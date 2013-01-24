@@ -1,0 +1,4 @@
+# Tooling related information for the Elasticsearch namespace
+http\://www.springframework.org/schema/data/elasticsearch@name=Solr Namespace
+http\://www.springframework.org/schema/data/elasticsearch@prefix=elasticsearch
+http\://www.springframework.org/schema/data/elasticsearch@icon=org/springframework/jdbc/config/spring-jdbc.gif

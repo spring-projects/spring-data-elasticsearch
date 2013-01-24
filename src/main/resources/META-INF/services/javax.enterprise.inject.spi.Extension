@@ -1,0 +1,1 @@
+org.springframework.data.elasticsearch.repository.cdi.ElasticsearchRepositoryExtension

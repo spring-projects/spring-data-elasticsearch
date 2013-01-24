@@ -1,0 +1,1 @@
+http\://www.springframework.org/schema/data/elasticsearch=org.springframework.data.elasticsearch.config.ElasticsearchNamespaceHandler

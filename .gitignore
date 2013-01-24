@@ -1,0 +1,7 @@
+atlassian-ide-plugin.xml
+.svn/
+data/
+spring-data-elasticsearch.iml
+spring-data-elasticsearch.ipr
+spring-data-elasticsearch.iws
+target/

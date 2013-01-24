@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<chapter id="solr.misc">
+	<title>Miscellaneous Solr Operation Support</title>
+	<abstract>
+		<para>
+			This chapter covers additional support for Solr operations (such as
+			faceting) that cannot be directly accessed via the repository
+			interface.
+			It is recommended to add those operations as custom
+			implementation as
+			described in
+			<xref linkend="repositories.custom-implementations" />
+			.
+		</para>
+	</abstract>
+	<section id="solr.misc.partialUpdates">
+		<title>Partial Updates</title>
+		<para>
+			PartialUpdates can be done using
+			<classname>PartialUpdate</classname>
+			which implements
+			<interfacename>Update</interfacename>
+			.
+			<note>
+				With Solr 4.0.0 it is not possible to update mulitvalue fields.
+			</note>
+		</para>
+		<example>
+			<programlisting language="java">PartialUpdate update = new PartialUpdate("id", "123");
+update.add("name", "updated-name");
+solrTemplate.saveBean(update);</programlisting>
+		</example>
+	</section>
+	<section id="solr.misc.projection">
+		<title>Projection</title>
+		<para>
+			Projections can be applied via
+			<interfacename>@Query</interfacename>
+			using the fields value.
+		</para>
+		<example>
+			<programlisting language="java">@Query(fields = { "name", "id" })
+List&lt;ProductBean&gt; findByNameStartingWith(String name);</programlisting>
+		</example>
+	</section>
+	<section id="solr.misc.faceting">
+		<title>Faceting</title>
+		<para>
+			Faceting cannot be directly applied using the
+			<interfacename>SolrRepository</interfacename>
+			but the
+			<classname>SolrTemplate</classname>
+			holds support for this feature.
+		</para>
+		<example>
+			<programlisting language="java">FacetQuery query = new SimpleFacetQuery(new Criteria(Criteria.WILDCARD).expression(Criteria.WILDCARD))
+  .setFacetOptions(new FacetOptions().addFacetOnField("name").setFacetLimit(5));
+FacetPage&lt;Product&gt; page = solrTemplate.queryForFacetPage(query, Product.class);</programlisting>
+		</example>
+		<para>
+			Facets on fields can also be defined using
+			<interfacename>@Facet</interfacename>
+			. Please mind that the result will be a
+			<classname>FacetPage</classname>
+			.
+			<programlisting language="java">@Query(value = "*:*")
+@Facet(fields = { "name" }, limit = 5)
+FacetPage&lt;Product&gt; findAllFacetOnPopularity(Pageable page);</programlisting>
+		</para>
+	</section>
+	<section id="solr.misc.filter">
+		<title>Filter Query</title>
+		<para>
+			Filter Queries improve query speed. It is recommended to
+			implement
+			geospatial search as filter query.
+			<note>
+				Please note that in solr, unless otherwise specified, all units of
+				distance are kilometers and points are in degrees of
+				latitude,longitude.
+			</note>
+		</para>
+		<example>
+			<programlisting language="java">Query query = new SimpleQuery(new Criteria("category").is("supercalifragilisticexpialidocious"));
+FilterQuery fq = new SimpleFilterQuery(new Criteria("store")
+  .near(new GeoLocation(48.305478, 14.286699), new Distance(5)));
+query.addFilterQuery(fq);</programlisting>
+		</example>
+		<para>
+			Simple filter queries can also be defined using
+			<interfacename>@Query</interfacename>
+			.
+		</para>
+		<programlisting language="java">@Query(value = "*:*", filters = { "inStock:true", "popularity:[* TO 3]" })
+List&lt;ProductBean&gt; findAllFilterAvailableTrueAndPopularityLessThanEqual3();</programlisting>
+	</section>
+</chapter>

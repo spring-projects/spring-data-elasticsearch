@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<chapter id="solr.repositories">
+	<title>Solr Repositories</title>
+	<abstract>
+		<para>This chapter includes details of the Solr repository
+			implementation.
+		</para>
+	</abstract>
+	<section id="solr.introduction">
+		<title>Introduction</title>
+
+		<section id="solr.namespace">
+			<title>Spring Namespace</title>
+
+			<para>
+				The Spring Data Solr module contains a custom namespace allowing
+				definition of repository beans as well as elements for instantiating
+				a
+				<classname>SolrServer</classname>
+				.
+			</para>
+
+			<para>
+				Using the
+				<code>repositories</code>
+				element looks up Spring Data repositories as described in
+				<xref linkend="repositories.create-instances" />
+				.
+			</para>
+
+			<example>
+				<title>Setting up Solr repositories using Namespace</title>
+				<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:solr="http://www.springframework.org/schema/data/solr"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/data/solr
+    http://www.springframework.org/schema/data/solr/spring-solr-1.0.xsd"&gt;
+
+  &lt;solr:repositories base-package="com.acme.repositories" /&gt;
+&lt;/beans&gt;</programlisting>
+			</example>
+
+			<para>
+				Using the
+				<code>solr-server</code>
+				or
+				<code>embedded-solr-server</code>
+				element registers an instance of
+				<code>SolrServer</code>
+				in the context.
+
+				<example>
+					<title>HttpSolrServer using Namespace</title>
+					<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:solr="http://www.springframework.org/schema/data/solr"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/data/solr
+    http://www.springframework.org/schema/data/solr/spring-solr-1.0.xsd"&gt;
+
+  &lt;solr:solr-server id="solrServer" url="http://locahost:8983/solr" /&gt;
+&lt;/beans&gt; </programlisting>
+				</example>
+
+				<example>
+					<title>EmbeddedSolrServer using Namespace</title>
+					<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:solr="http://www.springframework.org/schema/data/solr"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/data/solr
+    http://www.springframework.org/schema/data/solr/spring-solr-1.0.xsd"&gt;
+
+  &lt;solr:embedded-solr-server id="solrServer" solrHome="classpath:com/acme/solr" /&gt;
+&lt;/beans&gt; </programlisting>
+				</example>
+			</para>
+		</section>
+		<section id="solr.annotation">
+			<title>Annotation based configuration</title>
+			<para>The Spring Data Solr repositories support cannot only be
+				activated through an XML namespace but also using an annotation
+				through JavaConfig.
+			</para>
+			<example>
+				<title>Spring Data Solr repositories using JavaConfig</title>
+				<programlisting language="java">@Configuration
+@EnableSolrRepositories
+class ApplicationConfig {
+  
+  @Bean
+  public SolrServer solrServer() {
+    EmbeddedSolrServerFactory factory = new EmbeddedSolrServerFactory("classpath:com/acme/solr");
+    return factory.getSolrServer();
+  }
+  
+  @Bean
+  public SolrOperations solrTemplate() {
+    return new SolrTemplate(solrServer());
+  }
+}</programlisting>
+				<para>
+					The configuration above sets up an
+					<classname>EmbeddedSolrServer</classname>
+					which is used by the
+					<classname>SolrTemplate</classname>
+					. Spring Data Solr Repositories are activated using the
+					<interfacename>@EnableSolrRepositories</interfacename>
+					annotation, which
+					essentially carries the same attributes as the XML
+					namespace does. If no
+					base package is configured, it will use the
+					one
+					the configuration class
+					resides in.
+				</para>
+			</example>
+		</section>
+		<section id="solr.cdi">
+			<title>Solr Repositores using CDI</title>
+			<para>The Spring Data Solr repositories can also be set up using CDI
+				functionality.
+			</para>
+			<example>
+				<title>Spring Data Solr repositories using JavaConfig</title>
+				<programlisting language="java">class SolrTemplateProducer {
+
+  @Produces
+  @ApplicationScoped
+  public SolrOperations createSolrTemplate() {
+    return new SolrTemplate(new EmbeddedSolrServerFactory("classpath:com/acme/solr"));
+  }
+}
+
+class ProductService {
+
+  private ProductRepository repository;
+
+  public Page&lt;Product&gt; findAvailableProductsByName(String name, Pageable pageable) {
+    return repository.findByAvailableTrueAndNameStartingWith(name, pageable);
+  }
+
+  @Inject
+  public void setRepository(ProductRepository repository) {
+    this.repository = repository;
+  }
+}</programlisting>
+			</example>
+		</section>
+	</section>
+	<section id="solr.query-methods">
+		<title>Query methods</title>
+		<section id="solr.query-methods.finders">
+			<title>Query lookup strategies</title>
+			<para>
+				The Solr module supports defining a query manually as String or
+				have
+				it being derived from the method name.
+				<note>
+					There is no QueryDSL Support present at this time.
+				</note>
+			</para>
+
+			<simplesect>
+				<title>Declared queries</title>
+				<para>
+					Deriving the query from the method name is not always sufficient
+					and/or may result in unreadable method names. In this case one
+					might make either use of Solr named queries (see
+					<xref linkend="solr.query-methods.named-queries" />
+					) or use the
+					<interfacename>@Query</interfacename>
+					annotation (see
+					<xref linkend="solr.query-methods.at-query" />
+					).
+				</para>
+			</simplesect>
+		</section>
+
+		<section id="solr.query-methods.criterions">
+			<title>Query creation</title>
+
+			<para>
+				Generally the query creation mechanism for Solr works as described
+				in
+				<xref linkend="repositories.query-methods" />
+				. Here's a short example
+				of what a Solr query method translates into:
+				<example>
+					<title>Query creation from method names</title>
+					<programlisting language="java">public interface ProductRepository extends Repository&lt;Product, String&gt; {
+  List&lt;Product&gt; findByNameAndPopularity(String name, Integer popularity);
+}</programlisting>
+					<para>
+						The method name above will be translated into the following
+						solr query
+					</para>
+					<programlisting>q=name:?0 AND popularity:?1</programlisting>
+				</example>
+			</para>
+			<para>
+				A list of supported keywords for Solr is shown below.
+				<table>
+					<title>Supported keywords inside method names</title>
+					<tgroup cols="3">
+						<colspec colwidth="1*" />
+						<colspec colwidth="2*" />
+						<colspec colwidth="3*" />
+						<thead>
+							<row>
+								<entry>Keyword</entry>
+								<entry>Sample</entry>
+								<entry>Solr Query String</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<code>And</code>
+								</entry>
+								<entry>
+									<code>findByNameAndPopularity</code>
+								</entry>
+								<entry>
+									<code>q=name:?0 AND popularity:?1</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Or</code>
+								</entry>
+								<entry>
+									<code>findByNameOrPopularity</code>
+								</entry>
+								<entry>
+									<code>q=name:?0 OR popularity:?1</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Is</code>
+								</entry>
+								<entry>
+									<code>findByName</code>
+								</entry>
+								<entry>
+									<code>q=name:?0</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Not</code>
+								</entry>
+								<entry>
+									<code>findByNameNot</code>
+								</entry>
+								<entry>
+									<code>q=-name:?0</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Between</code>
+								</entry>
+								<entry>
+									<code>findByPopularityBetween</code>
+								</entry>
+								<entry>
+									<code>q=popularity:[?0 TO ?1]</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>LessThanEqual</code>
+								</entry>
+								<entry>
+									<code>findByPopularityLessThan</code>
+								</entry>
+								<entry>
+									<code>q=popularity:[* TO ?0]</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>GreaterThanEqual</code>
+								</entry>
+								<entry>
+									<code>findByPopularityGreaterThan</code>
+								</entry>
+								<entry>
+									<code>q=popularity:[?0 TO *]</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Before</code>
+								</entry>
+								<entry>
+									<code>findByLastModifiedBefore</code>
+								</entry>
+								<entry>
+									<code>q=last_modified:[* TO ?0]</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>After</code>
+								</entry>
+								<entry>
+									<code>findByLastModifiedAfter</code>
+								</entry>
+								<entry>
+									<code>q=last_modified:[?0 TO *]</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Like</code>
+								</entry>
+								<entry>
+									<code>findByNameLike</code>
+								</entry>
+								<entry>
+									<code>q=name:?0*</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>StartingWith</code>
+								</entry>
+								<entry>
+									<code>findByNameStartingWith</code>
+								</entry>
+								<entry>
+									<code>q=name:?0*</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>EndingWith</code>
+								</entry>
+								<entry>
+									<code>findByNameEndingWith</code>
+								</entry>
+								<entry>
+									<code>q=name:*?0</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Containing</code>
+								</entry>
+								<entry>
+									<code>findByNameContaining</code>
+								</entry>
+								<entry>
+									<code>q=name:*?0*</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>In</code>
+								</entry>
+								<entry>
+									<code>findByNameIn(Collection&lt;String&gt;
+										names)
+									</code>
+								</entry>
+								<entry>
+									<code>q=name:(?0... )</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>NotIn</code>
+								</entry>
+								<entry>
+									<code>findByNameNotIn(Collection&lt;String&gt;
+										names)
+									</code>
+								</entry>
+								<entry>
+									<code>q=-name:(?0... )</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Near</code>
+								</entry>
+								<entry>
+									<code>findByStoreNear</code>
+								</entry>
+								<entry>
+									<code>q={!geofilt pt=?0.latitude,?0.longitude sfield=store
+										d=?1}
+									</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>True</code>
+								</entry>
+								<entry>
+									<code>findByAvailableTrue</code>
+								</entry>
+								<entry>
+									<code>q=inStock:true</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>False</code>
+								</entry>
+								<entry>
+									<code>findByAvailableFalse</code>
+								</entry>
+								<entry>
+									<code>q=inStock:false</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>OrderBy</code>
+								</entry>
+								<entry>
+									<code>findByAvailableTrueOrderByNameDesc</code>
+								</entry>
+								<entry>
+									<code>q=inStock:true&amp;sort=name desc</code>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</para>
+		</section>
+		<section id="solr.query-methods.at-query">
+			<title>Using @Query Annotation</title>
+			<para>
+				Using named queries (
+				<xref linkend="solr.query-methods.named-queries" />
+				) to declare queries for entities is a valid
+				approach and works fine
+				for a small number of queries. As the
+				queries themselves are tied to
+				the Java method that executes them,
+				you actually can bind them
+				directly using the Spring Data Solr
+				<code>@Query</code>
+				annotation.
+			</para>
+			<example>
+				<title>
+					Declare query at the method using the
+					<interfacename>@Query</interfacename>
+					annotation.
+				</title>
+
+				<programlisting language="java">public interface ProductRepository extends SolrRepository&lt;Product, String&gt; {
+  @Query("inStock:?0")
+  List&lt;Product&gt; findByAvailable(Boolean available);
+}</programlisting>
+			</example>
+		</section>
+		<section id="solr.query-methods.named-queries">
+			<title>Using NamedQueries</title>
+			<para>
+				Named queries can be kept in a properties file and wired to the
+				accroding method. Please mind the naming convention described in
+				<xref linkend="repositories.query-methods.query-lookup-strategies" />
+				or use
+				<interfacename>@Query</interfacename>
+				.
+			</para>
+			<example>
+				<title>
+					Declare named query in properites file
+				</title>
+				<programlisting>Product.findByNamedQuery=popularity:?0
+Product.findByName=name:?0</programlisting>
+				<programlisting language="java">public interface ProductRepository extends SolrCrudRepository&lt;Product, String&gt; {
+				
+  List&lt;Product&gt; findByNamedQuery(Integer popularity);
+  
+  @Query(name = "Product.findByName")
+  List&lt;Product&gt; findByAnnotatedNamedQuery(String name); 
+  
+}</programlisting>
+			</example>
+		</section>
+	</section>
+</chapter>

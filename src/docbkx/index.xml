@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<book xmlns:xi="http://www.w3.org/2001/XInclude">
+	<bookinfo>
+		<title>Spring Data Solr</title>
+		<authorgroup>
+			<author>
+				<firstname>Christoph</firstname>
+				<surname>Strobl</surname>
+			</author>
+            <author>
+                <firstname>Oliver</firstname>
+                <surname>Gierke</surname>
+            </author>
+			<author>
+                <firstname>Mark</firstname>
+                <surname>Pollack</surname>
+            </author>
+            <author>
+                <firstname>Thomas</firstname>
+                <surname>Risberg</surname>
+            </author>
+		</authorgroup>
+		<legalnotice>
+			<para>
+				Copies of this document may be made for your own use and for
+				distribution to others, provided that you do not
+				charge any fee for
+				such copies and further provided that each copy
+				contains this
+				Copyright Notice, whether
+				distributed in print or electronically.
+			</para>
+		</legalnotice>
+
+		<copyright>
+			<year>2012</year>
+			<holder>The original author(s)</holder>
+		</copyright>
+	</bookinfo>
+
+	<toc />
+
+	<xi:include href="preface.xml" />
+
+	<part id="reference">
+		<title>Reference Documentation</title>
+
+		<xi:include href="https://raw.github.com/SpringSource/spring-data-commons/1.4.0.RC1/src/docbkx/repositories.xml">
+			<xi:fallback href="../../../spring-data-commons/src/docbkx/repositories.xml" /> 
+		</xi:include>
+
+		<xi:include href="reference/data-solr.xml" />
+		<xi:include href="reference/misc.xml" />
+	</part>
+
+	<part id="appendix">
+		<title>Appendix</title>
+		<xi:include
+			href="https://raw.github.com/SpringSource/spring-data-commons/1.4.0.RC1/src/docbkx/repository-namespace-reference.xml">
+			<xi:fallback
+				href="../../../spring-data-commons/src/docbkx/repository-namespace-reference.xml" />
+		</xi:include>
+		<xi:include
+			href="https://raw.github.com/SpringSource/spring-data-commons/1.4.0.RC1/src/docbkx/repository-query-keywords-reference.xml">
+			<xi:fallback
+				href="../../../spring-data-commons/src/docbkx/repository-query-keywords-reference.xml" />
+		</xi:include>
+	</part>
+
+</book>
