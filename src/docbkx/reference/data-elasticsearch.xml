@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<chapter id="solr.repositories">
+	<title>Solr Repositories</title>
+	<abstract>
+		<para>This chapter includes details of the Solr repository
+			implementation.
+		</para>
+	</abstract>
+	<section id="elasticsearch.introduction">
+		<title>Introduction</title>
+
+		<section id="elasticsearch.namespace">
+			<title>Spring Namespace</title>
+
+			<para>
+				The Spring Data Elasticsearch module contains a custom namespace allowing
+				definition of repository beans as well as elements for instantiating
+				a
+				<classname>ElasticsearchServer</classname>
+				.
+			</para>
+
+			<para>
+				Using the
+				<code>repositories</code>
+				element looks up Spring Data repositories as described in
+				<xref linkend="repositories.create-instances" />
+				.
+			</para>
+
+			<example>
+				<title>Setting up Elasticsearch repositories using Namespace</title>
+				<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/data/elasticsearch
+    http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd"&gt;
+
+  &lt;elasticsearch:repositories base-package="com.acme.repositories" /&gt;
+&lt;/beans&gt;</programlisting>
+			</example>
+
+			<para>
+				Using the
+				<code>Transport Client</code>
+				or
+				<code>Node Client</code>
+				element registers an instance of
+				<code>Elasticsearch Server</code>
+				in the context.
+
+				<example>
+					<title>Transport Client using Namespace</title>
+					<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+                        &lt;beans xmlns="http://www.springframework.org/schema/beans"
+                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                        xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+                        xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/data/elasticsearch
+                        http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd"&gt;
+
+  &lt;elasticsearch:transport-client id="client" cluster-nodes="localhost:9300,someip:9300" /&gt;
+&lt;/beans&gt; </programlisting>
+				</example>
+
+				<example>
+					<title>Node Client using Namespace</title>
+					<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+                        &lt;beans xmlns="http://www.springframework.org/schema/beans"
+                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                        xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+                        xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/data/elasticsearch
+                        http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd"&gt;
+
+  &lt;elasticsearch:node-client id="client" local="true"" /&gt;
+&lt;/beans&gt; </programlisting>
+				</example>
+			</para>
+		</section>
+		<section id="elasticsearch.annotation">
+			<title>Annotation based configuration</title>
+			<para>The Spring Data Elasticsearch repositories support cannot only be
+				activated through an XML namespace but also using an annotation
+				through JavaConfig.
+			</para>
+			<example>
+				<title>Spring Data Elasticsearch repositories using JavaConfig</title>
+				<programlisting language="java">@Configuration
+                    @EnableElasticsearchRepositories(basePackages = "org/springframework/data/elasticsearch/repositories")
+                    static class Config {
+
+                    @Bean
+                    public ElasticsearchOperations elasticsearchTemplate() {
+                    return new ElasticsearchTemplate(nodeBuilder().local(true).node().client());
+                    }
+                    }</programlisting>
+				<para>
+					The configuration above sets up an
+					<classname>Embedded Elasticsearch Server</classname>
+					which is used by the
+					<classname>ElasticsearchTemplate</classname>
+					. Spring Data Elasticsearch Repositories are activated using the
+					<interfacename>@EnableElasticsearchRepositories</interfacename>
+					annotation, which
+					essentially carries the same attributes as the XML
+					namespace does. If no
+					base package is configured, it will use the
+					one
+					the configuration class
+					resides in.
+				</para>
+			</example>
+		</section>
+		<!--<section id="elasticsearch.cdi">-->
+			<!--<title>Elasticsearch Repositores using CDI</title>-->
+			<!--<para>The Spring Data Elasticsearch repositories can also be set up using CDI-->
+				<!--functionality.-->
+			<!--</para>-->
+			<!--<example>-->
+				<!--<title>Spring Data Elasticsearch repositories using JavaConfig</title>-->
+				<!--<programlisting language="java">class SolrTemplateProducer {-->
+
+  <!--@Produces-->
+  <!--@ApplicationScoped-->
+  <!--public SolrOperations createSolrTemplate() {-->
+    <!--return new SolrTemplate(new EmbeddedSolrServerFactory("classpath:com/acme/solr"));-->
+  <!--}-->
+<!--}-->
+
+<!--class ProductService {-->
+
+  <!--private ProductRepository repository;-->
+
+  <!--public Page&lt;Product&gt; findAvailableProductsByName(String name, Pageable pageable) {-->
+    <!--return repository.findByAvailableTrueAndNameStartingWith(name, pageable);-->
+  <!--}-->
+
+  <!--@Inject-->
+  <!--public void setRepository(ProductRepository repository) {-->
+    <!--this.repository = repository;-->
+  <!--}-->
+<!--}</programlisting>-->
+			<!--</example>-->
+		<!--</section>-->
+	</section>
+	<section id="elasticsearch.query-methods">
+		<title>Query methods</title>
+		<section id="elasticsearch.query-methods.finders">
+			<title>Query lookup strategies</title>
+			<para>
+				The Elasticsearch module supports all basic query building feature as String,Abstract,Criteria or
+				have
+				it being derived from the method name.
+				<note>
+					There is no QueryDSL Support present at this time.
+				</note>
+			</para>
+
+			<simplesect>
+				<title>Declared queries</title>
+				<para>
+					Deriving the query from the method name is not always sufficient
+					and/or may result in unreadable method names. In this case one
+					might make either use of Elasticsearch named queries (see
+					<xref linkend="elasticsearch.query-methods.named-queries" />
+					) or use the
+					<interfacename>@Query</interfacename>
+					annotation (see
+					<xref linkend="elasticsearch.query-methods.at-query" />
+					).
+				</para>
+			</simplesect>
+		</section>
+
+		<section id="elasticsearch.query-methods.criterions">
+			<title>Query creation</title>
+
+			<para>
+				Generally the query creation mechanism for Elasticsearch works as described
+				in
+				<xref linkend="repositories.query-methods" />
+				. Here's a short example
+				of what a Elasticsearch query method translates into:
+				<example>
+					<title>Query creation from method names</title>
+					<programlisting language="java">public interface BookRepository extends Repository&lt;Book, String&gt; {
+  List&lt;Book&gt; findByNameAndPrice(String name, Integer price);
+}</programlisting>
+					<para>
+						The method name above will be translated into the following
+                        Elasticsearch json query
+					</para>
+					<programlisting>{
+                        "bool" : {
+                        "must" : [ {
+                        "field" : {
+                        "type" : "test"
+                        }
+                        }, {
+                        "field" : {
+                        "message" : "some message"
+                        }
+                        } ]
+                        }
+                        }</programlisting>
+				</example>
+			</para>
+			<para>
+				A list of supported keywords for Elasticsearch is shown below.
+				<table>
+					<title>Supported keywords inside method names</title>
+					<tgroup cols="3">
+						<colspec colwidth="1*" />
+						<colspec colwidth="2*" />
+						<colspec colwidth="3*" />
+						<thead>
+							<row>
+								<entry>Keyword</entry>
+								<entry>Sample</entry>
+								<entry>Elasticsearch Query String</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<code>And</code>
+								</entry>
+								<entry>
+									<code>findByNameAndPrice</code>
+								</entry>
+								<entry>
+									<code>{
+                                        "bool" : {
+                                        "must" : [ {
+                                        "field" : {
+                                        "name" : "?"
+                                        }
+                                        }, {
+                                        "field" : {
+                                        "price" : "?"
+                                        }
+                                        } ]
+                                        }
+                                        }</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Or</code>
+								</entry>
+								<entry>
+									<code>findByNameOrPrice</code>
+								</entry>
+								<entry>
+									<code>{
+                                        "bool" : {
+                                        "should" : [ {
+                                        "field" : {
+                                        "name" : "?"
+                                        }
+                                        }, {
+                                        "field" : {
+                                        "price" : "?"
+                                        }
+                                        } ]
+                                        }
+                                        }</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Is</code>
+								</entry>
+								<entry>
+									<code>findByName</code>
+								</entry>
+								<entry>
+									<code>{
+                                        "bool" : {
+                                        "must" : {
+                                        "field" : {
+                                        "name" : "?"
+                                        }
+                                        }
+                                        }
+                                        }</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Not</code>
+								</entry>
+								<entry>
+									<code>findByNameNot</code>
+								</entry>
+								<entry>
+									<code>{
+                                        "bool" : {
+                                        "must_not" : {
+                                        "field" : {
+                                        "name" : "?"
+                                        }
+                                        }
+                                        }
+                                        }</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Between</code>
+								</entry>
+								<entry>
+									<code>findByPriceBetween</code>
+								</entry>
+								<entry>
+									<code>{
+                                        "bool" : {
+                                        "must" : {
+                                        "range" : {
+                                        "price" : {
+                                        "from" : ?,
+                                        "to" : ?,
+                                        "include_lower" : true,
+                                        "include_upper" : true
+                                        }
+                                        }
+                                        }
+                                        }
+                                        }</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>LessThanEqual</code>
+								</entry>
+								<entry>
+									<code>findByPriceLessThan</code>
+								</entry>
+								<entry>
+									<code>{
+                                        "bool" : {
+                                        "must" : {
+                                        "range" : {
+                                        "price" : {
+                                        "from" : null,
+                                        "to" : ?,
+                                        "include_lower" : true,
+                                        "include_upper" : true
+                                        }
+                                        }
+                                        }
+                                        }
+                                        }</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>GreaterThanEqual</code>
+								</entry>
+								<entry>
+									<code>findByPriceGreaterThan</code>
+								</entry>
+								<entry>
+									<code>{
+                                        "bool" : {
+                                        "must" : {
+                                        "range" : {
+                                        "rate" : {
+                                        "from" : ?,
+                                        "to" : null,
+                                        "include_lower" : true,
+                                        "include_upper" : true
+                                        }
+                                        }
+                                        }
+                                        }
+                                        }</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Before</code>
+								</entry>
+								<entry>
+									<code>findByPriceBefore</code>
+								</entry>
+								<entry>
+									<code>{
+                                        "bool" : {
+                                        "must" : {
+                                        "range" : {
+                                        "price" : {
+                                        "from" : null,
+                                        "to" : ?,
+                                        "include_lower" : true,
+                                        "include_upper" : true
+                                        }
+                                        }
+                                        }
+                                        }
+                                        }</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>After</code>
+								</entry>
+								<entry>
+									<code>findByLastModifiedAfter</code>
+								</entry>
+								<entry>
+									<code>q=last_modified:[?0 TO *]</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Like</code>
+								</entry>
+								<entry>
+									<code>findByNameLike</code>
+								</entry>
+								<entry>
+									<code>q=name:?0*</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>StartingWith</code>
+								</entry>
+								<entry>
+									<code>findByNameStartingWith</code>
+								</entry>
+								<entry>
+									<code>q=name:?0*</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>EndingWith</code>
+								</entry>
+								<entry>
+									<code>findByNameEndingWith</code>
+								</entry>
+								<entry>
+									<code>q=name:*?0</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Containing</code>
+								</entry>
+								<entry>
+									<code>findByNameContaining</code>
+								</entry>
+								<entry>
+									<code>q=name:*?0*</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>In</code>
+								</entry>
+								<entry>
+									<code>findByNameIn(Collection&lt;String&gt;
+										names)
+									</code>
+								</entry>
+								<entry>
+									<code>q=name:(?0... )</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>NotIn</code>
+								</entry>
+								<entry>
+									<code>findByNameNotIn(Collection&lt;String&gt;
+										names)
+									</code>
+								</entry>
+								<entry>
+									<code>q=-name:(?0... )</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>Near</code>
+								</entry>
+								<entry>
+									<code>findByStoreNear</code>
+								</entry>
+								<entry>
+									<code>q={!geofilt pt=?0.latitude,?0.longitude sfield=store
+										d=?1}
+									</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>True</code>
+								</entry>
+								<entry>
+									<code>findByAvailableTrue</code>
+								</entry>
+								<entry>
+									<code>q=inStock:true</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>False</code>
+								</entry>
+								<entry>
+									<code>findByAvailableFalse</code>
+								</entry>
+								<entry>
+									<code>q=inStock:false</code>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<code>OrderBy</code>
+								</entry>
+								<entry>
+									<code>findByAvailableTrueOrderByNameDesc</code>
+								</entry>
+								<entry>
+									<code>q=inStock:true&amp;sort=name desc</code>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</para>
+		</section>
+		<section id="solr.query-methods.at-query">
+			<title>Using @Query Annotation</title>
+			<para>
+				Using named queries (
+				<xref linkend="solr.query-methods.named-queries" />
+				) to declare queries for entities is a valid
+				approach and works fine
+				for a small number of queries. As the
+				queries themselves are tied to
+				the Java method that executes them,
+				you actually can bind them
+				directly using the Spring Data Solr
+				<code>@Query</code>
+				annotation.
+			</para>
+			<example>
+				<title>
+					Declare query at the method using the
+					<interfacename>@Query</interfacename>
+					annotation.
+				</title>
+
+				<programlisting language="java">public interface ProductRepository extends SolrRepository&lt;Product, String&gt; {
+  @Query("inStock:?0")
+  List&lt;Product&gt; findByAvailable(Boolean available);
+}</programlisting>
+			</example>
+		</section>
+		<section id="solr.query-methods.named-queries">
+			<title>Using NamedQueries</title>
+			<para>
+				Named queries can be kept in a properties file and wired to the
+				accroding method. Please mind the naming convention described in
+				<xref linkend="repositories.query-methods.query-lookup-strategies" />
+				or use
+				<interfacename>@Query</interfacename>
+				.
+			</para>
+			<example>
+				<title>
+					Declare named query in properites file
+				</title>
+				<programlisting>Product.findByNamedQuery=popularity:?0
+Product.findByName=name:?0</programlisting>
+				<programlisting language="java">public interface ProductRepository extends SolrCrudRepository&lt;Product, String&gt; {
+				
+  List&lt;Product&gt; findByNamedQuery(Integer popularity);
+  
+  @Query(name = "Product.findByName")
+  List&lt;Product&gt; findByAnnotatedNamedQuery(String name); 
+  
+}</programlisting>
+			</example>
+		</section>
+	</section>
+</chapter>

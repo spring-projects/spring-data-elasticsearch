@@ -3,25 +3,17 @@
 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <book xmlns:xi="http://www.w3.org/2001/XInclude">
 	<bookinfo>
-		<title>Spring Data Solr</title>
+		<title>Spring Data Elasticsearch</title>
 		<authorgroup>
 			<author>
-				<firstname>Christoph</firstname>
-				<surname>Strobl</surname>
+				<firstname>Rizwan</firstname>
+				<surname>Idrees</surname>
 			</author>
             <author>
-                <firstname>Oliver</firstname>
-                <surname>Gierke</surname>
+                <firstname>Mohsin</firstname>
+                <surname>Husen</surname>
             </author>
-			<author>
-                <firstname>Mark</firstname>
-                <surname>Pollack</surname>
-            </author>
-            <author>
-                <firstname>Thomas</firstname>
-                <surname>Risberg</surname>
-            </author>
-		</authorgroup>
+        </authorgroup>
 		<legalnotice>
 			<para>
 				Copies of this document may be made for your own use and for
@@ -35,7 +27,7 @@
 		</legalnotice>
 
 		<copyright>
-			<year>2012</year>
+			<year>2013</year>
 			<holder>The original author(s)</holder>
 		</copyright>
 	</bookinfo>
@@ -51,7 +43,7 @@
 			<xi:fallback href="../../../spring-data-commons/src/docbkx/repositories.xml" /> 
 		</xi:include>
 
-		<xi:include href="reference/data-solr.xml" />
+		<xi:include href="reference/data-elasticsearch.xml" />
 		<xi:include href="reference/misc.xml" />
 	</part>
 

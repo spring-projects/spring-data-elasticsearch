@@ -3,13 +3,13 @@
 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <preface id="preface">
 	<title>Preface</title>
-	<para>The Spring Data Solr project applies core Spring concepts to
+	<para>The Spring Data Elasticsearch project applies core Spring concepts to
 		the
-		development of solutions using the Apache Solr Search Engine.
-		We
-		provide a "template" as a high-level abstraction for storing and
-		querying documents. You will notice similarities to the mongodb
-		support in the Spring Framework.
+		development of solutions using the Elasticsearch Search Engine.
+		We have povided a "template" as a high-level abstraction for
+        storing,querying,sorting and faceting documents. You will notice similarities
+        to the Spring data solr and
+        mongodb support in the Spring Framework.
 	</para>
 	<section id="project">
 		<title>Project Metadata</title>
@@ -17,35 +17,8 @@
 			<listitem>
 				<para>
 					Version Control -
-					<ulink url="git://github.com/SpringSource/spring-data-solr.git">git://github.com/SpringSource/spring-data-solr.git
+					<ulink url="git://github.com/BioMedCentralLtd/spring-data-elasticsearch.git">git://github.com/BioMedCentralLtd/spring-data-elasticsearch.git
 					</ulink>
-				</para>
-			</listitem>
-			<listitem>
-				<para>
-					Bugtacker -
-					<ulink url="https://jira.springsource.org/browse/DATASOLR">https://jira.springsource.org/browse/DATASOLR
-					</ulink>
-				</para>
-			</listitem>
-			<listitem>
-				<para>
-					Release repository -
-					<ulink url="http://repo.springsource.org/libs-release">http://repo.springsource.org/libs-release</ulink>
-				</para>
-			</listitem>
-
-			<listitem>
-				<para>
-					Milestone repository -
-					<ulink url="http://repo.springsource.org/libs-milestone">http://repo.springsource.org/libs-milestone
-					</ulink>
-				</para>
-			</listitem>
-			<listitem>
-				<para>
-					Snapshot repository -
-					<ulink url="http://repo.springsource.org/libs-snapshot">http://repo.springsource.org/libs-snapshot</ulink>
 				</para>
 			</listitem>
 		</itemizedlist>
@@ -54,19 +27,8 @@
 		<title>Requirements</title>
 		<para>
 			Requires
-			<ulink url="http://lucene.apache.org/solr/">Apache Solr</ulink>
-			3.5 and above or optional dependency
-			<programlisting language="xml">&lt;dependency&gt;
-  &lt;groupId&gt;org.apache.solr&lt;/groupId&gt;
-  &lt;artifactId&gt;solr-core&lt;/artifactId&gt;
-  &lt;version&gt;${solr.version}&lt;/version&gt;
-&lt;/dependency&gt;</programlisting>
-			<note>
-				If you tend to use the Embedded Version of Solr
-				Server 4.x you will also have to add a version of servlet-api and
-				check your &lt;lockType&gt; as well as &lt;unlockOnStartup&gt;
-				settings.
-			</note>
-		</para>
+			<ulink url="http://www.elasticsearch.org/download/">Elasticsearch</ulink>
+            0.20.2 and above or optional dependency
+	    </para>
 	</section>
 </preface>

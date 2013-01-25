@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
-@Ignore
 public class CriteriaQueryTest {
 
     @Resource
@@ -476,13 +475,13 @@ public class CriteriaQueryTest {
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(350,null));
         //when
-        SampleEntity sampleEntity = elasticsearchTemplate.queryForObject(criteriaQuery, SampleEntity.class);
+        Page<SampleEntity> page = elasticsearchTemplate.queryForPage(criteriaQuery, SampleEntity.class);
         //then
-        assertThat(sampleEntity,is(notNullValue()));
+        assertThat(page,is(notNullValue()));
+        assertThat(page.getTotalElements(),is(greaterThanOrEqualTo(1L)));
     }
 
     @Test
-    @Ignore
     public void testBetweenWithoutLowerBound() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
@@ -513,13 +512,13 @@ public class CriteriaQueryTest {
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(null,550));
         //when
-        SampleEntity sampleEntity = elasticsearchTemplate.queryForObject(criteriaQuery, SampleEntity.class);
+        Page<SampleEntity> page = elasticsearchTemplate.queryForPage(criteriaQuery, SampleEntity.class);
         //then
-        assertThat(sampleEntity,is(notNullValue()));
+        assertThat(page,is(notNullValue()));
+        assertThat(page.getTotalElements(),is(greaterThanOrEqualTo(1L)));
     }
 
     @Test
-    @Ignore
     public void testLessThanEqauls() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
@@ -550,13 +549,13 @@ public class CriteriaQueryTest {
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").lessThanEqual(750));
         //when
-        SampleEntity sampleEntity = elasticsearchTemplate.queryForObject(criteriaQuery, SampleEntity.class);
+        Page<SampleEntity> page = elasticsearchTemplate.queryForPage(criteriaQuery, SampleEntity.class);
         //then
-        assertThat(sampleEntity,is(notNullValue()));
+        assertThat(page,is(notNullValue()));
+        assertThat(page.getTotalElements(),is(greaterThanOrEqualTo(1L)));
     }
 
     @Test
-    @Ignore
     public void testGreaterThanEqauls() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
@@ -587,9 +586,10 @@ public class CriteriaQueryTest {
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").greaterThanEqual(950));
         //when
-        SampleEntity sampleEntity = elasticsearchTemplate.queryForObject(criteriaQuery, SampleEntity.class);
+        Page<SampleEntity> page = elasticsearchTemplate.queryForPage(criteriaQuery, SampleEntity.class);
         //then
-        assertThat(sampleEntity,is(notNullValue()));
+        assertThat(page,is(notNullValue()));
+        assertThat(page.getTotalElements(),is(greaterThanOrEqualTo(1L)));
     }
 
     @Test

@@ -11,7 +11,13 @@ public interface SampleCustomMethodRepository extends ElasticsearchRepository<Sa
 
     Page<SampleEntity> findByType(String type, Pageable pageable);
 
+    Page<SampleEntity> findByTypeNot(String type, Pageable pageable);
+
     @Query("{\"bool\" : {\"must\" : {\"field\" : {\"message\" : \"?0\"}}}}")
     Page<SampleEntity> findByMessage(String message, Pageable pageable);
+
+    Page<SampleEntity> findByRateLessThan(int rate, Pageable pageable);
+
+    Page<SampleEntity> findByRateBefore(int rate, Pageable pageable);
 
 }
