@@ -25,7 +25,7 @@ Test Coverage
 * Line 74%
 * Block 74%
 
-*[Emma Test Coverage Report] (https://github.com/BioMedCentralLtd/spring-data-elasticsearch/tree/master/site/emma/)
+*[Emma Test Coverage Report] (https://github.com/BioMedCentralLtd/spring-data-elasticsearch/blob/master/site/emma.zip?raw=true)
 
 Quick Start
 -----------
