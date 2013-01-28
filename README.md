@@ -185,7 +185,3 @@ You can set up repository scanning via xml configuration, which will happily cre
 
 </beans>
 ```
-
-Contributing to Spring Data
----------------------------
-Please refer to [CONTRIBUTING](https://github.com/BioMedCentralLtd/spring-data-elasticsearch/blob/master/CONTRIBUTING.md)
