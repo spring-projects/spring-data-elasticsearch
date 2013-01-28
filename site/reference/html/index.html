@@ -1,0 +1,938 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Spring Data Elasticsearch</title><link rel="stylesheet" href="css/html.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.72.0"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="book" lang="en"><div class="titlepage"><div><div><h1 class="title"><a name="d0e1"></a>Spring Data Elasticsearch</h1></div><div><div xmlns:fo="http://www.w3.org/1999/XSL/Format" class="authorgroup"><h2>Authors</h2><p></p><span class="author"><span class="firstname">BioMed Central</span> <span class="surname">Development Team</span></span></div></div><div><p class="copyright">Copyright &copy; 2013 The original author(s)</p></div><div><div class="legalnotice"><a name="d0e11"></a><p>
+				Copies of this document may be made for your own use and for
+				distribution to others, provided that you do not
+				charge any fee for
+				such copies and further provided that each copy
+				contains this
+				Copyright Notice, whether
+				distributed in print or electronically.
+			</p></div></div></div><hr></div><div class="toc"><dl><dt><span class="preface"><a href="#preface">Preface</a></span></dt><dd><dl><dt><span class="section"><a href="#project">1. Project Metadata</a></span></dt><dt><span class="section"><a href="#requirements">2. Requirements</a></span></dt></dl></dd><dt><span class="part"><a href="#reference">I. Reference Documentation</a></span></dt><dd><dl><dt><span class="chapter"><a href="#repositories">1. Repositories</a></span></dt><dd><dl><dt><span class="section"><a href="#repositories.introduction">1.1. Introduction</a></span></dt><dt><span class="section"><a href="#repositories.core-concepts">1.2. Core concepts</a></span></dt><dt><span class="section"><a href="#repositories.query-methods">1.3. Query methods</a></span></dt><dd><dl><dt><span class="section"><a href="#repositories.definition">1.3.1. Defining repository interfaces</a></span></dt><dd><dl><dt><span class="section"><a href="#repositories.definition-tuning">1.3.1.1. Fine tuning repository definition</a></span></dt></dl></dd><dt><span class="section"><a href="#repositories.query-methods.details">1.3.2. Defining query methods</a></span></dt><dd><dl><dt><span class="section"><a href="#repositories.query-methods.query-lookup-strategies">1.3.2.1. Query lookup strategies</a></span></dt><dt><span class="section"><a href="#repositories.query-methods.query-creation">1.3.2.2. Query creation</a></span></dt><dt><span class="section"><a href="#repositories.special-parameters">1.3.2.3. Special parameter handling</a></span></dt></dl></dd><dt><span class="section"><a href="#repositories.create-instances">1.3.3. Creating repository instances</a></span></dt><dd><dl><dt><span class="section"><a href="#repositories.create-instances.spring">1.3.3.1. XML Configuration</a></span></dt><dt><span class="section"><a href="#repositories.create-instances.java-config">1.3.3.2. JavaConfig</a></span></dt><dt><span class="section"><a href="#repositories.create-instances.standalone">1.3.3.3. Standalone usage</a></span></dt></dl></dd></dl></dd><dt><span class="section"><a href="#repositories.custom-implementations">1.4. Custom implementations</a></span></dt><dd><dl><dt><span class="section"><a href="#repositories.single-repository-behaviour">1.4.1. Adding behaviour to single repositories</a></span></dt><dt><span class="section"><a href="#repositories.custom-behaviour-for-all-repositories">1.4.2. Adding custom behaviour to all repositories</a></span></dt></dl></dd><dt><span class="section"><a href="#d0e637">1.5. Extensions</a></span></dt><dd><dl><dt><span class="section"><a href="#web-domain-class-binding">1.5.1. Domain class web binding for Spring MVC</a></span></dt><dt><span class="section"><a href="#web-pagination">1.5.2. Web pagination</a></span></dt><dt><span class="section"><a href="#d0e805">1.5.3. Repository populators</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#elasticsearch.repositories">2. Elasticsearch Repositories</a></span></dt><dd><dl><dt><span class="section"><a href="#elasticsearch.introduction">2.1. Introduction</a></span></dt><dd><dl><dt><span class="section"><a href="#elasticsearch.namespace">2.1.1. Spring Namespace</a></span></dt><dt><span class="section"><a href="#elasticsearch.annotation">2.1.2. Annotation based configuration</a></span></dt><dt><span class="section"><a href="#elasticsearch.cdi">2.1.3. Elasticsearch Repositores using CDI</a></span></dt></dl></dd><dt><span class="section"><a href="#elasticsearch.query-methods">2.2. Query methods</a></span></dt><dd><dl><dt><span class="section"><a href="#elasticsearch.query-methods.finders">2.2.1. Query lookup strategies</a></span></dt><dt><span class="section"><a href="#elasticsearch.query-methods.criterions">2.2.2. Query creation</a></span></dt><dt><span class="section"><a href="#elasticsearch.query-methods.at-query">2.2.3. Using @Query Annotation</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#elasticsearch.misc">3. Miscellaneous Elasticsearch Operation Support</a></span></dt><dd><dl><dt><span class="section"><a href="#elasticsearch.misc.filter">3.1. Filter Builder</a></span></dt></dl></dd></dl></dd><dt><span class="part"><a href="#appendix">II. Appendix</a></span></dt><dd><dl><dt><span class="appendix"><a href="#namespace-reference">A. Namespace reference</a></span></dt><dd><dl><dt><span class="section"><a href="#namespace-dao-config">A.1. The <code class="code">&lt;repositories /&gt;</code> element</a></span></dt></dl></dd><dt><span class="appendix"><a href="#repository-query-keywords">B. Repository query keywords</a></span></dt><dd><dl><dt><span class="section"><a href="#d0e1401">B.1. Supported query keywords</a></span></dt></dl></dd></dl></dd></dl></div><div class="preface" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="preface"></a>Preface</h2></div></div></div><p>The Spring Data Elasticsearch project applies core Spring concepts to
+		the
+		development of solutions using the Elasticsearch Search Engine.
+		We have povided a "template" as a high-level abstraction for
+        storing,querying,sorting and faceting documents. You will notice similarities
+        to the Spring data solr and
+        mongodb support in the Spring Framework.
+	</p><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="project"></a>1.&nbsp;Project Metadata</h2></div></div></div><div class="itemizedlist"><ul type="disc" compact><li><p>
+					Version Control -
+					<a xmlns:xlink="http://www.w3.org/1999/xlink" href="git://github.com/BioMedCentralLtd/spring-data-elasticsearch.git" target="_top">git://github.com/BioMedCentralLtd/spring-data-elasticsearch.git
+					</a>
+				</p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="requirements"></a>2.&nbsp;Requirements</h2></div></div></div><p>
+			Requires
+			<a xmlns:xlink="http://www.w3.org/1999/xlink" href="http://www.elasticsearch.org/download/" target="_top">Elasticsearch</a>
+            0.20.2 and above or optional dependency or not even that if you are using Embedded Node Client
+	    </p></div></div><div class="part" lang="en"><div class="titlepage"><div><div><h1 class="title"><a name="reference"></a>Part&nbsp;I.&nbsp;Reference Documentation</h1></div></div></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="repositories"></a>Chapter&nbsp;1.&nbsp;Repositories</h2></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="repositories.introduction"></a>1.1.&nbsp;Introduction</h2></div></div></div><p>Implementing a data access layer of an application has been
+    cumbersome for quite a while. Too much boilerplate code had to be written.
+    Domain classes were anemic and not designed in a real object oriented or
+    domain driven manner.</p><p>Using both of these technologies makes developers life a lot easier
+    regarding rich domain model's persistence. Nevertheless the amount of
+    boilerplate code to implement repositories especially is still quite high.
+    So the goal of the repository abstraction of Spring Data is to reduce the
+    effort to implement data access layers for various persistence stores
+    significantly.</p><p>The following chapters will introduce the core concepts and
+    interfaces of Spring Data repositories in general for detailled
+    information on the specific features of a particular store consult the
+    later chapters of this document.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/admons/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>As this part of the documentation is pulled in from Spring Data
+      Commons we have to decide for a particular module to be used as example.
+      The configuration and code samples in this chapter are using the JPA
+      module. Make sure you adapt e.g. the XML namespace declaration, types to
+      be extended to the equivalents of the module you're actually
+      using.</p></td></tr></table></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="repositories.core-concepts"></a>1.2.&nbsp;Core concepts</h2></div></div></div><p>The central interface in Spring Data repository abstraction is
+    <code class="interfacename">Repository</code> (probably not that much of a
+    surprise). It is typeable to the domain class to manage as well as the id
+    type of the domain class. This interface mainly acts as marker interface
+    to capture the types to deal with and help us when discovering interfaces
+    that extend this one. Beyond that there's
+    <code class="interfacename">CrudRepository</code> which provides some
+    sophisticated functionality around CRUD for the entity being
+    managed.</p><div class="example"><a name="repositories.repository"></a><p class="title"><b>Example&nbsp;1.1.&nbsp;<code class="interfacename">CrudRepository</code> interface</b></p><div class="example-contents"><div class="programlistingco"><pre class="programlisting"><span class="hl-keyword">public</span> <span class="hl-keyword">interface</span> CrudRepository&lt;T, ID <span class="hl-keyword">extends</span> Serializable&gt;
+    <span class="hl-keyword">extends</span> Repository&lt;T, ID&gt; {
+                                                                                         <span class="co"><img src="images/callouts/1.png" alt="(1)"></span>
+    T save(T entity);
+                                                                                         <span class="co"><img src="images/callouts/2.png" alt="(2)"></span>
+    T findOne(ID primaryKey);
+                                                                                         <span class="co"><img src="images/callouts/3.png" alt="(3)"></span>
+    Iterable&lt;T&gt; findAll();
+
+    Long count();
+                                                                                         <span class="co"><img src="images/callouts/4.png" alt="(4)"></span>
+    <span class="hl-keyword">void</span> delete(T entity);
+                                                                                         <span class="co"><img src="images/callouts/5.png" alt="(5)"></span>
+    <span class="hl-keyword">boolean</span> exists(ID primaryKey);
+                                                                                         <span class="co"><img src="images/callouts/6.png" alt="(6)"></span>
+    <span class="hl-comment">// &#8230; more functionality omitted.</span>
+}</pre><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><img src="images/callouts/1.png" alt="1" border="0"></td><td valign="top" align="left"><p>Saves the given entity.</p></td></tr><tr><td width="5%" valign="top" align="left"><img src="images/callouts/2.png" alt="2" border="0"></td><td valign="top" align="left"><p>Returns the entity identified by the given id.</p></td></tr><tr><td width="5%" valign="top" align="left"><img src="images/callouts/3.png" alt="3" border="0"></td><td valign="top" align="left"><p>Returns all entities.</p></td></tr><tr><td width="5%" valign="top" align="left"><img src="images/callouts/4.png" alt="4" border="0"></td><td valign="top" align="left"><p>Returns the number of entities.</p></td></tr><tr><td width="5%" valign="top" align="left"><img src="images/callouts/5.png" alt="5" border="0"></td><td valign="top" align="left"><p>Deletes the given entity.</p></td></tr><tr><td width="5%" valign="top" align="left"><img src="images/callouts/6.png" alt="6" border="0"></td><td valign="top" align="left"><p>Returns whether an entity with the given id exists.</p></td></tr></table></div></div></div></div><br class="example-break"><p>Usually we will have persistence technology specific sub-interfaces
+    to include additional technology specific methods. We will now ship
+    implementations for a variety of Spring Data modules that implement this
+    interface.</p><p>On top of the <code class="interfacename">CrudRepository</code> there is
+    a <code class="interfacename">PagingAndSortingRepository</code> abstraction
+    that adds additional methods to ease paginated access to entities:</p><div class="example"><a name="d0e116"></a><p class="title"><b>Example&nbsp;1.2.&nbsp;PagingAndSortingRepository</b></p><div class="example-contents"><pre class="programlisting"><span class="hl-keyword">public</span> <span class="hl-keyword">interface</span> PagingAndSortingRepository&lt;T, ID <span class="hl-keyword">extends</span> Serializable&gt; <span class="hl-keyword">extends</span> CrudRepository&lt;T, ID&gt; {
+
+    Iterable&lt;T&gt; findAll(Sort sort);
+
+    Page&lt;T&gt; findAll(Pageable pageable);
+}</pre></div></div><br class="example-break"><p>Accessing the second page of <code class="classname">User</code> by a page
+    size of 20 you could simply do something like this:</p><pre class="programlisting">PagingAndSortingRepository&lt;User, Long&gt; repository = <span class="hl-comment">// &#8230; get access to a bean</span>
+Page&lt;User&gt; users = repository.findAll(<span class="hl-keyword">new</span> PageRequest(1, 20));</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="repositories.query-methods"></a>1.3.&nbsp;Query methods</h2></div></div></div><p>Next to standard CRUD functionality repositories are usually queries
+    on the underlying datastore. With Spring Data declaring those queries
+    becomes a four-step process:</p><div class="orderedlist"><ol type="1"><li><p>Declare an interface extending
+        <code class="interfacename">Repository</code> or one of its sub-interfaces
+        and type it to the domain class it shall handle.</p><pre class="programlisting"><span class="hl-keyword">public</span> <span class="hl-keyword">interface</span> PersonRepository <span class="hl-keyword">extends</span> Repository&lt;User, Long&gt; { &#8230; }</pre></li><li><p>Declare query methods on the interface.</p><pre class="programlisting">List&lt;Person&gt; findByLastname(String lastname);</pre></li><li><p>Setup Spring to create proxy instances for those
+        interfaces.</p><pre class="programlisting">&lt;<span class="hl-tag">?xml version="1.0" encoding="UTF-8"?</span>&gt;
+&lt;<span class="hl-tag">beans:beans</span> <span class="hl-attribute">xmlns:beans</span>=<span class="hl-value">"http://www.springframework.org/schema/beans"</span>
+  <span class="hl-attribute">xmlns:xsi</span>=<span class="hl-value">"http://www.w3.org/2001/XMLSchema-instance"</span>
+  <span class="hl-attribute">xmlns</span>=<span class="hl-value">"http://www.springframework.org/schema/data/jpa"</span>
+  <span class="hl-attribute">xsi:schemaLocation</span>=<span class="hl-value">"http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/data/jpa
+    http://www.springframework.org/schema/data/jpa/spring-jpa.xsd"</span>&gt;
+
+  &lt;<span class="hl-tag">repositories</span> <span class="hl-attribute">base-package</span>=<span class="hl-value">"com.acme.repositories"</span> /&gt;
+
+&lt;<span class="hl-tag">/beans</span>&gt;</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/admons/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Note that we use the JPA namespace here just by example. If
+          you're using the repository abstraction for any other store you need
+          to change this to the appropriate namespace declaration of your
+          store module which should be exchanging <code class="code">jpa</code> in favor of
+          e.g. <code class="code">mongodb</code>.</p></td></tr></table></div></li><li><p>Get the repository instance injected and use it.</p><pre class="programlisting"><span class="hl-keyword">public</span> <span class="hl-keyword">class</span> SomeClient {
+
+  @Autowired
+  <span class="hl-keyword">private</span> PersonRepository repository;
+
+  <span class="hl-keyword">public</span> <span class="hl-keyword">void</span> doSomething() {
+    List&lt;Person&gt; persons = repository.findByLastname(<span class="hl-string">"Matthews"</span>);
+  }</pre></li></ol></div><p>At this stage we barely scratched the surface of what's possible
+    with the repositories but the general approach should be clear. Let's go
+    through each of these steps and figure out details and various options
+    that you have at each stage.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="repositories.definition"></a>1.3.1.&nbsp;Defining repository interfaces</h3></div></div></div><p>As a very first step you define a domain class specific repository
+      interface. It's got to extend <code class="interfacename">Repository</code>
+      and be typed to the domain class and an ID type. If you want to expose
+      CRUD methods for that domain type, extend
+      <code class="interfacename">CrudRepository</code> instead of
+      <code class="interfacename">Repository</code>.</p><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="repositories.definition-tuning"></a>1.3.1.1.&nbsp;Fine tuning repository definition</h4></div></div></div><p>Usually you will have your repository interface extend
+        <code class="interfacename">Repository</code>,
+        <code class="interfacename">CrudRepository</code> or
+        <code class="interfacename">PagingAndSortingRepository</code>. If you
+        don't like extending Spring Data interfaces at all you can also
+        annotate your repository interface with
+        <code class="interfacename">@RepositoryDefinition</code>. Extending
+        <code class="interfacename">CrudRepository</code> will expose a complete
+        set of methods to manipulate your entities. If you would rather be
+        selective about the methods being exposed, simply copy the ones you
+        want to expose from <code class="interfacename">CrudRepository</code> into
+        your domain repository.</p><div class="example"><a name="d0e205"></a><p class="title"><b>Example&nbsp;1.3.&nbsp;Selectively exposing CRUD methods</b></p><div class="example-contents"><pre class="programlisting"><span class="hl-keyword">interface</span> MyBaseRepository&lt;T, ID <span class="hl-keyword">extends</span> Serializable&gt; <span class="hl-keyword">extends</span> Repository&lt;T, ID&gt; {
+  T findOne(ID id);
+  T save(T entity);
+}
+
+<span class="hl-keyword">interface</span> UserRepository <span class="hl-keyword">extends</span> MyBaseRepository&lt;User, Long&gt; {
+
+  User findByEmailAddress(EmailAddress emailAddress);
+}</pre></div></div><br class="example-break"><p>In the first step we define a common base interface for all our
+        domain repositories and expose <code class="methodname">findOne(&#8230;)</code> as
+        well as <code class="methodname">save(&#8230;)</code>.These methods will be routed
+        into the base repository implementation of the store of your choice
+        because they are matching the method signatures in
+        <code class="interfacename">CrudRepository</code>. So our
+        <code class="interfacename">UserRepository</code> will now be able to save
+        users, find single ones by id as well as triggering a query to find
+        <code class="interfacename">User</code>s by their email address.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="repositories.query-methods.details"></a>1.3.2.&nbsp;Defining query methods</h3></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="repositories.query-methods.query-lookup-strategies"></a>1.3.2.1.&nbsp;Query lookup strategies</h4></div></div></div><p>The next thing we have to discuss is the definition of query
+        methods. There are two main ways that the repository proxy is able to
+        come up with the store specific query from the method name. The first
+        option is to derive the query from the method name directly, the
+        second is using some kind of additionally created query. What detailed
+        options are available pretty much depends on the actual store,
+        however, there's got to be some algorithm that decides what actual
+        query is created.</p><p>There are three strategies available for the repository
+        infrastructure to resolve the query. The strategy to be used can be
+        configured at the namespace through the
+        <code class="code">query-lookup-strategy</code> attribute. However, It might be the
+        case that some of the strategies are not supported for specific
+        datastores. Here are your options:</p><div class="simplesect" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="d0e240"></a>CREATE</h5></div></div></div><p>This strategy will try to construct a store specific query
+          from the query method's name. The general approach is to remove a
+          given set of well-known prefixes from the method name and parse the
+          rest of the method. Read more about query construction in <a href="#repositories.query-methods.query-creation" title="1.3.2.2.&nbsp;Query creation">Section&nbsp;1.3.2.2, &#8220;Query creation&#8221;</a>.</p></div><div class="simplesect" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="d0e247"></a>USE_DECLARED_QUERY</h5></div></div></div><p>This strategy tries to find a declared query which will be
+          used for execution first. The query could be defined by an
+          annotation somewhere or declared by other means. Please consult the
+          documentation of the specific store to find out what options are
+          available for that store. If the repository infrastructure does not
+          find a declared query for the method at bootstrap time it will
+          fail.</p></div><div class="simplesect" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="d0e252"></a>CREATE_IF_NOT_FOUND (default)</h5></div></div></div><p>This strategy is actually a combination of <code class="code">CREATE</code>
+          and <code class="code">USE_DECLARED_QUERY</code>. It will try to lookup a
+          declared query first but create a custom method name based query if
+          no declared query was found. This is the default lookup strategy and
+          thus will be used if you don't configure anything explicitly. It
+          allows quick query definition by method names but also custom tuning
+          of these queries by introducing declared queries as needed.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="repositories.query-methods.query-creation"></a>1.3.2.2.&nbsp;Query creation</h4></div></div></div><p>The query builder mechanism built into Spring Data repository
+        infrastructure is useful to build constraining queries over entities
+        of the repository. We will strip the prefixes <code class="code">findBy</code>,
+        <code class="code">find</code>, <code class="code">readBy</code>, <code class="code">read</code>,
+        <code class="code">getBy</code> as well as <code class="code">get</code> from the method and
+        start parsing the rest of it. At a very basic level you can define
+        conditions on entity properties and concatenate them with
+        <code class="code">AND</code> and <code class="code">OR</code>.</p><div class="example"><a name="d0e292"></a><p class="title"><b>Example&nbsp;1.4.&nbsp;Query creation from method names</b></p><div class="example-contents"><pre class="programlisting"><span class="hl-keyword">public</span> <span class="hl-keyword">interface</span> PersonRepository <span class="hl-keyword">extends</span> Repository&lt;User, Long&gt; {
+
+  List&lt;Person&gt; findByEmailAddressAndLastname(EmailAddress emailAddress, String lastname);
+}</pre></div></div><br class="example-break"><p>The actual result of parsing that method will of course depend
+        on the persistence store we create the query for, however, there are
+        some general things to notice. The expressions are usually property
+        traversals combined with operators that can be concatenated. As you
+        can see in the example you can combine property expressions with And
+        and Or. Beyond that you also get support for various operators like
+        <code class="literal">Between</code>, <code class="literal">LessThan</code>,
+        <code class="literal">GreaterThan</code>, <code class="literal">Like</code> for the
+        property expressions. As the operators supported can vary from
+        datastore to datastore please consult the according part of the
+        reference documentation.</p><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="repositories.query-methods.property-expressions"></a>1.3.2.2.1.&nbsp;Property expressions</h5></div></div></div><p>Property expressions can just refer to a direct property of
+          the managed entity (as you just saw in the example above). On query
+          creation time we already make sure that the parsed property is at a
+          property of the managed domain class. However, you can also define
+          constraints by traversing nested properties. Assume
+          <code class="classname">Person</code>s have <code class="classname">Address</code>es
+          with <code class="classname">ZipCode</code>s. In that case a method name
+          of</p><pre class="programlisting">List&lt;Person&gt; findByAddressZipCode(ZipCode zipCode);</pre><p>will create the property traversal
+          <code class="code">x.address.zipCode</code>. The resolution algorithm starts with
+          interpreting the entire part (<code class="literal">AddressZipCode</code>) as
+          property and checks the domain class for a property with that name
+          (uncapitalized). If it succeeds it just uses that. If not it starts
+          splitting up the source at the camel case parts from the right side
+          into a head and a tail and tries to find the according property,
+          e.g. <code class="literal">AddressZip</code> and <code class="literal">Code</code>. If
+          we find a property with that head we take the tail and continue
+          building the tree down from there. As in our case the first split
+          does not match we move the split point to the left
+          (<code class="literal">Address</code>, <code class="literal">ZipCode</code>).</p><p>Although this should work for most cases, there might be cases
+          where the algorithm could select the wrong property. Suppose our
+          <code class="classname">Person</code> class has an <code class="code">addressZip</code>
+          property as well. Then our algorithm would match in the first split
+          round already and essentially choose the wrong property and finally
+          fail (as the type of <code class="classname">addressZip</code> probably has
+          no code property). To resolve this ambiguity you can use
+          <code class="literal">_</code> inside your method name to manually define
+          traversal points. So our method name would end up like so:</p><pre class="programlisting">List&lt;Person&gt; findByAddress_ZipCode(ZipCode zipCode);
+</pre></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="repositories.special-parameters"></a>1.3.2.3.&nbsp;Special parameter handling</h4></div></div></div><p>To hand parameters to your query you simply define method
+        parameters as already seen in the examples above. Besides that we will
+        recognizes certain specific types to apply pagination and sorting to
+        your queries dynamically.</p><div class="example"><a name="d0e369"></a><p class="title"><b>Example&nbsp;1.5.&nbsp;Using Pageable and Sort in query methods</b></p><div class="example-contents"><pre class="programlisting">Page&lt;User&gt; findByLastname(String lastname, Pageable pageable);
+
+List&lt;User&gt; findByLastname(String lastname, Sort sort);
+
+List&lt;User&gt; findByLastname(String lastname, Pageable pageable);</pre></div></div><br class="example-break"><p>The first method allows you to pass a <code class="code">Pageable</code>
+        instance to the query method to dynamically add paging to your
+        statically defined query. <code class="code">Sorting</code> options are handed via
+        the <code class="interfacename">Pageable</code> instance too. If you only
+        need sorting, simply add a <code class="code">Sort</code> parameter to your method.
+        As you also can see, simply returning a
+        <code class="interfacename">List</code> is possible as well. We will then
+        not retrieve the additional metadata required to build the actual
+        <code class="interfacename">Page</code> instance but rather simply
+        restrict the query to lookup only the given range of entities.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/admons/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>To find out how many pages you get for a query entirely we
+          have to trigger an additional count query. This will be derived from
+          the query you actually trigger by default.</p></td></tr></table></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="repositories.create-instances"></a>1.3.3.&nbsp;Creating repository instances</h3></div></div></div><p>So now the question is how to create instances and bean
+      definitions for the repository interfaces defined.</p><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="repositories.create-instances.spring"></a>1.3.3.1.&nbsp;XML Configuration</h4></div></div></div><p>The easiest way to do so is by using the Spring namespace that
+        is shipped with each Spring Data module that supports the repository
+        mechanism. Each of those includes a repositories element that allows
+        you to simply define a base package that Spring will scan for
+        you.</p><pre class="programlisting">&lt;<span class="hl-tag">?xml version="1.0" encoding="UTF-8"?</span>&gt;
+&lt;<span class="hl-tag">beans:beans</span> <span class="hl-attribute">xmlns:beans</span>=<span class="hl-value">"http://www.springframework.org/schema/beans"</span>
+  <span class="hl-attribute">xmlns:xsi</span>=<span class="hl-value">"http://www.w3.org/2001/XMLSchema-instance"</span>
+  <span class="hl-attribute">xmlns</span>=<span class="hl-value">"http://www.springframework.org/schema/data/jpa"</span>
+  <span class="hl-attribute">xsi:schemaLocation</span>=<span class="hl-value">"http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/data/jpa
+    http://www.springframework.org/schema/data/jpa/spring-jpa.xsd"</span>&gt;
+
+  &lt;<span class="hl-tag">repositories</span> <span class="hl-attribute">base-package</span>=<span class="hl-value">"com.acme.repositories"</span> /&gt;
+
+&lt;<span class="hl-tag">/beans:beans</span>&gt;</pre><p>In this case we instruct Spring to scan
+        <span class="package">com.acme.repositories</span> and all its sub packages for
+        interfaces extending <code class="interfacename">Repository</code> or one
+        of its sub-interfaces. For each interface found it will register the
+        persistence technology specific
+        <code class="interfacename">FactoryBean</code> to create the according
+        proxies that handle invocations of the query methods. Each of these
+        beans will be registered under a bean name that is derived from the
+        interface name, so an interface of
+        <code class="interfacename">UserRepository</code> would be registered
+        under <code class="code">userRepository</code>. The <code class="code">base-package</code>
+        attribute allows the use of wildcards, so that you can have a pattern
+        of scanned packages.</p><div class="simplesect" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="d0e429"></a>Using filters</h5></div></div></div><p>By default we will pick up every interface extending the
+          persistence technology specific
+          <code class="interfacename">Repository</code> sub-interface located
+          underneath the configured base package and create a bean instance
+          for it. However, you might want finer grained control over which
+          interfaces bean instances get created for. To do this we support the
+          use of <code class="code">&lt;include-filter /&gt;</code> and
+          <code class="code">&lt;exclude-filter /&gt;</code> elements inside
+          <code class="code">&lt;repositories /&gt;</code>. The semantics are exactly
+          equivalent to the elements in Spring's context namespace. For
+          details see <a xmlns:xlink="http://www.w3.org/1999/xlink" href="http://static.springsource.org/spring/docs/2.5.x/reference/beans.html#beans-scanning-filters" target="_top">Spring reference documentation</a> on these
+          elements.</p><p>E.g. to exclude certain interfaces from instantiation as
+          repository, you could use the following configuration:</p><div class="example"><a name="d0e451"></a><p class="title"><b>Example&nbsp;1.6.&nbsp;Using exclude-filter element</b></p><div class="example-contents"><pre class="programlisting">&lt;<span class="hl-tag">repositories</span> <span class="hl-attribute">base-package</span>=<span class="hl-value">"com.acme.repositories"</span>&gt;
+  &lt;<span class="hl-tag">context:exclude-filter</span> <span class="hl-attribute">type</span>=<span class="hl-value">"regex"</span> <span class="hl-attribute">expression</span>=<span class="hl-value">".*SomeRepository"</span> /&gt;
+&lt;<span class="hl-tag">/repositories</span>&gt;</pre><p>This would exclude all interfaces ending in
+            <code class="interfacename">SomeRepository</code> from being
+            instantiated.</p></div></div><br class="example-break"></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="repositories.create-instances.java-config"></a>1.3.3.2.&nbsp;JavaConfig</h4></div></div></div><p>The repository infrastructure can also be triggered using a
+        store-specific
+        <code class="interfacename">@Enable${store}Repositories</code> annotation
+        on a JavaConfig class. For an introduction into Java based
+        configuration of the Spring container please have a look at the
+        reference documentation.<sup>[<a name="d0e469" href="#ftn.d0e469">1</a>]</sup></p><p>A sample configuration to enable Spring Data repositories would
+        look something like this.</p><div class="example"><a name="d0e475"></a><p class="title"><b>Example&nbsp;1.7.&nbsp;Sample annotation based repository configuration</b></p><div class="example-contents"><pre class="programlisting">@Configuration
+@EnableJpaRepositories("com.acme.repositories")
+class ApplicationConfiguration {
+
+  @Bean
+  public EntityManagerFactory entityManagerFactory() {
+    // &#8230;
+  }
+}</pre></div></div><br class="example-break"><p>Note that the sample uses the JPA specific annotation which
+        would have to be exchanged dependingon which store module you actually
+        use. The same applies to the definition of the
+        <code class="interfacename">EntityManagerFactory</code> bean. Please
+        consult the sections covering the store-specific configuration.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="repositories.create-instances.standalone"></a>1.3.3.3.&nbsp;Standalone usage</h4></div></div></div><p>You can also use the repository infrastructure outside of a
+        Spring container usage. You will still need to have some of the Spring
+        libraries on your classpath but you can generally setup repositories
+        programmatically as well. The Spring Data modules providing repository
+        support ship a persistence technology specific
+        <code class="classname">RepositoryFactory</code> that can be used as
+        follows:</p><div class="example"><a name="d0e493"></a><p class="title"><b>Example&nbsp;1.8.&nbsp;Standalone usage of repository factory</b></p><div class="example-contents"><pre class="programlisting">RepositoryFactorySupport factory = &#8230; <span class="hl-comment">// Instantiate factory here</span>
+UserRepository repository = factory.getRepository(UserRepository.<span class="hl-keyword">class</span>);</pre></div></div><br class="example-break"></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="repositories.custom-implementations"></a>1.4.&nbsp;Custom implementations</h2></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="repositories.single-repository-behaviour"></a>1.4.1.&nbsp;Adding behaviour to single repositories</h3></div></div></div><p>Often it is necessary to provide a custom implementation for a few
+      repository methods. Spring Data repositories easily allow you to provide
+      custom repository code and integrate it with generic CRUD abstraction
+      and query method functionality. To enrich a repository with custom
+      functionality you have to define an interface and an implementation for
+      that functionality first and let the repository interface you provided
+      so far extend that custom interface.</p><div class="example"><a name="d0e506"></a><p class="title"><b>Example&nbsp;1.9.&nbsp;Interface for custom repository functionality</b></p><div class="example-contents"><pre class="programlisting"><span class="hl-keyword">interface</span> UserRepositoryCustom {
+
+  <span class="hl-keyword">public</span> <span class="hl-keyword">void</span> someCustomMethod(User user);
+}</pre></div></div><br class="example-break"><div class="example"><a name="d0e511"></a><p class="title"><b>Example&nbsp;1.10.&nbsp;Implementation of custom repository functionality</b></p><div class="example-contents"><pre class="programlisting"><span class="hl-keyword">class</span> UserRepositoryImpl <span class="hl-keyword">implements</span> UserRepositoryCustom {
+
+  <span class="hl-keyword">public</span> <span class="hl-keyword">void</span> someCustomMethod(User user) {
+    <span class="hl-comment">// Your custom implementation</span>
+  }
+}</pre><p>Note that the implementation itself does not depend on
+        Spring Data and can be a regular Spring bean. So you can use standard
+        dependency injection behaviour to inject references to other beans,
+        take part in aspects and so on.</p></div></div><br class="example-break"><div class="example"><a name="d0e518"></a><p class="title"><b>Example&nbsp;1.11.&nbsp;Changes to the your basic repository interface</b></p><div class="example-contents"><pre class="programlisting"><span class="hl-keyword">public</span> <span class="hl-keyword">interface</span> UserRepository <span class="hl-keyword">extends</span> CrudRepository&lt;User, Long&gt;, UserRepositoryCustom {
+
+  <span class="hl-comment">// Declare query methods here</span>
+}</pre><p>Let your standard repository interface extend the custom
+        one. This makes CRUD and custom functionality available to
+        clients.</p></div></div><br class="example-break"><div class="simplesect" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="d0e525"></a>Configuration</h4></div></div></div><p>If you use namespace configuration the repository infrastructure
+        tries to autodetect custom implementations by looking up classes in
+        the package we found a repository using the naming conventions
+        appending the namespace element's attribute
+        <code class="code">repository-impl-postfix</code> to the classname. This suffix
+        defaults to <code class="code">Impl</code>.</p><div class="example"><a name="d0e536"></a><p class="title"><b>Example&nbsp;1.12.&nbsp;Configuration example</b></p><div class="example-contents"><pre class="programlisting">&lt;<span class="hl-tag">repositories</span> <span class="hl-attribute">base-package</span>=<span class="hl-value">"com.acme.repository"</span> /&gt;
+
+&lt;<span class="hl-tag">repositories</span> <span class="hl-attribute">base-package</span>=<span class="hl-value">"com.acme.repository"</span> <span class="hl-attribute">repository-impl-postfix</span>=<span class="hl-value">"FooBar"</span> /&gt;</pre></div></div><br class="example-break"><p>The first configuration example will try to lookup a class
+        <code class="classname">com.acme.repository.UserRepositoryImpl</code> to act
+        as custom repository implementation, where the second example will try
+        to lookup
+        <code class="classname">com.acme.repository.UserRepositoryFooBar</code>.</p></div><div class="simplesect" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="d0e550"></a>Manual wiring</h4></div></div></div><p>The approach above works perfectly well if your custom
+        implementation uses annotation based configuration and autowiring
+        entirely as it will be treated as any other Spring bean. If your
+        custom implementation bean needs some special wiring you simply
+        declare the bean and name it after the conventions just described. We
+        will then pick up the custom bean by name rather than creating an
+        instance.</p><div class="example"><a name="d0e555"></a><p class="title"><b>Example&nbsp;1.13.&nbsp;Manual wiring of custom implementations (I)</b></p><div class="example-contents"><pre class="programlisting">&lt;<span class="hl-tag">repositories</span> <span class="hl-attribute">base-package</span>=<span class="hl-value">"com.acme.repository"</span> /&gt;
+
+&lt;<span class="hl-tag">beans:bean</span> <span class="hl-attribute">id</span>=<span class="hl-value">"userRepositoryImpl"</span> <span class="hl-attribute">class</span>=<span class="hl-value">"&#8230;"</span>&gt;
+  &lt;<span class="hl-comment">!-- further configuration --</span>&gt;
+&lt;<span class="hl-tag">/beans:bean</span>&gt;</pre></div></div><br class="example-break"></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="repositories.custom-behaviour-for-all-repositories"></a>1.4.2.&nbsp;Adding custom behaviour to all repositories</h3></div></div></div><p>In other cases you might want to add a single method to all of
+      your repository interfaces. So the approach just shown is not feasible.
+      The first step to achieve this is adding and intermediate interface to
+      declare the shared behaviour</p><div class="example"><a name="d0e565"></a><p class="title"><b>Example&nbsp;1.14.&nbsp;An interface declaring custom shared behaviour</b></p><div class="example-contents"><pre class="programlisting">
+<span class="hl-keyword">public</span> <span class="hl-keyword">interface</span> MyRepository&lt;T, ID <span class="hl-keyword">extends</span> Serializable&gt;
+  <span class="hl-keyword">extends</span> JpaRepository&lt;T, ID&gt; {
+
+  <span class="hl-keyword">void</span> sharedCustomMethod(ID id);
+}</pre></div></div><br class="example-break"><p>Now your individual repository interfaces will extend this
+      intermediate interface instead of the
+      <code class="interfacename">Repository</code> interface to include the
+      functionality declared. The second step is to create an implementation
+      of this interface that extends the persistence technology specific
+      repository base class which will then act as a custom base class for the
+      repository proxies.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/admons/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>The default behaviour of the Spring <code class="code">&lt;repositories
+        /&gt;</code> namespace is to provide an implementation for all
+        interfaces that fall under the <code class="code">base-package</code>. This means
+        that if left in it's current state, an implementation instance of
+        <code class="interfacename">MyRepository</code> will be created by Spring.
+        This is of course not desired as it is just supposed to act as an
+        intermediary between <code class="interfacename">Repository</code> and the
+        actual repository interfaces you want to define for each entity. To
+        exclude an interface extending
+        <code class="interfacename">Repository</code> from being instantiated as a
+        repository instance it can either be annotate it with
+        <code class="interfacename">@NoRepositoryBean</code> or moved out side of
+        the configured <code class="code">base-package</code>.</p></td></tr></table></div><div class="example"><a name="d0e600"></a><p class="title"><b>Example&nbsp;1.15.&nbsp;Custom repository base class</b></p><div class="example-contents"><pre class="programlisting">
+<span class="hl-keyword">public</span> <span class="hl-keyword">class</span> MyRepositoryImpl&lt;T, ID <span class="hl-keyword">extends</span> Serializable&gt;
+  <span class="hl-keyword">extends</span> SimpleJpaRepository&lt;T, ID&gt; <span class="hl-keyword">implements</span> MyRepository&lt;T, ID&gt; {
+
+  <span class="hl-keyword">private</span> EntityManager entityManager;
+
+  <span class="hl-comment">// There are two constructors to choose from, either can be used.</span>
+  <span class="hl-keyword">public</span> MyRepositoryImpl(Class&lt;T&gt; domainClass, EntityManager entityManager) {
+    <span class="hl-keyword">super</span>(domainClass, entityManager);
+
+    <span class="hl-comment">// This is the recommended method for accessing inherited class dependencies.</span>
+    <span class="hl-keyword">this</span>.entityManager = entityManager;
+  }
+
+  <span class="hl-keyword">public</span> <span class="hl-keyword">void</span> sharedCustomMethod(ID id) {
+    <span class="hl-comment">// implementation goes here</span>
+  }
+}</pre></div></div><br class="example-break"><p>The last step is to create a custom repository factory to replace
+      the default <code class="classname">RepositoryFactoryBean</code> that will in
+      turn produce a custom <code class="classname">RepositoryFactory</code>. The new
+      repository factory will then provide your
+      <code class="classname">MyRepositoryImpl</code> as the implementation of any
+      interfaces that extend the <code class="interfacename">Repository</code>
+      interface, replacing the <code class="classname">SimpleJpaRepository</code>
+      implementation you just extended.</p><div class="example"><a name="d0e622"></a><p class="title"><b>Example&nbsp;1.16.&nbsp;Custom repository factory bean</b></p><div class="example-contents"><pre class="programlisting">
+<span class="hl-keyword">public</span> <span class="hl-keyword">class</span> MyRepositoryFactoryBean&lt;R <span class="hl-keyword">extends</span> JpaRepository&lt;T, I&gt;, T, I <span class="hl-keyword">extends</span> Serializable&gt;
+  <span class="hl-keyword">extends</span> JpaRepositoryFactoryBean&lt;R, T, I&gt; {
+
+  <span class="hl-keyword">protected</span> RepositoryFactorySupport createRepositoryFactory(EntityManager entityManager) {
+
+    <span class="hl-keyword">return</span> <span class="hl-keyword">new</span> MyRepositoryFactory(entityManager);
+  }
+
+  <span class="hl-keyword">private</span> <span class="hl-keyword">static</span> <span class="hl-keyword">class</span> MyRepositoryFactory&lt;T, I <span class="hl-keyword">extends</span> Serializable&gt; <span class="hl-keyword">extends</span> JpaRepositoryFactory {
+
+    <span class="hl-keyword">private</span> EntityManager entityManager;
+
+    <span class="hl-keyword">public</span> MyRepositoryFactory(EntityManager entityManager) {
+      <span class="hl-keyword">super</span>(entityManager);
+
+      <span class="hl-keyword">this</span>.entityManager = entityManager;
+    }
+
+    <span class="hl-keyword">protected</span> Object getTargetRepository(RepositoryMetadata metadata) {
+
+      <span class="hl-keyword">return</span> <span class="hl-keyword">new</span> MyRepositoryImpl&lt;T, I&gt;((Class&lt;T&gt;) metadata.getDomainClass(), entityManager);
+    }
+
+    <span class="hl-keyword">protected</span> Class&lt;?&gt; getRepositoryBaseClass(RepositoryMetadata metadata) {
+
+      <span class="hl-comment">// The RepositoryMetadata can be safely ignored, it is used by the JpaRepositoryFactory</span>
+      <span class="hl-comment">//to check for QueryDslJpaRepository's which is out of scope.</span>
+      <span class="hl-keyword">return</span> MyRepository.<span class="hl-keyword">class</span>;
+    }
+  }
+}</pre></div></div><br class="example-break"><p>Finally you can either declare beans of the custom factory
+      directly or use the <code class="code">factory-class</code> attribute of the Spring
+      namespace to tell the repository infrastructure to use your custom
+      factory implementation.</p><div class="example"><a name="d0e632"></a><p class="title"><b>Example&nbsp;1.17.&nbsp;Using the custom factory with the namespace</b></p><div class="example-contents"><pre class="programlisting">&lt;<span class="hl-tag">repositories</span> <span class="hl-attribute">base-package</span>=<span class="hl-value">"com.acme.repository"</span>
+  <span class="hl-attribute">factory-class</span>=<span class="hl-value">"com.acme.MyRepositoryFactoryBean"</span> /&gt;</pre></div></div><br class="example-break"></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e637"></a>1.5.&nbsp;Extensions</h2></div></div></div><p>This chapter documents a set of Spring Data extensions that enable
+    Spring Data usage in a variety of contexts. Currently most of the
+    integration is targeted towards Spring MVC.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="web-domain-class-binding"></a>1.5.1.&nbsp;Domain class web binding for Spring MVC</h3></div></div></div><p>Given you are developing a Spring MVC web applications you
+      typically have to resolve domain class ids from URLs. By default it's
+      your task to transform that request parameter or URL part into the
+      domain class to hand it layers below then or execute business logic on
+      the entities directly. This should look something like this:</p><pre class="programlisting">@Controller
+@RequestMapping(<span class="hl-string">"/users"</span>)
+<span class="hl-keyword">public</span> <span class="hl-keyword">class</span> UserController {
+
+  <span class="hl-keyword">private</span> <span class="hl-keyword">final</span> UserRepository userRepository;
+
+  <span class="hl-keyword">public</span> UserController(UserRepository userRepository) {
+    userRepository = userRepository;
+  }
+
+  @RequestMapping(<span class="hl-string">"/{id}"</span>)
+  <span class="hl-keyword">public</span> String showUserForm(@PathVariable(<span class="hl-string">"id"</span>) Long id, Model model) {
+    
+    <span class="hl-comment">// Do null check for id</span>
+    User user = userRepository.findOne(id);
+    <span class="hl-comment">// Do null check for user</span>
+    <span class="hl-comment">// Populate model</span>
+    <span class="hl-keyword">return</span> <span class="hl-string">"user"</span>;
+  }
+}</pre><p>First you pretty much have to declare a repository dependency for
+      each controller to lookup the entity managed by the controller or
+      repository respectively. Beyond that looking up the entity is
+      boilerplate as well as it's always a <code class="methodname">findOne(&#8230;)</code>
+      call. Fortunately Spring provides means to register custom converting
+      components that allow conversion between a <code class="classname">String</code>
+      value to an arbitrary type.</p><div class="simplesect" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="d0e657"></a>PropertyEditors</h4></div></div></div><p>For versions up to Spring 3.0 simple Java
+        <code class="interfacename">PropertyEditor</code>s had to be used. Thus,
+        we offer a <code class="classname">DomainClassPropertyEditorRegistrar</code>,
+        that will look up all Spring Data repositories registered in the
+        <code class="interfacename">ApplicationContext</code> and register a
+        custom <code class="interfacename">PropertyEditor</code> for the managed
+        domain class</p><pre class="programlisting">&lt;<span class="hl-tag">bean</span> <span class="hl-attribute">class</span>=<span class="hl-value">"&#8230;.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"</span>&gt;
+  &lt;<span class="hl-tag">property</span> <span class="hl-attribute">name</span>=<span class="hl-value">"webBindingInitializer"</span>&gt;
+    &lt;<span class="hl-tag">bean</span> <span class="hl-attribute">class</span>=<span class="hl-value">"&#8230;.web.bind.support.ConfigurableWebBindingInitializer"</span>&gt;
+      &lt;<span class="hl-tag">property</span> <span class="hl-attribute">name</span>=<span class="hl-value">"propertyEditorRegistrars"</span>&gt;
+        &lt;<span class="hl-tag">bean</span> <span class="hl-attribute">class</span>=<span class="hl-value">"org.springframework.data.repository.support.DomainClassPropertyEditorRegistrar"</span> /&gt;
+      &lt;<span class="hl-tag">/property</span>&gt;
+    &lt;<span class="hl-tag">/bean</span>&gt;
+  &lt;<span class="hl-tag">/property</span>&gt;
+&lt;<span class="hl-tag">/bean</span>&gt;</pre><p>If you have configured Spring MVC like this you can turn your
+        controller into the following that reduces a lot of the clutter and
+        boilerplate.</p><pre class="programlisting">@Controller
+@RequestMapping(<span class="hl-string">"/users"</span>)
+<span class="hl-keyword">public</span> <span class="hl-keyword">class</span> UserController {
+
+  @RequestMapping(<span class="hl-string">"/{id}"</span>)
+  <span class="hl-keyword">public</span> String showUserForm(@PathVariable(<span class="hl-string">"id"</span>) User user, Model model) {
+
+    <span class="hl-comment">// Do null check for user</span>
+    <span class="hl-comment">// Populate model</span>
+    <span class="hl-keyword">return</span> <span class="hl-string">"userForm"</span>;
+  }
+}</pre></div><div class="simplesect" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="d0e680"></a>ConversionService</h4></div></div></div><p>As of Spring 3.0 the
+        <code class="interfacename">PropertyEditor</code> support is superseeded
+        by a new conversion infrstructure that leaves all the drawbacks of
+        <code class="interfacename">PropertyEditor</code>s behind and uses a
+        stateless X to Y conversion approach. We now ship with a
+        <code class="classname">DomainClassConverter</code> that pretty much mimics
+        the behaviour of
+        <code class="classname">DomainClassPropertyEditorRegistrar</code>. To register
+        the converter you have to declare
+        <code class="classname">ConversionServiceFactoryBean</code>, register the
+        converter and tell the Spring MVC namespace to use the configured
+        conversion service:</p><pre class="programlisting">&lt;<span class="hl-tag">mvc:annotation-driven</span> <span class="hl-attribute">conversion-service</span>=<span class="hl-value">"conversionService"</span> /&gt;
+
+&lt;<span class="hl-tag">bean</span> <span class="hl-attribute">id</span>=<span class="hl-value">"conversionService"</span> <span class="hl-attribute">class</span>=<span class="hl-value">"&#8230;.context.support.ConversionServiceFactoryBean"</span>&gt;
+  &lt;<span class="hl-tag">property</span> <span class="hl-attribute">name</span>=<span class="hl-value">"converters"</span>&gt;
+    &lt;<span class="hl-tag">list</span>&gt;
+      &lt;<span class="hl-tag">bean</span> <span class="hl-attribute">class</span>=<span class="hl-value">"org.springframework.data.repository.support.DomainClassConverter"</span>&gt;
+        &lt;<span class="hl-tag">constructor-arg</span> <span class="hl-attribute">ref</span>=<span class="hl-value">"conversionService"</span> /&gt;
+      &lt;<span class="hl-tag">/bean</span>&gt;
+    &lt;<span class="hl-tag">/list</span>&gt;
+  &lt;<span class="hl-tag">/property</span>&gt;
+&lt;<span class="hl-tag">/bean</span>&gt;</pre></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="web-pagination"></a>1.5.2.&nbsp;Web pagination</h3></div></div></div><pre class="programlisting">@Controller
+@RequestMapping(<span class="hl-string">"/users"</span>)
+<span class="hl-keyword">public</span> <span class="hl-keyword">class</span> UserController {
+
+  <span class="hl-comment">// DI code omitted</span>
+
+  @RequestMapping
+  <span class="hl-keyword">public</span> String showUsers(Model model, HttpServletRequest request) {
+
+    <span class="hl-keyword">int</span> page = Integer.parseInt(request.getParameter(<span class="hl-string">"page"</span>));
+    <span class="hl-keyword">int</span> pageSize = Integer.parseInt(request.getParameter(<span class="hl-string">"pageSize"</span>));
+    model.addAttribute(<span class="hl-string">"users"</span>, userService.getUsers(pageable));
+    <span class="hl-keyword">return</span> <span class="hl-string">"users"</span>;
+  }
+}</pre><p>As you can see the naive approach requires the method to contain
+      an <code class="interfacename">HttpServletRequest</code> parameter that has
+      to be parsed manually. We even omitted an appropriate failure handling
+      which would make the code even more verbose. The bottom line is that the
+      controller actually shouldn't have to handle the functionality of
+      extracting pagination information from the request. So we include a
+      <code class="classname">PageableArgumentResolver</code> that will do the work
+      for you.</p><pre class="programlisting">&lt;<span class="hl-tag">bean</span> <span class="hl-attribute">class</span>=<span class="hl-value">"&#8230;.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"</span>&gt;
+  &lt;<span class="hl-tag">property</span> <span class="hl-attribute">name</span>=<span class="hl-value">"customArgumentResolvers"</span>&gt;
+    &lt;<span class="hl-tag">list</span>&gt;
+      &lt;<span class="hl-tag">bean</span> <span class="hl-attribute">class</span>=<span class="hl-value">"org.springframework.data.web.PageableArgumentResolver"</span> /&gt;
+    &lt;<span class="hl-tag">/list</span>&gt;
+  &lt;<span class="hl-tag">/property</span>&gt;
+&lt;<span class="hl-tag">/bean</span>&gt;</pre><p>This configuration allows you to simplify controllers down to
+      something like this:</p><pre class="programlisting">@Controller
+@RequestMapping(<span class="hl-string">"/users"</span>)
+<span class="hl-keyword">public</span> <span class="hl-keyword">class</span> UserController {
+
+  @RequestMapping
+  <span class="hl-keyword">public</span> String showUsers(Model model, Pageable pageable) {
+
+    model.addAttribute(<span class="hl-string">"users"</span>, userDao.readAll(pageable));
+    <span class="hl-keyword">return</span> <span class="hl-string">"users"</span>;
+  }
+}</pre><p>The <code class="classname">PageableArgumentResolver</code> will
+      automatically resolve request parameters to build a
+      <code class="classname">PageRequest</code> instance. By default it will expect
+      the following structure for the request parameters:</p><div class="table"><a name="d0e729"></a><p class="title"><b>Table&nbsp;1.1.&nbsp;Request parameters evaluated by
+        <code class="classname">PageableArgumentResolver</code></b></p><div class="table-contents"><table summary="Request parameters evaluated by&#xA;        PageableArgumentResolver" border="1"><colgroup><col><col></colgroup><tbody><tr><td><code class="code">page</code></td><td>The page you want to retrieve</td></tr><tr><td><code class="code">page.size</code></td><td>The size of the page you want to retrieve</td></tr><tr><td><code class="code">page.sort</code></td><td>The property that should be sorted by</td></tr><tr><td><code class="code">page.sort.dir</code></td><td>The direction that should be used for sorting</td></tr></tbody></table></div></div><br class="table-break"><p>In case you need multiple <code class="interfacename">Pageable</code>s
+      to be resolved from the request (for multiple tables e.g.) you can use
+      Spring's <code class="interfacename">@Qualifier</code> annotation to
+      distinguish one from another. The request parameters then have to be
+      prefixed with <code class="code">${qualifier}_</code>. So a method signature like
+      this:</p><pre class="programlisting"><span class="hl-keyword">public</span> String showUsers(Model model, 
+      @Qualifier(<span class="hl-string">"foo"</span>) Pageable first,
+      @Qualifier(<span class="hl-string">"bar"</span>) Pageable second) { &#8230; }
+</pre><p>you'd have to populate <code class="code">foo_page</code> and
+      <code class="code">bar_page</code> and the according subproperties.</p><div class="simplesect" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="d0e783"></a>Defaulting</h4></div></div></div><p>The <code class="classname">PageableArgumentResolver</code> will use a
+        <code class="classname">PageRequest</code> with the first page and a page size
+        of 10 by default and will use that in case it can't resolve a
+        <code class="classname">PageRequest</code> from the request (because of
+        missing parameters e.g.). You can configure a global default on the
+        bean declaration directly. In case you might need controller method
+        specific defaults for the <code class="interfacename">Pageable</code>
+        simply annotate the method parameter with
+        <code class="interfacename">@PageableDefaults</code> and specify page and
+        page size as annotation attributes:</p><pre class="programlisting"><span class="hl-keyword">public</span> String showUsers(Model model, 
+  @PageableDefaults(pageNumber = 0, value = 30) Pageable pageable) { &#8230; }
+</pre></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e805"></a>1.5.3.&nbsp;Repository populators</h3></div></div></div><p>If you have been working with the JDBC module of Spring you're
+      probably familiar with the support to populate a DataSource using SQL
+      scripts. A similar abstraction is available on the repositories level
+      although we don't use SQL as data definition language as we need to be
+      store independent of course. Thus the populators support XML (through
+      Spring's OXM abstraction) and JSON (through Jackson) to define data for
+      the repositories to be populated with.</p><p>Assume you have a file <code class="filename">data.json</code> with the
+      following content:</p><div class="example"><a name="d0e815"></a><p class="title"><b>Example&nbsp;1.18.&nbsp;Data defined in JSON</b></p><div class="example-contents"><pre class="programlisting">[ { "_class" : "com.acme.Person",
+ "firstname" : "Dave",
+  "lastname" : "Matthews" },
+  { "_class" : "com.acme.Person",
+ "firstname" : "Carter",
+  "lastname" : "Beauford" } ]</pre></div></div><br class="example-break"><p>You can easily populate you repositories by using the populator
+      elements of the repository namespace provided in Spring Data Commons. To
+      get the just shown data be populated to your
+      <code class="interfacename">PersonRepository</code> all you need to do is
+      the following:</p><div class="example"><a name="d0e825"></a><p class="title"><b>Example&nbsp;1.19.&nbsp;Declaring a Jackson repository populator</b></p><div class="example-contents"><pre class="programlisting">&lt;<span class="hl-tag">?xml version="1.0" encoding="UTF-8"?</span>&gt;
+&lt;<span class="hl-tag">beans</span> <span class="hl-attribute">xmlns</span>=<span class="hl-value">"http://www.springframework.org/schema/beans"</span>
+  <span class="hl-attribute">xmlns:xsi</span>=<span class="hl-value">"http://www.w3.org/2001/XMLSchema-instance"</span>
+  <span class="hl-attribute">xmlns:repository</span>=<span class="hl-value">"http://www.springframework.org/schema/data/repository"</span>
+  <span class="hl-attribute">xsi:schemaLocation</span>=<span class="hl-value">"http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/data/repository
+    http://www.springframework.org/schema/data/repository/spring-repository.xsd"</span>&gt;
+
+  &lt;<span class="hl-tag">repository:jackson-populator</span> <span class="hl-attribute">location</span>=<span class="hl-value">"classpath:data.json"</span> /&gt;
+
+&lt;<span class="hl-tag">/beans</span>&gt;</pre></div></div><br class="example-break"><p>This declaration causes the data.json file being read,
+      deserialized by a Jackson <code class="classname">ObjectMapper</code>. The type
+      the JSON object will be unmarshalled to will be determined by inspecting
+      the <code class="code">_class</code> attribute of the JSON document. We will
+      eventually select the appropriate repository being able to handle the
+      object just deserialized.</p><p>To rather use XML to define the repositories shall be populated
+      with you can use the unmarshaller-populator you hand one of the
+      marshaller options Spring OXM provides you with.</p><div class="example"><a name="d0e840"></a><p class="title"><b>Example&nbsp;1.20.&nbsp;Declaring an unmarshalling repository populator (using
+        JAXB)</b></p><div class="example-contents"><pre class="programlisting">&lt;<span class="hl-tag">?xml version="1.0" encoding="UTF-8"?</span>&gt;
+&lt;<span class="hl-tag">beans</span> <span class="hl-attribute">xmlns</span>=<span class="hl-value">"http://www.springframework.org/schema/beans"</span>
+  <span class="hl-attribute">xmlns:xsi</span>=<span class="hl-value">"http://www.w3.org/2001/XMLSchema-instance"</span>
+  <span class="hl-attribute">xmlns:repository</span>=<span class="hl-value">"http://www.springframework.org/schema/data/repository"</span>
+  <span class="hl-attribute">xmlns:oxm</span>=<span class="hl-value">"http://www.springframework.org/schema/oxm"</span>
+  <span class="hl-attribute">xsi:schemaLocation</span>=<span class="hl-value">"http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/data/repository
+    http://www.springframework.org/schema/data/repository/spring-repository.xsd
+    http://www.springframework.org/schema/oxm
+    http://www.springframework.org/schema/oxm/spring-oxm.xsd"</span>&gt;
+
+  &lt;<span class="hl-tag">repository:unmarshaller-populator</span> <span class="hl-attribute">location</span>=<span class="hl-value">"classpath:data.json"</span> <span class="hl-attribute">unmarshaller-ref</span>=<span class="hl-value">"unmarshaller"</span> /&gt;
+
+  &lt;<span class="hl-tag">oxm:jaxb2-marshaller</span> <span class="hl-attribute">contextPath</span>=<span class="hl-value">"com.acme"</span> /&gt;
+
+&lt;<span class="hl-tag">/beans</span>&gt;</pre></div></div><br class="example-break"></div></div><div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a name="ftn.d0e469" href="#d0e469">1</a>] </sup>JavaConfig in the Spring reference documentation - <a xmlns:xlink="http://www.w3.org/1999/xlink" href="http://static.springsource.org/spring/docs/3.1.x/spring-framework-reference/html/beans.html#beans-java" target="_top">http://static.springsource.org/spring/docs/3.1.x/spring-framework-reference/html/beans.html#beans-java</a></p></div></div></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="elasticsearch.repositories"></a>Chapter&nbsp;2.&nbsp;Elasticsearch Repositories</h2></div></div></div><div class="abstract"><p class="title"><b>Abstract</b></p><p>This chapter includes details of the Elasticsearch repository
+			implementation.
+		</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="elasticsearch.introduction"></a>2.1.&nbsp;Introduction</h2></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="elasticsearch.namespace"></a>2.1.1.&nbsp;Spring Namespace</h3></div></div></div><p>
+				The Spring Data Elasticsearch module contains a custom namespace allowing
+				definition of repository beans as well as elements for instantiating
+				a
+				<code class="classname">ElasticsearchServer</code>
+				.
+			</p><p>
+				Using the
+				<code class="code">repositories</code>
+				element looks up Spring Data repositories as described in
+				<a href="#repositories.create-instances" title="1.3.3.&nbsp;Creating repository instances">Section&nbsp;1.3.3, &#8220;Creating repository instances&#8221;</a>
+				.
+			</p><div class="example"><a name="d0e869"></a><p class="title"><b>Example&nbsp;2.1.&nbsp;Setting up Elasticsearch repositories using Namespace</b></p><div class="example-contents"><pre class="programlisting">&lt;<span class="hl-tag">?xml version="1.0" encoding="UTF-8"?</span>&gt;
+&lt;<span class="hl-tag">beans</span> <span class="hl-attribute">xmlns</span>=<span class="hl-value">"http://www.springframework.org/schema/beans"</span>
+<span class="hl-attribute">xmlns:xsi</span>=<span class="hl-value">"http://www.w3.org/2001/XMLSchema-instance"</span>
+<span class="hl-attribute">xmlns:elasticsearch</span>=<span class="hl-value">"http://www.springframework.org/schema/data/elasticsearch"</span>
+<span class="hl-attribute">xsi:schemaLocation</span>=<span class="hl-value">"http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+http://www.springframework.org/schema/data/elasticsearch
+http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd"</span>&gt;
+
+&lt;<span class="hl-tag">elasticsearch:repositories</span> <span class="hl-attribute">base-package</span>=<span class="hl-value">"com.acme.repositories"</span> /&gt;
+&lt;<span class="hl-tag">/beans</span>&gt;</pre></div></div><br class="example-break"><p>
+				Using the
+				<code class="code">Transport Client</code>
+				or
+				<code class="code">Node Client</code>
+				element registers an instance of
+				<code class="code">Elasticsearch Server</code>
+				in the context.
+
+				</p><div class="example"><a name="d0e885"></a><p class="title"><b>Example&nbsp;2.2.&nbsp;Transport Client using Namespace</b></p><div class="example-contents"><pre class="programlisting">&lt;<span class="hl-tag">?xml version="1.0" encoding="UTF-8"?</span>&gt;
+&lt;<span class="hl-tag">beans</span> <span class="hl-attribute">xmlns</span>=<span class="hl-value">"http://www.springframework.org/schema/beans"</span>
+<span class="hl-attribute">xmlns:xsi</span>=<span class="hl-value">"http://www.w3.org/2001/XMLSchema-instance"</span>
+<span class="hl-attribute">xmlns:elasticsearch</span>=<span class="hl-value">"http://www.springframework.org/schema/data/elasticsearch"</span>
+<span class="hl-attribute">xsi:schemaLocation</span>=<span class="hl-value">"http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+http://www.springframework.org/schema/data/elasticsearch
+http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd"</span>&gt;
+
+&lt;<span class="hl-tag">elasticsearch:transport-client</span> <span class="hl-attribute">id</span>=<span class="hl-value">"client"</span> <span class="hl-attribute">cluster-nodes</span>=<span class="hl-value">"localhost:9300,someip:9300"</span> /&gt;
+&lt;<span class="hl-tag">/beans</span>&gt; </pre></div></div><p><br class="example-break">
+
+				</p><div class="example"><a name="d0e891"></a><p class="title"><b>Example&nbsp;2.3.&nbsp;Node Client using Namespace</b></p><div class="example-contents"><pre class="programlisting">&lt;<span class="hl-tag">?xml version="1.0" encoding="UTF-8"?</span>&gt;
+&lt;<span class="hl-tag">beans</span> <span class="hl-attribute">xmlns</span>=<span class="hl-value">"http://www.springframework.org/schema/beans"</span>
+<span class="hl-attribute">xmlns:xsi</span>=<span class="hl-value">"http://www.w3.org/2001/XMLSchema-instance"</span>
+<span class="hl-attribute">xmlns:elasticsearch</span>=<span class="hl-value">"http://www.springframework.org/schema/data/elasticsearch"</span>
+<span class="hl-attribute">xsi:schemaLocation</span>=<span class="hl-value">"http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+http://www.springframework.org/schema/data/elasticsearch
+http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd"</span>&gt;
+
+&lt;<span class="hl-tag">elasticsearch:node-client</span> <span class="hl-attribute">id</span>=<span class="hl-value">"client"</span> <span class="hl-attribute">local</span>=<span class="hl-value">"true"</span><span class="hl-attribute">"</span> /&gt;
+&lt;<span class="hl-tag">/beans</span>&gt; </pre></div></div><p><br class="example-break">
+			</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="elasticsearch.annotation"></a>2.1.2.&nbsp;Annotation based configuration</h3></div></div></div><p>The Spring Data Elasticsearch repositories support cannot only be
+				activated through an XML namespace but also using an annotation
+				through JavaConfig.
+			</p><div class="example"><a name="d0e902"></a><p class="title"><b>Example&nbsp;2.4.&nbsp;Spring Data Elasticsearch repositories using JavaConfig</b></p><div class="example-contents"><pre class="programlisting">
+@Configuration
+@EnableElasticsearchRepositories(basePackages = <span class="hl-string">"org/springframework/data/elasticsearch/repositories"</span>)
+<span class="hl-keyword">static</span> <span class="hl-keyword">class</span> Config {
+
+@Bean
+<span class="hl-keyword">public</span> ElasticsearchOperations elasticsearchTemplate() {
+<span class="hl-keyword">return</span> <span class="hl-keyword">new</span> ElasticsearchTemplate(nodeBuilder().local(true).node().client());
+ }
+}</pre><p>
+					The configuration above sets up an
+					<code class="classname">Embedded Elasticsearch Server</code>
+					which is used by the
+					<code class="classname">ElasticsearchTemplate</code>
+					. Spring Data Elasticsearch Repositories are activated using the
+					<code class="interfacename">@EnableElasticsearchRepositories</code>
+					annotation, which
+					essentially carries the same attributes as the XML
+					namespace does. If no
+					base package is configured, it will use the
+					one
+					the configuration class
+					resides in.
+				</p></div></div><br class="example-break"></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="elasticsearch.cdi"></a>2.1.3.&nbsp;Elasticsearch Repositores using CDI</h3></div></div></div><p>The Spring Data Elasticsearch repositories can also be set up using CDI
+				functionality.
+			</p><div class="example"><a name="d0e923"></a><p class="title"><b>Example&nbsp;2.5.&nbsp;Spring Data Elasticsearch repositories using JavaConfig</b></p><div class="example-contents"><pre class="programlisting"><span class="hl-keyword">class</span> ElasticsearchTemplateProducer {
+
+@Produces
+@ApplicationScoped
+<span class="hl-keyword">public</span> ElasticsearchOperations createElasticsearchTemplate() {
+    <span class="hl-keyword">return</span> <span class="hl-keyword">new</span> ElasticsearchTemplate(<span class="hl-keyword">new</span> EmbeddedElasticsearchServerFactory(<span class="hl-string">"classpath:com/acme/Elasticsearch"</span>));
+  }
+}
+
+<span class="hl-keyword">class</span> ProductService {
+
+<span class="hl-keyword">private</span> ProductRepository repository;
+
+<span class="hl-keyword">public</span> Page&lt;Product&gt; findAvailableBookByName(String name, Pageable pageable) {
+   <span class="hl-keyword">return</span> repository.findByAvailableTrueAndNameStartingWith(name, pageable);
+}
+
+@Inject
+<span class="hl-keyword">public</span> <span class="hl-keyword">void</span> setRepository(ProductRepository repository) {
+   <span class="hl-keyword">this</span>.repository = repository;
+ }
+}</pre></div></div><br class="example-break"></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="elasticsearch.query-methods"></a>2.2.&nbsp;Query methods</h2></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="elasticsearch.query-methods.finders"></a>2.2.1.&nbsp;Query lookup strategies</h3></div></div></div><p>
+				The Elasticsearch module supports all basic query building feature as String,Abstract,Criteria or
+				have
+				it being derived from the method name.
+			</p><div class="simplesect" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="d0e936"></a>Declared queries</h4></div></div></div><p>
+					Deriving the query from the method name is not always sufficient
+					and/or may result in unreadable method names. In this case one
+					might make either use of
+					<code class="interfacename">@Query</code>
+					annotation (see
+					<a href="#elasticsearch.query-methods.at-query" title="2.2.3.&nbsp;Using @Query Annotation">Section&nbsp;2.2.3, &#8220;Using @Query Annotation&#8221;</a>
+					).
+				</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="elasticsearch.query-methods.criterions"></a>2.2.2.&nbsp;Query creation</h3></div></div></div><p>
+				Generally the query creation mechanism for Elasticsearch works as described
+				in
+				<a href="#repositories.query-methods" title="1.3.&nbsp;Query methods">Section&nbsp;1.3, &#8220;Query methods&#8221;</a>
+				. Here's a short example
+				of what a Elasticsearch query method translates into:
+				</p><div class="example"><a name="d0e953"></a><p class="title"><b>Example&nbsp;2.6.&nbsp;Query creation from method names</b></p><div class="example-contents"><pre class="programlisting"><span class="hl-keyword">public</span> <span class="hl-keyword">interface</span> BookRepository <span class="hl-keyword">extends</span> Repository&lt;Book, String&gt; {
+  List&lt;Book&gt; findByNameAndPrice(String name, Integer price);
+}</pre><p>
+						The method name above will be translated into the following
+                        Elasticsearch json query
+					</p><pre class="programlisting">
+                        { "bool" :
+                        { "must" :
+                        [
+                        { "field" : {"name" : "?"} },
+                        { "field" : {"price" : "?"} }
+                        ] } }</pre></div></div><p><br class="example-break">
+			</p><p>
+				A list of supported keywords for Elasticsearch is shown below.
+				</p><div class="table"><a name="d0e965"></a><p class="title"><b>Table&nbsp;2.1.&nbsp;Supported keywords inside method names</b></p><div class="table-contents"><table summary="Supported keywords inside method names" border="1"><colgroup><col><col><col></colgroup><thead><tr><th>Keyword</th><th>Sample</th><th>Elasticsearch Query String</th></tr></thead><tbody><tr><td>
+									<code class="code">And</code>
+								</td><td>
+									<code class="code">findByNameAndPrice</code>
+								</td><td>
+									<code class="code">{"bool" : {"must" : [ {"field" : {"name" : "?"}}, {"field" : {"price" : "?"}} ]}}</code>
+								</td></tr><tr><td>
+									<code class="code">Or</code>
+								</td><td>
+									<code class="code">findByNameOrPrice</code>
+								</td><td>
+									<code class="code">{"bool" : {"should" : [ {"field" : {"name" : "?"}}, {"field" : {"price" : "?"}} ]}}</code>
+								</td></tr><tr><td>
+									<code class="code">Is</code>
+								</td><td>
+									<code class="code">findByName</code>
+								</td><td>
+									<code class="code">{"bool" : {"must" : {"field" : {"name" : "?"}}}}</code>
+								</td></tr><tr><td>
+									<code class="code">Not</code>
+								</td><td>
+									<code class="code">findByNameNot</code>
+								</td><td>
+									<code class="code">{"bool" : {"must_not" : {"field" : {"name" : "?"}}}}</code>
+								</td></tr><tr><td>
+									<code class="code">Between</code>
+								</td><td>
+									<code class="code">findByPriceBetween</code>
+								</td><td>
+									<code class="code">{"bool" : {"must" : {"range" : {"price" : {"from" : ?,"to" : ?,"include_lower" : true,"include_upper" : true}}}}}</code>
+								</td></tr><tr><td>
+									<code class="code">LessThanEqual</code>
+								</td><td>
+									<code class="code">findByPriceLessThan</code>
+								</td><td>
+									<code class="code">{"bool" : {"must" : {"range" : {"price" : {"from" : null,"to" : ?,"include_lower" : true,"include_upper" : true}}}}}</code>
+								</td></tr><tr><td>
+									<code class="code">GreaterThanEqual</code>
+								</td><td>
+									<code class="code">findByPriceGreaterThan</code>
+								</td><td>
+									<code class="code">{"bool" : {"must" : {"range" : {"price" : {"from" : ?,"to" : null,"include_lower" : true,"include_upper" : true}}}}}</code>
+								</td></tr><tr><td>
+									<code class="code">Before</code>
+								</td><td>
+									<code class="code">findByPriceBefore</code>
+								</td><td>
+									<code class="code">{"bool" : {"must" : {"range" : {"price" : {"from" : null,"to" : ?,"include_lower" : true,"include_upper" : true}}}}}</code>
+								</td></tr><tr><td>
+									<code class="code">After</code>
+								</td><td>
+									<code class="code">findByPriceAfter</code>
+								</td><td>
+									<code class="code">{"bool" : {"must" : {"range" : {"price" : {"from" : ?,"to" : null,"include_lower" : true,"include_upper" : true}}}}}</code>
+								</td></tr><tr><td>
+									<code class="code">Like</code>
+								</td><td>
+									<code class="code">findByNameLike</code>
+								</td><td>
+									<code class="code">{"bool" : {"must" : {"field" : {"name" : {"query" : "?*","analyze_wildcard" : true}}}}}</code>
+								</td></tr><tr><td>
+									<code class="code">StartingWith</code>
+								</td><td>
+									<code class="code">findByNameStartingWith</code>
+								</td><td>
+									<code class="code">{"bool" : {"must" : {"field" : {"name" : {"query" : "?*","analyze_wildcard" : true}}}}}</code>
+								</td></tr><tr><td>
+									<code class="code">EndingWith</code>
+								</td><td>
+									<code class="code">findByNameEndingWith</code>
+								</td><td>
+									<code class="code">{"bool" : {"must" : {"field" : {"name" : {"query" : "*?","analyze_wildcard" : true}}}}}</code>
+								</td></tr><tr><td>
+									<code class="code">Contains/Containing</code>
+								</td><td>
+									<code class="code">findByNameContaining</code>
+								</td><td>
+									<code class="code">{"bool" : {"must" : {"field" : {"name" : {"query" : "*?*","analyze_wildcard" : true}}}}}</code>
+								</td></tr><tr><td>
+									<code class="code">In</code>
+								</td><td>
+									<code class="code">findByNameIn(Collection&lt;String&gt;
+										names)
+									</code>
+								</td><td>
+									<code class="code">Not Supported Yet !</code>
+								</td></tr><tr><td>
+									<code class="code">NotIn</code>
+								</td><td>
+									<code class="code">findByNameNotIn(Collection&lt;String&gt;
+										names)
+									</code>
+								</td><td>
+									<code class="code">Not Supported Yet !</code>
+								</td></tr><tr><td>
+									<code class="code">Near</code>
+								</td><td>
+									<code class="code">findByStoreNear</code>
+								</td><td>
+									<code class="code">Not Supported Yet !
+									</code>
+								</td></tr><tr><td>
+									<code class="code">True</code>
+								</td><td>
+									<code class="code">findByAvailableTrue</code>
+								</td><td>
+									<code class="code">Not Supported Yet !</code>
+								</td></tr><tr><td>
+									<code class="code">False</code>
+								</td><td>
+									<code class="code">findByAvailableFalse</code>
+								</td><td>
+									<code class="code">Not Supported Yet !</code>
+								</td></tr><tr><td>
+									<code class="code">OrderBy</code>
+								</td><td>
+									<code class="code">findByAvailableTrueOrderByNameDesc</code>
+								</td><td>
+									<code class="code">Not Supported Yet !</code>
+								</td></tr></tbody></table></div></div><p><br class="table-break">
+			</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="elasticsearch.query-methods.at-query"></a>2.2.3.&nbsp;Using @Query Annotation</h3></div></div></div><div class="example"><a name="d0e1289"></a><p class="title"><b>Example&nbsp;2.7.&nbsp;
+					Declare query at the method using the
+					<code class="interfacename">@Query</code>
+					annotation.
+				</b></p><div class="example-contents"><pre class="programlisting"><span class="hl-keyword">public</span> <span class="hl-keyword">interface</span> BookRepository <span class="hl-keyword">extends</span> ElasticsearchRepository&lt;Book, String&gt; {
+  @Query(<span class="hl-string">"{"</span>bool" : {<span class="hl-string">"must"</span> : {<span class="hl-string">"field"</span> : {<span class="hl-string">"name"</span> : <span class="hl-string">"?0"</span>}}}}<span class="hl-string">")
+  Page&lt;Book&gt; findByName(String name,Pageable pageable);
+}</span></pre></div></div><br class="example-break"></div></div></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="elasticsearch.misc"></a>Chapter&nbsp;3.&nbsp;Miscellaneous Elasticsearch Operation Support</h2></div></div></div><div class="abstract"><p class="title"><b>Abstract</b></p><p>
+			This chapter covers additional support for Elasticsearch operations
+            that cannot be directly accessed via the repository
+			interface.
+			It is recommended to add those operations as custom
+			implementation as
+			described in
+			<a href="#repositories.custom-implementations" title="1.4.&nbsp;Custom implementations">Section&nbsp;1.4, &#8220;Custom implementations&#8221;</a>
+			.
+		</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="elasticsearch.misc.filter"></a>3.1.&nbsp;Filter Builder</h2></div></div></div><p>
+			Filter Builder improves query speed.
+		</p><div class="example"><a name="d0e1329"></a><p class="title"><b>Example&nbsp;3.1.&nbsp;</b></p><div class="example-contents"><pre class="programlisting">
+<span class="hl-keyword">private</span> ElasticsearchTemplate elasticsearchTemplate;
+SearchQuery searchQuery = <span class="hl-keyword">new</span> SearchQuery();
+searchQuery.setElasticsearchQuery(matchAllQuery());
+searchQuery.setElasticsearchFilter(boolFilter().must(termFilter(<span class="hl-string">"id"</span>, documentId)));
+Page&lt;SampleEntity&gt; sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.<span class="hl-keyword">class</span>);
+</pre></div></div><br class="example-break"></div></div></div><div class="part" lang="en"><div class="titlepage"><div><div><h1 class="title"><a name="appendix"></a>Part&nbsp;II.&nbsp;Appendix</h1></div></div></div><div class="appendix" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="namespace-reference"></a>Appendix&nbsp;A.&nbsp;Namespace reference</h2></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="namespace-dao-config"></a>A.1.&nbsp;The <code class="code">&lt;repositories /&gt;</code> element</h2></div></div></div><p>The <code class="code">&lt;repositories /&gt;</code> triggers the setup of the
+    Spring Data repository infrastructure. The most important attribute is
+    <code class="code">base-package</code> which defines the package to scan for Spring
+    Data repository interfaces.<sup>[<a name="d0e1352" href="#ftn.d0e1352">2</a>]</sup></p><div class="table"><a name="d0e1356"></a><p class="title"><b>Table&nbsp;A.1.&nbsp;Attributes</b></p><div class="table-contents"><table summary="Attributes" border="1"><colgroup><col><col></colgroup><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><code class="code">base-package</code></td><td>Defines the package to be used to be scanned for repository
+            interfaces extending <code class="interfacename">*Repository</code>
+            (actual interface is determined by specific Spring Data module) in
+            auto detection mode. All packages below the configured package
+            will be scanned, too. Wildcards are also allowed.</td></tr><tr><td><code class="code">repository-impl-postfix</code></td><td>Defines the postfix to autodetect custom repository
+            implementations. Classes whose names end with the configured
+            postfix will be considered as candidates. Defaults to
+            <code class="code">Impl</code>.</td></tr><tr><td><code class="code">query-lookup-strategy</code></td><td>Determines the strategy to be used to create finder
+            queries. See <a href="#repositories.query-methods.query-lookup-strategies" title="1.3.2.1.&nbsp;Query lookup strategies">Section&nbsp;1.3.2.1, &#8220;Query lookup strategies&#8221;</a> for
+            details. Defaults to <code class="code">create-if-not-found</code>.</td></tr></tbody></table></div></div><br class="table-break"></div><div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a name="ftn.d0e1352" href="#d0e1352">2</a>] </sup>see <a href="#repositories.create-instances.spring" title="1.3.3.1.&nbsp;XML Configuration">Section&nbsp;1.3.3.1, &#8220;XML Configuration&#8221;</a></p></div></div></div><div class="appendix" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="repository-query-keywords"></a>Appendix&nbsp;B.&nbsp;Repository query keywords</h2></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e1401"></a>B.1.&nbsp;Supported query keywords</h2></div></div></div><p>The following table lists the keywords generally supported by the
+    Spring data repository query derivation mechanism. However consult the
+    store specific documentation for the exact list of supported keywords as
+    some of the ones listed here might not be supported in a particular
+    store.</p><div class="table"><a name="d0e1406"></a><p class="title"><b>Table&nbsp;B.1.&nbsp;Query keywords</b></p><div class="table-contents"><table summary="Query keywords" border="1"><colgroup><col><col></colgroup><thead><tr><th>Logical keyword</th><th>Keyword expressions</th></tr></thead><tbody><tr><td><code class="code">AFTER</code></td><td><code class="literal">After</code>,
+            <code class="literal">IsAfter</code></td></tr><tr><td><code class="code">BEFORE</code></td><td><code class="literal">Before</code>,
+            <code class="literal">IsBefore</code></td></tr><tr><td><code class="code">CONTAINING</code></td><td><code class="literal">Containing</code>,
+            <code class="literal">IsContaining</code>,
+            <code class="literal">Contains</code></td></tr><tr><td><code class="code">BETWEEN</code></td><td><code class="literal">Between</code>,
+            <code class="literal">IsBetween</code></td></tr><tr><td><code class="code">ENDING_WITH</code></td><td><code class="literal">EndingWith</code>,
+            <code class="literal">IsEndingWith</code>,
+            <code class="literal">EndsWith</code></td></tr><tr><td><code class="code">EXISTS</code></td><td><code class="literal">Exists</code></td></tr><tr><td><code class="code">FALSE</code></td><td><code class="literal">False</code>,
+            <code class="literal">IsFalse</code></td></tr><tr><td><code class="code">GREATER_THAN</code></td><td><code class="literal">GreaterThan</code>,
+            <code class="literal">IsGreaterThan</code></td></tr><tr><td><code class="code">GREATER_THAN_EQUALS</code></td><td><code class="literal">GreaterThanEqual</code>,
+            <code class="literal">IsGreaterThanEqual</code></td></tr><tr><td><code class="code">IN</code></td><td><code class="literal">In</code>, <code class="literal">IsIn</code></td></tr><tr><td><code class="code">IS</code></td><td><code class="literal">Is</code>, <code class="literal">Equals</code>, (or no
+            keyword)</td></tr><tr><td><code class="code">IS_NOT_NULL</code></td><td><code class="literal">NotNull</code>,
+            <code class="literal">IsNotNull</code></td></tr><tr><td><code class="code">IS_NULL</code></td><td><code class="literal">Null</code>, <code class="literal">IsNull</code></td></tr><tr><td><code class="code">LESS_THAN</code></td><td><code class="literal">LessThan</code>,
+            <code class="literal">IsLessThan</code></td></tr><tr><td><code class="code">LESS_THAN_EQUAL</code></td><td><code class="literal">LessThanEqual</code>,
+            <code class="literal">IsLessThanEqual</code></td></tr><tr><td><code class="code">LIKE</code></td><td><code class="literal">Like</code>, <code class="literal">IsLike</code></td></tr><tr><td><code class="code">NEAR</code></td><td><code class="literal">Near</code>, <code class="literal">IsNear</code></td></tr><tr><td><code class="code">NOT</code></td><td><code class="literal">Not</code>, <code class="literal">IsNot</code></td></tr><tr><td><code class="code">NOT_IN</code></td><td><code class="literal">NotIn</code>,
+            <code class="literal">IsNotIn</code></td></tr><tr><td><code class="code">NOT_LIKE</code></td><td><code class="literal">NotLike</code>,
+            <code class="literal">IsNotLike</code></td></tr><tr><td><code class="code">REGEX</code></td><td><code class="literal">Regex</code>, <code class="literal">MatchesRegex</code>,
+            <code class="literal">Matches</code></td></tr><tr><td><code class="code">STARTING_WITH</code></td><td><code class="literal">StartingWith</code>,
+            <code class="literal">IsStartingWith</code>,
+            <code class="literal">StartsWith</code></td></tr><tr><td><code class="code">TRUE</code></td><td><code class="literal">True</code>, <code class="literal">IsTrue</code></td></tr><tr><td><code class="code">WITHIN</code></td><td><code class="literal">Within</code>,
+            <code class="literal">IsWithin</code></td></tr></tbody></table></div></div><br class="table-break"></div></div></div></div></body></html>
