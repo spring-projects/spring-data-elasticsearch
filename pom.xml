@@ -5,7 +5,7 @@
     <artifactId>spring-data-elasticsearch</artifactId>
     <version>1.0.0.BUILD-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <inceptionYear>2012</inceptionYear>
+    <inceptionYear>2013</inceptionYear>
     <url>https://github.com/BioMedCentralLtd/spring-data-elasticsearch</url>
     <name>Spring Data Elasticsearch</name>
     <description>Spring Data module providing support for Elasticsearch repositories</description>
