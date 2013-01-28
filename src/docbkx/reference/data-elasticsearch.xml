@@ -132,7 +132,7 @@ return new ElasticsearchTemplate(nodeBuilder().local(true).node().client());
 @Produces
 @ApplicationScoped
 public ElasticsearchOperations createElasticsearchTemplate() {
-    return new ElasticsearchTemplate(new EmbeddedElasticsearchServerFactory("classpath:com/acme/Elasticsearch"));
+    return new ElasticsearchTemplate(nodeBuilder().local(true).node().client());
   }
 }
 
