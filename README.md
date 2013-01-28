@@ -20,11 +20,12 @@ Guide
 
 Test Coverage
 -------------
-Class 92%
-Method 80%
-Line 74%
-Block 74%
+* Class 92%
+* Method 80%
+* Line 74%
+* Block 74%
 
+*[Emma Test Coverage Report] (https://github.com/BioMedCentralLtd/spring-data-elasticsearch/tree/master/site/emma/)
 
 Quick Start
 -----------
