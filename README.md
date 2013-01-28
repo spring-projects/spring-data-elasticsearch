@@ -13,7 +13,7 @@ Guide
 ------------
 
 * [Reference Documentation](https://github.com/BioMedCentralLtd/spring-data-elasticsearch/tree/master/site/reference/html)
-* [PDF Documentation](https://github.com/BioMedCentralLtd/spring-data-elasticsearch/tree/master/site/reference/pdf/spring-data-elasticsearch-reference.pdf)
+* [PDF Documentation](https://github.com/BioMedCentralLtd/spring-data-elasticsearch/blob/master/site/reference/pdf/spring-data-elasticsearch-reference.pdf?raw=true)
 * [API Documentation](https://github.com/BioMedCentralLtd/spring-data-elasticsearch/tree/master/site/apidocs)
 * [Spring Data Project](http://www.springsource.org/spring-data)
 
