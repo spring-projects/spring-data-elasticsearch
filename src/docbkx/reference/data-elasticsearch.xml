@@ -32,16 +32,16 @@
 
 			<example>
 				<title>Setting up Elasticsearch repositories using Namespace</title>
-				<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;beans xmlns="http://www.springframework.org/schema/beans"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
-  xsi:schemaLocation="http://www.springframework.org/schema/beans
-    http://www.springframework.org/schema/beans/spring-beans.xsd
-    http://www.springframework.org/schema/data/elasticsearch
-    http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd"&gt;
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+http://www.springframework.org/schema/data/elasticsearch
+http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd"&gt;
 
-  &lt;elasticsearch:repositories base-package="com.acme.repositories" /&gt;
+&lt;elasticsearch:repositories base-package="com.acme.repositories" /&gt;
 &lt;/beans&gt;</programlisting>
 			</example>
 
@@ -61,7 +61,7 @@
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
 xsi:schemaLocation="http://www.springframework.org/schema/beans
-http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
 http://www.springframework.org/schema/data/elasticsearch
 http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd"&gt;
 
@@ -71,16 +71,16 @@ http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.
 
 				<example>
 					<title>Node Client using Namespace</title>
-					<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-                        &lt;beans xmlns="http://www.springframework.org/schema/beans"
-                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                        xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
-                        xsi:schemaLocation="http://www.springframework.org/schema/beans
-                        http://www.springframework.org/schema/beans/spring-beans.xsd
-                        http://www.springframework.org/schema/data/elasticsearch
-                        http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd"&gt;
+<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans xmlns="http://www.springframework.org/schema/beans"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+http://www.springframework.org/schema/data/elasticsearch
+http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd"&gt;
 
-  &lt;elasticsearch:node-client id="client" local="true"" /&gt;
+&lt;elasticsearch:node-client id="client" local="true"" /&gt;
 &lt;/beans&gt; </programlisting>
 				</example>
 			</para>
@@ -93,16 +93,16 @@ http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.
 			</para>
 			<example>
 				<title>Spring Data Elasticsearch repositories using JavaConfig</title>
-				<programlisting language="java">
-                    @Configuration
-                    @EnableElasticsearchRepositories(basePackages = "org/springframework/data/elasticsearch/repositories")
-                    static class Config {
+<programlisting language="java">
+@Configuration
+@EnableElasticsearchRepositories(basePackages = "org/springframework/data/elasticsearch/repositories")
+static class Config {
 
-                    @Bean
-                    public ElasticsearchOperations elasticsearchTemplate() {
-                    return new ElasticsearchTemplate(nodeBuilder().local(true).node().client());
-                    }
-                    }</programlisting>
+@Bean
+public ElasticsearchOperations elasticsearchTemplate() {
+return new ElasticsearchTemplate(nodeBuilder().local(true).node().client());
+ }
+}</programlisting>
 				<para>
 					The configuration above sets up an
 					<classname>Embedded Elasticsearch Server</classname>
@@ -127,27 +127,27 @@ http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.
 			</para>
 			<example>
 				<title>Spring Data Elasticsearch repositories using JavaConfig</title>
-				<programlisting language="java">class ElasticsearchTemplateProducer {
+<programlisting language="java">class ElasticsearchTemplateProducer {
 
-  @Produces
-  @ApplicationScoped
-  public ElasticsearchOperations createElasticsearchTemplate() {
+@Produces
+@ApplicationScoped
+public ElasticsearchOperations createElasticsearchTemplate() {
     return new ElasticsearchTemplate(new EmbeddedElasticsearchServerFactory("classpath:com/acme/Elasticsearch"));
   }
 }
 
 class ProductService {
 
-  private ProductRepository repository;
+private ProductRepository repository;
 
-  public Page&lt;Product&gt; findAvailableBookByName(String name, Pageable pageable) {
-    return repository.findByAvailableTrueAndNameStartingWith(name, pageable);
-  }
+public Page&lt;Product&gt; findAvailableBookByName(String name, Pageable pageable) {
+   return repository.findByAvailableTrueAndNameStartingWith(name, pageable);
+}
 
-  @Inject
-  public void setRepository(ProductRepository repository) {
-    this.repository = repository;
-  }
+@Inject
+public void setRepository(ProductRepository repository) {
+   this.repository = repository;
+ }
 }</programlisting>
 			</example>
 		</section>
@@ -195,12 +195,12 @@ class ProductService {
                         Elasticsearch json query
 					</para>
 					<programlisting>
-                        { "bool" : { "must" :
+                        { "bool" :
+                        { "must" :
                         [
                         { "field" : {"name" : "?"} },
                         { "field" : {"price" : "?"} }
-                        ]
-                        } }</programlisting>
+                        ] } }</programlisting>
 				</example>
 			</para>
 			<para>
@@ -227,19 +227,7 @@ class ProductService {
 									<code>findByNameAndPrice</code>
 								</entry>
 								<entry>
-									<code>{
-                                        "bool" : {
-                                        "must" : [ {
-                                        "field" : {
-                                        "name" : "?"
-                                        }
-                                        }, {
-                                        "field" : {
-                                        "price" : "?"
-                                        }
-                                        } ]
-                                        }
-                                        }</code>
+									<code>{"bool" : {"must" : [ {"field" : {"name" : "?"}}, {"field" : {"price" : "?"}} ]}}</code>
 								</entry>
 							</row>
 							<row>
@@ -250,19 +238,7 @@ class ProductService {
 									<code>findByNameOrPrice</code>
 								</entry>
 								<entry>
-									<code>{
-                                        "bool" : {
-                                        "should" : [ {
-                                        "field" : {
-                                        "name" : "?"
-                                        }
-                                        }, {
-                                        "field" : {
-                                        "price" : "?"
-                                        }
-                                        } ]
-                                        }
-                                        }</code>
+									<code>{"bool" : {"should" : [ {"field" : {"name" : "?"}}, {"field" : {"price" : "?"}} ]}}</code>
 								</entry>
 							</row>
 							<row>
@@ -273,15 +249,7 @@ class ProductService {
 									<code>findByName</code>
 								</entry>
 								<entry>
-									<code>{
-                                        "bool" : {
-                                        "must" : {
-                                        "field" : {
-                                        "name" : "?"
-                                        }
-                                        }
-                                        }
-                                        }</code>
+									<code>{"bool" : {"must" : {"field" : {"name" : "?"}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -292,15 +260,7 @@ class ProductService {
 									<code>findByNameNot</code>
 								</entry>
 								<entry>
-									<code>{
-                                        "bool" : {
-                                        "must_not" : {
-                                        "field" : {
-                                        "name" : "?"
-                                        }
-                                        }
-                                        }
-                                        }</code>
+									<code>{"bool" : {"must_not" : {"field" : {"name" : "?"}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -311,20 +271,7 @@ class ProductService {
 									<code>findByPriceBetween</code>
 								</entry>
 								<entry>
-									<code>{
-                                        "bool" : {
-                                        "must" : {
-                                        "range" : {
-                                        "price" : {
-                                        "from" : ?,
-                                        "to" : ?,
-                                        "include_lower" : true,
-                                        "include_upper" : true
-                                        }
-                                        }
-                                        }
-                                        }
-                                        }</code>
+									<code>{"bool" : {"must" : {"range" : {"price" : {"from" : ?,"to" : ?,"include_lower" : true,"include_upper" : true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -335,20 +282,7 @@ class ProductService {
 									<code>findByPriceLessThan</code>
 								</entry>
 								<entry>
-									<code>{
-                                        "bool" : {
-                                        "must" : {
-                                        "range" : {
-                                        "price" : {
-                                        "from" : null,
-                                        "to" : ?,
-                                        "include_lower" : true,
-                                        "include_upper" : true
-                                        }
-                                        }
-                                        }
-                                        }
-                                        }</code>
+									<code>{"bool" : {"must" : {"range" : {"price" : {"from" : null,"to" : ?,"include_lower" : true,"include_upper" : true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -359,20 +293,7 @@ class ProductService {
 									<code>findByPriceGreaterThan</code>
 								</entry>
 								<entry>
-									<code>{
-                                        "bool" : {
-                                        "must" : {
-                                        "range" : {
-                                        "price" : {
-                                        "from" : ?,
-                                        "to" : null,
-                                        "include_lower" : true,
-                                        "include_upper" : true
-                                        }
-                                        }
-                                        }
-                                        }
-                                        }</code>
+									<code>{"bool" : {"must" : {"range" : {"price" : {"from" : ?,"to" : null,"include_lower" : true,"include_upper" : true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -383,20 +304,7 @@ class ProductService {
 									<code>findByPriceBefore</code>
 								</entry>
 								<entry>
-									<code>{
-                                        "bool" : {
-                                        "must" : {
-                                        "range" : {
-                                        "price" : {
-                                        "from" : null,
-                                        "to" : ?,
-                                        "include_lower" : true,
-                                        "include_upper" : true
-                                        }
-                                        }
-                                        }
-                                        }
-                                        }</code>
+									<code>{"bool" : {"must" : {"range" : {"price" : {"from" : null,"to" : ?,"include_lower" : true,"include_upper" : true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -407,21 +315,7 @@ class ProductService {
 									<code>findByPriceAfter</code>
 								</entry>
 								<entry>
-									<code>{
-                                        "bool" : {
-                                        "must" : {
-                                        "range" : {
-                                        "price" : {
-                                        "from" : ?,
-                                        "to" : null,
-                                        "include_lower" : true,
-                                        "include_upper" : true
-                                        }
-                                        }
-                                        }
-                                        }
-                                        }
-                                    </code>
+									<code>{"bool" : {"must" : {"range" : {"price" : {"from" : ?,"to" : null,"include_lower" : true,"include_upper" : true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -432,18 +326,7 @@ class ProductService {
 									<code>findByNameLike</code>
 								</entry>
 								<entry>
-									<code>{
-                                        "bool" : {
-                                        "must" : {
-                                        "field" : {
-                                        "name" : {
-                                        "query" : "?*",
-                                        "analyze_wildcard" : true
-                                        }
-                                        }
-                                        }
-                                        }
-                                        }</code>
+									<code>{"bool" : {"must" : {"field" : {"name" : {"query" : "?*","analyze_wildcard" : true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -454,18 +337,7 @@ class ProductService {
 									<code>findByNameStartingWith</code>
 								</entry>
 								<entry>
-									<code>{
-                                        "bool" : {
-                                        "must" : {
-                                        "field" : {
-                                        "name" : {
-                                        "query" : "?*",
-                                        "analyze_wildcard" : true
-                                        }
-                                        }
-                                        }
-                                        }
-                                        }</code>
+									<code>{"bool" : {"must" : {"field" : {"name" : {"query" : "?*","analyze_wildcard" : true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -476,18 +348,7 @@ class ProductService {
 									<code>findByNameEndingWith</code>
 								</entry>
 								<entry>
-									<code>{
-                                        "bool" : {
-                                        "must" : {
-                                        "field" : {
-                                        "name" : {
-                                        "query" : "*?",
-                                        "analyze_wildcard" : true
-                                        }
-                                        }
-                                        }
-                                        }
-                                        }</code>
+									<code>{"bool" : {"must" : {"field" : {"name" : {"query" : "*?","analyze_wildcard" : true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -498,18 +359,7 @@ class ProductService {
 									<code>findByNameContaining</code>
 								</entry>
 								<entry>
-									<code>{
-                                        "bool" : {
-                                        "must" : {
-                                        "field" : {
-                                        "name" : {
-                                        "query" : "*?*",
-                                        "analyze_wildcard" : true
-                                        }
-                                        }
-                                        }
-                                        }
-                                        }</code>
+									<code>{"bool" : {"must" : {"field" : {"name" : {"query" : "*?*","analyze_wildcard" : true}}}}}</code>
 								</entry>
 							</row>
 							<row>

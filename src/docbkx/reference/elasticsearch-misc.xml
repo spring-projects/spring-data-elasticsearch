@@ -21,13 +21,13 @@
 			Filter Builder improves query speed.
 		</para>
 		<example>
-			<programlisting language="java">
-                private ElasticsearchTemplate elasticsearchTemplate;
-                SearchQuery searchQuery = new SearchQuery();
-                searchQuery.setElasticsearchQuery(matchAllQuery());
-                searchQuery.setElasticsearchFilter(boolFilter().must(termFilter("id", documentId)));
-                Page&lt;SampleEntity&gt; sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
-    </programlisting>
+<programlisting language="java">
+private ElasticsearchTemplate elasticsearchTemplate;
+SearchQuery searchQuery = new SearchQuery();
+searchQuery.setElasticsearchQuery(matchAllQuery());
+searchQuery.setElasticsearchFilter(boolFilter().must(termFilter("id", documentId)));
+Page&lt;SampleEntity&gt; sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
+</programlisting>
 		</example>
 	</section>
 </chapter>
