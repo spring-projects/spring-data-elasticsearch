@@ -340,19 +340,29 @@ public class CustomMethodRepositoryTest {
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
-        sampleEntity.setType("test");
-        sampleEntity.setMessage("foo");
+        sampleEntity.setType("abc");
+        sampleEntity.setMessage("test");
         sampleEntity.setAvailable(true);
         repository.save(sampleEntity);
 
-        //given
+        //document 2
         String documentId2 = randomNumeric(5);
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
-        sampleEntity2.setType("test");
+        sampleEntity2.setType("xyz");
         sampleEntity2.setMessage("bar");
         sampleEntity2.setAvailable(false);
         repository.save(sampleEntity2);
+
+        //document 3
+        String documentId3 = randomNumeric(5);
+        SampleEntity sampleEntity3 = new SampleEntity();
+        sampleEntity3.setId(documentId3);
+        sampleEntity3.setType("def");
+        sampleEntity3.setMessage("foo");
+        sampleEntity3.setAvailable(false);
+        repository.save(sampleEntity3);
+
         //when
         Page<SampleEntity> page = repository.findByMessageOrderByTypeAsc("foo",new PageRequest(1, 10));
         //then

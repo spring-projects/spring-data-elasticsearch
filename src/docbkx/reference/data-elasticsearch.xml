@@ -370,7 +370,7 @@ public void setRepository(ProductRepository repository) {
 									<code>findByNameIn(Collection&lt;String&gt;names)</code>
 								</entry>
 								<entry>
-									<code>Not Supported Yet !</code>
+									<code>{"bool" : {"must" : {"bool" : {"should" : [ {"field" : {"name" : "?"}}, {"field" : {"name" : "?"}} ]}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -381,7 +381,7 @@ public void setRepository(ProductRepository repository) {
 									<code>findByNameNotIn(Collection&lt;String&gt;names)</code>
 								</entry>
 								<entry>
-									<code>Not Supported Yet !</code>
+									<code>{"bool" : {"must_not" : {"bool" : {"should" : {"field" : {"name" : "?"}}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -403,7 +403,7 @@ public void setRepository(ProductRepository repository) {
 									<code>findByAvailableTrue</code>
 								</entry>
 								<entry>
-									<code>Not Supported Yet !</code>
+									<code>{"bool" : {"must" : {"field" : {"available" : true}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -414,7 +414,7 @@ public void setRepository(ProductRepository repository) {
 									<code>findByAvailableFalse</code>
 								</entry>
 								<entry>
-									<code>Not Supported Yet !</code>
+									<code>{"bool" : {"must" : {"field" : {"available" : false}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -425,7 +425,7 @@ public void setRepository(ProductRepository repository) {
 									<code>findByAvailableTrueOrderByNameDesc</code>
 								</entry>
 								<entry>
-									<code>Not Supported Yet !</code>
+									<code>{"sort" : [{ "name" : {"order" : "desc"} }],"bool" : {"must" : {"field" : {"available" : true}}}}</code>
 								</entry>
 							</row>
 						</tbody>

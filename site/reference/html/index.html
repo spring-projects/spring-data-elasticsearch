@@ -707,7 +707,7 @@ http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.
 @Produces
 @ApplicationScoped
 <span class="hl-keyword">public</span> ElasticsearchOperations createElasticsearchTemplate() {
-    <span class="hl-keyword">return</span> <span class="hl-keyword">new</span> ElasticsearchTemplate(<span class="hl-keyword">new</span> EmbeddedElasticsearchServerFactory(<span class="hl-string">"classpath:com/acme/Elasticsearch"</span>));
+    <span class="hl-keyword">return</span> <span class="hl-keyword">new</span> ElasticsearchTemplate(nodeBuilder().local(true).node().client());
   }
 }
 
@@ -838,13 +838,13 @@ http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.
 								</td><td>
 									<code class="code">findByNameIn(Collection&lt;String&gt;names)</code>
 								</td><td>
-									<code class="code">Not Supported Yet !</code>
+									<code class="code">{"bool" : {"must" : {"bool" : {"should" : [ {"field" : {"name" : "?"}}, {"field" : {"name" : "?"}} ]}}}}</code>
 								</td></tr><tr><td>
 									<code class="code">NotIn</code>
 								</td><td>
 									<code class="code">findByNameNotIn(Collection&lt;String&gt;names)</code>
 								</td><td>
-									<code class="code">Not Supported Yet !</code>
+									<code class="code">{"bool" : {"must_not" : {"bool" : {"should" : {"field" : {"name" : "?"}}}}}}</code>
 								</td></tr><tr><td>
 									<code class="code">Near</code>
 								</td><td>
@@ -856,19 +856,19 @@ http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.
 								</td><td>
 									<code class="code">findByAvailableTrue</code>
 								</td><td>
-									<code class="code">Not Supported Yet !</code>
+									<code class="code">{"bool" : {"must" : {"field" : {"available" : true}}}}</code>
 								</td></tr><tr><td>
 									<code class="code">False</code>
 								</td><td>
 									<code class="code">findByAvailableFalse</code>
 								</td><td>
-									<code class="code">Not Supported Yet !</code>
+									<code class="code">{"bool" : {"must" : {"field" : {"available" : false}}}}</code>
 								</td></tr><tr><td>
 									<code class="code">OrderBy</code>
 								</td><td>
 									<code class="code">findByAvailableTrueOrderByNameDesc</code>
 								</td><td>
-									<code class="code">Not Supported Yet !</code>
+									<code class="code">{"sort" : [{ "name" : {"order" : "desc"} }],"bool" : {"must" : {"field" : {"available" : true}}}}</code>
 								</td></tr></tbody></table></div></div><p><br class="table-break">
 			</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="elasticsearch.query-methods.at-query"></a>2.2.3.&nbsp;Using @Query Annotation</h3></div></div></div><div class="example"><a name="d0e1289"></a><p class="title"><b>Example&nbsp;2.7.&nbsp;
 					Declare query at the method using the
