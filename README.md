@@ -12,9 +12,9 @@ The Spring Data Elasticsearch project provides integration with the [elasticsear
 Guide
 ------------
 
-* [Reference Documentation](https://github.com/BioMedCentralLtd/spring-data-elasticsearch/tree/master/site/reference/html)
+* [Reference Documentation](https://github.com/BioMedCentralLtd/spring-data-elasticsearch/blob/master/site/reference.rar?raw=true)
 * [PDF Documentation](https://github.com/BioMedCentralLtd/spring-data-elasticsearch/blob/master/site/reference/pdf/spring-data-elasticsearch-reference.pdf?raw=true)
-* [API Documentation](https://github.com/BioMedCentralLtd/spring-data-elasticsearch/tree/master/site/apidocs)
+* [API Documentation](https://github.com/BioMedCentralLtd/spring-data-elasticsearch/blob/master/site/apidocs.zip?raw=true)
 * [Spring Data Project](http://www.springsource.org/spring-data)
 
 
