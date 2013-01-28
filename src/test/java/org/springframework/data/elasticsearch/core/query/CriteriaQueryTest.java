@@ -627,6 +627,4 @@ public class CriteriaQueryTest {
         //then
         assertThat(page.getTotalElements(),is(greaterThanOrEqualTo(1L)));
     }
-
-
 }

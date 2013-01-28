@@ -10,7 +10,7 @@ public interface Query {
 
 
     /**
-     * restrict result to entries on given page. Corresponds to the 'start' and 'rows' parameter in solr
+     * restrict result to entries on given page. Corresponds to the 'start' and 'rows' parameter in elasticsearch
      *
      * @param pageable
      * @return

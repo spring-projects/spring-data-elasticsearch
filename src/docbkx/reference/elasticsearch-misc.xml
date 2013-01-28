@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<chapter id="elasticsearch.misc">
+	<title>Miscellaneous Elasticsearch Operation Support</title>
+	<abstract>
+		<para>
+			This chapter covers additional support for Elasticsearch operations
+            that cannot be directly accessed via the repository
+			interface.
+			It is recommended to add those operations as custom
+			implementation as
+			described in
+			<xref linkend="repositories.custom-implementations" />
+			.
+		</para>
+	</abstract>
+	<section id="elasticsearch.misc.filter">
+		<title>Filter Builder</title>
+		<para>
+			Filter Builder improves query speed.
+		</para>
+		<example>
+			<programlisting language="java">
+                private ElasticsearchTemplate elasticsearchTemplate;
+                SearchQuery searchQuery = new SearchQuery();
+                searchQuery.setElasticsearchQuery(matchAllQuery());
+                searchQuery.setElasticsearchFilter(boolFilter().must(termFilter("id", documentId)));
+                Page&lt;SampleEntity&gt; sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
+    </programlisting>
+		</example>
+	</section>
+</chapter>

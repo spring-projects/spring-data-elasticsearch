@@ -33,7 +33,7 @@ public class ElasticsearchRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	private ElasticsearchOperations operations;
 
 	/**
-	 * Configures the {@link ElasticsearchOperations} to be used to create Solr repositories.
+	 * Configures the {@link ElasticsearchOperations} to be used to create Elasticsearch repositories.
 	 * 
 	 * @param operations the operations to set
 	 */

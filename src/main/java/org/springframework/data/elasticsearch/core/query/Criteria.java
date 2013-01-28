@@ -255,7 +255,7 @@ public class Criteria {
 
 
 	/**
-	 * Crates new CriteriaEntry allowing native solr expressions
+	 * Crates new CriteriaEntry allowing native elasticsearch expressions
 	 * 
 	 * @param s
 	 * @return

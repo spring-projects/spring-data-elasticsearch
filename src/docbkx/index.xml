@@ -5,13 +5,9 @@
 	<bookinfo>
 		<title>Spring Data Elasticsearch</title>
 		<authorgroup>
-			<author>
-				<firstname>Rizwan</firstname>
-				<surname>Idrees</surname>
-			</author>
             <author>
-                <firstname>Mohsin</firstname>
-                <surname>Husen</surname>
+                <firstname>BioMed Central</firstname>
+                <surname>Development Team</surname>
             </author>
         </authorgroup>
 		<legalnotice>
@@ -44,7 +40,7 @@
 		</xi:include>
 
 		<xi:include href="reference/data-elasticsearch.xml" />
-		<xi:include href="reference/misc.xml" />
+		<xi:include href="reference/elasticsearch-misc.xml" />
 	</part>
 
 	<part id="appendix">

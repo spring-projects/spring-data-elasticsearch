@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
-<chapter id="solr.repositories">
-	<title>Solr Repositories</title>
+<chapter id="elasticsearch.repositories">
+	<title>Elasticsearch Repositories</title>
 	<abstract>
-		<para>This chapter includes details of the Solr repository
+		<para>This chapter includes details of the Elasticsearch repository
 			implementation.
 		</para>
 	</abstract>
@@ -93,7 +93,8 @@
 			</para>
 			<example>
 				<title>Spring Data Elasticsearch repositories using JavaConfig</title>
-				<programlisting language="java">@Configuration
+				<programlisting language="java">
+                    @Configuration
                     @EnableElasticsearchRepositories(basePackages = "org/springframework/data/elasticsearch/repositories")
                     static class Config {
 
@@ -119,37 +120,37 @@
 				</para>
 			</example>
 		</section>
-		<!--<section id="elasticsearch.cdi">-->
-			<!--<title>Elasticsearch Repositores using CDI</title>-->
-			<!--<para>The Spring Data Elasticsearch repositories can also be set up using CDI-->
-				<!--functionality.-->
-			<!--</para>-->
-			<!--<example>-->
-				<!--<title>Spring Data Elasticsearch repositories using JavaConfig</title>-->
-				<!--<programlisting language="java">class SolrTemplateProducer {-->
+		<section id="elasticsearch.cdi">
+			<title>Elasticsearch Repositores using CDI</title>
+			<para>The Spring Data Elasticsearch repositories can also be set up using CDI
+				functionality.
+			</para>
+			<example>
+				<title>Spring Data Elasticsearch repositories using JavaConfig</title>
+				<programlisting language="java">class ElasticsearchTemplateProducer {
 
-  <!--@Produces-->
-  <!--@ApplicationScoped-->
-  <!--public SolrOperations createSolrTemplate() {-->
-    <!--return new SolrTemplate(new EmbeddedSolrServerFactory("classpath:com/acme/solr"));-->
-  <!--}-->
-<!--}-->
+  @Produces
+  @ApplicationScoped
+  public ElasticsearchOperations createElasticsearchTemplate() {
+    return new ElasticsearchTemplate(new EmbeddedElasticsearchServerFactory("classpath:com/acme/Elasticsearch"));
+  }
+}
 
-<!--class ProductService {-->
+class ProductService {
 
-  <!--private ProductRepository repository;-->
+  private ProductRepository repository;
 
-  <!--public Page&lt;Product&gt; findAvailableProductsByName(String name, Pageable pageable) {-->
-    <!--return repository.findByAvailableTrueAndNameStartingWith(name, pageable);-->
-  <!--}-->
+  public Page&lt;Product&gt; findAvailableBookByName(String name, Pageable pageable) {
+    return repository.findByAvailableTrueAndNameStartingWith(name, pageable);
+  }
 
-  <!--@Inject-->
-  <!--public void setRepository(ProductRepository repository) {-->
-    <!--this.repository = repository;-->
-  <!--}-->
-<!--}</programlisting>-->
-			<!--</example>-->
-		<!--</section>-->
+  @Inject
+  public void setRepository(ProductRepository repository) {
+    this.repository = repository;
+  }
+}</programlisting>
+			</example>
+		</section>
 	</section>
 	<section id="elasticsearch.query-methods">
 		<title>Query methods</title>
@@ -159,9 +160,6 @@
 				The Elasticsearch module supports all basic query building feature as String,Abstract,Criteria or
 				have
 				it being derived from the method name.
-				<note>
-					There is no QueryDSL Support present at this time.
-				</note>
 			</para>
 
 			<simplesect>
@@ -169,9 +167,7 @@
 				<para>
 					Deriving the query from the method name is not always sufficient
 					and/or may result in unreadable method names. In this case one
-					might make either use of Elasticsearch named queries (see
-					<xref linkend="elasticsearch.query-methods.named-queries" />
-					) or use the
+					might make either use of
 					<interfacename>@Query</interfacename>
 					annotation (see
 					<xref linkend="elasticsearch.query-methods.at-query" />
@@ -198,19 +194,13 @@
 						The method name above will be translated into the following
                         Elasticsearch json query
 					</para>
-					<programlisting>{
-                        "bool" : {
-                        "must" : [ {
-                        "field" : {
-                        "type" : "test"
-                        }
-                        }, {
-                        "field" : {
-                        "message" : "some message"
-                        }
-                        } ]
-                        }
-                        }</programlisting>
+					<programlisting>
+                        { "bool" : { "must" :
+                        [
+                        { "field" : {"name" : "?"} },
+                        { "field" : {"price" : "?"} }
+                        ]
+                        } }</programlisting>
 				</example>
 			</para>
 			<para>
@@ -373,7 +363,7 @@
                                         "bool" : {
                                         "must" : {
                                         "range" : {
-                                        "rate" : {
+                                        "price" : {
                                         "from" : ?,
                                         "to" : null,
                                         "include_lower" : true,
@@ -414,10 +404,24 @@
 									<code>After</code>
 								</entry>
 								<entry>
-									<code>findByLastModifiedAfter</code>
+									<code>findByPriceAfter</code>
 								</entry>
 								<entry>
-									<code>q=last_modified:[?0 TO *]</code>
+									<code>{
+                                        "bool" : {
+                                        "must" : {
+                                        "range" : {
+                                        "price" : {
+                                        "from" : ?,
+                                        "to" : null,
+                                        "include_lower" : true,
+                                        "include_upper" : true
+                                        }
+                                        }
+                                        }
+                                        }
+                                        }
+                                    </code>
 								</entry>
 							</row>
 							<row>
@@ -428,7 +432,18 @@
 									<code>findByNameLike</code>
 								</entry>
 								<entry>
-									<code>q=name:?0*</code>
+									<code>{
+                                        "bool" : {
+                                        "must" : {
+                                        "field" : {
+                                        "name" : {
+                                        "query" : "?*",
+                                        "analyze_wildcard" : true
+                                        }
+                                        }
+                                        }
+                                        }
+                                        }</code>
 								</entry>
 							</row>
 							<row>
@@ -439,7 +454,18 @@
 									<code>findByNameStartingWith</code>
 								</entry>
 								<entry>
-									<code></code>
+									<code>{
+                                        "bool" : {
+                                        "must" : {
+                                        "field" : {
+                                        "name" : {
+                                        "query" : "?*",
+                                        "analyze_wildcard" : true
+                                        }
+                                        }
+                                        }
+                                        }
+                                        }</code>
 								</entry>
 							</row>
 							<row>
@@ -450,18 +476,40 @@
 									<code>findByNameEndingWith</code>
 								</entry>
 								<entry>
-									<code>q=name:*?0</code>
+									<code>{
+                                        "bool" : {
+                                        "must" : {
+                                        "field" : {
+                                        "name" : {
+                                        "query" : "*?",
+                                        "analyze_wildcard" : true
+                                        }
+                                        }
+                                        }
+                                        }
+                                        }</code>
 								</entry>
 							</row>
 							<row>
 								<entry>
-									<code>Containing</code>
+									<code>Contains/Containing</code>
 								</entry>
 								<entry>
 									<code>findByNameContaining</code>
 								</entry>
 								<entry>
-									<code>q=name:*?0*</code>
+									<code>{
+                                        "bool" : {
+                                        "must" : {
+                                        "field" : {
+                                        "name" : {
+                                        "query" : "*?*",
+                                        "analyze_wildcard" : true
+                                        }
+                                        }
+                                        }
+                                        }
+                                        }</code>
 								</entry>
 							</row>
 							<row>
@@ -474,7 +522,7 @@
 									</code>
 								</entry>
 								<entry>
-									<code>q=name:(?0... )</code>
+									<code>Not Supported Yet !</code>
 								</entry>
 							</row>
 							<row>
@@ -487,7 +535,7 @@
 									</code>
 								</entry>
 								<entry>
-									<code>q=-name:(?0... )</code>
+									<code>Not Supported Yet !</code>
 								</entry>
 							</row>
 							<row>
@@ -498,8 +546,7 @@
 									<code>findByStoreNear</code>
 								</entry>
 								<entry>
-									<code>q={!geofilt pt=?0.latitude,?0.longitude sfield=store
-										d=?1}
+									<code>Not Supported Yet !
 									</code>
 								</entry>
 							</row>
@@ -511,7 +558,7 @@
 									<code>findByAvailableTrue</code>
 								</entry>
 								<entry>
-									<code>q=inStock:true</code>
+									<code>Not Supported Yet !</code>
 								</entry>
 							</row>
 							<row>
@@ -522,7 +569,7 @@
 									<code>findByAvailableFalse</code>
 								</entry>
 								<entry>
-									<code>q=inStock:false</code>
+									<code>Not Supported Yet !</code>
 								</entry>
 							</row>
 							<row>
@@ -533,7 +580,7 @@
 									<code>findByAvailableTrueOrderByNameDesc</code>
 								</entry>
 								<entry>
-									<code>q=inStock:true&amp;sort=name desc</code>
+									<code>Not Supported Yet !</code>
 								</entry>
 							</row>
 						</tbody>
@@ -541,21 +588,8 @@
 				</table>
 			</para>
 		</section>
-		<section id="solr.query-methods.at-query">
+		<section id="elasticsearch.query-methods.at-query">
 			<title>Using @Query Annotation</title>
-			<para>
-				Using named queries (
-				<xref linkend="solr.query-methods.named-queries" />
-				) to declare queries for entities is a valid
-				approach and works fine
-				for a small number of queries. As the
-				queries themselves are tied to
-				the Java method that executes them,
-				you actually can bind them
-				directly using the Spring Data Solr
-				<code>@Query</code>
-				annotation.
-			</para>
 			<example>
 				<title>
 					Declare query at the method using the
@@ -563,37 +597,30 @@
 					annotation.
 				</title>
 
-				<programlisting language="java">public interface ProductRepository extends SolrRepository&lt;Product, String&gt; {
-  @Query("inStock:?0")
-  List&lt;Product&gt; findByAvailable(Boolean available);
+				<programlisting language="java">public interface BookRepository extends ElasticsearchRepository&lt;Book, String&gt; {
+  @Query("{"bool" : {"must" : {"field" : {"name" : "?0"}}}}")
+  Page&lt;Book&gt; findByName(String name,Pageable pageable);
 }</programlisting>
 			</example>
 		</section>
-		<section id="solr.query-methods.named-queries">
-			<title>Using NamedQueries</title>
-			<para>
-				Named queries can be kept in a properties file and wired to the
-				accroding method. Please mind the naming convention described in
-				<xref linkend="repositories.query-methods.query-lookup-strategies" />
-				or use
-				<interfacename>@Query</interfacename>
-				.
-			</para>
-			<example>
-				<title>
-					Declare named query in properites file
-				</title>
-				<programlisting>Product.findByNamedQuery=popularity:?0
-Product.findByName=name:?0</programlisting>
-				<programlisting language="java">public interface ProductRepository extends SolrCrudRepository&lt;Product, String&gt; {
-				
-  List&lt;Product&gt; findByNamedQuery(Integer popularity);
-  
-  @Query(name = "Product.findByName")
-  List&lt;Product&gt; findByAnnotatedNamedQuery(String name); 
-  
-}</programlisting>
-			</example>
-		</section>
+		<!--<section id="elasticsearch.query-methods.named-queries">-->
+			<!--<title>Using NamedQueries</title>-->
+			<!--<para>-->
+				<!--Named queries can be kept in a properties file and wired to the-->
+				<!--accroding method. Please mind the naming convention described in-->
+				<!--<xref linkend="repositories.query-methods.query-lookup-strategies" />-->
+				<!--or use-->
+				<!--<interfacename>@Query</interfacename>-->
+				<!--.-->
+			<!--</para>-->
+			<!--<example>-->
+				<!--<title>-->
+					<!--Declare named query in properites file-->
+				<!--</title>-->
+				<!--<programlisting></programlisting>-->
+				<!--<programlisting language="java">-->
+<!--}</programlisting>-->
+			<!--</example>-->
+		<!--</section>-->
 	</section>
 </chapter>

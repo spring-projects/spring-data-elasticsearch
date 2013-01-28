@@ -44,7 +44,6 @@ class CriteriaQueryProcessor {
                 query.must(createQueryFragmentForCriteria(chainedCriteria));
             }
         }
-
         return query;
     }
 

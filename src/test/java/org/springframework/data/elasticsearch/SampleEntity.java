@@ -13,6 +13,7 @@ public class SampleEntity {
     private String type;
     private String message;
     private int rate;
+    private boolean available;
 
     public String getId() {
         return id;
@@ -44,6 +45,14 @@ public class SampleEntity {
 
     public void setRate(int rate) {
         this.rate = rate;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
     }
 
     @Override

@@ -22,7 +22,7 @@ package org.springframework.data.elasticsearch.core.query;
 public interface Field {
 
 	/**
-	 * Get the name of the field used in schema.xml of solr server
+	 * Get the name of the field used in schema.xml of elasticsearch server
 	 * 
 	 * @return
 	 */

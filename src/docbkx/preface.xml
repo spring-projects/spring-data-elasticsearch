@@ -28,7 +28,7 @@
 		<para>
 			Requires
 			<ulink url="http://www.elasticsearch.org/download/">Elasticsearch</ulink>
-            0.20.2 and above or optional dependency
+            0.20.2 and above or optional dependency or not even that if you are using Embedded Node Client
 	    </para>
 	</section>
 </preface>

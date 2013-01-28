@@ -98,7 +98,7 @@ public @interface EnableElasticsearchRepositories {
 	 */
 	Class<?> repositoryFactoryBeanClass() default ElasticsearchRepositoryFactoryBean.class;
 
-	// Solr specific configuration
+	// Elasticsearch specific configuration
 
 	/**
 	 * Configures the name of the {@link ElasticsearchTemplate} bean definition to be used to create repositories discovered
