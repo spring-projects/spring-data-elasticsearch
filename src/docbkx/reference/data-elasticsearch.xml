@@ -367,9 +367,7 @@ public void setRepository(ProductRepository repository) {
 									<code>In</code>
 								</entry>
 								<entry>
-									<code>findByNameIn(Collection&lt;String&gt;
-										names)
-									</code>
+									<code>findByNameIn(Collection&lt;String&gt;names)</code>
 								</entry>
 								<entry>
 									<code>Not Supported Yet !</code>
@@ -380,9 +378,7 @@ public void setRepository(ProductRepository repository) {
 									<code>NotIn</code>
 								</entry>
 								<entry>
-									<code>findByNameNotIn(Collection&lt;String&gt;
-										names)
-									</code>
+									<code>findByNameNotIn(Collection&lt;String&gt;names)</code>
 								</entry>
 								<entry>
 									<code>Not Supported Yet !</code>
@@ -396,8 +392,7 @@ public void setRepository(ProductRepository repository) {
 									<code>findByStoreNear</code>
 								</entry>
 								<entry>
-									<code>Not Supported Yet !
-									</code>
+									<code>Not Supported Yet !</code>
 								</entry>
 							</row>
 							<row>
