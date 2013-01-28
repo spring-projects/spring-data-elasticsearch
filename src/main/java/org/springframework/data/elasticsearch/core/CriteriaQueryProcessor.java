@@ -94,7 +94,13 @@ class CriteriaQueryProcessor {
                 query = rangeQuery(fieldName).from(ranges[0]).to(ranges[1]); break;
             case FUZZY:
                 query = fuzzyQuery(fieldName, (String) value); break;
-
+            case IN:
+                query = boolQuery();
+                Iterable<Object> collection = (Iterable<Object>) value;
+                for(Object item : collection){
+                   ((BoolQueryBuilder) query).should(fieldQuery(fieldName, item));
+                }
+                break;
         }
 
         return query;

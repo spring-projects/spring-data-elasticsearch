@@ -18,7 +18,7 @@ public interface SampleCustomMethodRepository extends ElasticsearchRepository<Sa
     @Query("{\"bool\" : {\"must\" : {\"field\" : {\"message\" : \"?0\"}}}}")
     Page<SampleEntity> findByMessage(String message, Pageable pageable);
 
-//    Page<SampleEntity> findByAvailable(boolean available, Pageable pageable);
+    Page<SampleEntity> findByAvailable(boolean available, Pageable pageable);
 
     Page<SampleEntity> findByRateLessThan(int rate, Pageable pageable);
 
@@ -34,14 +34,14 @@ public interface SampleCustomMethodRepository extends ElasticsearchRepository<Sa
 
     Page<SampleEntity> findByMessageContaining(String message, Pageable pageable);
 
-//    Page<SampleEntity> findByIdIn(List<String> ids, Pageable pageable);
-//
-//    Page<SampleEntity> findByIdNotIn(List<String> messages, Pageable pageable);
-//
-//    Page<SampleEntity> findByAvailableTrue(Pageable pageable);
-//
-//    Page<SampleEntity> findByAvailableFalse(Pageable pageable);
-//
-//    Page<SampleEntity> findByMessageOrderByMessage(String message,Pageable pageable);
+    Page<SampleEntity> findByIdIn(List<String> ids, Pageable pageable);
+
+    Page<SampleEntity> findByIdNotIn(List<String> messages, Pageable pageable);
+
+    Page<SampleEntity> findByAvailableTrue(Pageable pageable);
+
+    Page<SampleEntity> findByAvailableFalse(Pageable pageable);
+
+    Page<SampleEntity> findByMessageOrderByTypeAsc(String message,Pageable pageable);
 
 }

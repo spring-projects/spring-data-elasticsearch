@@ -340,13 +340,7 @@ public class Criteria {
 	 */
 	public Criteria in(Iterable<?> values) {
 		Assert.notNull(values, "Collection of 'in' values must not be null");
-		for (Object value : values) {
-			if (value instanceof Collection) {
-				in((Collection<?>) value);
-			} else {
-				is(value);
-			}
-		}
+        criteria.add(new CriteriaEntry(OperationKey.IN, values));
 		return this;
 	}
 
@@ -430,7 +424,7 @@ public class Criteria {
 	}
 
 	public enum OperationKey {
-		EQUALS, CONTAINS, STARTS_WITH, ENDS_WITH, EXPRESSION, BETWEEN, FUZZY;
+		EQUALS, CONTAINS, STARTS_WITH, ENDS_WITH, EXPRESSION, BETWEEN, FUZZY, IN;
 	}
 
 	public static class CriteriaEntry {

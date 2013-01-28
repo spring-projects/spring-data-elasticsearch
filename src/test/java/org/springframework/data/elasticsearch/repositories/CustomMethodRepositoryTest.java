@@ -227,170 +227,163 @@ public class CustomMethodRepositoryTest {
         assertThat(page.getTotalElements(), is(equalTo(1L)));
     }
 
-//    @Test
-//    @Ignore("Test failing due to java.lang.IllegalArgumentException: Invalid order syntax for part Message!")
-//    public void shouldExecuteCustomMethodForIn(){
-//        //given
-//        String documentId = randomNumeric(5);
-//        SampleEntity sampleEntity = new SampleEntity();
-//        sampleEntity.setId(documentId);
-//        sampleEntity.setType("test");
-//        sampleEntity.setMessage("foo");
-//        repository.save(sampleEntity);
-//
-//        //given
-//        String documentId2 = randomNumeric(5);
-//        SampleEntity sampleEntity2 = new SampleEntity();
-//        sampleEntity2.setId(documentId2);
-//        sampleEntity2.setType("test");
-//        sampleEntity2.setMessage("bar");
-//        repository.save(sampleEntity2);
-//
-//        List<String> ids = Arrays.asList(documentId,documentId2);
-//
-//
-//        //when
-//        Page<SampleEntity> page = repository.findByIdIn(ids, new PageRequest(1, 10));
-//        //then
-//        assertThat(page, is(notNullValue()));
-//        assertThat(page.getTotalElements(), is(equalTo(2L)));
-//    }
-//
-//    @Test
-//    @Ignore("Test failing due to java.lang.IllegalArgumentException: Invalid order syntax for part Message!")
-//    public void shouldExecuteCustomMethodForNotIn(){
-//        //given
-//        String documentId = randomNumeric(5);
-//        SampleEntity sampleEntity = new SampleEntity();
-//        sampleEntity.setId(documentId);
-//        sampleEntity.setType("test");
-//        sampleEntity.setMessage("foo");
-//        repository.save(sampleEntity);
-//
-//        //given
-//        String documentId2 = randomNumeric(5);
-//        SampleEntity sampleEntity2 = new SampleEntity();
-//        sampleEntity2.setId(documentId2);
-//        sampleEntity2.setType("test");
-//        sampleEntity2.setMessage("bar");
-//        repository.save(sampleEntity2);
-//
-//        List<String> ids = Arrays.asList(documentId);
-//
-//
-//        //when
-//        Page<SampleEntity> page = repository.findByIdNotIn(ids, new PageRequest(1, 10));
-//        //then
-//        assertThat(page, is(notNullValue()));
-//        assertThat(page.getTotalElements(), is(equalTo(1L)));
-//        assertThat(page.getContent().get(0).getId(),is(documentId2));
-//    }
-//
-//    @Test
-//    @Ignore("Test failing due to java.lang.IllegalArgumentException: Invalid order syntax for part Message!")
-//    public void shouldExecuteCustomMethodForTrue(){
-//        //given
-//        String documentId = randomNumeric(5);
-//        SampleEntity sampleEntity = new SampleEntity();
-//        sampleEntity.setId(documentId);
-//        sampleEntity.setType("test");
-//        sampleEntity.setMessage("foo");
-//        sampleEntity.setAvailable(true);
-//        repository.save(sampleEntity);
-//
-//        //given
-//        String documentId2 = randomNumeric(5);
-//        SampleEntity sampleEntity2 = new SampleEntity();
-//        sampleEntity2.setId(documentId2);
-//        sampleEntity2.setType("test");
-//        sampleEntity2.setMessage("bar");
-//        sampleEntity2.setAvailable(false);
-//        repository.save(sampleEntity2);
-//        //when
-//        Page<SampleEntity> page = repository.findByAvailableTrue(new PageRequest(1, 10));
-//        //then
-//        assertThat(page, is(notNullValue()));
-//        assertThat(page.getTotalElements(), is(equalTo(1L)));
-//    }
-//
-//    @Test
-//    @Ignore("Test failing due to java.lang.IllegalArgumentException: Invalid order syntax for part Message!")
-//    public void shouldExecuteCustomMethodForFalse(){
-//        //given
-//        String documentId = randomNumeric(5);
-//        SampleEntity sampleEntity = new SampleEntity();
-//        sampleEntity.setId(documentId);
-//        sampleEntity.setType("test");
-//        sampleEntity.setMessage("foo");
-//        sampleEntity.setAvailable(true);
-//        repository.save(sampleEntity);
-//
-//        //given
-//        String documentId2 = randomNumeric(5);
-//        SampleEntity sampleEntity2 = new SampleEntity();
-//        sampleEntity2.setId(documentId2);
-//        sampleEntity2.setType("test");
-//        sampleEntity2.setMessage("bar");
-//        sampleEntity2.setAvailable(false);
-//        repository.save(sampleEntity2);
-//        //when
-//        Page<SampleEntity> page = repository.findByAvailableFalse(new PageRequest(1, 10));
-//        //then
-//        assertThat(page, is(notNullValue()));
-//        assertThat(page.getTotalElements(), is(equalTo(1L)));
-//    }
-//
-//    @Test
-//    @Ignore("Test failing due to java.lang.IllegalArgumentException: Invalid order syntax for part Message!")
-//    public void shouldExecuteCustomMethodForOrderBy(){
-//        //given
-//        String documentId = randomNumeric(5);
-//        SampleEntity sampleEntity = new SampleEntity();
-//        sampleEntity.setId(documentId);
-//        sampleEntity.setType("test");
-//        sampleEntity.setMessage("foo");
-//        sampleEntity.setAvailable(true);
-//        repository.save(sampleEntity);
-//
-//        //given
-//        String documentId2 = randomNumeric(5);
-//        SampleEntity sampleEntity2 = new SampleEntity();
-//        sampleEntity2.setId(documentId2);
-//        sampleEntity2.setType("test");
-//        sampleEntity2.setMessage("bar");
-//        sampleEntity2.setAvailable(false);
-//        repository.save(sampleEntity2);
-//        //when
-//        Page<SampleEntity> page = repository.findByMessageOrderByMessage("foo",new PageRequest(1, 10));
-//        //then
-//        assertThat(page, is(notNullValue()));
-//        assertThat(page.getTotalElements(), is(equalTo(1L)));
-//    }
-//
-//    @Test
-//    public void testCustomMethodForBoolean(){
-//        //given
-//        String documentId = randomNumeric(5);
-//        SampleEntity sampleEntity = new SampleEntity();
-//        sampleEntity.setId(documentId);
-//        sampleEntity.setType("test");
-//        sampleEntity.setMessage("foo");
-//        sampleEntity.setAvailable(true);
-//        repository.save(sampleEntity);
-//
-//        //given
-//        String documentId2 = randomNumeric(5);
-//        SampleEntity sampleEntity2 = new SampleEntity();
-//        sampleEntity2.setId(documentId2);
-//        sampleEntity2.setType("test");
-//        sampleEntity2.setMessage("bar");
-//        sampleEntity2.setAvailable(false);
-//        repository.save(sampleEntity2);
-//        //when
-//        Page<SampleEntity> page = repository.findByAvailable(false,new PageRequest(1, 10));
-//        //then
-//        assertThat(page, is(notNullValue()));
-//        assertThat(page.getTotalElements(), is(equalTo(1L)));
-//    }
+    @Test
+    public void shouldExecuteCustomMethodForIn(){
+        //given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setType("test");
+        sampleEntity.setMessage("foo");
+        repository.save(sampleEntity);
+
+        //given
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setType("test");
+        sampleEntity2.setMessage("bar");
+        repository.save(sampleEntity2);
+
+        List<String> ids = Arrays.asList(documentId,documentId2);
+
+        //when
+        Page<SampleEntity> page = repository.findByIdIn(ids, new PageRequest(1, 10));
+        //then
+        assertThat(page, is(notNullValue()));
+        assertThat(page.getTotalElements(), is(equalTo(2L)));
+    }
+
+    @Test
+    public void shouldExecuteCustomMethodForNotIn(){
+        //given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setType("test");
+        sampleEntity.setMessage("foo");
+        repository.save(sampleEntity);
+
+        //given
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setType("test");
+        sampleEntity2.setMessage("bar");
+        repository.save(sampleEntity2);
+
+        List<String> ids = Arrays.asList(documentId);
+
+        //when
+        Page<SampleEntity> page = repository.findByIdNotIn(ids, new PageRequest(1, 10));
+        //then
+        assertThat(page, is(notNullValue()));
+        assertThat(page.getTotalElements(), is(equalTo(1L)));
+        assertThat(page.getContent().get(0).getId(),is(documentId2));
+    }
+
+    @Test
+    public void shouldExecuteCustomMethodForTrue(){
+        //given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setType("test");
+        sampleEntity.setMessage("foo");
+        sampleEntity.setAvailable(true);
+        repository.save(sampleEntity);
+
+        //given
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setType("test");
+        sampleEntity2.setMessage("bar");
+        sampleEntity2.setAvailable(false);
+        repository.save(sampleEntity2);
+        //when
+        Page<SampleEntity> page = repository.findByAvailableTrue(new PageRequest(1, 10));
+        //then
+        assertThat(page, is(notNullValue()));
+        assertThat(page.getTotalElements(), is(equalTo(1L)));
+    }
+
+    @Test
+    public void shouldExecuteCustomMethodForFalse(){
+        //given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setType("test");
+        sampleEntity.setMessage("foo");
+        sampleEntity.setAvailable(true);
+        repository.save(sampleEntity);
+
+        //given
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setType("test");
+        sampleEntity2.setMessage("bar");
+        sampleEntity2.setAvailable(false);
+        repository.save(sampleEntity2);
+        //when
+        Page<SampleEntity> page = repository.findByAvailableFalse(new PageRequest(1, 10));
+        //then
+        assertThat(page, is(notNullValue()));
+        assertThat(page.getTotalElements(), is(equalTo(1L)));
+    }
+
+    @Test
+    public void shouldExecuteCustomMethodForOrderBy(){
+        //given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setType("test");
+        sampleEntity.setMessage("foo");
+        sampleEntity.setAvailable(true);
+        repository.save(sampleEntity);
+
+        //given
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setType("test");
+        sampleEntity2.setMessage("bar");
+        sampleEntity2.setAvailable(false);
+        repository.save(sampleEntity2);
+        //when
+        Page<SampleEntity> page = repository.findByMessageOrderByTypeAsc("foo",new PageRequest(1, 10));
+        //then
+        assertThat(page, is(notNullValue()));
+        assertThat(page.getTotalElements(), is(equalTo(1L)));
+    }
+
+    @Test
+    public void testCustomMethodForBoolean(){
+        //given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setType("test");
+        sampleEntity.setMessage("foo");
+        sampleEntity.setAvailable(true);
+        repository.save(sampleEntity);
+
+        //given
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setType("test");
+        sampleEntity2.setMessage("bar");
+        sampleEntity2.setAvailable(false);
+        repository.save(sampleEntity2);
+        //when
+        Page<SampleEntity> page = repository.findByAvailable(false,new PageRequest(1, 10));
+        //then
+        assertThat(page, is(notNullValue()));
+        assertThat(page.getTotalElements(), is(equalTo(1L)));
+    }
 
 }
