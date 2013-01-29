@@ -337,7 +337,7 @@ public class RepositoryTest {
         Iterable<SampleEntity> sampleEntities=repository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC,"message")));
 
         //then
-        assertNotNull("sample entities cant be null..", sampleEntities);
+        assertThat(sampleEntities,is(notNullValue()));
     }
 
 }
