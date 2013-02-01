@@ -47,7 +47,7 @@ The ElasticsearchCrudRepository extends PagingAndSortingRepository
 Extending ElasticsearchRepository for custom methods
 
 ```java
-    public interface BookRepository extends Repositor<Book, String> {
+    public interface BookRepository extends Repository<Book, String> {
 
         //Equivalent Json Query will be "{ "bool" : { "must" :[{ "field" : {"name" : "?"} },{ "field" : {"price" : "?"} }]} }"
         List<Book>; findByNameAndPrice(String name, Integer price);
