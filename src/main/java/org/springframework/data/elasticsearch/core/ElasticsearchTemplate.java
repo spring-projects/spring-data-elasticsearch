@@ -21,6 +21,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -234,6 +235,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     private ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz){
+        Assert.isTrue(clazz.isAnnotationPresent(Document.class), "Unable to identify index name. " +
+                clazz.getSimpleName() + " is not a Document. Make sure the document class is annotated with @Document(indexName=\"foo\")");
         return elasticsearchConverter.getMappingContext().getPersistentEntity(clazz);
     }
 

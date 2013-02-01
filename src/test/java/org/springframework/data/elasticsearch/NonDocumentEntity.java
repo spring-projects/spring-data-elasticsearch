@@ -1,11 +1,12 @@
 package org.springframework.data.elasticsearch;
 
 
-import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.annotation.Id;
 
-@Document(indexName = "Foo")
 public class NonDocumentEntity {
 
+    @Id
+    private String someId;
     private String someField1;
     private String someField2;
 

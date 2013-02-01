@@ -101,7 +101,7 @@ class CriteriaQueryProcessor {
                    ((BoolQueryBuilder) query).should(fieldQuery(fieldName, item));
                 }
                 break;
-        }
+            }
 
         return query;
     }

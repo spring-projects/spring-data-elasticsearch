@@ -333,6 +333,4 @@ public class ElasticsearchTemplateTest {
         assertThat(sampleEntity1, is(notNullValue()));
     }
 
-
-
 }

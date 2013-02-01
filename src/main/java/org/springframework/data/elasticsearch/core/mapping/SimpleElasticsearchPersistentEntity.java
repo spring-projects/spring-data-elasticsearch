@@ -46,12 +46,12 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
         super(typeInformation);
         this.context = new StandardEvaluationContext();
         Class<T> clazz = typeInformation.getType();
-        Assert.isTrue(clazz.isAnnotationPresent(Document.class),
-                clazz.getSimpleName() + " is not a Document. Make sure the document class is annotated with @Document(indexName=\"foo\")");
-        Document document = clazz.getAnnotation(Document.class);
-        Assert.hasText(document.indexName(), " Unknown indexName. Make sure the indexName is defined. e.g @Document(indexName=\"foo\")");
-        this.indexName = typeInformation.getType().getAnnotation(Document.class).indexName();
-        this.indexType = hasText(document.type())? document.type() : clazz.getSimpleName().toLowerCase(Locale.ENGLISH);
+        if(clazz.isAnnotationPresent(Document.class)){
+            Document document = clazz.getAnnotation(Document.class);
+            Assert.hasText(document.indexName(), " Unknown indexName. Make sure the indexName is defined. e.g @Document(indexName=\"foo\")");
+            this.indexName = typeInformation.getType().getAnnotation(Document.class).indexName();
+            this.indexType = hasText(document.type())? document.type() : clazz.getSimpleName().toLowerCase(Locale.ENGLISH);
+        }
     }
 
     @Override
