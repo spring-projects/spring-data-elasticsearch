@@ -1,4 +1,4 @@
-spring-data-elasticsearch
+Spring Data Elasticsearch
 ========================= 
 
 Spring Data implementation for ElasticSearch
@@ -29,6 +29,14 @@ Test Coverage
 
 Quick Start
 -----------
+### Dependency
+
+<dependency>
+    <groupId>org.springframework.data</groupId>
+    <artifactId>spring-data-elasticsearch</artifactId>
+    <version>1.0.0.BUILD-SNAPSHOT</version>
+</dependency> 
+
 
 ### ElasticsearchTemplate
 ElasticsearchTemplate is the central support class for elasticsearch operations.
