@@ -29,7 +29,9 @@ Test Coverage
 
 Quick Start
 -----------
-### Dependency
+## Dependency
+
+*Dependency
 
 <dependency>
     <groupId>org.springframework.data</groupId>
