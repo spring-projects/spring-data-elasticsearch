@@ -29,16 +29,14 @@ Test Coverage
 
 Quick Start
 -----------
-## Dependency
-
-*Dependency
-
+### Dependency
+```java
 <dependency>
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-elasticsearch</artifactId>
     <version>1.0.0.BUILD-SNAPSHOT</version>
 </dependency> 
-
+```
 
 ### ElasticsearchTemplate
 ElasticsearchTemplate is the central support class for elasticsearch operations.
