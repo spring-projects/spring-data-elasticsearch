@@ -5,6 +5,7 @@ public class IndexQuery{
 
     private String id;
     private Object object;
+    private Long version;
 
     public String getId() {
         return id;
@@ -20,5 +21,13 @@ public class IndexQuery{
 
     public void setObject(Object object) {
         this.object = object;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

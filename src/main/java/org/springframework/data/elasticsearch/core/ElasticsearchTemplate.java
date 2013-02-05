@@ -216,8 +216,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     private IndexRequestBuilder prepareIndex(IndexQuery query){
         try {
             ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(query.getObject().getClass());
-            return client.prepareIndex(persistentEntity.getIndexName(), persistentEntity.getIndexType(), query.getId())
+            IndexRequestBuilder indexRequestBuilder = client.prepareIndex(persistentEntity.getIndexName(), persistentEntity.getIndexType(), query.getId())
                     .setSource(objectMapper.writeValueAsString(query.getObject()));
+            if(query.getVersion() != null){
+                indexRequestBuilder.setVersion(query.getVersion());
+            }
+            return indexRequestBuilder;
         } catch (IOException e) {
             throw new ElasticsearchException("failed to index the document [id: " + query.getId() +"]",e);
         }

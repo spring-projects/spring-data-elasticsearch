@@ -212,6 +212,7 @@ public class SimpleElasticsearchRepository<T> implements ElasticsearchRepository
         IndexQuery query = new IndexQuery();
         query.setObject(entity);
         query.setId(extractIdFromBean(entity));
+        query.setVersion(extractVersionFromBean(entity));
         return query;
     }
 
@@ -262,6 +263,13 @@ public class SimpleElasticsearchRepository<T> implements ElasticsearchRepository
     private String extractIdFromBean(T entity) {
         if (entityInformation != null) {
             return entityInformation.getId(entity);
+        }
+        return null;
+    }
+
+    private Long extractVersionFromBean(T entity){
+        if (entityInformation != null) {
+            return entityInformation.getVersion(entity);
         }
         return null;
     }

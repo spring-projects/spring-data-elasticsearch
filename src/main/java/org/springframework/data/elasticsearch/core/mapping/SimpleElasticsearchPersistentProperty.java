@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import org.springframework.data.elasticsearch.annotations.Version;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
@@ -55,7 +56,12 @@ public class SimpleElasticsearchPersistentProperty extends AnnotationBasedPersis
 		return super.isIdProperty() || SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName());
 	}
 
-	@Override
+    @Override
+    public boolean isVersionProperty(){
+        return field.isAnnotationPresent(Version.class);
+    }
+
+    @Override
 	protected Association<ElasticsearchPersistentProperty> createAssociation() {
 		return null;
 	}

@@ -22,6 +22,8 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 
 	String getFieldName();
 
+    boolean isVersionProperty();
+
     public enum PropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
 
         INSTANCE;

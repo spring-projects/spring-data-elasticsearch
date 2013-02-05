@@ -4,9 +4,10 @@ import org.springframework.data.elasticsearch.annotations.Document;
 
 @Document(indexName = "book",type = "book")
 public class Book {
-        private String id;
-        private String name;
-        private Author author;
+
+    private String id;
+    private String name;
+    private Author author;
 
     public String getId() {
         return id;

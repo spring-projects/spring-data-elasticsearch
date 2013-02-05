@@ -20,7 +20,7 @@
         <spring.version>3.1.2.RELEASE</spring.version>
         <slf4j.version>1.7.1</slf4j.version>
         <commons-lang.version>2.6</commons-lang.version>
-        <elasticsearch.version>0.20.2</elasticsearch.version>
+        <elasticsearch.version>0.20.4</elasticsearch.version>
         <apache.httpcomponents.version>4.2.2</apache.httpcomponents.version>
         <spring.data-commons.version>1.4.0.RELEASE</spring.data-commons.version>
         <joda-time.version>2.1</joda-time.version>

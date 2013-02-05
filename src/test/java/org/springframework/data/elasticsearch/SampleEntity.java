@@ -4,6 +4,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Version;
 
 @Document(indexName = "test-index", type = "test-type")
 public class SampleEntity {
@@ -14,6 +15,8 @@ public class SampleEntity {
     private String message;
     private int rate;
     private boolean available;
+    @Version
+    private Long version;
 
     public String getId() {
         return id;
@@ -55,6 +58,14 @@ public class SampleEntity {
         this.available = available;
     }
 
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof SampleEntity)) {
@@ -67,6 +78,9 @@ public class SampleEntity {
         return new EqualsBuilder().append(this.id, rhs.id)
                 .append(this.type, rhs.type)
                 .append(this.message, rhs.message)
+                .append(this.rate,rhs.rate)
+                .append(this.available,rhs.available)
+                .append(this.version,rhs.version)
                 .isEquals();
     }
 
@@ -76,6 +90,9 @@ public class SampleEntity {
                 .append(id)
                 .append(type)
                 .append(message)
+                .append(rate)
+                .append(available)
+                .append(version)
                 .toHashCode();
     }
 }

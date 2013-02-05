@@ -27,7 +27,6 @@ public class RepositoryTest {
     @Resource
     private SampleElasticsearchRepository repository;
 
-
     @Test
     public void shouldDoBulkIndexDocument(){
         //given
@@ -148,7 +147,7 @@ public class RepositoryTest {
 
     @Test
     @Ignore
-    public  void testFindAllByIdQuery(){
+    public  void shouldFindAllByIdQuery(){
         //todo : find solution for findAll(Iterable<Ids> ids)
         //given
         String documentId = randomNumeric(5);
@@ -171,31 +170,27 @@ public class RepositoryTest {
     }
 
     @Test
-    public void testSaveIterableEntities(){
-           //given
-
+    public void shouldSaveIterableEntities(){
+        //given
         String documentId = randomNumeric(5);
-        SampleEntity sampleEntity = new SampleEntity();
-        sampleEntity.setId(documentId);
-        sampleEntity.setMessage("hello world.");
+        SampleEntity sampleEntity1 = new SampleEntity();
+        sampleEntity1.setId(documentId);
+        sampleEntity1.setMessage("hello world.");
 
         String documentId2 = randomNumeric(5);
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("hello world.");
-
-        Iterable<SampleEntity> sampleEntities = Arrays.asList(sampleEntity,sampleEntity2);
-
+        Iterable<SampleEntity> sampleEntities = Arrays.asList(sampleEntity1,sampleEntity2);
         //when
         repository.save(sampleEntities);
-
         //then
         Page<SampleEntity> entities = repository.search(fieldQuery("id", documentId), new PageRequest(0, 50));
         assertNotNull(entities);
     }
 
     @Test
-    public void testDocumentExistById(){
+    public void shouldReturnTrueGivenDocumentWithIdExists(){
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
@@ -211,7 +206,7 @@ public class RepositoryTest {
     }
 
     @Test
-    public void testSearchForGivenSearchQuery(){
+    public void shouldReturnResultsForGivenSearchQuery(){
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
@@ -227,7 +222,7 @@ public class RepositoryTest {
     }
 
     @Test
-    public void testDeleteAll(){
+    public void shouldDeleteAll(){
         //when
         repository.deleteAll();
         //then
@@ -238,7 +233,7 @@ public class RepositoryTest {
     }
 
     @Test
-    public void testDeleteByEntity(){
+    public void shouldDeleteEntity(){
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
@@ -255,28 +250,30 @@ public class RepositoryTest {
     }
 
     @Test
-    public void testSearchForReturnIterableEntities(){
+    public void shouldReturnIterableEntities(){
         //given
         String documentId = randomNumeric(5);
-        SampleEntity sampleEntity = new SampleEntity();
-        sampleEntity.setId(documentId);
-        sampleEntity.setMessage("hello world.");
-        repository.save(sampleEntity);
+        SampleEntity sampleEntity1 = new SampleEntity();
+        sampleEntity1.setId(documentId);
+        sampleEntity1.setMessage("hello world.");
+        sampleEntity1.setVersion(System.currentTimeMillis());
+        repository.save(sampleEntity1);
 
         String documentId2 = randomNumeric(5);
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("hello world.");
+        sampleEntity2.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity2);
 
         //when
         Iterable<SampleEntity> sampleEntities=repository.search(fieldQuery("id",documentId));
-       //then
+        //then
         assertNotNull("sample entities cant be null..", sampleEntities);
     }
 
     @Test
-    public void testDeleteIterableEntities(){
+    public void shouldDeleteIterableEntities(){
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
@@ -291,10 +288,8 @@ public class RepositoryTest {
         repository.save(sampleEntity);
 
         Iterable<SampleEntity> sampleEntities = Arrays.asList(sampleEntity,sampleEntity2);
-
         //when
         repository.delete(sampleEntities);
-
         //then
         Page<SampleEntity> entities = repository.search(fieldQuery("id", documentId), new PageRequest(0,50));
         assertThat(entities.getTotalElements(),equalTo(0L));
@@ -303,11 +298,12 @@ public class RepositoryTest {
     }
 
     @Test
-    public void testIndexEntity(){
+    public void shouldIndexEntity(){
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
+        sampleEntity.setVersion(System.currentTimeMillis());
         sampleEntity.setMessage("some message");
         //when
         repository.index(sampleEntity);
@@ -318,7 +314,7 @@ public class RepositoryTest {
 
     @Test
     @Ignore("By default, the search request will fail if there is no mapping associated with a field. The ignore_unmapped option allows to ignore fields that have no mapping and not sort by them")
-    public void testFindBySort(){
+    public void shouldSortByGivenField(){
         //todo
         //given
         String documentId = randomNumeric(5);
@@ -332,12 +328,9 @@ public class RepositoryTest {
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("B.hello world.");
         repository.save(sampleEntity2);
-
         //when
         Iterable<SampleEntity> sampleEntities=repository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC,"message")));
-
         //then
         assertThat(sampleEntities,is(notNullValue()));
     }
-
 }

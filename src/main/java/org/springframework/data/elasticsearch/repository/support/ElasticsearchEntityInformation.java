@@ -28,5 +28,6 @@ public interface ElasticsearchEntityInformation<T, ID extends Serializable> exte
 	String getIdAttribute();
     String getIndexName();
     String getType();
-
+    String getVersionAttribute();
+    Long getVersion(T entity);
 }

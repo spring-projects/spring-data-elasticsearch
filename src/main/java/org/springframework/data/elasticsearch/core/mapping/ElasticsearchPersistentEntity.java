@@ -21,5 +21,5 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 
 	String getIndexName();
     String getIndexType();
-
+    ElasticsearchPersistentProperty getVersionProperty();
 }

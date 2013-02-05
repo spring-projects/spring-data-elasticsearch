@@ -22,6 +22,7 @@ import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
@@ -41,6 +42,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
     private final StandardEvaluationContext context;
     private String indexName;
     private String indexType;
+    private ElasticsearchPersistentProperty versionProperty;
 
     public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
         super(typeInformation);
@@ -69,5 +71,24 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
     @Override
     public String getIndexType() {
         return indexType;
+    }
+
+    @Override
+    public ElasticsearchPersistentProperty getVersionProperty() {
+        return this.versionProperty;
+    }
+
+    @Override
+    public void addPersistentProperty(ElasticsearchPersistentProperty property) {
+        super.addPersistentProperty(property);
+        if(property.isVersionProperty()){
+            if (this.versionProperty != null) {
+                throw new MappingException(String.format(
+                        "Attempt to add version property %s but already have property %s registered "
+                                + "as version. Check your mapping configuration!", property.getField(), versionProperty.getField()));
+            }
+            Assert.isTrue(property.getType() ==  Long.class, "Version property should be Long");
+            this.versionProperty = property;
+        }
     }
 }

@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.model.BeanWrapper;
@@ -32,6 +34,7 @@ import java.io.Serializable;
 public class MappingElasticsearchEntityInformation<T, ID extends Serializable> extends AbstractEntityInformation<T, ID>
         implements ElasticsearchEntityInformation<T, ID> {
 
+    private static final Logger logger = LoggerFactory.getLogger(MappingElasticsearchEntityInformation.class);
     private final ElasticsearchPersistentEntity<T> entityMetadata;
     private final String indexName;
     private final String type;
@@ -79,4 +82,24 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
     public String getType() {
         return type != null? type : entityMetadata.getIndexType();
     }
+
+    @Override
+    public String getVersionAttribute() {
+        return entityMetadata.getVersionProperty().getFieldName();
+    }
+
+    @Override
+    public Long getVersion(T entity) {
+        ElasticsearchPersistentProperty versionProperty = entityMetadata.getIdProperty();
+        try {
+            if(versionProperty != null){
+                return (Long) BeanWrapper.create(entity, null).getProperty(versionProperty);
+            }
+        } catch (Exception e) {
+            logger.debug("failed to retrieve version", e);
+        }
+        return null;
+    }
 }
+
+
