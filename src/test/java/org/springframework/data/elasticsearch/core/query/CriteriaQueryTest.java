@@ -1,6 +1,6 @@
 package org.springframework.data.elasticsearch.core.query;
 
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.data.domain.Page;
@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
@@ -28,9 +29,18 @@ public class CriteriaQueryTest {
     @Resource
     private ElasticsearchTemplate elasticsearchTemplate;
 
+    @Before
+    public void before(){
+        elasticsearchTemplate.createIndex(SampleEntity.class);
+        DeleteQuery deleteQuery = new DeleteQuery();
+        deleteQuery.setElasticsearchQuery(matchAllQuery());
+        elasticsearchTemplate.delete(deleteQuery,SampleEntity.class);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+    }
+
+
     @Test
     public void shouldPerformAndOperation(){
-        //given
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
