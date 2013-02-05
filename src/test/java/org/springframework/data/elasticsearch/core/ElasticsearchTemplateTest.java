@@ -48,6 +48,7 @@ public class ElasticsearchTemplateTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(documentId);
         indexQuery.setObject(sampleEntity);
@@ -68,9 +69,12 @@ public class ElasticsearchTemplateTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(documentId);
         indexQuery.setObject(sampleEntity);
+
         elasticsearchTemplate.index(indexQuery);
         //when
         GetQuery getQuery = new GetQuery();
@@ -89,11 +93,15 @@ public class ElasticsearchTemplateTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(documentId);
         indexQuery.setObject(sampleEntity);
+
         elasticsearchTemplate.index(indexQuery);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
+
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.setElasticsearchQuery(matchAllQuery());
         //when
@@ -112,6 +120,7 @@ public class ElasticsearchTemplateTest {
         SampleEntity sampleEntity1 = new SampleEntity();
         sampleEntity1.setId(documentId);
         sampleEntity1.setMessage("some message");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -123,6 +132,8 @@ public class ElasticsearchTemplateTest {
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("some message");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
@@ -145,9 +156,12 @@ public class ElasticsearchTemplateTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(documentId);
         indexQuery.setObject(sampleEntity);
+
         elasticsearchTemplate.index(indexQuery);
         //when
         elasticsearchTemplate.delete("test-index","test-type",documentId);
@@ -166,9 +180,12 @@ public class ElasticsearchTemplateTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(documentId);
         indexQuery.setObject(sampleEntity);
+
         elasticsearchTemplate.index(indexQuery);
         //when
         elasticsearchTemplate.delete(SampleEntity.class,documentId);
@@ -187,9 +204,12 @@ public class ElasticsearchTemplateTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(documentId);
         indexQuery.setObject(sampleEntity);
+
         elasticsearchTemplate.index(indexQuery);
         //when
         DeleteQuery deleteQuery = new DeleteQuery();
@@ -209,11 +229,14 @@ public class ElasticsearchTemplateTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(documentId);
         indexQuery.setObject(sampleEntity);
         elasticsearchTemplate.index(indexQuery);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
+
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.setElasticsearchQuery(matchAllQuery());
         searchQuery.setElasticsearchFilter(boolFilter().must(termFilter("id", documentId)));
@@ -224,17 +247,21 @@ public class ElasticsearchTemplateTest {
     }
 
     @Test
-    public void testStringQuery(){
+    public void shouldExecuteStringQuery(){
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(documentId);
         indexQuery.setObject(sampleEntity);
+
         elasticsearchTemplate.index(indexQuery);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
+
         StringQuery stringQuery = new StringQuery(matchAllQuery().toString());
         //when
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(stringQuery,SampleEntity.class);
@@ -243,17 +270,21 @@ public class ElasticsearchTemplateTest {
     }
 
     @Test
-    public void testStringQueryWithPageable(){
+    public void shouldReturnPageableResultsGivenStringQuery(){
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(documentId);
         indexQuery.setObject(sampleEntity);
+
         elasticsearchTemplate.index(indexQuery);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
+
         StringQuery stringQuery = new StringQuery(matchAllQuery().toString(),new PageRequest(0,10));
         //when
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(stringQuery,SampleEntity.class);
@@ -264,20 +295,23 @@ public class ElasticsearchTemplateTest {
 
     @Test
     @Ignore("By default, the search request will fail if there is no mapping associated with a field. The ignore_unmapped option allows to ignore fields that have no mapping and not sort by them")
-    public void testStringQueryWithPageableAndSort(){
+    public void shouldReturnSortedPageableResultsGivenStringQuery(){
         //todo
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(documentId);
         indexQuery.setObject(sampleEntity);
+
         elasticsearchTemplate.index(indexQuery);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
-        StringQuery stringQuery = new StringQuery(matchAllQuery().toString(),new PageRequest(0,10), new Sort(new Sort.Order(Sort.Direction.ASC,"messsage")));
 
+        StringQuery stringQuery = new StringQuery(matchAllQuery().toString(),new PageRequest(0,10), new Sort(new Sort.Order(Sort.Direction.ASC,"messsage")));
         //when
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(stringQuery,SampleEntity.class);
         //then
@@ -285,19 +319,22 @@ public class ElasticsearchTemplateTest {
     }
 
     @Test
-    public void testStringQueryGetObject(){
+    public void shouldReturnObjectMatchingGivenStringQuery(){
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(documentId);
         indexQuery.setObject(sampleEntity);
+
         elasticsearchTemplate.index(indexQuery);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
-        StringQuery stringQuery = new StringQuery(fieldQuery("id",documentId).toString());
 
+        StringQuery stringQuery = new StringQuery(fieldQuery("id",documentId).toString());
         //when
         SampleEntity sampleEntity1 = elasticsearchTemplate.queryForObject(stringQuery, SampleEntity.class);
         //then
@@ -306,7 +343,7 @@ public class ElasticsearchTemplateTest {
     }
 
     @Test
-    public void testCreateIndex(){
+    public void shouldCreateIndexGivenEntityClass(){
         //when
         boolean created = elasticsearchTemplate.createIndex(SampleEntity.class);
         //then
@@ -315,18 +352,22 @@ public class ElasticsearchTemplateTest {
 
 
     @Test
-    public void testCriteria(){
+    public void shouldExecuteGivenCriteriaQuery(){
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some test message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(documentId);
         indexQuery.setObject(sampleEntity);
+
         elasticsearchTemplate.index(indexQuery);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("test"));
+
         //when
         SampleEntity sampleEntity1 = elasticsearchTemplate.queryForObject(criteriaQuery,SampleEntity.class);
         //then

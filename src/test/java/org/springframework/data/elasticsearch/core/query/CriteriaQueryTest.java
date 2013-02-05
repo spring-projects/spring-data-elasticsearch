@@ -29,13 +29,15 @@ public class CriteriaQueryTest {
     private ElasticsearchTemplate elasticsearchTemplate;
 
     @Test
-    public void shouldTestAndOperation(){
+    public void shouldPerformAndOperation(){
         //given
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some test message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(documentId);
         indexQuery.setObject(sampleEntity);
@@ -49,7 +51,7 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void shouldTestOrOperation(){
+    public void shouldPerformOrOperation(){
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -57,6 +59,7 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity1 = new SampleEntity();
         sampleEntity1.setId(documentId);
         sampleEntity1.setMessage("some message");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -68,6 +71,8 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("test message");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
@@ -84,19 +89,20 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void shouldTestInnerAndCriteria(){
+    public void shouldPerformAndOperationWithinCriteria(){
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
         String documentId = randomNumeric(5);
-        SampleEntity sampleEntity1 = new SampleEntity();
-        sampleEntity1.setId(documentId);
-        sampleEntity1.setMessage("some message");
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
 
-        IndexQuery indexQuery1 = new IndexQuery();
-        indexQuery1.setId(documentId);
-        indexQuery1.setObject(sampleEntity1);
-        indexQueries.add(indexQuery1);
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId(documentId);
+        indexQuery.setObject(sampleEntity);
+        indexQueries.add(indexQuery);
 
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
@@ -110,19 +116,20 @@ public class CriteriaQueryTest {
 
 
     @Test
-    public void shouldTestInnerOrCriteria(){
+    public void shouldPerformOrOperationWithinCriteria(){
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
         String documentId = randomNumeric(5);
-        SampleEntity sampleEntity1 = new SampleEntity();
-        sampleEntity1.setId(documentId);
-        sampleEntity1.setMessage("some message");
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
 
-        IndexQuery indexQuery1 = new IndexQuery();
-        indexQuery1.setId(documentId);
-        indexQuery1.setObject(sampleEntity1);
-        indexQueries.add(indexQuery1);
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId(documentId);
+        indexQuery.setObject(sampleEntity);
+        indexQueries.add(indexQuery);
 
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
@@ -135,19 +142,20 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void testIs() {
+    public void shouldPerformIsOperation() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
         String documentId = randomNumeric(5);
-        SampleEntity sampleEntity1 = new SampleEntity();
-        sampleEntity1.setId(documentId);
-        sampleEntity1.setMessage("some message");
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
 
-        IndexQuery indexQuery1 = new IndexQuery();
-        indexQuery1.setId(documentId);
-        indexQuery1.setObject(sampleEntity1);
-        indexQueries.add(indexQuery1);
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId(documentId);
+        indexQuery.setObject(sampleEntity);
+        indexQueries.add(indexQuery);
 
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
@@ -160,7 +168,7 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void testMultipleIs() {
+    public void shouldPerformMultipleIsOperations() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -168,6 +176,7 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity1 = new SampleEntity();
         sampleEntity1.setId(documentId);
         sampleEntity1.setMessage("some message");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -179,11 +188,13 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("test message");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
-
         indexQueries.add(indexQuery2);
+
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("some message").is("test message"));
@@ -195,7 +206,7 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void testEndsWith() {
+    public void shouldPerformEndsWithOperation() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -203,6 +214,7 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity1 = new SampleEntity();
         sampleEntity1.setId(documentId);
         sampleEntity1.setMessage("some message");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -214,11 +226,13 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("test message end");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
-
         indexQueries.add(indexQuery2);
+
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         Criteria criteria = new Criteria("message").endsWith("end");
@@ -231,7 +245,7 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void testStartsWith() {
+    public void shouldPerformStartsWithOperation() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -239,6 +253,7 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity1 = new SampleEntity();
         sampleEntity1.setId(documentId);
         sampleEntity1.setMessage("start some message");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -250,11 +265,13 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("test message");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
-
         indexQueries.add(indexQuery2);
+
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         Criteria criteria = new Criteria("message").startsWith("start");
@@ -267,7 +284,7 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void testContains() {
+    public void shouldPerformContainsOperation() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -275,6 +292,7 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity1 = new SampleEntity();
         sampleEntity1.setId(documentId);
         sampleEntity1.setMessage("contains some message");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -286,11 +304,13 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("test message");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
-
         indexQueries.add(indexQuery2);
+
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery= new CriteriaQuery(new Criteria("message").contains("contains"));
@@ -302,7 +322,7 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void testExpression() {
+    public void shouldExecuteExpression() {
         //given
         //todo
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
@@ -311,6 +331,7 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity1 = new SampleEntity();
         sampleEntity1.setId(documentId);
         sampleEntity1.setMessage("elasticsearch search");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -322,23 +343,25 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("test message");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
-
         indexQueries.add(indexQuery2);
+
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery= new CriteriaQuery(new Criteria("message").expression("+elasticsearch || test"));
         //when
-        SampleEntity sampleEntity = elasticsearchTemplate.queryForObject(criteriaQuery,SampleEntity.class);
+        SampleEntity sampleEntity = elasticsearchTemplate.queryForObject(criteriaQuery, SampleEntity.class);
         //then
         assertThat("message", is(criteriaQuery.getCriteria().getField().getName()));
         assertThat(sampleEntity,is(notNullValue()));
     }
 
     @Test
-    public void testCriteriaChain() {
+    public void shouldExecuteCriteriaChain() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -346,6 +369,7 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity1 = new SampleEntity();
         sampleEntity1.setId(documentId);
         sampleEntity1.setMessage("some message search");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -357,11 +381,13 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("test test message");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
-
         indexQueries.add(indexQuery2);
+
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").startsWith("some").endsWith("search").contains("message").is("some message search"));
@@ -373,7 +399,7 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void testIsNot() {
+    public void shouldPerformIsNotOperation() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -381,6 +407,7 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity1 = new SampleEntity();
         sampleEntity1.setId(documentId);
         sampleEntity1.setMessage("bar");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -392,11 +419,13 @@ public class CriteriaQueryTest {
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("foo");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
-
         indexQueries.add(indexQuery2);
+
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("foo").not());
@@ -409,7 +438,7 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void testBetween() {
+    public void shouldPerformBetweenOperation() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -418,6 +447,7 @@ public class CriteriaQueryTest {
         sampleEntity1.setId(documentId);
         sampleEntity1.setRate(100);
         sampleEntity1.setMessage("bar");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -430,11 +460,13 @@ public class CriteriaQueryTest {
         sampleEntity2.setId(documentId2);
         sampleEntity2.setRate(200);
         sampleEntity2.setMessage("foo");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
-
         indexQueries.add(indexQuery2);
+
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(100,150));
@@ -445,7 +477,7 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void testBetweenWithoutUpperBound() {
+    public void shouldPerformBetweenOperationWithoutUpperBound() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -454,6 +486,7 @@ public class CriteriaQueryTest {
         sampleEntity1.setId(documentId);
         sampleEntity1.setRate(300);
         sampleEntity1.setMessage("bar");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -466,11 +499,13 @@ public class CriteriaQueryTest {
         sampleEntity2.setId(documentId2);
         sampleEntity2.setRate(400);
         sampleEntity2.setMessage("foo");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
-
         indexQueries.add(indexQuery2);
+
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(350,null));
@@ -482,7 +517,7 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void testBetweenWithoutLowerBound() {
+    public void shouldPerformBetweenOperationWithoutLowerBound() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -491,6 +526,7 @@ public class CriteriaQueryTest {
         sampleEntity1.setId(documentId);
         sampleEntity1.setRate(500);
         sampleEntity1.setMessage("bar");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -503,11 +539,13 @@ public class CriteriaQueryTest {
         sampleEntity2.setId(documentId2);
         sampleEntity2.setRate(600);
         sampleEntity2.setMessage("foo");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
-
         indexQueries.add(indexQuery2);
+
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(null,550));
@@ -519,7 +557,7 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void testLessThanEqauls() {
+    public void shouldPerformLessThanEqualOperation() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -528,6 +566,7 @@ public class CriteriaQueryTest {
         sampleEntity1.setId(documentId);
         sampleEntity1.setRate(700);
         sampleEntity1.setMessage("bar");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -540,11 +579,13 @@ public class CriteriaQueryTest {
         sampleEntity2.setId(documentId2);
         sampleEntity2.setRate(800);
         sampleEntity2.setMessage("foo");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
-
         indexQueries.add(indexQuery2);
+
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").lessThanEqual(750));
@@ -556,7 +597,7 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void testGreaterThanEqauls() {
+    public void shouldPerformGreaterThanEquals() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -565,6 +606,7 @@ public class CriteriaQueryTest {
         sampleEntity1.setId(documentId);
         sampleEntity1.setRate(900);
         sampleEntity1.setMessage("bar");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -577,11 +619,13 @@ public class CriteriaQueryTest {
         sampleEntity2.setId(documentId2);
         sampleEntity2.setRate(1000);
         sampleEntity2.setMessage("foo");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
-
         indexQueries.add(indexQuery2);
+
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").greaterThanEqual(950));
@@ -593,7 +637,7 @@ public class CriteriaQueryTest {
     }
 
     @Test
-    public void testBoost() {
+    public void shouldPerformBoostOperation() {
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -602,6 +646,7 @@ public class CriteriaQueryTest {
         sampleEntity1.setId(documentId);
         sampleEntity1.setRate(700);
         sampleEntity1.setMessage("bar foo");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -614,11 +659,13 @@ public class CriteriaQueryTest {
         sampleEntity2.setId(documentId2);
         sampleEntity2.setRate(800);
         sampleEntity2.setMessage("foo");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
         indexQuery2.setObject(sampleEntity2);
-
         indexQueries.add(indexQuery2);
+
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("foo").boost(1));
