@@ -198,11 +198,14 @@ public class RepositoryTest {
         SampleEntity sampleEntity1 = new SampleEntity();
         sampleEntity1.setId(documentId);
         sampleEntity1.setMessage("hello world.");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
         String documentId2 = randomNumeric(5);
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("hello world.");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
         Iterable<SampleEntity> sampleEntities = Arrays.asList(sampleEntity1,sampleEntity2);
         //when
         repository.save(sampleEntities);
@@ -300,26 +303,26 @@ public class RepositoryTest {
     @Test
     public void shouldDeleteIterableEntities(){
         //given
-        String documentId = randomNumeric(5);
-        SampleEntity sampleEntity = new SampleEntity();
-        sampleEntity.setId(documentId);
-        sampleEntity.setMessage("hello world.");
-        repository.save(sampleEntity);
+        String documentId1 = randomNumeric(5);
+        SampleEntity sampleEntity1 = new SampleEntity();
+        sampleEntity1.setId(documentId1);
+        sampleEntity1.setMessage("hello world.");
+        sampleEntity1.setVersion(System.currentTimeMillis());
+        System.out.println(documentId1);
 
         String documentId2 = randomNumeric(5);
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("hello world.");
-        repository.save(sampleEntity);
+        sampleEntity2.setVersion(System.currentTimeMillis());
+        repository.save(sampleEntity2);
 
-        Iterable<SampleEntity> sampleEntities = Arrays.asList(sampleEntity,sampleEntity2);
+        Iterable<SampleEntity> sampleEntities = Arrays.asList(sampleEntity2,sampleEntity2);
         //when
         repository.delete(sampleEntities);
         //then
-        Page<SampleEntity> entities = repository.search(fieldQuery("id", documentId), new PageRequest(0,50));
-        assertThat(entities.getTotalElements(),equalTo(0L));
-        entities = repository.search(fieldQuery("id", documentId2), new PageRequest(0,50));
-        assertThat(entities.getTotalElements(), equalTo(0L));
+        assertThat(repository.findOne(documentId1),is(nullValue()));
+        assertThat(repository.findOne(documentId2),is(nullValue()));
     }
 
     @Test
