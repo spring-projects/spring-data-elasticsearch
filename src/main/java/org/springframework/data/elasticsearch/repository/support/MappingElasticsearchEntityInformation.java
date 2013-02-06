@@ -96,7 +96,7 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
                 return (Long) BeanWrapper.create(entity, null).getProperty(versionProperty);
             }
         } catch (Exception e) {
-            logger.debug("failed to retrieve version", e);
+            throw new IllegalStateException("failed to load version field", e);
         }
         return null;
     }
