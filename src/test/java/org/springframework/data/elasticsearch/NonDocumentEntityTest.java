@@ -2,23 +2,18 @@ package org.springframework.data.elasticsearch;
 
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.elasticsearch.repositories.NonDocumentEntityRepository;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.annotation.Resource;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:/repository-non-document-entity.xml")
 public class NonDocumentEntityTest {
 
-    @Resource
-    private NonDocumentEntityRepository nonDocumentEntityRepository;
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldNotIndexEntitiesWhichAreNotADocument(){
+    @Test(expected = BeanCreationException.class)
+    public void shouldNotInitialiseRepositoryWithNonDocument(){
         //when
-        nonDocumentEntityRepository.save(new NonDocumentEntity());
+        ClassPathXmlApplicationContext ctx =
+                new ClassPathXmlApplicationContext("/repository-non-document-entity.xml");
+        ctx.getBean(NonDocumentEntityRepository.class);
     }
 }

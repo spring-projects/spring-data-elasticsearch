@@ -1,6 +1,7 @@
 package org.springframework.data.elasticsearch.repositories;
 
 
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,23 +28,36 @@ public class RepositoryTest {
     @Resource
     private SampleElasticsearchRepository repository;
 
+
+    @Before
+    public void before(){
+        repository.deleteAll();
+    }
+
     @Test
     public void shouldDoBulkIndexDocument(){
         //given
-        String documentId = randomNumeric(5);
+        String documentId1 = randomNumeric(5);
         SampleEntity sampleEntity1 = new SampleEntity();
-        sampleEntity1.setId(documentId);
+        sampleEntity1.setId(documentId1);
         sampleEntity1.setMessage("some message");
+        sampleEntity1.setVersion(System.currentTimeMillis());
 
+        String documentId2 = randomNumeric(5);
         SampleEntity sampleEntity2 = new SampleEntity();
-        sampleEntity2.setId(documentId);
+        sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("some message");
+        sampleEntity2.setVersion(System.currentTimeMillis());
 
         //when
         repository.save(Arrays.asList(sampleEntity1, sampleEntity2));
         //then
-        SampleEntity entityFromElasticSearch =  repository.findOne(documentId);
-        assertThat(entityFromElasticSearch, is(notNullValue()));
+        SampleEntity entity1FromElasticSearch =  repository.findOne(documentId1);
+        assertThat(entity1FromElasticSearch, is(notNullValue()));
+
+        SampleEntity entity2FromElasticSearch =  repository.findOne(documentId2);
+        assertThat(entity2FromElasticSearch, is(notNullValue()));
+
     }
 
     @Test
@@ -53,6 +67,7 @@ public class RepositoryTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
         //when
         repository.save(sampleEntity);
         //then
@@ -67,6 +82,7 @@ public class RepositoryTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity);
         //when
         SampleEntity entityFromElasticSearch = repository.findOne(documentId);
@@ -82,6 +98,7 @@ public class RepositoryTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity);
         //when
         Long count = repository.count();
@@ -104,6 +121,7 @@ public class RepositoryTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity);
         //when
         repository.delete(documentId);
@@ -119,6 +137,7 @@ public class RepositoryTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("some test message");
+        sampleEntity.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity);
 
         SearchQuery query = new SearchQuery();
@@ -137,6 +156,7 @@ public class RepositoryTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("hello world.");
+        sampleEntity.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity);
         //when
         Page<SampleEntity> page = repository.search(termQuery("message", "world"), new PageRequest(0,50));
@@ -154,12 +174,14 @@ public class RepositoryTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("hello world.");
+        sampleEntity.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity);
 
         String documentId2 = randomNumeric(5);
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
         sampleEntity2.setMessage("hello world.");
+        sampleEntity2.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity2);
 
         //when
@@ -196,6 +218,7 @@ public class RepositoryTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("hello world.");
+        sampleEntity.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity);
 
         //when
@@ -212,6 +235,7 @@ public class RepositoryTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("hello world.");
+        sampleEntity.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity);
         //when
         SearchQuery searchQuery = new SearchQuery();
@@ -239,6 +263,7 @@ public class RepositoryTest {
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
         sampleEntity.setMessage("hello world.");
+        sampleEntity.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity);
         //when
         repository.delete(sampleEntity);
@@ -252,9 +277,9 @@ public class RepositoryTest {
     @Test
     public void shouldReturnIterableEntities(){
         //given
-        String documentId = randomNumeric(5);
+        String documentId1 = randomNumeric(5);
         SampleEntity sampleEntity1 = new SampleEntity();
-        sampleEntity1.setId(documentId);
+        sampleEntity1.setId(documentId1);
         sampleEntity1.setMessage("hello world.");
         sampleEntity1.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity1);
@@ -267,7 +292,7 @@ public class RepositoryTest {
         repository.save(sampleEntity2);
 
         //when
-        Iterable<SampleEntity> sampleEntities=repository.search(fieldQuery("id",documentId));
+        Iterable<SampleEntity> sampleEntities = repository.search(fieldQuery("id",documentId1));
         //then
         assertNotNull("sample entities cant be null..", sampleEntities);
     }

@@ -62,10 +62,10 @@ public class SimpleElasticsearchRepository<T> implements ElasticsearchRepository
         Assert.notNull(metadata);
         this.entityInformation = metadata;
         setEntityClass(this.entityInformation.getJavaType());
+        createIndex();
     }
 
-    @PostConstruct
-    public void createIndex(){
+    private void createIndex(){
         elasticsearchOperations.createIndex(getEntityClass());
     }
 

@@ -39,6 +39,7 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.elasticsearch.action.search.SearchType.DFS_QUERY_THEN_FETCH;
 import static org.elasticsearch.client.Requests.indicesExistsRequest;
 import static org.elasticsearch.client.Requests.refreshRequest;
+import static org.elasticsearch.index.VersionType.EXTERNAL;
 
 
 public class ElasticsearchTemplate implements ElasticsearchOperations {
@@ -220,6 +221,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                     .setSource(objectMapper.writeValueAsString(query.getObject()));
             if(query.getVersion() != null){
                 indexRequestBuilder.setVersion(query.getVersion());
+                indexRequestBuilder.setVersionType(EXTERNAL);
             }
             return indexRequestBuilder;
         } catch (IOException e) {
