@@ -90,7 +90,7 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
 
     @Override
     public Long getVersion(T entity) {
-        ElasticsearchPersistentProperty versionProperty = entityMetadata.getIdProperty();
+        ElasticsearchPersistentProperty versionProperty = entityMetadata.getVersionProperty();
         try {
             if(versionProperty != null){
                 return (Long) BeanWrapper.create(entity, null).getProperty(versionProperty);
