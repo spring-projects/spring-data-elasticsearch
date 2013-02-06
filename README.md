@@ -216,3 +216,9 @@ Using Transport Client
 
 </beans>
 ```    
+
+### Contact Details
+
+* Rizwan Idrees (rizwan.idrees@biomedcentral.com)
+* Abdul Waheed (abdul.mohammed@biomedcentral.com)
+* Mohsin Husen (mohsin.husen@biomedcentral.com)
