@@ -89,6 +89,7 @@ public class SimpleElasticsearchRepository<T> implements ElasticsearchRepository
     public Page<T> findAll(Pageable pageable) {
         SearchQuery query = new SearchQuery();
         query.setElasticsearchQuery(matchAllQuery());
+        query.setPageable(pageable);
         return elasticsearchOperations.queryForPage(query, getEntityClass());
     }
 
@@ -161,6 +162,11 @@ public class SimpleElasticsearchRepository<T> implements ElasticsearchRepository
     @Override
     public Iterable<T> search(QueryBuilder elasticsearchQuery) {
         SearchQuery query = new SearchQuery();
+        int count = (int) elasticsearchOperations.count(query, getEntityClass());
+        if(count == 0){
+            return new PageImpl<T>(Collections.<T>emptyList());
+        }
+        query.setPageable(new PageRequest(0,count));
         query.setElasticsearchQuery(elasticsearchQuery);
         return elasticsearchOperations.queryForPage(query, getEntityClass());
     }

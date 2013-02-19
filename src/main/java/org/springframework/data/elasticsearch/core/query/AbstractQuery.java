@@ -20,16 +20,24 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.Assert;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.apache.commons.collections.CollectionUtils.addAll;
+
 /**
  * AbstractQuery
- * 
+ *
  */
-abstract class AbstractQuery  implements Query{
+abstract class AbstractQuery implements Query{
 
     private static final Pageable DEFAULT_PAGE = new PageRequest(0, DEFAULT_PAGE_SIZE);
 
     protected Pageable pageable = DEFAULT_PAGE;
     protected Sort sort;
+    protected List<String> indices = new ArrayList<String>();
+    protected List<String> types = new ArrayList<String>();
+    protected List<String> fields = new ArrayList<String>();
 
     @Override
     public Sort getSort() {
@@ -44,9 +52,38 @@ abstract class AbstractQuery  implements Query{
     @Override
     public final <T extends Query> T setPageable(Pageable pageable) {
         Assert.notNull(pageable);
-
         this.pageable = pageable;
         return (T) this.addSort(pageable.getSort());
+    }
+
+    @Override
+    public void addFields(String...fields) {
+        addAll(this.fields, fields);
+    }
+
+    @Override
+    public List<String> getFields() {
+        return fields;
+    }
+
+    @Override
+    public List<String> getIndices() {
+        return indices;
+    }
+
+    @Override
+    public void addIndices(String... indices) {
+        addAll(this.indices,indices);
+    }
+
+    @Override
+    public void addTypes(String... types) {
+        addAll(this.types,types);
+    }
+
+    @Override
+    public List<String> getTypes() {
+        return types;
     }
 
     @SuppressWarnings("unchecked")
@@ -63,5 +100,4 @@ abstract class AbstractQuery  implements Query{
 
         return (T) this;
     }
-
 }

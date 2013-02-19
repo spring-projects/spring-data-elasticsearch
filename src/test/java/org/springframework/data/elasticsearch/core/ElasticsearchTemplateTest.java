@@ -1,12 +1,15 @@
 package org.springframework.data.elasticsearch.core;
 
 
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.search.SearchHit;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.SampleEntity;
@@ -372,6 +375,44 @@ public class ElasticsearchTemplateTest {
         SampleEntity sampleEntity1 = elasticsearchTemplate.queryForObject(criteriaQuery,SampleEntity.class);
         //then
         assertThat(sampleEntity1, is(notNullValue()));
+    }
+
+    @Test
+    public void shouldReturnSpecifiedFields(){
+        //given
+        String documentId = randomNumeric(5);
+        String message = "some test message";
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage(message);
+        sampleEntity.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId(documentId);
+        indexQuery.setObject(sampleEntity);
+
+        elasticsearchTemplate.index(indexQuery);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.setElasticsearchQuery(matchAllQuery());
+        searchQuery.addFields("message");
+        searchQuery.addIndices("test-index");
+        searchQuery.addTypes("test-type");
+        //when
+        Page<String> page = elasticsearchTemplate.queryForPage(searchQuery, new ResultsMapper<String>() {
+            @Override
+            public Page<String> mapResults(SearchResponse response) {
+                List<String> values = new ArrayList<String>();
+                for(SearchHit searchHit : response.getHits()){
+                    values.add((String) searchHit.field("message").value());
+                }
+                return new PageImpl<String>(values);
+            }
+        });
+        //then
+        assertThat(page, is(notNullValue()));
+        assertThat(page.getTotalElements(), is(equalTo(1L)));
+        assertThat(page.getContent().get(0), is(message));
     }
 
 }

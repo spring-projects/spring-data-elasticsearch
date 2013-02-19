@@ -6,6 +6,8 @@ public class IndexQuery{
     private String id;
     private Object object;
     private Long version;
+    private String indexName;
+    private String type;
 
     public String getId() {
         return id;
@@ -29,5 +31,21 @@ public class IndexQuery{
 
     public void setVersion(Long version) {
         this.version = version;
+    }
+
+    public String getIndexName() {
+        return indexName;
+    }
+
+    public void setIndexName(String indexName) {
+        this.indexName = indexName;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

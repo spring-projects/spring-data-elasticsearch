@@ -4,6 +4,8 @@ package org.springframework.data.elasticsearch.core.query;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.util.List;
+
 public interface Query {
 
     int DEFAULT_PAGE_SIZE = 10;
@@ -48,4 +50,42 @@ public interface Query {
      */
     Sort getSort();
 
+
+    /**
+     * Get Indices to be searched
+     * @return
+     */
+    List<String> getIndices();
+
+
+    /**
+     * Add Indices to be added as part of search request
+     * @param indices
+     */
+    void addIndices(String...indices);
+
+    /**
+     * Add types to be searched
+     * @param types
+     */
+    void addTypes(String...types);
+
+    /**
+     * Get types to be searched
+     * @return
+     */
+    List<String> getTypes();
+
+    /**
+     * Add fields to be added as part of search request
+     * @param fields
+     */
+    void addFields(String...fields);
+
+
+    /**
+     * Get fields to be returned as part of search request
+     * @return
+     */
+    List<String> getFields();
 }

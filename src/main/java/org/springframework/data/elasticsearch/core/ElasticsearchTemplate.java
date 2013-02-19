@@ -13,6 +13,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.collect.MapBuilder;
+import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.sort.SortOrder;
@@ -46,7 +47,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     private Client client;
     private ElasticsearchConverter elasticsearchConverter;
-
     private ObjectMapper objectMapper = new ObjectMapper();
 
     {
@@ -98,12 +98,21 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public <T> Page<T> queryForPage(SearchQuery query, Class<T> clazz) {
-        SearchRequestBuilder searchRequestBuilder = prepareSearch(query,clazz);
-        if(query.getElasticsearchFilter() != null){
-            searchRequestBuilder.setFilter(query.getElasticsearchFilter());
+        SearchResponse response = doSearch(prepareSearch(query,clazz), query.getElasticsearchQuery(), query.getElasticsearchFilter());
+        return mapResults(response, clazz, query.getPageable());
+    }
+
+
+    public <T> Page<T> queryForPage(SearchQuery query, ResultsMapper<T> resultsMapper) {
+        SearchResponse response = doSearch(prepareSearch(query), query.getElasticsearchQuery(), query.getElasticsearchFilter());
+        return resultsMapper.mapResults(response);
+    }
+
+    private SearchResponse doSearch(SearchRequestBuilder searchRequest, QueryBuilder query,  FilterBuilder filter ){
+        if(filter != null){
+            searchRequest.setFilter(filter);
         }
-        SearchResponse response = searchRequestBuilder.setQuery(query.getElasticsearchQuery()).execute().actionGet();
-        return  mapResults(response, clazz, query.getPageable());
+        return searchRequest.setQuery(query).execute().actionGet();
     }
 
     @Override
@@ -195,16 +204,31 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     private <T> SearchRequestBuilder prepareSearch(Query query, Class<T> clazz){
-        int startRecord=0;
-        if(query.getPageable() != null){
-            startRecord = ((query.getPageable().getPageNumber() - 1) * query.getPageable().getPageSize());
+        if(query.getIndices().isEmpty()){
+            query.addIndices(retrieveIndexNameFromPersistentEntity(clazz));
         }
-        ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
-        SearchRequestBuilder searchRequestBuilder = client.prepareSearch(persistentEntity.getIndexName())
+        if(query.getTypes().isEmpty()){
+            query.addTypes(retrieveTypeFromPersistentEntity(clazz));
+        }
+        return prepareSearch(query);
+    }
+
+    private SearchRequestBuilder prepareSearch(Query query){
+        int startRecord = 0;
+        SearchRequestBuilder searchRequestBuilder = client.prepareSearch(toArray(query.getIndices()))
                 .setSearchType(DFS_QUERY_THEN_FETCH)
-                .setTypes(persistentEntity.getIndexType())
-                .setFrom(startRecord < 0 ? 0 : startRecord)
-                .setSize(query.getPageable() != null ? query.getPageable().getPageSize() : 10);
+                .setTypes(toArray(query.getTypes()));
+
+        if(query.getPageable() != null){
+            startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
+            searchRequestBuilder.setSize(query.getPageable().getPageSize());
+        }
+        searchRequestBuilder.setFrom(startRecord);
+
+
+        if(!query.getFields().isEmpty()){
+            searchRequestBuilder.addFields(toArray(query.getFields()));
+        }
 
         if(query.getSort() != null){
             for(Sort.Order order : query.getSort()){
@@ -216,8 +240,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     private IndexRequestBuilder prepareIndex(IndexQuery query){
         try {
-            ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(query.getObject().getClass());
-            IndexRequestBuilder indexRequestBuilder = client.prepareIndex(persistentEntity.getIndexName(), persistentEntity.getIndexType(), query.getId())
+            String indexName = isBlank(query.getIndexName())?
+                    retrieveIndexNameFromPersistentEntity(query.getObject().getClass())[0] : query.getIndexName();
+            String type = isBlank(query.getType())?
+                    retrieveTypeFromPersistentEntity(query.getObject().getClass())[0] : query.getType();
+
+            IndexRequestBuilder indexRequestBuilder = client.prepareIndex(indexName,type,query.getId())
                     .setSource(objectMapper.writeValueAsString(query.getObject()));
             if(query.getVersion() != null){
                 indexRequestBuilder.setVersion(query.getVersion());
@@ -244,6 +272,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         Assert.isTrue(clazz.isAnnotationPresent(Document.class), "Unable to identify index name. " +
                 clazz.getSimpleName() + " is not a Document. Make sure the document class is annotated with @Document(indexName=\"foo\")");
         return elasticsearchConverter.getMappingContext().getPersistentEntity(clazz);
+    }
+
+    private String[] retrieveIndexNameFromPersistentEntity(Class clazz){
+        return new String[]{getPersistentEntityFor(clazz).getIndexName()};
+    }
+
+    private String[] retrieveTypeFromPersistentEntity(Class clazz){
+        return new String[]{getPersistentEntityFor(clazz).getIndexType()};
     }
 
     private <T> Page<T> mapResults(SearchResponse response, final Class<T> elementType,final Pageable pageable){
@@ -273,4 +309,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
             throw new ElasticsearchException("failed to map source [ " + source + "] to class " + clazz.getSimpleName() , e);
         }
     }
+
+    private static String[] toArray(List<String> values){
+        String[] valuesAsArray = new String[values.size()];
+        return values.toArray(valuesAsArray);
+
+    }
+
 }
+

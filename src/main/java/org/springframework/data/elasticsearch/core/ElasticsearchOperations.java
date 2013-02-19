@@ -61,6 +61,17 @@ public interface ElasticsearchOperations {
      */
     <T> Page<T> queryForPage(SearchQuery query, Class<T> clazz);
 
+
+    /**
+     * Execute the query against elasticsearch and return result as {@link Page}
+     *
+     * @param query
+     * @param resultsMapper
+     * @return
+     */
+    <T> Page<T> queryForPage(SearchQuery query, ResultsMapper<T> resultsMapper);
+
+
     /**
      * Execute the query against elasticsearch and return result as {@link Page}
      *
