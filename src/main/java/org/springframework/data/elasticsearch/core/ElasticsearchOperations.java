@@ -1,7 +1,6 @@
 package org.springframework.data.elasticsearch.core;
 
 
-import org.elasticsearch.action.bulk.BulkResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -91,6 +90,13 @@ public interface ElasticsearchOperations {
      */
     <T> Page<T> queryForPage(StringQuery query, Class<T> clazz);
 
+    /**
+     * Execute the query against elasticsearch and return ids
+     *
+     * @param query
+     * @return
+     */
+    <T> List<String> queryForIds(SearchQuery query);
 
     /**
      * return number of elements found by for given query
@@ -155,5 +161,25 @@ public interface ElasticsearchOperations {
      * @param waitForOperation
      */
     <T> void refresh(Class<T> clazz,boolean waitForOperation);
+
+    /**
+     * Returns scroll id for scan query
+     * @param query
+     * @param scrollTimeInMillis
+     * @param noFields
+     * @return
+     */
+     String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields);
+
+    /**
+     * Scrolls the results for give scroll id
+     * @param scrollId
+     * @param scrollTimeInMillis
+     * @param resultsMapper
+     * @param <T>
+     * @return
+     */
+    <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, ResultsMapper<T> resultsMapper);
+
 
 }
