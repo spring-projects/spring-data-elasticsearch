@@ -17,6 +17,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -100,13 +101,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public <T> Page<T> queryForPage(SearchQuery query, Class<T> clazz) {
-        SearchResponse response = doSearch(prepareSearch(query,clazz), query.getElasticsearchQuery(), query.getElasticsearchFilter());
+        SearchResponse response = doSearch(prepareSearch(query,clazz), query.getElasticsearchQuery(), query.getElasticsearchFilter(),query.getElasticsearchSort());
         return mapResults(response, clazz, query.getPageable());
     }
 
 
     public <T> Page<T> queryForPage(SearchQuery query, ResultsMapper<T> resultsMapper) {
-        SearchResponse response = doSearch(prepareSearch(query), query.getElasticsearchQuery(), query.getElasticsearchFilter());
+        SearchResponse response = doSearch(prepareSearch(query), query.getElasticsearchQuery(), query.getElasticsearchFilter(),query.getElasticsearchSort());
         return resultsMapper.mapResults(response);
     }
 
@@ -121,10 +122,15 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return extractIds(response);
     }
 
-    private SearchResponse doSearch(SearchRequestBuilder searchRequest, QueryBuilder query,  FilterBuilder filter ){
+    private SearchResponse doSearch(SearchRequestBuilder searchRequest, QueryBuilder query,  FilterBuilder filter, SortBuilder sortBuilder){
         if(filter != null){
             searchRequest.setFilter(filter);
         }
+
+        if(sortBuilder != null){
+            searchRequest.addSort(sortBuilder);
+        }
+
         return searchRequest.setQuery(query).execute().actionGet();
     }
 

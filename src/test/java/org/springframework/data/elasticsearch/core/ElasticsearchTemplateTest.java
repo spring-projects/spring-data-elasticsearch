@@ -3,6 +3,9 @@ package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -250,6 +253,65 @@ public class ElasticsearchTemplateTest {
     }
 
     @Test
+    public void shouldTestSortBuilder(){
+        //given
+        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+        //first document
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity1 = new SampleEntity();
+        sampleEntity1.setId(documentId);
+        sampleEntity1.setMessage("abc");
+        sampleEntity1.setRate(10);
+        sampleEntity1.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery1 = new IndexQuery();
+        indexQuery1.setId(documentId);
+        indexQuery1.setObject(sampleEntity1);
+
+        //second document
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setMessage("xyz");
+        sampleEntity2.setRate(5);
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery2 = new IndexQuery();
+        indexQuery2.setId(documentId2);
+        indexQuery2.setObject(sampleEntity2);
+
+        //third document
+        String documentId3 = randomNumeric(5);
+        SampleEntity sampleEntity3 = new SampleEntity();
+        sampleEntity3.setId(documentId3);
+        sampleEntity3.setMessage("xyz");
+        sampleEntity3.setRate(15);
+        sampleEntity3.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery3 = new IndexQuery();
+        indexQuery3.setId(documentId3);
+        indexQuery3.setObject(sampleEntity3);
+
+        indexQueries.add(indexQuery1);
+        indexQueries.add(indexQuery2);
+        indexQueries.add(indexQuery3);
+
+        elasticsearchTemplate.bulkIndex(indexQueries);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.setElasticsearchQuery(matchAllQuery());
+        SortBuilder sortBuilder = new FieldSortBuilder("rate").ignoreUnmapped(true).order(SortOrder.ASC);
+
+        searchQuery.setElasticsearchSort(sortBuilder);
+        //when
+        Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
+        //then
+        assertThat(sampleEntities.getTotalElements(), equalTo(3L));
+        assertThat(sampleEntities.getContent().get(0).getRate(),is(sampleEntity2.getRate()));
+    }
+
+    @Test
     public void shouldExecuteStringQuery(){
         //given
         String documentId = randomNumeric(5);
@@ -414,5 +476,4 @@ public class ElasticsearchTemplateTest {
         assertThat(page.getTotalElements(), is(equalTo(1L)));
         assertThat(page.getContent().get(0), is(message));
     }
-
 }
