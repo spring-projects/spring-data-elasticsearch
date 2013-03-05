@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ import org.springframework.util.Assert;
  * Criteria is the central class when constructing queries. It follows more or less a fluent API style, which allows to
  * easily chain together multiple criteria.
  *
+ * @author Rizwan Idrees
+ * @author Mohsin Husen
  */
 public class Criteria {
 

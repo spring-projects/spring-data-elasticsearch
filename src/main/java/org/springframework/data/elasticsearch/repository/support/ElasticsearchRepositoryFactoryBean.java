@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,9 @@ import java.io.Serializable;
 
 /**
  * Spring {@link org.springframework.beans.factory.FactoryBean} implementation to ease container based configuration for XML namespace and JavaConfig.
- * 
+ *
+ * @author Rizwan Idrees
+ * @author Mohsin Husen
  */
 public class ElasticsearchRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends
         RepositoryFactoryBeanSupport<T, S, ID> {
