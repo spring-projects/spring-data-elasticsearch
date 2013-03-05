@@ -261,8 +261,16 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
             String type = isBlank(query.getType())?
                     retrieveTypeFromPersistentEntity(query.getObject().getClass())[0] : query.getType();
 
-            IndexRequestBuilder indexRequestBuilder = client.prepareIndex(indexName,type,query.getId())
-                    .setSource(objectMapper.writeValueAsString(query.getObject()));
+            IndexRequestBuilder indexRequestBuilder = null;
+
+            if(query.getId() != null){
+                indexRequestBuilder = client.prepareIndex(indexName,type,query.getId());
+            }else {
+                indexRequestBuilder = client.prepareIndex(indexName,type);
+            }
+
+            indexRequestBuilder.setSource(objectMapper.writeValueAsString(query.getObject()));
+
             if(query.getVersion() != null){
                 indexRequestBuilder.setVersion(query.getVersion());
                 indexRequestBuilder.setVersionType(EXTERNAL);

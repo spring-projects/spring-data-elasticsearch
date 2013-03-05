@@ -55,10 +55,13 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
     public ID getId(T entity) {
         ElasticsearchPersistentProperty id = entityMetadata.getIdProperty();
         try {
-            return (ID) BeanWrapper.create(entity, null).getProperty(id);
+            if(id != null){
+                return (ID) BeanWrapper.create(entity, null).getProperty(id);
+            }
         } catch (Exception e) {
             throw new IllegalStateException("ID could not be resolved", e);
         }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
