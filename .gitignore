@@ -1,6 +1,17 @@
 atlassian-ide-plugin.xml
+
+## Ignore svn files
 .svn
-spring-data-elasticsearch.iml
-spring-data-elasticsearch.ipr
-spring-data-elasticsearch.iws
+
 target
+
+## Ignore project files created by Eclipse
+.settings
+.project
+.classpath
+
+## Ignore project files created by IntelliJ IDEA
+*.iml
+*.ipr
+*.iws
+.idea
