@@ -32,6 +32,7 @@ import java.util.List;
 
 import static org.elasticsearch.index.query.QueryBuilders.inQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
 /**
  * Elasticsearch specific repository implementation. Likely to be used as target within {@link ElasticsearchRepositoryFactory}
@@ -185,11 +186,19 @@ public class SimpleElasticsearchRepository<T> implements ElasticsearchRepository
 
     @Override
     public Page<T> searchSimilar(T entity) {
+        return searchSimilar(entity, DEFAULT_PAGE);
+    }
+
+    @Override
+    public Page<T> searchSimilar(T entity, Pageable pageable) {
         Assert.notNull(entity, "Cannot search similar records for 'null'.");
+        Assert.notNull(entity, "Pageable cannot be 'null'");
         MoreLikeThisQuery query = new MoreLikeThisQuery();
         query.setId(extractIdFromBean(entity));
+        query.setPageable(pageable);
         return elasticsearchOperations.moreLikeThis(query, getEntityClass());
     }
+
 
     @Override
     public void delete(String id) {

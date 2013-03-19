@@ -16,14 +16,13 @@
 
 package org.springframework.data.elasticsearch.core.query;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.commons.collections.CollectionUtils.addAll;
-import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE_SIZE;
+import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
 /**
  * MoreLikeThisQuery
@@ -50,7 +49,7 @@ public class MoreLikeThisQuery {
     private Integer minWordLen;
     private Integer maxWordLen;
     private Float boostTerms;
-    private Pageable pageable = new PageRequest(0, DEFAULT_PAGE_SIZE);
+    private Pageable pageable = DEFAULT_PAGE;
 
     public String getId() {
         return id;

@@ -33,8 +33,6 @@ import static org.apache.commons.collections.CollectionUtils.addAll;
  */
 abstract class AbstractQuery implements Query{
 
-    private static final Pageable DEFAULT_PAGE = new PageRequest(0, DEFAULT_PAGE_SIZE);
-
     protected Pageable pageable = DEFAULT_PAGE;
     protected Sort sort;
     protected List<String> indices = new ArrayList<String>();
