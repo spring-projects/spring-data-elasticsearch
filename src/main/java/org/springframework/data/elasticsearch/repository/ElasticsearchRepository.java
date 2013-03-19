@@ -42,4 +42,6 @@ public interface ElasticsearchRepository<T, ID extends Serializable> extends Ela
     Page<T> search(SearchQuery searchQuery);
 
     Page<T> searchSimilar(T entity);
+
+    Page<T> searchSimilar(T entity, Pageable pageable);
 }
