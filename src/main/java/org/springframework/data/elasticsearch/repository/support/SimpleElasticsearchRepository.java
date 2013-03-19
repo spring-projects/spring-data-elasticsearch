@@ -19,14 +19,10 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.util.Assert;
 
-import javax.annotation.PostConstruct;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -185,6 +181,14 @@ public class SimpleElasticsearchRepository<T> implements ElasticsearchRepository
     @Override
     public Page<T> search(SearchQuery query){
         return elasticsearchOperations.queryForPage(query, getEntityClass());
+    }
+
+    @Override
+    public Page<T> searchSimilar(T entity) {
+        Assert.notNull(entity, "Cannot search similar records for 'null'.");
+        MoreLikeThisQuery query = new MoreLikeThisQuery();
+        query.setId(extractIdFromBean(entity));
+        return elasticsearchOperations.moreLikeThis(query, getEntityClass());
     }
 
     @Override

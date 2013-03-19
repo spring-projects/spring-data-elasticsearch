@@ -29,7 +29,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -381,4 +383,40 @@ public class RepositoryTest {
         //then
         assertThat(sampleEntities,is(notNullValue()));
     }
+
+
+    @Test
+    public void shouldReturnSimilarEntities(){
+        //given
+        String sampleMessage = "So we build a web site or an application and want to add search to it, " +
+                "and then it hits us: getting search working is hard. We want our search solution to be fast," +
+                " we want a painless setup and a completely free search schema, we want to be able to index data simply using JSON over HTTP, " +
+                "we want our search server to be always available, we want to be able to start with one machine and scale to hundreds, " +
+                "we want real-time search, we want simple multi-tenancy, and we want a solution that is built for the cloud.";
+
+
+
+        List<SampleEntity> sampleEntities = createSampleEntitiesWithMessage(sampleMessage, 30);
+        repository.save(sampleEntities);
+
+        //when
+        Page<SampleEntity> results = repository.searchSimilar(sampleEntities.get(0));
+
+        //then
+        assertThat(results.getTotalElements(), is(greaterThanOrEqualTo(1L)));
+    }
+
+    private static List<SampleEntity> createSampleEntitiesWithMessage(String message, int numberOfEntities){
+        List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+        for(int i = 0; i < numberOfEntities; i++){
+            String documentId = randomNumeric(5);
+            SampleEntity sampleEntity = new SampleEntity();
+            sampleEntity.setId(documentId);
+            sampleEntity.setMessage(message);
+            sampleEntity.setVersion(System.currentTimeMillis());
+            sampleEntities.add(sampleEntity);
+        }
+        return sampleEntities;
+    }
+
 }

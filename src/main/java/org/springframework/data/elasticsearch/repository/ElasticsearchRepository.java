@@ -22,7 +22,6 @@ import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.repository.NoRepositoryBean;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * @param <T>
@@ -41,4 +40,6 @@ public interface ElasticsearchRepository<T, ID extends Serializable> extends Ela
     Page<T> search(QueryBuilder elasticsearchQuery, Pageable pageable);
 
     Page<T> search(SearchQuery searchQuery);
+
+    Page<T> searchSimilar(T entity);
 }
