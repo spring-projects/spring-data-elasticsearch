@@ -202,5 +202,13 @@ public interface ElasticsearchOperations {
      */
     <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, ResultsMapper<T> resultsMapper);
 
+    /**
+     *  more like this query to search for documents that are "like" a specific document.
+     * @param query
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+    <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz);
 
 }

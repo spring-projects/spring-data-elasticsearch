@@ -24,6 +24,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.count.CountRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.action.mlt.MoreLikeThisRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -54,7 +55,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.elasticsearch.action.search.SearchType.DFS_QUERY_THEN_FETCH;
 import static org.elasticsearch.action.search.SearchType.SCAN;
 import static org.elasticsearch.client.Requests.indicesExistsRequest;
@@ -127,7 +130,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return mapResults(response, clazz, query.getPageable());
     }
 
-
+    @Override
     public <T> Page<T> queryForPage(SearchQuery query, ResultsMapper<T> resultsMapper) {
         SearchResponse response = doSearch(prepareSearch(query), query.getElasticsearchQuery(), query.getElasticsearchFilter(),query.getElasticsearchSort());
         return resultsMapper.mapResults(response);
@@ -142,18 +145,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         }
         SearchResponse response = request.execute().actionGet();
         return extractIds(response);
-    }
-
-    private SearchResponse doSearch(SearchRequestBuilder searchRequest, QueryBuilder query,  FilterBuilder filter, SortBuilder sortBuilder){
-        if(filter != null){
-            searchRequest.setFilter(filter);
-        }
-
-        if(sortBuilder != null){
-            searchRequest.addSort(sortBuilder);
-        }
-
-        return searchRequest.setQuery(query).execute().actionGet();
     }
 
     @Override
@@ -229,6 +220,114 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                 .execute().actionGet();
     }
 
+    @Override
+    public String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields) {
+        Assert.notNull(query.getIndices(), "No index defined for Query");
+        Assert.notNull(query.getTypes(), "No type define for Query");
+        Assert.notNull(query.getPageable(), "Query.pageable is required for scan & scroll");
+
+        SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(query.getIndices()))
+                .setSearchType(SCAN)
+                .setQuery(query.getElasticsearchQuery())
+                .setTypes(toArray(query.getTypes()))
+                .setScroll(TimeValue.timeValueMillis(scrollTimeInMillis))
+                .setFrom(0)
+                .setSize(query.getPageable().getPageSize());
+
+        if(query.getElasticsearchFilter() != null){
+            requestBuilder.setFilter(query.getElasticsearchFilter());
+        }
+
+        if(noFields){
+            requestBuilder.setNoFields();
+        }
+        return requestBuilder.execute().actionGet().getScrollId();
+    }
+
+    @Override
+    public <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, ResultsMapper<T> resultsMapper) {
+        SearchResponse response = client.prepareSearchScroll(scrollId)
+                .setScroll(TimeValue.timeValueMillis(scrollTimeInMillis))
+                .execute().actionGet();
+        return resultsMapper.mapResults(response);
+    }
+
+    @Override
+    public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz) {
+        int startRecord = 0;
+        ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
+        String indexName = isNotBlank(query.getIndexName())? query.getIndexName(): persistentEntity.getIndexName();
+        String type = isNotBlank(query.getType())? query.getType() : persistentEntity.getIndexType();
+
+        Assert.notNull(indexName,"No 'indexName' defined for MoreLikeThisQuery");
+        Assert.notNull(type, "No 'type' defined for MoreLikeThisQuery");
+        Assert.notNull(query.getId(), "No document id defined for MoreLikeThisQuery");
+
+        MoreLikeThisRequestBuilder requestBuilder =
+                client.prepareMoreLikeThis(indexName,type, query.getId());
+
+        if(query.getPageable() != null){
+            startRecord = ((query.getPageable().getPageNumber() - 1) * query.getPageable().getPageSize());
+            requestBuilder.setSearchSize(query.getPageable().getPageSize());
+        }
+        requestBuilder.setSearchFrom(startRecord < 0 ? 0 : startRecord);
+
+        if(isNotEmpty(query.getSearchIndices())){
+            requestBuilder.setSearchIndices(toArray(query.getSearchIndices()));
+        }
+        if(isNotEmpty(query.getSearchTypes())){
+            requestBuilder.setSearchTypes(toArray(query.getSearchTypes()));
+        }
+        if(isNotEmpty(query.getFields())){
+            requestBuilder.setField(toArray(query.getFields()));
+        }
+        if(isNotBlank(query.getRouting())){
+            requestBuilder.setRouting(query.getRouting());
+        }
+        if(query.getPercentTermsToMatch() != null){
+            requestBuilder.setPercentTermsToMatch(query.getPercentTermsToMatch());
+        }
+        if(query.getMinTermFreq() != null){
+            requestBuilder.setMinTermFreq(query.getMinTermFreq());
+        }
+        if(query.getMaxQueryTerms() != null){
+            requestBuilder.maxQueryTerms(query.getMaxQueryTerms());
+        }
+        if(isNotEmpty(query.getStopWords())){
+            requestBuilder.setStopWords(toArray(query.getStopWords()));
+        }
+        if(query.getMinDocFreq() != null){
+            requestBuilder.setMinDocFreq(query.getMinDocFreq());
+        }
+        if(query.getMaxDocFreq() != null){
+            requestBuilder.setMaxDocFreq(query.getMaxDocFreq());
+        }
+        if(query.getMinWordLen() != null){
+            requestBuilder.setMinWordLen(query.getMinWordLen());
+        }
+        if(query.getMaxWordLen() != null){
+            requestBuilder.setMaxWordLen(query.getMaxWordLen());
+        }
+        if(query.getBoostTerms() != null){
+            requestBuilder.setBoostTerms(query.getBoostTerms());
+        }
+
+        SearchResponse response = requestBuilder.execute().actionGet();
+        return mapResults(response, clazz, query.getPageable());
+    }
+
+    private SearchResponse doSearch(SearchRequestBuilder searchRequest, QueryBuilder query,  FilterBuilder filter, SortBuilder sortBuilder){
+        if(filter != null){
+            searchRequest.setFilter(filter);
+        }
+
+        if(sortBuilder != null){
+            searchRequest.addSort(sortBuilder);
+        }
+
+        return searchRequest.setQuery(query).execute().actionGet();
+    }
+
     private boolean createIndexIfNotCreated(String indexName) {
         return  indexExists(indexName) ||  createIndex(indexName);
     }
@@ -256,7 +355,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     private SearchRequestBuilder prepareSearch(Query query){
         Assert.notNull(query.getIndices(), "No index defined for Query");
-        Assert.notNull(query.getTypes(), "No type define for Query");
+        Assert.notNull(query.getTypes(), "No type defined for Query");
 
         int startRecord = 0;
         SearchRequestBuilder searchRequestBuilder = client.prepareSearch(toArray(query.getIndices()))
@@ -318,38 +417,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
         client.admin().indices()
                 .refresh(refreshRequest(persistentEntity.getIndexName()).waitForOperations(waitForOperation)).actionGet();
-    }
-
-    @Override
-    public String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields) {
-        Assert.notNull(query.getIndices(), "No index defined for Query");
-        Assert.notNull(query.getTypes(), "No type define for Query");
-        Assert.notNull(query.getPageable(), "Query.pageable is required for scan & scroll");
-
-        SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(query.getIndices()))
-                .setSearchType(SCAN)
-                .setQuery(query.getElasticsearchQuery())
-                .setTypes(toArray(query.getTypes()))
-                .setScroll(TimeValue.timeValueMillis(scrollTimeInMillis))
-                .setFrom(0)
-                .setSize(query.getPageable().getPageSize());
-
-        if(query.getElasticsearchFilter() != null){
-            requestBuilder.setFilter(query.getElasticsearchFilter());
-        }
-
-        if(noFields){
-            requestBuilder.setNoFields();
-        }
-        return requestBuilder.execute().actionGet().getScrollId();
-    }
-
-    @Override
-    public <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, ResultsMapper<T> resultsMapper) {
-        SearchResponse response = client.prepareSearchScroll(scrollId)
-                .setScroll(TimeValue.timeValueMillis(scrollTimeInMillis))
-                .execute().actionGet();
-        return resultsMapper.mapResults(response);
     }
 
     private ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz){

@@ -112,7 +112,6 @@ public class ElasticsearchTemplateTest {
     @Test
     public void shouldReturnPageForGivenSearchQuery(){
         //given
-        //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
@@ -247,7 +246,7 @@ public class ElasticsearchTemplateTest {
     }
 
     @Test
-    public void shouldTestFilterBuilder(){
+    public void shouldFilterSearchResultsGivenFilter(){
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
@@ -271,7 +270,7 @@ public class ElasticsearchTemplateTest {
     }
 
     @Test
-    public void shouldTestSortBuilder(){
+    public void shouldSortResultsGivenSortCriteria(){
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -493,5 +492,52 @@ public class ElasticsearchTemplateTest {
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
         assertThat(page.getContent().get(0), is(message));
+    }
+
+    @Test
+    public void shouldReturnSimilarResultsGivenMoreLikeThisQuery(){
+        //given
+        String sampleMessage = "So we build a web site or an application and want to add search to it, " +
+                "and then it hits us: getting search working is hard. We want our search solution to be fast," +
+                " we want a painless setup and a completely free search schema, we want to be able to index data simply using JSON over HTTP, " +
+                "we want our search server to be always available, we want to be able to start with one machine and scale to hundreds, " +
+                "we want real-time search, we want simple multi-tenancy, and we want a solution that is built for the cloud.";
+
+        String documentId1 = randomNumeric(5);
+        SampleEntity sampleEntity1 = new SampleEntity();
+        sampleEntity1.setId(documentId1);
+        sampleEntity1.setMessage(sampleMessage);
+        sampleEntity1.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery1 = new IndexQuery();
+        indexQuery1.setId(documentId1);
+        indexQuery1.setObject(sampleEntity1);
+
+        elasticsearchTemplate.index(indexQuery1);
+
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setMessage(sampleMessage);
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery2 = new IndexQuery();
+        indexQuery2.setId(documentId2);
+        indexQuery2.setObject(sampleEntity2);
+
+        elasticsearchTemplate.index(indexQuery2);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+
+        MoreLikeThisQuery moreLikeThisQuery = new MoreLikeThisQuery();
+        moreLikeThisQuery.setId(documentId2);
+        moreLikeThisQuery.addFields("message");
+        moreLikeThisQuery.setMinDocFreq(1);
+        //when
+        Page<SampleEntity> sampleEntities = elasticsearchTemplate.moreLikeThis(moreLikeThisQuery, SampleEntity.class);
+
+        //then
+        assertThat(sampleEntities.getTotalElements(), is(equalTo(1L)));
+        assertThat(sampleEntities.getContent(), hasItem(sampleEntity1));
     }
 }
