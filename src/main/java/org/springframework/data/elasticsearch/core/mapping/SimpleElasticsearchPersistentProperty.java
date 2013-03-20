@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
-import org.springframework.data.elasticsearch.annotations.Version;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
@@ -35,6 +34,7 @@ import java.util.Set;
 public class SimpleElasticsearchPersistentProperty extends AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements
 		ElasticsearchPersistentProperty {
 
+    private static final Class FIELD_ANNOTATION = org.springframework.data.elasticsearch.annotations.Field.class;
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
 
@@ -60,8 +60,15 @@ public class SimpleElasticsearchPersistentProperty extends AnnotationBasedPersis
 	}
 
     @Override
-    public boolean isVersionProperty(){
-        return field.isAnnotationPresent(Version.class);
+    public String getMappingType() {
+        return isAnnotationPresent(FIELD_ANNOTATION)?
+               ((org.springframework.data.elasticsearch.annotations.Field) findAnnotation(FIELD_ANNOTATION)).type(): null;
+    }
+
+    @Override
+    public String getAnalyzer() {
+      return isAnnotationPresent(FIELD_ANNOTATION)?
+                ((org.springframework.data.elasticsearch.annotations.Field) findAnnotation(FIELD_ANNOTATION)).analyzer(): null;
     }
 
     @Override

@@ -17,7 +17,7 @@
 package org.springframework.data.elasticsearch.core.mapping;
 
 import org.junit.Test;
-import org.springframework.data.elasticsearch.annotations.Version;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;

@@ -45,7 +45,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
     private final StandardEvaluationContext context;
     private String indexName;
     private String indexType;
-    private ElasticsearchPersistentProperty versionProperty;
 
     public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
         super(typeInformation);
@@ -77,21 +76,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
     }
 
     @Override
-    public ElasticsearchPersistentProperty getVersionProperty() {
-        return this.versionProperty;
-    }
-
-    @Override
     public void addPersistentProperty(ElasticsearchPersistentProperty property) {
         super.addPersistentProperty(property);
         if(property.isVersionProperty()){
-            if (this.versionProperty != null) {
-                throw new MappingException(String.format(
-                        "Attempt to add version property %s but already have property %s registered "
-                                + "as version. Check your mapping configuration!", property.getField(), versionProperty.getField()));
-            }
             Assert.isTrue(property.getType() ==  Long.class, "Version property should be Long");
-            this.versionProperty = property;
         }
     }
 }
