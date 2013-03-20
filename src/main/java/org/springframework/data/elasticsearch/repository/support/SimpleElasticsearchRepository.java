@@ -95,9 +95,13 @@ public class SimpleElasticsearchRepository<T> implements ElasticsearchRepository
 
     @Override
     public Iterable<T> findAll(Sort sort) {
+        int itemCount = (int) this.count();
+        if (itemCount == 0) {
+            return new PageImpl<T>(Collections.<T> emptyList());
+        }
         SearchQuery query = new SearchQuery();
         query.setElasticsearchQuery(matchAllQuery());
-        query.setPageable(new PageRequest(0,Integer.MAX_VALUE, sort));
+        query.setPageable(new PageRequest(0,itemCount, sort));
         return elasticsearchOperations.queryForPage(query, getEntityClass());
     }
 
