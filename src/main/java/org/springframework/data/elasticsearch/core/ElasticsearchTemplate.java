@@ -267,10 +267,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                 client.prepareMoreLikeThis(indexName,type, query.getId());
 
         if(query.getPageable() != null){
-            startRecord = ((query.getPageable().getPageNumber() - 1) * query.getPageable().getPageSize());
+            startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
             requestBuilder.setSearchSize(query.getPageable().getPageSize());
         }
-        requestBuilder.setSearchFrom(startRecord < 0 ? 0 : startRecord);
+        requestBuilder.setSearchFrom(startRecord);
 
         if(isNotEmpty(query.getSearchIndices())){
             requestBuilder.setSearchIndices(toArray(query.getSearchIndices()));
@@ -363,10 +363,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                 .setTypes(toArray(query.getTypes()));
 
         if(query.getPageable() != null){
-            startRecord = ((query.getPageable().getPageNumber() - 1) * query.getPageable().getPageSize());
+            startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
             searchRequestBuilder.setSize(query.getPageable().getPageSize());
         }
-        searchRequestBuilder.setFrom(startRecord < 0 ? 0 : startRecord);
+        searchRequestBuilder.setFrom(startRecord);
 
 
         if(!query.getFields().isEmpty()){
