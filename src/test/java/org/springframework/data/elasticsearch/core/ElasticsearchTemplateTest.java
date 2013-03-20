@@ -540,4 +540,76 @@ public class ElasticsearchTemplateTest {
         assertThat(sampleEntities.getTotalElements(), is(equalTo(1L)));
         assertThat(sampleEntities.getContent(), hasItem(sampleEntity1));
     }
+
+    @Test
+    public void shouldReturnResultsWithScanAndScroll(){
+        //given
+        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+        //first document
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity1 = new SampleEntity();
+        sampleEntity1.setId(documentId);
+        sampleEntity1.setMessage("some message");
+        sampleEntity1.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery1 = new IndexQuery();
+        indexQuery1.setId(documentId);
+        indexQuery1.setObject(sampleEntity1);
+        indexQueries.add(indexQuery1);
+
+        //second document
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setMessage("some message");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery2 = new IndexQuery();
+        indexQuery2.setId(documentId2);
+        indexQuery2.setObject(sampleEntity2);
+
+        indexQueries.add(indexQuery2);
+        //when
+        elasticsearchTemplate.bulkIndex(indexQueries);
+        elasticsearchTemplate.refresh(SampleEntity.class,true);
+        //then
+
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.addIndices("test-index");
+        searchQuery.addTypes("test-type");
+        searchQuery.setElasticsearchQuery(matchAllQuery());
+        searchQuery.setPageable(new PageRequest(0,1));
+
+        String scrollId = elasticsearchTemplate.scan(searchQuery,1000,false);
+        List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+        boolean hasRecords = true;
+        while (hasRecords){
+            Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L , new ResultsMapper<SampleEntity>() {
+                @Override
+                public Page<SampleEntity> mapResults(SearchResponse response) {
+                    List<SampleEntity> chunk = new ArrayList<SampleEntity>();
+                    for(SearchHit searchHit : response.getHits()){
+                        if(response.getHits().getHits().length <= 0) {
+                            return null;
+                        }
+                        SampleEntity user = new SampleEntity();
+                        user.setId(searchHit.getId());
+                        user.setMessage((String)searchHit.getSource().get("message"));
+                        chunk.add(user);
+                    }
+                    return new PageImpl<SampleEntity>(chunk);
+                }
+
+            });
+            if(page != null) {
+                sampleEntities.addAll(page.getContent());
+                hasRecords = page.hasNextPage();
+            }
+            else{
+                hasRecords = false;
+            }
+
+        }
+        assertThat(sampleEntities.size(), is(equalTo(2)));
+    }
 }
