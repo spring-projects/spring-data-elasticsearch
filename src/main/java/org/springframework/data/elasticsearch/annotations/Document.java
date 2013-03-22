@@ -34,6 +34,6 @@ import java.lang.annotation.*;
 @Target({ ElementType.TYPE })
 public @interface Document {
 
-    String indexName() default "";
+    String indexName();
     String type() default "";
 }
