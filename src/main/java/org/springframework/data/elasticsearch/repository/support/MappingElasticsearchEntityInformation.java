@@ -87,11 +87,6 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
     }
 
     @Override
-    public String getVersionAttribute() {
-        return entityMetadata.getVersionProperty().getFieldName();
-    }
-
-    @Override
     public Long getVersion(T entity) {
         ElasticsearchPersistentProperty versionProperty = entityMetadata.getVersionProperty();
         try {
