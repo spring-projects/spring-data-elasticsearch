@@ -362,7 +362,6 @@ public class RepositoryTest {
     }
 
     @Test
-    @Ignore("By default, the search request will fail if there is no mapping associated with a field. The ignore_unmapped option allows to ignore fields that have no mapping and not sort by them")
     public void shouldSortByGivenField(){
         //todo
         //given
