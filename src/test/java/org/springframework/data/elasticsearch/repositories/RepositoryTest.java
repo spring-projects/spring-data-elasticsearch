@@ -330,7 +330,6 @@ public class RepositoryTest {
         sampleEntity1.setId(documentId1);
         sampleEntity1.setMessage("hello world.");
         sampleEntity1.setVersion(System.currentTimeMillis());
-        System.out.println(documentId1);
 
         String documentId2 = randomNumeric(5);
         SampleEntity sampleEntity2 = new SampleEntity();
