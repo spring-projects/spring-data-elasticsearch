@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repositories;
+package org.springframework.data.elasticsearch.repository.support;
 
 
 import org.junit.Before;
@@ -25,6 +25,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.SampleEntity;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.repositories.SampleElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -44,8 +45,8 @@ import static org.junit.Assert.*;
  */
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:/repository-test.xml")
-public class RepositoryTest {
+@ContextConfiguration("classpath:/simple-repository-test.xml")
+public class SimpleElasticsearchRepositoryTest {
 
     @Resource
     private SampleElasticsearchRepository repository;
@@ -79,7 +80,6 @@ public class RepositoryTest {
 
         SampleEntity entity2FromElasticSearch =  repository.findOne(documentId2);
         assertThat(entity2FromElasticSearch, is(notNullValue()));
-
     }
 
     @Test
