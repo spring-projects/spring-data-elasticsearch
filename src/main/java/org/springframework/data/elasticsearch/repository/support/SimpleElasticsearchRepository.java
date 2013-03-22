@@ -63,10 +63,15 @@ public class SimpleElasticsearchRepository<T> implements ElasticsearchRepository
         this.entityInformation = metadata;
         setEntityClass(this.entityInformation.getJavaType());
         createIndex();
+        putMapping();
     }
 
     private void createIndex(){
         elasticsearchOperations.createIndex(getEntityClass());
+    }
+
+    private void putMapping(){
+        elasticsearchOperations.putMapping(getEntityClass());
     }
 
     @Override

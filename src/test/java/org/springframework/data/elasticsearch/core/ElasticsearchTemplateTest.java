@@ -31,6 +31,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.SampleEntity;
+import org.springframework.data.elasticsearch.SampleMappingEntity;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -612,4 +613,14 @@ public class ElasticsearchTemplateTest {
         }
         assertThat(sampleEntities.size(), is(equalTo(2)));
     }
+
+    @Test
+    public void shouldPutMappingForGivenEntity()throws Exception{
+        //given
+        Class entity = SampleMappingEntity.class;
+        elasticsearchTemplate.createIndex(entity);
+        //when
+        assertThat(elasticsearchTemplate.putMapping(entity) , is(true)) ;
+    }
+
 }

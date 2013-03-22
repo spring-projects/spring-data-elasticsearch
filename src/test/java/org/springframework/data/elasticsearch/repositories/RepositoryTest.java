@@ -417,5 +417,4 @@ public class RepositoryTest {
         }
         return sampleEntities;
     }
-
 }

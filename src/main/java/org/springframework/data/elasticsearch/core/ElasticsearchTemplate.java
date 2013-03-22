@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -31,6 +32,7 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
@@ -63,6 +65,7 @@ import static org.elasticsearch.action.search.SearchType.SCAN;
 import static org.elasticsearch.client.Requests.indicesExistsRequest;
 import static org.elasticsearch.client.Requests.refreshRequest;
 import static org.elasticsearch.index.VersionType.EXTERNAL;
+import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMapping;
 
 /**
  * ElasticsearchTemplate
@@ -90,11 +93,24 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         this.elasticsearchConverter = (elasticsearchConverter == null)? new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()) : elasticsearchConverter ;
     }
 
-
     @Override
     public <T> boolean createIndex(Class<T> clazz) {
         ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
         return createIndexIfNotCreated(persistentEntity.getIndexName());
+    }
+
+    @Override
+    public <T> boolean putMapping(Class<T> clazz) {
+        ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
+        PutMappingRequestBuilder requestBuilder = client.admin().indices().preparePutMapping(persistentEntity.getIndexName())
+                .setType(persistentEntity.getIndexType());
+
+        try {
+            XContentBuilder xContentBuilder = buildMapping(clazz, persistentEntity.getIndexType(), persistentEntity.getIdProperty().getFieldName());
+            return requestBuilder.setSource(xContentBuilder).execute().actionGet().acknowledged();
+        } catch (Exception e) {
+            throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName() , e);
+        }
     }
 
     @Override

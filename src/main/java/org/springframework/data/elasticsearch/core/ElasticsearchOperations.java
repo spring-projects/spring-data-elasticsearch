@@ -37,11 +37,19 @@ public interface ElasticsearchOperations {
     ElasticsearchConverter getElasticsearchConverter();
 
     /**
-     * Create an index
+     * Create an index for a class
      * @param clazz
      * @param <T>
      */
     <T> boolean createIndex(Class<T> clazz);
+
+    /**
+     * Create mapping for a class
+     * @param clazz
+     * @param <T>
+     */
+    <T> boolean putMapping(Class<T> clazz);
+
 
     /**
      * Execute the query against elasticsearch and return the first returned object
