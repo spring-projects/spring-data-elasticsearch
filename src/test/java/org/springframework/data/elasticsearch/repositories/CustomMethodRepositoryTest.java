@@ -71,7 +71,7 @@ public class CustomMethodRepositoryTest {
         sampleEntity.setMessage("some message");
         repository.save(sampleEntity);
         //when
-        Page<SampleEntity> page = repository.findByType("test", new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByType("test", new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(greaterThanOrEqualTo(1L)));
@@ -87,7 +87,7 @@ public class CustomMethodRepositoryTest {
         sampleEntity.setMessage("some message");
         repository.save(sampleEntity);
         //when
-        Page<SampleEntity> page = repository.findByTypeNot("test", new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByTypeNot("test", new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -103,7 +103,7 @@ public class CustomMethodRepositoryTest {
         sampleEntity.setMessage("customQuery");
         repository.save(sampleEntity);
         //when
-        Page<SampleEntity> page  = repository.findByMessage("customQuery", new PageRequest(1, 10));
+        Page<SampleEntity> page  = repository.findByMessage("customQuery", new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(greaterThanOrEqualTo(1L)));
@@ -130,7 +130,7 @@ public class CustomMethodRepositoryTest {
         repository.save(sampleEntity2);
 
         //when
-        Page<SampleEntity> page = repository.findByRateLessThan(10, new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByRateLessThan(10, new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -148,7 +148,7 @@ public class CustomMethodRepositoryTest {
         repository.save(sampleEntity);
 
         //when
-        Page<SampleEntity> page = repository.findByRateBefore(10, new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByRateBefore(10, new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -166,7 +166,7 @@ public class CustomMethodRepositoryTest {
         repository.save(sampleEntity);
 
         //when
-        Page<SampleEntity> page = repository.findByRateAfter(10, new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByRateAfter(10, new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -184,7 +184,7 @@ public class CustomMethodRepositoryTest {
         repository.save(sampleEntity);
 
         //when
-        Page<SampleEntity> page = repository.findByMessageLike("fo", new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByMessageLike("fo", new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -202,7 +202,7 @@ public class CustomMethodRepositoryTest {
         repository.save(sampleEntity);
 
         //when
-        Page<SampleEntity> page = repository.findByMessageStartingWith("fo", new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByMessageStartingWith("fo", new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -220,7 +220,7 @@ public class CustomMethodRepositoryTest {
         repository.save(sampleEntity);
 
         //when
-        Page<SampleEntity> page = repository.findByMessageEndingWith("o", new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByMessageEndingWith("o", new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -238,7 +238,7 @@ public class CustomMethodRepositoryTest {
         repository.save(sampleEntity);
 
         //when
-        Page<SampleEntity> page = repository.findByMessageContaining("fo", new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByMessageContaining("fo", new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -265,7 +265,7 @@ public class CustomMethodRepositoryTest {
         List<String> ids = Arrays.asList(documentId,documentId2);
 
         //when
-        Page<SampleEntity> page = repository.findByIdIn(ids, new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByIdIn(ids, new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(2L)));
@@ -292,7 +292,7 @@ public class CustomMethodRepositoryTest {
         List<String> ids = Arrays.asList(documentId);
 
         //when
-        Page<SampleEntity> page = repository.findByIdNotIn(ids, new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByIdNotIn(ids, new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -319,7 +319,7 @@ public class CustomMethodRepositoryTest {
         sampleEntity2.setAvailable(false);
         repository.save(sampleEntity2);
         //when
-        Page<SampleEntity> page = repository.findByAvailableTrue(new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByAvailableTrue(new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -345,7 +345,7 @@ public class CustomMethodRepositoryTest {
         sampleEntity2.setAvailable(false);
         repository.save(sampleEntity2);
         //when
-        Page<SampleEntity> page = repository.findByAvailableFalse(new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByAvailableFalse(new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -381,14 +381,14 @@ public class CustomMethodRepositoryTest {
         repository.save(sampleEntity3);
 
         //when
-        Page<SampleEntity> page = repository.findByMessageOrderByTypeAsc("foo",new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByMessageOrderByTypeAsc("foo",new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
     }
 
     @Test
-    public void testCustomMethodForBoolean(){
+    public void shouldExecuteCustomMethodWithBooleanParameter(){
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
@@ -407,7 +407,7 @@ public class CustomMethodRepositoryTest {
         sampleEntity2.setAvailable(false);
         repository.save(sampleEntity2);
         //when
-        Page<SampleEntity> page = repository.findByAvailable(false,new PageRequest(1, 10));
+        Page<SampleEntity> page = repository.findByAvailable(false, new PageRequest(0, 10));
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
