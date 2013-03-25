@@ -448,24 +448,8 @@ public void setRepository(ProductRepository repository) {
 }</programlisting>
 			</example>
 		</section>
-		<!--<section id="elasticsearch.query-methods.named-queries">-->
-			<!--<title>Using NamedQueries</title>-->
-			<!--<para>-->
-				<!--Named queries can be kept in a properties file and wired to the-->
-				<!--accroding method. Please mind the naming convention described in-->
-				<!--<xref linkend="repositories.query-methods.query-lookup-strategies" />-->
-				<!--or use-->
-				<!--<interfacename>@Query</interfacename>-->
-				<!--.-->
-			<!--</para>-->
-			<!--<example>-->
-				<!--<title>-->
-					<!--Declare named query in properites file-->
-				<!--</title>-->
-				<!--<programlisting></programlisting>-->
-				<!--<programlisting language="java">-->
-<!--}</programlisting>-->
-			<!--</example>-->
-		<!--</section>-->
+
 	</section>
+
+
 </chapter>
