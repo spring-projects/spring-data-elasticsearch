@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.elasticsearch.core.geo.GeoLocation;
 import org.springframework.util.Assert;
 
 /**
@@ -335,7 +336,7 @@ public class Criteria {
 	}
 
 	/**
-	 * Crates new CriteriaEntry for multiple values {@code (arg0 arg1 arg2 ...)}
+	 * Creates new CriteriaEntry for multiple values {@code (arg0 arg1 arg2 ...)}
 	 * 
 	 * @param values the collection containing the values to match against
 	 * @return
@@ -343,8 +344,24 @@ public class Criteria {
 	public Criteria in(Iterable<?> values) {
 		Assert.notNull(values, "Collection of 'in' values must not be null");
         criteria.add(new CriteriaEntry(OperationKey.IN, values));
-		return this;
-	}
+        return this;
+    }
+
+    /**
+     * Creates new CriteriaEntry for {@code location WITHIN distance}
+     * @param location {@link GeoLocation} center coordinates
+     * @param distance {@link String} radius as a string (e.g. : '100km').
+     *                               Distance unit :
+     *                               either mi/miles or km can be set
+     *
+     * @return Criteria the chaind criteria with the new 'within' criteria included.
+     */
+    public Criteria within(GeoLocation location, String distance) {
+        Assert.notNull(location, "Location value for near criteria must not be null");
+        Assert.notNull(location, "Distance value for near criteria must not be null");
+        criteria.add(new CriteriaEntry(OperationKey.WITHIN, new Object[] { location, distance }));
+        return this;
+    }
 
 
 	private void assertNoBlankInWildcardedQuery(String searchString, boolean leadingWildcard, boolean trailingWildcard) {
@@ -426,7 +443,7 @@ public class Criteria {
 	}
 
 	public enum OperationKey {
-		EQUALS, CONTAINS, STARTS_WITH, ENDS_WITH, EXPRESSION, BETWEEN, FUZZY, IN;
+		EQUALS, CONTAINS, STARTS_WITH, ENDS_WITH, EXPRESSION, BETWEEN, FUZZY, IN, WITHIN, NEAR;
 	}
 
 	public static class CriteriaEntry {
