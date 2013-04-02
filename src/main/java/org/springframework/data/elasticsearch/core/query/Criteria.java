@@ -90,6 +90,12 @@ public class Criteria {
 		this.field = field;
 	}
 
+//    public void splitCriteria(List<CriteriaEntry> queries, List<CriteriaEntry> filters) {
+//        for(Criteria c : this.criteriaChain) {
+//            switch ()
+//        }
+//    }
+
 	/**
 	 * Static factory method to create a new Criteria for field with given name
 	 * 
