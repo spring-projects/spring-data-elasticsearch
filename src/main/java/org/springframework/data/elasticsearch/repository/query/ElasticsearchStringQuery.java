@@ -63,6 +63,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
         ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
         StringQuery stringQuery = createQuery(accessor);
         if(queryMethod.isPageQuery()){
+            stringQuery.setPageable(accessor.getPageable());
             return  elasticsearchOperations.queryForPage(stringQuery, queryMethod.getEntityInformation().getJavaType());
         }
         return elasticsearchOperations.queryForObject(stringQuery, queryMethod.getEntityInformation().getJavaType());

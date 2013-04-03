@@ -47,7 +47,8 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
         ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
         CriteriaQuery query = createQuery(accessor);
         if(queryMethod.isPageQuery()){
-            return  elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
+            query.setPageable(accessor.getPageable());
+            return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
         }
         return elasticsearchOperations.queryForObject(query, queryMethod.getEntityInformation().getJavaType());
     }

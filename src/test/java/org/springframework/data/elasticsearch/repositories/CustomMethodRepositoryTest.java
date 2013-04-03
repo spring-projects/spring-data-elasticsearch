@@ -23,6 +23,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.SampleEntity;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
@@ -34,6 +35,7 @@ import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.apache.commons.lang.RandomStringUtils.random;
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.hamcrest.Matchers.*;
@@ -411,6 +413,54 @@ public class CustomMethodRepositoryTest {
         //then
         assertThat(page, is(notNullValue()));
         assertThat(page.getTotalElements(), is(equalTo(1L)));
+    }
+
+    @Test
+    public void shouldReturnPageableResultsWithQueryAnnotationExpectedPageSize() {
+        // given
+        for (int i = 0; i < 30; i++) {
+            String documentId = String.valueOf(i);
+            SampleEntity sampleEntity = new SampleEntity();
+            sampleEntity.setId(documentId);
+            sampleEntity.setMessage("message");
+            sampleEntity.setVersion(System.currentTimeMillis());
+            repository.save(sampleEntity);
+        }
+        // when
+        Page<SampleEntity> pageResult = repository.findByMessage("message", new PageRequest(0, 23, new Sort(new Sort.Order(Sort.Direction.ASC,"message"))));
+        // then
+        assertThat(pageResult.getTotalElements(), is(equalTo(30L)));
+        assertThat(pageResult.getContent().size(), is(equalTo(23)));
+    }
+
+    @Test
+    public void shouldReturnPageableResultsWithGivenSortingOrder(){
+        //given
+        String documentId = random(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage("abc");
+        sampleEntity.setVersion(System.currentTimeMillis());
+        repository.save(sampleEntity);
+
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setMessage("abd");
+        sampleEntity.setVersion(System.currentTimeMillis());
+        repository.save(sampleEntity2);
+
+        String documentId3 = randomNumeric(5);
+        SampleEntity sampleEntity3 = new SampleEntity();
+        sampleEntity3.setId(documentId3);
+        sampleEntity3.setMessage("abe");
+        sampleEntity.setVersion(System.currentTimeMillis());
+        repository.save(sampleEntity3);
+        //when
+        Page<SampleEntity> pageResult = repository.findByMessageContaining("a", new PageRequest(0, 23, new Sort(new Sort.Order(Sort.Direction.DESC,"message"))));
+        //then
+        assertThat(pageResult.getContent().isEmpty(),is(false));
+        assertThat(pageResult.getContent().get(0).getMessage(),is(sampleEntity3.getMessage()));
     }
 
 }

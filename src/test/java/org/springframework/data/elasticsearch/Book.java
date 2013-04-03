@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 /**
  * @author Rizwan Idrees
@@ -23,6 +24,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 @Document(indexName = "book",type = "book")
 public class Book {
 
+    @Id
     private String id;
     private String name;
     private Author author;
