@@ -25,15 +25,13 @@ public class GeoLocation {
     private double longitude;
 
     public GeoLocation lat(double latitude) {
-        GeoLocation loc = new GeoLocation();
-        loc.setLatitude(latitude);
-        return loc;
+        setLatitude(latitude);
+        return this;
     }
 
     public GeoLocation lon(double longitude) {
-        GeoLocation loc = new GeoLocation();
-        loc.setLongitude(longitude);
-        return loc;
+        setLongitude(longitude);
+        return this;
     }
 
     public GeoLocation() {
