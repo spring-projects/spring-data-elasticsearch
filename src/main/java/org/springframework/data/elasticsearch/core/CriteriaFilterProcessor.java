@@ -37,8 +37,9 @@ import static org.springframework.data.elasticsearch.core.query.Criteria.Operati
 class CriteriaFilterProcessor {
 
 
-    List<FilterBuilder> createFilterFromCriteria(Criteria criteria) {
+    FilterBuilder createFilterFromCriteria(Criteria criteria) {
         List<FilterBuilder> fbList = new LinkedList<FilterBuilder>();
+        FilterBuilder filter = null;
 
         ListIterator<Criteria> chainIterator = criteria.getCriteriaChain().listIterator();
         while (chainIterator.hasNext()) {
@@ -53,7 +54,16 @@ class CriteriaFilterProcessor {
                 fbList.addAll(createFilterFragmentForCriteria(chainedCriteria));
             }
         }
-        return fbList;
+
+        if(!fbList.isEmpty()) {
+            if(fbList.size() == 1) {
+                filter =fbList.get(0);
+            } else {
+                filter = andFilter(fbList.toArray(new FilterBuilder[]{ }));
+            }
+        }
+
+        return filter;
     }
 
 
