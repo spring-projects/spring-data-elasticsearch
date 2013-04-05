@@ -57,12 +57,6 @@ Extending ElasticsearchRepository for custom methods
 ```java
     public interface BookRepository extends Repository<Book, String> {
 
-        //Equivalent Json Query will be "{ "bool" : { "must" :[{ "field" : {"name" : "?"} },{ "field" : {"price" : "?"} }]} }"
-        List<Book>; findByNameAndPrice(String name, Integer price);
-
-        //Equivalent Json Query will be "{"bool" : {"should" : [ {"field" : "name" : "?"}}, {"field" : {"price" : "?"}} ]}}"
-        List<Book> findByNameOrPrice(String name, Integer price);
-
         //Equivalent Json Query will be "{"bool" : {"must" : {"field" : {"name" : "?"}}}}"
         Page<Book> findByName(String name,Pageable page);
 
