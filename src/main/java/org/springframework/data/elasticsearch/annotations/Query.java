@@ -18,7 +18,7 @@ package org.springframework.data.elasticsearch.annotations;
 import java.lang.annotation.*;
 
 /**
- * Query
+ * AbstractQuery
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -37,7 +37,7 @@ public @interface Query {
     String value() default "";
 
     /**
-     * Named Query Named looked up by repository.
+     * Named AbstractQuery Named looked up by repository.
      *
      * @return
      */

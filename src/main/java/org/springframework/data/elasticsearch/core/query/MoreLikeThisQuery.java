@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.commons.collections.CollectionUtils.addAll;
-import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
+import static org.springframework.data.elasticsearch.core.query.AbstractQuery.DEFAULT_PAGE;
 
 /**
  * MoreLikeThisQuery

@@ -22,6 +22,8 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.util.Assert;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -37,26 +39,57 @@ class CriteriaQueryProcessor {
 
 
     QueryBuilder createQueryFromCriteria(Criteria criteria) {
-        BoolQueryBuilder query = boolQuery();
+        if(criteria == null || criteria.getQueryCriteriaEntries().size() == 0)
+            return null;
+
+        List<QueryBuilder> shouldQueryBuilderList = new LinkedList<QueryBuilder>();
+        List<QueryBuilder> mustNotQueryBuilderList = new LinkedList<QueryBuilder>();
+        List<QueryBuilder> mustQueryBuilderList = new LinkedList<QueryBuilder>();
+
 
         ListIterator<Criteria> chainIterator = criteria.getCriteriaChain().listIterator();
         while (chainIterator.hasNext()) {
             Criteria chainedCriteria = chainIterator.next();
-            if(chainedCriteria.isOr()){
-                query.should(createQueryFragmentForCriteria(chainedCriteria));
-            }else if(chainedCriteria.isNegating()){
-                query.mustNot(createQueryFragmentForCriteria(chainedCriteria));
-            }else{
-                query.must(createQueryFragmentForCriteria(chainedCriteria));
+            QueryBuilder queryFragmentForCriteria = createQueryFragmentForCriteria(chainedCriteria);
+
+            if(queryFragmentForCriteria!=null) {
+                if(chainedCriteria.isOr()){
+                    shouldQueryBuilderList.add(queryFragmentForCriteria);
+                }else if(chainedCriteria.isNegating()){
+                    mustNotQueryBuilderList.add(queryFragmentForCriteria);
+                }else{
+                    mustQueryBuilderList.add(queryFragmentForCriteria);
+                }
             }
         }
+
+        BoolQueryBuilder query = null;
+
+        if(!shouldQueryBuilderList.isEmpty() || !mustNotQueryBuilderList.isEmpty() || !mustQueryBuilderList.isEmpty()) {
+
+            query = boolQuery();
+
+            for(QueryBuilder qb : shouldQueryBuilderList) {
+                query.should(qb);
+            }
+            for(QueryBuilder qb : mustNotQueryBuilderList) {
+                query.mustNot(qb);
+            }
+            for(QueryBuilder qb : mustQueryBuilderList) {
+                query.must(qb);
+            }
+        }
+
         return query;
     }
 
 
     private QueryBuilder createQueryFragmentForCriteria(Criteria chainedCriteria) {
-        Iterator<Criteria.CriteriaEntry> it = chainedCriteria.getCriteriaEntries().iterator();
-        boolean singeEntryCriteria = (chainedCriteria.getCriteriaEntries().size() == 1);
+        if(chainedCriteria.getQueryCriteriaEntries().isEmpty())
+            return null;
+
+        Iterator<Criteria.CriteriaEntry> it = chainedCriteria.getQueryCriteriaEntries().iterator();
+        boolean singeEntryCriteria = (chainedCriteria.getQueryCriteriaEntries().size() == 1);
 
         String fieldName = chainedCriteria.getField().getName();
         Assert.notNull(fieldName,"Unknown field");

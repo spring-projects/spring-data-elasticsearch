@@ -89,7 +89,6 @@ public interface ElasticsearchOperations {
      */
     <T> Page<T> queryForPage(SearchQuery query, Class<T> clazz);
 
-
     /**
      * Execute the query against elasticsearch and return result as {@link Page}
      *

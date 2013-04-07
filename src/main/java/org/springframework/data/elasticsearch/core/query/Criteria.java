@@ -34,6 +34,7 @@ import org.springframework.util.Assert;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Franck Marchand
  */
 public class Criteria {
 
@@ -50,7 +51,8 @@ public class Criteria {
 	private List<Criteria> criteriaChain = new ArrayList<Criteria>(1);
 
 	private Set<CriteriaEntry> queryCriteria = new LinkedHashSet<CriteriaEntry>();
-	private Set<CriteriaEntry> filterCriteria = new LinkedHashSet<CriteriaEntry>();
+
+    private Set<CriteriaEntry> filterCriteria = new LinkedHashSet<CriteriaEntry>();
 
 	public Criteria() {
 	}
@@ -387,9 +389,13 @@ public class Criteria {
 		return this.field;
 	}
 
-	public Set<CriteriaEntry> getCriteriaEntries() {
+	public Set<CriteriaEntry> getQueryCriteriaEntries() {
 		return Collections.unmodifiableSet(this.queryCriteria);
 	}
+
+    public Set<CriteriaEntry> getFilterCriteria() {
+        return filterCriteria;
+    }
 
 	/**
 	 * Conjunction to be used with this criteria (AND | OR)

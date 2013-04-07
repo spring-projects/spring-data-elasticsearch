@@ -450,6 +450,32 @@ public class ElasticsearchTemplateTests {
         assertThat(sampleEntity1, is(notNullValue()));
     }
 
+//    @Test
+//    public void shouldExecuteGivenCriteriaQuery(){
+//        //given
+//        String documentId = randomNumeric(5);
+//        SampleEntity sampleEntity = new SampleEntity();
+//        sampleEntity.setId(documentId);
+//        sampleEntity.setMessage("some test message");
+//        sampleEntity.setVersion(System.currentTimeMillis());
+//
+//        IndexQuery indexQuery = new IndexQuery();
+//        indexQuery.setId(documentId);
+//        indexQuery.setObject(sampleEntity);
+//
+//        elasticsearchTemplate.index(indexQuery);
+//        elasticsearchTemplate.refresh(SampleEntity.class, true);
+//
+//        Criteria crit = new Criteria("message").contains("test");
+//
+//        CriteriaQuery query = new CriteriaQuery(crit);
+//
+//        //when
+//        SampleEntity sampleEntity1 = elasticsearchTemplate.queryForObject(query,SampleEntity.class);
+//        //then
+//        assertThat(sampleEntity1, is(notNullValue()));
+//    }
+
     @Test
     public void shouldReturnSpecifiedFields(){
         //given

@@ -25,7 +25,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.elasticsearch.index.query.FilterBuilders.*;
 import static org.springframework.data.elasticsearch.core.query.Criteria.OperationKey;
 
@@ -42,6 +41,7 @@ class CriteriaFilterProcessor {
         FilterBuilder filter = null;
 
         ListIterator<Criteria> chainIterator = criteria.getCriteriaChain().listIterator();
+
         while (chainIterator.hasNext()) {
             FilterBuilder fb = null;
             Criteria chainedCriteria = chainIterator.next();
@@ -49,7 +49,7 @@ class CriteriaFilterProcessor {
                 fb = orFilter(createFilterFragmentForCriteria(chainedCriteria).toArray(new FilterBuilder[]{ }));
                 fbList.add(fb);
             }else if(chainedCriteria.isNegating()){
-                fbList.addAll(buildNegationFilter(criteria.getField().getName(), criteria.getCriteriaEntries().iterator()));
+                fbList.addAll(buildNegationFilter(criteria.getField().getName(), criteria.getQueryCriteriaEntries().iterator()));
             }else{
                 fbList.addAll(createFilterFragmentForCriteria(chainedCriteria));
             }
@@ -68,7 +68,7 @@ class CriteriaFilterProcessor {
 
 
     private List<FilterBuilder> createFilterFragmentForCriteria(Criteria chainedCriteria) {
-        Iterator<Criteria.CriteriaEntry> it = chainedCriteria.getCriteriaEntries().iterator();
+        Iterator<Criteria.CriteriaEntry> it = chainedCriteria.getQueryCriteriaEntries().iterator();
         List<FilterBuilder> filterList = new LinkedList<FilterBuilder>();
 
         String fieldName = chainedCriteria.getField().getName();
