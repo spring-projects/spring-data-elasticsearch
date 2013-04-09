@@ -36,6 +36,9 @@ public interface SampleCustomMethodRepository extends ElasticsearchRepository<Sa
     @Query("{\"bool\" : {\"must\" : {\"field\" : {\"message\" : \"?0\"}}}}")
     Page<SampleEntity> findByMessage(String message, Pageable pageable);
 
+    @Query("{\"bool\" : {\"must\" : {\"field\" : {\"message\" : \"?0\"}}}}")
+    List<SampleEntity> findByMessage(String message);
+
     Page<SampleEntity> findByAvailable(boolean available, Pageable pageable);
 
     Page<SampleEntity> findByRateLessThan(int rate, Pageable pageable);

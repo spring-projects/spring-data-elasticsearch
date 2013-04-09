@@ -18,6 +18,8 @@ package org.springframework.data.elasticsearch.repositories;
 import org.springframework.data.elasticsearch.Book;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
+import java.util.List;
+
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen

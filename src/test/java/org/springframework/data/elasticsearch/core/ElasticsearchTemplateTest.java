@@ -615,6 +615,111 @@ public class ElasticsearchTemplateTest {
     }
 
     @Test
+    public void shouldReturnListForGivenCriteria(){
+        //given
+        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+        //first document
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity1 = new SampleEntity();
+        sampleEntity1.setId(documentId);
+        sampleEntity1.setMessage("test message");
+        sampleEntity1.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery1 = new IndexQuery();
+        indexQuery1.setId(documentId);
+        indexQuery1.setObject(sampleEntity1);
+        indexQueries.add(indexQuery1);
+
+        //second document
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setMessage("test test");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery2 = new IndexQuery();
+        indexQuery2.setId(documentId2);
+        indexQuery2.setObject(sampleEntity2);
+
+        indexQueries.add(indexQuery2);
+
+        //second document
+        String documentId3 = randomNumeric(5);
+        SampleEntity sampleEntity3 = new SampleEntity();
+        sampleEntity3.setId(documentId3);
+        sampleEntity3.setMessage("some message");
+        sampleEntity3.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery3 = new IndexQuery();
+        indexQuery3.setId(documentId3);
+        indexQuery3.setObject(sampleEntity3);
+
+        indexQueries.add(indexQuery3);
+        //when
+        elasticsearchTemplate.bulkIndex(indexQueries);
+        elasticsearchTemplate.refresh(SampleEntity.class,true);
+        //when
+        CriteriaQuery singleCriteriaQuery = new CriteriaQuery(new Criteria("message").contains("test"));
+        CriteriaQuery multipleCriteriaQuery = new CriteriaQuery(new Criteria("message").contains("some").and("message").contains("message"));
+        List<SampleEntity> sampleEntitiesForSingleCriteria = elasticsearchTemplate.queryForList(singleCriteriaQuery,SampleEntity.class);
+        List<SampleEntity> sampleEntitiesForAndCriteria = elasticsearchTemplate.queryForList(multipleCriteriaQuery,SampleEntity.class);
+        //then
+        assertThat(sampleEntitiesForSingleCriteria.size(),is(2));
+        assertThat(sampleEntitiesForAndCriteria.size(),is(1));
+    }
+
+    @Test
+    public void shouldReturnListForGivenStringQuery(){
+        //given
+        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+        //first document
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity1 = new SampleEntity();
+        sampleEntity1.setId(documentId);
+        sampleEntity1.setMessage("test message");
+        sampleEntity1.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery1 = new IndexQuery();
+        indexQuery1.setId(documentId);
+        indexQuery1.setObject(sampleEntity1);
+        indexQueries.add(indexQuery1);
+
+        //second document
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setMessage("test test");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery2 = new IndexQuery();
+        indexQuery2.setId(documentId2);
+        indexQuery2.setObject(sampleEntity2);
+
+        indexQueries.add(indexQuery2);
+
+        //second document
+        String documentId3 = randomNumeric(5);
+        SampleEntity sampleEntity3 = new SampleEntity();
+        sampleEntity3.setId(documentId3);
+        sampleEntity3.setMessage("some message");
+        sampleEntity3.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery3 = new IndexQuery();
+        indexQuery3.setId(documentId3);
+        indexQuery3.setObject(sampleEntity3);
+
+        indexQueries.add(indexQuery3);
+        //when
+        elasticsearchTemplate.bulkIndex(indexQueries);
+        elasticsearchTemplate.refresh(SampleEntity.class,true);
+        //when
+        StringQuery stringQuery = new StringQuery(matchAllQuery().toString());
+        List<SampleEntity> sampleEntities = elasticsearchTemplate.queryForList(stringQuery,SampleEntity.class);
+        //then
+        assertThat(sampleEntities.size(),is(3));
+    }
+
+    @Test
     public void shouldPutMappingForGivenEntity()throws Exception{
         //given
         Class entity = SampleMappingEntity.class;

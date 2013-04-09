@@ -120,6 +120,26 @@ public interface ElasticsearchOperations {
     <T> Page<T> queryForPage(StringQuery query, Class<T> clazz);
 
     /**
+     * Execute the criteria query against elasticsearch and return result as {@link List}
+     *
+     * @param query
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+    <T> List<T> queryForList(CriteriaQuery query, Class<T> clazz);
+
+    /**
+     * Execute the string query against elasticsearch and return result as {@link List}
+     *
+     * @param query
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+    <T> List<T> queryForList(StringQuery query, Class<T> clazz);
+
+    /**
      * Execute the query against elasticsearch and return ids
      *
      * @param query

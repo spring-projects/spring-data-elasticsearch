@@ -49,6 +49,11 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
         if(queryMethod.isPageQuery()){
             query.setPageable(accessor.getPageable());
             return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
+        } else if (queryMethod.isCollectionQuery()) {
+            if(accessor.getPageable() != null){
+                query.setPageable(accessor.getPageable());
+            }
+            return elasticsearchOperations.queryForList(query,queryMethod.getEntityInformation().getJavaType());
         }
         return elasticsearchOperations.queryForObject(query, queryMethod.getEntityInformation().getJavaType());
     }

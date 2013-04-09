@@ -463,4 +463,39 @@ public class CustomMethodRepositoryTest {
         assertThat(pageResult.getContent().get(0).getMessage(),is(sampleEntity3.getMessage()));
     }
 
+
+    @Test
+    public void shouldReturnListForMessage(){
+        //given
+        String documentId = random(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage("abc");
+        sampleEntity.setVersion(System.currentTimeMillis());
+        repository.save(sampleEntity);
+
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setMessage("abd");
+        sampleEntity.setVersion(System.currentTimeMillis());
+        repository.save(sampleEntity2);
+
+        String documentId3 = randomNumeric(5);
+        SampleEntity sampleEntity3 = new SampleEntity();
+        sampleEntity3.setId(documentId3);
+        sampleEntity3.setMessage("abe");
+        sampleEntity.setVersion(System.currentTimeMillis());
+        repository.save(sampleEntity3);
+        //when
+        List<SampleEntity> sampleEntities = repository.findByMessage("abc");
+        //then
+        assertThat(sampleEntities.isEmpty(),is(false));
+        assertThat(sampleEntities.size(),is(1));
+    }
+
+
+
+
+
 }

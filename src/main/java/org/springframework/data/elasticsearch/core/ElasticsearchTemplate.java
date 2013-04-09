@@ -153,6 +153,17 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     @Override
+    public <T> List<T> queryForList(CriteriaQuery query, Class<T> clazz){
+        return queryForPage(query, clazz).getContent();
+    }
+
+    @Override
+    public <T> List<T> queryForList(StringQuery query, Class<T> clazz){
+        return queryForPage(query, clazz).getContent();
+    }
+
+
+    @Override
     public <T> List<String> queryForIds(SearchQuery query) {
         SearchRequestBuilder request = prepareSearch(query).setQuery(query.getElasticsearchQuery())
                 .setNoFields();
