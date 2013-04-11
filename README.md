@@ -16,7 +16,7 @@ Guide
 * [PDF Documentation](https://github.com/BioMedCentralLtd/spring-data-elasticsearch/blob/master/site/reference/pdf/spring-data-elasticsearch-reference.pdf?raw=true)
 * [API Documentation](https://github.com/BioMedCentralLtd/spring-data-elasticsearch/blob/master/site/apidocs.zip?raw=true)
 * [Spring Data Project](http://www.springsource.org/spring-data)
-
+* [Sample Test Application](https://github.com/BioMedCentralLtd/spring-data-elasticsearch-sample-application)
 
 Test Coverage
 -------------
