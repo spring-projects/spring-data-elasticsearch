@@ -185,7 +185,7 @@ Using Node Client
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
        xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd
-		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
 
     <elasticsearch:node-client id="client" local="true"/>
 
@@ -204,7 +204,7 @@ Using Transport Client
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
        xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd
-		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
 
     <elasticsearch:repositories base-package="com.xyz.acme"/>
 
