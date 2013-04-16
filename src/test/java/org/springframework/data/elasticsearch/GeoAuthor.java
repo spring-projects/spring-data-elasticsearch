@@ -15,14 +15,17 @@
  */
 package org.springframework.data.elasticsearch;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.geo.GeoLocation;
 
 /**
- * @author Rizwan Idrees
- * @author Mohsin Husen
+ * @author Franck Marchand
  */
+@Document(indexName = "test-geo-index", type = "test-geo-type")
 public class GeoAuthor {
 
+    @Id
     private String id;
     private String name;
 

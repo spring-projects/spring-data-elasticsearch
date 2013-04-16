@@ -393,6 +393,10 @@ public class Criteria {
 		return Collections.unmodifiableSet(this.queryCriteria);
 	}
 
+	public Set<CriteriaEntry> getFilterCriteriaEntries() {
+		return Collections.unmodifiableSet(this.filterCriteria);
+	}
+
     public Set<CriteriaEntry> getFilterCriteria() {
         return filterCriteria;
     }

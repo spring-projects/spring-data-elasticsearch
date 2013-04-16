@@ -68,7 +68,7 @@ class CriteriaFilterProcessor {
 
 
     private List<FilterBuilder> createFilterFragmentForCriteria(Criteria chainedCriteria) {
-        Iterator<Criteria.CriteriaEntry> it = chainedCriteria.getQueryCriteriaEntries().iterator();
+        Iterator<Criteria.CriteriaEntry> it = chainedCriteria.getFilterCriteriaEntries().iterator();
         List<FilterBuilder> filterList = new LinkedList<FilterBuilder>();
 
         String fieldName = chainedCriteria.getField().getName();
