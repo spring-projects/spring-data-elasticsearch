@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -224,6 +225,20 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
             }
             throw new ElasticsearchException("Bulk indexing has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages [" + failedDocuments+"]", failedDocuments);
         }
+    }
+
+    @Override
+    public <T> boolean indexExists(Class<T> clazz){
+        return indexExists(getPersistentEntityFor(clazz).getIndexName());
+    }
+
+    @Override
+    public <T> boolean deleteIndex(Class<T> clazz){
+        String indexName = getPersistentEntityFor(clazz).getIndexName();
+        if(indexExists(indexName)){
+            return client.admin().indices().delete(new DeleteIndexRequest(indexName)).actionGet().acknowledged();
+        }
+        return false;
     }
 
     @Override

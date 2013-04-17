@@ -198,6 +198,22 @@ public interface ElasticsearchOperations {
     <T> void delete(DeleteQuery query, Class<T> clazz);
 
     /**
+     * Deletes an index for given entity
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+    <T> boolean deleteIndex(Class<T> clazz);
+
+    /**
+     * check if index is exists
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+    <T> boolean indexExists(Class<T> clazz);
+
+    /**
      * refresh the index
      * @param indexName
      * @param waitForOperation

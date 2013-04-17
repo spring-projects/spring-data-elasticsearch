@@ -728,4 +728,16 @@ public class ElasticsearchTemplateTest {
         assertThat(elasticsearchTemplate.putMapping(entity) , is(true)) ;
     }
 
+    @Test
+    public void shouldDeleteIndexForGivenEntity(){
+        //given
+        Class clazz = SampleEntity.class;
+        //when
+        elasticsearchTemplate.deleteIndex(clazz);
+        //then
+        assertThat(elasticsearchTemplate.indexExists(clazz),is(false));
+    }
+
+
+
 }
