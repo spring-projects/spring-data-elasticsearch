@@ -20,7 +20,7 @@
         <spring.version>3.1.4.RELEASE</spring.version>
         <slf4j.version>1.7.1</slf4j.version>
         <commons-lang.version>2.6</commons-lang.version>
-        <elasticsearch.version>0.20.5</elasticsearch.version>
+        <elasticsearch.version>0.20.6</elasticsearch.version>
         <apache.httpcomponents.version>4.2.2</apache.httpcomponents.version>
         <spring.data-commons.version>1.5.0.RELEASE</spring.data-commons.version>
         <joda-time.version>2.1</joda-time.version>
@@ -112,33 +112,6 @@
             <artifactId>commons-collections</artifactId>
             <version>3.2.1</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>${apache.httpcomponents.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpmime</artifactId>
-            <version>${apache.httpcomponents.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient-cache</artifactId>
-            <version>${apache.httpcomponents.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
 
         <!-- JODA Time -->
         <dependency>
@@ -226,19 +199,6 @@
             <version>${webbeans.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-jdbc</artifactId>
-            <version>${spring.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>1.3.168</version>
-            <scope>test</scope>
-        </dependency>
-
 
     </dependencies>
 
