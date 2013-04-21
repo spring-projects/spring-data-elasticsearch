@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repositories;
 
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +30,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.annotation.Resource;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -58,7 +56,7 @@ public class CustomMethodRepositoryTest {
     public void before(){
         elasticsearchTemplate.createIndex(SampleEntity.class);
         DeleteQuery deleteQuery = new DeleteQuery();
-        deleteQuery.setElasticsearchQuery(matchAllQuery());
+        deleteQuery.setQuery(matchAllQuery());
         elasticsearchTemplate.delete(deleteQuery,SampleEntity.class);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
     }

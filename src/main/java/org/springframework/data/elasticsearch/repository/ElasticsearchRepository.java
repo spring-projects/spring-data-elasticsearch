@@ -35,9 +35,9 @@ public interface ElasticsearchRepository<T, ID extends Serializable> extends Ela
 
     <S extends T> S index(S entity);
 
-    Iterable<T> search(QueryBuilder elasticsearchQuery);
+    Iterable<T> search(QueryBuilder query);
 
-    Page<T> search(QueryBuilder elasticsearchQuery, Pageable pageable);
+    Page<T> search(QueryBuilder query, Pageable pageable);
 
     Page<T> search(SearchQuery searchQuery);
 

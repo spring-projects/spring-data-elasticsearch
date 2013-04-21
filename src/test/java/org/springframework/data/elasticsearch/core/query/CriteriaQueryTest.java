@@ -51,7 +51,7 @@ public class CriteriaQueryTest {
     public void before(){
         elasticsearchTemplate.createIndex(SampleEntity.class);
         DeleteQuery deleteQuery = new DeleteQuery();
-        deleteQuery.setElasticsearchQuery(matchAllQuery());
+        deleteQuery.setQuery(matchAllQuery());
         elasticsearchTemplate.delete(deleteQuery,SampleEntity.class);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
     }

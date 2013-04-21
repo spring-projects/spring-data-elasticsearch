@@ -92,9 +92,10 @@ public class SimpleElasticsearchRepository<T> implements ElasticsearchRepository
 
     @Override
     public Page<T> findAll(Pageable pageable) {
-        SearchQuery query = new SearchQuery();
-        query.setElasticsearchQuery(matchAllQuery());
-        query.setPageable(pageable);
+        SearchQuery query = new NativeSearchQueryBuilder()
+                .withQuery(matchAllQuery())
+                .withPageable(pageable)
+                .build();
         return elasticsearchOperations.queryForPage(query, getEntityClass());
     }
 
@@ -104,22 +105,25 @@ public class SimpleElasticsearchRepository<T> implements ElasticsearchRepository
         if (itemCount == 0) {
             return new PageImpl<T>(Collections.<T> emptyList());
         }
-        SearchQuery query = new SearchQuery();
-        query.setElasticsearchQuery(matchAllQuery());
-        query.setPageable(new PageRequest(0,itemCount, sort));
+        SearchQuery query = new NativeSearchQueryBuilder()
+                .withQuery(matchAllQuery())
+                .withPageable(new PageRequest(0,itemCount, sort))
+                .build();
         return elasticsearchOperations.queryForPage(query, getEntityClass());
     }
 
     @Override
     public Iterable<T> findAll(Iterable<String> ids) {
-        SearchQuery query = new SearchQuery();
-        query.setElasticsearchQuery(inQuery(entityInformation.getIdAttribute(), ids));
+        SearchQuery query = new NativeSearchQueryBuilder()
+                .withQuery(inQuery(entityInformation.getIdAttribute(), ids))
+                .build();
         return elasticsearchOperations.queryForPage(query, getEntityClass());
     }
 
     @Override
     public long count() {
-        SearchQuery query = new SearchQuery();
+        SearchQuery query = new NativeSearchQueryBuilder()
+                .withQuery(matchAllQuery()).build();
         return elasticsearchOperations.count(query,getEntityClass());
     }
 
@@ -169,23 +173,24 @@ public class SimpleElasticsearchRepository<T> implements ElasticsearchRepository
     }
 
     @Override
-    public Iterable<T> search(QueryBuilder elasticsearchQuery) {
-        SearchQuery query = new SearchQuery();
-        int count = (int) elasticsearchOperations.count(query, getEntityClass());
+    public Iterable<T> search(QueryBuilder query) {
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(query).build();
+        int count = (int) elasticsearchOperations.count(searchQuery, getEntityClass());
         if(count == 0){
             return new PageImpl<T>(Collections.<T>emptyList());
         }
-        query.setPageable(new PageRequest(0,count));
-        query.setElasticsearchQuery(elasticsearchQuery);
-        return elasticsearchOperations.queryForPage(query, getEntityClass());
+        searchQuery.setPageable(new PageRequest(0, count));
+        return elasticsearchOperations.queryForPage(searchQuery, getEntityClass());
     }
 
     @Override
-    public Page<T> search(QueryBuilder elasticsearchQuery, Pageable pageable) {
-        SearchQuery query = new SearchQuery();
-        query.setElasticsearchQuery(elasticsearchQuery);
-        query.setPageable(pageable);
-        return elasticsearchOperations.queryForPage(query, getEntityClass());
+    public Page<T> search(QueryBuilder query, Pageable pageable) {
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(query)
+                .withPageable(pageable)
+                .build();
+        return elasticsearchOperations.queryForPage(searchQuery, getEntityClass());
     }
 
     @Override
@@ -233,9 +238,9 @@ public class SimpleElasticsearchRepository<T> implements ElasticsearchRepository
 
     @Override
     public void deleteAll() {
-        DeleteQuery query = new DeleteQuery();
-        query.setElasticsearchQuery(matchAllQuery());
-        elasticsearchOperations.delete(query, getEntityClass());
+        DeleteQuery deleteQuery = new DeleteQuery();
+        deleteQuery.setQuery(matchAllQuery());
+        elasticsearchOperations.delete(deleteQuery, getEntityClass());
         elasticsearchOperations.refresh(entityInformation.getIndexName(),true);
     }
 

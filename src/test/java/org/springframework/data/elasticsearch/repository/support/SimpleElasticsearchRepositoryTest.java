@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.SampleEntity;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repositories.SampleElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -162,8 +163,9 @@ public class SimpleElasticsearchRepositoryTest {
         sampleEntity.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity);
 
-        SearchQuery query = new SearchQuery();
-        query.setElasticsearchQuery(termQuery("message", "test"));
+        SearchQuery query = new NativeSearchQueryBuilder()
+                .withQuery(termQuery("message", "test"))
+                .build();
         //when
         Page<SampleEntity> page = repository.search(query);
         //then
@@ -263,8 +265,9 @@ public class SimpleElasticsearchRepositoryTest {
         sampleEntity.setVersion(System.currentTimeMillis());
         repository.save(sampleEntity);
         //when
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.setElasticsearchQuery(fieldQuery("id",documentId));
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(fieldQuery("id",documentId))
+                .build();
         Page<SampleEntity> sampleEntities= repository.search(searchQuery);
         //then
         assertThat(sampleEntities.getTotalElements(), equalTo(1L));
@@ -275,8 +278,9 @@ public class SimpleElasticsearchRepositoryTest {
         //when
         repository.deleteAll();
         //then
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.setElasticsearchQuery(matchAllQuery());
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(matchAllQuery())
+                .build();
         Page<SampleEntity> sampleEntities= repository.search(searchQuery);
         assertThat(sampleEntities.getTotalElements(), equalTo(0L));
     }
@@ -293,8 +297,9 @@ public class SimpleElasticsearchRepositoryTest {
         //when
         repository.delete(sampleEntity);
         //then
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.setElasticsearchQuery(fieldQuery("id", documentId));
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(fieldQuery("id", documentId))
+                .build();
         Page<SampleEntity> sampleEntities= repository.search(searchQuery);
         assertThat(sampleEntities.getTotalElements(),equalTo(0L));
     }

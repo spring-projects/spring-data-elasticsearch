@@ -19,7 +19,6 @@ package org.springframework.data.elasticsearch.core;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -61,7 +60,7 @@ public class ElasticsearchTemplateTest {
     public void before(){
         elasticsearchTemplate.createIndex(SampleEntity.class);
         DeleteQuery deleteQuery = new DeleteQuery();
-        deleteQuery.setElasticsearchQuery(matchAllQuery());
+        deleteQuery.setQuery(matchAllQuery());
         elasticsearchTemplate.delete(deleteQuery,SampleEntity.class);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
     }
@@ -79,8 +78,7 @@ public class ElasticsearchTemplateTest {
         indexQuery.setObject(sampleEntity);
         elasticsearchTemplate.index(indexQuery);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.setElasticsearchQuery(matchAllQuery());
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
         //when
         long count = elasticsearchTemplate.count(searchQuery, SampleEntity.class);
         //then
@@ -126,8 +124,7 @@ public class ElasticsearchTemplateTest {
         elasticsearchTemplate.index(indexQuery);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
 
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.setElasticsearchQuery(matchAllQuery());
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
         //when
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
         //then
@@ -167,8 +164,7 @@ public class ElasticsearchTemplateTest {
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         //then
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.setElasticsearchQuery(matchAllQuery());
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
         assertThat(sampleEntities.getTotalElements(), is(equalTo(2L)));
     }
@@ -191,8 +187,7 @@ public class ElasticsearchTemplateTest {
         elasticsearchTemplate.delete("test-index","test-type",documentId);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
         //then
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.setElasticsearchQuery(fieldQuery("id", documentId));
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(fieldQuery("id", documentId)).build();
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
         assertThat(sampleEntities.getTotalElements(), equalTo(0L));
     }
@@ -215,8 +210,7 @@ public class ElasticsearchTemplateTest {
         elasticsearchTemplate.delete(SampleEntity.class,documentId);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
         //then
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.setElasticsearchQuery(fieldQuery("id", documentId));
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(fieldQuery("id", documentId)).build();
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
         assertThat(sampleEntities.getTotalElements(), equalTo(0L));
     }
@@ -237,17 +231,16 @@ public class ElasticsearchTemplateTest {
         elasticsearchTemplate.index(indexQuery);
         //when
         DeleteQuery deleteQuery = new DeleteQuery();
-        deleteQuery.setElasticsearchQuery(fieldQuery("id", documentId));
+        deleteQuery.setQuery(fieldQuery("id", documentId));
         elasticsearchTemplate.delete(deleteQuery,SampleEntity.class);
         //then
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.setElasticsearchQuery(fieldQuery("id",documentId));
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(fieldQuery("id",documentId)).build();
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
         assertThat(sampleEntities.getTotalElements(), equalTo(0L));
     }
 
     @Test
-    public void shouldFilterSearchResultsGivenFilter(){
+    public void shouldFilterSearchResultsForGivenFilter(){
         //given
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
@@ -261,9 +254,10 @@ public class ElasticsearchTemplateTest {
         elasticsearchTemplate.index(indexQuery);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
 
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.setElasticsearchQuery(matchAllQuery());
-        searchQuery.setElasticsearchFilter(boolFilter().must(termFilter("id", documentId)));
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(matchAllQuery())
+                .withFilter(boolFilter().must(termFilter("id", documentId)))
+                .build();
         //when
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
         //then
@@ -317,11 +311,10 @@ public class ElasticsearchTemplateTest {
         elasticsearchTemplate.bulkIndex(indexQueries);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
 
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.setElasticsearchQuery(matchAllQuery());
-        SortBuilder sortBuilder = new FieldSortBuilder("rate").ignoreUnmapped(true).order(SortOrder.ASC);
-
-        searchQuery.setElasticsearchSort(sortBuilder);
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(matchAllQuery())
+                .withSort(new FieldSortBuilder("rate").ignoreUnmapped(true).order(SortOrder.ASC))
+                .build();
         //when
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
         //then
@@ -473,11 +466,12 @@ public class ElasticsearchTemplateTest {
 
         elasticsearchTemplate.index(indexQuery);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.setElasticsearchQuery(matchAllQuery());
-        searchQuery.addFields("message");
-        searchQuery.addIndices("test-index");
-        searchQuery.addTypes("test-type");
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(matchAllQuery())
+                .withIndices("test-index")
+                .withTypes("test-type")
+                .withFields("message")
+                .build();
         //when
         Page<String> page = elasticsearchTemplate.queryForPage(searchQuery, new ResultsMapper<String>() {
             @Override
@@ -575,11 +569,12 @@ public class ElasticsearchTemplateTest {
         elasticsearchTemplate.refresh(SampleEntity.class,true);
         //then
 
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.addIndices("test-index");
-        searchQuery.addTypes("test-type");
-        searchQuery.setElasticsearchQuery(matchAllQuery());
-        searchQuery.setPageable(new PageRequest(0,1));
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(matchAllQuery())
+                .withIndices("test-index")
+                .withTypes("test-type")
+                .withPageable(new PageRequest(0,1))
+                .build();
 
         String scrollId = elasticsearchTemplate.scan(searchQuery,1000,false);
         List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();

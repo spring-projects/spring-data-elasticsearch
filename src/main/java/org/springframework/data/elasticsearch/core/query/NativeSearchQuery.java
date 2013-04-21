@@ -16,22 +16,38 @@
 package org.springframework.data.elasticsearch.core.query;
 
 
+import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+
 /**
- * DeleteQuery
+ * NativeSearchQuery
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public class DeleteQuery{
+public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
     private QueryBuilder query;
+    private FilterBuilder filter;
+    private SortBuilder sort;
+
+    public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, SortBuilder sort) {
+        this.query = query;
+        this.filter = filter;
+        this.sort = sort;
+    }
 
     public QueryBuilder getQuery() {
         return query;
     }
 
-    public void setQuery(QueryBuilder query) {
-        this.query = query;
+
+    public FilterBuilder getFilter() {
+        return filter;
+    }
+
+    public SortBuilder getElasticsearchSort() {
+        return sort;
     }
 }

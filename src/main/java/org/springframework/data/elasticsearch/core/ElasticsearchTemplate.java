@@ -143,13 +143,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public <T> Page<T> queryForPage(SearchQuery query, Class<T> clazz) {
-        SearchResponse response = doSearch(prepareSearch(query,clazz), query.getElasticsearchQuery(), query.getElasticsearchFilter(),query.getElasticsearchSort());
+        SearchResponse response = doSearch(prepareSearch(query,clazz), query.getQuery(), query.getFilter(), query.getElasticsearchSort());
         return mapResults(response, clazz, query.getPageable());
     }
 
     @Override
     public <T> Page<T> queryForPage(SearchQuery query, ResultsMapper<T> resultsMapper) {
-        SearchResponse response = doSearch(prepareSearch(query), query.getElasticsearchQuery(), query.getElasticsearchFilter(),query.getElasticsearchSort());
+        SearchResponse response = doSearch(prepareSearch(query), query.getQuery(), query.getFilter(), query.getElasticsearchSort());
         return resultsMapper.mapResults(response);
     }
 
@@ -166,22 +166,22 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public <T> List<String> queryForIds(SearchQuery query) {
-        SearchRequestBuilder request = prepareSearch(query).setQuery(query.getElasticsearchQuery())
+        SearchRequestBuilder request = prepareSearch(query).setQuery(query.getQuery())
                 .setNoFields();
-        if(query.getElasticsearchFilter() != null){
-            request.setFilter(query.getElasticsearchFilter());
+        if(query.getFilter() != null){
+            request.setFilter(query.getFilter());
         }
         SearchResponse response = request.execute().actionGet();
         return extractIds(response);
     }
 
     @Override
-    public <T> Page<T> queryForPage(CriteriaQuery query, Class<T> clazz) {
-        QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(query.getCriteria());
-        SearchResponse response =  prepareSearch(query,clazz)
-                .setQuery(elasticsearchQuery)
+    public <T> Page<T> queryForPage(CriteriaQuery criteriaQuery, Class<T> clazz) {
+        QueryBuilder query = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
+        SearchResponse response =  prepareSearch(criteriaQuery,clazz)
+                .setQuery(query)
                 .execute().actionGet();
-        return  mapResults(response, clazz, query.getPageable());
+        return  mapResults(response, clazz, criteriaQuery.getPageable());
     }
 
     @Override
@@ -197,8 +197,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
         CountRequestBuilder countRequestBuilder = client.prepareCount(persistentEntity.getIndexName())
                 .setTypes(persistentEntity.getIndexType());
-        if(query.getElasticsearchQuery() != null){
-            countRequestBuilder.setQuery(query.getElasticsearchQuery());
+        if(query.getQuery() != null){
+            countRequestBuilder.setQuery(query.getQuery());
         }
         return countRequestBuilder.execute().actionGet().count();
     }
@@ -254,30 +254,30 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     @Override
-    public <T> void delete(DeleteQuery query, Class<T> clazz) {
+    public <T> void delete(DeleteQuery deleteQuery, Class<T> clazz) {
         ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
         client.prepareDeleteByQuery(persistentEntity.getIndexName())
                 .setTypes(persistentEntity.getIndexType())
-                .setQuery(query.getElasticsearchQuery())
+                .setQuery(deleteQuery.getQuery())
                 .execute().actionGet();
     }
 
     @Override
-    public String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields) {
-        Assert.notNull(query.getIndices(), "No index defined for Query");
-        Assert.notNull(query.getTypes(), "No type define for Query");
-        Assert.notNull(query.getPageable(), "Query.pageable is required for scan & scroll");
+    public String scan(SearchQuery searchQuery, long scrollTimeInMillis, boolean noFields) {
+        Assert.notNull(searchQuery.getIndices(), "No index defined for Query");
+        Assert.notNull(searchQuery.getTypes(), "No type define for Query");
+        Assert.notNull(searchQuery.getPageable(), "Query.pageable is required for scan & scroll");
 
-        SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(query.getIndices()))
+        SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(searchQuery.getIndices()))
                 .setSearchType(SCAN)
-                .setQuery(query.getElasticsearchQuery())
-                .setTypes(toArray(query.getTypes()))
+                .setQuery(searchQuery.getQuery())
+                .setTypes(toArray(searchQuery.getTypes()))
                 .setScroll(TimeValue.timeValueMillis(scrollTimeInMillis))
                 .setFrom(0)
-                .setSize(query.getPageable().getPageSize());
+                .setSize(searchQuery.getPageable().getPageSize());
 
-        if(query.getElasticsearchFilter() != null){
-            requestBuilder.setFilter(query.getElasticsearchFilter());
+        if(searchQuery.getFilter() != null){
+            requestBuilder.setFilter(searchQuery.getFilter());
         }
 
         if(noFields){
