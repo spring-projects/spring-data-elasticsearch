@@ -66,6 +66,14 @@ public class ElasticsearchTemplateTests {
         deleteQuery.setQuery(matchAllQuery());
         elasticsearchTemplate.delete(deleteQuery,SampleEntity.class);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+        elasticsearchTemplate.createIndex(GeoAuthor.class);
+        DeleteQuery deleteGeoAuthorQuery = new DeleteQuery();
+        deleteGeoAuthorQuery.setElasticsearchQuery(matchAllQuery());
+        elasticsearchTemplate.delete(deleteGeoAuthorQuery,GeoAuthor.class);
+        elasticsearchTemplate.refresh(GeoAuthor.class, true);
+
+        elasticsearchTemplate.putMapping(GeoAuthor.class);
     }
 
     @Test
@@ -775,8 +783,8 @@ public class ElasticsearchTemplateTests {
     @Test
     public void shouldReturnListForGivenCriteriaWithGeoLocation(){
         // put mapping before any request
-        Class entity = GeoAuthor.class;
-        elasticsearchTemplate.createIndex(entity);
+        /*Class entity = GeoAuthor.class;
+        elasticsearchTemplate.createIndex(entity);*/
 
         elasticsearchTemplate.putMapping(entity);
 
@@ -787,7 +795,7 @@ public class ElasticsearchTemplateTests {
         GeoAuthor geoAuthor1 = new GeoAuthor();
         geoAuthor1.setId(documentId);
         geoAuthor1.setName("Franck Marchand");
-        geoAuthor1.setLocation(new GeoLocation(45.7806d, 3.0875d));
+        geoAuthor1.setLocation(new GeoLocation(45.7806d, 3.0875d)); // Clermont-Ferrand
 
         IndexQuery indexQuery1 = new IndexQuery();
         indexQuery1.setId(documentId);
@@ -799,7 +807,7 @@ public class ElasticsearchTemplateTests {
         GeoAuthor geoAuthor2 = new GeoAuthor();
         geoAuthor2.setId(documentId2);
         geoAuthor2.setName("Mohsin Husen");
-        geoAuthor2.setLocation(new GeoLocation(51.5171d, 0.1062d));
+        geoAuthor2.setLocation(new GeoLocation(51.5171d, 0.1062d)); // London
 
         IndexQuery indexQuery2 = new IndexQuery();
         indexQuery2.setId(documentId2);
@@ -812,7 +820,7 @@ public class ElasticsearchTemplateTests {
         GeoAuthor geoAuthor3 = new GeoAuthor();
         geoAuthor3.setId(documentId3);
         geoAuthor3.setName("Rizwan Idrees");
-        geoAuthor3.setLocation(new GeoLocation(51.5171d, 0.1062d));
+        geoAuthor3.setLocation(new GeoLocation(51.5171d, 0.1062d)); // London
 
         IndexQuery indexQuery3 = new IndexQuery();
         indexQuery3.setId(documentId3);
@@ -829,5 +837,6 @@ public class ElasticsearchTemplateTests {
         List<GeoAuthor> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery,GeoAuthor.class);
         //then
         assertThat(geoAuthorsForGeoCriteria.size(),is(1));
+        assertEquals("Franck Marchand", geoAuthorsForGeoCriteria.get(0).getName());
     }
 }

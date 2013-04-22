@@ -49,8 +49,12 @@ class CriteriaFilterProcessor {
                 fb = orFilter(createFilterFragmentForCriteria(chainedCriteria).toArray(new FilterBuilder[]{ }));
                 fbList.add(fb);
             }else if(chainedCriteria.isNegating()){
-                fbList.addAll(buildNegationFilter(criteria.getField().getName(), criteria.getQueryCriteriaEntries().iterator()));
-            }else{
+                List<FilterBuilder> negationFilters = buildNegationFilter(criteria.getField().getName(), criteria.getFilterCriteriaEntries().iterator());
+
+                if(!negationFilters.isEmpty()) {
+                    fbList.addAll(negationFilters);
+                }
+            }else {
                 fbList.addAll(createFilterFragmentForCriteria(chainedCriteria));
             }
         }
