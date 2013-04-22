@@ -23,9 +23,10 @@
 		<example>
 <programlisting language="java">
 private ElasticsearchTemplate elasticsearchTemplate;
-SearchQuery searchQuery = new SearchQuery();
-searchQuery.setElasticsearchQuery(matchAllQuery());
-searchQuery.setElasticsearchFilter(boolFilter().must(termFilter("id", documentId)));
+SearchQuery searchQuery = new NativeSearchQueryBuilder()
+.withQuery(matchAllQuery())
+.withFilter(boolFilter().must(termFilter("id", documentId)))
+.build();
 Page&lt;SampleEntity&gt; sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
 </programlisting>
 		</example>
@@ -42,41 +43,41 @@ Page&lt;SampleEntity&gt; sampleEntities = elasticsearchTemplate.queryForPage(sea
                 Using Scan and Scroll
             </title>
             <programlisting language="java">
-                SearchQuery searchQuery = new SearchQuery();
-                searchQuery.addIndices("test-index");
-                searchQuery.addTypes("test-type");
-                searchQuery.setElasticsearchQuery(matchAllQuery());
-                searchQuery.setPageable(new PageRequest(0,1));
-                String scrollId = elasticsearchTemplate.scan(searchQuery,1000,false);
-                List&lt;SampleEntity&gt; sampleEntities = new ArrayList&lt;SampleEntity&gt;();
-                boolean hasRecords = true;
-                while (hasRecords){
-                Page&lt;SampleEntity&gt; page = elasticsearchTemplate.scroll(scrollId, 5000L , new ResultsMapper&lt;SampleEntity&gt;() {
-                @Override
-                public Page&lt;SampleEntity&gt; mapResults(SearchResponse response) {
-                List&lt;SampleEntity&gt; chunk = new ArrayList&lt;SampleEntity&gt;();
-                for(SearchHit searchHit : response.getHits()){
-                if(response.getHits().getHits().length &lt;= 0) {
-                return null;
-                }
-                SampleEntity user = new SampleEntity();
-                user.setId(searchHit.getId());
-                user.setMessage((String)searchHit.getSource().get("message"));
-                chunk.add(user);
-                }
-                return new PageImpl&lt;SampleEntity&gt;(chunk);
-                }
-
-                });
-                if(page != null) {
-                sampleEntities.addAll(page.getContent());
-                hasRecords = page.hasNextPage();
-                }
-                else{
-                hasRecords = false;
-                }
-                }
-                }</programlisting>
+SearchQuery searchQuery = new NativeSearchQueryBuilder()
+.withQuery(matchAllQuery())
+.withIndices("test-index")
+.withTypes("test-type")
+.withPageable(new PageRequest(0,1))
+.build();
+String scrollId = elasticsearchTemplate.scan(searchQuery,1000,false);
+List&lt;SampleEntity&gt; sampleEntities = new ArrayList&lt;SampleEntity&gt;();
+boolean hasRecords = true;
+while (hasRecords){
+Page&lt;SampleEntity&gt; page = elasticsearchTemplate.scroll(scrollId, 5000L , new ResultsMapper&lt;SampleEntity&gt;() {
+@Override
+public Page&lt;SampleEntity&gt; mapResults(SearchResponse response) {
+List&lt;SampleEntity&gt; chunk = new ArrayList&lt;SampleEntity&gt;();
+for(SearchHit searchHit : response.getHits()){
+ if(response.getHits().getHits().length &lt;= 0) {
+   return null;
+ }
+ SampleEntity user = new SampleEntity();
+ user.setId(searchHit.getId());
+ user.setMessage((String)searchHit.getSource().get("message"));
+ chunk.add(user);
+ }
+ return new PageImpl&lt;SampleEntity&gt;(chunk);
+}
+ });
+   if(page != null) {
+   sampleEntities.addAll(page.getContent());
+   hasRecords = page.hasNextPage();
+  }
+  else{
+   hasRecords = false;
+  }
+ }
+}</programlisting>
         </example>
     </section>
 </chapter>

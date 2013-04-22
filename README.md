@@ -132,8 +132,9 @@ Searching entities using Elasticsearch Template
         @Autowired
         private ElasticsearchTemplate elasticsearchTemplate;
 
-        SearchQuery searchQuery = new SearchQuery();
-        searchQuery.setElasticsearchQuery(fieldQuery("id", documentId));
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+        .withQuery(fieldQuery("id", documentId))
+        .build();
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
 ```
 
