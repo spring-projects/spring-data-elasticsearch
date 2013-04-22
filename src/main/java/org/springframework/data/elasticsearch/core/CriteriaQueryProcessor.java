@@ -34,6 +34,7 @@ import static org.springframework.data.elasticsearch.core.query.Criteria.Operati
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Franck Marchand
  */
 class CriteriaQueryProcessor {
 

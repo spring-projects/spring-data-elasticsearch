@@ -807,7 +807,7 @@ public class ElasticsearchTemplateTests {
 
         indexQueries.add(indexQuery2);
 
-        //second document
+        //third document
         String documentId3 = randomNumeric(5);
         GeoAuthor geoAuthor3 = new GeoAuthor();
         geoAuthor3.setId(documentId3);
