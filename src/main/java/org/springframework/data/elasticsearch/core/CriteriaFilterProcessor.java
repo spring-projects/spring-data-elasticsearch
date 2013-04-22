@@ -105,7 +105,7 @@ class CriteriaFilterProcessor {
                 GeoLocation loc = (GeoLocation)valArray[0];
                 String dist = (String)valArray[1];
 
-                ((GeoDistanceFilterBuilder)filter).lat(loc.getLatitude()).lon(loc.getLongitude()).distance(dist);
+                ((GeoDistanceFilterBuilder)filter).lat(loc.getLat()).lon(loc.getLon()).distance(dist);
                 break;
             }
 

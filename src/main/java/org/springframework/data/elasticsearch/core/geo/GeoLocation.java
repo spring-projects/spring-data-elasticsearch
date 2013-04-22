@@ -21,16 +21,16 @@ package org.springframework.data.elasticsearch.core.geo;
  * @author fmarchand
  */
 public class GeoLocation {
-    private double latitude;
-    private double longitude;
+    private double lat;
+    private double lon;
 
-    public GeoLocation lat(double latitude) {
-        setLatitude(latitude);
+    public GeoLocation lat(double lat) {
+        setLat(lat);
         return this;
     }
 
-    public GeoLocation lon(double longitude) {
-        setLongitude(longitude);
+    public GeoLocation lon(double lon) {
+        setLon(lon);
         return this;
     }
 
@@ -38,23 +38,23 @@ public class GeoLocation {
     }
 
     public GeoLocation(double latitude, double longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
+        this.lat = latitude;
+        this.lon = longitude;
     }
 
-    public double getLatitude() {
-        return latitude;
+    public double getLat() {
+        return lat;
     }
 
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
+    public void setLat(double lat) {
+        this.lat = lat;
     }
 
-    public double getLongitude() {
-        return longitude;
+    public double getLon() {
+        return lon;
     }
 
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
+    public void setLon(double lon) {
+        this.lon = lon;
     }
 }
