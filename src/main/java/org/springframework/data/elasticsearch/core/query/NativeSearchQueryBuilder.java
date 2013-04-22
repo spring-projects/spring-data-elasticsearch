@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Artur Konczak
  */
 
 public class NativeSearchQueryBuilder {

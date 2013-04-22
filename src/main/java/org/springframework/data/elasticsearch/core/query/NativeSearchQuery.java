@@ -25,6 +25,7 @@ import org.elasticsearch.search.sort.SortBuilder;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Artur Konczak
  */
 public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
