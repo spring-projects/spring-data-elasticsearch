@@ -18,7 +18,7 @@ package org.springframework.data.elasticsearch.core.geo;
 /**
  * geo-location used for #{@link org.springframework.data.elasticsearch.core.query.Criteria}.
  *
- * @author fmarchand
+ * @author Franck Marchand
  */
 public class GeoLocation {
     private double lat;
