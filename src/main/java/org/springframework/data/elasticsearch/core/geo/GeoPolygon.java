@@ -15,10 +15,17 @@
  */
 package org.springframework.data.elasticsearch.core.geo;
 
+import java.util.List;
+
 /**
- * Geo polygone used for #{@link org.springframework.data.elasticsearch.core.query.Criteria}.
+ * Geo polygon used for #{@link org.springframework.data.elasticsearch.core.query.Criteria}.
  *
  * @author Franck Marchand
  */
 public class GeoPolygon {
+    private List<GeoLocation> points;
+
+    public GeoPolygon(List<GeoLocation> points) {
+        this.points = points;
+    }
 }
