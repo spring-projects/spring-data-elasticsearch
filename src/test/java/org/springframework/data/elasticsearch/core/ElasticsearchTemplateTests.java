@@ -69,7 +69,7 @@ public class ElasticsearchTemplateTests {
 
         elasticsearchTemplate.createIndex(GeoAuthor.class);
         DeleteQuery deleteGeoAuthorQuery = new DeleteQuery();
-        deleteGeoAuthorQuery.setElasticsearchQuery(matchAllQuery());
+        deleteGeoAuthorQuery.setQuery(matchAllQuery());
         elasticsearchTemplate.delete(deleteGeoAuthorQuery,GeoAuthor.class);
         elasticsearchTemplate.refresh(GeoAuthor.class, true);
 
@@ -782,12 +782,6 @@ public class ElasticsearchTemplateTests {
 
     @Test
     public void shouldReturnListForGivenCriteriaWithGeoLocation(){
-        // put mapping before any request
-        /*Class entity = GeoAuthor.class;
-        elasticsearchTemplate.createIndex(entity);*/
-
-        elasticsearchTemplate.putMapping(entity);
-
         //given
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
