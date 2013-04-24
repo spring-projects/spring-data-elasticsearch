@@ -18,7 +18,6 @@
     <url>https://github.com/SpringSource/spring-data-elasticsearch</url>
     
     <properties>
-
     	<dist.key>DATAES</dist.key>
     	
     	<commonscollections>3.2.1</commonscollections>

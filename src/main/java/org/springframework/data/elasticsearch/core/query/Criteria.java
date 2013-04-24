@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.elasticsearch.core.geo.GeoBBox;
 import org.springframework.data.elasticsearch.core.geo.GeoLocation;
 import org.springframework.util.Assert;
 
@@ -372,6 +373,18 @@ public class Criteria {
         return this;
     }
 
+    /**
+     * Creates new CriteriaEntry for {@code location BBOX bounding box}
+     * @param bbox {@link org.springframework.data.elasticsearch.core.geo.GeoBBox} center coordinates
+     *
+     * @return Criteria the chaind criteria with the new 'bbox' criteria included.
+     */
+    public Criteria bbox(GeoBBox bbox) {
+        Assert.notNull(bbox, "bbox value for bbox criteria must not be null");
+        filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{bbox}));
+        return this;
+    }
+
 
 	private void assertNoBlankInWildcardedQuery(String searchString, boolean leadingWildcard, boolean trailingWildcard) {
 		if (StringUtils.contains(searchString, CRITERIA_VALUE_SEPERATOR)) {
@@ -460,7 +473,7 @@ public class Criteria {
 	}
 
 	public enum OperationKey {
-		EQUALS, CONTAINS, STARTS_WITH, ENDS_WITH, EXPRESSION, BETWEEN, FUZZY, IN, WITHIN, NEAR;
+		EQUALS, CONTAINS, STARTS_WITH, ENDS_WITH, EXPRESSION, BETWEEN, FUZZY, IN, WITHIN, BBOX, NEAR;
 	}
 
 	public static class CriteriaEntry {

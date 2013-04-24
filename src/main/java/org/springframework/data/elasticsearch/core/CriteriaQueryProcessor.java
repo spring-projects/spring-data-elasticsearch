@@ -40,7 +40,7 @@ class CriteriaQueryProcessor {
 
 
     QueryBuilder createQueryFromCriteria(Criteria criteria) {
-        if(criteria == null || criteria.getQueryCriteriaEntries().size() == 0)
+        if(criteria == null)
             return null;
 
         List<QueryBuilder> shouldQueryBuilderList = new LinkedList<QueryBuilder>();

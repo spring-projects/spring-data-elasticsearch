@@ -32,6 +32,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.GeoAuthor;
 import org.springframework.data.elasticsearch.SampleEntity;
 import org.springframework.data.elasticsearch.SampleMappingEntity;
+import org.springframework.data.elasticsearch.core.geo.GeoBBox;
 import org.springframework.data.elasticsearch.core.geo.GeoLocation;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.test.context.ContextConfiguration;
@@ -45,8 +46,11 @@ import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
 import static org.elasticsearch.index.query.FilterBuilders.termFilter;
 import static org.elasticsearch.index.query.QueryBuilders.fieldQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -823,14 +827,33 @@ public class ElasticsearchTemplateTests {
         indexQueries.add(indexQuery3);
         //when
         elasticsearchTemplate.bulkIndex(indexQueries);
-        elasticsearchTemplate.refresh(GeoAuthor.class,true);
+        elasticsearchTemplate.refresh(GeoAuthor.class, true);
         //when
         CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(
                 new Criteria("location").within(new GeoLocation(45.7806d, 3.0875d), "20km"));
+
 
         List<GeoAuthor> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery,GeoAuthor.class);
         //then
         assertThat(geoAuthorsForGeoCriteria.size(),is(1));
         assertEquals("Franck Marchand", geoAuthorsForGeoCriteria.get(0).getName());
+
+        // query/filter geo distance mixed query
+        CriteriaQuery geoLocationCriteriaQuery2 = new CriteriaQuery(
+                new Criteria("name").is("Mohsin Husen").and("location").within(new GeoLocation(51.5171d, 0.1062d), "20km"));
+        List<GeoAuthor> geoAuthorsForGeoCriteria2 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery2,GeoAuthor.class);
+
+        assertThat(geoAuthorsForGeoCriteria2.size(),is(1));
+        assertEquals("Mohsin Husen", geoAuthorsForGeoCriteria2.get(0).getName());
+
+        // bbox query
+        CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
+                new Criteria("location").bbox(
+                        new GeoBBox(new GeoLocation(53.5171d, 0),
+                                new GeoLocation(49.5171d, 0.2062d))));
+        List<GeoAuthor> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3,GeoAuthor.class);
+
+        assertThat(geoAuthorsForGeoCriteria3.size(),is(2));
+        assertThat(geoAuthorsForGeoCriteria3, containsInAnyOrder(hasProperty("name", equalTo("Mohsin Husen")), hasProperty("name",equalTo("Rizwan Idrees"))));
     }
 }

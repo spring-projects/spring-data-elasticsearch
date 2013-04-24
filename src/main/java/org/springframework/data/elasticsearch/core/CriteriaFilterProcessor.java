@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.index.query.*;
+import org.springframework.data.elasticsearch.core.geo.GeoBBox;
 import org.springframework.data.elasticsearch.core.geo.GeoLocation;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.util.Assert;
@@ -96,7 +97,7 @@ class CriteriaFilterProcessor {
         FilterBuilder filter = null;
 
         switch (key){
-            case WITHIN:
+            case WITHIN:  {
                 filter = geoDistanceFilter(fieldName);
 
                 Assert.isTrue(value instanceof Object[], "Value of a geo distance filter should be an array of two values.");
@@ -112,6 +113,23 @@ class CriteriaFilterProcessor {
                 ((GeoDistanceFilterBuilder)filter).lat(loc.getLat()).lon(loc.getLon()).distance(dist);
                 break;
             }
+
+            case BBOX: {
+                filter = geoBoundingBoxFilter(fieldName);
+
+                Assert.isTrue(value instanceof Object[], "Value of a geo distance filter should be an array of two values.");
+                Object[] valArray = (Object[]) value;
+                Assert.noNullElements(valArray, "Geo bbox filter takes a not null element array as parameter.");
+                Assert.isTrue(valArray.length == 1, "Geo distance filter takes a 1-elements array as parameter.");
+                Assert.isTrue(valArray[0] instanceof GeoBBox, "single-element of a geo bbox filter must be a GeoBBox");
+
+                GeoBBox geoBBox = (GeoBBox)valArray[0];
+                ((GeoBoundingBoxFilterBuilder)filter).topLeft(geoBBox.getTopLeft().getLat(), geoBBox.getTopLeft().getLon());
+                ((GeoBoundingBoxFilterBuilder)filter).bottomRight(geoBBox.getBottomRight().getLat(), geoBBox.getBottomRight().getLon());
+                break;
+            }
+
+        }
 
         return filter;
     }
