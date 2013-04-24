@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import java.io.Serializable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -22,8 +24,6 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.repository.core.support.AbstractEntityInformation;
 import org.springframework.util.Assert;
-
-import java.io.Serializable;
 
 /**
  * Elasticsearch specific implementation of {@link org.springframework.data.repository.core.support.AbstractEntityInformation}
@@ -33,6 +33,7 @@ import java.io.Serializable;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Ryan Henszey
  */
 public class MappingElasticsearchEntityInformation<T, ID extends Serializable> extends AbstractEntityInformation<T, ID>
         implements ElasticsearchEntityInformation<T, ID> {
@@ -41,6 +42,7 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
     private final ElasticsearchPersistentEntity<T> entityMetadata;
     private final String indexName;
     private final String type;
+    private Class<?> idClass;
 
     public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity) {
         this(entity, null, null);
@@ -51,6 +53,7 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
         this.entityMetadata = entity;
         this.indexName = indexName;
         this.type = type;
+        this.idClass = entity.getIdProperty().getType();
     }
 
     @SuppressWarnings("unchecked")
@@ -67,7 +70,7 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
     @SuppressWarnings("unchecked")
     @Override
     public Class<ID> getIdType() {
-        return (Class<ID>) String.class;
+        return (Class<ID>)idClass;
     }
 
     @Override

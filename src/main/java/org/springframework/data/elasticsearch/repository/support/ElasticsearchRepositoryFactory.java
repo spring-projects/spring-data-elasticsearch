@@ -15,6 +15,11 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import static org.springframework.data.querydsl.QueryDslUtils.QUERY_DSL_PRESENT;
+
+import java.io.Serializable;
+import java.lang.reflect.Method;
+
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchPartQuery;
@@ -28,18 +33,15 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.util.Assert;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-
-import static org.springframework.data.querydsl.QueryDslUtils.QUERY_DSL_PRESENT;
-
 /**
  * Factory to create {@link ElasticsearchRepository}
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Ryan Henszey
  */
 public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
+  
 
     private final ElasticsearchOperations elasticsearchOperations;
     private final ElasticsearchEntityInformationCreator entityInformationCreator;
@@ -59,8 +61,27 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected Object getTargetRepository(RepositoryMetadata metadata) {
-        SimpleElasticsearchRepository repository = new SimpleElasticsearchRepository(getEntityInformation(metadata.getDomainType()), elasticsearchOperations);
+      
+        ElasticsearchEntityInformation<?, ?> entityInformation = getEntityInformation(metadata.getDomainType());
+        
+        AbstractElasticsearchRepository repository;
+        
+        //Probably a better way to store and look these up.
+        if(Integer.class.isAssignableFrom(entityInformation.getIdType()) ||
+            Long.class.isAssignableFrom(entityInformation.getIdType()) ||
+            Double.class.isAssignableFrom(entityInformation.getIdType())){
+          //logger.debug("Using NumberKeyedRepository for " + metadata.getRepositoryInterface());
+          repository = new NumberKeyedRepository(getEntityInformation(metadata.getDomainType()), elasticsearchOperations);
+        } 
+        else if (entityInformation.getIdType() == String.class){
+          //logger.debug("Using SimpleElasticsearchRepository for " + metadata.getRepositoryInterface());
+          repository = new SimpleElasticsearchRepository(getEntityInformation(metadata.getDomainType()), elasticsearchOperations);
+        } 
+        else {
+          throw new IllegalArgumentException("Unsuppored ID type " + entityInformation.getIdType()); 
+        }
         repository.setEntityClass(metadata.getDomainType());
+        
         return repository;
     }
 
