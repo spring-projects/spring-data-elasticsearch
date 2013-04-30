@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,9 @@ package org.springframework.data.elasticsearch.client;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 
@@ -29,9 +32,11 @@ import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
  * @author Mohsin Husen
  */
 
-public class NodeClientFactoryBean implements FactoryBean<NodeClient>, InitializingBean{
+public class NodeClientFactoryBean implements FactoryBean<NodeClient>, InitializingBean, DisposableBean {
 
+    private static final Logger logger = LoggerFactory.getLogger(NodeClientFactoryBean.class);
     private boolean local;
+    private boolean data;
     private NodeClient nodeClient;
 
     NodeClientFactoryBean() {
@@ -58,10 +63,26 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        nodeClient = (NodeClient) nodeBuilder().local(this.local).node().client();
+        nodeClient = (NodeClient) nodeBuilder().local(this.local).data(this.data).node().client();
     }
 
     public void setLocal(boolean local) {
         this.local = local;
+    }
+
+    public void setData(boolean data) {
+        this.data = data;
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        try {
+            logger.info("Closing elasticSearch  client");
+            if (nodeClient != null) {
+                nodeClient.close();
+            }
+        } catch (final Exception e) {
+            logger.error("Error closing ElasticSearch client: ", e);
+        }
     }
 }
