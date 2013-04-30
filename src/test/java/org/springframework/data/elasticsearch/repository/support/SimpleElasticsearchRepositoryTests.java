@@ -47,7 +47,7 @@ import static org.junit.Assert.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/simple-repository-test.xml")
-public class SimpleElasticsearchRepositoryTest {
+public class SimpleElasticsearchRepositoryTests {
 
     @Resource
     private SampleElasticsearchRepository repository;

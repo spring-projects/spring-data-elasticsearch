@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
-public class CriteriaQueryTest {
+public class CriteriaQueryTests {
 
     @Resource
     private ElasticsearchTemplate elasticsearchTemplate;

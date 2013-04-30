@@ -28,7 +28,7 @@ import java.beans.PropertyDescriptor;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public class SimpleElasticsearchPersistentEntityTest {
+public class SimpleElasticsearchPersistentEntityTests {
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowExceptionGivenVersionPropertyIsNotLong() throws NoSuchFieldException, IntrospectionException {

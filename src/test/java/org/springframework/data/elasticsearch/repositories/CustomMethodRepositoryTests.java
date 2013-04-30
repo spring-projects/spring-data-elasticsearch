@@ -44,7 +44,7 @@ import static org.junit.Assert.assertThat;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:custom-method-repository-test.xml")
-public class CustomMethodRepositoryTest {
+public class CustomMethodRepositoryTests {
 
     @Resource
     private SampleCustomMethodRepository repository;

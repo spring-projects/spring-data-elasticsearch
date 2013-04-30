@@ -39,7 +39,7 @@ import static org.junit.Assert.assertThat;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
-public class EnableElasticsearchRepositoriesTest {
+public class EnableElasticsearchRepositoriesTests {
 
     @Configuration
     @EnableElasticsearchRepositories(basePackages = "org.springframework.data.elasticsearch.repositories")

@@ -24,7 +24,7 @@ import org.springframework.data.elasticsearch.repositories.NonDocumentEntityRepo
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public class NonDocumentEntityTest {
+public class NonDocumentEntityTests {
 
 
     @Test(expected = BeanCreationException.class)

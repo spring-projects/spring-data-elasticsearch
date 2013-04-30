@@ -27,7 +27,7 @@ import static org.junit.Assert.assertThat;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public class MappingElasticsearchConverterTest {
+public class MappingElasticsearchConverterTests {
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldFailToInitializeGivenMappingContextIsNull(){

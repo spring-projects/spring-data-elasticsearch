@@ -35,7 +35,7 @@ import static org.junit.Assert.assertThat;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/repository-test-nested-object.xml")
-public class NestedObjectTest{
+public class NestedObjectTests{
 
     @Resource
     private SampleElasticSearchBookRepository repository;

@@ -51,7 +51,7 @@ import static org.junit.Assert.*;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
-public class ElasticsearchTemplateTest {
+public class ElasticsearchTemplateTests {
 
     @Autowired
     private ElasticsearchTemplate elasticsearchTemplate;

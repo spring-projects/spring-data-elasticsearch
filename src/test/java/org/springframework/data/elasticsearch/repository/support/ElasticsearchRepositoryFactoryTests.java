@@ -38,7 +38,7 @@ import static org.mockito.Mockito.when;
  * @author Mohsin Husen
  */
 @RunWith(MockitoJUnitRunner.class)
-public class ElasticsearchRepositoryFactoryTest {
+public class ElasticsearchRepositoryFactoryTests {
 
     @Mock
     private ElasticsearchOperations operations;

@@ -4,6 +4,7 @@ atlassian-ide-plugin.xml
 .svn
 
 target
+data
 
 ## Ignore project files created by Eclipse
 .settings

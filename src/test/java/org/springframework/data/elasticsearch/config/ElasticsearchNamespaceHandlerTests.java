@@ -37,7 +37,7 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("namespace.xml")
-public class ElasticsearchNamespaceHandlerTest {
+public class ElasticsearchNamespaceHandlerTests {
 
     @Autowired
     private ApplicationContext context;

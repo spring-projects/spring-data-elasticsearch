@@ -30,7 +30,7 @@ import java.util.TimeZone;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public class DateTimeConvertersTest {
+public class DateTimeConvertersTests {
     @Test
     public void testJodaDateTimeConverterWithNullValue() {
         Assert.assertNull(DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(null));
