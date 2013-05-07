@@ -63,7 +63,7 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        nodeClient = (NodeClient) nodeBuilder().local(this.local).data(this.purgeDataOnShutdown).node().client();
+        nodeClient = (NodeClient) nodeBuilder().local(this.local).data(!this.purgeDataOnShutdown).node().client();
     }
 
     public void setLocal(boolean local) {

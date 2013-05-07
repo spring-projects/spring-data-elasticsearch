@@ -5,6 +5,6 @@
        xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <elasticsearch:node-client id="client" local="true" purge-data-on-shutdown="false" />
+    <elasticsearch:node-client id="client" local="true" purge-data-on-shutdown="true" />
 
 </beans>
