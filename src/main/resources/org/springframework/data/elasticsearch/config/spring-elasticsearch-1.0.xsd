@@ -45,7 +45,7 @@
             <xsd:complexContent>
                 <xsd:extension base="beans:identifiedType">
                     <xsd:attribute name="local" type="xsd:boolean" default="false"/>
-                    <xsd:attribute name="data" type="xsd:boolean" default="false"/>
+                    <xsd:attribute name="purge-data-on-shutdown" type="xsd:boolean" default="false"/>
                 </xsd:extension>
             </xsd:complexContent>
         </xsd:complexType>

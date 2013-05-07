@@ -36,7 +36,7 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
     private static final Logger logger = LoggerFactory.getLogger(NodeClientFactoryBean.class);
     private boolean local;
-    private boolean data;
+    private boolean purgeDataOnShutdown;
     private NodeClient nodeClient;
 
     NodeClientFactoryBean() {
@@ -63,15 +63,15 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        nodeClient = (NodeClient) nodeBuilder().local(this.local).data(this.data).node().client();
+        nodeClient = (NodeClient) nodeBuilder().local(this.local).data(this.purgeDataOnShutdown).node().client();
     }
 
     public void setLocal(boolean local) {
         this.local = local;
     }
 
-    public void setData(boolean data) {
-        this.data = data;
+    public void setPurgeDataOnShutdown(boolean purgeDataOnShutdown) {
+        this.purgeDataOnShutdown = purgeDataOnShutdown;
     }
 
     @Override
