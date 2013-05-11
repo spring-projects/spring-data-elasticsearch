@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
+import org.elasticsearch.common.settings.ImmutableSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -36,7 +37,8 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
     private static final Logger logger = LoggerFactory.getLogger(NodeClientFactoryBean.class);
     private boolean local;
-    private boolean purgeDataOnShutdown;
+    private boolean enableHttp;
+    private String clusterName;
     private NodeClient nodeClient;
 
     NodeClientFactoryBean() {
@@ -63,15 +65,23 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        nodeClient = (NodeClient) nodeBuilder().local(this.local).data(!this.purgeDataOnShutdown).node().client();
+        ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder()
+                .put("http.enabled", String.valueOf(this.enableHttp));
+
+        nodeClient = (NodeClient) nodeBuilder().settings(settings)
+                .clusterName(this.clusterName).local(this.local).node().client();
     }
 
     public void setLocal(boolean local) {
         this.local = local;
     }
 
-    public void setPurgeDataOnShutdown(boolean purgeDataOnShutdown) {
-        this.purgeDataOnShutdown = purgeDataOnShutdown;
+    public void setEnableHttp(boolean enableHttp) {
+        this.enableHttp = enableHttp;
+    }
+
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
     }
 
     @Override

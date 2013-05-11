@@ -25,7 +25,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-@Document(indexName = "test-index", type = "test-type")
+@Document(indexName = "test-index", type = "test-type", indexStoreType = "memory")
 public class SampleEntity {
 
     @Id

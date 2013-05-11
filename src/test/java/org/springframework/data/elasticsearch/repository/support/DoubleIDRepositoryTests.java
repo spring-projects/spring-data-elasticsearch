@@ -377,13 +377,13 @@ public class DoubleIDRepositoryTests {
       Double documentId = RandomUtils.nextDouble();
       DoubleIDEntity sampleEntity = new DoubleIDEntity();
       sampleEntity.setId(documentId);
-      sampleEntity.setMessage("A. hello world.");
+      sampleEntity.setMessage("abc");
       repository.save(sampleEntity);
 
       Double documentId2 = RandomUtils.nextDouble();
       DoubleIDEntity sampleEntity2 = new DoubleIDEntity();
       sampleEntity2.setId(documentId2);
-      sampleEntity2.setMessage("B.hello world.");
+      sampleEntity2.setMessage("xyz");
       repository.save(sampleEntity2);
       //when
       Iterable<DoubleIDEntity> sampleEntities=repository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC,"message")));

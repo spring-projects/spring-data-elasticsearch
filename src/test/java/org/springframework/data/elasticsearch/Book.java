@@ -21,7 +21,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-@Document(indexName = "book",type = "book")
+@Document(indexName = "book",type = "book", indexStoreType = "memory")
 public class Book {
 
     @Id

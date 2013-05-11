@@ -45,6 +45,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
     private final StandardEvaluationContext context;
     private String indexName;
     private String indexType;
+    private String indexStoreType;
 
     public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
         super(typeInformation);
@@ -55,6 +56,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
             Assert.hasText(document.indexName(), " Unknown indexName. Make sure the indexName is defined. e.g @Document(indexName=\"foo\")");
             this.indexName = typeInformation.getType().getAnnotation(Document.class).indexName();
             this.indexType = hasText(document.type())? document.type() : clazz.getSimpleName().toLowerCase(Locale.ENGLISH);
+            this.indexStoreType = typeInformation.getType().getAnnotation(Document.class).indexStoreType();
         }
     }
 
@@ -73,6 +75,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
     @Override
     public String getIndexType() {
         return indexType;
+    }
+
+    public String getIndexStoreType() {
+        return indexStoreType;
     }
 
     @Override

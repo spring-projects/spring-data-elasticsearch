@@ -25,17 +25,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.annotation.Resource;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -55,7 +51,6 @@ public class CriteriaQueryTests {
         elasticsearchTemplate.delete(deleteQuery,SampleEntity.class);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
     }
-
 
     @Test
     public void shouldPerformAndOperation(){

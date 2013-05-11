@@ -41,7 +41,8 @@ public class NodeClientBeanDefinitionParser extends AbstractBeanDefinitionParser
 
     private void setLocalSettings(Element element, BeanDefinitionBuilder builder) {
         builder.addPropertyValue("local", Boolean.valueOf(element.getAttribute("local")));
-        builder.addPropertyValue("purgeDataOnShutdown", Boolean.valueOf(element.getAttribute("purge-data-on-shutdown")));
+        builder.addPropertyValue("clusterName", element.getAttribute("cluster-name"));
+        builder.addPropertyValue("enableHttp",Boolean.valueOf(element.getAttribute("http-enabled")));
     }
 
 

@@ -35,4 +35,5 @@ public @interface Document {
 
     String indexName();
     String type() default "";
+    String indexStoreType() default "fs";
 }

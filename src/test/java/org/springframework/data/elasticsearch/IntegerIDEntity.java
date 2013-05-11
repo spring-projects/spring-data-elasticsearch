@@ -22,7 +22,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 
-@Document(indexName = "integer-keyed-entity", type = "integer-keyed-entity")
+@Document(indexName = "integer-keyed-entity", type = "integer-keyed-entity", indexStoreType = "memory")
 public class IntegerIDEntity {
 
 

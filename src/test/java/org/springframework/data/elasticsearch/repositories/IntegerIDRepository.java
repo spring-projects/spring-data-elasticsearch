@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.repositories;
 
 import org.springframework.data.elasticsearch.IntegerIDEntity;
-import org.springframework.data.elasticsearch.SampleEntity;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 public interface IntegerIDRepository extends ElasticsearchRepository<IntegerIDEntity,Integer> {

@@ -373,13 +373,13 @@ public class SimpleElasticsearchRepositoryTests {
         String documentId = randomNumeric(5);
         SampleEntity sampleEntity = new SampleEntity();
         sampleEntity.setId(documentId);
-        sampleEntity.setMessage("A. hello world.");
+        sampleEntity.setMessage("world");
         repository.save(sampleEntity);
 
         String documentId2 = randomNumeric(5);
         SampleEntity sampleEntity2 = new SampleEntity();
         sampleEntity2.setId(documentId2);
-        sampleEntity2.setMessage("B.hello world.");
+        sampleEntity2.setMessage("hello");
         repository.save(sampleEntity2);
         //when
         Iterable<SampleEntity> sampleEntities=repository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC,"message")));

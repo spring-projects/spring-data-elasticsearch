@@ -96,7 +96,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     @Override
     public <T> boolean createIndex(Class<T> clazz) {
         ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
-        return createIndexIfNotCreated(persistentEntity.getIndexName());
+        return createIndexIfNotCreated(clazz);
     }
 
     @Override
@@ -369,8 +369,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return searchRequest.setQuery(query).execute().actionGet();
     }
 
-    private boolean createIndexIfNotCreated(String indexName) {
-        return  indexExists(indexName) ||  createIndex(indexName);
+    private <T> boolean createIndexIfNotCreated(Class<T> clazz) {
+        return  indexExists(getPersistentEntityFor(clazz).getIndexName()) ||  createIndexWithSettings(clazz);
     }
 
     private boolean indexExists(String indexName) {
@@ -379,9 +379,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                 .exists(indicesExistsRequest(indexName)).actionGet().exists();
     }
 
-    private boolean createIndex(String indexName) {
-        return client.admin().indices().create(Requests.createIndexRequest(indexName).
-                settings(new MapBuilder<String, String>().put("index.refresh_interval", "-1").map())).actionGet().acknowledged();
+    private <T> boolean createIndexWithSettings(Class<T> clazz) {
+        ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
+        return client.admin().indices().create(Requests.createIndexRequest(persistentEntity.getIndexName()).
+                settings(new MapBuilder<String, String>()
+                        .put("index.store.type", persistentEntity.getIndexStoreType())
+                        .map())).actionGet().acknowledged();
     }
 
     private <T> SearchRequestBuilder prepareSearch(Query query, Class<T> clazz){

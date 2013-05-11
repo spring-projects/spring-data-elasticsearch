@@ -377,13 +377,13 @@ public class IntegerIDRepositoryTests {
       Integer documentId = RandomUtils.nextInt();
       IntegerIDEntity sampleEntity = new IntegerIDEntity();
       sampleEntity.setId(documentId);
-      sampleEntity.setMessage("A. hello world.");
+      sampleEntity.setMessage("hello");
       repository.save(sampleEntity);
 
       Integer documentId2 = RandomUtils.nextInt();
       IntegerIDEntity sampleEntity2 = new IntegerIDEntity();
       sampleEntity2.setId(documentId2);
-      sampleEntity2.setMessage("B.hello world.");
+      sampleEntity2.setMessage("world");
       repository.save(sampleEntity2);
       //when
       Iterable<IntegerIDEntity> sampleEntities=repository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC,"message")));
