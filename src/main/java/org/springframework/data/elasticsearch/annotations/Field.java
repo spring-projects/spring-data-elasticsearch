@@ -29,7 +29,7 @@ public @interface Field {
 
     String type() default "";
     String index() default "";
-    boolean store() default true;
+    boolean store() default false;
     String searchAnalyzer() default "";
     String indexAnalyzer() default "";
 
