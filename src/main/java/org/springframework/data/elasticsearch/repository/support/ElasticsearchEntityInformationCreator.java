@@ -18,8 +18,8 @@ package org.springframework.data.elasticsearch.repository.support;
 import java.io.Serializable;
 
 /**
- *  ElasticsearchEntityInformationCreator
- *
+ * ElasticsearchEntityInformationCreator
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */

@@ -17,24 +17,25 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.PersistentProperty;
+
 /**
- *  ElasticsearchPersistentProperty
- *
+ * ElasticsearchPersistentProperty
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 
-public interface ElasticsearchPersistentProperty extends PersistentProperty<ElasticsearchPersistentProperty>{
+public interface ElasticsearchPersistentProperty extends PersistentProperty<ElasticsearchPersistentProperty> {
 
-    String getFieldName();
+	String getFieldName();
 
-    public enum PropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
+	public enum PropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
 
-        INSTANCE;
+		INSTANCE;
 
-        public String convert(ElasticsearchPersistentProperty source) {
-            return source.getFieldName();
-        }
-    }
+		public String convert(ElasticsearchPersistentProperty source) {
+			return source.getFieldName();
+		}
+	}
 
 }

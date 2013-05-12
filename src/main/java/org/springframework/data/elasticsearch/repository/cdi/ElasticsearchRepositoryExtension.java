@@ -33,7 +33,7 @@ import java.util.Set;
 
 /**
  * ElasticsearchRepositoryExtension
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -53,24 +53,25 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 	}
 
 	void afterBeanDiscovery(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
-        for (Entry<Class<?>, Set<Annotation>> entry : getRepositoryTypes()) {
+		for (Entry<Class<?>, Set<Annotation>> entry : getRepositoryTypes()) {
 
 			Class<?> repositoryType = entry.getKey();
 			Set<Annotation> qualifiers = entry.getValue();
 
 			Bean<?> repositoryBean = createRepositoryBean(repositoryType, qualifiers, beanManager);
-            afterBeanDiscovery.addBean(repositoryBean);
+			afterBeanDiscovery.addBean(repositoryBean);
 		}
 	}
 
 	private <T> Bean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers, BeanManager beanManager) {
-		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers.toString());
+		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers
+				.toString());
 
 		if (elasticsearchOperationsBean == null) {
 			throw new UnsatisfiedResolutionException(String.format("Unable to resolve a bean for '%s' with qualifiers %s.",
-                    ElasticsearchOperations.class.getName(), qualifiers));
+					ElasticsearchOperations.class.getName(), qualifiers));
 		}
-        return new ElasticsearchRepositoryBean<T>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager);
+		return new ElasticsearchRepositoryBean<T>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager);
 	}
 
 }

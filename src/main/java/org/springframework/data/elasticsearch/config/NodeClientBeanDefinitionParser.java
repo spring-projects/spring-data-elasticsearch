@@ -25,31 +25,30 @@ import org.w3c.dom.Element;
 
 /**
  * NodeClientBeanDefinitionParser
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 
 public class NodeClientBeanDefinitionParser extends AbstractBeanDefinitionParser {
 
-    @Override
-    protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
-        BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(NodeClientFactoryBean.class);
-        setLocalSettings(element,builder);
-        return getSourcedBeanDefinition(builder, element, parserContext);
-    }
+	@Override
+	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(NodeClientFactoryBean.class);
+		setLocalSettings(element, builder);
+		return getSourcedBeanDefinition(builder, element, parserContext);
+	}
 
-    private void setLocalSettings(Element element, BeanDefinitionBuilder builder) {
-        builder.addPropertyValue("local", Boolean.valueOf(element.getAttribute("local")));
-        builder.addPropertyValue("clusterName", element.getAttribute("cluster-name"));
-        builder.addPropertyValue("enableHttp",Boolean.valueOf(element.getAttribute("http-enabled")));
-    }
+	private void setLocalSettings(Element element, BeanDefinitionBuilder builder) {
+		builder.addPropertyValue("local", Boolean.valueOf(element.getAttribute("local")));
+		builder.addPropertyValue("clusterName", element.getAttribute("cluster-name"));
+		builder.addPropertyValue("enableHttp", Boolean.valueOf(element.getAttribute("http-enabled")));
+	}
 
-
-    private AbstractBeanDefinition getSourcedBeanDefinition(BeanDefinitionBuilder builder, Element source,
-                                                            ParserContext context) {
-        AbstractBeanDefinition definition = builder.getBeanDefinition();
-        definition.setSource(context.extractSource(source));
-        return definition;
-    }
+	private AbstractBeanDefinition getSourcedBeanDefinition(BeanDefinitionBuilder builder, Element source,
+			ParserContext context) {
+		AbstractBeanDefinition definition = builder.getBeanDefinition();
+		definition.setSource(context.extractSource(source));
+		return definition;
+	}
 }

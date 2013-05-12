@@ -24,7 +24,7 @@ import java.io.Serializable;
 
 /**
  * ElasticsearchEntityInformationCreatorImpl
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -33,7 +33,7 @@ public class ElasticsearchEntityInformationCreatorImpl implements ElasticsearchE
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 
 	public ElasticsearchEntityInformationCreatorImpl(
-            MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
+			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
 		Assert.notNull(mappingContext);
 		this.mappingContext = mappingContext;
 	}
@@ -41,7 +41,7 @@ public class ElasticsearchEntityInformationCreatorImpl implements ElasticsearchE
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T, ID extends Serializable> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
-        ElasticsearchPersistentEntity<T> persistentEntity = (ElasticsearchPersistentEntity<T>) mappingContext
+		ElasticsearchPersistentEntity<T> persistentEntity = (ElasticsearchPersistentEntity<T>) mappingContext
 				.getPersistentEntity(domainClass);
 		return new MappingElasticsearchEntityInformation<T, ID>(persistentEntity);
 	}

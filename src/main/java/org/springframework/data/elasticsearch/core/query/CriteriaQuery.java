@@ -15,67 +15,67 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
 
 /**
- *   CriteriaQuery
- *
+ * CriteriaQuery
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public class CriteriaQuery extends AbstractQuery{
+public class CriteriaQuery extends AbstractQuery {
 
-    private Criteria criteria;
-    private CriteriaQuery() {
-    }
+	private Criteria criteria;
 
-    public CriteriaQuery(Criteria criteria) {
-        this(criteria, null);
-    }
+	private CriteriaQuery() {
+	}
 
-    public CriteriaQuery(Criteria criteria, Pageable pageable) {
-        this.criteria = criteria;
-        this.pageable = pageable;
-        if (pageable != null) {
-            this.addSort(pageable.getSort());
-        }
-    }
+	public CriteriaQuery(Criteria criteria) {
+		this(criteria, null);
+	}
 
-    public static final Query fromQuery(CriteriaQuery source) {
-        return fromQuery(source, new CriteriaQuery());
-    }
+	public CriteriaQuery(Criteria criteria, Pageable pageable) {
+		this.criteria = criteria;
+		this.pageable = pageable;
+		if (pageable != null) {
+			this.addSort(pageable.getSort());
+		}
+	}
 
-    public static <T extends CriteriaQuery> T fromQuery(CriteriaQuery source, T destination) {
-        if (source == null || destination == null) {
-            return null;
-        }
+	public static final Query fromQuery(CriteriaQuery source) {
+		return fromQuery(source, new CriteriaQuery());
+	}
 
-        if (source.getCriteria() != null) {
-            destination.addCriteria(source.getCriteria());
-        }
+	public static <T extends CriteriaQuery> T fromQuery(CriteriaQuery source, T destination) {
+		if (source == null || destination == null) {
+			return null;
+		}
 
-        if (source.getSort() != null) {
-            destination.addSort(source.getSort());
-        }
+		if (source.getCriteria() != null) {
+			destination.addCriteria(source.getCriteria());
+		}
 
-        return destination;
-    }
+		if (source.getSort() != null) {
+			destination.addSort(source.getSort());
+		}
 
-    @SuppressWarnings("unchecked")
-    public final <T extends CriteriaQuery> T addCriteria(Criteria criteria) {
-        Assert.notNull(criteria, "Cannot add null criteria.");
-        if (this.criteria == null) {
-            this.criteria = criteria;
-        } else {
-            this.criteria.and(criteria);
-        }
-        return (T) this;
-    }
+		return destination;
+	}
 
-    public Criteria getCriteria() {
-        return this.criteria;
-    }
+	@SuppressWarnings("unchecked")
+	public final <T extends CriteriaQuery> T addCriteria(Criteria criteria) {
+		Assert.notNull(criteria, "Cannot add null criteria.");
+		if (this.criteria == null) {
+			this.criteria = criteria;
+		} else {
+			this.criteria.and(criteria);
+		}
+		return (T) this;
+	}
+
+	public Criteria getCriteria() {
+		return this.criteria;
+	}
 
 }

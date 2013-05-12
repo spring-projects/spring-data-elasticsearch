@@ -18,34 +18,32 @@ package org.springframework.data.elasticsearch.repository.support;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 
 /**
- * Elasticsearch specific repository implementation. Likely to be used as target within {@link ElasticsearchRepositoryFactory}
- *
- *
+ * Elasticsearch specific repository implementation. Likely to be used as target within
+ * {@link ElasticsearchRepositoryFactory}
+ * 
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Ryan Henszey
  */
-public class NumberKeyedRepository<T,ID extends Number> extends AbstractElasticsearchRepository<T,ID> {
+public class NumberKeyedRepository<T, ID extends Number> extends AbstractElasticsearchRepository<T, ID> {
 
-  
-  public NumberKeyedRepository() {
-    super();
-  }
+	public NumberKeyedRepository() {
+		super();
+	}
 
-  public NumberKeyedRepository(ElasticsearchEntityInformation<T, ID> metadata,ElasticsearchOperations elasticsearchOperations) {
-    super(metadata, elasticsearchOperations);
-  }
+	public NumberKeyedRepository(ElasticsearchEntityInformation<T, ID> metadata,
+			ElasticsearchOperations elasticsearchOperations) {
+		super(metadata, elasticsearchOperations);
+	}
 
-  public NumberKeyedRepository(ElasticsearchOperations elasticsearchOperations) {
-    super(elasticsearchOperations);
-  }
-  
-  
-  
-  @Override
-  protected String stringIdRepresentation(ID id) {
-    return String.valueOf(id);
-  }
-  
+	public NumberKeyedRepository(ElasticsearchOperations elasticsearchOperations) {
+		super(elasticsearchOperations);
+	}
+
+	@Override
+	protected String stringIdRepresentation(ID id) {
+		return String.valueOf(id);
+	}
 
 }

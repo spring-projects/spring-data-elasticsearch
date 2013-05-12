@@ -15,40 +15,38 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 
 /**
  * NativeSearchQuery
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
  */
 public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
-    private QueryBuilder query;
-    private FilterBuilder filter;
-    private SortBuilder sort;
+	private QueryBuilder query;
+	private FilterBuilder filter;
+	private SortBuilder sort;
 
-    public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, SortBuilder sort) {
-        this.query = query;
-        this.filter = filter;
-        this.sort = sort;
-    }
+	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, SortBuilder sort) {
+		this.query = query;
+		this.filter = filter;
+		this.sort = sort;
+	}
 
-    public QueryBuilder getQuery() {
-        return query;
-    }
+	public QueryBuilder getQuery() {
+		return query;
+	}
 
+	public FilterBuilder getFilter() {
+		return filter;
+	}
 
-    public FilterBuilder getFilter() {
-        return filter;
-    }
-
-    public SortBuilder getElasticsearchSort() {
-        return sort;
-    }
+	public SortBuilder getElasticsearchSort() {
+		return sort;
+	}
 }

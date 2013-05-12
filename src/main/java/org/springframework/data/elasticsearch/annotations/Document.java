@@ -15,14 +15,13 @@
  */
 package org.springframework.data.elasticsearch.annotations;
 
-
 import org.springframework.data.annotation.Persistent;
 
 import java.lang.annotation.*;
 
 /**
  * Document
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -33,10 +32,15 @@ import java.lang.annotation.*;
 @Target({ ElementType.TYPE })
 public @interface Document {
 
-    String indexName();
-    String type() default "";
-    short shards() default 1;
-    short replicas() default 5;
-    String refreshInterval() default "1s";
-    String indexStoreType() default "fs";
+	String indexName();
+
+	String type() default "";
+
+	short shards() default 1;
+
+	short replicas() default 5;
+
+	String refreshInterval() default "1s";
+
+	String indexStoreType() default "fs";
 }

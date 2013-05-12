@@ -15,8 +15,10 @@
 			<title>Spring Namespace</title>
 
 			<para>
-				The Spring Data Elasticsearch module contains a custom namespace allowing
-				definition of repository beans as well as elements for instantiating
+				The Spring Data Elasticsearch module contains a custom namespace
+				allowing
+				definition of repository beans as well as elements for
+				instantiating
 				a
 				<classname>ElasticsearchServer</classname>
 				.
@@ -32,7 +34,7 @@
 
 			<example>
 				<title>Setting up Elasticsearch repositories using Namespace</title>
-<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+				<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;beans xmlns="http://www.springframework.org/schema/beans"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
@@ -56,7 +58,7 @@ http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.
 
 				<example>
 					<title>Transport Client using Namespace</title>
-<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+					<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;beans xmlns="http://www.springframework.org/schema/beans"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
@@ -71,7 +73,7 @@ http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.
 
 				<example>
 					<title>Node Client using Namespace</title>
-<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+					<programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;beans xmlns="http://www.springframework.org/schema/beans"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
@@ -87,13 +89,15 @@ http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.
 		</section>
 		<section id="elasticsearch.annotation">
 			<title>Annotation based configuration</title>
-			<para>The Spring Data Elasticsearch repositories support cannot only be
+			<para>The Spring Data Elasticsearch repositories support cannot only
+				be
 				activated through an XML namespace but also using an annotation
 				through JavaConfig.
 			</para>
 			<example>
-				<title>Spring Data Elasticsearch repositories using JavaConfig</title>
-<programlisting language="java">
+				<title>Spring Data Elasticsearch repositories using JavaConfig
+				</title>
+				<programlisting language="java">
 @Configuration
 @EnableElasticsearchRepositories(basePackages = "org/springframework/data/elasticsearch/repositories")
 static class Config {
@@ -122,12 +126,14 @@ return new ElasticsearchTemplate(nodeBuilder().local(true).node().client());
 		</section>
 		<section id="elasticsearch.cdi">
 			<title>Elasticsearch Repositores using CDI</title>
-			<para>The Spring Data Elasticsearch repositories can also be set up using CDI
+			<para>The Spring Data Elasticsearch repositories can also be set up
+				using CDI
 				functionality.
 			</para>
 			<example>
-				<title>Spring Data Elasticsearch repositories using JavaConfig</title>
-<programlisting language="java">class ElasticsearchTemplateProducer {
+				<title>Spring Data Elasticsearch repositories using JavaConfig
+				</title>
+				<programlisting language="java">class ElasticsearchTemplateProducer {
 
 @Produces
 @ApplicationScoped
@@ -157,9 +163,11 @@ public void setRepository(ProductRepository repository) {
 		<section id="elasticsearch.query-methods.finders">
 			<title>Query lookup strategies</title>
 			<para>
-				The Elasticsearch module supports all basic query building feature as String,Abstract,Criteria or
+				The Elasticsearch module supports all basic query building
+				feature as String,Abstract,Criteria or
 				have
-				it being derived from the method name.
+				it being derived from the
+				method name.
 			</para>
 
 			<simplesect>
@@ -180,11 +188,13 @@ public void setRepository(ProductRepository repository) {
 			<title>Query creation</title>
 
 			<para>
-				Generally the query creation mechanism for Elasticsearch works as described
+				Generally the query creation mechanism for Elasticsearch works as
+				described
 				in
 				<xref linkend="repositories.query-methods" />
 				. Here's a short example
-				of what a Elasticsearch query method translates into:
+				of what a Elasticsearch query method
+				translates into:
 				<example>
 					<title>Query creation from method names</title>
 					<programlisting language="java">public interface BookRepository extends Repository&lt;Book, String&gt; {
@@ -192,7 +202,7 @@ public void setRepository(ProductRepository repository) {
 }</programlisting>
 					<para>
 						The method name above will be translated into the following
-                        Elasticsearch json query
+						Elasticsearch json query
 					</para>
 					<programlisting>
                         { "bool" :
@@ -227,7 +237,8 @@ public void setRepository(ProductRepository repository) {
 									<code>findByNameAndPrice</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must" : [ {"field" : {"name" : "?"}}, {"field" : {"price" : "?"}} ]}}</code>
+									<code>{"bool" : {"must" : [ {"field" : {"name" : "?"}},
+										{"field" : {"price" : "?"}} ]}}</code>
 								</entry>
 							</row>
 							<row>
@@ -238,7 +249,8 @@ public void setRepository(ProductRepository repository) {
 									<code>findByNameOrPrice</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"should" : [ {"field" : {"name" : "?"}}, {"field" : {"price" : "?"}} ]}}</code>
+									<code>{"bool" : {"should" : [ {"field" : {"name" : "?"}},
+										{"field" : {"price" : "?"}} ]}}</code>
 								</entry>
 							</row>
 							<row>
@@ -260,7 +272,8 @@ public void setRepository(ProductRepository repository) {
 									<code>findByNameNot</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must_not" : {"field" : {"name" : "?"}}}}</code>
+									<code>{"bool" : {"must_not" : {"field" : {"name" : "?"}}}}
+									</code>
 								</entry>
 							</row>
 							<row>
@@ -271,7 +284,9 @@ public void setRepository(ProductRepository repository) {
 									<code>findByPriceBetween</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must" : {"range" : {"price" : {"from" : ?,"to" : ?,"include_lower" : true,"include_upper" : true}}}}}</code>
+									<code>{"bool" : {"must" : {"range" : {"price" : {"from" :
+										?,"to" : ?,"include_lower" : true,"include_upper" : true}}}}}
+									</code>
 								</entry>
 							</row>
 							<row>
@@ -282,7 +297,9 @@ public void setRepository(ProductRepository repository) {
 									<code>findByPriceLessThan</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must" : {"range" : {"price" : {"from" : null,"to" : ?,"include_lower" : true,"include_upper" : true}}}}}</code>
+									<code>{"bool" : {"must" : {"range" : {"price" : {"from" :
+										null,"to" : ?,"include_lower" : true,"include_upper" :
+										true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -293,7 +310,9 @@ public void setRepository(ProductRepository repository) {
 									<code>findByPriceGreaterThan</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must" : {"range" : {"price" : {"from" : ?,"to" : null,"include_lower" : true,"include_upper" : true}}}}}</code>
+									<code>{"bool" : {"must" : {"range" : {"price" : {"from" :
+										?,"to" : null,"include_lower" : true,"include_upper" :
+										true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -304,7 +323,9 @@ public void setRepository(ProductRepository repository) {
 									<code>findByPriceBefore</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must" : {"range" : {"price" : {"from" : null,"to" : ?,"include_lower" : true,"include_upper" : true}}}}}</code>
+									<code>{"bool" : {"must" : {"range" : {"price" : {"from" :
+										null,"to" : ?,"include_lower" : true,"include_upper" :
+										true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -315,7 +336,9 @@ public void setRepository(ProductRepository repository) {
 									<code>findByPriceAfter</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must" : {"range" : {"price" : {"from" : ?,"to" : null,"include_lower" : true,"include_upper" : true}}}}}</code>
+									<code>{"bool" : {"must" : {"range" : {"price" : {"from" :
+										?,"to" : null,"include_lower" : true,"include_upper" :
+										true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -326,7 +349,8 @@ public void setRepository(ProductRepository repository) {
 									<code>findByNameLike</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must" : {"field" : {"name" : {"query" : "?*","analyze_wildcard" : true}}}}}</code>
+									<code>{"bool" : {"must" : {"field" : {"name" : {"query" :
+										"?*","analyze_wildcard" : true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -337,7 +361,8 @@ public void setRepository(ProductRepository repository) {
 									<code>findByNameStartingWith</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must" : {"field" : {"name" : {"query" : "?*","analyze_wildcard" : true}}}}}</code>
+									<code>{"bool" : {"must" : {"field" : {"name" : {"query" :
+										"?*","analyze_wildcard" : true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -348,7 +373,8 @@ public void setRepository(ProductRepository repository) {
 									<code>findByNameEndingWith</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must" : {"field" : {"name" : {"query" : "*?","analyze_wildcard" : true}}}}}</code>
+									<code>{"bool" : {"must" : {"field" : {"name" : {"query" :
+										"*?","analyze_wildcard" : true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -359,7 +385,8 @@ public void setRepository(ProductRepository repository) {
 									<code>findByNameContaining</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must" : {"field" : {"name" : {"query" : "*?*","analyze_wildcard" : true}}}}}</code>
+									<code>{"bool" : {"must" : {"field" : {"name" : {"query" :
+										"*?*","analyze_wildcard" : true}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -370,7 +397,8 @@ public void setRepository(ProductRepository repository) {
 									<code>findByNameIn(Collection&lt;String&gt;names)</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must" : {"bool" : {"should" : [ {"field" : {"name" : "?"}}, {"field" : {"name" : "?"}} ]}}}}</code>
+									<code>{"bool" : {"must" : {"bool" : {"should" : [ {"field" :
+										{"name" : "?"}}, {"field" : {"name" : "?"}} ]}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -381,7 +409,8 @@ public void setRepository(ProductRepository repository) {
 									<code>findByNameNotIn(Collection&lt;String&gt;names)</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must_not" : {"bool" : {"should" : {"field" : {"name" : "?"}}}}}}</code>
+									<code>{"bool" : {"must_not" : {"bool" : {"should" : {"field" :
+										{"name" : "?"}}}}}}</code>
 								</entry>
 							</row>
 							<row>
@@ -403,7 +432,8 @@ public void setRepository(ProductRepository repository) {
 									<code>findByAvailableTrue</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must" : {"field" : {"available" : true}}}}</code>
+									<code>{"bool" : {"must" : {"field" : {"available" : true}}}}
+									</code>
 								</entry>
 							</row>
 							<row>
@@ -414,7 +444,8 @@ public void setRepository(ProductRepository repository) {
 									<code>findByAvailableFalse</code>
 								</entry>
 								<entry>
-									<code>{"bool" : {"must" : {"field" : {"available" : false}}}}</code>
+									<code>{"bool" : {"must" : {"field" : {"available" : false}}}}
+									</code>
 								</entry>
 							</row>
 							<row>
@@ -425,7 +456,8 @@ public void setRepository(ProductRepository repository) {
 									<code>findByAvailableTrueOrderByNameDesc</code>
 								</entry>
 								<entry>
-									<code>{"sort" : [{ "name" : {"order" : "desc"} }],"bool" : {"must" : {"field" : {"available" : true}}}}</code>
+									<code>{"sort" : [{ "name" : {"order" : "desc"} }],"bool" :
+										{"must" : {"field" : {"available" : true}}}}</code>
 								</entry>
 							</row>
 						</tbody>

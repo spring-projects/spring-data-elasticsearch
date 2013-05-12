@@ -17,39 +17,40 @@ package org.springframework.data.elasticsearch;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
+
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-@Document(indexName = "book",type = "book", indexStoreType = "memory", shards = 1 , replicas = 0, refreshInterval = "-1" )
+@Document(indexName = "book", type = "book", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class Book {
 
-    @Id
-    private String id;
-    private String name;
-    private Author author;
+	@Id
+	private String id;
+	private String name;
+	private Author author;
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public Author getAuthor() {
-        return author;
-    }
+	public Author getAuthor() {
+		return author;
+	}
 
-    public void setAuthor(Author author) {
-        this.author = author;
-    }
+	public void setAuthor(Author author) {
+		this.author = author;
+	}
 }

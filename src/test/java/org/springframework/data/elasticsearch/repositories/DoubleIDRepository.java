@@ -18,8 +18,6 @@ package org.springframework.data.elasticsearch.repositories;
 import org.springframework.data.elasticsearch.DoubleIDEntity;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
-public interface DoubleIDRepository extends ElasticsearchRepository<DoubleIDEntity,Double> {
-
-
+public interface DoubleIDRepository extends ElasticsearchRepository<DoubleIDEntity, Double> {
 
 }

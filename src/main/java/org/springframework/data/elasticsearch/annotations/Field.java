@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.annotations;
 
 import java.lang.annotation.*;
 
-
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -27,10 +26,14 @@ import java.lang.annotation.*;
 @Documented
 public @interface Field {
 
-    String type() default "";
-    String index() default "";
-    boolean store() default false;
-    String searchAnalyzer() default "";
-    String indexAnalyzer() default "";
+	String type() default "";
+
+	String index() default "";
+
+	boolean store() default false;
+
+	String searchAnalyzer() default "";
+
+	String indexAnalyzer() default "";
 
 }

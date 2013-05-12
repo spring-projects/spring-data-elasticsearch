@@ -24,7 +24,7 @@ import java.lang.reflect.Field;
 
 /**
  * SimpleElasticsearchMappingContext
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */

@@ -31,44 +31,44 @@ import java.util.TimeZone;
  * @author Mohsin Husen
  */
 public class DateTimeConvertersTests {
-    @Test
-    public void testJodaDateTimeConverterWithNullValue() {
-        Assert.assertNull(DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(null));
-    }
+	@Test
+	public void testJodaDateTimeConverterWithNullValue() {
+		Assert.assertNull(DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(null));
+	}
 
-    @Test
-    public void testJodaDateTimeConverter() {
-        DateTime dateTime = new DateTime(2013, 1,24 , 6, 35, 0, DateTimeZone.UTC);
-        Assert.assertEquals("2013-01-24T06:35:00.000Z",
-                DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(dateTime));
-    }
+	@Test
+	public void testJodaDateTimeConverter() {
+		DateTime dateTime = new DateTime(2013, 1, 24, 6, 35, 0, DateTimeZone.UTC);
+		Assert
+				.assertEquals("2013-01-24T06:35:00.000Z", DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(dateTime));
+	}
 
-    @Test
-    public void testJodaLocalDateTimeConverterWithNullValue() {
-        Assert.assertNull(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE.convert(null));
-    }
+	@Test
+	public void testJodaLocalDateTimeConverterWithNullValue() {
+		Assert.assertNull(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE.convert(null));
+	}
 
-    @Test
-    public void testJodaLocalDateTimeConverter() {
-        LocalDateTime dateTime = new LocalDateTime(new DateTime(2013, 1,24, 6, 35, 0, DateTimeZone.UTC).getMillis(),
-                DateTimeZone.UTC);
-        Assert.assertEquals("2013-01-24T06:35:00.000Z",
-                DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE.convert(dateTime));
-    }
+	@Test
+	public void testJodaLocalDateTimeConverter() {
+		LocalDateTime dateTime = new LocalDateTime(new DateTime(2013, 1, 24, 6, 35, 0, DateTimeZone.UTC).getMillis(),
+				DateTimeZone.UTC);
+		Assert.assertEquals("2013-01-24T06:35:00.000Z",
+				DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE.convert(dateTime));
+	}
 
-    @Test
-    public void testJavaDateConverterWithNullValue() {
-        Assert.assertNull(DateTimeConverters.JavaDateConverter.INSTANCE.convert(null));
-    }
+	@Test
+	public void testJavaDateConverterWithNullValue() {
+		Assert.assertNull(DateTimeConverters.JavaDateConverter.INSTANCE.convert(null));
+	}
 
-    @Test
-    public void testJavaDateConverter() {
-        DateTime dateTime = new DateTime(2013, 1,24, 6, 35, 0, DateTimeZone.UTC);
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
-        calendar.setTimeInMillis(dateTime.getMillis());
+	@Test
+	public void testJavaDateConverter() {
+		DateTime dateTime = new DateTime(2013, 1, 24, 6, 35, 0, DateTimeZone.UTC);
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+		calendar.setTimeInMillis(dateTime.getMillis());
 
-        Assert.assertEquals("2013-01-24T06:35:00.000Z",
-                DateTimeConverters.JavaDateConverter.INSTANCE.convert(calendar.getTime()));
-    }
+		Assert.assertEquals("2013-01-24T06:35:00.000Z",
+				DateTimeConverters.JavaDateConverter.INSTANCE.convert(calendar.getTime()));
+	}
 }

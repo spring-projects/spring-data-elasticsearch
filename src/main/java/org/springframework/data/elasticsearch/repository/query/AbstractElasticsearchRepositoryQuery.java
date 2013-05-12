@@ -21,24 +21,25 @@ import org.springframework.data.repository.query.RepositoryQuery;
 
 /**
  * AbstractElasticsearchRepositoryQuery
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 
 public abstract class AbstractElasticsearchRepositoryQuery implements RepositoryQuery {
 
-    protected ElasticsearchQueryMethod queryMethod;
-    protected ElasticsearchOperations elasticsearchOperations;
+	protected ElasticsearchQueryMethod queryMethod;
+	protected ElasticsearchOperations elasticsearchOperations;
 
-    public AbstractElasticsearchRepositoryQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations) {
-        this.queryMethod = queryMethod;
-        this.elasticsearchOperations = elasticsearchOperations;
-    }
+	public AbstractElasticsearchRepositoryQuery(ElasticsearchQueryMethod queryMethod,
+			ElasticsearchOperations elasticsearchOperations) {
+		this.queryMethod = queryMethod;
+		this.elasticsearchOperations = elasticsearchOperations;
+	}
 
-    @Override
-    public QueryMethod getQueryMethod() {
-        return queryMethod;
-    }
+	@Override
+	public QueryMethod getQueryMethod() {
+		return queryMethod;
+	}
 
 }

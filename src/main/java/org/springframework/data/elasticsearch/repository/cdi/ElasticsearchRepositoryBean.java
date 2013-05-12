@@ -28,7 +28,7 @@ import java.util.Set;
 
 /**
  * Uses CdiRepositoryBean to create ElasticsearchRepository instances.
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -36,8 +36,8 @@ public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 
 	private final Bean<ElasticsearchOperations> elasticsearchOperationsBean;
 
-	public ElasticsearchRepositoryBean(Bean<ElasticsearchOperations> operations, Set<Annotation> qualifiers, Class<T> repositoryType,
-                                       BeanManager beanManager) {
+	public ElasticsearchRepositoryBean(Bean<ElasticsearchOperations> operations, Set<Annotation> qualifiers,
+			Class<T> repositoryType, BeanManager beanManager) {
 		super(qualifiers, repositoryType, beanManager);
 
 		Assert.notNull(operations, "Cannot create repository with 'null' for ElasticsearchOperations.");
@@ -46,7 +46,8 @@ public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 
 	@Override
 	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType) {
-        ElasticsearchOperations elasticsearchOperations = getDependencyInstance(elasticsearchOperationsBean, ElasticsearchOperations.class);
+		ElasticsearchOperations elasticsearchOperations = getDependencyInstance(elasticsearchOperationsBean,
+				ElasticsearchOperations.class);
 		return new ElasticsearchRepositoryFactory(elasticsearchOperations).getRepository(repositoryType);
 	}
 

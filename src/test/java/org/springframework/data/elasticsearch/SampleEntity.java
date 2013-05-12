@@ -25,93 +25,82 @@ import org.springframework.data.elasticsearch.annotations.Document;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-@Document(indexName = "test-index", type = "test-type", indexStoreType = "memory", shards = 1 , replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index", type = "test-type", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleEntity {
 
-    @Id
-    private String id;
-    private String type;
-    private String message;
-    private int rate;
-    private boolean available;
-    @Version
-    private Long version;
+	@Id
+	private String id;
+	private String type;
+	private String message;
+	private int rate;
+	private boolean available;
+	@Version
+	private Long version;
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getType() {
-        return type;
-    }
+	public String getType() {
+		return type;
+	}
 
-    public void setType(String type) {
-        this.type = type;
-    }
+	public void setType(String type) {
+		this.type = type;
+	}
 
-    public String getMessage() {
-        return message;
-    }
+	public String getMessage() {
+		return message;
+	}
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+	public void setMessage(String message) {
+		this.message = message;
+	}
 
-    public int getRate() {
-        return rate;
-    }
+	public int getRate() {
+		return rate;
+	}
 
-    public void setRate(int rate) {
-        this.rate = rate;
-    }
+	public void setRate(int rate) {
+		this.rate = rate;
+	}
 
-    public boolean isAvailable() {
-        return available;
-    }
+	public boolean isAvailable() {
+		return available;
+	}
 
-    public void setAvailable(boolean available) {
-        this.available = available;
-    }
+	public void setAvailable(boolean available) {
+		this.available = available;
+	}
 
-    public Long getVersion() {
-        return version;
-    }
+	public Long getVersion() {
+		return version;
+	}
 
-    public void setVersion(Long version) {
-        this.version = version;
-    }
+	public void setVersion(Long version) {
+		this.version = version;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof SampleEntity)) {
-            return false;
-        }
-        if (this == obj) {
-            return true;
-        }
-        SampleEntity rhs = (SampleEntity) obj;
-        return new EqualsBuilder().append(this.id, rhs.id)
-                .append(this.type, rhs.type)
-                .append(this.message, rhs.message)
-                .append(this.rate,rhs.rate)
-                .append(this.available,rhs.available)
-                .append(this.version,rhs.version)
-                .isEquals();
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof SampleEntity)) {
+			return false;
+		}
+		if (this == obj) {
+			return true;
+		}
+		SampleEntity rhs = (SampleEntity) obj;
+		return new EqualsBuilder().append(this.id, rhs.id).append(this.type, rhs.type).append(this.message, rhs.message)
+				.append(this.rate, rhs.rate).append(this.available, rhs.available).append(this.version, rhs.version).isEquals();
+	}
 
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder()
-                .append(id)
-                .append(type)
-                .append(message)
-                .append(rate)
-                .append(available)
-                .append(version)
-                .toHashCode();
-    }
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder().append(id).append(type).append(message).append(rate).append(available).append(version)
+				.toHashCode();
+	}
 }

@@ -27,28 +27,29 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.util.Assert;
 
 /**
- *  MappingElasticsearchConverter
- *
+ * MappingElasticsearchConverter
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 
-public class MappingElasticsearchConverter implements ElasticsearchConverter, ApplicationContextAware{
+public class MappingElasticsearchConverter implements ElasticsearchConverter, ApplicationContextAware {
 
-	private final MappingContext<? extends ElasticsearchPersistentEntity<?>,ElasticsearchPersistentProperty> mappingContext;
+	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	private final GenericConversionService conversionService;
 
 	@SuppressWarnings("unused")
 	private ApplicationContext applicationContext;
 
-	public MappingElasticsearchConverter(MappingContext<? extends ElasticsearchPersistentEntity<?>,ElasticsearchPersistentProperty> mappingContext) {
+	public MappingElasticsearchConverter(
+			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
 		Assert.notNull(mappingContext);
 		this.mappingContext = mappingContext;
 		this.conversionService = new DefaultConversionService();
 	}
 
 	@Override
-	public MappingContext<? extends ElasticsearchPersistentEntity<?>,ElasticsearchPersistentProperty> getMappingContext() {
+	public MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> getMappingContext() {
 		return mappingContext;
 	}
 

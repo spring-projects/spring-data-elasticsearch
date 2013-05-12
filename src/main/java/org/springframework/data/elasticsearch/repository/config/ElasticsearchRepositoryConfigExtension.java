@@ -23,12 +23,11 @@ import org.springframework.data.repository.config.RepositoryConfigurationExtensi
 import org.springframework.data.repository.config.XmlRepositoryConfigurationSource;
 import org.w3c.dom.Element;
 
-
-
 /**
- * {@link org.springframework.data.repository.config.RepositoryConfigurationExtension} implementation to configure Elasticsearch repository configuration support,
- * evaluating the {@link EnableElasticsearchRepositories} annotation or the equivalent XML element.
- *
+ * {@link org.springframework.data.repository.config.RepositoryConfigurationExtension} implementation to configure
+ * Elasticsearch repository configuration support, evaluating the {@link EnableElasticsearchRepositories} annotation or
+ * the equivalent XML element.
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */

@@ -23,32 +23,33 @@ import org.springframework.data.elasticsearch.client.TransportClientFactoryBean;
 import org.w3c.dom.Element;
 
 import static org.apache.commons.lang.StringUtils.split;
+
 /**
- *  TransportClientBeanDefinitionParser
- *
+ * TransportClientBeanDefinitionParser
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 
 public class TransportClientBeanDefinitionParser extends AbstractBeanDefinitionParser {
 
-    private static final String SEPARATOR_CHARS = ",";
+	private static final String SEPARATOR_CHARS = ",";
 
-    @Override
-    protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
-        BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(TransportClientFactoryBean.class);
-        setClusterNodes(element, builder);
-        return getSourcedBeanDefinition(builder,element, parserContext);
-    }
+	@Override
+	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(TransportClientFactoryBean.class);
+		setClusterNodes(element, builder);
+		return getSourcedBeanDefinition(builder, element, parserContext);
+	}
 
-    private void setClusterNodes(Element element, BeanDefinitionBuilder builder){
-        builder.addPropertyValue("clusterNodes", split(element.getAttribute("cluster-nodes"), SEPARATOR_CHARS));
-    }
+	private void setClusterNodes(Element element, BeanDefinitionBuilder builder) {
+		builder.addPropertyValue("clusterNodes", split(element.getAttribute("cluster-nodes"), SEPARATOR_CHARS));
+	}
 
-    private AbstractBeanDefinition getSourcedBeanDefinition(BeanDefinitionBuilder builder, Element source,
-                                                            ParserContext context) {
-        AbstractBeanDefinition definition = builder.getBeanDefinition();
-        definition.setSource(context.extractSource(source));
-        return definition;
-    }
+	private AbstractBeanDefinition getSourcedBeanDefinition(BeanDefinitionBuilder builder, Element source,
+			ParserContext context) {
+		AbstractBeanDefinition definition = builder.getBeanDefinition();
+		definition.setSource(context.extractSource(source));
+		return definition;
+	}
 }

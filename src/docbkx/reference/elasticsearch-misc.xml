@@ -6,9 +6,10 @@
 	<abstract>
 		<para>
 			This chapter covers additional support for Elasticsearch operations
-            that cannot be directly accessed via the repository
+			that cannot be directly accessed via the repository
 			interface.
-			It is recommended to add those operations as custom
+			It is
+			recommended to add those operations as custom
 			implementation as
 			described in
 			<xref linkend="repositories.custom-implementations" />
@@ -21,7 +22,7 @@
 			Filter Builder improves query speed.
 		</para>
 		<example>
-<programlisting language="java">
+			<programlisting language="java">
 private ElasticsearchTemplate elasticsearchTemplate;
 SearchQuery searchQuery = new NativeSearchQueryBuilder()
 .withQuery(matchAllQuery())
@@ -31,18 +32,19 @@ Page&lt;SampleEntity&gt; sampleEntities = elasticsearchTemplate.queryForPage(sea
 </programlisting>
 		</example>
 	</section>
-    <section id="elasticsearch.scan.and.scroll">
-        <title>Using Scan And Scroll For Big Result Set</title>
-        <para>
-            Elasticsearch has scan and scroll feature for getting big result set in chunks.
-            <interfacename>ElasticsearchTemplate</interfacename>
-            has scan and scroll methods that can be used as below.
-        </para>
-        <example>
-            <title>
-                Using Scan and Scroll
-            </title>
-            <programlisting language="java">
+	<section id="elasticsearch.scan.and.scroll">
+		<title>Using Scan And Scroll For Big Result Set</title>
+		<para>
+			Elasticsearch has scan and scroll feature for getting big result set
+			in chunks.
+			<interfacename>ElasticsearchTemplate</interfacename>
+			has scan and scroll methods that can be used as below.
+		</para>
+		<example>
+			<title>
+				Using Scan and Scroll
+			</title>
+			<programlisting language="java">
 SearchQuery searchQuery = new NativeSearchQueryBuilder()
 .withQuery(matchAllQuery())
 .withIndices("test-index")
@@ -78,6 +80,6 @@ for(SearchHit searchHit : response.getHits()){
   }
  }
 }</programlisting>
-        </example>
-    </section>
+		</example>
+	</section>
 </chapter>

@@ -24,5 +24,5 @@ import java.util.List;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public interface SampleElasticSearchBookRepository  extends ElasticsearchRepository<Book,String> {
+public interface SampleElasticSearchBookRepository extends ElasticsearchRepository<Book, String> {
 }

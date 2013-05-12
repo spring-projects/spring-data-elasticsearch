@@ -26,20 +26,20 @@ import java.io.Serializable;
 /**
  * @param <T>
  * @param <ID>
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 @NoRepositoryBean
-public interface ElasticsearchRepository<T, ID extends Serializable> extends ElasticsearchCrudRepository<T,ID> {
+public interface ElasticsearchRepository<T, ID extends Serializable> extends ElasticsearchCrudRepository<T, ID> {
 
-    <S extends T> S index(S entity);
+	<S extends T> S index(S entity);
 
-    Iterable<T> search(QueryBuilder query);
+	Iterable<T> search(QueryBuilder query);
 
-    Page<T> search(QueryBuilder query, Pageable pageable);
+	Page<T> search(QueryBuilder query, Pageable pageable);
 
-    Page<T> search(SearchQuery searchQuery);
+	Page<T> search(SearchQuery searchQuery);
 
-    Page<T> searchSimilar(T entity, SearchQuery searchQuery);
+	Page<T> searchSimilar(T entity, SearchQuery searchQuery);
 }

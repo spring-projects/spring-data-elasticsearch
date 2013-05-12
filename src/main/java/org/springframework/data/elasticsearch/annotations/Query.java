@@ -19,7 +19,7 @@ import java.lang.annotation.*;
 
 /**
  * Query
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -29,18 +29,18 @@ import java.lang.annotation.*;
 @Documented
 public @interface Query {
 
-    /**
-     * Elasticsearch query to be used when executing query. May contain placeholders eg. ?0
-     *
-     * @return
-     */
-    String value() default "";
+	/**
+	 * Elasticsearch query to be used when executing query. May contain placeholders eg. ?0
+	 * 
+	 * @return
+	 */
+	String value() default "";
 
-    /**
-     * Named Query Named looked up by repository.
-     *
-     * @return
-     */
-    String name() default "";
+	/**
+	 * Named Query Named looked up by repository.
+	 * 
+	 * @return
+	 */
+	String name() default "";
 
 }

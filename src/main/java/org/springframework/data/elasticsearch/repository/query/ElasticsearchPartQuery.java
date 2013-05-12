@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
@@ -25,40 +24,39 @@ import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
 
 /**
- *  ElasticsearchPartQuery
- *
+ * ElasticsearchPartQuery
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery{
+public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery {
 
-    private final PartTree tree;
-    private final MappingContext<?, ElasticsearchPersistentProperty> mappingContext;
+	private final PartTree tree;
+	private final MappingContext<?, ElasticsearchPersistentProperty> mappingContext;
 
+	public ElasticsearchPartQuery(ElasticsearchQueryMethod method, ElasticsearchOperations elasticsearchOperations) {
+		super(method, elasticsearchOperations);
+		this.tree = new PartTree(method.getName(), method.getEntityInformation().getJavaType());
+		this.mappingContext = elasticsearchOperations.getElasticsearchConverter().getMappingContext();
+	}
 
-    public ElasticsearchPartQuery(ElasticsearchQueryMethod method, ElasticsearchOperations elasticsearchOperations) {
-        super(method, elasticsearchOperations);
-        this.tree = new PartTree(method.getName(), method.getEntityInformation().getJavaType());
-        this.mappingContext = elasticsearchOperations.getElasticsearchConverter().getMappingContext();
-    }
+	@Override
+	public Object execute(Object[] parameters) {
+		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
+		CriteriaQuery query = createQuery(accessor);
+		if (queryMethod.isPageQuery()) {
+			query.setPageable(accessor.getPageable());
+			return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
+		} else if (queryMethod.isCollectionQuery()) {
+			if (accessor.getPageable() != null) {
+				query.setPageable(accessor.getPageable());
+			}
+			return elasticsearchOperations.queryForList(query, queryMethod.getEntityInformation().getJavaType());
+		}
+		return elasticsearchOperations.queryForObject(query, queryMethod.getEntityInformation().getJavaType());
+	}
 
-    @Override
-    public Object execute(Object[] parameters) {
-        ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
-        CriteriaQuery query = createQuery(accessor);
-        if(queryMethod.isPageQuery()){
-            query.setPageable(accessor.getPageable());
-            return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
-        } else if (queryMethod.isCollectionQuery()) {
-            if(accessor.getPageable() != null){
-                query.setPageable(accessor.getPageable());
-            }
-            return elasticsearchOperations.queryForList(query,queryMethod.getEntityInformation().getJavaType());
-        }
-        return elasticsearchOperations.queryForObject(query, queryMethod.getEntityInformation().getJavaType());
-    }
-
-    public CriteriaQuery createQuery(ParametersParameterAccessor accessor) {
-        return new ElasticsearchQueryCreator(tree, accessor, mappingContext).createQuery();
-    }
+	public CriteriaQuery createQuery(ParametersParameterAccessor accessor) {
+		return new ElasticsearchQueryCreator(tree, accessor, mappingContext).createQuery();
+	}
 }

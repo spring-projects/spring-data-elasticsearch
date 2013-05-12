@@ -30,7 +30,7 @@ import org.springframework.util.Assert;
 /**
  * Criteria is the central class when constructing queries. It follows more or less a fluent API style, which allows to
  * easily chain together multiple criteria.
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -251,10 +251,9 @@ public class Criteria {
 	 * @return
 	 */
 	public Criteria fuzzy(String s) {
-        criteria.add(new CriteriaEntry(OperationKey.FUZZY, s));
-        return this;
+		criteria.add(new CriteriaEntry(OperationKey.FUZZY, s));
+		return this;
 	}
-
 
 	/**
 	 * Crates new CriteriaEntry allowing native elasticsearch expressions
@@ -342,10 +341,9 @@ public class Criteria {
 	 */
 	public Criteria in(Iterable<?> values) {
 		Assert.notNull(values, "Collection of 'in' values must not be null");
-        criteria.add(new CriteriaEntry(OperationKey.IN, values));
+		criteria.add(new CriteriaEntry(OperationKey.IN, values));
 		return this;
 	}
-
 
 	private void assertNoBlankInWildcardedQuery(String searchString, boolean leadingWildcard, boolean trailingWildcard) {
 		if (StringUtils.contains(searchString, CRITERIA_VALUE_SEPERATOR)) {
@@ -384,13 +382,13 @@ public class Criteria {
 		return this.negating;
 	}
 
-    public boolean isAnd(){
-        return AND_OPERATOR == getConjunctionOperator();
-    }
+	public boolean isAnd() {
+		return AND_OPERATOR == getConjunctionOperator();
+	}
 
-    public boolean isOr(){
-        return OR_OPERATOR == getConjunctionOperator();
-    }
+	public boolean isOr() {
+		return OR_OPERATOR == getConjunctionOperator();
+	}
 
 	public float getBoost() {
 		return this.boost;
@@ -431,7 +429,7 @@ public class Criteria {
 
 	public static class CriteriaEntry {
 
-		private OperationKey  key;
+		private OperationKey key;
 		private Object value;
 
 		CriteriaEntry(OperationKey key, Object value) {

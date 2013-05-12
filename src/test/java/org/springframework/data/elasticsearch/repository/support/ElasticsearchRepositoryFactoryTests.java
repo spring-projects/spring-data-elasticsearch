@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +32,7 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 
 import static org.mockito.Mockito.when;
+
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -40,27 +40,25 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class ElasticsearchRepositoryFactoryTests {
 
-    @Mock
-    private ElasticsearchOperations operations;
-    private ElasticsearchConverter converter;
-    private ElasticsearchRepositoryFactory factory;
-    MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext= new SimpleElasticsearchMappingContext();
+	@Mock
+	private ElasticsearchOperations operations;
+	private ElasticsearchConverter converter;
+	private ElasticsearchRepositoryFactory factory;
+	MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext = new SimpleElasticsearchMappingContext();
 
-    @Before
-    public void before(){
-        converter = new MappingElasticsearchConverter(mappingContext);
-        when(operations.getElasticsearchConverter()).thenReturn(converter);
-        factory = new ElasticsearchRepositoryFactory(operations);
-    }
+	@Before
+	public void before() {
+		converter = new MappingElasticsearchConverter(mappingContext);
+		when(operations.getElasticsearchConverter()).thenReturn(converter);
+		factory = new ElasticsearchRepositoryFactory(operations);
+	}
 
-
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowExceptionGivenQueryDslRepository(){
-        //given
-        RepositoryMetadata metadata = new DefaultRepositoryMetadata(QueryDslPredicateExecutor.class);
-        //when
-        factory.getRepositoryBaseClass(metadata);
-    }
+	@Test(expected = IllegalArgumentException.class)
+	public void shouldThrowExceptionGivenQueryDslRepository() {
+		// given
+		RepositoryMetadata metadata = new DefaultRepositoryMetadata(QueryDslPredicateExecutor.class);
+		// when
+		factory.getRepositoryBaseClass(metadata);
+	}
 
 }

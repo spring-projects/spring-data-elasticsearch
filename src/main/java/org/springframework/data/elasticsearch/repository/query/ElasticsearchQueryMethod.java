@@ -26,33 +26,35 @@ import org.springframework.util.StringUtils;
 import java.lang.reflect.Method;
 
 /**
- *  ElasticsearchQueryMethod
- *
+ * ElasticsearchQueryMethod
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
-    private final ElasticsearchEntityInformation<?, ?> entityInformation;
-    private Method method;
+	private final ElasticsearchEntityInformation<?, ?> entityInformation;
+	private Method method;
 
-    public ElasticsearchQueryMethod(Method method, RepositoryMetadata metadata, ElasticsearchEntityInformationCreator elasticsearchEntityInformationCreator) {
-        super(method, metadata);
-        this.entityInformation = elasticsearchEntityInformationCreator.getEntityInformation(metadata.getReturnedDomainClass(method));
-        this.method = method;
-    }
+	public ElasticsearchQueryMethod(Method method, RepositoryMetadata metadata,
+			ElasticsearchEntityInformationCreator elasticsearchEntityInformationCreator) {
+		super(method, metadata);
+		this.entityInformation = elasticsearchEntityInformationCreator.getEntityInformation(metadata
+				.getReturnedDomainClass(method));
+		this.method = method;
+	}
 
-    public boolean hasAnnotatedQuery() {
-        return getQueryAnnotation() != null;
-    }
+	public boolean hasAnnotatedQuery() {
+		return getQueryAnnotation() != null;
+	}
 
-    public String getAnnotatedQuery() {
-        String query = (String) AnnotationUtils.getValue(getQueryAnnotation(), "value");
-        return StringUtils.hasText(query) ? query : null;
-    }
+	public String getAnnotatedQuery() {
+		String query = (String) AnnotationUtils.getValue(getQueryAnnotation(), "value");
+		return StringUtils.hasText(query) ? query : null;
+	}
 
-    private Query getQueryAnnotation() {
-        return this.method.getAnnotation(Query.class);
-    }
+	private Query getQueryAnnotation() {
+		return this.method.getAnnotation(Query.class);
+	}
 
 }

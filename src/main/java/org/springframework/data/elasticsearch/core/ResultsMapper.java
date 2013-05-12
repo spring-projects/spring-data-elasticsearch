@@ -20,15 +20,16 @@ import org.springframework.data.domain.Page;
 
 /**
  * ResultsMapper
+ * 
  * @param <T>
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
- *
+ * 
  */
 
 public interface ResultsMapper<T> {
 
-    Page<T> mapResults(SearchResponse response);
+	Page<T> mapResults(SearchResponse response);
 
 }

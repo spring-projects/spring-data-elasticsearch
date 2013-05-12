@@ -15,23 +15,23 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-
 import org.elasticsearch.index.query.QueryBuilder;
+
 /**
  * DeleteQuery
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public class DeleteQuery{
+public class DeleteQuery {
 
-    private QueryBuilder query;
+	private QueryBuilder query;
 
-    public QueryBuilder getQuery() {
-        return query;
-    }
+	public QueryBuilder getQuery() {
+		return query;
+	}
 
-    public void setQuery(QueryBuilder query) {
-        this.query = query;
-    }
+	public void setQuery(QueryBuilder query) {
+		this.query = query;
+	}
 }

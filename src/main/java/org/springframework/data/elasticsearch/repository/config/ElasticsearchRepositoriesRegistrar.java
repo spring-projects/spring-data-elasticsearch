@@ -21,9 +21,9 @@ import org.springframework.data.repository.config.RepositoryConfigurationExtensi
 import java.lang.annotation.Annotation;
 
 /**
- * {@link org.springframework.context.annotation.ImportBeanDefinitionRegistrar} implementation to trigger configuration of the {@link EnableElasticsearchRepositories}
- * annotation.
- *
+ * {@link org.springframework.context.annotation.ImportBeanDefinitionRegistrar} implementation to trigger configuration
+ * of the {@link EnableElasticsearchRepositories} annotation.
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */

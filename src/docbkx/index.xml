@@ -5,11 +5,11 @@
 	<bookinfo>
 		<title>Spring Data Elasticsearch</title>
 		<authorgroup>
-            <author>
-                <firstname>BioMed Central</firstname>
-                <surname>Development Team</surname>
-            </author>
-        </authorgroup>
+			<author>
+				<firstname>BioMed Central</firstname>
+				<surname>Development Team</surname>
+			</author>
+		</authorgroup>
 		<legalnotice>
 			<para>
 				Copies of this document may be made for your own use and for
@@ -35,8 +35,10 @@
 	<part id="reference">
 		<title>Reference Documentation</title>
 
-		<xi:include href="https://raw.github.com/SpringSource/spring-data-commons/1.4.0.RC1/src/docbkx/repositories.xml">
-			<xi:fallback href="../../../spring-data-commons/src/docbkx/repositories.xml" /> 
+		<xi:include
+			href="https://raw.github.com/SpringSource/spring-data-commons/1.4.0.RC1/src/docbkx/repositories.xml">
+			<xi:fallback
+				href="../../../spring-data-commons/src/docbkx/repositories.xml" />
 		</xi:include>
 
 		<xi:include href="reference/data-elasticsearch.xml" />

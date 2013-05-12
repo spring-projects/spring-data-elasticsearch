@@ -27,12 +27,12 @@ import java.util.Set;
 
 /**
  * Elasticsearch specific {@link org.springframework.data.mapping.PersistentProperty} implementation processing
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public class SimpleElasticsearchPersistentProperty extends AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements
-		ElasticsearchPersistentProperty {
+public class SimpleElasticsearchPersistentProperty extends
+		AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements ElasticsearchPersistentProperty {
 
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
@@ -40,11 +40,11 @@ public class SimpleElasticsearchPersistentProperty extends AnnotationBasedPersis
 	static {
 		SUPPORTED_ID_TYPES.add(String.class);
 		SUPPORTED_ID_PROPERTY_NAMES.add("id");
-        SUPPORTED_ID_PROPERTY_NAMES.add("documentId");
+		SUPPORTED_ID_PROPERTY_NAMES.add("documentId");
 	}
 
 	public SimpleElasticsearchPersistentProperty(Field field, PropertyDescriptor propertyDescriptor,
-                                                 PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
+			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
 		super(field, propertyDescriptor, owner, simpleTypeHolder);
 	}
 
@@ -58,7 +58,7 @@ public class SimpleElasticsearchPersistentProperty extends AnnotationBasedPersis
 		return super.isIdProperty() || SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName());
 	}
 
-    @Override
+	@Override
 	protected Association<ElasticsearchPersistentProperty> createAssociation() {
 		return null;
 	}

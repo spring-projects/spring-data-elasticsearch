@@ -27,72 +27,72 @@ import org.springframework.beans.factory.InitializingBean;
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
 /**
- *  NodeClientFactoryBean
- *
+ * NodeClientFactoryBean
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 
 public class NodeClientFactoryBean implements FactoryBean<NodeClient>, InitializingBean, DisposableBean {
 
-    private static final Logger logger = LoggerFactory.getLogger(NodeClientFactoryBean.class);
-    private boolean local;
-    private boolean enableHttp;
-    private String clusterName;
-    private NodeClient nodeClient;
+	private static final Logger logger = LoggerFactory.getLogger(NodeClientFactoryBean.class);
+	private boolean local;
+	private boolean enableHttp;
+	private String clusterName;
+	private NodeClient nodeClient;
 
-    NodeClientFactoryBean() {
-    }
+	NodeClientFactoryBean() {
+	}
 
-    public NodeClientFactoryBean(boolean local) {
-        this.local = local;
-    }
+	public NodeClientFactoryBean(boolean local) {
+		this.local = local;
+	}
 
-    @Override
-    public NodeClient getObject() throws Exception {
-        return nodeClient;
-    }
+	@Override
+	public NodeClient getObject() throws Exception {
+		return nodeClient;
+	}
 
-    @Override
-    public Class<? extends Client> getObjectType() {
-        return NodeClient.class;
-    }
+	@Override
+	public Class<? extends Client> getObjectType() {
+		return NodeClient.class;
+	}
 
-    @Override
-    public boolean isSingleton() {
-        return true;
-    }
+	@Override
+	public boolean isSingleton() {
+		return true;
+	}
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder()
-                .put("http.enabled", String.valueOf(this.enableHttp));
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder().put("http.enabled",
+				String.valueOf(this.enableHttp));
 
-        nodeClient = (NodeClient) nodeBuilder().settings(settings)
-                .clusterName(this.clusterName).local(this.local).node().client();
-    }
+		nodeClient = (NodeClient) nodeBuilder().settings(settings).clusterName(this.clusterName).local(this.local).node()
+				.client();
+	}
 
-    public void setLocal(boolean local) {
-        this.local = local;
-    }
+	public void setLocal(boolean local) {
+		this.local = local;
+	}
 
-    public void setEnableHttp(boolean enableHttp) {
-        this.enableHttp = enableHttp;
-    }
+	public void setEnableHttp(boolean enableHttp) {
+		this.enableHttp = enableHttp;
+	}
 
-    public void setClusterName(String clusterName) {
-        this.clusterName = clusterName;
-    }
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
+	}
 
-    @Override
-    public void destroy() throws Exception {
-        try {
-            logger.info("Closing elasticSearch  client");
-            if (nodeClient != null) {
-                nodeClient.close();
-            }
-        } catch (final Exception e) {
-            logger.error("Error closing ElasticSearch client: ", e);
-        }
-    }
+	@Override
+	public void destroy() throws Exception {
+		try {
+			logger.info("Closing elasticSearch  client");
+			if (nodeClient != null) {
+				nodeClient.close();
+			}
+		} catch (final Exception e) {
+			logger.error("Error closing ElasticSearch client: ", e);
+		}
+	}
 }

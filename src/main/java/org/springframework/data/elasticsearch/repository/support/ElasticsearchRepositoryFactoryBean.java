@@ -24,13 +24,14 @@ import org.springframework.util.Assert;
 import java.io.Serializable;
 
 /**
- * Spring {@link org.springframework.beans.factory.FactoryBean} implementation to ease container based configuration for XML namespace and JavaConfig.
- *
+ * Spring {@link org.springframework.beans.factory.FactoryBean} implementation to ease container based configuration for
+ * XML namespace and JavaConfig.
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 public class ElasticsearchRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends
-        RepositoryFactoryBeanSupport<T, S, ID> {
+		RepositoryFactoryBeanSupport<T, S, ID> {
 
 	private ElasticsearchOperations operations;
 
@@ -50,14 +51,13 @@ public class ElasticsearchRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	 */
 	@Override
 	public void afterPropertiesSet() {
-        super.afterPropertiesSet();
+		super.afterPropertiesSet();
 		Assert.notNull(operations, "ElasticsearchOperations must be configured!");
 	}
 
-
-    @Override
-    protected RepositoryFactorySupport createRepositoryFactory() {
-        return new ElasticsearchRepositoryFactory(operations);
-    }
+	@Override
+	protected RepositoryFactorySupport createRepositoryFactory() {
+		return new ElasticsearchRepositoryFactory(operations);
+	}
 
 }

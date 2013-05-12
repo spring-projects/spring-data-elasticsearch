@@ -17,10 +17,11 @@ package org.springframework.data.elasticsearch.repositories;
 
 import org.springframework.data.elasticsearch.SampleEntity;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public interface SampleElasticsearchRepository extends ElasticsearchRepository<SampleEntity,String> {
+public interface SampleElasticsearchRepository extends ElasticsearchRepository<SampleEntity, String> {
 
 }

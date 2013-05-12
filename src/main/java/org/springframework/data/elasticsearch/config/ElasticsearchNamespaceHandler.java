@@ -21,21 +21,21 @@ import org.springframework.data.repository.config.RepositoryBeanDefinitionParser
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;
 
 /**
- *  ElasticsearchNamespaceHandler
- *
+ * ElasticsearchNamespaceHandler
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 
-public class ElasticsearchNamespaceHandler extends NamespaceHandlerSupport{
+public class ElasticsearchNamespaceHandler extends NamespaceHandlerSupport {
 
-    @Override
-    public void init() {
-        RepositoryConfigurationExtension extension = new ElasticsearchRepositoryConfigExtension();
+	@Override
+	public void init() {
+		RepositoryConfigurationExtension extension = new ElasticsearchRepositoryConfigExtension();
 		RepositoryBeanDefinitionParser parser = new RepositoryBeanDefinitionParser(extension);
 
 		registerBeanDefinitionParser("repositories", parser);
 		registerBeanDefinitionParser("node-client", new NodeClientBeanDefinitionParser());
 		registerBeanDefinitionParser("transport-client", new TransportClientBeanDefinitionParser());
-    }
+	}
 }

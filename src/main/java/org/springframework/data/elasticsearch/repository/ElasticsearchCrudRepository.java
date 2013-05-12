@@ -23,12 +23,12 @@ import java.util.List;
 /**
  * @param <T>
  * @param <ID>
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 public interface ElasticsearchCrudRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID> {
 
-    <S extends T> List<S> save(List<S> entities);
+	<S extends T> List<S> save(List<S> entities);
 
 }

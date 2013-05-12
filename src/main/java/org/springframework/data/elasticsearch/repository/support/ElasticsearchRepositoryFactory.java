@@ -35,90 +35,87 @@ import org.springframework.util.Assert;
 
 /**
  * Factory to create {@link ElasticsearchRepository}
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Ryan Henszey
  */
 public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
-  
 
-    private final ElasticsearchOperations elasticsearchOperations;
-    private final ElasticsearchEntityInformationCreator entityInformationCreator;
+	private final ElasticsearchOperations elasticsearchOperations;
+	private final ElasticsearchEntityInformationCreator entityInformationCreator;
 
-    public ElasticsearchRepositoryFactory(ElasticsearchOperations elasticsearchOperations) {
-        Assert.notNull(elasticsearchOperations);
-        this.elasticsearchOperations = elasticsearchOperations;
-        this.entityInformationCreator = new ElasticsearchEntityInformationCreatorImpl(elasticsearchOperations.getElasticsearchConverter()
-                .getMappingContext());
-    }
+	public ElasticsearchRepositoryFactory(ElasticsearchOperations elasticsearchOperations) {
+		Assert.notNull(elasticsearchOperations);
+		this.elasticsearchOperations = elasticsearchOperations;
+		this.entityInformationCreator = new ElasticsearchEntityInformationCreatorImpl(elasticsearchOperations
+				.getElasticsearchConverter().getMappingContext());
+	}
 
-    @Override
-    public <T, ID extends Serializable> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
-        return entityInformationCreator.getEntityInformation(domainClass);
-    }
+	@Override
+	public <T, ID extends Serializable> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+		return entityInformationCreator.getEntityInformation(domainClass);
+	}
 
-    @Override
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    protected Object getTargetRepository(RepositoryMetadata metadata) {
-      
-        ElasticsearchEntityInformation<?, ?> entityInformation = getEntityInformation(metadata.getDomainType());
-        
-        AbstractElasticsearchRepository repository;
-        
-        //Probably a better way to store and look these up.
-        if(Integer.class.isAssignableFrom(entityInformation.getIdType()) ||
-            Long.class.isAssignableFrom(entityInformation.getIdType()) ||
-            Double.class.isAssignableFrom(entityInformation.getIdType())){
-          //logger.debug("Using NumberKeyedRepository for " + metadata.getRepositoryInterface());
-          repository = new NumberKeyedRepository(getEntityInformation(metadata.getDomainType()), elasticsearchOperations);
-        } 
-        else if (entityInformation.getIdType() == String.class){
-          //logger.debug("Using SimpleElasticsearchRepository for " + metadata.getRepositoryInterface());
-          repository = new SimpleElasticsearchRepository(getEntityInformation(metadata.getDomainType()), elasticsearchOperations);
-        } 
-        else {
-          throw new IllegalArgumentException("Unsuppored ID type " + entityInformation.getIdType()); 
-        }
-        repository.setEntityClass(metadata.getDomainType());
-        
-        return repository;
-    }
+	@Override
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	protected Object getTargetRepository(RepositoryMetadata metadata) {
 
-    @Override
-    protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
-        if (isQueryDslRepository(metadata.getRepositoryInterface())) {
-            throw new IllegalArgumentException("QueryDsl Support has not been implemented yet.");
-        }
-        return SimpleElasticsearchRepository.class;
-    }
+		ElasticsearchEntityInformation<?, ?> entityInformation = getEntityInformation(metadata.getDomainType());
 
-    private static boolean isQueryDslRepository(Class<?> repositoryInterface) {
-        return QUERY_DSL_PRESENT && QueryDslPredicateExecutor.class.isAssignableFrom(repositoryInterface);
-    }
+		AbstractElasticsearchRepository repository;
 
-    @Override
-    protected QueryLookupStrategy getQueryLookupStrategy(QueryLookupStrategy.Key key) {
-        return new ElasticsearchQueryLookupStrategy();
-    }
+		// Probably a better way to store and look these up.
+		if (Integer.class.isAssignableFrom(entityInformation.getIdType())
+				|| Long.class.isAssignableFrom(entityInformation.getIdType())
+				|| Double.class.isAssignableFrom(entityInformation.getIdType())) {
+			// logger.debug("Using NumberKeyedRepository for " + metadata.getRepositoryInterface());
+			repository = new NumberKeyedRepository(getEntityInformation(metadata.getDomainType()), elasticsearchOperations);
+		} else if (entityInformation.getIdType() == String.class) {
+			// logger.debug("Using SimpleElasticsearchRepository for " + metadata.getRepositoryInterface());
+			repository = new SimpleElasticsearchRepository(getEntityInformation(metadata.getDomainType()),
+					elasticsearchOperations);
+		} else {
+			throw new IllegalArgumentException("Unsuppored ID type " + entityInformation.getIdType());
+		}
+		repository.setEntityClass(metadata.getDomainType());
 
-    private class ElasticsearchQueryLookupStrategy implements QueryLookupStrategy {
+		return repository;
+	}
 
-        @Override
-        public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, NamedQueries namedQueries) {
+	@Override
+	protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
+		if (isQueryDslRepository(metadata.getRepositoryInterface())) {
+			throw new IllegalArgumentException("QueryDsl Support has not been implemented yet.");
+		}
+		return SimpleElasticsearchRepository.class;
+	}
 
-            ElasticsearchQueryMethod queryMethod = new ElasticsearchQueryMethod(method, metadata, entityInformationCreator);
-            String namedQueryName = queryMethod.getNamedQueryName();
+	private static boolean isQueryDslRepository(Class<?> repositoryInterface) {
+		return QUERY_DSL_PRESENT && QueryDslPredicateExecutor.class.isAssignableFrom(repositoryInterface);
+	}
 
-            if (namedQueries.hasQuery(namedQueryName)) {
-                String namedQuery = namedQueries.getQuery(namedQueryName);
-                return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, namedQuery);
-            }
-            else if (queryMethod.hasAnnotatedQuery()) {
-                return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, queryMethod.getAnnotatedQuery());
-            }
-            return new ElasticsearchPartQuery(queryMethod, elasticsearchOperations);
-        }
-    }
+	@Override
+	protected QueryLookupStrategy getQueryLookupStrategy(QueryLookupStrategy.Key key) {
+		return new ElasticsearchQueryLookupStrategy();
+	}
+
+	private class ElasticsearchQueryLookupStrategy implements QueryLookupStrategy {
+
+		@Override
+		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, NamedQueries namedQueries) {
+
+			ElasticsearchQueryMethod queryMethod = new ElasticsearchQueryMethod(method, metadata, entityInformationCreator);
+			String namedQueryName = queryMethod.getNamedQueryName();
+
+			if (namedQueries.hasQuery(namedQueryName)) {
+				String namedQuery = namedQueries.getQuery(namedQueryName);
+				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, namedQuery);
+			} else if (queryMethod.hasAnnotatedQuery()) {
+				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, queryMethod.getAnnotatedQuery());
+			}
+			return new ElasticsearchPartQuery(queryMethod, elasticsearchOperations);
+		}
+	}
 
 }

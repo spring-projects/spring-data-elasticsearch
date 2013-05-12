@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.core.query;
 
 /**
  * The most trivial implementation of a Field
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */

@@ -22,7 +22,7 @@ import org.springframework.data.domain.Pageable;
 
 /**
  * NativeSearchQuery
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
@@ -30,63 +30,63 @@ import org.springframework.data.domain.Pageable;
 
 public class NativeSearchQueryBuilder {
 
-    private QueryBuilder queryBuilder;
-    private FilterBuilder filterBuilder;
-    private SortBuilder sortBuilder;
-    private Pageable pageable;
-    private String[] indices;
-    private String[] types;
-    private String[] fields;
+	private QueryBuilder queryBuilder;
+	private FilterBuilder filterBuilder;
+	private SortBuilder sortBuilder;
+	private Pageable pageable;
+	private String[] indices;
+	private String[] types;
+	private String[] fields;
 
-    public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder){
-        this.queryBuilder = queryBuilder;
-        return this;
-    }
+	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
+		this.queryBuilder = queryBuilder;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withFilter(FilterBuilder filterBuilder){
-        this.filterBuilder = filterBuilder;
-        return this;
-    }
+	public NativeSearchQueryBuilder withFilter(FilterBuilder filterBuilder) {
+		this.filterBuilder = filterBuilder;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withSort(SortBuilder sortBuilder){
-        this.sortBuilder = sortBuilder;
-        return this;
-    }
+	public NativeSearchQueryBuilder withSort(SortBuilder sortBuilder) {
+		this.sortBuilder = sortBuilder;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withPageable(Pageable pageable){
-        this.pageable = pageable;
-        return this;
-    }
+	public NativeSearchQueryBuilder withPageable(Pageable pageable) {
+		this.pageable = pageable;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withIndices(String... indices){
-        this.indices = indices;
-        return this;
-    }
+	public NativeSearchQueryBuilder withIndices(String... indices) {
+		this.indices = indices;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withTypes(String... types){
-        this.types = types;
-        return this;
-    }
+	public NativeSearchQueryBuilder withTypes(String... types) {
+		this.types = types;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withFields(String... fields){
-        this.fields = fields;
-        return this;
-    }
+	public NativeSearchQueryBuilder withFields(String... fields) {
+		this.fields = fields;
+		return this;
+	}
 
-    public NativeSearchQuery build(){
-        NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder,filterBuilder,sortBuilder);
-        if(pageable != null){
-            nativeSearchQuery.setPageable(pageable);
-        }
-        if(indices != null) {
-            nativeSearchQuery.addIndices(indices);
-        }
-        if(types != null) {
-            nativeSearchQuery.addTypes(types);
-        }
-        if(fields != null) {
-            nativeSearchQuery.addFields(fields);
-        }
-        return nativeSearchQuery;
-    }
+	public NativeSearchQuery build() {
+		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilder);
+		if (pageable != null) {
+			nativeSearchQuery.setPageable(pageable);
+		}
+		if (indices != null) {
+			nativeSearchQuery.addIndices(indices);
+		}
+		if (types != null) {
+			nativeSearchQuery.addTypes(types);
+		}
+		if (fields != null) {
+			nativeSearchQuery.addFields(fields);
+		}
+		return nativeSearchQuery;
+	}
 }

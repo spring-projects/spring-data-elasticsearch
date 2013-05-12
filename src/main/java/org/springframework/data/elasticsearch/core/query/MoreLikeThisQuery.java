@@ -25,164 +25,164 @@ import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PA
 
 /**
  * MoreLikeThisQuery
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 
 public class MoreLikeThisQuery {
 
-    private String id;
-    private String indexName;
-    private String type;
-    private List<String> searchIndices = new ArrayList<String>();
-    private List<String> searchTypes = new ArrayList<String>();
-    private List<String> fields = new ArrayList<String>();
-    private String routing;
-    private Float percentTermsToMatch;
-    private Integer minTermFreq;
-    private Integer maxQueryTerms;
-    private List<String> stopWords = new ArrayList<String>();
-    private Integer minDocFreq;
-    private Integer maxDocFreq;
-    private Integer minWordLen;
-    private Integer maxWordLen;
-    private Float boostTerms;
-    private Pageable pageable = DEFAULT_PAGE;
+	private String id;
+	private String indexName;
+	private String type;
+	private List<String> searchIndices = new ArrayList<String>();
+	private List<String> searchTypes = new ArrayList<String>();
+	private List<String> fields = new ArrayList<String>();
+	private String routing;
+	private Float percentTermsToMatch;
+	private Integer minTermFreq;
+	private Integer maxQueryTerms;
+	private List<String> stopWords = new ArrayList<String>();
+	private Integer minDocFreq;
+	private Integer maxDocFreq;
+	private Integer minWordLen;
+	private Integer maxWordLen;
+	private Float boostTerms;
+	private Pageable pageable = DEFAULT_PAGE;
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getIndexName() {
-        return indexName;
-    }
+	public String getIndexName() {
+		return indexName;
+	}
 
-    public void setIndexName(String indexName) {
-        this.indexName = indexName;
-    }
+	public void setIndexName(String indexName) {
+		this.indexName = indexName;
+	}
 
-    public String getType() {
-        return type;
-    }
+	public String getType() {
+		return type;
+	}
 
-    public void setType(String type) {
-        this.type = type;
-    }
+	public void setType(String type) {
+		this.type = type;
+	}
 
-    public List<String> getSearchIndices() {
-        return searchIndices;
-    }
+	public List<String> getSearchIndices() {
+		return searchIndices;
+	}
 
-    public void addSearchIndices(String...searchIndices) {
-        addAll(this.searchIndices, searchIndices);
-    }
+	public void addSearchIndices(String... searchIndices) {
+		addAll(this.searchIndices, searchIndices);
+	}
 
-    public List<String> getSearchTypes() {
-        return searchTypes;
-    }
+	public List<String> getSearchTypes() {
+		return searchTypes;
+	}
 
-    public void addSearchTypes(String...searchTypes) {
-        addAll(this.searchTypes, searchTypes);
-    }
+	public void addSearchTypes(String... searchTypes) {
+		addAll(this.searchTypes, searchTypes);
+	}
 
-    public List<String> getFields() {
-        return fields;
-    }
+	public List<String> getFields() {
+		return fields;
+	}
 
-    public void addFields(String...fields) {
-        addAll(this.fields,fields);
-    }
+	public void addFields(String... fields) {
+		addAll(this.fields, fields);
+	}
 
-    public String getRouting() {
-        return routing;
-    }
+	public String getRouting() {
+		return routing;
+	}
 
-    public void setRouting(String routing) {
-        this.routing = routing;
-    }
+	public void setRouting(String routing) {
+		this.routing = routing;
+	}
 
-    public Float getPercentTermsToMatch() {
-        return percentTermsToMatch;
-    }
+	public Float getPercentTermsToMatch() {
+		return percentTermsToMatch;
+	}
 
-    public void setPercentTermsToMatch(Float percentTermsToMatch) {
-        this.percentTermsToMatch = percentTermsToMatch;
-    }
+	public void setPercentTermsToMatch(Float percentTermsToMatch) {
+		this.percentTermsToMatch = percentTermsToMatch;
+	}
 
-    public Integer getMinTermFreq() {
-        return minTermFreq;
-    }
+	public Integer getMinTermFreq() {
+		return minTermFreq;
+	}
 
-    public void setMinTermFreq(Integer minTermFreq) {
-        this.minTermFreq = minTermFreq;
-    }
+	public void setMinTermFreq(Integer minTermFreq) {
+		this.minTermFreq = minTermFreq;
+	}
 
-    public Integer getMaxQueryTerms() {
-        return maxQueryTerms;
-    }
+	public Integer getMaxQueryTerms() {
+		return maxQueryTerms;
+	}
 
-    public void setMaxQueryTerms(Integer maxQueryTerms) {
-        this.maxQueryTerms = maxQueryTerms;
-    }
+	public void setMaxQueryTerms(Integer maxQueryTerms) {
+		this.maxQueryTerms = maxQueryTerms;
+	}
 
-    public List<String> getStopWords() {
-        return stopWords;
-    }
+	public List<String> getStopWords() {
+		return stopWords;
+	}
 
-    public void addStopWords(String...stopWords) {
-        addAll(this.stopWords,stopWords);
-    }
+	public void addStopWords(String... stopWords) {
+		addAll(this.stopWords, stopWords);
+	}
 
-    public Integer getMinDocFreq() {
-        return minDocFreq;
-    }
+	public Integer getMinDocFreq() {
+		return minDocFreq;
+	}
 
-    public void setMinDocFreq(Integer minDocFreq) {
-        this.minDocFreq = minDocFreq;
-    }
+	public void setMinDocFreq(Integer minDocFreq) {
+		this.minDocFreq = minDocFreq;
+	}
 
-    public Integer getMaxDocFreq() {
-        return maxDocFreq;
-    }
+	public Integer getMaxDocFreq() {
+		return maxDocFreq;
+	}
 
-    public void setMaxDocFreq(Integer maxDocFreq) {
-        this.maxDocFreq = maxDocFreq;
-    }
+	public void setMaxDocFreq(Integer maxDocFreq) {
+		this.maxDocFreq = maxDocFreq;
+	}
 
-    public Integer getMinWordLen() {
-        return minWordLen;
-    }
+	public Integer getMinWordLen() {
+		return minWordLen;
+	}
 
-    public void setMinWordLen(Integer minWordLen) {
-        this.minWordLen = minWordLen;
-    }
+	public void setMinWordLen(Integer minWordLen) {
+		this.minWordLen = minWordLen;
+	}
 
-    public Integer getMaxWordLen() {
-        return maxWordLen;
-    }
+	public Integer getMaxWordLen() {
+		return maxWordLen;
+	}
 
-    public void setMaxWordLen(Integer maxWordLen) {
-        this.maxWordLen = maxWordLen;
-    }
+	public void setMaxWordLen(Integer maxWordLen) {
+		this.maxWordLen = maxWordLen;
+	}
 
-    public Float getBoostTerms() {
-        return boostTerms;
-    }
+	public Float getBoostTerms() {
+		return boostTerms;
+	}
 
-    public void setBoostTerms(Float boostTerms) {
-        this.boostTerms = boostTerms;
-    }
+	public void setBoostTerms(Float boostTerms) {
+		this.boostTerms = boostTerms;
+	}
 
-    public Pageable getPageable() {
-        return pageable;
-    }
+	public Pageable getPageable() {
+		return pageable;
+	}
 
-    public void setPageable(Pageable pageable) {
-        this.pageable = pageable;
-    }
+	public void setPageable(Pageable pageable) {
+		this.pageable = pageable;
+	}
 }

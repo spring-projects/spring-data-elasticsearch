@@ -22,5 +22,5 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public interface NonDocumentEntityRepository extends ElasticsearchRepository<NonDocumentEntity,String> {
+public interface NonDocumentEntityRepository extends ElasticsearchRepository<NonDocumentEntity, String> {
 }

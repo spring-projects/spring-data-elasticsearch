@@ -24,49 +24,46 @@ import org.springframework.data.elasticsearch.annotations.Document;
  * @author Mohsin Husen
  */
 
-@Document(indexName = "integer-keyed-entity", type = "integer-keyed-entity", indexStoreType = "memory", shards = 1 , replicas = 0, refreshInterval = "-1")
+@Document(indexName = "integer-keyed-entity", type = "integer-keyed-entity", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class IntegerIDEntity {
 
+	@Id
+	private Integer id;
+	private String type;
+	private String message;
+	@Version
+	private Long version;
 
-  @Id
-  private Integer id;
-  private String type;
-  private String message;
-  @Version
-  private Long version;
-  
-  public Integer getId() {
-    return id;
-  }
-  
-  public void setId(Integer id) {
-    this.id = id;
-  }
-  
-  public String getType() {
-    return type;
-  }
-  
-  public void setType(String type) {
-    this.type = type;
-  }
-  
-  public String getMessage() {
-    return message;
-  }
-  
-  public void setMessage(String message) {
-    this.message = message;
-  }
+	public Integer getId() {
+		return id;
+	}
 
-  public Long getVersion() {
-    return version;
-  }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-  public void setVersion(Long version) {
-    this.version = version;
-  }
-  
-  
-  
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public Long getVersion() {
+		return version;
+	}
+
+	public void setVersion(Long version) {
+		this.version = version;
+	}
+
 }

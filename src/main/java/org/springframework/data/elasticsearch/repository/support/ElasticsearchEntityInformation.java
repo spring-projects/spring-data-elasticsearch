@@ -22,14 +22,17 @@ import java.io.Serializable;
 /**
  * @param <T>
  * @param <ID>
- *
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 public interface ElasticsearchEntityInformation<T, ID extends Serializable> extends EntityInformation<T, ID> {
 
 	String getIdAttribute();
-    String getIndexName();
-    String getType();
-    Long getVersion(T entity);
+
+	String getIndexName();
+
+	String getType();
+
+	Long getVersion(T entity);
 }

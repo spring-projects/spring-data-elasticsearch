@@ -3,13 +3,16 @@
 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <preface id="preface">
 	<title>Preface</title>
-	<para>The Spring Data Elasticsearch project applies core Spring concepts to
+	<para>The Spring Data Elasticsearch project applies core Spring
+		concepts to
 		the
-		development of solutions using the Elasticsearch Search Engine.
+		development of solutions using the Elasticsearch Search
+		Engine.
 		We have povided a "template" as a high-level abstraction for
-        storing,querying,sorting and faceting documents. You will notice similarities
-        to the Spring data solr and
-        mongodb support in the Spring Framework.
+		storing,querying,sorting and faceting documents. You will notice
+		similarities
+		to the Spring data solr and
+		mongodb support in the Spring Framework.
 	</para>
 	<section id="project">
 		<title>Project Metadata</title>
@@ -17,7 +20,8 @@
 			<listitem>
 				<para>
 					Version Control -
-					<ulink url="git://github.com/BioMedCentralLtd/spring-data-elasticsearch.git">git://github.com/BioMedCentralLtd/spring-data-elasticsearch.git
+					<ulink
+						url="git://github.com/BioMedCentralLtd/spring-data-elasticsearch.git">git://github.com/BioMedCentralLtd/spring-data-elasticsearch.git
 					</ulink>
 				</para>
 			</listitem>
@@ -28,7 +32,8 @@
 		<para>
 			Requires
 			<ulink url="http://www.elasticsearch.org/download/">Elasticsearch</ulink>
-            0.20.2 and above or optional dependency or not even that if you are using Embedded Node Client
-	    </para>
+			0.20.2 and above or optional dependency or not even that if you are
+			using Embedded Node Client
+		</para>
 	</section>
 </preface>

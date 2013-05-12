@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.config;
 
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,22 +40,22 @@ import static org.junit.Assert.assertThat;
 @ContextConfiguration
 public class EnableElasticsearchRepositoriesTests {
 
-    @Configuration
-    @EnableElasticsearchRepositories(basePackages = "org.springframework.data.elasticsearch.repositories")
-    static class Config {
+	@Configuration
+	@EnableElasticsearchRepositories(basePackages = "org.springframework.data.elasticsearch.repositories")
+	static class Config {
 
-        @Bean
-        public ElasticsearchOperations elasticsearchTemplate() {
-            return new ElasticsearchTemplate(nodeBuilder().local(true).clusterName("testCluster").node().client());
-        }
-    }
+		@Bean
+		public ElasticsearchOperations elasticsearchTemplate() {
+			return new ElasticsearchTemplate(nodeBuilder().local(true).clusterName("testCluster").node().client());
+		}
+	}
 
-    @Autowired
-    private SampleElasticsearchRepository repository;
+	@Autowired
+	private SampleElasticsearchRepository repository;
 
-    @Test
-    public void bootstrapsRepository() {
-        assertThat(repository, is(notNullValue()));
-    }
+	@Test
+	public void bootstrapsRepository() {
+		assertThat(repository, is(notNullValue()));
+	}
 
 }

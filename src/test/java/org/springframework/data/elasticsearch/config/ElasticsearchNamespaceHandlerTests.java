@@ -39,25 +39,26 @@ import static org.junit.Assert.assertThat;
 @ContextConfiguration("namespace.xml")
 public class ElasticsearchNamespaceHandlerTests {
 
-    @Autowired
-    private ApplicationContext context;
+	@Autowired
+	private ApplicationContext context;
 
-    @Test
-    public void shouldCreatesNodeClient() {
-        assertThat(context.getBean(NodeClientFactoryBean.class), is(notNullValue()));
-        assertThat(context.getBean(NodeClientFactoryBean.class), is(instanceOf(NodeClientFactoryBean.class)));
-    }
+	@Test
+	public void shouldCreatesNodeClient() {
+		assertThat(context.getBean(NodeClientFactoryBean.class), is(notNullValue()));
+		assertThat(context.getBean(NodeClientFactoryBean.class), is(instanceOf(NodeClientFactoryBean.class)));
+	}
 
-    @Test
-    public void shouldCreateTransportClient() {
-        assertThat(context.getBean(TransportClientFactoryBean.class), is(notNullValue()));
-        assertThat(context.getBean(TransportClientFactoryBean.class), is(instanceOf(TransportClientFactoryBean.class)));
-    }
+	@Test
+	public void shouldCreateTransportClient() {
+		assertThat(context.getBean(TransportClientFactoryBean.class), is(notNullValue()));
+		assertThat(context.getBean(TransportClientFactoryBean.class), is(instanceOf(TransportClientFactoryBean.class)));
+	}
 
-    @Test
-    public void shouldCreateRepository(){
-        assertThat(context.getBean(TransportClientFactoryBean.class), is(notNullValue()));
-        assertThat(context.getBean(SampleElasticsearchRepository.class), is(instanceOf(SampleElasticsearchRepository.class)));
-    }
+	@Test
+	public void shouldCreateRepository() {
+		assertThat(context.getBean(TransportClientFactoryBean.class), is(notNullValue()));
+		assertThat(context.getBean(SampleElasticsearchRepository.class),
+				is(instanceOf(SampleElasticsearchRepository.class)));
+	}
 
 }

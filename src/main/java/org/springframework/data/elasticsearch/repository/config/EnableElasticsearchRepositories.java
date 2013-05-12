@@ -24,9 +24,9 @@ import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import java.lang.annotation.*;
 
 /**
- * Annotation to enable Elasticsearch repositories. Will scan the package of the annotated configuration class for Spring Data
- * repositories by default.
- *
+ * Annotation to enable Elasticsearch repositories. Will scan the package of the annotated configuration class for
+ * Spring Data repositories by default.
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -39,7 +39,8 @@ public @interface EnableElasticsearchRepositories {
 
 	/**
 	 * Alias for the {@link #basePackages()} attribute. Allows for more concise annotation declarations e.g.:
-	 * {@code @EnableElasticsearchRepositories("org.my.pkg")} instead of {@code @EnableElasticsearchRepositories(basePackages="org.my.pkg")}.
+	 * {@code @EnableElasticsearchRepositories("org.my.pkg")} instead of
+	 * {@code @EnableElasticsearchRepositories(basePackages="org.my.pkg")}.
 	 */
 	String[] value() default {};
 
@@ -85,16 +86,17 @@ public @interface EnableElasticsearchRepositories {
 	String namedQueriesLocation() default "";
 
 	/**
-	 * Returns the key of the {@link org.springframework.data.repository.query.QueryLookupStrategy} to be used for lookup queries for query methods. Defaults to
+	 * Returns the key of the {@link org.springframework.data.repository.query.QueryLookupStrategy} to be used for lookup
+	 * queries for query methods. Defaults to
 	 * {@link org.springframework.data.repository.query.QueryLookupStrategy.Key#CREATE_IF_NOT_FOUND}.
-	 *
+	 * 
 	 * @return
 	 */
 	Key queryLookupStrategy() default Key.CREATE_IF_NOT_FOUND;
 
 	/**
-	 * Returns the {@link org.springframework.beans.factory.FactoryBean} class to be used for each repository instance. Defaults to
-	 * {@link ElasticsearchRepositoryFactoryBean}.
+	 * Returns the {@link org.springframework.beans.factory.FactoryBean} class to be used for each repository instance.
+	 * Defaults to {@link ElasticsearchRepositoryFactoryBean}.
 	 * 
 	 * @return
 	 */
@@ -103,8 +105,8 @@ public @interface EnableElasticsearchRepositories {
 	// Elasticsearch specific configuration
 
 	/**
-	 * Configures the name of the {@link ElasticsearchTemplate} bean definition to be used to create repositories discovered
-	 * through this annotation. Defaults to {@code elasticsearchTemplate}.
+	 * Configures the name of the {@link ElasticsearchTemplate} bean definition to be used to create repositories
+	 * discovered through this annotation. Defaults to {@code elasticsearchTemplate}.
 	 * 
 	 * @return
 	 */

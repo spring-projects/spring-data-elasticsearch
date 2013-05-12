@@ -38,51 +38,51 @@ import static org.junit.Assert.assertThat;
 @ContextConfiguration("classpath:/simple-repository-test.xml")
 public class DoubleIDRepositoryTests {
 
-  @Resource
-  private DoubleIDRepository repository;
+	@Resource
+	private DoubleIDRepository repository;
 
-  @Before
-  public void before(){
-      repository.deleteAll();
-  }
+	@Before
+	public void before() {
+		repository.deleteAll();
+	}
 
-  @Test
-  public void shouldDoBulkIndexDocument(){
-      //given
-      Double documentId1 = RandomUtils.nextDouble();
-      DoubleIDEntity sampleEntity1 = new DoubleIDEntity();
-      sampleEntity1.setId(documentId1);
-      sampleEntity1.setMessage("some message");
-      sampleEntity1.setVersion(System.currentTimeMillis());
+	@Test
+	public void shouldDoBulkIndexDocument() {
+		// given
+		Double documentId1 = RandomUtils.nextDouble();
+		DoubleIDEntity sampleEntity1 = new DoubleIDEntity();
+		sampleEntity1.setId(documentId1);
+		sampleEntity1.setMessage("some message");
+		sampleEntity1.setVersion(System.currentTimeMillis());
 
-      Double documentId2 = RandomUtils.nextDouble();
-      DoubleIDEntity sampleEntity2 = new DoubleIDEntity();
-      sampleEntity2.setId(documentId2);
-      sampleEntity2.setMessage("some message");
-      sampleEntity2.setVersion(System.currentTimeMillis());
+		Double documentId2 = RandomUtils.nextDouble();
+		DoubleIDEntity sampleEntity2 = new DoubleIDEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setMessage("some message");
+		sampleEntity2.setVersion(System.currentTimeMillis());
 
-      //when
-      repository.save(Arrays.asList(sampleEntity1, sampleEntity2));
-      //then
-      DoubleIDEntity entity1FromElasticSearch =  repository.findOne(documentId1);
-      assertThat(entity1FromElasticSearch, is(notNullValue()));
+		// when
+		repository.save(Arrays.asList(sampleEntity1, sampleEntity2));
+		// then
+		DoubleIDEntity entity1FromElasticSearch = repository.findOne(documentId1);
+		assertThat(entity1FromElasticSearch, is(notNullValue()));
 
-      DoubleIDEntity entity2FromElasticSearch =  repository.findOne(documentId2);
-      assertThat(entity2FromElasticSearch, is(notNullValue()));
-  }
+		DoubleIDEntity entity2FromElasticSearch = repository.findOne(documentId2);
+		assertThat(entity2FromElasticSearch, is(notNullValue()));
+	}
 
-  @Test
-  public void shouldSaveDocument(){
-      //given
-      Double documentId = RandomUtils.nextDouble();
-      DoubleIDEntity sampleEntity = new DoubleIDEntity();
-      sampleEntity.setId(documentId);
-      sampleEntity.setMessage("some message");
-      sampleEntity.setVersion(System.currentTimeMillis());
-      //when
-      repository.save(sampleEntity);
-      //then
-      DoubleIDEntity entityFromElasticSearch =  repository.findOne(documentId);
-      assertThat(entityFromElasticSearch, is(notNullValue()));
-  }
+	@Test
+	public void shouldSaveDocument() {
+		// given
+		Double documentId = RandomUtils.nextDouble();
+		DoubleIDEntity sampleEntity = new DoubleIDEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setMessage("some message");
+		sampleEntity.setVersion(System.currentTimeMillis());
+		// when
+		repository.save(sampleEntity);
+		// then
+		DoubleIDEntity entityFromElasticSearch = repository.findOne(documentId);
+		assertThat(entityFromElasticSearch, is(notNullValue()));
+	}
 }
