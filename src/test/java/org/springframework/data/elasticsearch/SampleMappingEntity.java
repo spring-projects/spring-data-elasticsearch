@@ -29,7 +29,7 @@ public class SampleMappingEntity {
 
     @Id
     private String id;
-    @Field(type = "string",index = "not_analyzed", store = true, searchAnalyzer = "standard", indexAnalyzer = "standard")
+    @Field(type = "string", index = "not_analyzed", store = true, searchAnalyzer = "standard", indexAnalyzer = "standard")
     private String message;
 
     private NestedEntity nested;

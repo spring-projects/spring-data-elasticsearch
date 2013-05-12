@@ -19,10 +19,13 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 
+/**
+ * @author Rizwan Idrees
+ * @author Mohsin Husen
+ */
 
 @Document(indexName = "double-keyed-entity", type = "double-keyed-entity", indexStoreType = "memory", shards = 1 , replicas = 0, refreshInterval = "-1")
 public class DoubleIDEntity {
-
 
   @Id
   private Double id;

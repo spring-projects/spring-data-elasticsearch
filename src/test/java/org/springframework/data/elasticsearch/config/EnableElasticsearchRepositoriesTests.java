@@ -47,7 +47,7 @@ public class EnableElasticsearchRepositoriesTests {
 
         @Bean
         public ElasticsearchOperations elasticsearchTemplate() {
-            return new ElasticsearchTemplate(nodeBuilder().local(true).node().client());
+            return new ElasticsearchTemplate(nodeBuilder().local(true).clusterName("testCluster").node().client());
         }
     }
 

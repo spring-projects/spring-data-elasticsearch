@@ -19,6 +19,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 
+/**
+ * @author Rizwan Idrees
+ * @author Mohsin Husen
+ */
 
 @Document(indexName = "integer-keyed-entity", type = "integer-keyed-entity", indexStoreType = "memory", shards = 1 , replicas = 0, refreshInterval = "-1")
 public class IntegerIDEntity {
