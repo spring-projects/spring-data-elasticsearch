@@ -107,7 +107,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
         try {
             XContentBuilder xContentBuilder = buildMapping(clazz, persistentEntity.getIndexType(), persistentEntity.getIdProperty().getFieldName());
-            return requestBuilder.setSource(xContentBuilder).execute().actionGet().acknowledged();
+            return requestBuilder.setSource(xContentBuilder).execute().actionGet().isAcknowledged();
         } catch (Exception e) {
             throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName() , e);
         }
@@ -199,7 +199,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         if(query.getQuery() != null){
             countRequestBuilder.setQuery(query.getQuery());
         }
-        return countRequestBuilder.execute().actionGet().count();
+        return countRequestBuilder.execute().actionGet().getCount();
     }
 
     @Override
@@ -218,9 +218,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         BulkResponse bulkResponse = bulkRequest.execute().actionGet();
         if (bulkResponse.hasFailures()) {
             Map<String, String> failedDocuments = new HashMap<String, String>();
-            for (BulkItemResponse item : bulkResponse.items()) {
-                if (item.failed())
-                    failedDocuments.put(item.getId(), item.failureMessage());
+            for (BulkItemResponse item : bulkResponse.getItems()) {
+                if (item.isFailed())
+                    failedDocuments.put(item.getId(), item.getFailureMessage());
             }
             throw new ElasticsearchException("Bulk indexing has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages [" + failedDocuments+"]", failedDocuments);
         }
@@ -235,7 +235,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     public <T> boolean deleteIndex(Class<T> clazz){
         String indexName = getPersistentEntityFor(clazz).getIndexName();
         if(indexExists(indexName)){
-            return client.admin().indices().delete(new DeleteIndexRequest(indexName)).actionGet().acknowledged();
+            return client.admin().indices().delete(new DeleteIndexRequest(indexName)).actionGet().isAcknowledged();
         }
         return false;
     }
@@ -376,13 +376,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     private boolean indexExists(String indexName) {
         return client.admin()
                 .indices()
-                .exists(indicesExistsRequest(indexName)).actionGet().exists();
+                .exists(indicesExistsRequest(indexName)).actionGet().isExists();
     }
 
     private <T> boolean createIndexWithSettings(Class<T> clazz) {
         ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
         return client.admin().indices().create(Requests.createIndexRequest(persistentEntity.getIndexName()).
-                settings(getSettings(persistentEntity))).actionGet().acknowledged();
+                settings(getSettings(persistentEntity))).actionGet().isAcknowledged();
     }
 
     private <T> Map getSettings(ElasticsearchPersistentEntity<T> persistentEntity) {

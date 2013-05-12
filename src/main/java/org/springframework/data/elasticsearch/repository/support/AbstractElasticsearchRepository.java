@@ -200,17 +200,19 @@ public abstract class AbstractElasticsearchRepository<T,ID extends Serializable>
     }
 
     @Override
-    public Page<T> searchSimilar(T entity) {
-        return searchSimilar(entity, DEFAULT_PAGE);
-    }
-
-    @Override
-    public Page<T> searchSimilar(T entity, Pageable pageable) {
+    public Page<T> searchSimilar(T entity, SearchQuery searchQuery) {
         Assert.notNull(entity, "Cannot search similar records for 'null'.");
-        Assert.notNull(entity, "Pageable cannot be 'null'");
+        Assert.notNull(searchQuery.getFields(), "Fields cannot be 'null'");
         MoreLikeThisQuery query = new MoreLikeThisQuery();
         query.setId(stringIdRepresentation(extractIdFromBean(entity)));
-        query.setPageable(pageable);
+        query.setPageable(searchQuery.getPageable() != null ? searchQuery.getPageable() : DEFAULT_PAGE);
+        query.addFields(searchQuery.getFields().toArray(new String[searchQuery.getFields().size()]));
+        if(!searchQuery.getIndices().isEmpty()) {
+            query.addSearchIndices(searchQuery.getIndices().toArray(new String[searchQuery.getIndices().size()]));
+        }
+        if(!searchQuery.getTypes().isEmpty()){
+            query.addSearchTypes(searchQuery.getTypes().toArray(new String[searchQuery.getTypes().size()]));
+        }
         return elasticsearchOperations.moreLikeThis(query, getEntityClass());
     }
 
@@ -296,14 +298,14 @@ public abstract class AbstractElasticsearchRepository<T,ID extends Serializable>
         this.elasticsearchOperations = elasticsearchOperations;
     }
 
-    
+
     protected ID extractIdFromBean(T entity) {
       if (entityInformation != null) {
           return entityInformation.getId(entity);
       }
       return null;
     }
-    
+
     protected abstract String stringIdRepresentation(ID id);
 
     private Long extractVersionFromBean(T entity){

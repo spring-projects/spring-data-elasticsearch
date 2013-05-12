@@ -387,7 +387,6 @@ public class SimpleElasticsearchRepositoryTests {
         assertThat(sampleEntities,is(notNullValue()));
     }
 
-
     @Test
     public void shouldReturnSimilarEntities(){
         //given
@@ -403,7 +402,11 @@ public class SimpleElasticsearchRepositoryTests {
         repository.save(sampleEntities);
 
         //when
-        Page<SampleEntity> results = repository.searchSimilar(sampleEntities.get(0));
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withPageable(new PageRequest(0, 5))
+                .withFields("message")
+                .build();
+        Page<SampleEntity> results = repository.searchSimilar(sampleEntities.get(0), searchQuery);
 
         //then
         assertThat(results.getTotalElements(), is(greaterThanOrEqualTo(1L)));
@@ -416,6 +419,7 @@ public class SimpleElasticsearchRepositoryTests {
             SampleEntity sampleEntity = new SampleEntity();
             sampleEntity.setId(documentId);
             sampleEntity.setMessage(message);
+            sampleEntity.setRate(2);
             sampleEntity.setVersion(System.currentTimeMillis());
             sampleEntities.add(sampleEntity);
         }
