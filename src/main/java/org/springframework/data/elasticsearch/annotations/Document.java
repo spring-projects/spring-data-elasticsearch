@@ -35,5 +35,8 @@ public @interface Document {
 
     String indexName();
     String type() default "";
+    short shards() default 1;
+    short replicas() default 5;
+    String refreshInterval() default "1s";
     String indexStoreType() default "fs";
 }

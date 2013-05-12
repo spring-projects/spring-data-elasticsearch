@@ -382,9 +382,16 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     private <T> boolean createIndexWithSettings(Class<T> clazz) {
         ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
         return client.admin().indices().create(Requests.createIndexRequest(persistentEntity.getIndexName()).
-                settings(new MapBuilder<String, String>()
-                        .put("index.store.type", persistentEntity.getIndexStoreType())
-                        .map())).actionGet().acknowledged();
+                settings(getSettings(persistentEntity))).actionGet().acknowledged();
+    }
+
+    private <T> Map getSettings(ElasticsearchPersistentEntity<T> persistentEntity) {
+       return new MapBuilder<String, String>()
+                .put("index.number_of_shards", String.valueOf(persistentEntity.getShards()))
+                .put("index.number_of_replicas", String.valueOf(persistentEntity.getReplicas()))
+                .put("index.refresh_interval", persistentEntity.getRefreshInterval())
+                .put("index.store.type", persistentEntity.getIndexStoreType())
+                .map();
     }
 
     private <T> SearchRequestBuilder prepareSearch(Query query, Class<T> clazz){

@@ -15,14 +15,12 @@
  */
 package org.springframework.data.elasticsearch;
 
-import java.math.BigInteger;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 
-@Document(indexName = "integer-keyed-entity", type = "integer-keyed-entity", indexStoreType = "memory")
+@Document(indexName = "integer-keyed-entity", type = "integer-keyed-entity", indexStoreType = "memory", shards = 1 , replicas = 0, refreshInterval = "-1")
 public class IntegerIDEntity {
 
 

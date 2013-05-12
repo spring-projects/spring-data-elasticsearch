@@ -20,7 +20,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 
-@Document(indexName = "double-keyed-entity", type = "double-keyed-entity", indexStoreType = "memory")
+@Document(indexName = "double-keyed-entity", type = "double-keyed-entity", indexStoreType = "memory", shards = 1 , replicas = 0, refreshInterval = "-1")
 public class DoubleIDEntity {
 
 

@@ -27,6 +27,9 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 
 	String getIndexName();
     String getIndexType();
+    short getShards();
+    short getReplicas();
+    String getRefreshInterval();
     String getIndexStoreType();
     ElasticsearchPersistentProperty getVersionProperty();
 }
