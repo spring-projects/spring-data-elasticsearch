@@ -54,7 +54,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 
     public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations, String query) {
         super(queryMethod, elasticsearchOperations);
-        Assert.notNull(query, "Query cannot be empty");
+        Assert.notNull(query, "AbstractQuery cannot be empty");
         this.query = query;
     }
 
