@@ -33,8 +33,6 @@ import static org.apache.commons.lang.StringUtils.split;
 
 public class TransportClientBeanDefinitionParser extends AbstractBeanDefinitionParser {
 
-	private static final String SEPARATOR_CHARS = ",";
-
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(TransportClientFactoryBean.class);
@@ -43,7 +41,7 @@ public class TransportClientBeanDefinitionParser extends AbstractBeanDefinitionP
 	}
 
 	private void setClusterNodes(Element element, BeanDefinitionBuilder builder) {
-		builder.addPropertyValue("clusterNodes", split(element.getAttribute("cluster-nodes"), SEPARATOR_CHARS));
+		builder.addPropertyValue("clusterNodes", element.getAttribute("cluster-nodes"));
 	}
 
 	private AbstractBeanDefinition getSourcedBeanDefinition(BeanDefinitionBuilder builder, Element source,
