@@ -36,9 +36,9 @@ public @interface Document {
 
 	String type() default "";
 
-	short shards() default 1;
+	short shards() default 5;
 
-	short replicas() default 5;
+	short replicas() default 1;
 
 	String refreshInterval() default "1s";
 
