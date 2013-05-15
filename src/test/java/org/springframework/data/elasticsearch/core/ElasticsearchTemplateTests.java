@@ -555,18 +555,20 @@ public class ElasticsearchTemplateTests {
 		indexQuery2.setObject(sampleEntity2);
 
 		indexQueries.add(indexQuery2);
+
+        List<IndexQuery> entities =  createSampleEntitiesWithMessage("Test message", 30);
 		// when
-		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.bulkIndex(entities);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		// then
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices("test-index")
-				.withTypes("test-type").withPageable(new PageRequest(0, 1)).build();
+				.withTypes("test-type").withPageable(new PageRequest(0, 10)).build();
 
 		String scrollId = elasticsearchTemplate.scan(searchQuery, 1000, false);
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
 		boolean hasRecords = true;
-		while (hasRecords) {
+        while (hasRecords) {
 			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new ResultsMapper<SampleEntity>() {
 				@Override
 				public Page<SampleEntity> mapResults(SearchResponse response) {
@@ -580,20 +582,44 @@ public class ElasticsearchTemplateTests {
 						user.setMessage((String) searchHit.getSource().get("message"));
 						chunk.add(user);
 					}
-					return new PageImpl<SampleEntity>(chunk);
+                    if(chunk.size() > 0){
+
+                        return new PageImpl<SampleEntity>(chunk);
+                    }
+                    return null;
 				}
 
 			});
 			if (page != null) {
 				sampleEntities.addAll(page.getContent());
-				hasRecords = page.hasNextPage();
-			} else {
-				hasRecords = false;
-			}
+            } else {
+                hasRecords = false;
+            }
 
 		}
-		assertThat(sampleEntities.size(), is(equalTo(2)));
+		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
+
+    private static List<IndexQuery> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
+        List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+        for (int i = 0; i < numberOfEntities; i++) {
+            String documentId = randomNumeric(5);
+            SampleEntity sampleEntity = new SampleEntity();
+            sampleEntity.setId(documentId);
+            sampleEntity.setMessage(message);
+            sampleEntity.setRate(2);
+            sampleEntity.setVersion(System.currentTimeMillis());
+            IndexQuery indexQuery2 = new IndexQuery();
+            indexQuery2.setId(documentId);
+            indexQuery2.setObject(sampleEntity);
+
+            indexQueries.add(indexQuery2);
+            sampleEntities.add(sampleEntity);
+
+        }
+        return indexQueries;
+    }
 
 	@Test
 	public void shouldReturnListForGivenCriteria() {
