@@ -19,7 +19,10 @@ import org.apache.commons.lang.math.RandomUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.DoubleIDEntity;
 import org.springframework.data.elasticsearch.IntegerIDEntity;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.repositories.IntegerIDRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -41,10 +44,16 @@ public class IntegerIDRepositoryTests {
 	@Resource
 	private IntegerIDRepository repository;
 
-	@Before
-	public void before() {
-		repository.deleteAll();
-	}
+    @Autowired
+    private ElasticsearchTemplate elasticsearchTemplate;
+
+
+    @Before
+    public void before() {
+        elasticsearchTemplate.deleteIndex(IntegerIDEntity.class);
+        elasticsearchTemplate.createIndex(IntegerIDEntity.class);
+        elasticsearchTemplate.refresh(IntegerIDEntity.class, true);
+    }
 
 	@Test
 	public void shouldDoBulkIndexDocument() {

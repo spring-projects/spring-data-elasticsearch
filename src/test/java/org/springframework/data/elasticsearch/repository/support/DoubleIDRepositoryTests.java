@@ -19,7 +19,9 @@ import org.apache.commons.lang.math.RandomUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.DoubleIDEntity;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.repositories.DoubleIDRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -41,9 +43,15 @@ public class DoubleIDRepositoryTests {
 	@Resource
 	private DoubleIDRepository repository;
 
+    @Autowired
+    private ElasticsearchTemplate elasticsearchTemplate;
+
+
 	@Before
 	public void before() {
-		repository.deleteAll();
+		elasticsearchTemplate.deleteIndex(DoubleIDEntity.class);
+        elasticsearchTemplate.createIndex(DoubleIDEntity.class);
+        elasticsearchTemplate.refresh(DoubleIDEntity.class, true);
 	}
 
 	@Test
