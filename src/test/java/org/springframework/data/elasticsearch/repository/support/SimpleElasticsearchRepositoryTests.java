@@ -19,10 +19,12 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.SampleEntity;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repositories.SampleElasticsearchRepository;
@@ -51,10 +53,16 @@ public class SimpleElasticsearchRepositoryTests {
 	@Resource
 	private SampleElasticsearchRepository repository;
 
-	@Before
-	public void before() {
-		repository.deleteAll();
-	}
+    @Autowired
+    private ElasticsearchTemplate elasticsearchTemplate;
+
+
+    @Before
+    public void before() {
+        elasticsearchTemplate.deleteIndex(SampleEntity.class);
+        elasticsearchTemplate.createIndex(SampleEntity.class);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+    }
 
 	@Test
 	public void shouldDoBulkIndexDocument() {

@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
@@ -46,10 +45,8 @@ public class CriteriaQueryTests {
 
 	@Before
 	public void before() {
+        elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
-		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(matchAllQuery());
-		elasticsearchTemplate.delete(deleteQuery, SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 	}
 

@@ -58,10 +58,8 @@ public class ElasticsearchTemplateTests {
 
 	@Before
 	public void before() {
+        elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
-		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(matchAllQuery());
-		elasticsearchTemplate.delete(deleteQuery, SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 	}
 
@@ -529,33 +527,7 @@ public class ElasticsearchTemplateTests {
 
 	@Test
 	public void shouldReturnResultsWithScanAndScroll() {
-		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
-		// first document
-		String documentId = randomNumeric(5);
-		SampleEntity sampleEntity1 = new SampleEntity();
-		sampleEntity1.setId(documentId);
-		sampleEntity1.setMessage("some message");
-		sampleEntity1.setVersion(System.currentTimeMillis());
-
-		IndexQuery indexQuery1 = new IndexQuery();
-		indexQuery1.setId(documentId);
-		indexQuery1.setObject(sampleEntity1);
-		indexQueries.add(indexQuery1);
-
-		// second document
-		String documentId2 = randomNumeric(5);
-		SampleEntity sampleEntity2 = new SampleEntity();
-		sampleEntity2.setId(documentId2);
-		sampleEntity2.setMessage("some message");
-		sampleEntity2.setVersion(System.currentTimeMillis());
-
-		IndexQuery indexQuery2 = new IndexQuery();
-		indexQuery2.setId(documentId2);
-		indexQuery2.setObject(sampleEntity2);
-
-		indexQueries.add(indexQuery2);
-
+	    //given
         List<IndexQuery> entities =  createSampleEntitiesWithMessage("Test message", 30);
 		// when
 		elasticsearchTemplate.bulkIndex(entities);
@@ -601,7 +573,6 @@ public class ElasticsearchTemplateTests {
 	}
 
     private static List<IndexQuery> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
-        List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         for (int i = 0; i < numberOfEntities; i++) {
             String documentId = randomNumeric(5);
@@ -610,13 +581,10 @@ public class ElasticsearchTemplateTests {
             sampleEntity.setMessage(message);
             sampleEntity.setRate(2);
             sampleEntity.setVersion(System.currentTimeMillis());
-            IndexQuery indexQuery2 = new IndexQuery();
-            indexQuery2.setId(documentId);
-            indexQuery2.setObject(sampleEntity);
-
-            indexQueries.add(indexQuery2);
-            sampleEntities.add(sampleEntity);
-
+            IndexQuery indexQuery = new IndexQuery();
+            indexQuery.setId(documentId);
+            indexQuery.setObject(sampleEntity);
+            indexQueries.add(indexQuery);
         }
         return indexQueries;
     }

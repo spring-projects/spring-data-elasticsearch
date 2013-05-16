@@ -24,7 +24,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.SampleEntity;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -34,7 +33,6 @@ import java.util.List;
 
 import static org.apache.commons.lang.RandomStringUtils.random;
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
@@ -54,10 +52,8 @@ public class CustomMethodRepositoryTests {
 
 	@Before
 	public void before() {
+        elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
-		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(matchAllQuery());
-		elasticsearchTemplate.delete(deleteQuery, SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 	}
 
