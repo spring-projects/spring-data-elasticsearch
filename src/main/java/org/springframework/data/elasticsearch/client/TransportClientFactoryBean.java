@@ -41,6 +41,9 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
     private static final Logger logger = LoggerFactory.getLogger(TransportClientFactoryBean.class);
     private String clusterNodes;
+    private String clusterName;
+    private Boolean enableHttp;
+    private Boolean clientTransportSniff;
     private TransportClient client;
     private Properties properties;
     static final String COLON = ":";
@@ -96,11 +99,27 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
         if (properties != null) {
             return settingsBuilder().put(properties).build();
         }
-        return settingsBuilder().put("client.transport.sniff", true).build();
+        return settingsBuilder()
+                .put("cluster.name", clusterName)
+                .put("client.transport.sniff", clientTransportSniff)
+                .put("http.enabled", enableHttp)
+                .build();
     }
 
     public void setClusterNodes(String clusterNodes) {
         this.clusterNodes = clusterNodes;
+    }
+
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
+    }
+
+    public void setEnableHttp(Boolean enableHttp) {
+        this.enableHttp = enableHttp;
+    }
+
+    public void setClientTransportSniff(Boolean clientTransportSniff) {
+        this.clientTransportSniff = clientTransportSniff;
     }
 
     public void setProperties(Properties properties) {

@@ -44,9 +44,21 @@
         <xsd:complexType>
             <xsd:complexContent>
                 <xsd:extension base="beans:identifiedType">
-                    <xsd:attribute name="local" type="xsd:boolean" default="false"/>
-                    <xsd:attribute name="cluster-name" type="xsd:string" default="elasticsearch"/>
-                    <xsd:attribute name="http-enabled" type="xsd:boolean" default="true"/>
+                    <xsd:attribute name="local" type="xsd:boolean" default="false">
+                        <xsd:annotation>
+                            <xsd:documentation><![CDATA[local here means local on the JVM (well, actually class loader) level, meaning that two local servers started within the same JVM will discover themselves and form a cluster]]></xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="cluster-name" type="xsd:string" default="elasticsearch">
+                        <xsd:annotation>
+                            <xsd:documentation><![CDATA[Name of the cluster in which this instance of node client will connect to]]> </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="http-enabled" type="xsd:boolean" default="true">
+                        <xsd:annotation>
+                            <xsd:documentation><![CDATA[to enable or desable http port]]> </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
                 </xsd:extension>
             </xsd:complexContent>
         </xsd:complexType>
@@ -65,6 +77,21 @@
                     <xsd:attribute name="cluster-nodes" type="xsd:string" default="127.0.0.1:9300">
                         <xsd:annotation>
                             <xsd:documentation><![CDATA[The comma delimited list of host:port entries to use for elasticsearch cluster.]]></xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="cluster-name" type="xsd:string" default="elasticsearch">
+                        <xsd:annotation>
+                            <xsd:documentation><![CDATA[Name of the cluster in which this instance of node client will connect to]]> </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="http-enabled" type="xsd:boolean" default="true">
+                        <xsd:annotation>
+                            <xsd:documentation><![CDATA[to enable or desable http port]]> </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="client-transport-sniff" type="xsd:boolean" default="true">
+                        <xsd:annotation>
+                            <xsd:documentation><![CDATA[The client allows to sniff the rest of the cluster, and add those into its list of machines to use.]]> </xsd:documentation>
                         </xsd:annotation>
                     </xsd:attribute>
                 </xsd:extension>
