@@ -84,7 +84,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @return
 	 */
-	<T> Page<T> queryForPage(SearchQuery query, Class<T> clazz);
+	<T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz);
 
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page}
@@ -93,7 +93,7 @@ public interface ElasticsearchOperations {
 	 * @param resultsMapper
 	 * @return
 	 */
-	<T> Page<T> queryForPage(SearchQuery query, ResultsMapper<T> resultsMapper);
+	<T> FacetedPage<T> queryForPage(SearchQuery query, ResultsMapper<T> resultsMapper);
 
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page}
@@ -111,7 +111,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @return
 	 */
-	<T> Page<T> queryForPage(StringQuery query, Class<T> clazz);
+	<T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz);
 
 	/**
 	 * Execute the criteria query against elasticsearch and return result as {@link List}

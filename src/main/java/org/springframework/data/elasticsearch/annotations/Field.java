@@ -20,20 +20,26 @@ import java.lang.annotation.*;
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Artur Konczak
+ * @author Jonathan Yan
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 @Documented
 public @interface Field {
 
-	String type() default "";
+    String type() default "";
 
-	String index() default "";
+    String index() default "";
 
-	boolean store() default false;
+    boolean store() default false;
 
-	String searchAnalyzer() default "";
+    String searchAnalyzer() default "";
 
-	String indexAnalyzer() default "";
+    String indexAnalyzer() default "";
+
+    boolean facetable() default false;
+
+    boolean sortable() default false;
 
 }

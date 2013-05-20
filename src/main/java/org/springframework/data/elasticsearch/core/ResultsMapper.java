@@ -25,11 +25,12 @@ import org.springframework.data.domain.Page;
  * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Artur Konczak
  * 
  */
 
 public interface ResultsMapper<T> {
 
-	Page<T> mapResults(SearchResponse response);
+	FacetedPage<T> mapResults(SearchResponse response);
 
 }

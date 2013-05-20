@@ -19,6 +19,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.FacetedPage;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.util.Assert;
@@ -180,13 +181,13 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	}
 
 	@Override
-	public Page<T> search(QueryBuilder query, Pageable pageable) {
+	public FacetedPage<T> search(QueryBuilder query, Pageable pageable) {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(query).withPageable(pageable).build();
 		return elasticsearchOperations.queryForPage(searchQuery, getEntityClass());
 	}
 
 	@Override
-	public Page<T> search(SearchQuery query) {
+	public FacetedPage<T> search(SearchQuery query) {
 		return elasticsearchOperations.queryForPage(query, getEntityClass());
 	}
 

@@ -17,7 +17,10 @@ package org.springframework.data.elasticsearch.core.query;
 
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.facet.FacetBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
+
+import java.util.List;
 
 /**
  * NativeSearchQuery
@@ -32,4 +35,6 @@ public interface SearchQuery extends Query {
 	FilterBuilder getFilter();
 
 	SortBuilder getElasticsearchSort();
+
+    List<FacetRequest> getFacets();
 }

@@ -465,12 +465,12 @@ public class ElasticsearchTemplateTests {
 		// when
 		Page<String> page = elasticsearchTemplate.queryForPage(searchQuery, new ResultsMapper<String>() {
 			@Override
-			public Page<String> mapResults(SearchResponse response) {
+			public FacetedPage<String> mapResults(SearchResponse response) {
 				List<String> values = new ArrayList<String>();
 				for (SearchHit searchHit : response.getHits()) {
 					values.add((String) searchHit.field("message").value());
 				}
-				return new PageImpl<String>(values);
+				return new FacetedPageImpl<String>(values);
 			}
 		});
 		// then
@@ -543,7 +543,7 @@ public class ElasticsearchTemplateTests {
         while (hasRecords) {
 			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new ResultsMapper<SampleEntity>() {
 				@Override
-				public Page<SampleEntity> mapResults(SearchResponse response) {
+				public FacetedPage<SampleEntity> mapResults(SearchResponse response) {
 					List<SampleEntity> chunk = new ArrayList<SampleEntity>();
 					for (SearchHit searchHit : response.getHits()) {
 						if (response.getHits().getHits().length <= 0) {
@@ -556,7 +556,7 @@ public class ElasticsearchTemplateTests {
 					}
                     if(chunk.size() > 0){
 
-                        return new PageImpl<SampleEntity>(chunk);
+                        return new FacetedPageImpl<SampleEntity>(chunk);
                     }
                     return null;
 				}

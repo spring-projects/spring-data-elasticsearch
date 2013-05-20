@@ -15,14 +15,18 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.domain.Pageable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * NativeSearchQuery
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
@@ -30,63 +34,72 @@ import org.springframework.data.domain.Pageable;
 
 public class NativeSearchQueryBuilder {
 
-	private QueryBuilder queryBuilder;
-	private FilterBuilder filterBuilder;
-	private SortBuilder sortBuilder;
-	private Pageable pageable;
-	private String[] indices;
-	private String[] types;
-	private String[] fields;
+    private QueryBuilder queryBuilder;
+    private FilterBuilder filterBuilder;
+    private SortBuilder sortBuilder;
+    private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
+    private Pageable pageable;
+    private String[] indices;
+    private String[] types;
+    private String[] fields;
 
-	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
-		this.queryBuilder = queryBuilder;
-		return this;
-	}
+    public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
+        this.queryBuilder = queryBuilder;
+        return this;
+    }
 
-	public NativeSearchQueryBuilder withFilter(FilterBuilder filterBuilder) {
-		this.filterBuilder = filterBuilder;
-		return this;
-	}
+    public NativeSearchQueryBuilder withFilter(FilterBuilder filterBuilder) {
+        this.filterBuilder = filterBuilder;
+        return this;
+    }
 
-	public NativeSearchQueryBuilder withSort(SortBuilder sortBuilder) {
-		this.sortBuilder = sortBuilder;
-		return this;
-	}
+    public NativeSearchQueryBuilder withSort(SortBuilder sortBuilder) {
+        this.sortBuilder = sortBuilder;
+        return this;
+    }
 
-	public NativeSearchQueryBuilder withPageable(Pageable pageable) {
-		this.pageable = pageable;
-		return this;
-	}
+    public NativeSearchQueryBuilder withFacet(FacetRequest facetRequest) {
+        facetRequests.add(facetRequest);
+        return this;
+    }
 
-	public NativeSearchQueryBuilder withIndices(String... indices) {
-		this.indices = indices;
-		return this;
-	}
+    public NativeSearchQueryBuilder withPageable(Pageable pageable) {
+        this.pageable = pageable;
+        return this;
+    }
 
-	public NativeSearchQueryBuilder withTypes(String... types) {
-		this.types = types;
-		return this;
-	}
+    public NativeSearchQueryBuilder withIndices(String... indices) {
+        this.indices = indices;
+        return this;
+    }
 
-	public NativeSearchQueryBuilder withFields(String... fields) {
-		this.fields = fields;
-		return this;
-	}
+    public NativeSearchQueryBuilder withTypes(String... types) {
+        this.types = types;
+        return this;
+    }
 
-	public NativeSearchQuery build() {
-		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilder);
-		if (pageable != null) {
-			nativeSearchQuery.setPageable(pageable);
-		}
-		if (indices != null) {
-			nativeSearchQuery.addIndices(indices);
-		}
-		if (types != null) {
-			nativeSearchQuery.addTypes(types);
-		}
-		if (fields != null) {
-			nativeSearchQuery.addFields(fields);
-		}
-		return nativeSearchQuery;
-	}
+    public NativeSearchQueryBuilder withFields(String... fields) {
+        this.fields = fields;
+        return this;
+    }
+
+    public NativeSearchQuery build() {
+        NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilder);
+        if (pageable != null) {
+            nativeSearchQuery.setPageable(pageable);
+        }
+        if (indices != null) {
+            nativeSearchQuery.addIndices(indices);
+        }
+        if (types != null) {
+            nativeSearchQuery.addTypes(types);
+        }
+        if (fields != null) {
+            nativeSearchQuery.addFields(fields);
+        }
+        if (CollectionUtils.isNotEmpty(facetRequests)) {
+            nativeSearchQuery.setFacets(facetRequests);
+        }
+        return nativeSearchQuery;
+    }
 }

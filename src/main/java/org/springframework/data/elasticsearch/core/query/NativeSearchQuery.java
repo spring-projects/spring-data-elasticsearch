@@ -17,7 +17,11 @@ package org.springframework.data.elasticsearch.core.query;
 
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.facet.FacetBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * NativeSearchQuery
@@ -31,6 +35,17 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	private QueryBuilder query;
 	private FilterBuilder filter;
 	private SortBuilder sort;
+    private List<FacetRequest> facets;
+
+
+    public NativeSearchQuery(QueryBuilder query) {
+        this.query = query;
+    }
+
+    public NativeSearchQuery(QueryBuilder query, FilterBuilder filter) {
+        this.query = query;
+        this.filter = filter;
+    }
 
 	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, SortBuilder sort) {
 		this.query = query;
@@ -49,4 +64,20 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	public SortBuilder getElasticsearchSort() {
 		return sort;
 	}
+
+    public void addFacet(FacetRequest facetRequest){
+        if(facets==null){
+            facets = new ArrayList<FacetRequest>();
+        }
+        facets.add(facetRequest);
+    }
+
+    public void setFacets(List<FacetRequest> facets){
+        this.facets = facets;
+    }
+
+    @Override
+    public List<FacetRequest> getFacets() {
+        return facets;
+    }
 }
