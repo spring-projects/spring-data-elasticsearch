@@ -19,8 +19,7 @@ import java.util.List;
  */
 public class TermFacetRequest extends AbstractFacetRequest {
 
-    private String[] stringFields;
-    private String[] numberFields;
+    private String[] fields;
     private int size = 10;
     private TermsFacet.ComparatorType order;
 
@@ -28,12 +27,8 @@ public class TermFacetRequest extends AbstractFacetRequest {
         super(name);
     }
 
-    public void setStringFields(String... fields) {
-        this.stringFields = fields;
-    }
-
-    public void setNumberFields(String... fields) {
-        this.numberFields = fields;
+    public void setFields(String... fields) {
+        this.fields = fields;
     }
 
     public void setSize(int size) {
@@ -57,24 +52,10 @@ public class TermFacetRequest extends AbstractFacetRequest {
         order = TermsFacet.ComparatorType.COUNT;
     }
 
-    private List<String> convertStringFieldsToFullNames() {
-        List<String> result = new ArrayList<String>();
-        if (ArrayUtils.isNotEmpty(stringFields)) {
-            for (String stringField : stringFields) {
-                result.add(stringField + "." + FIELD_UNTOUCHED);
-            }
-        }
-        if (ArrayUtils.isNotEmpty(numberFields)) {
-            Collections.addAll(result, numberFields);
-        }
-        return result;
-    }
-
     @Override
     public FacetBuilder getFacet() {
-        List<String> fields = convertStringFieldsToFullNames();
         Assert.notEmpty(fields, "Please select at last one field !!!");
-        TermsFacetBuilder builder = FacetBuilders.termsFacet(getName()).fields(fields.toArray(new String[fields.size()])).size(size);
+        TermsFacetBuilder builder = FacetBuilders.termsFacet(getName()).fields(fields).size(size);
         if (order != null) {
             builder.order(order);
         }

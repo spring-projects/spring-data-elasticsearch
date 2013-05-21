@@ -28,18 +28,14 @@ import java.lang.annotation.*;
 @Documented
 public @interface Field {
 
-    String type() default "";
+    FieldType type() default FieldType.Auto;
 
-    String index() default "";
+    FieldIndex index() default FieldIndex.analyzed;
 
     boolean store() default false;
 
     String searchAnalyzer() default "";
 
     String indexAnalyzer() default "";
-
-    boolean facetable() default false;
-
-    boolean sortable() default false;
 
 }

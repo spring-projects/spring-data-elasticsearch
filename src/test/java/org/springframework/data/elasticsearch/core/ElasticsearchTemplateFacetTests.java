@@ -79,7 +79,7 @@ public class ElasticsearchTemplateFacetTests {
 
         // given
         String facetName = "fauthors";
-        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withFacet(new TermFacetRequestBuilder(facetName).withStringFields("authors").build()).build();
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withFacet(new TermFacetRequestBuilder(facetName).withFields("authors.untouched").build()).build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
         // then
@@ -109,8 +109,8 @@ public class ElasticsearchTemplateFacetTests {
         // given
         String facetName = "fauthors";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-                .withFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("title","four")))
-                .withFacet(new TermFacetRequestBuilder(facetName).applyQueryFilter().withStringFields("authors").build()).build();
+                .withFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("title", "four")))
+                .withFacet(new TermFacetRequestBuilder(facetName).applyQueryFilter().withFields("authors.untouched").build()).build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
         // then
@@ -136,7 +136,7 @@ public class ElasticsearchTemplateFacetTests {
         // given
         String facetName = "fauthors";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-                .withFacet(new TermFacetRequestBuilder(facetName).withStringFields("authors").ascTerm().build()).build();
+                .withFacet(new TermFacetRequestBuilder(facetName).withFields("authors.untouched").ascTerm().build()).build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
         // then
@@ -167,7 +167,7 @@ public class ElasticsearchTemplateFacetTests {
         // given
         String facetName = "fauthors";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-                .withFacet(new TermFacetRequestBuilder(facetName).withStringFields("authors").ascCount().build()).build();
+                .withFacet(new TermFacetRequestBuilder(facetName).withFields("authors.untouched").ascCount().build()).build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
         // then
@@ -197,7 +197,7 @@ public class ElasticsearchTemplateFacetTests {
         // given
         String facetName = "fyears";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-                .withFacet(new TermFacetRequestBuilder(facetName).withNumberFields("publishedYears").descCount().build()).build();
+                .withFacet(new TermFacetRequestBuilder(facetName).withFields("publishedYears").descCount().build()).build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
         // then
@@ -227,7 +227,7 @@ public class ElasticsearchTemplateFacetTests {
         // given
         String facetName = "fyears";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-                .withFacet(new TermFacetRequestBuilder(facetName).withNumberFields("publishedYears").withStringFields("authors").ascTerm().build()).build();
+                .withFacet(new TermFacetRequestBuilder(facetName).withFields("publishedYears", "authors.untouched").ascTerm().build()).build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
         // then
@@ -274,8 +274,8 @@ public class ElasticsearchTemplateFacetTests {
         String numberFacetName = "fAuthors";
         String stringFacetName = "fyears";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-                .withFacet(new TermFacetRequestBuilder(numberFacetName).withNumberFields("publishedYears").ascTerm().build())
-                .withFacet(new TermFacetRequestBuilder(stringFacetName).withStringFields("authors").ascTerm().build())
+                .withFacet(new TermFacetRequestBuilder(numberFacetName).withFields("publishedYears").ascTerm().build())
+                .withFacet(new TermFacetRequestBuilder(stringFacetName).withFields("authors.untouched").ascTerm().build())
                 .build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);

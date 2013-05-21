@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.query.FacetRequest;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
@@ -71,15 +71,14 @@ class MappingBuilder {
             if (isEntity(field)) {
                 mapEntity(xContentBuilder, field.getType(), false, EMPTY, field.getName());
             }
-            Field fieldAnnotation = field.getAnnotation(Field.class);
-            if (isRootObject && fieldAnnotation != null && isIdField(field, idFieldName)) {
+            Field singleField = field.getAnnotation(Field.class);
+            MultiField multiField = field.getAnnotation(MultiField.class);
+            if (isRootObject && singleField != null && isIdField(field, idFieldName)) {
                 applyDefaultIdFieldMapping(xContentBuilder, field);
-            } else if (fieldAnnotation != null) {
-                if ((fieldAnnotation.sortable() || fieldAnnotation.facetable()) && TYPE_VALUE_STRING.equals(fieldAnnotation.type())) {
-                    addMultiFieldMapping(xContentBuilder, field, fieldAnnotation);
-                } else {
-                    addSimpleFieldMapping(xContentBuilder, field, fieldAnnotation);
-                }
+            } else if (multiField != null) {
+                addMultiFieldMapping(xContentBuilder, field, multiField);
+            } else if (singleField != null) {
+                addSingleFieldMapping(xContentBuilder, field, singleField);
             }
         }
 
@@ -105,15 +104,15 @@ class MappingBuilder {
      * @param fieldAnnotation
      * @throws IOException
      */
-    private static void addSimpleFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field,
+    private static void addSingleFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field,
                                               Field fieldAnnotation) throws IOException {
         xContentBuilder.startObject(field.getName());
         xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
-        if (isNotBlank(fieldAnnotation.type())) {
-            xContentBuilder.field(FIELD_TYPE, fieldAnnotation.type());
+        if (FieldType.Auto != fieldAnnotation.type()) {
+            xContentBuilder.field(FIELD_TYPE, fieldAnnotation.type().name().toLowerCase());
         }
-        if (isNotBlank(fieldAnnotation.index())) {
-            xContentBuilder.field(FIELD_INDEX, fieldAnnotation.index());
+        if (FieldIndex.not_analyzed == fieldAnnotation.index()) {
+            xContentBuilder.field(FIELD_INDEX, fieldAnnotation.index().name().toLowerCase());
         }
         if (isNotBlank(fieldAnnotation.searchAnalyzer())) {
             xContentBuilder.field(FIELD_SEARCH_ANALYZER, fieldAnnotation.searchAnalyzer());
@@ -125,6 +124,33 @@ class MappingBuilder {
     }
 
     /**
+     * Apply mapping for a single nested @Field annotation
+     *
+     * @param builder
+     * @param field
+     * @param annotation
+     * @throws IOException
+     */
+    private static void addNestedFieldMapping(XContentBuilder builder, java.lang.reflect.Field field,
+                                              NestedField annotation) throws IOException {
+        builder.startObject(field.getName() + "." + annotation.dotSuffix());
+        builder.field(FIELD_STORE, annotation.store());
+        if (FieldType.Auto != annotation.type()) {
+            builder.field(FIELD_TYPE, annotation.type().name().toLowerCase());
+        }
+        if (FieldIndex.not_analyzed == annotation.index()) {
+            builder.field(FIELD_INDEX, annotation.index().name().toLowerCase());
+        }
+        if (isNotBlank(annotation.searchAnalyzer())) {
+            builder.field(FIELD_SEARCH_ANALYZER, annotation.searchAnalyzer());
+        }
+        if (isNotBlank(annotation.indexAnalyzer())) {
+            builder.field(FIELD_INDEX_ANALYZER, annotation.indexAnalyzer());
+        }
+        builder.endObject();
+    }
+
+    /**
      * Multi field mappings for string type fields, support for sorts and facets
      *
      * @param builder
@@ -133,19 +159,14 @@ class MappingBuilder {
      * @throws IOException
      */
     private static void addMultiFieldMapping(XContentBuilder builder, java.lang.reflect.Field field,
-                                             Field annotation) throws IOException {
+                                             MultiField annotation) throws IOException {
         builder.startObject(field.getName());
         builder.field(FIELD_TYPE, "multi_field");
         builder.startObject("fields");
         //add standard field
-        addSimpleFieldMapping(builder, field, annotation);
-        //facet field - untouched, not analise, stored
-        if (annotation.facetable()) {
-            addFacetMapping(builder, field, annotation);
-        }
-        //sort field - lowercase, not analise, stored
-        if (annotation.sortable()) {
-            addSortMapping(builder, field, annotation);
+        addSingleFieldMapping(builder, field, annotation.mainField());
+        for (NestedField nestedField : annotation.otherFields()) {
+            addNestedFieldMapping(builder, field, nestedField);
         }
         builder.endObject();
         builder.endObject();

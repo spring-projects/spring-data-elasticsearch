@@ -1,11 +1,15 @@
 package org.springframework.data.elasticsearch;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.*;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.springframework.data.elasticsearch.annotations.FieldIndex.analyzed;
+import static org.springframework.data.elasticsearch.annotations.FieldIndex.not_analyzed;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
+import static org.springframework.data.elasticsearch.annotations.FieldType.String;
 
 /**
  * Simple type to test facets
@@ -18,10 +22,16 @@ public class Article {
 
     private String title;
 
-    @Field(type = "string", facetable = true)
+    @MultiField(
+            mainField = @Field(type = String, index = analyzed),
+            otherFields = {
+                    @NestedField(dotSuffix = "untouched", type = String, store = true, index = not_analyzed),
+                    @NestedField(dotSuffix = "sort", type = String, store = true, indexAnalyzer = "keyword")
+            }
+    )
     private List<String> authors = new ArrayList<String>();
 
-    @Field(type = "integer", facetable = true)
+    @Field(type = Integer, store = true)
     private List<Integer> publishedYears = new ArrayList<Integer>();
 
     public Article() {

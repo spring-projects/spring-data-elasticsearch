@@ -13,13 +13,8 @@ public class TermFacetRequestBuilder {
         result = new TermFacetRequest(name);
     }
 
-    public TermFacetRequestBuilder withStringFields(String... fields) {
-        result.setStringFields(fields);
-        return this;
-    }
-
-    public TermFacetRequestBuilder withNumberFields(String... fields) {
-        result.setNumberFields(fields);
+    public TermFacetRequestBuilder withFields(String... fields) {
+        result.setFields(fields);
         return this;
     }
 
