@@ -3,5 +3,5 @@ package org.springframework.data.elasticsearch.annotations;
 /**
  */
 public enum FieldType {
-    String, Integer, Long, Date, Object, Auto
+    String, Integer, Long, Date, Float, Double, Boolean, Object, Auto
 }
