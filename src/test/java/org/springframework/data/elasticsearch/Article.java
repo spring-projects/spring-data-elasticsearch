@@ -34,6 +34,8 @@ public class Article {
     @Field(type = Integer, store = true)
     private List<Integer> publishedYears = new ArrayList<Integer>();
 
+    private int score;
+
     public Article() {
 
     }
@@ -72,5 +74,13 @@ public class Article {
 
     public void setPublishedYears(List<Integer> publishedYears) {
         this.publishedYears = publishedYears;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public void setScore(int score) {
+        this.score = score;
     }
 }

@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.data.elasticsearch.annotations.*;
-import org.springframework.data.elasticsearch.core.query.FacetRequest;
+import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;

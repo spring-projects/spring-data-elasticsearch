@@ -23,17 +23,22 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.Article;
 import org.springframework.data.elasticsearch.ArticleBuilder;
-import org.springframework.data.elasticsearch.core.facet.Term;
-import org.springframework.data.elasticsearch.core.facet.TermResult;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.facet.request.NativeFacetRequest;
+import org.springframework.data.elasticsearch.core.facet.request.RangeFacetRequestBuilder;
+import org.springframework.data.elasticsearch.core.facet.request.TermFacetRequestBuilder;
+import org.springframework.data.elasticsearch.core.facet.result.Range;
+import org.springframework.data.elasticsearch.core.facet.result.RangeResult;
+import org.springframework.data.elasticsearch.core.facet.result.Term;
+import org.springframework.data.elasticsearch.core.facet.result.TermResult;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.elasticsearch.index.query.FilterBuilders.termFilter;
-import static org.elasticsearch.index.query.QueryBuilders.fieldQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Rizwan Idrees
@@ -62,10 +67,10 @@ public class ElasticsearchTemplateFacetTests {
         elasticsearchTemplate.putMapping(Article.class);
         elasticsearchTemplate.refresh(Article.class, true);
 
-        IndexQuery article1 = new ArticleBuilder("1").title("article four").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addAuthor(JONATHAN_YAN).buildIndex();
-        IndexQuery article2 = new ArticleBuilder("2").title("article three").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addPublishedYear(YEAR_2000).buildIndex();
-        IndexQuery article3 = new ArticleBuilder("3").title("article two").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addPublishedYear(YEAR_2001).addPublishedYear(YEAR_2000).buildIndex();
-        IndexQuery article4 = new ArticleBuilder("4").title("article one").addAuthor(RIZWAN_IDREES).addPublishedYear(YEAR_2002).addPublishedYear(YEAR_2001).addPublishedYear(YEAR_2000).buildIndex();
+        IndexQuery article1 = new ArticleBuilder("1").title("article four").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addAuthor(JONATHAN_YAN).score(10).buildIndex();
+        IndexQuery article2 = new ArticleBuilder("2").title("article three").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addPublishedYear(YEAR_2000).score(20).buildIndex();
+        IndexQuery article3 = new ArticleBuilder("3").title("article two").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addPublishedYear(YEAR_2001).addPublishedYear(YEAR_2000).score(30).buildIndex();
+        IndexQuery article4 = new ArticleBuilder("4").title("article one").addAuthor(RIZWAN_IDREES).addPublishedYear(YEAR_2002).addPublishedYear(YEAR_2001).addPublishedYear(YEAR_2000).score(40).buildIndex();
 
         elasticsearchTemplate.index(article1);
         elasticsearchTemplate.index(article2);
@@ -79,7 +84,7 @@ public class ElasticsearchTemplateFacetTests {
 
         // given
         String facetName = "fauthors";
-        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withFacet(new TermFacetRequestBuilder(facetName).withFields("authors.untouched").build()).build();
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withFacet(new TermFacetRequestBuilder(facetName).fields("authors.untouched").build()).build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
         // then
@@ -110,7 +115,7 @@ public class ElasticsearchTemplateFacetTests {
         String facetName = "fauthors";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
                 .withFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("title", "four")))
-                .withFacet(new TermFacetRequestBuilder(facetName).applyQueryFilter().withFields("authors.untouched").build()).build();
+                .withFacet(new TermFacetRequestBuilder(facetName).applyQueryFilter().fields("authors.untouched").build()).build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
         // then
@@ -131,12 +136,34 @@ public class ElasticsearchTemplateFacetTests {
     }
 
     @Test
+    public void shouldExcludeTermsFromFacetedAuthorsForGivenQuery() {
+        // given
+        String facetName = "fauthors";
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+                .withFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("title", "four")))
+                .withFacet(new TermFacetRequestBuilder(facetName).applyQueryFilter().fields("authors.untouched").excludeTerms(RIZWAN_IDREES, ARTUR_KONCZAK).build()).build();
+        // when
+        FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
+        // then
+        assertThat(result.getNumberOfElements(), is(equalTo(3)));
+
+        TermResult facet = (TermResult) result.getFacet(facetName);
+
+        assertThat(facet.getTerms().size(), is(1));
+
+        Term term = facet.getTerms().get(0);
+        assertThat(term.getTerm(), is(MOHSIN_HUSEN));
+        assertThat(term.getCount(), is(1));
+
+    }
+
+    @Test
     public void shouldReturnFacetedAuthorsForGivenQueryOrderedByTerm() {
 
         // given
         String facetName = "fauthors";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-                .withFacet(new TermFacetRequestBuilder(facetName).withFields("authors.untouched").ascTerm().build()).build();
+                .withFacet(new TermFacetRequestBuilder(facetName).fields("authors.untouched").ascTerm().build()).build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
         // then
@@ -167,7 +194,7 @@ public class ElasticsearchTemplateFacetTests {
         // given
         String facetName = "fauthors";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-                .withFacet(new TermFacetRequestBuilder(facetName).withFields("authors.untouched").ascCount().build()).build();
+                .withFacet(new TermFacetRequestBuilder(facetName).fields("authors.untouched").ascCount().build()).build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
         // then
@@ -197,7 +224,7 @@ public class ElasticsearchTemplateFacetTests {
         // given
         String facetName = "fyears";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-                .withFacet(new TermFacetRequestBuilder(facetName).withFields("publishedYears").descCount().build()).build();
+                .withFacet(new TermFacetRequestBuilder(facetName).fields("publishedYears").descCount().build()).build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
         // then
@@ -227,7 +254,7 @@ public class ElasticsearchTemplateFacetTests {
         // given
         String facetName = "fyears";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-                .withFacet(new TermFacetRequestBuilder(facetName).withFields("publishedYears", "authors.untouched").ascTerm().build()).build();
+                .withFacet(new TermFacetRequestBuilder(facetName).fields("publishedYears", "authors.untouched").ascTerm().build()).build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
         // then
@@ -274,8 +301,8 @@ public class ElasticsearchTemplateFacetTests {
         String numberFacetName = "fAuthors";
         String stringFacetName = "fyears";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-                .withFacet(new TermFacetRequestBuilder(numberFacetName).withFields("publishedYears").ascTerm().build())
-                .withFacet(new TermFacetRequestBuilder(stringFacetName).withFields("authors.untouched").ascTerm().build())
+                .withFacet(new TermFacetRequestBuilder(numberFacetName).fields("publishedYears").ascTerm().build())
+                .withFacet(new TermFacetRequestBuilder(stringFacetName).fields("authors.untouched").ascTerm().build())
                 .build();
         // when
         FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
@@ -344,6 +371,120 @@ public class ElasticsearchTemplateFacetTests {
         term = facet.getTerms().get(2);
         assertThat(term.getTerm(), is(Integer.toString(YEAR_2002)));
         assertThat(term.getCount(), is(1));
+    }
+
+    @Test
+    public void shouldFilterResultByRegexForGivenQuery() {
+        // given
+        String facetName = "regex_authors";
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+                .withFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("title", "four")))
+                .withFacet(new TermFacetRequestBuilder(facetName).applyQueryFilter().fields("authors.untouched").regex("Art.*").build()).build();
+        // when
+        FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
+        // then
+        assertThat(result.getNumberOfElements(), is(equalTo(3)));
+
+        TermResult facet = (TermResult) result.getFacet(facetName);
+
+        assertThat(facet.getTerms().size(), is(1));
+
+        Term term = facet.getTerms().get(0);
+        assertThat(term.getTerm(), is(ARTUR_KONCZAK));
+        assertThat(term.getCount(), is(2));
+
+    }
+
+    @Test
+    public void shouldReturnAllTermsForGivenQuery() {
+        // given
+        String facetName = "all_authors";
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+                .withFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("title", "four")))
+                .withFacet(new TermFacetRequestBuilder(facetName).applyQueryFilter().fields("authors.untouched").allTerms().build()).build();
+        // when
+        FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
+        // then
+        assertThat(result.getNumberOfElements(), is(equalTo(3)));
+
+        TermResult facet = (TermResult) result.getFacet(facetName);
+
+        assertThat(facet.getTerms().size(), is(4));
+    }
+
+
+    @Test
+    public void shouldReturnRangeFacetForGivenQuery() {
+        // given
+        String facetName = "rangeYears";
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+                .withFacet(
+                        new RangeFacetRequestBuilder(facetName).field("publishedYears")
+                                .to(YEAR_2000).range(YEAR_2000, YEAR_2002).from(YEAR_2002).build()
+                ).build();
+        // when
+        FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
+        // then
+        assertThat(result.getNumberOfElements(), is(equalTo(4)));
+
+        RangeResult facet = (RangeResult) result.getFacet(facetName);
+        assertThat(facet.getRanges().size(), is(equalTo(3)));
+
+
+        Range range = facet.getRanges().get(0);
+        assertThat(range.getFrom(), nullValue());
+        assertThat(range.getTo(), is((double) YEAR_2000));
+        assertThat(range.getCount(), is(0L));
+        assertThat(range.getTotal(), is(0.0));
+
+        range = facet.getRanges().get(1);
+        assertThat(range.getFrom(), is((double) YEAR_2000));
+        assertThat(range.getTo(), is((double) YEAR_2002));
+        assertThat(range.getCount(), is(3L));
+        assertThat(range.getTotal(), is(6000.0));
+
+        range = facet.getRanges().get(2);
+        assertThat(range.getFrom(), is((double) YEAR_2002));
+        assertThat(range.getTo(), nullValue());
+        assertThat(range.getCount(), is(1L));
+        assertThat(range.getTotal(), is(2002.0));
+    }
+
+    @Test
+    public void shouldReturnKeyValueRangeFacetForGivenQuery() {
+        // given
+        String facetName = "rangeScoreOverYears";
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+                .withFacet(
+                        new RangeFacetRequestBuilder(facetName).fields("publishedYears", "score")
+                                .to(YEAR_2000).range(YEAR_2000, YEAR_2002).from(YEAR_2002).build()
+                ).build();
+        // when
+        FacetedPage<Article> result = elasticsearchTemplate.queryForPage(searchQuery, Article.class);
+        // then
+        assertThat(result.getNumberOfElements(), is(equalTo(4)));
+
+        RangeResult facet = (RangeResult) result.getFacet(facetName);
+        assertThat(facet.getRanges().size(), is(equalTo(3)));
+
+
+        Range range = facet.getRanges().get(0);
+        assertThat(range.getFrom(), nullValue());
+        assertThat(range.getTo(), is((double) YEAR_2000));
+        assertThat(range.getCount(), is(0L));
+        assertThat(range.getTotal(), is(0.0));
+
+        range = facet.getRanges().get(1);
+        assertThat(range.getFrom(), is((double) YEAR_2000));
+        assertThat(range.getTo(), is((double) YEAR_2002));
+        assertThat(range.getCount(), is(3L));
+        assertThat(range.getTotal(), is(90.0));
+
+        range = facet.getRanges().get(2);
+        assertThat(range.getFrom(), is((double) YEAR_2002));
+        assertThat(range.getTo(), nullValue());
+        assertThat(range.getCount(), is(1L));
+        assertThat(range.getTotal(), is(40.0));
     }
 
 

@@ -47,6 +47,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.facet.FacetMapper;
+import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.facet.FacetResult;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
