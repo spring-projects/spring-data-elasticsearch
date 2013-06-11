@@ -43,7 +43,6 @@ public class TransportClientBeanDefinitionParser extends AbstractBeanDefinitionP
 	private void setClusterNodes(Element element, BeanDefinitionBuilder builder) {
 		builder.addPropertyValue("clusterNodes", element.getAttribute("cluster-nodes"));
         builder.addPropertyValue("clusterName", element.getAttribute("cluster-name"));
-        builder.addPropertyValue("enableHttp", Boolean.valueOf(element.getAttribute("http-enabled")));
         builder.addPropertyValue("clientTransportSniff", Boolean.valueOf(element.getAttribute("client-transport-sniff")));
 	}
 
