@@ -39,7 +39,7 @@ public class FacetMapper {
     private static FacetResult parseRange(RangeFacet facet) {
         List<Range> entries = new ArrayList<Range>();
         for (RangeFacet.Entry entry : facet.getEntries()) {
-            entries.add(new Range(entry.getFrom() == Double.NEGATIVE_INFINITY ? null : entry.getFrom(), entry.getTo() == Double.POSITIVE_INFINITY ? null : entry.getTo(), entry.getCount(), entry.getTotal()));
+            entries.add(new Range(entry.getFrom() == Double.NEGATIVE_INFINITY ? null : entry.getFrom(), entry.getTo() == Double.POSITIVE_INFINITY ? null : entry.getTo(), entry.getCount(), entry.getTotal(), entry.getTotalCount(), entry.getMin(), entry.getMax()));
         }
         return new RangeResult(facet.getName(), entries);
     }
