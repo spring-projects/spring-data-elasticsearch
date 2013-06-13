@@ -34,7 +34,9 @@ import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.facet.Facet;
 import org.elasticsearch.search.facet.FacetBuilder;
@@ -180,8 +182,21 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public <T> Page<T> queryForPage(CriteriaQuery criteriaQuery, Class<T> clazz) {
-        QueryBuilder query = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
-        SearchResponse response = prepareSearch(criteriaQuery, clazz).setQuery(query).execute().actionGet();
+        QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
+        FilterBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
+        SearchRequestBuilder searchRequestBuilder = prepareSearch(criteriaQuery, clazz);
+
+        if (elasticsearchQuery != null) {
+            searchRequestBuilder.setQuery(elasticsearchQuery);
+        } else {
+            searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
+        }
+
+        if (elasticsearchFilter != null)
+            searchRequestBuilder.setFilter(elasticsearchFilter);
+
+        SearchResponse response = searchRequestBuilder
+                .execute().actionGet();
         return mapResults(response, clazz, criteriaQuery.getPageable());
     }
 

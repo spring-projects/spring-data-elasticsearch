@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
+import org.springframework.data.elasticsearch.core.geo.GeoLocation;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
@@ -71,6 +72,11 @@ class MappingBuilder {
             if (isEntity(field)) {
                 mapEntity(xContentBuilder, field.getType(), false, EMPTY, field.getName());
             }
+
+            if(field.getType() == GeoLocation.class) {
+                applyGeoLocationFieldMapping(xContentBuilder, field);
+            }            
+            
             Field singleField = field.getAnnotation(Field.class);
             MultiField multiField = field.getAnnotation(MultiField.class);
             if (isRootObject && singleField != null && isIdField(field, idFieldName)) {
@@ -86,6 +92,12 @@ class MappingBuilder {
             xContentBuilder.endObject().endObject();
         }
 
+    }
+
+    private static void applyGeoLocationFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
+        xContentBuilder.startObject(field.getName());
+        xContentBuilder.field("type", "geo_point")
+            .endObject();
     }
 
     private static void applyDefaultIdFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field)
