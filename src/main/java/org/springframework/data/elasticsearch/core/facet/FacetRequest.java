@@ -1,4 +1,4 @@
-package org.springframework.data.elasticsearch.core.query;
+package org.springframework.data.elasticsearch.core.facet;
 
 import org.elasticsearch.search.facet.FacetBuilder;
 

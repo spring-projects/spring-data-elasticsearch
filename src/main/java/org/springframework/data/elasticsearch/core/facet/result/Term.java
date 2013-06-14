@@ -1,4 +1,4 @@
-package org.springframework.data.elasticsearch.core.facet;
+package org.springframework.data.elasticsearch.core.facet.result;
 
 /**
  * Single term

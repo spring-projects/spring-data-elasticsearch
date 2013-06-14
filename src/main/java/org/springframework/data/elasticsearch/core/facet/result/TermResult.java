@@ -1,6 +1,7 @@
-package org.springframework.data.elasticsearch.core.facet;
+package org.springframework.data.elasticsearch.core.facet.result;
 
-import org.springframework.util.Assert;
+import org.springframework.data.elasticsearch.core.facet.AbstactFacetResult;
+import org.springframework.data.elasticsearch.core.facet.FacetType;
 
 import java.util.List;
 

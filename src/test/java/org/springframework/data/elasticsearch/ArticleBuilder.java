@@ -1,10 +1,6 @@
 package org.springframework.data.elasticsearch;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
-
-import java.util.ArrayList;
 
 /**
  * Simple type to test facets
@@ -32,11 +28,16 @@ public class ArticleBuilder {
         return this;
     }
 
+    public ArticleBuilder score(int score) {
+        resutl.setScore(score);
+        return this;
+    }
+
     public Article build() {
         return resutl;
     }
 
-    public IndexQuery buildIndex(){
+    public IndexQuery buildIndex() {
         IndexQuery indexQuery = new IndexQuery();
         indexQuery.setId(resutl.getId());
         indexQuery.setObject(resutl);

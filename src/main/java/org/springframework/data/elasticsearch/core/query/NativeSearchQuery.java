@@ -19,6 +19,7 @@ import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.facet.FacetBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
+import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
 import java.util.ArrayList;
 import java.util.List;
