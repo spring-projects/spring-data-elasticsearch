@@ -15,17 +15,27 @@
  */
 package org.springframework.data.elasticsearch.core.geo;
 
-import java.util.List;
-
 /**
- * Geo polygon used for #{@link org.springframework.data.elasticsearch.core.query.Criteria}.
+ * Geo bbox used for #{@link org.springframework.data.elasticsearch.core.query.Criteria}.
  *
  * @author Franck Marchand
  */
-public class GeoPolygon {
-    private List<GeoLocation> points;
+public class GeoEnvelope {
 
-    public GeoPolygon(List<GeoLocation> points) {
-        this.points = points;
+    private GeoPoint topLeft;
+    private GeoPoint bottomRight;
+
+    public GeoEnvelope(GeoPoint topLeft, GeoPoint bottomRight) {
+        this.topLeft = topLeft;
+        this.bottomRight = bottomRight;
     }
+
+    public GeoPoint getTopLeft() {
+        return topLeft;
+    }
+
+    public GeoPoint getBottomRight() {
+        return bottomRight;
+    }
+
 }

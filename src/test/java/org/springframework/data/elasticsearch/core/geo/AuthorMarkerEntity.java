@@ -13,23 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch;
+package org.springframework.data.elasticsearch.core.geo;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.geo.GeoLocation;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
 /**
  * @author Franck Marchand
  */
-@Document(indexName = "test-geo-index", type = "test-geo-type")
-public class GeoAuthor {
+@Document(indexName = "test-geo-index", type = "geo-class-point-type", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+public class AuthorMarkerEntity {
 
     @Id
     private String id;
     private String name;
 
-    private GeoLocation location;
+    private GeoPoint location;
+
+    private AuthorMarkerEntity(){
+    }
+
+    public AuthorMarkerEntity(String id){
+        this.id = id;
+    }
 
     public String getId() {
         return id;
@@ -47,11 +54,11 @@ public class GeoAuthor {
         this.name = name;
     }
 
-    public GeoLocation getLocation() {
+    public GeoPoint getLocation() {
         return location;
     }
 
-    public void setLocation(GeoLocation location) {
+    public void setLocation(GeoPoint location) {
         this.location = location;
     }
 }

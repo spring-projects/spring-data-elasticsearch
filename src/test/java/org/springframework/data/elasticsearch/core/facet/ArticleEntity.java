@@ -1,4 +1,4 @@
-package org.springframework.data.elasticsearch;
+package org.springframework.data.elasticsearch.core.facet;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
@@ -15,7 +15,7 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.Strin
  * Simple type to test facets
  */
 @Document(indexName = "articles", type = "article", shards = 1, replicas = 0, refreshInterval = "-1")
-public class Article {
+public class ArticleEntity {
 
     @Id
     private String id;
@@ -36,11 +36,11 @@ public class Article {
 
     private int score;
 
-    public Article() {
+    private ArticleEntity(){
 
     }
 
-    public Article(String id) {
+    public ArticleEntity(String id) {
         this.id = id;
     }
 

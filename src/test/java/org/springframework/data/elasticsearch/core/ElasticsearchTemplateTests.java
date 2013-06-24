@@ -27,11 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.GeoAuthor;
 import org.springframework.data.elasticsearch.SampleEntity;
 import org.springframework.data.elasticsearch.SampleMappingEntity;
-import org.springframework.data.elasticsearch.core.geo.GeoBBox;
-import org.springframework.data.elasticsearch.core.geo.GeoLocation;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -46,7 +43,8 @@ import static org.elasticsearch.index.query.QueryBuilders.fieldQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Rizwan Idrees
@@ -65,12 +63,6 @@ public class ElasticsearchTemplateTests {
         elasticsearchTemplate.deleteIndex(SampleEntity.class);
         elasticsearchTemplate.createIndex(SampleEntity.class);
         elasticsearchTemplate.refresh(SampleEntity.class, true);
-
-        elasticsearchTemplate.deleteIndex(GeoAuthor.class);
-        elasticsearchTemplate.createIndex(GeoAuthor.class);
-        elasticsearchTemplate.refresh(GeoAuthor.class, true);
-
-        elasticsearchTemplate.putMapping(GeoAuthor.class);
     }
 
 	@Test
@@ -725,86 +717,4 @@ public class ElasticsearchTemplateTests {
 		// then
 		assertThat(elasticsearchTemplate.indexExists(clazz), is(false));
 	}
-
-    @Test
-    public void shouldPutMappingForGivenEntityWithGeoLocation()throws Exception{
-        //given
-        Class entity = GeoAuthor.class;
-        elasticsearchTemplate.createIndex(entity);
-        //when
-        assertThat(elasticsearchTemplate.putMapping(entity) , is(true)) ;
-    }
-
-    @Test
-    public void shouldReturnListForGivenCriteriaWithGeoLocation(){
-        //given
-        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
-        //first document
-        String documentId = randomNumeric(5);
-        GeoAuthor geoAuthor1 = new GeoAuthor();
-        geoAuthor1.setId(documentId);
-        geoAuthor1.setName("Franck Marchand");
-        geoAuthor1.setLocation(new GeoLocation(45.7806d, 3.0875d)); // Clermont-Ferrand
-
-        IndexQuery indexQuery1 = new IndexQuery();
-        indexQuery1.setId(documentId);
-        indexQuery1.setObject(geoAuthor1);
-        indexQueries.add(indexQuery1);
-
-        //second document
-        String documentId2 = randomNumeric(5);
-        GeoAuthor geoAuthor2 = new GeoAuthor();
-        geoAuthor2.setId(documentId2);
-        geoAuthor2.setName("Mohsin Husen");
-        geoAuthor2.setLocation(new GeoLocation(51.5171d, 0.1062d)); // London
-
-        IndexQuery indexQuery2 = new IndexQuery();
-        indexQuery2.setId(documentId2);
-        indexQuery2.setObject(geoAuthor2);
-
-        indexQueries.add(indexQuery2);
-
-        //third document
-        String documentId3 = randomNumeric(5);
-        GeoAuthor geoAuthor3 = new GeoAuthor();
-        geoAuthor3.setId(documentId3);
-        geoAuthor3.setName("Rizwan Idrees");
-        geoAuthor3.setLocation(new GeoLocation(51.5171d, 0.1062d)); // London
-
-        IndexQuery indexQuery3 = new IndexQuery();
-        indexQuery3.setId(documentId3);
-        indexQuery3.setObject(geoAuthor3);
-
-        indexQueries.add(indexQuery3);
-        //when
-        elasticsearchTemplate.bulkIndex(indexQueries);
-        elasticsearchTemplate.refresh(GeoAuthor.class, true);
-        //when
-        CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(
-                new Criteria("location").within(new GeoLocation(45.7806d, 3.0875d), "20km"));
-
-
-        List<GeoAuthor> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery,GeoAuthor.class);
-        //then
-        assertThat(geoAuthorsForGeoCriteria.size(),is(1));
-        assertEquals("Franck Marchand", geoAuthorsForGeoCriteria.get(0).getName());
-
-        // query/filter geo distance mixed query
-        CriteriaQuery geoLocationCriteriaQuery2 = new CriteriaQuery(
-                new Criteria("name").is("Mohsin Husen").and("location").within(new GeoLocation(51.5171d, 0.1062d), "20km"));
-        List<GeoAuthor> geoAuthorsForGeoCriteria2 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery2,GeoAuthor.class);
-
-        assertThat(geoAuthorsForGeoCriteria2.size(),is(1));
-        assertEquals("Mohsin Husen", geoAuthorsForGeoCriteria2.get(0).getName());
-
-        // bbox query
-        CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
-                new Criteria("location").bbox(
-                        new GeoBBox(new GeoLocation(53.5171d, 0),
-                                new GeoLocation(49.5171d, 0.2062d))));
-        List<GeoAuthor> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3,GeoAuthor.class);
-
-        assertThat(geoAuthorsForGeoCriteria3.size(),is(2));
-        assertThat(geoAuthorsForGeoCriteria3, containsInAnyOrder(hasProperty("name", equalTo("Mohsin Husen")), hasProperty("name",equalTo("Rizwan Idrees"))));
-    }
 }
