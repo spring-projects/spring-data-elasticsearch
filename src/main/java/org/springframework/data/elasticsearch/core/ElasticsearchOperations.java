@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.elasticsearch.action.update.UpdateResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -157,6 +158,14 @@ public interface ElasticsearchOperations {
 	 * @return returns the document id
 	 */
 	String index(IndexQuery query);
+
+    /**
+     * Partial update of the document
+     *
+     * @param updateQuery
+     * @return
+     */
+    UpdateResponse update(UpdateQuery updateQuery);
 
 	/**
 	 * Bulk index all objects. Will do save or update

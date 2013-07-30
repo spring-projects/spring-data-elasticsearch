@@ -29,6 +29,8 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.mlt.MoreLikeThisRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.collect.MapBuilder;
@@ -99,7 +101,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public <T> boolean createIndex(Class<T> clazz) {
-        ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
         return createIndexIfNotCreated(clazz);
     }
 
@@ -206,6 +207,25 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     public String index(IndexQuery query) {
         return prepareIndex(query).execute().actionGet().getId();
     }
+
+    @Override
+    public UpdateResponse update(UpdateQuery query) {
+        String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName() : getPersistentEntityFor(query.getClazz()).getIndexName();
+        String type = isNotBlank(query.getType()) ? query.getType() : getPersistentEntityFor(query.getClazz()).getIndexType();
+        Assert.notNull(indexName, "No index defined for Query");
+        Assert.notNull(type, "No type define for Query");
+        Assert.notNull(query.getId(), "No Id define for Query");
+        Assert.notNull(query.getIndexRequest(), "No IndexRequest define for Query");
+        UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
+        if(query.DoUpsert()){
+            updateRequestBuilder.setDocAsUpsert(true)
+                    .setUpsertRequest(query.getIndexRequest()).setDoc(query.getIndexRequest());
+        } else {
+            updateRequestBuilder.setDoc(query.getIndexRequest());
+        }
+        return updateRequestBuilder.execute().actionGet();
+    }
+
 
     @Override
     public void bulkIndex(List<IndexQuery> queries) {

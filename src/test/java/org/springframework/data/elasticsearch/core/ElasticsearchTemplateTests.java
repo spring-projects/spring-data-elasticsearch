@@ -15,7 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
@@ -715,5 +717,65 @@ public class ElasticsearchTemplateTests {
 		// then
 		assertThat(elasticsearchTemplate.indexExists(clazz), is(false));
 	}
+
+    @Test
+    public void shouldDoPartialUpdateForExistingDocument() {
+        //given
+        String documentId = randomNumeric(5);
+        String messageBeforeUpdate = "some test message";
+        String messageAfterUpdate = "test message";
+
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage(messageBeforeUpdate);
+        sampleEntity.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId(documentId);
+        indexQuery.setObject(sampleEntity);
+
+        elasticsearchTemplate.index(indexQuery);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+        IndexRequest indexRequest = new IndexRequest();
+        indexRequest.source("message", messageAfterUpdate);
+        UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId)
+                .withClass(SampleEntity.class).withIndexRequest(indexRequest).build();
+        // when
+        elasticsearchTemplate.update(updateQuery);
+        //then
+        GetQuery getQuery = new GetQuery();
+        getQuery.setId(documentId);
+        SampleEntity indexedEntity = elasticsearchTemplate.queryForObject(getQuery, SampleEntity.class);
+        assertThat(indexedEntity.getMessage(), is(messageAfterUpdate));
+    }
+
+    @Test(expected = DocumentMissingException.class)
+    public void shouldThrowExceptionIfDocumentDoesNotExistWhileDoingPartialUpdate(){
+        // when
+        IndexRequest indexRequest = new IndexRequest();
+        UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5))
+                .withClass(SampleEntity.class).withIndexRequest(indexRequest).build();
+        elasticsearchTemplate.update(updateQuery);
+    }
+
+    @Test
+    public void shouldDoUpsertIfDocumentDoesNotExist(){
+        //given
+        String documentId = randomNumeric(5);
+        String message = "test message";
+        IndexRequest indexRequest = new IndexRequest();
+        indexRequest.source("message", message);
+        UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId)
+                .withDoUpsert(true).withClass(SampleEntity.class)
+                .withIndexRequest(indexRequest).build();
+        //when
+        elasticsearchTemplate.update(updateQuery);
+        //then
+        GetQuery getQuery = new GetQuery();
+        getQuery.setId(documentId);
+        SampleEntity indexedEntity = elasticsearchTemplate.queryForObject(getQuery, SampleEntity.class);
+        assertThat(indexedEntity.getMessage(), is(message));
+    }
 
 }
