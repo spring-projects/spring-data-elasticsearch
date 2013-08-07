@@ -19,6 +19,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.Before;
@@ -27,7 +28,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.SampleEntity;
@@ -44,6 +44,7 @@ import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
 import static org.elasticsearch.index.query.FilterBuilders.termFilter;
 import static org.elasticsearch.index.query.QueryBuilders.fieldQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
@@ -776,6 +777,56 @@ public class ElasticsearchTemplateTests {
         getQuery.setId(documentId);
         SampleEntity indexedEntity = elasticsearchTemplate.queryForObject(getQuery, SampleEntity.class);
         assertThat(indexedEntity.getMessage(), is(message));
+    }
+
+    @Test
+    public void shouldReturnHighlightedFieldsForGivenQueryAndFields(){
+
+        //given
+        String documentId = randomNumeric(5);
+        String actualMessage = "some test message";
+        String highlightedMessage = "some <em>test</em> message";
+
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage(actualMessage);
+        sampleEntity.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId(documentId);
+        indexQuery.setObject(sampleEntity);
+
+        elasticsearchTemplate.index(indexQuery);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(termQuery("message", "test"))
+                .withHighlightFields(new HighlightBuilder.Field("message"))
+                .build();
+
+        Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, new ResultsMapper<SampleEntity>() {
+            @Override
+            public FacetedPage<SampleEntity> mapResults(SearchResponse response) {
+                List<SampleEntity> chunk = new ArrayList<SampleEntity>();
+                for (SearchHit searchHit : response.getHits()) {
+                    if (response.getHits().getHits().length <= 0) {
+                        return null;
+                    }
+                    SampleEntity user = new SampleEntity();
+                    user.setId(searchHit.getId());
+                    user.setMessage((String) searchHit.getSource().get("message"));
+                    user.setHighlightedMessage(searchHit.getHighlightFields().get("message").fragments()[0].toString());
+                    chunk.add(user);
+                }
+                if(chunk.size() > 0){
+                    return new FacetedPageImpl<SampleEntity>(chunk);
+                }
+                return null;
+            }
+        });
+
+        assertThat(sampleEntities.getContent().get(0).getHighlightedMessage(), is(highlightedMessage));
+
     }
 
 }

@@ -40,6 +40,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.facet.Facet;
 import org.elasticsearch.search.facet.FacetBuilder;
+import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -385,6 +386,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                     facet.facetFilter(searchQuery.getFilter());
                 }
                 searchRequest.addFacet(facet);
+            }
+        }
+
+        if(searchQuery.getHighlightFields() != null) {
+            for(HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()){
+                searchRequest.addHighlightedField(highlightField);
             }
         }
 
