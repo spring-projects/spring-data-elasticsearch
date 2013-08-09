@@ -42,9 +42,7 @@ import java.util.List;
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
 import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
 import static org.elasticsearch.index.query.FilterBuilders.termFilter;
-import static org.elasticsearch.index.query.QueryBuilders.fieldQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
@@ -829,4 +827,26 @@ public class ElasticsearchTemplateTests {
 
     }
 
+    @Test
+    public void shouldDeleteSpecifiedTypeFromAnIndex() {
+        // given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId(documentId);
+        indexQuery.setObject(sampleEntity);
+
+        elasticsearchTemplate.index(indexQuery);
+
+        // when
+        elasticsearchTemplate.deleteType("test-index","test-type");
+
+        //then
+        boolean typeExists = elasticsearchTemplate.typeExists("test-index", "test-type");
+        assertThat(typeExists, is(false));
+    }
 }

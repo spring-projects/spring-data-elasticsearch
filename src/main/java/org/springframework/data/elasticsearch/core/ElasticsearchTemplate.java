@@ -19,6 +19,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -253,12 +254,27 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     @Override
+    public boolean typeExists(String index, String type) {
+        return client.admin().cluster().prepareState().execute().actionGet()
+                .getState().metaData().index(index).mappings().containsKey(type);
+    }
+
+    @Override
     public <T> boolean deleteIndex(Class<T> clazz) {
         String indexName = getPersistentEntityFor(clazz).getIndexName();
         if (indexExists(indexName)) {
             return client.admin().indices().delete(new DeleteIndexRequest(indexName)).actionGet().isAcknowledged();
         }
         return false;
+    }
+
+    @Override
+    public void deleteType(String index, String type){
+        Map mappings = client.admin().cluster().prepareState().execute().actionGet()
+                .getState().metaData().index(index).mappings();
+        if (mappings.containsKey(type)) {
+            client.admin().indices().deleteMapping(new DeleteMappingRequest(index).type(type)).actionGet();
+        }
     }
 
     @Override
