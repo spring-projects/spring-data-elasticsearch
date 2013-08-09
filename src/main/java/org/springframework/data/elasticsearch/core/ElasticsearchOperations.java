@@ -202,6 +202,13 @@ public interface ElasticsearchOperations {
 	<T> void delete(DeleteQuery query, Class<T> clazz);
 
 	/**
+     * Delete all records matching the query
+     *
+     * @param query
+     */
+    void delete(DeleteQuery query);
+
+	/**
 	 * Deletes an index for given entity
 	 *
 	 * @param clazz

@@ -849,4 +849,31 @@ public class ElasticsearchTemplateTests {
         boolean typeExists = elasticsearchTemplate.typeExists("test-index", "test-type");
         assertThat(typeExists, is(false));
     }
+
+    @Test
+    public void shouldDeleteDocumentBySpecifiedTypeUsingDeleteQuery(){
+        // given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId(documentId);
+        indexQuery.setObject(sampleEntity);
+
+        elasticsearchTemplate.index(indexQuery);
+        // when
+        DeleteQuery deleteQuery = new DeleteQuery();
+        deleteQuery.setQuery(fieldQuery("id", documentId));
+        deleteQuery.setIndex("test-index");
+        deleteQuery.setType("test-type");
+        elasticsearchTemplate.delete(deleteQuery);
+        // then
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(fieldQuery("id", documentId)).build();
+        Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+        assertThat(sampleEntities.getTotalElements(), equalTo(0L));
+    }
+
 }

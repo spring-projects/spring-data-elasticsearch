@@ -296,6 +296,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     @Override
+    public void delete(DeleteQuery deleteQuery) {
+        Assert.notNull(deleteQuery.getIndex(), "No index defined for Query");
+        Assert.notNull(deleteQuery.getType(), "No type define for Query");
+        client.prepareDeleteByQuery(deleteQuery.getIndex()).setTypes(deleteQuery.getType())
+                .setQuery(deleteQuery.getQuery()).execute().actionGet();
+    }
+
+    @Override
     public String scan(SearchQuery searchQuery, long scrollTimeInMillis, boolean noFields) {
         Assert.notNull(searchQuery.getIndices(), "No index defined for Query");
         Assert.notNull(searchQuery.getTypes(), "No type define for Query");
