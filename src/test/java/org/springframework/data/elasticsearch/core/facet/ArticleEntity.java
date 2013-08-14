@@ -14,7 +14,7 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.Strin
 /**
  * Simple type to test facets
  */
-@Document(indexName = "articles", type = "article", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "articles", type = "article", shards = 1, replicas = 0, refreshInterval = "-1", indexStoreType = "memory")
 public class ArticleEntity {
 
     @Id

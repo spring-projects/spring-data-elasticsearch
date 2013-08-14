@@ -15,8 +15,11 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.Before;
@@ -39,12 +42,9 @@ import java.util.List;
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
 import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
 import static org.elasticsearch.index.query.FilterBuilders.termFilter;
-import static org.elasticsearch.index.query.QueryBuilders.fieldQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * @author Rizwan Idrees
@@ -717,4 +717,164 @@ public class ElasticsearchTemplateTests {
 		// then
 		assertThat(elasticsearchTemplate.indexExists(clazz), is(false));
 	}
+
+    @Test
+    public void shouldDoPartialUpdateForExistingDocument() {
+        //given
+        String documentId = randomNumeric(5);
+        String messageBeforeUpdate = "some test message";
+        String messageAfterUpdate = "test message";
+
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage(messageBeforeUpdate);
+        sampleEntity.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId(documentId);
+        indexQuery.setObject(sampleEntity);
+
+        elasticsearchTemplate.index(indexQuery);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+        IndexRequest indexRequest = new IndexRequest();
+        indexRequest.source("message", messageAfterUpdate);
+        UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId)
+                .withClass(SampleEntity.class).withIndexRequest(indexRequest).build();
+        // when
+        elasticsearchTemplate.update(updateQuery);
+        //then
+        GetQuery getQuery = new GetQuery();
+        getQuery.setId(documentId);
+        SampleEntity indexedEntity = elasticsearchTemplate.queryForObject(getQuery, SampleEntity.class);
+        assertThat(indexedEntity.getMessage(), is(messageAfterUpdate));
+    }
+
+    @Test(expected = DocumentMissingException.class)
+    public void shouldThrowExceptionIfDocumentDoesNotExistWhileDoingPartialUpdate(){
+        // when
+        IndexRequest indexRequest = new IndexRequest();
+        UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5))
+                .withClass(SampleEntity.class).withIndexRequest(indexRequest).build();
+        elasticsearchTemplate.update(updateQuery);
+    }
+
+    @Test
+    public void shouldDoUpsertIfDocumentDoesNotExist(){
+        //given
+        String documentId = randomNumeric(5);
+        String message = "test message";
+        IndexRequest indexRequest = new IndexRequest();
+        indexRequest.source("message", message);
+        UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId)
+                .withDoUpsert(true).withClass(SampleEntity.class)
+                .withIndexRequest(indexRequest).build();
+        //when
+        elasticsearchTemplate.update(updateQuery);
+        //then
+        GetQuery getQuery = new GetQuery();
+        getQuery.setId(documentId);
+        SampleEntity indexedEntity = elasticsearchTemplate.queryForObject(getQuery, SampleEntity.class);
+        assertThat(indexedEntity.getMessage(), is(message));
+    }
+
+    @Test
+    public void shouldReturnHighlightedFieldsForGivenQueryAndFields(){
+
+        //given
+        String documentId = randomNumeric(5);
+        String actualMessage = "some test message";
+        String highlightedMessage = "some <em>test</em> message";
+
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage(actualMessage);
+        sampleEntity.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId(documentId);
+        indexQuery.setObject(sampleEntity);
+
+        elasticsearchTemplate.index(indexQuery);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(termQuery("message", "test"))
+                .withHighlightFields(new HighlightBuilder.Field("message"))
+                .build();
+
+        Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, new ResultsMapper<SampleEntity>() {
+            @Override
+            public FacetedPage<SampleEntity> mapResults(SearchResponse response) {
+                List<SampleEntity> chunk = new ArrayList<SampleEntity>();
+                for (SearchHit searchHit : response.getHits()) {
+                    if (response.getHits().getHits().length <= 0) {
+                        return null;
+                    }
+                    SampleEntity user = new SampleEntity();
+                    user.setId(searchHit.getId());
+                    user.setMessage((String) searchHit.getSource().get("message"));
+                    user.setHighlightedMessage(searchHit.getHighlightFields().get("message").fragments()[0].toString());
+                    chunk.add(user);
+                }
+                if(chunk.size() > 0){
+                    return new FacetedPageImpl<SampleEntity>(chunk);
+                }
+                return null;
+            }
+        });
+
+        assertThat(sampleEntities.getContent().get(0).getHighlightedMessage(), is(highlightedMessage));
+
+    }
+
+    @Test
+    public void shouldDeleteSpecifiedTypeFromAnIndex() {
+        // given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId(documentId);
+        indexQuery.setObject(sampleEntity);
+
+        elasticsearchTemplate.index(indexQuery);
+
+        // when
+        elasticsearchTemplate.deleteType("test-index","test-type");
+
+        //then
+        boolean typeExists = elasticsearchTemplate.typeExists("test-index", "test-type");
+        assertThat(typeExists, is(false));
+    }
+
+    @Test
+    public void shouldDeleteDocumentBySpecifiedTypeUsingDeleteQuery(){
+        // given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId(documentId);
+        indexQuery.setObject(sampleEntity);
+
+        elasticsearchTemplate.index(indexQuery);
+        // when
+        DeleteQuery deleteQuery = new DeleteQuery();
+        deleteQuery.setQuery(fieldQuery("id", documentId));
+        deleteQuery.setIndex("test-index");
+        deleteQuery.setType("test-type");
+        elasticsearchTemplate.delete(deleteQuery);
+        // then
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(fieldQuery("id", documentId)).build();
+        Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+        assertThat(sampleEntities.getTotalElements(), equalTo(0L));
+    }
+
 }

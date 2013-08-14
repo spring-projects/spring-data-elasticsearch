@@ -19,6 +19,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -29,6 +30,8 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.mlt.MoreLikeThisRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.collect.MapBuilder;
@@ -40,6 +43,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.facet.Facet;
 import org.elasticsearch.search.facet.FacetBuilder;
+import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -101,7 +105,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public <T> boolean createIndex(Class<T> clazz) {
-        ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
         return createIndexIfNotCreated(clazz);
     }
 
@@ -228,6 +231,25 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     @Override
+    public UpdateResponse update(UpdateQuery query) {
+        String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName() : getPersistentEntityFor(query.getClazz()).getIndexName();
+        String type = isNotBlank(query.getType()) ? query.getType() : getPersistentEntityFor(query.getClazz()).getIndexType();
+        Assert.notNull(indexName, "No index defined for Query");
+        Assert.notNull(type, "No type define for Query");
+        Assert.notNull(query.getId(), "No Id define for Query");
+        Assert.notNull(query.getIndexRequest(), "No IndexRequest define for Query");
+        UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
+        if(query.DoUpsert()){
+            updateRequestBuilder.setDocAsUpsert(true)
+                    .setUpsertRequest(query.getIndexRequest()).setDoc(query.getIndexRequest());
+        } else {
+            updateRequestBuilder.setDoc(query.getIndexRequest());
+        }
+        return updateRequestBuilder.execute().actionGet();
+    }
+
+
+    @Override
     public void bulkIndex(List<IndexQuery> queries) {
         BulkRequestBuilder bulkRequest = client.prepareBulk();
         for (IndexQuery query : queries) {
@@ -252,12 +274,27 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     @Override
+    public boolean typeExists(String index, String type) {
+        return client.admin().cluster().prepareState().execute().actionGet()
+                .getState().metaData().index(index).mappings().containsKey(type);
+    }
+
+    @Override
     public <T> boolean deleteIndex(Class<T> clazz) {
         String indexName = getPersistentEntityFor(clazz).getIndexName();
         if (indexExists(indexName)) {
             return client.admin().indices().delete(new DeleteIndexRequest(indexName)).actionGet().isAcknowledged();
         }
         return false;
+    }
+
+    @Override
+    public void deleteType(String index, String type){
+        Map mappings = client.admin().cluster().prepareState().execute().actionGet()
+                .getState().metaData().index(index).mappings();
+        if (mappings.containsKey(type)) {
+            client.admin().indices().deleteMapping(new DeleteMappingRequest(index).type(type)).actionGet();
+        }
     }
 
     @Override
@@ -275,6 +312,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     public <T> void delete(DeleteQuery deleteQuery, Class<T> clazz) {
         ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
         client.prepareDeleteByQuery(persistentEntity.getIndexName()).setTypes(persistentEntity.getIndexType())
+                .setQuery(deleteQuery.getQuery()).execute().actionGet();
+    }
+
+    @Override
+    public void delete(DeleteQuery deleteQuery) {
+        Assert.notNull(deleteQuery.getIndex(), "No index defined for Query");
+        Assert.notNull(deleteQuery.getType(), "No type define for Query");
+        client.prepareDeleteByQuery(deleteQuery.getIndex()).setTypes(deleteQuery.getType())
                 .setQuery(deleteQuery.getQuery()).execute().actionGet();
     }
 
@@ -385,6 +430,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                     facet.facetFilter(searchQuery.getFilter());
                 }
                 searchRequest.addFacet(facet);
+            }
+        }
+
+        if(searchQuery.getHighlightFields() != null) {
+            for(HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()){
+                searchRequest.addHighlightedField(highlightField);
             }
         }
 

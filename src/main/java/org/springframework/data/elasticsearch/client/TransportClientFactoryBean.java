@@ -42,7 +42,6 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
     private static final Logger logger = LoggerFactory.getLogger(TransportClientFactoryBean.class);
     private String clusterNodes;
     private String clusterName;
-    private Boolean enableHttp;
     private Boolean clientTransportSniff;
     private TransportClient client;
     private Properties properties;
@@ -102,7 +101,6 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
         return settingsBuilder()
                 .put("cluster.name", clusterName)
                 .put("client.transport.sniff", clientTransportSniff)
-                .put("http.enabled", enableHttp)
                 .build();
     }
 
@@ -112,10 +110,6 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
     public void setClusterName(String clusterName) {
         this.clusterName = clusterName;
-    }
-
-    public void setEnableHttp(Boolean enableHttp) {
-        this.enableHttp = enableHttp;
     }
 
     public void setClientTransportSniff(Boolean clientTransportSniff) {

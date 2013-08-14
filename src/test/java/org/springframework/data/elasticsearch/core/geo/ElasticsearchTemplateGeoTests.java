@@ -77,7 +77,7 @@ public class ElasticsearchTemplateGeoTests {
         double[] latLonArray = {0.100000, 51.000000};
         String lonLatString = "51.000000, 0.100000";
         String geohash = "u1044k2bd6u";
-        indexQueries.add(new AuthorMarkerAnnotatedEntityBuilder("2").name("Mohsin Husen").location(geohash.substring(3)).additionalLocation(latLonArray).buildIndex());
+        indexQueries.add(new AuthorMarkerAnnotatedEntityBuilder("2").name("Mohsin Husen").location(geohash.substring(0,5)).additionalLocation(latLonArray).buildIndex());
         indexQueries.add(new AuthorMarkerAnnotatedEntityBuilder("1").name("Artur Konczak").location(lonLatString).additionalLocation(latLonArray).buildIndex());
         indexQueries.add(new AuthorMarkerAnnotatedEntityBuilder("3").name("Rizwan Idrees").location(geohash).additionalLocation(latLonArray).buildIndex());
 
@@ -132,9 +132,7 @@ public class ElasticsearchTemplateGeoTests {
         List<AuthorMarkerAnnotatedEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery, AuthorMarkerAnnotatedEntity.class);
 
         //then
-        assertThat(geoAuthorsForGeoCriteria.size(), is(1));
-        //TODO: result should be 3 not 1 - geohash points don't work
-        assertEquals("Artur Konczak", geoAuthorsForGeoCriteria.get(0).getName());
+        assertThat(geoAuthorsForGeoCriteria.size(), is(3));
     }
 
     @Test

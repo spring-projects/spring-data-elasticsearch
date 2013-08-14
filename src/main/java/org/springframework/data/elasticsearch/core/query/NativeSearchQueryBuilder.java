@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.query;
 import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
@@ -39,6 +40,7 @@ public class NativeSearchQueryBuilder {
     private FilterBuilder filterBuilder;
     private SortBuilder sortBuilder;
     private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
+    private HighlightBuilder.Field[] highlightFields;
     private Pageable pageable;
     private String[] indices;
     private String[] types;
@@ -64,6 +66,11 @@ public class NativeSearchQueryBuilder {
         return this;
     }
 
+    public NativeSearchQueryBuilder withHighlightFields(HighlightBuilder.Field... highlightFields){
+        this.highlightFields = highlightFields;
+        return this;
+    }
+
     public NativeSearchQueryBuilder withPageable(Pageable pageable) {
         this.pageable = pageable;
         return this;
@@ -85,7 +92,7 @@ public class NativeSearchQueryBuilder {
     }
 
     public NativeSearchQuery build() {
-        NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilder);
+        NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilder, highlightFields);
         if (pageable != null) {
             nativeSearchQuery.setPageable(pageable);
         }

@@ -34,6 +34,7 @@ public class SampleEntity {
 	private String message;
 	private int rate;
 	private boolean available;
+    private String highlightedMessage;
 	@Version
 	private Long version;
 
@@ -75,6 +76,14 @@ public class SampleEntity {
 
 	public void setAvailable(boolean available) {
 		this.available = available;
+	}
+
+    public String getHighlightedMessage() {
+        return highlightedMessage;
+    }
+
+    public void setHighlightedMessage(String highlightedMessage) {
+        this.highlightedMessage = highlightedMessage;
 	}
 
 	public Long getVersion() {

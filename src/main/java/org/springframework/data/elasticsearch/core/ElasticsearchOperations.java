@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.elasticsearch.action.update.UpdateResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -168,6 +169,14 @@ public interface ElasticsearchOperations {
 	 */
 	String index(IndexQuery query);
 
+    /**
+     * Partial update of the document
+     *
+     * @param updateQuery
+     * @return
+     */
+    UpdateResponse update(UpdateQuery updateQuery);
+
 	/**
 	 * Bulk index all objects. Will do save or update
 	 * 
@@ -203,13 +212,28 @@ public interface ElasticsearchOperations {
 	<T> void delete(DeleteQuery query, Class<T> clazz);
 
 	/**
+     * Delete all records matching the query
+     *
+     * @param query
+     */
+    void delete(DeleteQuery query);
+
+	/**
 	 * Deletes an index for given entity
-	 * 
+	 *
 	 * @param clazz
 	 * @param <T>
 	 * @return
 	 */
 	<T> boolean deleteIndex(Class<T> clazz);
+
+	/**
+     * Deletes a type in an index
+     *
+     * @param index
+     * @param type
+     */
+    void deleteType(String index, String type);
 
 	/**
 	 * check if index is exists
@@ -219,6 +243,15 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	<T> boolean indexExists(Class<T> clazz);
+
+    /**
+     * check if type is exists in an index
+     *
+     * @param index
+     * @param type
+     * @return
+     */
+     boolean typeExists(String index, String type);
 
 	/**
 	 * refresh the index
