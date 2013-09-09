@@ -3,8 +3,6 @@ Spring Data Elasticsearch
 
 Spring Data implementation for ElasticSearch
 
-[![Build Status](https://secure.travis-ci.org/BioMedCentralLtd/spring-data-elasticsearch.png)](http://travis-ci.org/BioMedCentralLtd/spring-data-elasticsearch)
-
 Spring Data makes it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services as well as provide improved support for relational database technologies.
 
 The Spring Data Elasticsearch project provides integration with the [elasticsearch](http://www.elasticsearch.org/) search engine.
@@ -29,6 +27,8 @@ Test Coverage
 
 Quick Start
 -----------
+Wiki page for [Getting Started] (https://github.com/spring-projects/spring-data-elasticsearch/wiki/How-to-start-with-spring-data-elasticsearch)
+
 ### Dependency
 ```java
 <dependency>
