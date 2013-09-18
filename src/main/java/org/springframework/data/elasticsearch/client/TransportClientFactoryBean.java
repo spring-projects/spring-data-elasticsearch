@@ -43,6 +43,9 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
     private String clusterNodes;
     private String clusterName;
     private Boolean clientTransportSniff;
+    private Boolean clientIgnoreClusterName;
+    private String clientPingTimeout;
+    private String clientNodesSamplerInterval;
     private TransportClient client;
     private Properties properties;
     static final String COLON = ":";
@@ -101,6 +104,9 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
         return settingsBuilder()
                 .put("cluster.name", clusterName)
                 .put("client.transport.sniff", clientTransportSniff)
+                .put("client.transport.ignore_cluster_name", clientIgnoreClusterName)
+                .put("client.transport.ping_timeout", clientPingTimeout)
+                .put("client.transport.nodes_sampler_interval", clientNodesSamplerInterval)
                 .build();
     }
 
@@ -114,6 +120,30 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
     public void setClientTransportSniff(Boolean clientTransportSniff) {
         this.clientTransportSniff = clientTransportSniff;
+    }
+
+    public String getClientNodesSamplerInterval() {
+        return clientNodesSamplerInterval;
+    }
+
+    public void setClientNodesSamplerInterval(String clientNodesSamplerInterval) {
+        this.clientNodesSamplerInterval = clientNodesSamplerInterval;
+    }
+
+    public String getClientPingTimeout() {
+        return clientPingTimeout;
+    }
+
+    public void setClientPingTimeout(String clientPingTimeout) {
+        this.clientPingTimeout = clientPingTimeout;
+    }
+
+    public Boolean getClientIgnoreClusterName() {
+        return clientIgnoreClusterName;
+    }
+
+    public void setClientIgnoreClusterName(Boolean clientIgnoreClusterName) {
+        this.clientIgnoreClusterName = clientIgnoreClusterName;
     }
 
     public void setProperties(Properties properties) {
