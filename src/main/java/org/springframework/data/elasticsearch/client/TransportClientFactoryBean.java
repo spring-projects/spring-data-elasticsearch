@@ -46,9 +46,6 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
     private Boolean clientIgnoreClusterName;
     private String clientPingTimeout;
     private String clientNodesSamplerInterval;
-    private Boolean clientIgnoreClusterName;
-    private String clientPingTimeout;
-    private String clientNodesSamplerInterval;
     private TransportClient client;
     private Properties properties;
     static final String COLON = ":";
@@ -121,34 +118,8 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
         this.clusterName = clusterName;
     }
 
-    }
-
     public void setClientTransportSniff(Boolean clientTransportSniff) {
         this.clientTransportSniff = clientTransportSniff;
-    }
-
-    public String getClientNodesSamplerInterval() {
-        return clientNodesSamplerInterval;
-    }
-
-    public void setClientNodesSamplerInterval(String clientNodesSamplerInterval) {
-        this.clientNodesSamplerInterval = clientNodesSamplerInterval;
-    }
-
-    public String getClientPingTimeout() {
-        return clientPingTimeout;
-    }
-
-    public void setClientPingTimeout(String clientPingTimeout) {
-        this.clientPingTimeout = clientPingTimeout;
-    }
-
-    public Boolean getClientIgnoreClusterName() {
-        return clientIgnoreClusterName;
-    }
-
-    public void setClientIgnoreClusterName(Boolean clientIgnoreClusterName) {
-        this.clientIgnoreClusterName = clientIgnoreClusterName;
     }
 
     public String getClientNodesSamplerInterval() {
