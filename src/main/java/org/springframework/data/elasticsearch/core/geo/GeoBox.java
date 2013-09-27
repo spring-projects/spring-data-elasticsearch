@@ -20,12 +20,12 @@ package org.springframework.data.elasticsearch.core.geo;
  *
  * @author Franck Marchand
  */
-public class GeoEnvelope {
+public class GeoBox {
 
     private GeoPoint topLeft;
     private GeoPoint bottomRight;
 
-    public GeoEnvelope(GeoPoint topLeft, GeoPoint bottomRight) {
+    public GeoBox(GeoPoint topLeft, GeoPoint bottomRight) {
         this.topLeft = topLeft;
         this.bottomRight = bottomRight;
     }

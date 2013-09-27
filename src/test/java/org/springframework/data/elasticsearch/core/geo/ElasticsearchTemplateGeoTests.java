@@ -191,7 +191,7 @@ public class ElasticsearchTemplateGeoTests {
         loadClassBaseEntities();
         CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
                 new Criteria("location").bbox(
-                        new GeoEnvelope(new GeoPoint(53.5171d, 0),
+                        new GeoBox(new GeoPoint(53.5171d, 0),
                                 new GeoPoint(49.5171d, 0.2062d))));
         //when
         List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3, AuthorMarkerEntity.class);

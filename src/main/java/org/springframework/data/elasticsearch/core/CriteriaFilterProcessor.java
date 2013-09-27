@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.index.query.*;
-import org.springframework.data.elasticsearch.core.geo.GeoEnvelope;
+import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.util.Assert;
@@ -152,8 +152,8 @@ class CriteriaFilterProcessor {
     }
 
     private void oneParameterBBox(GeoBoundingBoxFilterBuilder filter, Object value) {
-        Assert.isTrue(value instanceof GeoEnvelope, "single-element of a geo bbox filter must be type of GeoEnvelop");
-        GeoEnvelope geoBBox = (GeoEnvelope) value;
+        Assert.isTrue(value instanceof GeoBox, "single-element of a geo bbox filter must be type of GeoEnvelop");
+        GeoBox geoBBox = (GeoBox) value;
         filter.topLeft(geoBBox.getTopLeft().getLat(), geoBBox.getTopLeft().getLon());
         filter.bottomRight(geoBBox.getBottomRight().getLat(), geoBBox.getBottomRight().getLon());
     }

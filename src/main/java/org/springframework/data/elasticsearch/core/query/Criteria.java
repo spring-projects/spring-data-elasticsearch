@@ -25,7 +25,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.elasticsearch.core.geo.GeoEnvelope;
+import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.util.Assert;
 
@@ -387,10 +387,10 @@ public class Criteria {
     /**
      * Creates new CriteriaEntry for {@code location BBOX bounding box}
      *
-     * @param bbox {@link org.springframework.data.elasticsearch.core.geo.GeoEnvelope} bounding box(left top corner + right bottom corner)
+     * @param bbox {@link org.springframework.data.elasticsearch.core.geo.GeoBox} bounding box(left top corner + right bottom corner)
      * @return Criteria the chaind criteria with the new 'bbox' criteria included.
      */
-    public Criteria bbox(GeoEnvelope bbox) {
+    public Criteria bbox(GeoBox bbox) {
         Assert.notNull(bbox, "bbox value for bbox criteria must not be null");
         filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{bbox}));
         return this;
