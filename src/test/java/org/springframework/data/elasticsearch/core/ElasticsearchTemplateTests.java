@@ -49,6 +49,7 @@ import static org.junit.Assert.*;
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Franck Marchand
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -57,12 +58,12 @@ public class ElasticsearchTemplateTests {
 	@Autowired
 	private ElasticsearchTemplate elasticsearchTemplate;
 
-	@Before
-	public void before() {
+    @Before
+    public void before(){
         elasticsearchTemplate.deleteIndex(SampleEntity.class);
-		elasticsearchTemplate.createIndex(SampleEntity.class);
-		elasticsearchTemplate.refresh(SampleEntity.class, true);
-	}
+        elasticsearchTemplate.createIndex(SampleEntity.class);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+    }
 
 	@Test
 	public void shouldReturnCountForGivenSearchQuery() {

@@ -22,6 +22,8 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.util.Assert;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -32,106 +34,141 @@ import static org.springframework.data.elasticsearch.core.query.Criteria.Operati
  * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Franck Marchand
  */
 class CriteriaQueryProcessor {
 
-	QueryBuilder createQueryFromCriteria(Criteria criteria) {
-		BoolQueryBuilder query = boolQuery();
 
-		ListIterator<Criteria> chainIterator = criteria.getCriteriaChain().listIterator();
-		while (chainIterator.hasNext()) {
-			Criteria chainedCriteria = chainIterator.next();
-			if (chainedCriteria.isOr()) {
-				query.should(createQueryFragmentForCriteria(chainedCriteria));
-			} else if (chainedCriteria.isNegating()) {
-				query.mustNot(createQueryFragmentForCriteria(chainedCriteria));
-			} else {
-				query.must(createQueryFragmentForCriteria(chainedCriteria));
-			}
-		}
-		return query;
-	}
+    QueryBuilder createQueryFromCriteria(Criteria criteria) {
+        if(criteria == null)
+            return null;
 
-	private QueryBuilder createQueryFragmentForCriteria(Criteria chainedCriteria) {
-		Iterator<Criteria.CriteriaEntry> it = chainedCriteria.getCriteriaEntries().iterator();
-		boolean singeEntryCriteria = (chainedCriteria.getCriteriaEntries().size() == 1);
+        List<QueryBuilder> shouldQueryBuilderList = new LinkedList<QueryBuilder>();
+        List<QueryBuilder> mustNotQueryBuilderList = new LinkedList<QueryBuilder>();
+        List<QueryBuilder> mustQueryBuilderList = new LinkedList<QueryBuilder>();
 
-		String fieldName = chainedCriteria.getField().getName();
-		Assert.notNull(fieldName, "Unknown field");
-		QueryBuilder query = null;
 
-		if (singeEntryCriteria) {
-			Criteria.CriteriaEntry entry = it.next();
-			query = processCriteriaEntry(entry.getKey(), entry.getValue(), fieldName);
-		} else {
-			query = boolQuery();
-			while (it.hasNext()) {
-				Criteria.CriteriaEntry entry = it.next();
-				((BoolQueryBuilder) query).must(processCriteriaEntry(entry.getKey(), entry.getValue(), fieldName));
-			}
-		}
+        ListIterator<Criteria> chainIterator = criteria.getCriteriaChain().listIterator();
+        while (chainIterator.hasNext()) {
+            Criteria chainedCriteria = chainIterator.next();
+            QueryBuilder queryFragmentForCriteria = createQueryFragmentForCriteria(chainedCriteria);
 
-		addBoost(query, chainedCriteria.getBoost());
-		return query;
-	}
+            if(queryFragmentForCriteria!=null) {
+                if(chainedCriteria.isOr()){
+                    shouldQueryBuilderList.add(queryFragmentForCriteria);
+                }else if(chainedCriteria.isNegating()){
+                    mustNotQueryBuilderList.add(queryFragmentForCriteria);
+                }else{
+                    mustQueryBuilderList.add(queryFragmentForCriteria);
+                }
+            }
+        }
 
-	private QueryBuilder processCriteriaEntry(OperationKey key, Object value, String fieldName) {
-		if (value == null) {
-			return null;
-		}
-		QueryBuilder query = null;
+        BoolQueryBuilder query = null;
 
-		switch (key) {
-		case EQUALS:
-			query = fieldQuery(fieldName, value);
-			break;
-		case CONTAINS:
-			query = fieldQuery(fieldName, "*" + value + "*").analyzeWildcard(true);
-			break;
-		case STARTS_WITH:
-			query = fieldQuery(fieldName, value + "*").analyzeWildcard(true);
-			break;
-		case ENDS_WITH:
-			query = fieldQuery(fieldName, "*" + value).analyzeWildcard(true);
-			break;
-		case EXPRESSION:
-			query = queryString((String) value).field(fieldName);
-			break;
-		case BETWEEN:
-			Object[] ranges = (Object[]) value;
-			query = rangeQuery(fieldName).from(ranges[0]).to(ranges[1]);
-			break;
-		case FUZZY:
-			query = fuzzyQuery(fieldName, (String) value);
-			break;
-		case IN:
-			query = boolQuery();
-			Iterable<Object> collection = (Iterable<Object>) value;
-			for (Object item : collection) {
-				((BoolQueryBuilder) query).should(fieldQuery(fieldName, item));
-			}
-			break;
-		}
+        if(!shouldQueryBuilderList.isEmpty() || !mustNotQueryBuilderList.isEmpty() || !mustQueryBuilderList.isEmpty()) {
 
-		return query;
-	}
+            query = boolQuery();
 
-	private QueryBuilder buildNegationQuery(String fieldName, Iterator<Criteria.CriteriaEntry> it) {
-		BoolQueryBuilder notQuery = boolQuery();
-		while (it.hasNext()) {
-			notQuery.mustNot(fieldQuery(fieldName, it.next().getValue()));
-		}
-		return notQuery;
-	}
+            for(QueryBuilder qb : shouldQueryBuilderList) {
+                query.should(qb);
+            }
+            for(QueryBuilder qb : mustNotQueryBuilderList) {
+                query.mustNot(qb);
+            }
+            for(QueryBuilder qb : mustQueryBuilderList) {
+                query.must(qb);
+            }
+        }
 
-	private void addBoost(QueryBuilder query, float boost) {
-		if (Float.isNaN(boost)) {
-			return;
-		}
-		if (query instanceof BoostableQueryBuilder) {
-			((BoostableQueryBuilder) query).boost(boost);
-		}
+        return query;
+    }
 
-	}
+
+    private QueryBuilder createQueryFragmentForCriteria(Criteria chainedCriteria) {
+        if(chainedCriteria.getQueryCriteriaEntries().isEmpty())
+            return null;
+
+        Iterator<Criteria.CriteriaEntry> it = chainedCriteria.getQueryCriteriaEntries().iterator();
+        boolean singeEntryCriteria = (chainedCriteria.getQueryCriteriaEntries().size() == 1);
+
+        String fieldName = chainedCriteria.getField().getName();
+        Assert.notNull(fieldName,"Unknown field");
+        QueryBuilder query = null;
+
+        if(singeEntryCriteria){
+            Criteria.CriteriaEntry entry = it.next();
+            query = processCriteriaEntry(entry.getKey(), entry.getValue(), fieldName);
+        }else{
+            query = boolQuery();
+            while (it.hasNext()){
+                Criteria.CriteriaEntry entry = it.next();
+                ((BoolQueryBuilder)query).must(processCriteriaEntry(entry.getKey(), entry.getValue(), fieldName));
+            }
+        }
+
+        addBoost(query, chainedCriteria.getBoost());
+        return query;
+    }
+
+
+    private QueryBuilder processCriteriaEntry(OperationKey key, Object value, String fieldName) {
+        if (value == null) {
+            return null;
+        }
+        QueryBuilder query = null;
+
+        switch (key) {
+            case EQUALS:
+                query = fieldQuery(fieldName, value);
+                break;
+            case CONTAINS:
+                query = fieldQuery(fieldName, "*" + value + "*").analyzeWildcard(true);
+                break;
+            case STARTS_WITH:
+                query = fieldQuery(fieldName, value + "*").analyzeWildcard(true);
+                break;
+            case ENDS_WITH:
+                query = fieldQuery(fieldName, "*" + value).analyzeWildcard(true);
+                break;
+            case EXPRESSION:
+                query = queryString((String) value).field(fieldName);
+                break;
+            case BETWEEN:
+                Object[] ranges = (Object[]) value;
+                query = rangeQuery(fieldName).from(ranges[0]).to(ranges[1]);
+                break;
+            case FUZZY:
+                query = fuzzyQuery(fieldName, (String) value);
+                break;
+            case IN:
+                query = boolQuery();
+                Iterable<Object> collection = (Iterable<Object>) value;
+                for (Object item : collection) {
+                    ((BoolQueryBuilder) query).should(fieldQuery(fieldName, item));
+                }
+                break;
+        }
+
+        return query;
+    }
+
+    private QueryBuilder buildNegationQuery(String fieldName, Iterator<Criteria.CriteriaEntry> it) {
+        BoolQueryBuilder notQuery = boolQuery();
+        while (it.hasNext()) {
+            notQuery.mustNot(fieldQuery(fieldName, it.next().getValue()));
+        }
+        return notQuery;
+    }
+
+    private void addBoost(QueryBuilder query, float boost) {
+        if (Float.isNaN(boost)) {
+            return;
+        }
+        if (query instanceof BoostableQueryBuilder) {
+            ((BoostableQueryBuilder) query).boost(boost);
+        }
+
+    }	
 
 }

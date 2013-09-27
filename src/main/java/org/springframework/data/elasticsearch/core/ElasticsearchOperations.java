@@ -134,6 +134,16 @@ public interface ElasticsearchOperations {
 	 */
 	<T> List<T> queryForList(StringQuery query, Class<T> clazz);
 
+    /**
+     * Execute the search query against elasticsearch and return result as {@link List}
+     *
+     * @param query
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+    <T> List<T> queryForList(SearchQuery query, Class<T> clazz);
+
 	/**
 	 * Execute the query against elasticsearch and return ids
 	 * 

@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
@@ -47,6 +48,7 @@ class MappingBuilder {
     public static final String INDEX_VALUE_NOT_ANALYZED = "not_analyzed";
     public static final String TYPE_VALUE_STRING = "string";
     public static final String TYPE_VALUE_OBJECT = "object";
+    public static final String TYPE_VALUE_GEO_POINT = "geo_point";
 
     private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = new SimpleTypeHolder();
 
@@ -71,8 +73,15 @@ class MappingBuilder {
             if (isEntity(field)) {
                 mapEntity(xContentBuilder, field.getType(), false, EMPTY, field.getName());
             }
+
             Field singleField = field.getAnnotation(Field.class);
             MultiField multiField = field.getAnnotation(MultiField.class);
+            GeoPointField geoPoint = field.getAnnotation(GeoPointField.class);
+
+            if (field.getType() == GeoPoint.class || geoPoint != null) {
+                applyGeoPointFieldMapping(xContentBuilder, field);
+            }
+
             if (isRootObject && singleField != null && isIdField(field, idFieldName)) {
                 applyDefaultIdFieldMapping(xContentBuilder, field);
             } else if (multiField != null) {
@@ -86,6 +95,12 @@ class MappingBuilder {
             xContentBuilder.endObject().endObject();
         }
 
+    }
+
+    private static void applyGeoPointFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
+        xContentBuilder.startObject(field.getName());
+        xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_GEO_POINT)
+                .endObject();
     }
 
     private static void applyDefaultIdFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field)
