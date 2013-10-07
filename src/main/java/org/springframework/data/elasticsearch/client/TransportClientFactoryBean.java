@@ -35,6 +35,7 @@ import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilde
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Jakub Vavrik
  */
 
 public class TransportClientFactoryBean implements FactoryBean<TransportClient>, InitializingBean, DisposableBean {
@@ -43,9 +44,9 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
     private String clusterNodes;
     private String clusterName;
     private Boolean clientTransportSniff;
-    private Boolean clientIgnoreClusterName;
-    private String clientPingTimeout;
-    private String clientNodesSamplerInterval;
+    private Boolean clientIgnoreClusterName = Boolean.FALSE;
+    private String clientPingTimeout = "5s";
+    private String clientNodesSamplerInterval = "5s";
     private TransportClient client;
     private Properties properties;
     static final String COLON = ":";
