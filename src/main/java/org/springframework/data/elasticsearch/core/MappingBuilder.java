@@ -41,6 +41,7 @@ class MappingBuilder {
     public static final String FIELD_STORE = "store";
     public static final String FIELD_TYPE = "type";
     public static final String FIELD_INDEX = "index";
+    public static final String FIELD_FORMAT = "format";
     public static final String FIELD_SEARCH_ANALYZER = "search_analyzer";
     public static final String FIELD_INDEX_ANALYZER = "index_analyzer";
     public static final String FIELD_PROPERTIES = "properties";
@@ -125,6 +126,10 @@ class MappingBuilder {
         xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
         if (FieldType.Auto != fieldAnnotation.type()) {
             xContentBuilder.field(FIELD_TYPE, fieldAnnotation.type().name().toLowerCase());
+            if (FieldType.Date == fieldAnnotation.type() && DateFormat.none != fieldAnnotation.format()) {
+                xContentBuilder.field(FIELD_FORMAT, DateFormat.custom == fieldAnnotation.format()
+                        ? fieldAnnotation.pattern() : fieldAnnotation.format());
+            }
         }
         if (FieldIndex.not_analyzed == fieldAnnotation.index()) {
             xContentBuilder.field(FIELD_INDEX, fieldAnnotation.index().name().toLowerCase());
