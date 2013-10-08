@@ -22,6 +22,7 @@ import java.lang.annotation.*;
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Jonathan Yan
+ * @author Jakub Vavrik
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -31,6 +32,10 @@ public @interface Field {
     FieldType type() default FieldType.Auto;
 
     FieldIndex index() default FieldIndex.analyzed;
+
+    DateFormat format() default DateFormat.none;
+
+    String pattern() default "";
 
     boolean store() default false;
 
