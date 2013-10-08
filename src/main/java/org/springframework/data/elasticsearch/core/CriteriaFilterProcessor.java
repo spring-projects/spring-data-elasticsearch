@@ -128,9 +128,9 @@ class CriteriaFilterProcessor {
             case BBOX: {
                 filter = geoBoundingBoxFilter(fieldName);
 
-                Assert.isTrue(value instanceof Object[], "Value of a bbox filter should be an array of one or two values.");
+                Assert.isTrue(value instanceof Object[], "Value of a boundedBy filter should be an array of one or two values.");
                 Object[] valArray = (Object[]) value;
-                Assert.noNullElements(valArray, "Geo bbox filter takes a not null element array as parameter.");
+                Assert.noNullElements(valArray, "Geo boundedBy filter takes a not null element array as parameter.");
 
                 if (valArray.length == 1) {
                     //GeoEnvelop
@@ -141,7 +141,7 @@ class CriteriaFilterProcessor {
                     twoParameterBBox((GeoBoundingBoxFilterBuilder) filter, valArray);
                 } else {
                     //error
-                    Assert.isTrue(false, "Geo distance filter takes a 1-elements array(GeoEnvelop) or 2-elements array(GeoPoints or Strings(geohash)).");
+                    Assert.isTrue(false, "Geo distance filter takes a 1-elements array(GeoBox) or 2-elements array(GeoPoints or Strings(format lat,lon or geohash)).");
                 }
                 break;
             }
@@ -152,7 +152,7 @@ class CriteriaFilterProcessor {
     }
 
     private void oneParameterBBox(GeoBoundingBoxFilterBuilder filter, Object value) {
-        Assert.isTrue(value instanceof GeoBox, "single-element of a geo bbox filter must be type of GeoEnvelop");
+        Assert.isTrue(value instanceof GeoBox, "single-element of boundedBy filter must be type of GeoBox");
         GeoBox geoBBox = (GeoBox) value;
         filter.topLeft(geoBBox.getTopLeft().getLat(), geoBBox.getTopLeft().getLon());
         filter.bottomRight(geoBBox.getBottomRight().getLat(), geoBBox.getBottomRight().getLon());
@@ -168,7 +168,7 @@ class CriteriaFilterProcessor {
     }
 
     private void twoParameterBBox(GeoBoundingBoxFilterBuilder filter, Object[] values) {
-        Assert.isTrue(isType(values, GeoPoint.class) || isType(values, String.class), " both elements of geo bbox filter must be type of GeoPoint or String(geohash)");
+        Assert.isTrue(isType(values, GeoPoint.class) || isType(values, String.class), " both elements of boundedBy filter must be type of GeoPoint or String(format lat,lon or geohash)");
         if (values[0] instanceof GeoPoint) {
             GeoPoint topLeft = (GeoPoint) values[0];
             GeoPoint bottomRight = (GeoPoint) values[1];
