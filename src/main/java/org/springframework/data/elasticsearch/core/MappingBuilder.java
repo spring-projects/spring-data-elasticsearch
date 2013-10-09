@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -71,6 +72,11 @@ class MappingBuilder {
         }
 
         for (java.lang.reflect.Field field : fields) {
+
+            if (field.isAnnotationPresent(Transient.class)) {
+                continue;
+            }
+
             if (isEntity(field)) {
                 mapEntity(xContentBuilder, field.getType(), false, EMPTY, field.getName());
             }
