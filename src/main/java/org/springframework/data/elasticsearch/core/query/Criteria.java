@@ -385,14 +385,14 @@ public class Criteria {
     }
 
     /**
-     * Creates new CriteriaEntry for {@code location BBOX bounding box}
+     * Creates new CriteriaEntry for {@code location GeoBox bounding box}
      *
-     * @param bbox {@link org.springframework.data.elasticsearch.core.geo.GeoBox} bounding box(left top corner + right bottom corner)
-     * @return Criteria the chaind criteria with the new 'bbox' criteria included.
+     * @param boundingBox {@link org.springframework.data.elasticsearch.core.geo.GeoBox} bounding box(left top corner + right bottom corner)
+     * @return Criteria the chaind criteria with the new 'boundingBox' criteria included.
      */
-    public Criteria bbox(GeoBox bbox) {
-        Assert.notNull(bbox, "bbox value for bbox criteria must not be null");
-        filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{bbox}));
+    public Criteria boundedBy(GeoBox boundingBox) {
+        Assert.notNull(boundingBox, "boundingBox value for boundedBy criteria must not be null");
+        filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{boundingBox}));
         return this;
     }
 
@@ -400,28 +400,28 @@ public class Criteria {
     /**
      * Creates new CriteriaEntry for bounding box created from points
      *
-     * @param topLeft     left top corner of bounding box
-     * @param bottomRight right bottom corner of bounding box
-     * @return Criteria the chaind criteria with the new 'bbox' criteria included.
+     * @param topLeftPoint     left top corner of bounding box
+     * @param bottomRightPoint right bottom corner of bounding box
+     * @return Criteria the chaind criteria with the new 'boundedBy' criteria included.
      */
-    public Criteria bbox(String topLeft, String bottomRight) {
-        Assert.isTrue(StringUtils.isNotBlank(topLeft), "topLeft point must not be empty");
-        Assert.isTrue(StringUtils.isNotBlank(bottomRight), "bottomRight point must not be empty");
-        filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{topLeft, bottomRight}));
+    public Criteria boundedBy(String topLeftPoint, String bottomRightPoint) {
+        Assert.isTrue(StringUtils.isNotBlank(topLeftPoint), "topLeftPoint must not be empty");
+        Assert.isTrue(StringUtils.isNotBlank(bottomRightPoint), "bottomRightPoint must not be empty");
+        filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{topLeftPoint, bottomRightPoint}));
         return this;
     }
 
     /**
      * Creates new CriteriaEntry for bounding box created from points
      *
-     * @param topLeft     left top corner of bounding box
-     * @param bottomRight right bottom corner of bounding box
-     * @return Criteria the chaind criteria with the new 'bbox' criteria included.
+     * @param topLeftPoint     left top corner of bounding box
+     * @param bottomRightPoint right bottom corner of bounding box
+     * @return Criteria the chaind criteria with the new 'boundedBy' criteria included.
      */
-    public Criteria bbox(GeoPoint topLeft, GeoPoint bottomRight) {
-        Assert.notNull(topLeft, "topLeft point must not be null");
-        Assert.notNull(bottomRight, "bottomRight point must not be null");
-        filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{topLeft, bottomRight}));
+    public Criteria boundedBy(GeoPoint topLeftPoint, GeoPoint bottomRightPoint) {
+        Assert.notNull(topLeftPoint, "topLeftPoint must not be null");
+        Assert.notNull(bottomRightPoint, "bottomRightPoint must not be null");
+        filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{topLeftPoint, bottomRightPoint}));
         return this;
     }
 

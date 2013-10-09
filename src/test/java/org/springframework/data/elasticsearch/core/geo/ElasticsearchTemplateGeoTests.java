@@ -186,11 +186,11 @@ public class ElasticsearchTemplateGeoTests {
     }
 
     @Test
-    public void shouldFindAuthorMarkersInBoxForGivenCriteriaQueryUsingGeoEnvelop() {
+    public void shouldFindAuthorMarkersInBoxForGivenCriteriaQueryUsingGeoBox() {
         //given
         loadClassBaseEntities();
         CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
-                new Criteria("location").bbox(
+                new Criteria("location").boundedBy(
                         new GeoBox(new GeoPoint(53.5171d, 0),
                                 new GeoPoint(49.5171d, 0.2062d))));
         //when
@@ -206,7 +206,7 @@ public class ElasticsearchTemplateGeoTests {
         //given
         loadClassBaseEntities();
         CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
-                new Criteria("location").bbox("53.5171d, 0", "49.5171d, 0.2062d"));
+                new Criteria("location").boundedBy("53.5171d, 0", "49.5171d, 0.2062d"));
         //when
         List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3, AuthorMarkerEntity.class);
 
@@ -220,7 +220,7 @@ public class ElasticsearchTemplateGeoTests {
         //given
         loadClassBaseEntities();
         CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
-                new Criteria("location").bbox(
+                new Criteria("location").boundedBy(
                         new GeoPoint(53.5171d, 0),
                         new GeoPoint(49.5171d, 0.2062d)));
         //when
