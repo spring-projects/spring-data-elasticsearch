@@ -23,13 +23,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.FacetedPage;
-import org.springframework.data.elasticsearch.core.facet.request.NativeFacetRequest;
-import org.springframework.data.elasticsearch.core.facet.request.RangeFacetRequestBuilder;
-import org.springframework.data.elasticsearch.core.facet.request.TermFacetRequestBuilder;
-import org.springframework.data.elasticsearch.core.facet.result.Range;
-import org.springframework.data.elasticsearch.core.facet.result.RangeResult;
-import org.springframework.data.elasticsearch.core.facet.result.Term;
-import org.springframework.data.elasticsearch.core.facet.result.TermResult;
+import org.springframework.data.elasticsearch.core.facet.request.*;
+import org.springframework.data.elasticsearch.core.facet.result.*;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
@@ -57,6 +52,7 @@ public class ElasticsearchTemplateFacetTests {
     public static final int YEAR_2002 = 2002;
     public static final int YEAR_2001 = 2001;
     public static final int YEAR_2000 = 2000;
+    public static final String PUBLISHED_YEARS = "publishedYears";
     @Autowired
     private ElasticsearchTemplate elasticsearchTemplate;
 
@@ -419,7 +415,7 @@ public class ElasticsearchTemplateFacetTests {
         String facetName = "rangeYears";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
                 .withFacet(
-                        new RangeFacetRequestBuilder(facetName).field("publishedYears")
+                        new RangeFacetRequestBuilder(facetName).field(PUBLISHED_YEARS)
                                 .to(YEAR_2000).range(YEAR_2000, YEAR_2002).from(YEAR_2002).build()
                 ).build();
         // when
@@ -456,7 +452,7 @@ public class ElasticsearchTemplateFacetTests {
         String facetName = "rangeScoreOverYears";
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
                 .withFacet(
-                        new RangeFacetRequestBuilder(facetName).fields("publishedYears", "score")
+                        new RangeFacetRequestBuilder(facetName).fields(PUBLISHED_YEARS, "score")
                                 .to(YEAR_2000).range(YEAR_2000, YEAR_2002).from(YEAR_2002).build()
                 ).build();
         // when
@@ -487,5 +483,21 @@ public class ElasticsearchTemplateFacetTests {
         assertThat(range.getTotal(), is(40.0));
     }
 
+    @Test
+    public void shouldReturnStatisticalFacetForGivenQuery() {
+        // given
+        String facetName = "statPublishedYear";
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+                .withFacet(new StatisticalFacetRequestBuilder(facetName).field(PUBLISHED_YEARS).build()
+                ).build();
+        // when
+        FacetedPage<ArticleEntity> result = elasticsearchTemplate.queryForPage(searchQuery, ArticleEntity.class);
+        // then
+        assertThat(result.getNumberOfElements(), is(equalTo(4)));
 
+        StatisticalResult facet = (StatisticalResult) result.getFacet(facetName);
+        assertThat(facet.getCount(), is(equalTo(6L)));
+        assertThat(facet.getMax(), is(equalTo(2002.0)));
+        assertThat(facet.getMin(), is(equalTo(2000.0)));
+    }
 }

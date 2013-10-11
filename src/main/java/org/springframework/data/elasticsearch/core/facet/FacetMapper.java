@@ -1,18 +1,18 @@
 package org.springframework.data.elasticsearch.core.facet;
 
 import org.elasticsearch.search.facet.Facet;
+import org.elasticsearch.search.facet.histogram.HistogramFacet;
 import org.elasticsearch.search.facet.range.RangeFacet;
+import org.elasticsearch.search.facet.statistical.StatisticalFacet;
 import org.elasticsearch.search.facet.terms.TermsFacet;
-import org.springframework.data.elasticsearch.core.facet.result.Range;
-import org.springframework.data.elasticsearch.core.facet.result.RangeResult;
-import org.springframework.data.elasticsearch.core.facet.result.Term;
-import org.springframework.data.elasticsearch.core.facet.result.TermResult;
+import org.springframework.data.elasticsearch.core.facet.result.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Artur Konczak
+ * @author Petar Tahchiev
  */
 public class FacetMapper {
 
@@ -23,6 +23,10 @@ public class FacetMapper {
 
         if (facet instanceof RangeFacet) {
             return parseRange((RangeFacet) facet);
+        }
+
+        if (facet instanceof StatisticalFacet) {
+            return parseStatistical((StatisticalFacet) facet);
         }
 
         return null;
@@ -42,6 +46,10 @@ public class FacetMapper {
             entries.add(new Range(entry.getFrom() == Double.NEGATIVE_INFINITY ? null : entry.getFrom(), entry.getTo() == Double.POSITIVE_INFINITY ? null : entry.getTo(), entry.getCount(), entry.getTotal(), entry.getTotalCount(), entry.getMin(), entry.getMax()));
         }
         return new RangeResult(facet.getName(), entries);
+    }
+
+    private static FacetResult parseStatistical(StatisticalFacet facet) {
+        return new StatisticalResult(facet.getName(), facet.getCount(), facet.getMax(), facet.getMin(), facet.getMean(), facet.getStdDeviation(), facet.getSumOfSquares(), facet.getTotal(), facet.getVariance());
     }
 
 }
