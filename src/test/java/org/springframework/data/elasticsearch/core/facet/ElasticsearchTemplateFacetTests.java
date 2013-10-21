@@ -500,4 +500,32 @@ public class ElasticsearchTemplateFacetTests {
         assertThat(facet.getMax(), is(equalTo(2002.0)));
         assertThat(facet.getMin(), is(equalTo(2000.0)));
     }
+
+    @Test
+    public void shouldReturnHistogramFacetForGivenQuery() {
+        // given
+        String facetName = "numberPublicationPerYear";
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+                .withFacet(new HistogramFacetRequestBuilder(facetName).field(PUBLISHED_YEARS).interval(1).build()
+                ).build();
+        // when
+        FacetedPage<ArticleEntity> result = elasticsearchTemplate.queryForPage(searchQuery, ArticleEntity.class);
+        // then
+        assertThat(result.getNumberOfElements(), is(equalTo(4)));
+
+        HistogramResult facet = (HistogramResult) result.getFacet(facetName);
+        assertThat(facet.getIntervalUnit().size(), is(equalTo(3)));
+
+        IntervalUnit unit = facet.getIntervalUnit().get(0);
+        assertThat(unit.getKey(), is(Long.valueOf(YEAR_2000)));
+        assertThat(unit.getCount(), is(3L));
+
+        unit = facet.getIntervalUnit().get(1);
+        assertThat(unit.getKey(), is(Long.valueOf(YEAR_2001)));
+        assertThat(unit.getCount(), is(2L));
+
+        unit = facet.getIntervalUnit().get(2);
+        assertThat(unit.getKey(), is(Long.valueOf(YEAR_2002)));
+        assertThat(unit.getCount(), is(1L));
+    }
 }

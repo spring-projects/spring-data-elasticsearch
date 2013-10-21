@@ -29,6 +29,10 @@ public class FacetMapper {
             return parseStatistical((StatisticalFacet) facet);
         }
 
+        if (facet instanceof HistogramFacet) {
+            return parseHistogram((HistogramFacet) facet);
+        }
+
         return null;
     }
 
@@ -50,6 +54,14 @@ public class FacetMapper {
 
     private static FacetResult parseStatistical(StatisticalFacet facet) {
         return new StatisticalResult(facet.getName(), facet.getCount(), facet.getMax(), facet.getMin(), facet.getMean(), facet.getStdDeviation(), facet.getSumOfSquares(), facet.getTotal(), facet.getVariance());
+    }
+
+    private static FacetResult parseHistogram(HistogramFacet facet) {
+        List<IntervalUnit> entries = new ArrayList<IntervalUnit>();
+        for (HistogramFacet.Entry entry : facet.getEntries()) {
+            entries.add(new IntervalUnit(entry.getKey(), entry.getCount(), entry.getTotalCount(), entry.getTotal(), entry.getMean(), entry.getMin(), entry.getMax()));
+        }
+        return new HistogramResult(facet.getName(), entries);
     }
 
 }
