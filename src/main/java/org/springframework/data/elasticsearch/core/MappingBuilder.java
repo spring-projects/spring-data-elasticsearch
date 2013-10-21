@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -24,7 +25,9 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static org.apache.commons.lang.StringUtils.EMPTY;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -56,14 +59,13 @@ class MappingBuilder {
     static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName) throws IOException {
         XContentBuilder xContentBuilder = jsonBuilder().startObject().startObject(indexType).startObject(FIELD_PROPERTIES);
 
-        mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY);
+        mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY, new HashSet<Class>());
 
         return xContentBuilder.endObject().endObject().endObject();
     }
 
     private static void mapEntity(XContentBuilder xContentBuilder, Class clazz, boolean isRootObject, String idFieldName,
-                                  String nestedObjectFieldName) throws IOException {
-
+                    String nestedObjectFieldName, Set<Class> ancestorClasses) throws IOException {
         java.lang.reflect.Field[] fields = clazz.getDeclaredFields();
 
         if (!isRootObject && isAnyPropertyAnnotatedAsField(fields)) {
@@ -71,8 +73,18 @@ class MappingBuilder {
         }
 
         for (java.lang.reflect.Field field : fields) {
+
+            if (field.isAnnotationPresent(Transient.class)) {
+                continue;
+            }
+
             if (isEntity(field)) {
-                mapEntity(xContentBuilder, field.getType(), false, EMPTY, field.getName());
+                if (ancestorClasses.contains(field.getType())) {
+                    continue;
+                } else {
+                    ancestorClasses.add(field.getType());
+                    mapEntity(xContentBuilder, field.getType(), false, EMPTY, field.getName(), ancestorClasses);
+                }
             }
 
             Field singleField = field.getAnnotation(Field.class);
