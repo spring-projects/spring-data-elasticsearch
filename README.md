@@ -223,3 +223,4 @@ Using Transport Client
 * Rizwan Idrees (rizwan.idrees@biomedcentral.com)
 * Abdul Waheed (abdul.mohammed@biomedcentral.com)
 * Mohsin Husen (mohsin.husen@biomedcentral.com)
+* Artur Konczak(artur.konczak@biomedcentral.com)
