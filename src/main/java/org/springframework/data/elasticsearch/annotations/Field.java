@@ -43,4 +43,6 @@ public @interface Field {
 
     String indexAnalyzer() default "";
 
+    String [] ignoreFields() default {};
+
 }

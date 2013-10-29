@@ -24,6 +24,7 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 import static org.apache.commons.lang.StringUtils.EMPTY;
@@ -71,7 +72,7 @@ class MappingBuilder {
         }
 
         for (java.lang.reflect.Field field : fields) {
-            if (isEntity(field)) {
+            if (isEntity(field)  && !isInIgnoreFields(field)) {
                 mapEntity(xContentBuilder, field.getType(), false, EMPTY, field.getName());
             }
 
@@ -245,5 +246,14 @@ class MappingBuilder {
 
     private static boolean isIdField(java.lang.reflect.Field field, String idFieldName) {
         return idFieldName.equals(field.getName());
+    }
+
+    private static boolean isInIgnoreFields(java.lang.reflect.Field field) {
+        Field fieldAnnotation = field.getAnnotation(Field.class);
+        if ( null != fieldAnnotation ) {
+            String [] ignoreFields = fieldAnnotation.ignoreFields();
+            return Arrays.asList(ignoreFields).contains(field.getName());
+        }
+        return false;
     }
 }
