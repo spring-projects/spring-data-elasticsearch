@@ -29,7 +29,7 @@ import java.util.List;
  * @author Artur Konczak
  */
 
-@Document( indexName = "person" , type = "user" , shards = 1, replicas = 0)
+@Document( indexName = "person" , type = "user", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class Person {
 
     @Id
