@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.data.domain.Page;
@@ -72,6 +73,7 @@ public class CriteriaQueryTests {
 		assertThat(sampleEntity1, is(notNullValue()));
 	}
 
+    @Ignore("DATAES-30")
 	@Test
 	public void shouldPerformOrOperation() {
 		// given
@@ -137,6 +139,7 @@ public class CriteriaQueryTests {
 		assertThat(page.getTotalElements(), is(greaterThanOrEqualTo(1L)));
 	}
 
+    @Ignore("DATAES-30")
 	@Test
 	public void shouldPerformOrOperationWithinCriteria() {
 		// given

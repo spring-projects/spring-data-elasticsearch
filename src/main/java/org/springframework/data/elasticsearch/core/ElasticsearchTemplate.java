@@ -241,7 +241,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
         if(query.DoUpsert()){
             updateRequestBuilder.setDocAsUpsert(true)
-                    .setUpsertRequest(query.getIndexRequest()).setDoc(query.getIndexRequest());
+                    .setUpsert(query.getIndexRequest()).setDoc(query.getIndexRequest());
         } else {
             updateRequestBuilder.setDoc(query.getIndexRequest());
         }
@@ -522,13 +522,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     public void refresh(String indexName, boolean waitForOperation) {
-        client.admin().indices().refresh(refreshRequest(indexName).waitForOperations(waitForOperation)).actionGet();
+        client.admin().indices().refresh(refreshRequest(indexName).force(waitForOperation)).actionGet();
     }
 
     public <T> void refresh(Class<T> clazz, boolean waitForOperation) {
         ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
         client.admin().indices()
-                .refresh(refreshRequest(persistentEntity.getIndexName()).waitForOperations(waitForOperation)).actionGet();
+                .refresh(refreshRequest(persistentEntity.getIndexName()).force(waitForOperation)).actionGet();
     }
 
     private ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz) {
