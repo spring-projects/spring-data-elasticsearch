@@ -15,18 +15,29 @@
  */
 package org.springframework.data.elasticsearch;
 
+import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repositories.SampleElasticSearchBookRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.annotation.Resource;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.apache.commons.lang.RandomStringUtils.randomAlphanumeric;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -34,13 +45,14 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Artur Konczak
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/repository-test-nested-object.xml")
 public class NestedObjectTests {
 
 	@Resource
-	private SampleElasticSearchBookRepository repository;
+	private SampleElasticSearchBookRepository bookRepository;
 
     @Autowired
     private ElasticsearchTemplate elasticsearchTemplate;
@@ -51,10 +63,75 @@ public class NestedObjectTests {
         elasticsearchTemplate.deleteIndex(Book.class);
         elasticsearchTemplate.createIndex(Book.class);
         elasticsearchTemplate.refresh(Book.class, true);
+        elasticsearchTemplate.deleteIndex(Person.class);
+        elasticsearchTemplate.createIndex(Person.class);
+        elasticsearchTemplate.putMapping(Person.class);
+        elasticsearchTemplate.refresh(Person.class, true);
+    }
+
+    @Test
+    public void shouldIndexNestedObject(){
+
+        List<Car> cars = new ArrayList<Car>();
+
+        Car saturn = new Car();
+        saturn.setName("Saturn");
+        saturn.setModel("SL");
+
+        Car subaru = new Car();
+        subaru.setName("Subaru");
+        subaru.setModel("Imprezza");
+
+        Car ford = new Car();
+        ford.setName("Ford");
+        ford.setModel("Focus");
+
+        cars.add(saturn);
+        cars.add(subaru);
+        cars.add(ford);
+
+        Person foo = new Person();
+        foo.setName("Foo");
+        foo.setId("1");
+        foo.setCar(cars);
+
+
+        Car car  = new Car();
+        car.setName("Saturn");
+        car.setModel("Imprezza");
+
+        Person bar = new Person();
+        bar.setId("2");
+        bar.setName("Bar");
+        bar.setCar(Arrays.asList(car));
+
+        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+        IndexQuery indexQuery1 = new IndexQuery();
+        indexQuery1.setId(foo.getId());
+        indexQuery1.setObject(foo);
+
+        IndexQuery indexQuery2 = new IndexQuery();
+        indexQuery2.setId(bar.getId());
+        indexQuery2.setObject(bar);
+
+        indexQueries.add(indexQuery1);
+        indexQueries.add(indexQuery2);
+
+        elasticsearchTemplate.putMapping(Person.class);
+        elasticsearchTemplate.bulkIndex(indexQueries);
+        elasticsearchTemplate.refresh(Person.class, true);
+
+        QueryBuilder builder = nestedQuery("car", boolQuery().must(termQuery("car.name", "saturn")).must(termQuery("car.model", "imprezza")));
+
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
+        List<Person> persons = elasticsearchTemplate.queryForList(searchQuery, Person.class);
+
+        assertThat(persons.size() , is(1));
+
     }
 
 	@Test
-	public void shouldIndexNestedObject() {
+	public void shouldIndexInnerObject() {
 		// given
 		String id = randomAlphanumeric(5);
 		Book book = new Book();
@@ -65,8 +142,8 @@ public class NestedObjectTests {
 		author.setName("ABC");
 		book.setAuthor(author);
 		// when
-		repository.save(book);
+		bookRepository.save(book);
 		// then
-		assertThat(repository.findOne(id), is(notNullValue()));
+		assertThat(bookRepository.findOne(id), is(notNullValue()));
 	}
 }

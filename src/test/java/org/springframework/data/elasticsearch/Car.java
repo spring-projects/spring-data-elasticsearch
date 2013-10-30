@@ -13,13 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.annotations;
+package org.springframework.data.elasticsearch;
 
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
  */
-public enum FieldType {
-    String, Integer, Long, Date, Float, Double, Boolean, Object, Auto, Nested
+public class Car {
+
+    private String name;
+    private String model;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
 }
