@@ -501,24 +501,29 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return searchRequestBuilder;
     }
 
-    private IndexRequestBuilder prepareIndex(IndexQuery query) {
-        try {
-            String indexName = isBlank(query.getIndexName()) ? retrieveIndexNameFromPersistentEntity(query.getObject()
-                    .getClass())[0] : query.getIndexName();
-            String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
-                    : query.getType();
+	private IndexRequestBuilder prepareIndex(IndexQuery query) {
+    	try {
+    		String indexName = isBlank(query.getIndexName()) ? retrieveIndexNameFromPersistentEntity(query
+    				.getObject().getClass())[0] : query.getIndexName();
+    				String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0] : query.getType();
+    				IndexRequestBuilder indexRequestBuilder=null;
 
-            IndexRequestBuilder indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(
-                    objectMapper.writeValueAsString(query.getObject()));
+    				if (query.getSource()Unable to render embedded object: File (=null && query.getObject()) not found.=null)
+    				{ throw new ElasticsearchException("Cannot set both object and source on document [id: "+query.getId()+"]"); }
 
-            if (query.getVersion() != null) {
-                indexRequestBuilder.setVersion(query.getVersion());
-                indexRequestBuilder.setVersionType(EXTERNAL);
-            }
-            return indexRequestBuilder;
-        } catch (IOException e) {
-            throw new ElasticsearchException("failed to index the document [id: " + query.getId() + "]", e);
-        }
+    				else if (query.getObject()!=null)
+    				{ indexRequestBuilder = client.prepareIndex( indexName, type, query.getId()).setSource( objectMapper.writeValueAsString(query.getObject())); }
+
+    				else if (query.getSource()!=null)
+    				{ indexRequestBuilder = client.prepareIndex( indexName, type, query.getId()).setSource( query.getSource()); }
+
+    				if (query.getVersion() != null)
+    				{ indexRequestBuilder.setVersion(query.getVersion()); indexRequestBuilder.setVersionType(EXTERNAL); }
+
+    				return indexRequestBuilder;
+    	} catch (IOException e)
+    	{ throw new ElasticsearchException( "failed to index the document [id: " + query.getId() + "]", e); }
+
     }
 
     public void refresh(String indexName, boolean waitForOperation) {
