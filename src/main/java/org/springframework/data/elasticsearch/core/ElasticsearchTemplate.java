@@ -239,7 +239,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         Assert.notNull(query.getId(), "No Id define for Query");
         Assert.notNull(query.getIndexRequest(), "No IndexRequest define for Query");
         UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
-        if (query.DoUpsert()) {
+        if(query.DoUpsert()){
             updateRequestBuilder.setDocAsUpsert(true)
                     .setUpsert(query.getIndexRequest()).setDoc(query.getIndexRequest());
         } else {
@@ -289,7 +289,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     @Override
-    public void deleteType(String index, String type) {
+    public void deleteType(String index, String type){
         Map mappings = client.admin().cluster().prepareState().execute().actionGet()
                 .getState().metaData().index(index).mappings();
         if (mappings.containsKey(type)) {
@@ -433,8 +433,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
             }
         }
 
-        if (searchQuery.getHighlightFields() != null) {
-            for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
+        if(searchQuery.getHighlightFields() != null) {
+            for(HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()){
                 searchRequest.addHighlightedField(highlightField);
             }
         }
