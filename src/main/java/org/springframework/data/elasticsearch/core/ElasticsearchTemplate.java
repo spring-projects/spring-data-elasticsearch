@@ -554,7 +554,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return new String[]{getPersistentEntityFor(clazz).getIndexType()};
     }
 
-    public <T> boolean createIndexIfNotCreated(String indexName) {
+    private <T> boolean createIndexIfNotCreated(String indexName) {
         return indexExists(indexName) || createIndexWithoutSettings(indexName);
     }
 
