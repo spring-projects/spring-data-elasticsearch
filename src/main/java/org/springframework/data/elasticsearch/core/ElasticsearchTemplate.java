@@ -108,6 +108,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return createIndexIfNotCreated(clazz);
     }
 
+    public <T> boolean createIndex(String indexName) {
+        return createIndexIfNotCreated(indexName);
+    }
+
     @Override
     public <T> boolean putMapping(Class<T> clazz) {
         ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
@@ -501,24 +505,29 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return searchRequestBuilder;
     }
 
-    private IndexRequestBuilder prepareIndex(IndexQuery query) {
-        try {
-            String indexName = isBlank(query.getIndexName()) ? retrieveIndexNameFromPersistentEntity(query.getObject()
-                    .getClass())[0] : query.getIndexName();
-            String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
-                    : query.getType();
+	private IndexRequestBuilder prepareIndex(IndexQuery query) {
+    	try {
+    		String indexName = isBlank(query.getIndexName()) ? retrieveIndexNameFromPersistentEntity(query
+    				.getObject().getClass())[0] : query.getIndexName();
+    				String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0] : query.getType();
+    				IndexRequestBuilder indexRequestBuilder=null;
 
-            IndexRequestBuilder indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(
-                    objectMapper.writeValueAsString(query.getObject()));
+    				if (query.getSource()!=null && query.getObject()!=null)
+    				{ throw new ElasticsearchException("Cannot set both object and source on document [id: "+query.getId()+"]"); }
 
-            if (query.getVersion() != null) {
-                indexRequestBuilder.setVersion(query.getVersion());
-                indexRequestBuilder.setVersionType(EXTERNAL);
-            }
-            return indexRequestBuilder;
-        } catch (IOException e) {
-            throw new ElasticsearchException("failed to index the document [id: " + query.getId() + "]", e);
-        }
+    				else if (query.getObject()!=null)
+    				{ indexRequestBuilder = client.prepareIndex( indexName, type, query.getId()).setSource( objectMapper.writeValueAsString(query.getObject())); }
+
+    				else if (query.getSource()!=null)
+    				{ indexRequestBuilder = client.prepareIndex( indexName, type, query.getId()).setSource( query.getSource()); }
+
+    				if (query.getVersion() != null)
+    				{ indexRequestBuilder.setVersion(query.getVersion()); indexRequestBuilder.setVersionType(EXTERNAL); }
+
+    				return indexRequestBuilder;
+    	} catch (IOException e)
+    	{ throw new ElasticsearchException( "failed to index the document [id: " + query.getId() + "]", e); }
+
     }
 
     public void refresh(String indexName, boolean waitForOperation) {
@@ -545,6 +554,15 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return new String[]{getPersistentEntityFor(clazz).getIndexType()};
     }
 
+    private <T> boolean createIndexIfNotCreated(String indexName) {
+        return indexExists(indexName) || createIndexWithoutSettings(indexName);
+    }
+
+    private <T> boolean createIndexWithoutSettings(String indexName) {
+        return client.admin().indices()
+                .create(Requests.createIndexRequest(indexName)).actionGet()
+                .isAcknowledged();
+    }
     private <T> FacetedPage<T> mapResults(SearchResponse response, final Class<T> elementType, final Pageable pageable) {
         ResultsMapper<T> resultsMapper = new ResultsMapper<T>() {
             @Override
