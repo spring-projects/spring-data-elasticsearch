@@ -108,6 +108,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return createIndexIfNotCreated(clazz);
     }
 
+    public <T> boolean createIndex(String indexName) {
+        return createIndexIfNotCreated(indexName);
+    }
+
     @Override
     public <T> boolean putMapping(Class<T> clazz) {
         ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
