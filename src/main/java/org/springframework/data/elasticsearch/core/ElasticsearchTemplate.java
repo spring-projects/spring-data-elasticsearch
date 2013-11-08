@@ -508,7 +508,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     				String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0] : query.getType();
     				IndexRequestBuilder indexRequestBuilder=null;
 
-    				if (query.getSource()Unable to render embedded object: File (=null && query.getObject()) not found.=null)
+    				if (query.getSource()!=null && query.getObject()!=null)
     				{ throw new ElasticsearchException("Cannot set both object and source on document [id: "+query.getId()+"]"); }
 
     				else if (query.getObject()!=null)
@@ -550,6 +550,15 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return new String[]{getPersistentEntityFor(clazz).getIndexType()};
     }
 
+    public <T> boolean createIndexIfNotCreated(String indexName) {
+        return indexExists(indexName) || createIndexWithoutSettings(indexName);
+    }
+
+    private <T> boolean createIndexWithoutSettings(String indexName) {
+        return client.admin().indices()
+                .create(Requests.createIndexRequest(indexName)).actionGet()
+                .isAcknowledged();
+    }
     private <T> FacetedPage<T> mapResults(SearchResponse response, final Class<T> elementType, final Pageable pageable) {
         ResultsMapper<T> resultsMapper = new ResultsMapper<T>() {
             @Override
