@@ -1,172 +1,177 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<groupId>org.springframework.data</groupId>
-	<artifactId>spring-data-elasticsearch</artifactId>
-	<version>1.0.0.BUILD-SNAPSHOT</version>
+    <groupId>org.springframework.data</groupId>
+    <artifactId>spring-data-elasticsearch</artifactId>
+    <version>1.0.0.BUILD-SNAPSHOT</version>
 
-	<parent>
-		<groupId>org.springframework.data.build</groupId>
-		<artifactId>spring-data-parent</artifactId>
-		<version>1.2.0.RELEASE</version>
-		<relativePath>../spring-data-build/parent/pom.xml</relativePath>
-	</parent>
+    <parent>
+        <groupId>org.springframework.data.build</groupId>
+        <artifactId>spring-data-parent</artifactId>
+        <version>1.2.0.RELEASE</version>
+        <relativePath>../spring-data-build/parent/pom.xml</relativePath>
+    </parent>
 
-	<name>Spring Data Elasticsearch</name>
-	<description>Spring Data Implementation for Elasticsearch</description>
-	<url>https://github.com/SpringSource/spring-data-elasticsearch</url>
+    <name>Spring Data Elasticsearch</name>
+    <description>Spring Data Implementation for Elasticsearch</description>
+    <url>https://github.com/SpringSource/spring-data-elasticsearch</url>
 
-	<properties>
+    <properties>
 
-		<dist.key>DATAES</dist.key>
+        <dist.key>DATAES</dist.key>
 
-		<commonscollections>3.2.1</commonscollections>
-		<commonslang>2.6</commonslang>
-		<elasticsearch>0.90.6</elasticsearch>
-		<jackson>1.9.2</jackson>
-		<springdata.commons>1.6.0.BUILD-SNAPSHOT</springdata.commons>
+        <commonscollections>3.2.1</commonscollections>
+        <commonslang>2.6</commonslang>
+        <elasticsearch>0.90.6</elasticsearch>
+        <jackson>2.2.3</jackson>
+        <springdata.commons>1.6.0.BUILD-SNAPSHOT</springdata.commons>
 
-	</properties>
+    </properties>
 
-	<dependencies>
+    <dependencies>
 
-		<!-- Spring -->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
-			<version>${spring}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+        <!-- Spring -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-tx</artifactId>
-			<version>${spring}</version>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>${spring}</version>
+        </dependency>
 
-		<!-- For JavaConfig -->
-		<dependency>
-			<groupId>cglib</groupId>
-			<artifactId>cglib</artifactId>
-			<version>2.2.2</version>
-			<scope>test</scope>
-		</dependency>
+        <!-- For JavaConfig -->
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>2.2.2</version>
+            <scope>test</scope>
+        </dependency>
 
-		<!-- SPRING DATA -->
-		<dependency>
-			<groupId>org.springframework.data</groupId>
-			<artifactId>spring-data-commons</artifactId>
-			<version>${springdata.commons}</version>
-		</dependency>
+        <!-- SPRING DATA -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+            <version>${springdata.commons}</version>
+        </dependency>
 
-		<!-- APACHE -->
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-			<version>${commonslang}</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-			<version>${commonscollections}</version>
-		</dependency>
+        <!-- APACHE -->
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>${commonslang}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>${commonscollections}</version>
+        </dependency>
 
-		<!-- JODA Time -->
-		<dependency>
-			<groupId>joda-time</groupId>
-			<artifactId>joda-time</artifactId>
-			<version>${jodatime}</version>
-		</dependency>
+        <!-- JODA Time -->
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>${jodatime}</version>
+        </dependency>
 
-		<!-- Elasticsearch -->
-		<dependency>
-			<groupId>org.elasticsearch</groupId>
-			<artifactId>elasticsearch</artifactId>
-			<version>${elasticsearch}</version>
-		</dependency>
+        <!-- Elasticsearch -->
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>${elasticsearch}</version>
+        </dependency>
 
-		<!-- Jackson JSON Mapper -->
-		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-mapper-asl</artifactId>
-			<version>${jackson}</version>
-		</dependency>
+        <!-- Jackson JSON Mapper -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson}</version>
+        </dependency>
 
-		<!-- CDI -->
-		<dependency>
-			<groupId>javax.enterprise</groupId>
-			<artifactId>cdi-api</artifactId>
-			<version>${cdi}</version>
-			<scope>provided</scope>
-			<optional>true</optional>
-		</dependency>
+        <!-- CDI -->
+        <dependency>
+            <groupId>javax.enterprise</groupId>
+            <artifactId>cdi-api</artifactId>
+            <version>${cdi}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
 
-		<!-- Test -->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-test</artifactId>
-			<version>${spring}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.openwebbeans.test</groupId>
-			<artifactId>cditest-owb</artifactId>
-			<version>${webbeans}</version>
-			<scope>test</scope>
-		</dependency>
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${spring}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.openwebbeans.test</groupId>
+            <artifactId>cditest-owb</artifactId>
+            <version>${webbeans}</version>
+            <scope>test</scope>
+        </dependency>
 
-	</dependencies>
+    </dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>wagon-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>wagon-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 
-	<developers>
-		<developer>
-			<id>biomedcentral</id>
-			<name>BioMed Central Development Team</name>
-			<timezone>+0</timezone>
-		</developer>
-	</developers>
+    <developers>
+        <developer>
+            <id>biomedcentral</id>
+            <name>BioMed Central Development Team</name>
+            <timezone>+0</timezone>
+        </developer>
+    </developers>
 
-	<repositories>
-		<repository>
-			<id>spring-libs-snapshot</id>
-			<url>http://repo.springsource.org/lib-snapshot-local</url>
-		</repository>
-	</repositories>
+    <repositories>
+        <repository>
+            <id>spring-libs-snapshot</id>
+            <url>http://repo.springsource.org/lib-snapshot-local</url>
+        </repository>
+    </repositories>
 
-	<scm>
-		<url>https://github.com/SpringSource/spring-data-elasticsearch</url>
-		<connection>scm:git:git://github.com/SpringSource/spring-data-elasticsearch.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com:SpringSource/spring-data-elasticsearch.git
+    <scm>
+        <url>https://github.com/SpringSource/spring-data-elasticsearch</url>
+        <connection>scm:git:git://github.com/SpringSource/spring-data-elasticsearch.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:SpringSource/spring-data-elasticsearch.git
         </developerConnection>
-	</scm>
+    </scm>
 
-	<ciManagement>
-		<system>Bamboo</system>
-		<url>http://build.springsource.org/browse/SPRINGDATAES</url>
-	</ciManagement>
+    <ciManagement>
+        <system>Bamboo</system>
+        <url>http://build.springsource.org/browse/SPRINGDATAES</url>
+    </ciManagement>
 
-	<issueManagement>
-		<system>JIRA</system>
-		<url>https://jira.springsource.org/browse/DATAES</url>
-	</issueManagement>
+    <issueManagement>
+        <system>JIRA</system>
+        <url>https://jira.springsource.org/browse/DATAES</url>
+    </issueManagement>
 
 </project>

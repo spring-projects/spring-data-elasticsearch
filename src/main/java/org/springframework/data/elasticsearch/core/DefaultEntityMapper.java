@@ -1,7 +1,7 @@
 package org.springframework.data.elasticsearch.core;
 
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
@@ -9,6 +9,7 @@ import java.io.IOException;
  * DocumentMapper using jackson
  *
  * @author Artur Konczak
+ * @author Petar Tahchiev
  */
 public class DefaultEntityMapper implements EntityMapper {
 
@@ -16,7 +17,7 @@ public class DefaultEntityMapper implements EntityMapper {
 
     public DefaultEntityMapper() {
         objectMapper = new ObjectMapper();
-        objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
