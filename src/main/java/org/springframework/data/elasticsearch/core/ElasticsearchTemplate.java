@@ -16,8 +16,6 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
@@ -81,24 +79,30 @@ import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMa
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Artur Konczak
  */
 
 public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     private Client client;
     private ElasticsearchConverter elasticsearchConverter;
-    private ObjectMapper objectMapper = new ObjectMapper();
-
-    {
-        objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    }
+    private EntityMapper entityMapper;
 
     public ElasticsearchTemplate(Client client) {
-        this(client, null);
+        this(client, null, null);
+    }
+
+    public ElasticsearchTemplate(Client client, EntityMapper entityMapper) {
+        this(client, null, entityMapper);
     }
 
     public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter) {
+        this(client, elasticsearchConverter, null);
+    }
+
+    public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter, EntityMapper entityMapper) {
         this.client = client;
+        this.entityMapper = (entityMapper == null) ? new DefaultEntityMapper() : entityMapper;
         this.elasticsearchConverter = (elasticsearchConverter == null) ? new MappingElasticsearchConverter(
                 new SimpleElasticsearchMappingContext()) : elasticsearchConverter;
     }
@@ -239,7 +243,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         Assert.notNull(query.getId(), "No Id define for Query");
         Assert.notNull(query.getIndexRequest(), "No IndexRequest define for Query");
         UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
-        if(query.DoUpsert()){
+        if (query.DoUpsert()) {
             updateRequestBuilder.setDocAsUpsert(true)
                     .setUpsert(query.getIndexRequest()).setDoc(query.getIndexRequest());
         } else {
@@ -289,7 +293,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     @Override
-    public void deleteType(String index, String type){
+    public void deleteType(String index, String type) {
         Map mappings = client.admin().cluster().prepareState().execute().actionGet()
                 .getState().metaData().index(index).mappings();
         if (mappings.containsKey(type)) {
@@ -433,8 +437,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
             }
         }
 
-        if(searchQuery.getHighlightFields() != null) {
-            for(HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()){
+        if (searchQuery.getHighlightFields() != null) {
+            for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
                 searchRequest.addHighlightedField(highlightField);
             }
         }
@@ -509,7 +513,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                     : query.getType();
 
             IndexRequestBuilder indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(
-                    objectMapper.writeValueAsString(query.getObject()));
+                    entityMapper.mapToString(query.getObject()));
 
             if (query.getVersion() != null) {
                 indexRequestBuilder.setVersion(query.getVersion());
@@ -587,7 +591,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
             return null;
         }
         try {
-            return objectMapper.readValue(source, clazz);
+            return entityMapper.mapToObject(source, clazz);
         } catch (IOException e) {
             throw new ElasticsearchException("failed to map source [ " + source + "] to class " + clazz.getSimpleName(), e);
         }
@@ -599,4 +603,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     }
 
+    protected EntityMapper getEntityMapper() {
+        return entityMapper;
+    }
 }
