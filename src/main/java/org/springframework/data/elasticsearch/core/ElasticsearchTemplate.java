@@ -56,9 +56,11 @@ import org.springframework.data.elasticsearch.core.facet.FacetResult;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -138,7 +140,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         GetResponse response = client
                 .prepareGet(persistentEntity.getIndexName(), persistentEntity.getIndexType(), query.getId()).execute()
                 .actionGet();
-        return mapResult(response.getSourceAsString(), clazz);
+        T entity = mapResult(response.getSourceAsString(), clazz);
+        // Set entity id with response id (in case of auto-generated id by ES).
+        if (entity != null){
+           setPersistentEntityId(entity, response.getId());
+        }
+        return entity;
     }
 
     @Override
@@ -231,7 +238,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public String index(IndexQuery query) {
-        return prepareIndex(query).execute().actionGet().getId();
+        String documentId = prepareIndex(query).execute().actionGet().getId();
+        setPersistentEntityId(query.getObject(), documentId);
+        return documentId;
     }
 
     @Override
@@ -512,8 +521,17 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
             String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
                     : query.getType();
 
-            IndexRequestBuilder indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(
-                    entityMapper.mapToString(query.getObject()));
+            IndexRequestBuilder indexRequestBuilder = null;
+            String entityId = getPersistentEntityId(query.getObject());
+            
+            // If we have a query id and a document id, do not ask ES to generate one.
+            if (query.getId() != null && entityId != null){
+               indexRequestBuilder = client.prepareIndex(indexName, type, query.getId());
+            } else {
+               indexRequestBuilder = client.prepareIndex(indexName, type);
+            }
+            
+            indexRequestBuilder.setSource(entityMapper.mapToString(query.getObject()));
 
             if (query.getVersion() != null) {
                 indexRequestBuilder.setVersion(query.getVersion());
@@ -540,6 +558,40 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                 + " is not a Document. Make sure the document class is annotated with @Document(indexName=\"foo\")");
         return elasticsearchConverter.getMappingContext().getPersistentEntity(clazz);
     }
+    
+    private String getPersistentEntityId(Object entity){
+       PersistentProperty idProperty = getPersistentEntityFor(entity.getClass()).getIdProperty();
+       if (idProperty != null){
+          Method getter = idProperty.getGetter();
+          if (getter != null){
+             try{
+                Object id = getter.invoke(entity);
+                if (id != null){
+                   return String.valueOf(id);
+                }
+                
+             } catch (Throwable t){
+                t.printStackTrace();
+             }
+          }
+       }
+       return null;
+    }
+    
+    private void setPersistentEntityId(Object entity, String id){
+       PersistentProperty idProperty = getPersistentEntityFor(entity.getClass()).getIdProperty();
+       // Only deal with String because ES generated Ids are strings !
+       if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)){
+          Method setter = idProperty.getSetter();
+          if (setter != null){
+             try{
+                setter.invoke(entity, id);
+             } catch (Throwable t) {
+                t.printStackTrace();
+             }
+          }
+       }
+    }
 
     private String[] retrieveIndexNameFromPersistentEntity(Class clazz) {
         return new String[]{getPersistentEntityFor(clazz).getIndexName()};
@@ -557,7 +609,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                 List<T> results = new ArrayList<T>();
                 for (SearchHit hit : response.getHits()) {
                     if (hit != null) {
-                        results.add(mapResult(hit.sourceAsString(), elementType));
+                        T entity = mapResult(hit.sourceAsString(), elementType);
+                        setPersistentEntityId(entity, hit.getId());
+                        results.add(entity);
                     }
                 }
                 List<FacetResult> facets = new ArrayList<FacetResult>();

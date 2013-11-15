@@ -22,6 +22,8 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
+import org.hamcrest.core.IsNot;
+import org.hamcrest.core.IsNull;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -84,7 +86,7 @@ public class ElasticsearchTemplateTests {
 		// then
 		assertThat(count, is(equalTo(1L)));
 	}
-
+   
 	@Test
 	public void shouldReturnObjectForGivenId() {
 		// given
@@ -106,8 +108,9 @@ public class ElasticsearchTemplateTests {
 		// then
 		assertNotNull("not null....", sampleEntity1);
 		assertEquals(sampleEntity, sampleEntity1);
+		assertEquals(documentId, sampleEntity1.getId());
 	}
-
+	
 	@Test
 	public void shouldReturnPageForGivenSearchQuery() {
 		// given
@@ -131,7 +134,7 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities, is(notNullValue()));
 		assertThat(sampleEntities.getTotalElements(), greaterThanOrEqualTo(1L));
 	}
-
+   
 	@Test
 	public void shouldDoBulkIndex() {
 		// given
@@ -168,7 +171,63 @@ public class ElasticsearchTemplateTests {
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		assertThat(sampleEntities.getTotalElements(), is(equalTo(2L)));
 	}
+	
+	@Test
+   public void shouldDoIndexWithoutId() {
+      // given
+      // document
+      SampleEntity sampleEntity = new SampleEntity();
+      sampleEntity.setMessage("some message");
+      sampleEntity.setVersion(System.currentTimeMillis());
 
+      IndexQuery indexQuery = new IndexQuery();
+      indexQuery.setObject(sampleEntity);
+      // when
+      String documentId = elasticsearchTemplate.index(indexQuery);
+      // then
+      GetQuery getQuery = new GetQuery();
+      getQuery.setId(documentId);
+
+      SampleEntity result = elasticsearchTemplate.queryForObject(getQuery, SampleEntity.class);
+      assertThat(result.getId(), is(equalTo(documentId)));
+   }
+	
+	@Test
+   public void shouldDoBulkIndexWithoutId() {
+      // given
+      List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+      // first document
+      String documentId = randomNumeric(5);
+      SampleEntity sampleEntity1 = new SampleEntity();
+      sampleEntity1.setMessage("some message");
+      sampleEntity1.setVersion(System.currentTimeMillis());
+
+      IndexQuery indexQuery1 = new IndexQuery();
+      indexQuery1.setId(documentId);
+      indexQuery1.setObject(sampleEntity1);
+      indexQueries.add(indexQuery1);
+
+      // second document
+      String documentId2 = randomNumeric(5);
+      SampleEntity sampleEntity2 = new SampleEntity();
+      sampleEntity2.setMessage("some message");
+      sampleEntity2.setVersion(System.currentTimeMillis());
+
+      IndexQuery indexQuery2 = new IndexQuery();
+      indexQuery2.setObject(sampleEntity2);
+      indexQueries.add(indexQuery2);
+      // when
+      elasticsearchTemplate.bulkIndex(indexQueries);
+      elasticsearchTemplate.refresh(SampleEntity.class, true);
+      // then
+      SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+      Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+      assertThat(sampleEntities.getTotalElements(), is(equalTo(2L)));
+      
+      assertThat(sampleEntities.getContent().get(0).getId(), is(notNullValue()));
+      assertThat(sampleEntities.getContent().get(1).getId(), is(notNullValue()));
+   }
+	
 	@Test
 	public void shouldDeleteDocumentForGivenId() {
 		// given
@@ -876,5 +935,4 @@ public class ElasticsearchTemplateTests {
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
         assertThat(sampleEntities.getTotalElements(), equalTo(0L));
     }
-
 }

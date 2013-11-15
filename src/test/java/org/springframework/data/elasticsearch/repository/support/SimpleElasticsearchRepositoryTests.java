@@ -103,6 +103,18 @@ public class SimpleElasticsearchRepositoryTests {
 		SampleEntity entityFromElasticSearch = repository.findOne(documentId);
 		assertThat(entityFromElasticSearch, is(notNullValue()));
 	}
+	
+	@Test
+   public void shouldSaveDocumentWithoutId() {
+      // given
+      SampleEntity sampleEntity = new SampleEntity();
+      sampleEntity.setMessage("some message");
+      sampleEntity.setVersion(System.currentTimeMillis());
+      // when
+      repository.save(sampleEntity);
+      // then
+      assertThat(sampleEntity.getId(), is(notNullValue()));
+   }
 
 	@Test
 	public void shouldFindDocumentById() {
