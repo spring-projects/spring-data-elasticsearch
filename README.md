@@ -166,6 +166,67 @@ Indexing multiple Document(bulk index) using Repository
         repository.save(sampleEntities);
 ```
 
+### Adding custom behaviors to ResultMapper - CustomResultMapper
+
+Define new class implementing ResultMapper
+
+```java
+public class CustomResultMapper implements ResultsMapper{
+
+    private EntityMapper entityMapper;
+
+    public CustomResultMapper(EntityMapper entityMapper) {
+        this.entityMapper = entityMapper;
+    }
+
+    @Override
+    public EntityMapper getEntityMapper() {
+        return entityMapper;
+    }
+
+    @Override
+    public <T> T mapResult(GetResponse response, Class<T> clazz) {
+        return null;  //Your implementation
+    }
+
+    @Override
+    public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+        return null;  //Your implementation
+    }
+}
+
+```
+
+Inject your custom implementation to template
+
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+       xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+    <elasticsearch:repositories base-package="com.xyz.acme"/>
+
+    <elasticsearch:transport-client id="client" cluster-nodes="localhost:9300,someip:9300" />
+
+    <bean name="elasticsearchTemplate"
+          class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
+        <constructor-arg name="client" ref="client"/>
+        <constructor-arg name="resultsMapper" ref="resultMapper"/>
+    </bean>
+
+    <bean name="entityMapper" class="org.springframework.data.elasticsearch.core.DefaultEntityMapper"/>
+
+    <bean name="resultMapper" class="org.springframework.data.elasticsearch.core.CustomResultMapper">
+        <constructor-arg ref="entityMapper"/>
+    </bean>
+
+</beans>
+```
+
 ### Geo indexing and request
 
 You can make request using geo_distance filter. This can be done using GeoPoint object.

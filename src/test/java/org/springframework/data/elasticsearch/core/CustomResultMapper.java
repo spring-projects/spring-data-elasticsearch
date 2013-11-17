@@ -5,9 +5,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.springframework.data.domain.Pageable;
 
 /**
- * User: dead
- * Date: 11/11/13
- * Time: 17:37
+ * @author Artur Konczak
  */
 public class CustomResultMapper implements ResultsMapper{
 
