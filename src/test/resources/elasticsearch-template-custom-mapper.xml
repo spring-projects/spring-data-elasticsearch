@@ -10,9 +10,13 @@
     <bean name="elasticsearchTemplate"
           class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
         <constructor-arg name="client" ref="client"/>
-        <constructor-arg name="entityMapper" ref="entityMapper"/>
+        <constructor-arg name="resultsMapper" ref="resultMapper"/>
     </bean>
 
     <bean name="entityMapper" class="org.springframework.data.elasticsearch.core.CustomEntityMapper"/>
+
+    <bean name="resultMapper" class="org.springframework.data.elasticsearch.core.CustomResultMapper">
+        <constructor-arg ref="entityMapper"/>
+    </bean>
 
 </beans>

@@ -37,12 +37,16 @@ public class ElasticsearchTemplateCustomMapperTests {
     @Autowired
     private EntityMapper entityMapper;
 
+    @Autowired
+    private ResultsMapper resultsMapper;
+
     @Test
     public void shouldUseCustomMapper() {
         //given
         //when
         //them
-        assertThat(elasticsearchTemplate.getEntityMapper(), is(entityMapper));
+        assertThat(elasticsearchTemplate.getResultsMapper(), is(resultsMapper));
+        assertThat(elasticsearchTemplate.getResultsMapper().getEntityMapper(), is(entityMapper));
     }
 
 }

@@ -39,20 +39,16 @@ import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.facet.Facet;
 import org.elasticsearch.search.facet.FacetBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.facet.FacetMapper;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
-import org.springframework.data.elasticsearch.core.facet.FacetResult;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -86,25 +82,29 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     private Client client;
     private ElasticsearchConverter elasticsearchConverter;
-    private EntityMapper entityMapper;
+    private ResultsMapper resultsMapper;
 
     public ElasticsearchTemplate(Client client) {
         this(client, null, null);
     }
 
     public ElasticsearchTemplate(Client client, EntityMapper entityMapper) {
-        this(client, null, entityMapper);
+        this(client, null, new DefaultResultMapper(entityMapper));
+    }
+
+    public ElasticsearchTemplate(Client client, ResultsMapper resultsMapper) {
+        this(client, null, resultsMapper);
     }
 
     public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter) {
         this(client, elasticsearchConverter, null);
     }
 
-    public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter, EntityMapper entityMapper) {
+    public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter, ResultsMapper resultsMapper) {
         this.client = client;
-        this.entityMapper = (entityMapper == null) ? new DefaultEntityMapper() : entityMapper;
         this.elasticsearchConverter = (elasticsearchConverter == null) ? new MappingElasticsearchConverter(
                 new SimpleElasticsearchMappingContext()) : elasticsearchConverter;
+        this.resultsMapper = (resultsMapper == null) ? new DefaultResultMapper() : resultsMapper;
     }
 
     @Override
@@ -134,11 +134,16 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public <T> T queryForObject(GetQuery query, Class<T> clazz) {
+        return queryForObject(query, clazz, resultsMapper);
+    }
+
+    @Override
+    public <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper) {
         ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
         GetResponse response = client
                 .prepareGet(persistentEntity.getIndexName(), persistentEntity.getIndexType(), query.getId()).execute()
                 .actionGet();
-        return mapResult(response.getSourceAsString(), clazz);
+        return mapper.mapResult(response, clazz);
     }
 
     @Override
@@ -157,14 +162,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public <T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz) {
-        SearchResponse response = doSearch(prepareSearch(query, clazz), query);
-        return mapResults(response, clazz, query.getPageable());
+        return queryForPage(query, clazz, resultsMapper);
     }
 
     @Override
-    public <T> FacetedPage<T> queryForPage(SearchQuery query, ResultsMapper<T> resultsMapper) {
-        SearchResponse response = doSearch(prepareSearch(query), query);
-        return resultsMapper.mapResults(response);
+    public <T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
+        SearchResponse response = doSearch(prepareSearch(query, clazz), query);
+        return mapper.mapResults(response, clazz, query.getPageable());
     }
 
     @Override
@@ -209,13 +213,18 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
         SearchResponse response = searchRequestBuilder
                 .execute().actionGet();
-        return mapResults(response, clazz, criteriaQuery.getPageable());
+        return resultsMapper.mapResults(response, clazz, criteriaQuery.getPageable());
     }
 
     @Override
     public <T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz) {
+        return queryForPage(query, clazz, resultsMapper);
+    }
+
+    @Override
+    public <T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper) {
         SearchResponse response = prepareSearch(query, clazz).setQuery(query.getSource()).execute().actionGet();
-        return mapResults(response, clazz, query.getPageable());
+        return mapper.mapResults(response, clazz, query.getPageable());
     }
 
     @Override
@@ -349,10 +358,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     @Override
-    public <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, ResultsMapper<T> resultsMapper) {
+    public <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, Class<T> clazz) {
         SearchResponse response = client.prepareSearchScroll(scrollId)
                 .setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute().actionGet();
-        return resultsMapper.mapResults(response);
+        return resultsMapper.mapResults(response, clazz, null);
     }
 
     @Override
@@ -415,7 +424,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         }
 
         SearchResponse response = requestBuilder.execute().actionGet();
-        return mapResults(response, clazz, query.getPageable());
+        return resultsMapper.mapResults(response, clazz, query.getPageable());
     }
 
     private SearchResponse doSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
@@ -513,7 +522,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                     : query.getType();
 
             IndexRequestBuilder indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(
-                    entityMapper.mapToString(query.getObject()));
+                    resultsMapper.getEntityMapper().mapToString(query.getObject()));
 
             if (query.getVersion() != null) {
                 indexRequestBuilder.setVersion(query.getVersion());
@@ -549,33 +558,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return new String[]{getPersistentEntityFor(clazz).getIndexType()};
     }
 
-    private <T> FacetedPage<T> mapResults(SearchResponse response, final Class<T> elementType, final Pageable pageable) {
-        ResultsMapper<T> resultsMapper = new ResultsMapper<T>() {
-            @Override
-            public FacetedPage<T> mapResults(SearchResponse response) {
-                long totalHits = response.getHits().totalHits();
-                List<T> results = new ArrayList<T>();
-                for (SearchHit hit : response.getHits()) {
-                    if (hit != null) {
-                        results.add(mapResult(hit.sourceAsString(), elementType));
-                    }
-                }
-                List<FacetResult> facets = new ArrayList<FacetResult>();
-                if (response.getFacets() != null) {
-                    for (Facet facet : response.getFacets()) {
-                        FacetResult facetResult = FacetMapper.parse(facet);
-                        if (facetResult != null) {
-                            facets.add(facetResult);
-                        }
-                    }
-                }
-
-                return new FacetedPageImpl<T>(results, pageable, totalHits, facets);
-            }
-        };
-        return resultsMapper.mapResults(response);
-    }
-
     private List<String> extractIds(SearchResponse response) {
         List<String> ids = new ArrayList<String>();
         for (SearchHit hit : response.getHits()) {
@@ -586,24 +568,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return ids;
     }
 
-    private <T> T mapResult(String source, Class<T> clazz) {
-        if (isBlank(source)) {
-            return null;
-        }
-        try {
-            return entityMapper.mapToObject(source, clazz);
-        } catch (IOException e) {
-            throw new ElasticsearchException("failed to map source [ " + source + "] to class " + clazz.getSimpleName(), e);
-        }
-    }
-
     private static String[] toArray(List<String> values) {
         String[] valuesAsArray = new String[values.size()];
         return values.toArray(valuesAsArray);
 
     }
 
-    protected EntityMapper getEntityMapper() {
-        return entityMapper;
+    protected ResultsMapper getResultsMapper() {
+        return resultsMapper;
     }
 }

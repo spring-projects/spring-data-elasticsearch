@@ -14,7 +14,7 @@ import java.util.List;
  * @author Artur Konczak
  * @author Petar Tahchiev
  */
-public class FacetMapper {
+public class DefaultFacetMapper {
 
     public static FacetResult parse(Facet facet) {
         if (facet instanceof TermsFacet) {
