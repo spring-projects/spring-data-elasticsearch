@@ -166,6 +166,95 @@ Indexing multiple Document(bulk index) using Repository
         repository.save(sampleEntities);
 ```
 
+### Geo indexing and request
+
+You can make request using geo_distance filter. This can be done using GeoPoint object.
+
+First, here is a sample of an entity with a GeoPoint field (location)
+
+```java
+@Document(indexName = "test-geo-index", type = "geo-class-point-type")
+public class AuthorMarkerEntity {
+
+    @Id
+    private String id;
+    private String name;
+
+    private GeoPoint location;
+
+    private AuthorMarkerEntity(){
+    }
+
+    public AuthorMarkerEntity(String id){
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public GeoPoint getLocation() {
+        return location;
+    }
+
+    public void setLocation(GeoPoint location) {
+        this.location = location;
+    }
+}
+```
+
+Indexing your entity with a geo-point : 
+```java
+elasticsearchTemplate.createIndex(AuthorMarkerEntity.class);
+elasticsearchTemplate.refresh(AuthorMarkerEntity.class, true);
+elasticsearchTemplate.putMapping(AuthorMarkerEntity.class);
+
+List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+indexQueries.add(new AuthorMarkerEntityBuilder("1").name("Franck Marchand").location(45.7806d, 3.0875d).buildIndex());
+indexQueries.add(new AuthorMarkerEntityBuilder("2").name("Mohsin Husen").location(51.5171d, 0.1062d).buildIndex());
+indexQueries.add(new AuthorMarkerEntityBuilder("3").name("Rizwan Idrees").location(51.5171d, 0.1062d).buildIndex());
+elasticsearchTemplate.bulkIndex(indexQueries);
+```
+
+For your information : 
+- Clermont-Ferrand : 45.7806, 3.0875
+- London : 51.5171, 0.1062
+
+So, if you want to search for authors who are located within 20 kilometers around Clermont-Ferrand, here is the way to build your query :
+
+```java
+CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(
+                new Criteria("location").within(new GeoPoint(45.7806d, 3.0875d), "20km"));
+List<AuthorMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery, AuthorMarkerEntity.class);
+```
+
+This example should only return one author named "Franck Marchand".
+
+You can even combine with other criteria (e.g. author name) :
+
+Here, we're looking for authors located within 20 kilometers around London AND named "Mohsin Husen" : 
+
+```java
+CriteriaQuery geoLocationCriteriaQuery2 = new CriteriaQuery(
+                new Criteria("name").is("Mohsin Husen").and("location").within(new GeoPoint(51.5171d, 0.1062d), "20km"));
+List<AuthorMarkerEntity> geoAuthorsForGeoCriteria2 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery2, AuthorMarkerEntity.class);
+```
+
+This example should only return one author named "Mohsin Husen".
+
+
 ### XML Namespace
 
 You can set up repository scanning via xml configuration, which will happily create your repositories.
