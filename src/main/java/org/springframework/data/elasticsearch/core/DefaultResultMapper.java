@@ -16,6 +16,7 @@ import org.springframework.data.elasticsearch.core.facet.FacetResult;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -82,7 +83,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
             }
             generator.writeEndObject();
             generator.flush();
-            return new String(stream.toByteArray());
+            return new String(stream.toByteArray(), Charset.forName("UTF-8"));
         } catch (IOException e) {
             return null;
         }
