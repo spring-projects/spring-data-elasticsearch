@@ -537,6 +537,16 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         }
     }
 
+    public void addAlias(String alias, String index) {
+        client.admin().indices().prepareAliases().addAlias(index, alias)
+                .execute().actionGet();
+    }
+
+    public void removeAlias(String alias, String index) {
+        client.admin().indices().prepareAliases().removeAlias(index, alias)
+                .execute().actionGet();
+    }
+
     public void refresh(String indexName, boolean waitForOperation) {
         client.admin().indices().refresh(refreshRequest(indexName).force(waitForOperation)).actionGet();
     }
