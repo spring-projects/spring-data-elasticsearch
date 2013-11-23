@@ -16,6 +16,8 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
@@ -59,6 +61,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -542,6 +545,35 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
         client.admin().indices()
                 .refresh(refreshRequest(persistentEntity.getIndexName()).force(waitForOperation)).actionGet();
+    }
+
+    public Boolean addAlias(AliasQuery query) {
+        Assert.notNull(query.getIndexName(), "No index defined for Alias");
+        Assert.notNull(query.getAliasName(), "No alias defined");
+        IndicesAliasesRequestBuilder indicesAliasesRequestBuilder = null;
+        if(query.getFilterBuilder() != null) {
+            indicesAliasesRequestBuilder = client.admin().indices().prepareAliases().addAlias(query.getIndexName(), query.getAliasName(), query.getFilterBuilder());
+        } else if(query.getFilter() != null) {
+            indicesAliasesRequestBuilder = client.admin().indices().prepareAliases().addAlias(query.getIndexName(), query.getAliasName(), query.getFilter());
+        } else {
+            indicesAliasesRequestBuilder = client.admin().indices().prepareAliases().addAlias(query.getIndexName(), query.getAliasName());
+        }
+        return indicesAliasesRequestBuilder.execute().actionGet().isAcknowledged();
+    }
+
+    public Boolean removeAlias(AliasQuery query) {
+        Assert.notNull(query.getIndexName(), "No index defined for Alias");
+        Assert.notNull(query.getAliasName(), "No alias defined");
+        return client.admin().indices().prepareAliases().removeAlias(query.getIndexName(), query.getAliasName())
+                .execute().actionGet().isAcknowledged();
+    }
+
+    public Set<String> queryForAlias(String indexName) {
+        ClusterStateRequest clusterStateRequest = Requests.clusterStateRequest()
+                .filterRoutingTable(true)
+                .filterNodes(true)
+                .filteredIndices(indexName);
+        return client.admin().cluster().state(clusterStateRequest).actionGet().getState().getMetaData().aliases().keySet();
     }
 
     private ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz) {

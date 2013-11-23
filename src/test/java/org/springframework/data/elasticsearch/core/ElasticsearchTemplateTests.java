@@ -39,6 +39,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
 import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
@@ -856,6 +857,42 @@ public class ElasticsearchTemplateTests {
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(fieldQuery("id", documentId)).build();
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
         assertThat(sampleEntities.getTotalElements(), equalTo(0L));
+    }
+
+    @Test
+    public void shouldAddAlias(){
+        // given
+        elasticsearchTemplate.createIndex(SampleEntity.class);
+        AliasQuery aliasQuery = new AliasBuilder()
+                .withIndexName("test-index")
+                .withAliasName("test-alias").build();
+        // when
+        elasticsearchTemplate.addAlias(aliasQuery);
+        // then
+        Set<String> aliases = elasticsearchTemplate.queryForAlias("test-index");
+        assertThat(aliases, is(notNullValue()));
+        assertThat(aliases.contains("test-alias"), is(true));
+    }
+
+    @Test
+    public void shouldRemoveAlias(){
+        // given
+        elasticsearchTemplate.createIndex(SampleEntity.class);
+        String indexName = "test-index";
+        String aliasName = "test-alias";
+        AliasQuery aliasQuery = new AliasBuilder()
+                .withIndexName(indexName)
+                .withAliasName(aliasName).build();
+        // when
+        elasticsearchTemplate.addAlias(aliasQuery);
+        Set<String> aliases = elasticsearchTemplate.queryForAlias(indexName);
+        assertThat(aliases, is(notNullValue()));
+        assertThat(aliases.contains(aliasName), is(true));
+        // then
+        elasticsearchTemplate.removeAlias(aliasQuery);
+        aliases = elasticsearchTemplate.queryForAlias(indexName);
+        assertThat(aliases, is(notNullValue()));
+        assertThat(aliases.size(), is(0));
     }
 
 }

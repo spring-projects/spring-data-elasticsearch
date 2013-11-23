@@ -21,6 +21,7 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.query.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * ElasticsearchOperations
@@ -319,4 +320,27 @@ public interface ElasticsearchOperations {
 	 */
 	<T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz);
 
+    /**
+     * adding new alias
+     *
+     * @param query
+     * @return
+     */
+     Boolean addAlias(AliasQuery query);
+
+    /**
+     * removing previously created alias
+     *
+     * @param query
+     * @return
+     */
+     Boolean removeAlias(AliasQuery query);
+
+    /**
+     * get all the alias pointing to specified index
+     *
+     * @param indexName
+     * @return
+     */
+     Set<String> queryForAlias(String indexName);
 }
