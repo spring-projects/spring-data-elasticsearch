@@ -310,6 +310,17 @@ public interface ElasticsearchOperations {
 	 */
 	<T> Page<T> scroll(String scrollId, long scrollTimeInMillis, Class<T> clazz);
 
+    /**
+     * Scrolls the results for give scroll id using custom result mapper
+     *
+     * @param scrollId
+     * @param scrollTimeInMillis
+     * @param mapper
+     * @param <T>
+     * @return
+     */
+    <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper);
+
 	/**
 	 * more like this query to search for documents that are "like" a specific document.
 	 * 

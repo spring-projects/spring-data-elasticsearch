@@ -556,6 +556,50 @@ public class ElasticsearchTemplateTests {
         assertThat(sampleEntities.size(), is(equalTo(30)));
     }
 
+    @Test
+    public void shouldReturnResultsForScanAndScrollWithCustomResultMapper() {
+        //given
+        List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+        // when
+        elasticsearchTemplate.bulkIndex(entities);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+        // then
+
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices("test-index")
+                .withTypes("test-type").withPageable(new PageRequest(0, 10)).build();
+
+        String scrollId = elasticsearchTemplate.scan(searchQuery, 1000, false);
+        List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+        boolean hasRecords = true;
+        while (hasRecords) {
+            Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new SearchResultMapper() {
+                @Override
+                public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+                    List<SampleEntity> chunk = new ArrayList<SampleEntity>();
+                    for (SearchHit searchHit : response.getHits()) {
+                        if (response.getHits().getHits().length <= 0) {
+                            return null;
+                        }
+                        SampleEntity user = new SampleEntity();
+                        user.setId(searchHit.getId());
+                        user.setMessage((String) searchHit.getSource().get("message"));
+                        chunk.add(user);
+                    }
+                    if (chunk.size() > 0) {
+                        return new FacetedPageImpl<T>((List<T>) chunk);
+                    }
+                    return null;
+                }
+            });
+            if (page != null) {
+                sampleEntities.addAll(page.getContent());
+            } else {
+                hasRecords = false;
+            }
+        }
+        assertThat(sampleEntities.size(), is(equalTo(30)));
+    }
+
     private static List<IndexQuery> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         for (int i = 0; i < numberOfEntities; i++) {

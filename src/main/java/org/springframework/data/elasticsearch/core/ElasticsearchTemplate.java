@@ -368,6 +368,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     @Override
+    public <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper) {
+        SearchResponse response = client.prepareSearchScroll(scrollId)
+                .setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute().actionGet();
+        return mapper.mapResults(response, null, null);
+    }
+
+    @Override
     public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz) {
         int startRecord = 0;
         ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
