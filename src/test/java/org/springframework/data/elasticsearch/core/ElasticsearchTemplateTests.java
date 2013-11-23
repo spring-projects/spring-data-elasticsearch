@@ -31,6 +31,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.SampleEntity;
 import org.springframework.data.elasticsearch.SampleMappingEntity;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -939,4 +940,71 @@ public class ElasticsearchTemplateTests {
         assertThat(aliases.size(), is(0));
     }
 
+
+    @Test
+    public void shouldIndexDocumentForSpecifiedSource(){
+
+        // given
+        String documentSource = "{\"id\":\"2333343434\",\"type\":null,\"message\":\"some message\",\"rate\":0,\"available\":false,\"highlightedMessage\":null,\"version\":1385208779482}";
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId("2333343434");
+        indexQuery.setSource(documentSource);
+        indexQuery.setIndexName("test-index");
+        indexQuery.setType("test-type");
+        // when
+        elasticsearchTemplate.index(indexQuery);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id",indexQuery.getId()))
+                .withIndices("test-index")
+                .withTypes("test-type")
+                .build();
+        // then
+        Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapper() {
+            @Override
+            public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+                    List<SampleEntity> values = new ArrayList<SampleEntity>();
+                    for (SearchHit searchHit : response.getHits()) {
+                        SampleEntity sampleEntity = new SampleEntity();
+                        sampleEntity.setId(searchHit.getId());
+                        sampleEntity.setMessage((String) searchHit.getSource().get("message"));
+                        values.add(sampleEntity);
+                    }
+                    return new FacetedPageImpl<T>((List<T>) values);
+            }
+        });
+        assertThat(page, is(notNullValue()));
+        assertThat(page.getContent().size(), is(1));
+        assertThat(page.getContent().get(0).getId(), is(indexQuery.getId()));
+    }
+
+    @Test (expected = ElasticsearchException.class)
+    public void shouldThrowElasticsearchExceptionWhenNoDocumentSpecified(){
+        // given
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId("2333343434");
+        indexQuery.setIndexName("test-index");
+        indexQuery.setType("test-type");
+
+        //when
+        elasticsearchTemplate.index(indexQuery);
+    }
+
+    @Test
+    public void shouldReturnIds(){
+        //given
+        List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+        // when
+        elasticsearchTemplate.bulkIndex(entities);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(termQuery("message", "message"))
+                .withIndices("test-index")
+                .withTypes("test-type")
+                .withPageable(new PageRequest(0,100))
+                .build();
+        // then
+        List<String> ids = elasticsearchTemplate.queryForIds(searchQuery);
+        assertThat(ids, is(notNullValue()));
+        assertThat(ids.size(), is(30));
+    }
 }

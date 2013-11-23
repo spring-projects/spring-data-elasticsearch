@@ -531,9 +531,16 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
             String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
                     : query.getType();
 
-            IndexRequestBuilder indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(
-                    resultsMapper.getEntityMapper().mapToString(query.getObject()));
+            IndexRequestBuilder indexRequestBuilder = null;
 
+            if(query.getObject() != null) {
+                indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(
+                    resultsMapper.getEntityMapper().mapToString(query.getObject()));
+            } else if(query.getSource() != null) {
+                indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource());
+            } else {
+                throw new ElasticsearchException("object or source is null, failed to index the document [id: " + query.getId() + "]");
+            }
             if (query.getVersion() != null) {
                 indexRequestBuilder.setVersion(query.getVersion());
                 indexRequestBuilder.setVersionType(EXTERNAL);
@@ -544,16 +551,19 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         }
     }
 
+    @Override
     public void refresh(String indexName, boolean waitForOperation) {
         client.admin().indices().refresh(refreshRequest(indexName).force(waitForOperation)).actionGet();
     }
 
+    @Override
     public <T> void refresh(Class<T> clazz, boolean waitForOperation) {
         ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
         client.admin().indices()
                 .refresh(refreshRequest(persistentEntity.getIndexName()).force(waitForOperation)).actionGet();
     }
 
+    @Override
     public Boolean addAlias(AliasQuery query) {
         Assert.notNull(query.getIndexName(), "No index defined for Alias");
         Assert.notNull(query.getAliasName(), "No alias defined");
@@ -568,6 +578,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return indicesAliasesRequestBuilder.execute().actionGet().isAcknowledged();
     }
 
+    @Override
     public Boolean removeAlias(AliasQuery query) {
         Assert.notNull(query.getIndexName(), "No index defined for Alias");
         Assert.notNull(query.getAliasName(), "No alias defined");
@@ -575,6 +586,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                 .execute().actionGet().isAcknowledged();
     }
 
+    @Override
     public Set<String> queryForAlias(String indexName) {
         ClusterStateRequest clusterStateRequest = Requests.clusterStateRequest()
                 .filterRoutingTable(true)

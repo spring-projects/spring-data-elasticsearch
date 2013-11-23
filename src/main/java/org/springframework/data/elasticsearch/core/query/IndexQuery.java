@@ -29,6 +29,7 @@ public class IndexQuery {
 	private Long version;
 	private String indexName;
 	private String type;
+    private String source;
 
 	public String getId() {
 		return id;
@@ -69,4 +70,12 @@ public class IndexQuery {
 	public void setType(String type) {
 		this.type = type;
 	}
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
 }
