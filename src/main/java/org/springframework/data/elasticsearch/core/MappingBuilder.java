@@ -23,6 +23,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -47,6 +48,7 @@ class MappingBuilder {
     public static final String FIELD_SEARCH_ANALYZER = "search_analyzer";
     public static final String FIELD_INDEX_ANALYZER = "index_analyzer";
     public static final String FIELD_PROPERTIES = "properties";
+    public static final String FIELD_PARENT = "_parent";
 
     public static final String INDEX_VALUE_NOT_ANALYZED = "not_analyzed";
     public static final String TYPE_VALUE_STRING = "string";
@@ -55,9 +57,16 @@ class MappingBuilder {
 
     private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = new SimpleTypeHolder();
 
-    static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName) throws IOException {
-        XContentBuilder xContentBuilder = jsonBuilder().startObject().startObject(indexType).startObject(FIELD_PROPERTIES);
-
+    static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName, String parentType) throws IOException {
+        XContentBuilder mapping = jsonBuilder().startObject().startObject(indexType);
+        
+        // Parent
+        if (StringUtils.hasText(parentType)) {
+        	mapping.startObject(FIELD_PARENT).field(FIELD_TYPE,parentType).endObject();
+        }
+        
+        // Properties
+        XContentBuilder xContentBuilder = mapping.startObject(FIELD_PROPERTIES);
         mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY);
 
         return xContentBuilder.endObject().endObject().endObject();

@@ -104,4 +104,17 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
 		}
 		return null;
 	}
+	
+	@Override
+	public String getParentId(T entity) {
+		ElasticsearchPersistentProperty parentProperty = entityMetadata.getParentIdProperty();
+		try {
+			if (parentProperty != null) {
+				return (String) BeanWrapper.create(entity, null).getProperty(parentProperty);
+			}
+		} catch (Exception e) {
+			throw new IllegalStateException("failed to load parent ID: " + e, e);
+		}
+		return null;
+	}
 }
