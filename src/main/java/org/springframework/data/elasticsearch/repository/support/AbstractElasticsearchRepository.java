@@ -244,6 +244,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		query.setObject(entity);
 		query.setId(stringIdRepresentation(extractIdFromBean(entity)));
 		query.setVersion(extractVersionFromBean(entity));
+		query.setParentId(extractParentIdFromBean(entity));
 		return query;
 	}
 
@@ -305,5 +306,11 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		}
 		return null;
 	}
-
+	
+	private String extractParentIdFromBean(T entity) {
+		if (entityInformation != null) {
+			return entityInformation.getParentId(entity);
+		}
+		return null;
+	}
 }

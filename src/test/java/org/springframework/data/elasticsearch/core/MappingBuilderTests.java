@@ -4,8 +4,7 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.SampleTransientEntity;
-import org.springframework.data.elasticsearch.SimpleRecursiveEntity;
+import org.springframework.data.elasticsearch.*;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -33,12 +32,20 @@ public class MappingBuilderTests {
 
     @Test
     public void testInfiniteLoopAvoidance() throws IOException {
-        final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\"" +
-                "type\":\"string\",\"index\":\"not_analyzed\",\"search_analyzer\":\"standard\"," +
-                "\"index_analyzer\":\"standard\"}}}}";
+    	final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\"" +
+    			"type\":\"string\",\"index\":\"not_analyzed\",\"search_analyzer\":\"standard\"," +
+    			"\"index_analyzer\":\"standard\"}}}}";
 
-        XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class, "mapping", "id");
+        XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class, "mapping", "id", null);
         assertThat(xContentBuilder.string(), is(expected));
+    }
+    
+    @Test
+    public void testParentType() throws IOException {
+    	final String expected = "{\"mapping\":{\"_parent\":{\"type\":\"parentType\"},\"properties\":{}}}";
+    	
+    	XContentBuilder xContentBuilder = MappingBuilder.buildMapping(MinimalEntity.class, "mapping", "id", "parentType");
+    	assertThat(xContentBuilder.string(), is(expected));
     }
 
 }
