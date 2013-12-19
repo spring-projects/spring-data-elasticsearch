@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -25,6 +26,7 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 
 import java.io.IOException;
+import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -76,9 +78,9 @@ class MappingBuilder {
 
             if (field.isAnnotationPresent(Transient.class)) {
                 continue;
-            }            
-            
-            if (isEntity(field)  && !isInIgnoreFields(field)) {
+            }
+
+            if (isEntity(field)  && !isInIgnoreFields(field) && !isAnnotated(field)) {
                 mapEntity(xContentBuilder, field.getType(), false, EMPTY, field.getName());
             }
 
@@ -103,6 +105,10 @@ class MappingBuilder {
             xContentBuilder.endObject().endObject();
         }
 
+    }
+
+    private static boolean isAnnotated(java.lang.reflect.Field field) {
+        return field.getAnnotation(Field.class)==null && field.getAnnotation(MultiField.class)==null && field.getAnnotation(GeoPointField.class)==null;
     }
 
     private static void applyGeoPointFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
@@ -237,6 +243,7 @@ class MappingBuilder {
         TypeInformation<?> actualType = typeInformation.getActualType();
         boolean isComplexType = actualType == null ? false : !SIMPLE_TYPE_HOLDER.isSimpleType(actualType.getType());
         return isComplexType && !actualType.isCollectionLike() && !Map.class.isAssignableFrom(typeInformation.getType());
+        //return isComplexType && !actualType.isCollectionLike() && !Map.class.isAssignableFrom(typeInformation.getType()) && !Number.class.isAssignableFrom(typeInformation.getType());
     }
 
     private static boolean isAnyPropertyAnnotatedAsField(java.lang.reflect.Field[] fields) {
