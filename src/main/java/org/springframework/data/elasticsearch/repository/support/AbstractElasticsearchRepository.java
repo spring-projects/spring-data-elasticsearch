@@ -39,8 +39,8 @@ import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PA
 /**
  * Elasticsearch specific repository implementation. Likely to be used as target within
  * {@link ElasticsearchRepositoryFactory}
- * 
- * 
+ *
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Ryan Henszey
@@ -192,19 +192,15 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	}
 
 	@Override
-	public Page<T> searchSimilar(T entity, SearchQuery searchQuery) {
+	public Page<T> searchSimilar(T entity, String[] fields, Pageable pageable) {
 		Assert.notNull(entity, "Cannot search similar records for 'null'.");
-		Assert.notNull(searchQuery.getFields(), "Fields cannot be 'null'");
+		Assert.notNull(pageable, "'pageable' cannot be 'null'");
 		MoreLikeThisQuery query = new MoreLikeThisQuery();
 		query.setId(stringIdRepresentation(extractIdFromBean(entity)));
-		query.setPageable(searchQuery.getPageable() != null ? searchQuery.getPageable() : DEFAULT_PAGE);
-		query.addFields(searchQuery.getFields().toArray(new String[searchQuery.getFields().size()]));
-		if (!searchQuery.getIndices().isEmpty()) {
-			query.addSearchIndices(searchQuery.getIndices().toArray(new String[searchQuery.getIndices().size()]));
-		}
-		if (!searchQuery.getTypes().isEmpty()) {
-			query.addSearchTypes(searchQuery.getTypes().toArray(new String[searchQuery.getTypes().size()]));
-		}
+		query.setPageable(pageable);
+        if(fields != null){
+		    query.addFields(fields);
+        }
 		return elasticsearchOperations.moreLikeThis(query, getEntityClass());
 	}
 

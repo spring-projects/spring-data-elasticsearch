@@ -29,6 +29,4 @@ import java.util.List;
  */
 public interface ElasticsearchCrudRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID> {
 
-	<S extends T> List<S> save(List<S> entities);
-
 }

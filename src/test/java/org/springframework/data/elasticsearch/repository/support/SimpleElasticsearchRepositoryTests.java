@@ -398,9 +398,7 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.save(sampleEntities);
 
 		// when
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withPageable(new PageRequest(0, 5)).withFields("message")
-				.build();
-		Page<SampleEntity> results = repository.searchSimilar(sampleEntities.get(0), searchQuery);
+		Page<SampleEntity> results = repository.searchSimilar(sampleEntities.get(0), new String[]{"message"} ,new PageRequest(0, 5));
 
 		// then
 		assertThat(results.getTotalElements(), is(greaterThanOrEqualTo(1L)));
