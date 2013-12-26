@@ -34,6 +34,8 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -57,11 +59,7 @@ import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -70,6 +68,7 @@ import static org.elasticsearch.action.search.SearchType.DFS_QUERY_THEN_FETCH;
 import static org.elasticsearch.action.search.SearchType.SCAN;
 import static org.elasticsearch.client.Requests.indicesExistsRequest;
 import static org.elasticsearch.client.Requests.refreshRequest;
+import static org.elasticsearch.common.collect.Sets.newHashSet;
 import static org.elasticsearch.index.VersionType.EXTERNAL;
 import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMapping;
 
@@ -306,7 +305,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public void deleteType(String index, String type) {
-        Map mappings = client.admin().cluster().prepareState().execute().actionGet()
+        ImmutableOpenMap<String, MappingMetaData> mappings = client.admin().cluster().prepareState().execute().actionGet()
                 .getState().metaData().index(index).mappings();
         if (mappings.containsKey(type)) {
             client.admin().indices().deleteMapping(new DeleteMappingRequest(index).type(type)).actionGet();
@@ -592,7 +591,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                 .filterRoutingTable(true)
                 .filterNodes(true)
                 .filteredIndices(indexName);
-        return client.admin().cluster().state(clusterStateRequest).actionGet().getState().getMetaData().aliases().keySet();
+        Iterator<String> iterator = client.admin().cluster().state(clusterStateRequest).actionGet().getState().getMetaData().aliases().keysIt();
+        return newHashSet(iterator);
     }
 
     private ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz) {
