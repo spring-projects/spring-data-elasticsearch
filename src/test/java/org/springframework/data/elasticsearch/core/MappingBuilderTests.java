@@ -8,6 +8,7 @@ import org.springframework.data.elasticsearch.SampleTransientEntity;
 import org.springframework.data.elasticsearch.SimpleRecursiveEntity;
 import org.springframework.data.elasticsearch.StockPrice;
 import org.springframework.data.elasticsearch.StockPriceBuilder;
+import org.springframework.data.elasticsearch.MinimalEntity;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.test.context.ContextConfiguration;
@@ -44,7 +45,7 @@ public class MappingBuilderTests {
                 "type\":\"string\",\"index\":\"not_analyzed\",\"search_analyzer\":\"standard\"," +
                 "\"index_analyzer\":\"standard\"}}}}";
 
-        XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class, "mapping", "id");
+        XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class, "mapping", "id", null);
         assertThat(xContentBuilder.string(), is(expected));
     }
 
@@ -54,7 +55,7 @@ public class MappingBuilderTests {
         final String expected = "{\"mapping\":{\"properties\":{\"price\":{\"store\":false,\"type\":\"double\"}}}}";
 
         //When
-        XContentBuilder xContentBuilder = MappingBuilder.buildMapping(StockPrice.class, "mapping", "id");
+        XContentBuilder xContentBuilder = MappingBuilder.buildMapping(StockPrice.class, "mapping", "id", null);
 
         //Then
         assertThat(xContentBuilder.string(), is(expected));
@@ -83,4 +84,10 @@ public class MappingBuilderTests {
         assertThat(entry.getPrice(), is(new BigDecimal(price)));
     }
 
+    @Test
+    public void shouldCreateMappingForSpecifiedParentType() throws IOException {
+        final String expected = "{\"mapping\":{\"_parent\":{\"type\":\"parentType\"},\"properties\":{}}}";
+        XContentBuilder xContentBuilder = MappingBuilder.buildMapping(MinimalEntity.class, "mapping", "id", "parentType");
+        assertThat(xContentBuilder.string(), is(expected));
+    }
 }

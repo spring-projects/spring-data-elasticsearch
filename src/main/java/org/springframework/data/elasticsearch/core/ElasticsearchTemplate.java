@@ -122,7 +122,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
         try {
             XContentBuilder xContentBuilder = buildMapping(clazz, persistentEntity.getIndexType(), persistentEntity
-                    .getIdProperty().getFieldName());
+                    .getIdProperty().getFieldName(), persistentEntity.getParentType());
             return requestBuilder.setSource(xContentBuilder).execute().actionGet().isAcknowledged();
         } catch (Exception e) {
             throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
@@ -544,6 +544,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                 indexRequestBuilder.setVersion(query.getVersion());
                 indexRequestBuilder.setVersionType(EXTERNAL);
             }
+            
+            if (query.getParentId() != null) {
+                indexRequestBuilder.setParent(query.getParentId());
+            }
+            
             return indexRequestBuilder;
         } catch (IOException e) {
             throw new ElasticsearchException("failed to index the document [id: " + query.getId() + "]", e);
