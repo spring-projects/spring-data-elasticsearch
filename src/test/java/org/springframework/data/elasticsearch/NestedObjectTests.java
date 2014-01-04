@@ -15,12 +15,15 @@
  */
 package org.springframework.data.elasticsearch;
 
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
@@ -67,10 +70,14 @@ public class NestedObjectTests {
         elasticsearchTemplate.createIndex(Person.class);
         elasticsearchTemplate.putMapping(Person.class);
         elasticsearchTemplate.refresh(Person.class, true);
+        elasticsearchTemplate.deleteIndex(PersonMultipleLevelNested.class);
+        elasticsearchTemplate.createIndex(PersonMultipleLevelNested.class);
+        elasticsearchTemplate.putMapping(PersonMultipleLevelNested.class);
+        elasticsearchTemplate.refresh(PersonMultipleLevelNested.class,true);
     }
 
     @Test
-    public void shouldIndexNestedObject(){
+    public void shouldIndexInitialLevelNestedObject(){
 
         List<Car> cars = new ArrayList<Car>();
 
@@ -131,6 +138,48 @@ public class NestedObjectTests {
     }
 
 	@Test
+    public void shouldIndexMultipleLevelNestedObject(){
+        //given
+        List<IndexQuery> indexQueries = createPerson();
+
+        //when
+        elasticsearchTemplate.putMapping(PersonMultipleLevelNested.class);
+        elasticsearchTemplate.bulkIndex(indexQueries);
+        elasticsearchTemplate.refresh(PersonMultipleLevelNested.class, true);
+
+        //then
+        GetQuery getQuery = new GetQuery();
+        getQuery.setId("1");
+        PersonMultipleLevelNested personIndexed = elasticsearchTemplate.queryForObject(getQuery, PersonMultipleLevelNested.class);
+        assertThat(personIndexed, is(notNullValue()));
+    }
+
+    @Test
+    public void shouldSearchUsingNestedQueryOnMultipleLevelNestedObject(){
+        //given
+        List<IndexQuery> indexQueries = createPerson();
+
+        //when
+        elasticsearchTemplate.putMapping(PersonMultipleLevelNested.class);
+        elasticsearchTemplate.bulkIndex(indexQueries);
+        elasticsearchTemplate.refresh(PersonMultipleLevelNested.class, true);
+
+        //then
+        BoolQueryBuilder builder = boolQuery();
+        builder.must(nestedQuery("girlFriends", termQuery("girlFriends.type","temp")))
+               .must(nestedQuery("girlFriends.cars", termQuery("girlFriends.cars.name", "Ford".toLowerCase())));
+
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(builder)
+                .build();
+
+        Page<PersonMultipleLevelNested> personIndexed = elasticsearchTemplate.queryForPage(searchQuery, PersonMultipleLevelNested.class);
+        assertThat(personIndexed, is(notNullValue()));
+        assertThat(personIndexed.getTotalElements(), is(1L));
+        assertThat(personIndexed.getContent().get(0).getId(), is("1"));
+    }
+
+	@Test
 	public void shouldIndexInnerObject() {
 		// given
 		String id = randomAlphanumeric(5);
@@ -145,5 +194,64 @@ public class NestedObjectTests {
 		bookRepository.save(book);
 		// then
 		assertThat(bookRepository.findOne(id), is(notNullValue()));
+	}
+
+    private List<IndexQuery> createPerson(){
+
+        PersonMultipleLevelNested person1 = new PersonMultipleLevelNested();
+
+        person1.setId("1");
+        person1.setName("name");
+
+        Car saturn = new Car();
+        saturn.setName("Saturn");
+        saturn.setModel("SL");
+
+        Car subaru = new Car();
+        subaru.setName("Subaru");
+        subaru.setModel("Imprezza");
+
+        Car car  = new Car();
+        car.setName("Saturn");
+        car.setModel("Imprezza");
+
+        Car ford = new Car();
+        ford.setName("Ford");
+        ford.setModel("Focus");
+
+        GirlFriend permanent = new GirlFriend();
+        permanent.setName("permanent");
+        permanent.setType("permanent");
+        permanent.setCars(Arrays.asList(saturn, subaru));
+
+        GirlFriend temp = new GirlFriend();
+        temp.setName("temp");
+        temp.setType("temp");
+        temp.setCars(Arrays.asList(car,ford));
+
+        person1.setGirlFriends(Arrays.asList(permanent, temp));
+
+        IndexQuery indexQuery1 = new IndexQuery();
+        indexQuery1.setId(person1.getId());
+        indexQuery1.setObject(person1);
+
+
+        PersonMultipleLevelNested person2 = new PersonMultipleLevelNested();
+
+        person2.setId("2");
+        person2.setName("name");
+
+        person2.setGirlFriends(Arrays.asList(permanent));
+
+        IndexQuery indexQuery2 = new IndexQuery();
+        indexQuery2.setId(person2.getId());
+        indexQuery2.setObject(person2);
+
+        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+        indexQueries.add(indexQuery1);
+        indexQueries.add(indexQuery2);
+
+        return indexQueries;
+
 	}
 }

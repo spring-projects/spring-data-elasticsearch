@@ -869,7 +869,7 @@ public class ElasticsearchTemplateTests {
         indexQuery.setObject(sampleEntity);
 
         elasticsearchTemplate.index(indexQuery);
-
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
         // when
         elasticsearchTemplate.deleteType("test-index", "test-type");
 

@@ -16,9 +16,9 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.springframework.core.GenericCollectionTypeResolver;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
-import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -26,7 +26,6 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 
 import java.io.IOException;
-import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -52,7 +51,6 @@ class MappingBuilder {
 
     public static final String INDEX_VALUE_NOT_ANALYZED = "not_analyzed";
     public static final String TYPE_VALUE_STRING = "string";
-    public static final String TYPE_VALUE_OBJECT = "object";
     public static final String TYPE_VALUE_GEO_POINT = "geo_point";
 
     private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = new SimpleTypeHolder();
@@ -60,35 +58,47 @@ class MappingBuilder {
     static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName) throws IOException {
         XContentBuilder xContentBuilder = jsonBuilder().startObject().startObject(indexType).startObject(FIELD_PROPERTIES);
 
-        mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY);
+        mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY, false);
 
         return xContentBuilder.endObject().endObject().endObject();
     }
 
     private static void mapEntity(XContentBuilder xContentBuilder, Class clazz, boolean isRootObject, String idFieldName,
-                                  String nestedObjectFieldName) throws IOException {
+                                  String nestedObjectFieldName, boolean nestedAnnotaion) throws IOException {
 
         java.lang.reflect.Field[] fields = clazz.getDeclaredFields();
 
-        if (!isRootObject && isAnyPropertyAnnotatedAsField(fields)) {
-            xContentBuilder.startObject(nestedObjectFieldName).field(FIELD_TYPE, TYPE_VALUE_OBJECT).startObject(FIELD_PROPERTIES);
+        if (!isRootObject && (isAnyPropertyAnnotatedAsField(fields) || nestedAnnotaion)) {
+            String type = FieldType.Object.toString().toLowerCase();
+            if(nestedAnnotaion){
+                type =  FieldType.Nested.toString().toLowerCase();
+            }
+            xContentBuilder.startObject(nestedObjectFieldName).field(FIELD_TYPE, type).startObject(FIELD_PROPERTIES);
         }
 
         for (java.lang.reflect.Field field : fields) {
 
-            if (field.isAnnotationPresent(Transient.class)) {
+            if (field.isAnnotationPresent(Transient.class) || isInIgnoreFields(field)) {
                 continue;
-            }
-
-            if (isEntity(field)  && !isInIgnoreFields(field) && !isAnnotated(field)) {
-                mapEntity(xContentBuilder, field.getType(), false, EMPTY, field.getName());
-            }
+            }            
+            
+            boolean isGeoField = isGeoField(field);
 
             Field singleField = field.getAnnotation(Field.class);
-            MultiField multiField = field.getAnnotation(MultiField.class);
-            GeoPointField geoPoint = field.getAnnotation(GeoPointField.class);
+            if (!isGeoField && isEntity(field) && !isAnnotated(field)) {
+                if(singleField == null){
+                    continue;
+                }
+                boolean nestedField = isNestedField(field);
+                mapEntity(xContentBuilder, getFieldType(field), false, EMPTY, field.getName(), nestedField);
+                if(nestedField){
+                    continue;
+                }
+            }
 
-            if (field.getType() == GeoPoint.class || geoPoint != null) {
+            MultiField multiField = field.getAnnotation(MultiField.class);
+
+            if (isGeoField) {
                 applyGeoPointFieldMapping(xContentBuilder, field);
             }
 
@@ -238,12 +248,20 @@ class MappingBuilder {
         builder.endObject();
     }
 
-    private static boolean isEntity(java.lang.reflect.Field field) {
+    protected static boolean isEntity(java.lang.reflect.Field field) {
         TypeInformation typeInformation = ClassTypeInformation.from(field.getType());
-        TypeInformation<?> actualType = typeInformation.getActualType();
-        boolean isComplexType = actualType == null ? false : !SIMPLE_TYPE_HOLDER.isSimpleType(actualType.getType());
-        return isComplexType && !actualType.isCollectionLike() && !Map.class.isAssignableFrom(typeInformation.getType());
-        //return isComplexType && !actualType.isCollectionLike() && !Map.class.isAssignableFrom(typeInformation.getType()) && !Number.class.isAssignableFrom(typeInformation.getType());
+        Class<?> clazz = getFieldType(field);
+        boolean isComplexType = !SIMPLE_TYPE_HOLDER.isSimpleType(clazz);
+        return isComplexType && !Map.class.isAssignableFrom(typeInformation.getType());
+    }
+
+    protected static Class<?> getFieldType(java.lang.reflect.Field field) {
+        Class<?> clazz = field.getType();
+        TypeInformation typeInformation = ClassTypeInformation.from(clazz);
+        if (typeInformation.isCollectionLike()) {
+            clazz = GenericCollectionTypeResolver.getCollectionFieldType(field) != null ? GenericCollectionTypeResolver.getCollectionFieldType(field) : typeInformation.getComponentType().getType();
+        }
+        return clazz;
     }
 
     private static boolean isAnyPropertyAnnotatedAsField(java.lang.reflect.Field[] fields) {
@@ -269,4 +287,14 @@ class MappingBuilder {
         }
         return false;
     }
+
+    private static boolean isNestedField(java.lang.reflect.Field field) {
+        Field fieldAnnotation = field.getAnnotation(Field.class);
+        return fieldAnnotation != null && (FieldType.Nested == fieldAnnotation.type() || FieldType.Object == fieldAnnotation.type());
+    }
+
+    private static boolean isGeoField(java.lang.reflect.Field field) {
+        return field.getType() == GeoPoint.class || field.getAnnotation(GeoPointField.class) != null;
+    }
+
 }
