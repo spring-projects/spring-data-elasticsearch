@@ -1,18 +1,18 @@
 /*
- * Copyright 2013 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright 2013 the original author or authors.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.action.index.IndexRequest;
@@ -22,6 +22,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
+import org.hamcrest.core.IsEqual;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -50,10 +51,10 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 /**
- * @author Rizwan Idrees
- * @author Mohsin Husen
- * @author Franck Marchand
- */
+* @author Rizwan Idrees
+* @author Mohsin Husen
+* @author Franck Marchand
+*/
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class ElasticsearchTemplateTests {
@@ -170,6 +171,63 @@ public class ElasticsearchTemplateTests {
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
         assertThat(sampleEntities.getTotalElements(), is(equalTo(2L)));
+    }
+    
+    @Test
+    public void shouldDoIndexWithoutId() {
+       // given
+       // document
+       SampleEntity sampleEntity = new SampleEntity();
+       sampleEntity.setMessage("some message");
+       sampleEntity.setVersion(System.currentTimeMillis());
+
+       IndexQuery indexQuery = new IndexQuery();
+       indexQuery.setObject(sampleEntity);
+       // when
+       String documentId = elasticsearchTemplate.index(indexQuery);
+       // then
+       assertThat(sampleEntity.getId(), is(equalTo(documentId)));
+       
+       GetQuery getQuery = new GetQuery();
+       getQuery.setId(documentId);
+       SampleEntity result = elasticsearchTemplate.queryForObject(getQuery, SampleEntity.class);
+       assertThat(result.getId(), is(equalTo(documentId)));
+    }
+    
+    @Test
+    public void shouldDoBulkIndexWithoutId() {
+       // given
+       List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+       // first document
+       String documentId = randomNumeric(5);
+       SampleEntity sampleEntity1 = new SampleEntity();
+       sampleEntity1.setMessage("some message");
+       sampleEntity1.setVersion(System.currentTimeMillis());
+
+       IndexQuery indexQuery1 = new IndexQuery();
+       indexQuery1.setId(documentId);
+       indexQuery1.setObject(sampleEntity1);
+       indexQueries.add(indexQuery1);
+
+       // second document
+       String documentId2 = randomNumeric(5);
+       SampleEntity sampleEntity2 = new SampleEntity();
+       sampleEntity2.setMessage("some message");
+       sampleEntity2.setVersion(System.currentTimeMillis());
+
+       IndexQuery indexQuery2 = new IndexQuery();
+       indexQuery2.setObject(sampleEntity2);
+       indexQueries.add(indexQuery2);
+       // when
+       elasticsearchTemplate.bulkIndex(indexQueries);
+       elasticsearchTemplate.refresh(SampleEntity.class, true);
+       // then
+       SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+       Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+       assertThat(sampleEntities.getTotalElements(), is(equalTo(2L)));
+       
+       assertThat(sampleEntities.getContent().get(0).getId(), is(notNullValue()));
+       assertThat(sampleEntities.getContent().get(1).getId(), is(notNullValue()));
     }
 
     @Test

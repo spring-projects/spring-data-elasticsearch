@@ -56,9 +56,11 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
@@ -106,7 +108,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         this.client = client;
         this.elasticsearchConverter = (elasticsearchConverter == null) ? new MappingElasticsearchConverter(
                 new SimpleElasticsearchMappingContext()) : elasticsearchConverter;
-        this.resultsMapper = (resultsMapper == null) ? new DefaultResultMapper() : resultsMapper;
+        //this.resultsMapper = (resultsMapper == null) ? new DefaultResultMapper() : resultsMapper;
+        this.resultsMapper = (resultsMapper == null) ? new DefaultResultMapper(this.elasticsearchConverter.getMappingContext()) : resultsMapper;
     }
 
     @Override
@@ -145,7 +148,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         GetResponse response = client
                 .prepareGet(persistentEntity.getIndexName(), persistentEntity.getIndexType(), query.getId()).execute()
                 .actionGet();
-        return mapper.mapResult(response, clazz);
+
+        T entity = mapper.mapResult(response, clazz);
+        return entity;
     }
 
     @Override
@@ -242,7 +247,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public String index(IndexQuery query) {
-        return prepareIndex(query).execute().actionGet().getId();
+        String documentId = prepareIndex(query).execute().actionGet().getId();
+        // We should call this because we are not going through a mapper.
+        if (query.getObject() != null){
+           setPersistentEntityId(query.getObject(), documentId);
+        }
+        return documentId;
     }
 
     @Override
@@ -531,11 +541,17 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                     : query.getType();
 
             IndexRequestBuilder indexRequestBuilder = null;
-
-            if(query.getObject() != null) {
-                indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(
-                    resultsMapper.getEntityMapper().mapToString(query.getObject()));
-            } else if(query.getSource() != null) {
+            
+            if (query.getObject() != null) {
+                // If we have a query id and a document id, do not ask ES to generate one.
+                String entityId = getPersistentEntityId(query.getObject());
+                if (query.getId() != null && entityId != null){
+                   indexRequestBuilder = client.prepareIndex(indexName, type, query.getId());   
+                } else {
+                   indexRequestBuilder = client.prepareIndex(indexName, type);   
+                }
+                indexRequestBuilder.setSource(resultsMapper.getEntityMapper().mapToString(query.getObject()));
+            } else if (query.getSource() != null) {
                 indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource());
             } else {
                 throw new ElasticsearchException("object or source is null, failed to index the document [id: " + query.getId() + "]");
@@ -604,6 +620,40 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         Assert.isTrue(clazz.isAnnotationPresent(Document.class), "Unable to identify index name. " + clazz.getSimpleName()
                 + " is not a Document. Make sure the document class is annotated with @Document(indexName=\"foo\")");
         return elasticsearchConverter.getMappingContext().getPersistentEntity(clazz);
+    }
+    
+    private String getPersistentEntityId(Object entity){
+       PersistentProperty idProperty = getPersistentEntityFor(entity.getClass()).getIdProperty();
+       if (idProperty != null){
+          Method getter = idProperty.getGetter();
+          if (getter != null){
+             try{
+                Object id = getter.invoke(entity);
+                if (id != null){
+                   return String.valueOf(id);
+                }
+                
+             } catch (Throwable t){
+                t.printStackTrace();
+             }
+          }
+       }
+       return null;
+    }
+    
+    private void setPersistentEntityId(Object entity, String id){
+       PersistentProperty idProperty = getPersistentEntityFor(entity.getClass()).getIdProperty();
+       // Only deal with String because ES generated Ids are strings !
+       if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)){
+          Method setter = idProperty.getSetter();
+          if (setter != null){
+             try{
+                setter.invoke(entity, id);
+             } catch (Throwable t) {
+                t.printStackTrace();
+             }
+          }
+       }
     }
 
     private String[] retrieveIndexNameFromPersistentEntity(Class clazz) {
