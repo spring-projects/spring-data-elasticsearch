@@ -15,22 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.elasticsearch.action.search.SearchResponse;
-import org.springframework.data.domain.Page;
-
 /**
  * ResultsMapper
- * 
- * @param <T>
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
- * 
  */
 
-public interface ResultsMapper<T> {
+public interface ResultsMapper extends SearchResultMapper, GetResultMapper {
 
-	FacetedPage<T> mapResults(SearchResponse response);
+    EntityMapper getEntityMapper();
 
 }

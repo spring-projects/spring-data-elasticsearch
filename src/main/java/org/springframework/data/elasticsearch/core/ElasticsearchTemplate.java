@@ -16,6 +16,8 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
@@ -32,6 +34,8 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -39,20 +43,16 @@ import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.facet.Facet;
 import org.elasticsearch.search.facet.FacetBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.facet.FacetMapper;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
-import org.springframework.data.elasticsearch.core.facet.FacetResult;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -61,10 +61,7 @@ import org.springframework.util.Assert;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -73,6 +70,7 @@ import static org.elasticsearch.action.search.SearchType.DFS_QUERY_THEN_FETCH;
 import static org.elasticsearch.action.search.SearchType.SCAN;
 import static org.elasticsearch.client.Requests.indicesExistsRequest;
 import static org.elasticsearch.client.Requests.refreshRequest;
+import static org.elasticsearch.common.collect.Sets.newHashSet;
 import static org.elasticsearch.index.VersionType.EXTERNAL;
 import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMapping;
 
@@ -88,25 +86,30 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     private Client client;
     private ElasticsearchConverter elasticsearchConverter;
-    private EntityMapper entityMapper;
+    private ResultsMapper resultsMapper;
 
     public ElasticsearchTemplate(Client client) {
         this(client, null, null);
     }
 
     public ElasticsearchTemplate(Client client, EntityMapper entityMapper) {
-        this(client, null, entityMapper);
+        this(client, null, new DefaultResultMapper(entityMapper));
+    }
+
+    public ElasticsearchTemplate(Client client, ResultsMapper resultsMapper) {
+        this(client, null, resultsMapper);
     }
 
     public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter) {
         this(client, elasticsearchConverter, null);
     }
 
-    public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter, EntityMapper entityMapper) {
+    public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter, ResultsMapper resultsMapper) {
         this.client = client;
-        this.entityMapper = (entityMapper == null) ? new DefaultEntityMapper() : entityMapper;
         this.elasticsearchConverter = (elasticsearchConverter == null) ? new MappingElasticsearchConverter(
                 new SimpleElasticsearchMappingContext()) : elasticsearchConverter;
+        //this.resultsMapper = (resultsMapper == null) ? new DefaultResultMapper() : resultsMapper;
+        this.resultsMapper = (resultsMapper == null) ? new DefaultResultMapper(this.elasticsearchConverter.getMappingContext()) : resultsMapper;
     }
 
     @Override
@@ -136,15 +139,17 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public <T> T queryForObject(GetQuery query, Class<T> clazz) {
+        return queryForObject(query, clazz, resultsMapper);
+    }
+
+    @Override
+    public <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper) {
         ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
         GetResponse response = client
                 .prepareGet(persistentEntity.getIndexName(), persistentEntity.getIndexType(), query.getId()).execute()
                 .actionGet();
-        T entity = mapResult(response.getSourceAsString(), clazz);
-        // Set entity id with response id (in case of auto-generated id by ES).
-        if (entity != null){
-           setPersistentEntityId(entity, response.getId());
-        }
+
+        T entity = mapper.mapResult(response, clazz);
         return entity;
     }
 
@@ -164,14 +169,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public <T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz) {
-        SearchResponse response = doSearch(prepareSearch(query, clazz), query);
-        return mapResults(response, clazz, query.getPageable());
+        return queryForPage(query, clazz, resultsMapper);
     }
 
     @Override
-    public <T> FacetedPage<T> queryForPage(SearchQuery query, ResultsMapper<T> resultsMapper) {
-        SearchResponse response = doSearch(prepareSearch(query), query);
-        return resultsMapper.mapResults(response);
+    public <T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
+        SearchResponse response = doSearch(prepareSearch(query, clazz), query);
+        return mapper.mapResults(response, clazz, query.getPageable());
     }
 
     @Override
@@ -216,13 +220,18 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
         SearchResponse response = searchRequestBuilder
                 .execute().actionGet();
-        return mapResults(response, clazz, criteriaQuery.getPageable());
+        return resultsMapper.mapResults(response, clazz, criteriaQuery.getPageable());
     }
 
     @Override
     public <T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz) {
+        return queryForPage(query, clazz, resultsMapper);
+    }
+
+    @Override
+    public <T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper) {
         SearchResponse response = prepareSearch(query, clazz).setQuery(query.getSource()).execute().actionGet();
-        return mapResults(response, clazz, query.getPageable());
+        return mapper.mapResults(response, clazz, query.getPageable());
     }
 
     @Override
@@ -239,7 +248,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     @Override
     public String index(IndexQuery query) {
         String documentId = prepareIndex(query).execute().actionGet().getId();
-        setPersistentEntityId(query.getObject(), documentId);
+        // We should call this because we are not going through a mapper.
+        if (query.getObject() != null){
+           setPersistentEntityId(query.getObject(), documentId);
+        }
         return documentId;
     }
 
@@ -303,7 +315,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
     @Override
     public void deleteType(String index, String type) {
-        Map mappings = client.admin().cluster().prepareState().execute().actionGet()
+        ImmutableOpenMap<String, MappingMetaData> mappings = client.admin().cluster().prepareState().execute().actionGet()
                 .getState().metaData().index(index).mappings();
         if (mappings.containsKey(type)) {
             client.admin().indices().deleteMapping(new DeleteMappingRequest(index).type(type)).actionGet();
@@ -358,10 +370,17 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
     }
 
     @Override
-    public <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, ResultsMapper<T> resultsMapper) {
+    public <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, Class<T> clazz) {
         SearchResponse response = client.prepareSearchScroll(scrollId)
                 .setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute().actionGet();
-        return resultsMapper.mapResults(response);
+        return resultsMapper.mapResults(response, clazz, null);
+    }
+
+    @Override
+    public <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper) {
+        SearchResponse response = client.prepareSearchScroll(scrollId)
+                .setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute().actionGet();
+        return mapper.mapResults(response, null, null);
     }
 
     @Override
@@ -424,7 +443,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         }
 
         SearchResponse response = requestBuilder.execute().actionGet();
-        return mapResults(response, clazz, query.getPageable());
+        return resultsMapper.mapResults(response, clazz, query.getPageable());
     }
 
     private SearchResponse doSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
@@ -522,17 +541,21 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                     : query.getType();
 
             IndexRequestBuilder indexRequestBuilder = null;
-            String entityId = getPersistentEntityId(query.getObject());
             
-            // If we have a query id and a document id, do not ask ES to generate one.
-            if (query.getId() != null && entityId != null){
-               indexRequestBuilder = client.prepareIndex(indexName, type, query.getId());
+            if (query.getObject() != null) {
+                // If we have a query id and a document id, do not ask ES to generate one.
+                String entityId = getPersistentEntityId(query.getObject());
+                if (query.getId() != null && entityId != null){
+                   indexRequestBuilder = client.prepareIndex(indexName, type, query.getId());   
+                } else {
+                   indexRequestBuilder = client.prepareIndex(indexName, type);   
+                }
+                indexRequestBuilder.setSource(resultsMapper.getEntityMapper().mapToString(query.getObject()));
+            } else if (query.getSource() != null) {
+                indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource());
             } else {
-               indexRequestBuilder = client.prepareIndex(indexName, type);
+                throw new ElasticsearchException("object or source is null, failed to index the document [id: " + query.getId() + "]");
             }
-            
-            indexRequestBuilder.setSource(entityMapper.mapToString(query.getObject()));
-
             if (query.getVersion() != null) {
                 indexRequestBuilder.setVersion(query.getVersion());
                 indexRequestBuilder.setVersionType(EXTERNAL);
@@ -543,14 +566,49 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         }
     }
 
+    @Override
     public void refresh(String indexName, boolean waitForOperation) {
         client.admin().indices().refresh(refreshRequest(indexName).force(waitForOperation)).actionGet();
     }
 
+    @Override
     public <T> void refresh(Class<T> clazz, boolean waitForOperation) {
         ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
         client.admin().indices()
                 .refresh(refreshRequest(persistentEntity.getIndexName()).force(waitForOperation)).actionGet();
+    }
+
+    @Override
+    public Boolean addAlias(AliasQuery query) {
+        Assert.notNull(query.getIndexName(), "No index defined for Alias");
+        Assert.notNull(query.getAliasName(), "No alias defined");
+        IndicesAliasesRequestBuilder indicesAliasesRequestBuilder = null;
+        if(query.getFilterBuilder() != null) {
+            indicesAliasesRequestBuilder = client.admin().indices().prepareAliases().addAlias(query.getIndexName(), query.getAliasName(), query.getFilterBuilder());
+        } else if(query.getFilter() != null) {
+            indicesAliasesRequestBuilder = client.admin().indices().prepareAliases().addAlias(query.getIndexName(), query.getAliasName(), query.getFilter());
+        } else {
+            indicesAliasesRequestBuilder = client.admin().indices().prepareAliases().addAlias(query.getIndexName(), query.getAliasName());
+        }
+        return indicesAliasesRequestBuilder.execute().actionGet().isAcknowledged();
+    }
+
+    @Override
+    public Boolean removeAlias(AliasQuery query) {
+        Assert.notNull(query.getIndexName(), "No index defined for Alias");
+        Assert.notNull(query.getAliasName(), "No alias defined");
+        return client.admin().indices().prepareAliases().removeAlias(query.getIndexName(), query.getAliasName())
+                .execute().actionGet().isAcknowledged();
+    }
+
+    @Override
+    public Set<String> queryForAlias(String indexName) {
+        ClusterStateRequest clusterStateRequest = Requests.clusterStateRequest()
+                .filterRoutingTable(true)
+                .filterNodes(true)
+                .filteredIndices(indexName);
+        Iterator<String> iterator = client.admin().cluster().state(clusterStateRequest).actionGet().getState().getMetaData().aliases().keysIt();
+        return newHashSet(iterator);
     }
 
     private ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz) {
@@ -601,35 +659,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return new String[]{getPersistentEntityFor(clazz).getIndexType()};
     }
 
-    private <T> FacetedPage<T> mapResults(SearchResponse response, final Class<T> elementType, final Pageable pageable) {
-        ResultsMapper<T> resultsMapper = new ResultsMapper<T>() {
-            @Override
-            public FacetedPage<T> mapResults(SearchResponse response) {
-                long totalHits = response.getHits().totalHits();
-                List<T> results = new ArrayList<T>();
-                for (SearchHit hit : response.getHits()) {
-                    if (hit != null) {
-                        T entity = mapResult(hit.sourceAsString(), elementType);
-                        setPersistentEntityId(entity, hit.getId());
-                        results.add(entity);
-                    }
-                }
-                List<FacetResult> facets = new ArrayList<FacetResult>();
-                if (response.getFacets() != null) {
-                    for (Facet facet : response.getFacets()) {
-                        FacetResult facetResult = FacetMapper.parse(facet);
-                        if (facetResult != null) {
-                            facets.add(facetResult);
-                        }
-                    }
-                }
-
-                return new FacetedPageImpl<T>(results, pageable, totalHits, facets);
-            }
-        };
-        return resultsMapper.mapResults(response);
-    }
-
     private List<String> extractIds(SearchResponse response) {
         List<String> ids = new ArrayList<String>();
         for (SearchHit hit : response.getHits()) {
@@ -640,24 +669,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
         return ids;
     }
 
-    private <T> T mapResult(String source, Class<T> clazz) {
-        if (isBlank(source)) {
-            return null;
-        }
-        try {
-            return entityMapper.mapToObject(source, clazz);
-        } catch (IOException e) {
-            throw new ElasticsearchException("failed to map source [ " + source + "] to class " + clazz.getSimpleName(), e);
-        }
-    }
-
     private static String[] toArray(List<String> values) {
         String[] valuesAsArray = new String[values.size()];
         return values.toArray(valuesAsArray);
 
     }
 
-    protected EntityMapper getEntityMapper() {
-        return entityMapper;
+    protected ResultsMapper getResultsMapper() {
+        return resultsMapper;
     }
 }

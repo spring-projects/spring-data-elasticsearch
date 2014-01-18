@@ -21,6 +21,7 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.query.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * ElasticsearchOperations
@@ -60,6 +61,16 @@ public interface ElasticsearchOperations {
 	 */
 	<T> T queryForObject(GetQuery query, Class<T> clazz);
 
+    /**
+     * Execute the query against elasticsearch and return the first returned object using custom mapper
+     *
+     * @param query
+     * @param clazz
+     * @param mapper
+     * @return the first matching object
+     */
+    <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper);
+
 	/**
 	 * Execute the query against elasticsearch and return the first returned object
 	 * 
@@ -87,14 +98,14 @@ public interface ElasticsearchOperations {
 	 */
 	<T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz);
 
-	/**
-	 * Execute the query against elasticsearch and return result as {@link Page}
-	 * 
-	 * @param query
-	 * @param resultsMapper
-	 * @return
-	 */
-	<T> FacetedPage<T> queryForPage(SearchQuery query, ResultsMapper<T> resultsMapper);
+    /**
+     * Execute the query against elasticsearch and return result as {@link Page} using custom mapper
+     *
+     * @param query
+     * @param clazz
+     * @return
+     */
+    <T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page}
@@ -113,6 +124,15 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	<T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz);
+
+    /**
+     * Execute the query against elasticsearch and return result as {@link Page} using custom mapper
+     *
+     * @param query
+     * @param clazz
+     * @return
+     */
+    <T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
 	 * Execute the criteria query against elasticsearch and return result as {@link List}
@@ -284,11 +304,22 @@ public interface ElasticsearchOperations {
 	 * 
 	 * @param scrollId
 	 * @param scrollTimeInMillis
-	 * @param resultsMapper
+	 * @param clazz
 	 * @param <T>
 	 * @return
 	 */
-	<T> Page<T> scroll(String scrollId, long scrollTimeInMillis, ResultsMapper<T> resultsMapper);
+	<T> Page<T> scroll(String scrollId, long scrollTimeInMillis, Class<T> clazz);
+
+    /**
+     * Scrolls the results for give scroll id using custom result mapper
+     *
+     * @param scrollId
+     * @param scrollTimeInMillis
+     * @param mapper
+     * @param <T>
+     * @return
+     */
+    <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper);
 
 	/**
 	 * more like this query to search for documents that are "like" a specific document.
@@ -300,4 +331,27 @@ public interface ElasticsearchOperations {
 	 */
 	<T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz);
 
+    /**
+     * adding new alias
+     *
+     * @param query
+     * @return
+     */
+     Boolean addAlias(AliasQuery query);
+
+    /**
+     * removing previously created alias
+     *
+     * @param query
+     * @return
+     */
+     Boolean removeAlias(AliasQuery query);
+
+    /**
+     * get all the alias pointing to specified index
+     *
+     * @param indexName
+     * @return
+     */
+     Set<String> queryForAlias(String indexName);
 }

@@ -24,7 +24,7 @@
 
         <commonscollections>3.2.1</commonscollections>
         <commonslang>2.6</commonslang>
-        <elasticsearch>0.90.6</elasticsearch>
+        <elasticsearch>0.90.9</elasticsearch>
         <jackson>2.2.3</jackson>
         <springdata.commons>1.6.0.BUILD-SNAPSHOT</springdata.commons>
 
@@ -153,7 +153,7 @@
     <repositories>
         <repository>
             <id>spring-libs-snapshot</id>
-            <url>http://repo.springsource.org/lib-snapshot-local</url>
+            <url>http://repo.springsource.org/libs-snapshot-local</url>
         </repository>
         <repository>
            <id>spring-maven-snapshot</id>

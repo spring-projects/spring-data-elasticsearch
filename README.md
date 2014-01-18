@@ -166,6 +166,156 @@ Indexing multiple Document(bulk index) using Repository
         repository.save(sampleEntities);
 ```
 
+### Adding custom behaviors to ResultMapper - CustomResultMapper
+
+Define new class implementing ResultMapper
+
+```java
+public class CustomResultMapper implements ResultsMapper{
+
+    private EntityMapper entityMapper;
+
+    public CustomResultMapper(EntityMapper entityMapper) {
+        this.entityMapper = entityMapper;
+    }
+
+    @Override
+    public EntityMapper getEntityMapper() {
+        return entityMapper;
+    }
+
+    @Override
+    public <T> T mapResult(GetResponse response, Class<T> clazz) {
+        return null;  //Your implementation
+    }
+
+    @Override
+    public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+        return null;  //Your implementation
+    }
+}
+
+```
+
+Inject your custom implementation to template
+
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+       xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+    <elasticsearch:repositories base-package="com.xyz.acme"/>
+
+    <elasticsearch:transport-client id="client" cluster-nodes="localhost:9300,someip:9300" />
+
+    <bean name="elasticsearchTemplate"
+          class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
+        <constructor-arg name="client" ref="client"/>
+        <constructor-arg name="resultsMapper" ref="resultMapper"/>
+    </bean>
+
+    <bean name="entityMapper" class="org.springframework.data.elasticsearch.core.DefaultEntityMapper"/>
+
+    <bean name="resultMapper" class="org.springframework.data.elasticsearch.core.CustomResultMapper">
+        <constructor-arg ref="entityMapper"/>
+    </bean>
+
+</beans>
+```
+
+### Geo indexing and request
+
+You can make request using geo_distance filter. This can be done using GeoPoint object.
+
+First, here is a sample of an entity with a GeoPoint field (location)
+
+```java
+@Document(indexName = "test-geo-index", type = "geo-class-point-type")
+public class AuthorMarkerEntity {
+
+    @Id
+    private String id;
+    private String name;
+
+    private GeoPoint location;
+
+    private AuthorMarkerEntity(){
+    }
+
+    public AuthorMarkerEntity(String id){
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public GeoPoint getLocation() {
+        return location;
+    }
+
+    public void setLocation(GeoPoint location) {
+        this.location = location;
+    }
+}
+```
+
+Indexing your entity with a geo-point : 
+```java
+elasticsearchTemplate.createIndex(AuthorMarkerEntity.class);
+elasticsearchTemplate.refresh(AuthorMarkerEntity.class, true);
+elasticsearchTemplate.putMapping(AuthorMarkerEntity.class);
+
+List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+indexQueries.add(new AuthorMarkerEntityBuilder("1").name("Franck Marchand").location(45.7806d, 3.0875d).buildIndex());
+indexQueries.add(new AuthorMarkerEntityBuilder("2").name("Mohsin Husen").location(51.5171d, 0.1062d).buildIndex());
+indexQueries.add(new AuthorMarkerEntityBuilder("3").name("Rizwan Idrees").location(51.5171d, 0.1062d).buildIndex());
+elasticsearchTemplate.bulkIndex(indexQueries);
+```
+
+For your information : 
+- Clermont-Ferrand : 45.7806, 3.0875
+- London : 51.5171, 0.1062
+
+So, if you want to search for authors who are located within 20 kilometers around Clermont-Ferrand, here is the way to build your query :
+
+```java
+CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(
+                new Criteria("location").within(new GeoPoint(45.7806d, 3.0875d), "20km"));
+List<AuthorMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery, AuthorMarkerEntity.class);
+```
+
+This example should only return one author named "Franck Marchand".
+
+You can even combine with other criteria (e.g. author name) :
+
+Here, we're looking for authors located within 20 kilometers around London AND named "Mohsin Husen" : 
+
+```java
+CriteriaQuery geoLocationCriteriaQuery2 = new CriteriaQuery(
+                new Criteria("name").is("Mohsin Husen").and("location").within(new GeoPoint(51.5171d, 0.1062d), "20km"));
+List<AuthorMarkerEntity> geoAuthorsForGeoCriteria2 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery2, AuthorMarkerEntity.class);
+```
+
+This example should only return one author named "Mohsin Husen".
+
+
 ### XML Namespace
 
 You can set up repository scanning via xml configuration, which will happily create your repositories.
