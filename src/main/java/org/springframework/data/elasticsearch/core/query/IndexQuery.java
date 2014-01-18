@@ -30,6 +30,7 @@ public class IndexQuery {
 	private String indexName;
 	private String type;
     private String source;
+	private String parentId;
 
 	public String getId() {
 		return id;
@@ -78,4 +79,12 @@ public class IndexQuery {
     public void setSource(String source) {
         this.source = source;
     }
+
+	public String getParentId() {
+		return parentId;
+	}
+
+	public void setParentId(String parentId) {
+		this.parentId = parentId;
+	}
 }

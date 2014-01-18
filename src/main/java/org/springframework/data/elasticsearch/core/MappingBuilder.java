@@ -32,6 +32,7 @@ import java.util.Map;
 import static org.apache.commons.lang.StringUtils.EMPTY;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  * @author Rizwan Idrees
@@ -48,6 +49,7 @@ class MappingBuilder {
     public static final String FIELD_SEARCH_ANALYZER = "search_analyzer";
     public static final String FIELD_INDEX_ANALYZER = "index_analyzer";
     public static final String FIELD_PROPERTIES = "properties";
+    public static final String FIELD_PARENT = "_parent";
 
     public static final String INDEX_VALUE_NOT_ANALYZED = "not_analyzed";
     public static final String TYPE_VALUE_STRING = "string";
@@ -55,8 +57,16 @@ class MappingBuilder {
 
     private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = new SimpleTypeHolder();
 
-    static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName) throws IOException {
-        XContentBuilder xContentBuilder = jsonBuilder().startObject().startObject(indexType).startObject(FIELD_PROPERTIES);
+    static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName, String parentType) throws IOException {
+
+        XContentBuilder mapping = jsonBuilder().startObject().startObject(indexType);
+        // Parent
+        if (hasText(parentType)) {
+            mapping.startObject(FIELD_PARENT).field(FIELD_TYPE,parentType).endObject();
+        }
+
+        // Properties
+        XContentBuilder xContentBuilder = mapping.startObject(FIELD_PROPERTIES);
 
         mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY, false);
 

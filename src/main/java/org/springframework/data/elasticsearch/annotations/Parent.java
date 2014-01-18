@@ -13,16 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
+package org.springframework.data.elasticsearch.annotations;
 
-import org.elasticsearch.action.search.SearchResponse;
-import org.springframework.data.domain.Pageable;
+import java.lang.annotation.*;
+
+import org.springframework.data.annotation.Persistent;
 
 /**
- * @author Artur Konczak
+ * Parent
+ * 
+ * @author Philipp Jardas
  */
-public interface SearchResultMapper {
 
-    <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
-
+@Persistent
+@Inherited
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface Parent {
+	String type();
 }

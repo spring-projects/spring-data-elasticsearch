@@ -21,8 +21,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
-import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
@@ -49,6 +49,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private short replicas;
 	private String refreshInterval;
 	private String indexStoreType;
+	private String parentType;
+	private ElasticsearchPersistentProperty parentIdProperty;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 		super(typeInformation);
@@ -105,8 +107,28 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
+	public String getParentType() {
+		return parentType;
+	}
+
+	@Override
+	public ElasticsearchPersistentProperty getParentIdProperty() {
+		return parentIdProperty;
+	}
+
+	@Override
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
 		super.addPersistentProperty(property);
+		
+		Parent parent = property.getField().getAnnotation(Parent.class);
+		if (parent != null) {
+			Assert.isNull(this.parentIdProperty, "Only one field can hold a @Parent annotation");
+			Assert.isNull(this.parentType, "Only one field can hold a @Parent annotation");
+			Assert.isTrue(property.getType() == String.class, "Parent ID property should be String");
+			this.parentIdProperty = property;
+			this.parentType = parent.type();
+		}
+		
 		if (property.isVersionProperty()) {
 			Assert.isTrue(property.getType() == Long.class, "Version property should be Long");
 		}

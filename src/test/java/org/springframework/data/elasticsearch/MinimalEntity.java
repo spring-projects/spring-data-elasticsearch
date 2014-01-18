@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
+package org.springframework.data.elasticsearch;
 
-import org.elasticsearch.action.search.SearchResponse;
-import org.springframework.data.domain.Pageable;
-
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
 /**
- * @author Artur Konczak
+ * MinimalEntity
+ *
+ * @author Philipp Jardas
  */
-public interface SearchResultMapper {
-
-    <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
-
+@Document(indexName = "index", type = "type")
+public class MinimalEntity {
+	@Id
+	private String id;
 }
