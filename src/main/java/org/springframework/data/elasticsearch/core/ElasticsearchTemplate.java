@@ -210,6 +210,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
             searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
         }
 
+        if(criteriaQuery.getMinScore()>0){
+            searchRequestBuilder.setMinScore(criteriaQuery.getMinScore());
+        }
+
         if (elasticsearchFilter != null)
             searchRequestBuilder.setFilter(elasticsearchFilter);
 
@@ -519,6 +523,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
                 searchRequestBuilder.addSort(order.getProperty(), order.getDirection() == Sort.Direction.DESC ? SortOrder.DESC
                         : SortOrder.ASC);
             }
+        }
+
+        if(query.getMinScore()>0){
+            searchRequestBuilder.setMinScore(query.getMinScore());
         }
         return searchRequestBuilder;
     }

@@ -37,6 +37,7 @@ abstract class AbstractQuery implements Query {
 	protected List<String> indices = new ArrayList<String>();
 	protected List<String> types = new ArrayList<String>();
 	protected List<String> fields = new ArrayList<String>();
+    protected float minScore;
 
 	@Override
 	public Sort getSort() {
@@ -99,4 +100,12 @@ abstract class AbstractQuery implements Query {
 
 		return (T) this;
 	}
+
+    public float getMinScore() {
+        return minScore;
+    }
+
+    public void setMinScore(float minScore) {
+        this.minScore = minScore;
+    }
 }

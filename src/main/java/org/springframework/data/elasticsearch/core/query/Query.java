@@ -108,4 +108,10 @@ public interface Query {
 	 * @return
 	 */
 	List<String> getFields();
+
+    /**
+     * Get minimum score
+     * @return
+     */
+    float getMinScore();
 }

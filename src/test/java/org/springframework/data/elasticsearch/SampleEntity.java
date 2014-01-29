@@ -112,4 +112,17 @@ public class SampleEntity {
 		return new HashCodeBuilder().append(id).append(type).append(message).append(rate).append(available).append(version)
 				.toHashCode();
 	}
+
+    @Override
+    public String toString() {
+        return "SampleEntity{" +
+                "id='" + id + '\'' +
+                ", type='" + type + '\'' +
+                ", message='" + message + '\'' +
+                ", rate=" + rate +
+                ", available=" + available +
+                ", highlightedMessage='" + highlightedMessage + '\'' +
+                ", version=" + version +
+                '}';
+    }
 }

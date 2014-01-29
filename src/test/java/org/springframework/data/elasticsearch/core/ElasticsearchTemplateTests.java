@@ -33,6 +33,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.SampleEntity;
+import org.springframework.data.elasticsearch.SampleEntityBuilder;
 import org.springframework.data.elasticsearch.SampleMappingEntity;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.test.context.ContextConfiguration;
@@ -1006,5 +1007,31 @@ public class ElasticsearchTemplateTests {
         List<String> ids = elasticsearchTemplate.queryForIds(searchQuery);
         assertThat(ids, is(notNullValue()));
         assertThat(ids.size(), is(30));
+    }
+
+    @Test
+    public void shouldReturnDocumentAboveMinimalScoreGivenQuery() {
+        // given
+        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+
+        indexQueries.add(new SampleEntityBuilder("1").message("ab").buildIndex());
+        indexQueries.add(new SampleEntityBuilder("2").message("bc").buildIndex());
+        indexQueries.add(new SampleEntityBuilder("3").message("ac").buildIndex());
+
+        elasticsearchTemplate.bulkIndex(indexQueries);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+        // when
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(boolQuery().must(wildcardQuery("message", "*a*")).should(wildcardQuery("message", "*b*")))
+                .withIndices("test-index")
+                .withTypes("test-type")
+                .withMinScore(0.5F)
+                .build();
+
+        Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+        // then
+        assertThat(page.getTotalElements(),is(1L));
+        assertThat(page.getContent().get(0).getMessage(), is("ab"));
     }
 }

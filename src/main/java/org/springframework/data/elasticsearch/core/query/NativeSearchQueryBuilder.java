@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.elasticsearch.common.cache.CacheBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
@@ -45,6 +46,7 @@ public class NativeSearchQueryBuilder {
     private String[] indices;
     private String[] types;
     private String[] fields;
+    private float minScore;
 
     public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
         this.queryBuilder = queryBuilder;
@@ -91,6 +93,11 @@ public class NativeSearchQueryBuilder {
         return this;
     }
 
+    public NativeSearchQueryBuilder withMinScore(float minScore) {
+        this.minScore = minScore;
+        return this;
+    }
+
     public NativeSearchQuery build() {
         NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilder, highlightFields);
         if (pageable != null) {
@@ -107,6 +114,10 @@ public class NativeSearchQueryBuilder {
         }
         if (CollectionUtils.isNotEmpty(facetRequests)) {
             nativeSearchQuery.setFacets(facetRequests);
+        }
+
+        if(minScore>0){
+            nativeSearchQuery.setMinScore(minScore);
         }
         return nativeSearchQuery;
     }

@@ -15,12 +15,15 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.SampleEntity;
+import org.springframework.data.elasticsearch.SampleEntityBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -30,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
@@ -700,4 +704,25 @@ public class CriteriaQueryTests {
 		// then
 		assertThat(page.getTotalElements(), is(greaterThanOrEqualTo(1L)));
 	}
+
+    @Test
+    public void shouldReturnDocumentAboveMinimalScoreGivenCriteria() {
+        // given
+        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+
+        indexQueries.add(new SampleEntityBuilder("1").message("ab").buildIndex());
+        indexQueries.add(new SampleEntityBuilder("2").message("bc").buildIndex());
+        indexQueries.add(new SampleEntityBuilder("3").message("ac").buildIndex());
+
+        elasticsearchTemplate.bulkIndex(indexQueries);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+        // when
+        CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("a").or(new Criteria("message").contains("b")));
+        criteriaQuery.setMinScore(0.5F);
+        Page<SampleEntity> page = elasticsearchTemplate.queryForPage(criteriaQuery, SampleEntity.class);
+        // then
+        assertThat(page.getTotalElements(),is(1L));
+        assertThat(page.getContent().get(0).getMessage(), is("ab"));
+    }
 }
