@@ -1034,4 +1034,62 @@ public class ElasticsearchTemplateTests {
         assertThat(page.getTotalElements(),is(1L));
         assertThat(page.getContent().get(0).getMessage(), is("ab"));
     }
+
+
+    @Test
+    public void shouldDoIndexWithoutId() {
+        // given
+        // document
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setObject(sampleEntity);
+        // when
+        String documentId = elasticsearchTemplate.index(indexQuery);
+        // then
+        assertThat(sampleEntity.getId(), is(equalTo(documentId)));
+
+        GetQuery getQuery = new GetQuery();
+        getQuery.setId(documentId);
+        SampleEntity result = elasticsearchTemplate.queryForObject(getQuery, SampleEntity.class);
+        assertThat(result.getId(), is(equalTo(documentId)));
+    }
+
+    @Test
+    public void shouldDoBulkIndexWithoutId() {
+        // given
+        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+        // first document
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity1 = new SampleEntity();
+        sampleEntity1.setMessage("some message");
+        sampleEntity1.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery1 = new IndexQuery();
+        //indexQuery1.setId(documentId);
+        indexQuery1.setObject(sampleEntity1);
+        indexQueries.add(indexQuery1);
+
+        // second document
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setMessage("some message");
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery2 = new IndexQuery();
+        indexQuery2.setObject(sampleEntity2);
+        indexQueries.add(indexQuery2);
+        // when
+        elasticsearchTemplate.bulkIndex(indexQueries);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+        // then
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+        Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+        assertThat(sampleEntities.getTotalElements(), is(equalTo(2L)));
+
+        assertThat(sampleEntities.getContent().get(0).getId(), is(notNullValue()));
+        assertThat(sampleEntities.getContent().get(1).getId(), is(notNullValue()));
+    }
+
 }

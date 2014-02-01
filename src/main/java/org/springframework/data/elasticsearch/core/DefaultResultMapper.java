@@ -26,9 +26,15 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.facet.Facet;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.facet.DefaultFacetMapper;
 import org.springframework.data.elasticsearch.core.facet.FacetResult;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.mapping.context.MappingContext;
 
+import java.lang.reflect.Method;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -41,8 +47,15 @@ import java.util.List;
  */
 public class DefaultResultMapper extends AbstractResultMapper {
 
+    private MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
+   
     public DefaultResultMapper(){
         super(new DefaultEntityMapper());
+    }
+    
+    public DefaultResultMapper(MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext){
+       super(new DefaultEntityMapper());
+       this.mappingContext = mappingContext;
     }
 
     public DefaultResultMapper(EntityMapper entityMapper) {
@@ -55,11 +68,14 @@ public class DefaultResultMapper extends AbstractResultMapper {
         List<T> results = new ArrayList<T>();
         for (SearchHit hit : response.getHits()) {
             if (hit != null) {
+                T result = null;
                 if (!Strings.isNullOrEmpty(hit.sourceAsString())) {
-                    results.add(mapEntity(hit.sourceAsString(), clazz));
+                    result = mapEntity(hit.sourceAsString(), clazz);
                 } else {
-                    results.add(mapEntity(hit.getFields().values(), clazz));
+                    result = mapEntity(hit.getFields().values(), clazz);
                 }
+                setPersistentEntityId(result, hit.getId(), clazz);
+                results.add(result);
             }
         }
         List<FacetResult> facets = new ArrayList<FacetResult>();
@@ -106,6 +122,27 @@ public class DefaultResultMapper extends AbstractResultMapper {
 
     @Override
     public <T> T mapResult(GetResponse response, Class<T> clazz) {
-        return mapEntity(response.getSourceAsString(),clazz);
+        T result = mapEntity(response.getSourceAsString(),clazz);
+        if (result != null){
+           setPersistentEntityId(result, response.getId(), clazz);
+        }
+        return result;
+    }
+    
+    private <T> void setPersistentEntityId(T result, String id, Class<T> clazz) {
+       if (mappingContext != null && clazz.isAnnotationPresent(Document.class)){
+          PersistentProperty<ElasticsearchPersistentProperty> idProperty = mappingContext.getPersistentEntity(clazz).getIdProperty();
+          // Only deal with String because ES generated Ids are strings !
+          if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)){
+              Method setter = idProperty.getSetter();
+              if (setter != null){
+                  try{
+                      setter.invoke(result, id);
+                  } catch (Throwable t) {
+                      t.printStackTrace();
+                  }
+              }
+          }
+      }
     }
 }
