@@ -41,7 +41,7 @@ class ElasticsearchTemplateProducer {
 	public ElasticsearchOperations createSolrTemplate() throws IOException, ParserConfigurationException, SAXException {
 
         ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder().put("http.enabled","false" );
-        NodeClient client = (NodeClient) nodeBuilder().settings(settings).clusterName("testCluster").local(true).node()
+        NodeClient client = (NodeClient) nodeBuilder().settings(settings).clusterName("testClusterForCDI").local(true).node()
                 .client();
 		return new ElasticsearchTemplate(client);
 	}
