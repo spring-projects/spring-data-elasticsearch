@@ -38,8 +38,7 @@ import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 class ElasticsearchTemplateProducer {
 
  	@Produces
-	public ElasticsearchOperations createSolrTemplate() throws IOException, ParserConfigurationException, SAXException {
-
+	public ElasticsearchOperations createElasticsearchTemplate() throws IOException, ParserConfigurationException, SAXException {
         ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder().put("http.enabled","false" );
         NodeClient client = (NodeClient) nodeBuilder().settings(settings).clusterName("testClusterForCDI").local(true).node()
                 .client();
@@ -55,7 +54,7 @@ class ElasticsearchTemplateProducer {
 	private void deleteAll() {
 		ElasticsearchOperations template;
 		try {
-			template = createSolrTemplate();
+			template = createElasticsearchTemplate();
             DeleteQuery deleteQuery = new DeleteQuery();
             deleteQuery.setQuery(QueryBuilders.matchAllQuery());
             deleteQuery.setIndex("test-product-index");
