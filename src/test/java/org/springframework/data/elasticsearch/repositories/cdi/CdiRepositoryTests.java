@@ -26,10 +26,10 @@ import static org.junit.Assert.*;
  * @author Mohsin Husen
  */
 
-public class CdiRepositoryTests {
+public class CDIRepositoryTests {
 
 	private static CdiTestContainer cdiContainer;
-	private CdiProductRepository repository;
+	private CDIProductRepository repository;
 
 	@BeforeClass
 	public static void init() throws Exception {
@@ -46,7 +46,7 @@ public class CdiRepositoryTests {
 
 	@Before
 	public void setUp() {
-		CdiRepositoryClient client = cdiContainer.getInstance(CdiRepositoryClient.class);
+		CDIRepositoryClient client = cdiContainer.getInstance(CDIRepositoryClient.class);
 		repository = client.getRepository();
 	}
 
