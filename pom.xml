@@ -126,6 +126,12 @@
             <version>${webbeans}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>3.0-alpha-1</version>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 
