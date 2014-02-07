@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core.facet.request;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
 import org.elasticsearch.search.facet.FacetBuilder;
 import org.elasticsearch.search.facet.FacetBuilders;
 import org.elasticsearch.search.facet.histogram.HistogramFacetBuilder;
@@ -27,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author Artur Konczak
+ * @author Mohsin Husen
  */
 public class HistogramFacetRequest extends AbstractFacetRequest {
 

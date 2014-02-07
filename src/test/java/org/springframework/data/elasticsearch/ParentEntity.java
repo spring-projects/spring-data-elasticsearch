@@ -17,12 +17,12 @@ package org.springframework.data.elasticsearch;
 
 import org.springframework.core.style.ToStringCreator;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.elasticsearch.annotations.*;
 /**
  * ParentEntity
  *
  * @author Philipp Jardas
+ * @author Mohsin Husen
  */
 @Document(indexName = ParentEntity.INDEX, type = ParentEntity.PARENT_TYPE, indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class ParentEntity {

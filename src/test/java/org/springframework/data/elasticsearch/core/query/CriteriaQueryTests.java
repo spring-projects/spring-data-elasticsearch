@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortOrder;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -33,7 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 

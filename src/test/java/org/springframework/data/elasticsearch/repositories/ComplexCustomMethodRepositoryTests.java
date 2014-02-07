@@ -19,25 +19,19 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.SampleEntity;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.List;
 
-import static org.apache.commons.lang.RandomStringUtils.random;
-import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 /**
  * @author Artur Konczak
+ * @author Mohsin Husen
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:complex-custom-method-repository-test.xml")

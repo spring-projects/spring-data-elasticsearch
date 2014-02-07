@@ -16,11 +16,10 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.search.SearchResponse;
-import org.springframework.data.domain.Pageable;
 
 /**
  * @author Artur Konczak
+ * @author Mohsin Husen
  */
 public interface GetResultMapper {
 

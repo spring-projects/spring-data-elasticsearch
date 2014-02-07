@@ -16,14 +16,11 @@
 package org.springframework.data.elasticsearch.core.facet.request;
 
 import org.elasticsearch.search.facet.FacetBuilder;
-import org.elasticsearch.search.facet.terms.TermsFacetBuilder;
-import org.springframework.data.elasticsearch.core.facet.FacetRequest;
-
-import org.elasticsearch.search.facet.FacetBuilder;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
 /**
  * @author Artur Konczak
+ * @author Mohsin Husen
  */
 public class NativeFacetRequest implements FacetRequest {
 

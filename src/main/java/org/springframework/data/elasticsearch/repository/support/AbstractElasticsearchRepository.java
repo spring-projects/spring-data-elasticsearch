@@ -34,7 +34,6 @@ import java.util.List;
 
 import static org.elasticsearch.index.query.QueryBuilders.inQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
 /**
  * Elasticsearch specific repository implementation. Likely to be used as target within
