@@ -20,10 +20,9 @@ import org.springframework.data.repository.CrudRepository;
 
 /**
  * @author Mohsin Husen
+ * @author Oliver Gierke
  */
-
-public interface CDIProductRepository extends CrudRepository<Product, String> {
+public interface CdiProductRepository extends CrudRepository<Product, String> {
 
 	Product findOne(String id);
-
 }

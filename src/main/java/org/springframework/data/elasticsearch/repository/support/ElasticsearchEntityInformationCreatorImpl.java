@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import java.io.Serializable;
  * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Oliver Gierke
  */
 public class ElasticsearchEntityInformationCreatorImpl implements ElasticsearchEntityInformationCreator {
 
@@ -41,9 +42,12 @@ public class ElasticsearchEntityInformationCreatorImpl implements ElasticsearchE
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T, ID extends Serializable> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+		
 		ElasticsearchPersistentEntity<T> persistentEntity = (ElasticsearchPersistentEntity<T>) mappingContext
 				.getPersistentEntity(domainClass);
+		
+		Assert.notNull(persistentEntity, String.format("Unable to obtain mapping metadata for %s!", domainClass));
+		
 		return new MappingElasticsearchEntityInformation<T, ID>(persistentEntity);
 	}
-
 }

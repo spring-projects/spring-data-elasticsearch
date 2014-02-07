@@ -19,17 +19,18 @@ import javax.inject.Inject;
 
 /**
  * @author Mohsin Husen
+ * @author Oliver Gierke
  */
-class CDIRepositoryClient {
+class CdiRepositoryClient {
 
-    private CDIProductRepository repository;
+    private CdiProductRepository repository;
 
-	public CDIProductRepository getRepository() {
+	public CdiProductRepository getRepository() {
 		return repository;
 	}
 
 	@Inject
-	public void setRepository(CDIProductRepository repository) {
+	public void setRepository(CdiProductRepository repository) {
 		this.repository = repository;
 	}
 

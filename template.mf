@@ -14,7 +14,7 @@ Import-Template:
  org.elasticsearch.*;version="${elasticsearch:[=.=.=,+1.0.0)}",
  org.joda.time.*;version="${jodatime:[=.=.=,+1.0.0)}",
  org.slf4j.*;version="${slf4j:[=.=.=,+1.0.0)}",
- org.springframework.*;version="${spring30:[=.=.=.=,+1.0.0)}",
+ org.springframework.*;version="${spring:[=.=.=.=,+1.0.0)}",
  org.springframework.data.*;version="${springdata.commons:[=.=.=.=,+1.0.0)}",
  org.w3c.*;version="0.0.0"
  

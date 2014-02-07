@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository.cdi;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.repository.cdi.CdiRepositoryBean;
 import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
 
 import javax.enterprise.event.Observes;
@@ -36,8 +37,8 @@ import java.util.Set;
  * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Oliver Gierke
  */
-
 public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupport {
 
 	private final Map<String, Bean<ElasticsearchOperations>> elasticsearchOperationsMap = new HashMap<String, Bean<ElasticsearchOperations>>();
@@ -58,12 +59,14 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 			Class<?> repositoryType = entry.getKey();
 			Set<Annotation> qualifiers = entry.getValue();
 
-			Bean<?> repositoryBean = createRepositoryBean(repositoryType, qualifiers, beanManager);
+			CdiRepositoryBean<?> repositoryBean = createRepositoryBean(repositoryType, qualifiers, beanManager);
 			afterBeanDiscovery.addBean(repositoryBean);
+			registerBean(repositoryBean);
 		}
 	}
 
-	private <T> Bean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers, BeanManager beanManager) {
+	private <T> CdiRepositoryBean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers, BeanManager beanManager) {
+		
 		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers
 				.toString());
 
@@ -71,7 +74,7 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 			throw new UnsatisfiedResolutionException(String.format("Unable to resolve a bean for '%s' with qualifiers %s.",
 					ElasticsearchOperations.class.getName(), qualifiers));
 		}
+		
 		return new ElasticsearchRepositoryBean<T>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager);
 	}
-
 }
