@@ -147,11 +147,18 @@
     <repositories>
         <repository>
             <id>spring-libs-milestone</id>
-            <url>http://repo.spring.io/libs-mileston</url>
+            <url>http://repo.spring.io/libs-milestone</url>
         </repository>
     </repositories>
 
-    <scm>
+    <pluginRepositories>
+		<pluginRepository>
+			<id>spring-plugins-release</id>
+			<url>http://repo.spring.io/plugins-release</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<scm>
         <url>https://github.com/SpringSource/spring-data-elasticsearch</url>
         <connection>scm:git:git://github.com/SpringSource/spring-data-elasticsearch.git</connection>
         <developerConnection>scm:git:ssh://git@github.com:SpringSource/spring-data-elasticsearch.git
