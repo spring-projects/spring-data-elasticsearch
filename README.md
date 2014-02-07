@@ -26,7 +26,7 @@ Wiki page for [Getting Started] (https://github.com/spring-projects/spring-data-
 <dependency>
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-elasticsearch</artifactId>
-    <version>1.0.0.BUILD-SNAPSHOT</version>
+    <version>1.0.0.M1</version>
 </dependency> 
 ```
 
