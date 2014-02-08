@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repositories;
+package org.springframework.data.elasticsearch.repository.complex;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -31,14 +31,13 @@ import static org.junit.Assert.assertThat;
 
 /**
  * @author Artur Konczak
- * @author Mohsin Husen
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:complex-custom-method-repository-test.xml")
-public class ComplexCustomMethodRepositoryTests {
+@ContextConfiguration("classpath:complex-custom-method-repository-manual-wiring-test.xml")
+public class ComplexCustomMethodRepositoryManualWiringTests {
 
     @Resource
-    private ComplexElasticsearchRepository complexRepository;
+    private ComplexElasticsearchRepositoryManualWiring complexRepository;
 
 	@Autowired
 	private ElasticsearchTemplate elasticsearchTemplate;
@@ -57,7 +56,7 @@ public class ComplexCustomMethodRepositoryTests {
         //When
         String result = complexRepository.doSomethingSpecial();
         //Then
-        assertThat(result, is("2+2=4"));
+        assertThat(result, is("3+3=6"));
 
     }
 

@@ -13,26 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repositories.impl;
-
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.repositories.ComplexElasticsearchRepositoryCustom;
+package org.springframework.data.elasticsearch.repository.complex;
 
 /**
  * @author Artur Konczak
  * @author Mohsin Husen
  */
-public class ComplexElasticsearchRepositoryManualWiringImpl implements ComplexElasticsearchRepositoryCustom {
+public interface ComplexElasticsearchRepositoryCustom {
 
-    private ElasticsearchTemplate template;
+    public String doSomethingSpecial();
 
-    @Override
-    public String doSomethingSpecial() {
-        assert(template.getElasticsearchConverter()!=null);
-        return "3+3=6";
-    }
-
-    public void setTemplate(ElasticsearchTemplate template) {
-        this.template = template;
-    }
 }

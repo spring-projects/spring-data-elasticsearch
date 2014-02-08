@@ -13,9 +13,9 @@
 	</bean>
 
 	<elasticsearch:repositories
-            base-package="org.springframework.data.elasticsearch.repositories" />
+            base-package="org.springframework.data.elasticsearch.repository.complex" />
 
-    <bean id="complexElasticsearchRepositoryManualWiringImpl" class="org.springframework.data.elasticsearch.repositories.impl.ComplexElasticsearchRepositoryManualWiringImpl">
+    <bean id="complexElasticsearchRepositoryManualWiringImpl" class="org.springframework.data.elasticsearch.repository.complex.ComplexElasticsearchRepositoryManualWiringImpl">
         <property name="template" ref="elasticsearchTemplate"/>
     </bean>
 

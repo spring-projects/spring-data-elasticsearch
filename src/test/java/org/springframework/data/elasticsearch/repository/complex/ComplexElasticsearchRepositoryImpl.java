@@ -1,8 +1,7 @@
-package org.springframework.data.elasticsearch.repositories.impl;
+package org.springframework.data.elasticsearch.repository.complex;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.repositories.ComplexElasticsearchRepositoryCustom;
 
 /**
  * @author Artur Konczak

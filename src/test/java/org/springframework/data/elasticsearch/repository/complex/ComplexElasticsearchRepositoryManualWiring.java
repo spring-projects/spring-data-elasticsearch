@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repositories;
+package org.springframework.data.elasticsearch.repository.complex;
 
 import org.springframework.data.elasticsearch.SampleEntity;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -21,6 +21,6 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 /**
  * @author Artur Konczak
  */
-public interface ComplexElasticsearchRepository extends ElasticsearchRepository<SampleEntity, String>, ComplexElasticsearchRepositoryCustom {
+public interface ComplexElasticsearchRepositoryManualWiring extends ElasticsearchRepository<SampleEntity, String>, ComplexElasticsearchRepositoryCustom {
 
 }
