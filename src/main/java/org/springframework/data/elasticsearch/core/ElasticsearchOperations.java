@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -181,7 +183,27 @@ public interface ElasticsearchOperations {
 	 */
 	<T> long count(SearchQuery query, Class<T> clazz);
 
-	/**
+    /**
+     * Execute a multiget against elasticsearch for the given ids
+     *
+     * @param ids
+     * @param route
+     * @param clazz
+     * @return
+     */
+    <T> LinkedList<T> getObjects(Collection<String> ids, String route, Class<T> clazz);
+
+    /**
+     * Execute a get against elasticsearch for the given id
+     *
+     * @param id
+     * @param route
+     * @param clazz
+     * @return
+     */
+    <T> T getObject(String id, String route, Class<T> clazz);
+
+    /**
 	 * Index an object. Will do save or update
 	 *
 	 * @param query
