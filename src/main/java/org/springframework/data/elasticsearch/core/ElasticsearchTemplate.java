@@ -57,6 +57,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.facet.FacetBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -451,8 +452,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 			searchRequest.setFilter(searchQuery.getFilter());
 		}
 
-		if (searchQuery.getElasticsearchSort() != null) {
-			searchRequest.addSort(searchQuery.getElasticsearchSort());
+		if (CollectionUtils.isNotEmpty(searchQuery.getElasticsearchSorts())) {
+            for (SortBuilder sort : searchQuery.getElasticsearchSorts()) {
+			    searchRequest.addSort(sort);
+            }
 		}
 
 		if (CollectionUtils.isNotEmpty(searchQuery.getFacets())) {
