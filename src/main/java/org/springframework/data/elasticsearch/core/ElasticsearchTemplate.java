@@ -62,6 +62,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
@@ -455,7 +456,15 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 			searchRequest.addSort(searchQuery.getElasticsearchSort());
 		}
 
-		if (CollectionUtils.isNotEmpty(searchQuery.getFacets())) {
+        if (!searchQuery.getScriptFields().isEmpty()) {
+            searchRequest.addField("_source");
+        }
+
+        for (ScriptField scriptedField : searchQuery.getScriptFields()) {
+            searchRequest.addScriptField(scriptedField.fieldName(), scriptedField.script(), scriptedField.params());
+        }
+
+        if (CollectionUtils.isNotEmpty(searchQuery.getFacets())) {
 			for (FacetRequest facetRequest : searchQuery.getFacets()) {
 				FacetBuilder facet = facetRequest.getFacet();
 				if (facetRequest.applyQueryFilter() && searchQuery.getFilter() != null) {

@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.elasticsearch.index.query.FilterBuilder;
@@ -35,7 +36,8 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
 	private QueryBuilder query;
 	private FilterBuilder filter;
-	private SortBuilder sort;
+    private final List<ScriptField> scriptFields = new ArrayList<ScriptField>();
+    private SortBuilder sort;
 	private List<FacetRequest> facets;
 	private HighlightBuilder.Field[] highlightFields;
 
@@ -78,6 +80,17 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	public HighlightBuilder.Field[] getHighlightFields() {
 		return highlightFields;
 	}
+
+    @Override
+    public List<ScriptField> getScriptFields() { return scriptFields; }
+
+    public void setScriptFields(List<ScriptField> scriptFields) {
+        this.scriptFields.addAll(scriptFields);
+    }
+
+    public void addScriptField(ScriptField... scriptField) {
+        scriptFields.addAll(Arrays.asList(scriptField));
+    }
 
 	public void addFacet(FacetRequest facetRequest) {
 		if (facets == null) {
