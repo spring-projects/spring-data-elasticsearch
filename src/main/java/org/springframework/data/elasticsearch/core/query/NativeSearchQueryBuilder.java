@@ -38,7 +38,7 @@ public class NativeSearchQueryBuilder {
 
 	private QueryBuilder queryBuilder;
 	private FilterBuilder filterBuilder;
-	private SortBuilder sortBuilder;
+	private List<SortBuilder> sortBuilders = new ArrayList<SortBuilder>();
 	private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
 	private HighlightBuilder.Field[] highlightFields;
 	private Pageable pageable;
@@ -58,7 +58,7 @@ public class NativeSearchQueryBuilder {
 	}
 
 	public NativeSearchQueryBuilder withSort(SortBuilder sortBuilder) {
-		this.sortBuilder = sortBuilder;
+		this.sortBuilders.add(sortBuilder);
 		return this;
 	}
 
@@ -98,7 +98,7 @@ public class NativeSearchQueryBuilder {
 	}
 
 	public NativeSearchQuery build() {
-		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilder, highlightFields);
+		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightFields);
 		if (pageable != null) {
 			nativeSearchQuery.setPageable(pageable);
 		}
