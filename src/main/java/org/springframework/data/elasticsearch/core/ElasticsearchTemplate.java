@@ -37,7 +37,7 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.count.CountRequestBuilder;
-import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.*;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.mlt.MoreLikeThisRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -246,7 +246,36 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 		return countRequestBuilder.execute().actionGet().getCount();
 	}
 
-	@Override
+    @Override
+    public <T> LinkedList<T> getObjects(Collection<String> ids, String route, Class<T> clazz) {
+        ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
+        MultiGetRequestBuilder builder = client.prepareMultiGet();
+        for (String id : ids) {
+            builder.add(new MultiGetRequest.Item(persistentEntity.getIndexName(), persistentEntity.getIndexType(), id).routing(route));
+        }
+        MultiGetResponse responses = builder.execute().actionGet();
+        final LinkedList<T> result = new LinkedList<T>();
+        for (MultiGetItemResponse response : responses.getResponses()) {
+            if (!response.isFailed() && response.getResponse().isExists()) {
+                result.add(resultsMapper.mapResult(response.getResponse(), clazz));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public <T> T getObject(String id, String route, Class<T> clazz) {
+        if (id != null) {
+            ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
+            GetResponse response = client
+                    .prepareGet(persistentEntity.getIndexName(), persistentEntity.getIndexType(), id).setRouting(route)
+                    .execute().actionGet();
+            return resultsMapper.mapResult(response, clazz);
+        }
+        return null;
+    }
+
+    @Override
 	public String index(IndexQuery query) {
 		String documentId = prepareIndex(query).execute().actionGet().getId();
 		// We should call this because we are not going through a mapper.
