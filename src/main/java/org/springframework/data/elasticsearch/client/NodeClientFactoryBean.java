@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.client;
 
+import static org.elasticsearch.node.NodeBuilder.*;
+
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -24,11 +26,9 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 
-import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
-
 /**
  * NodeClientFactoryBean
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */

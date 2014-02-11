@@ -23,7 +23,6 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 /**
  * @param <T>
  * @param <ID>
- * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Oliver Gierke

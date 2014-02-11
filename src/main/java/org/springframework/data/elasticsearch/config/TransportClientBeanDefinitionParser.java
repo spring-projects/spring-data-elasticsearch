@@ -22,11 +22,9 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.elasticsearch.client.TransportClientFactoryBean;
 import org.w3c.dom.Element;
 
-import static org.apache.commons.lang.StringUtils.split;
-
 /**
  * TransportClientBeanDefinitionParser
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -42,15 +40,15 @@ public class TransportClientBeanDefinitionParser extends AbstractBeanDefinitionP
 
 	private void setConfigurations(Element element, BeanDefinitionBuilder builder) {
 		builder.addPropertyValue("clusterNodes", element.getAttribute("cluster-nodes"));
-        builder.addPropertyValue("clusterName", element.getAttribute("cluster-name"));
-        builder.addPropertyValue("clientTransportSniff", Boolean.valueOf(element.getAttribute("client-transport-sniff")));
-        builder.addPropertyValue("clientIgnoreClusterName", Boolean.valueOf(element.getAttribute("client-transport-ignore-cluster-name")));
-        builder.addPropertyValue("clientPingTimeout", element.getAttribute("client-transport-ping-timeout"));
-        builder.addPropertyValue("clientNodesSamplerInterval", element.getAttribute("client-transport-nodes-sampler-interval"));
+		builder.addPropertyValue("clusterName", element.getAttribute("cluster-name"));
+		builder.addPropertyValue("clientTransportSniff", Boolean.valueOf(element.getAttribute("client-transport-sniff")));
+		builder.addPropertyValue("clientIgnoreClusterName", Boolean.valueOf(element.getAttribute("client-transport-ignore-cluster-name")));
+		builder.addPropertyValue("clientPingTimeout", element.getAttribute("client-transport-ping-timeout"));
+		builder.addPropertyValue("clientNodesSamplerInterval", element.getAttribute("client-transport-nodes-sampler-interval"));
 	}
 
 	private AbstractBeanDefinition getSourcedBeanDefinition(BeanDefinitionBuilder builder, Element source,
-			ParserContext context) {
+															ParserContext context) {
 		AbstractBeanDefinition definition = builder.getBeanDefinition();
 		definition.setSource(context.extractSource(source));
 		return definition;

@@ -15,6 +15,9 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
@@ -22,12 +25,9 @@ import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.util.Assert;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
  * ElasticsearchStringQuery
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -48,11 +48,10 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		if (!conversionService.canConvert(org.joda.time.LocalDateTime.class, String.class)) {
 			conversionService.addConverter(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE);
 		}
-
 	}
 
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod,
-			ElasticsearchOperations elasticsearchOperations, String query) {
+									ElasticsearchOperations elasticsearchOperations, String query) {
 		super(queryMethod, elasticsearchOperations);
 		Assert.notNull(query, "Query cannot be empty");
 		this.query = query;

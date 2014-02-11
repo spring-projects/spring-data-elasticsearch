@@ -20,8 +20,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 /**
  * Elasticsearch specific repository implementation. Likely to be used as target within
  * {@link ElasticsearchRepositoryFactory}
- * 
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Ryan Henszey
@@ -33,7 +32,7 @@ public class SimpleElasticsearchRepository<T> extends AbstractElasticsearchRepos
 	}
 
 	public SimpleElasticsearchRepository(ElasticsearchEntityInformation<T, String> metadata,
-			ElasticsearchOperations elasticsearchOperations) {
+										 ElasticsearchOperations elasticsearchOperations) {
 		super(metadata, elasticsearchOperations);
 	}
 
@@ -45,5 +44,4 @@ public class SimpleElasticsearchRepository<T> extends AbstractElasticsearchRepos
 	protected String stringIdRepresentation(String id) {
 		return id;
 	}
-
 }

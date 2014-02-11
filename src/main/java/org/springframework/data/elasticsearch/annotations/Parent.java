@@ -21,7 +21,7 @@ import org.springframework.data.annotation.Persistent;
 
 /**
  * Parent
- * 
+ *
  * @author Philipp Jardas
  */
 
@@ -30,5 +30,6 @@ import org.springframework.data.annotation.Persistent;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface Parent {
+
 	String type();
 }

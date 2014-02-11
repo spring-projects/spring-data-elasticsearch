@@ -15,10 +15,10 @@
  */
 package org.springframework.data.elasticsearch;
 
+import java.util.List;
+
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-
-import java.util.List;
 
 /**
  * @author Mohsin Husen
@@ -26,34 +26,34 @@ import java.util.List;
 
 public class GirlFriend {
 
-    private String name;
+	private String name;
 
-    private String type;
+	private String type;
 
-    @Field(type = FieldType.Nested)
-    private List<Car> cars;
+	@Field(type = FieldType.Nested)
+	private List<Car> cars;
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getType() {
-        return type;
-    }
+	public String getType() {
+		return type;
+	}
 
-    public void setType(String type) {
-        this.type = type;
-    }
+	public void setType(String type) {
+		this.type = type;
+	}
 
-    public List<Car> getCars() {
-        return cars;
-    }
+	public List<Car> getCars() {
+		return cars;
+	}
 
-    public void setCars(List<Car> cars) {
-        this.cars = cars;
-    }
+	public void setCars(List<Car> cars) {
+		this.cars = cars;
+	}
 }

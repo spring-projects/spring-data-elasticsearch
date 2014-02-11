@@ -14,49 +14,52 @@
  * limitations under the License.
  */
 package org.springframework.data.elasticsearch.core.query;
-import org.elasticsearch.index.query.FilterBuilder;
+
 import java.util.Map;
+
+import org.elasticsearch.index.query.FilterBuilder;
+
 /**
- *  AliasQuery is useful for creating new alias or deleting existing ones
+ * AliasQuery is useful for creating new alias or deleting existing ones
  *
  * @author Mohsin Husen
  */
 public class AliasQuery {
 
-    private String indexName;
-    private String aliasName;
-    private FilterBuilder filterBuilder;
-    private Map<String, Object> filter;
+	private String indexName;
+	private String aliasName;
+	private FilterBuilder filterBuilder;
+	private Map<String, Object> filter;
 
-    public String getIndexName() {
-        return indexName;
-    }
+	public String getIndexName() {
+		return indexName;
+	}
 
-    public void setIndexName(String indexName) {
-        this.indexName = indexName;
-    }
+	public void setIndexName(String indexName) {
+		this.indexName = indexName;
+	}
 
-    public String getAliasName() {
-        return aliasName;
-    }
+	public String getAliasName() {
+		return aliasName;
+	}
 
-    public void setAliasName(String aliasName) {
-        this.aliasName = aliasName;
-    }
+	public void setAliasName(String aliasName) {
+		this.aliasName = aliasName;
+	}
 
-    public FilterBuilder getFilterBuilder() {
-        return filterBuilder;
-    }
+	public FilterBuilder getFilterBuilder() {
+		return filterBuilder;
+	}
 
-    public void setFilterBuilder(FilterBuilder filterBuilder) {
-        this.filterBuilder = filterBuilder;
-    }
+	public void setFilterBuilder(FilterBuilder filterBuilder) {
+		this.filterBuilder = filterBuilder;
+	}
 
-    public Map<String, Object> getFilter() {
-        return filter;
-    }
+	public Map<String, Object> getFilter() {
+		return filter;
+	}
 
-    public void setFilter(Map<String, Object> filter) {
-        this.filter = filter;
-    }
+	public void setFilter(Map<String, Object> filter) {
+		this.filter = filter;
+	}
 }

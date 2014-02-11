@@ -15,10 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core.facet.result;
 
-import org.springframework.data.elasticsearch.core.facet.AbstactFacetResult;
-import org.springframework.data.elasticsearch.core.facet.FacetType;
-
 import java.util.List;
+
+import org.springframework.data.elasticsearch.core.facet.AbstractFacetResult;
+import org.springframework.data.elasticsearch.core.facet.FacetType;
 
 /**
  * Basic term facet result
@@ -28,17 +28,16 @@ import java.util.List;
  * @author Artur Konczak
  * @author Jonathan Yan
  */
-public class RangeResult extends AbstactFacetResult {
+public class RangeResult extends AbstractFacetResult {
 
-    private List<Range> ranges;
+	private List<Range> ranges;
 
-    public RangeResult(String name, List<Range> ranges) {
-        super(name, FacetType.range);
-        this.ranges = ranges;
-    }
+	public RangeResult(String name, List<Range> ranges) {
+		super(name, FacetType.range);
+		this.ranges = ranges;
+	}
 
-    public List<Range> getRanges() {
-        return ranges;
-    }
-
+	public List<Range> getRanges() {
+		return ranges;
+	}
 }

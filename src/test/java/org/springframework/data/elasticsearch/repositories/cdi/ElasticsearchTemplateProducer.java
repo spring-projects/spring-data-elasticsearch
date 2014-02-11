@@ -15,6 +15,14 @@
  */
 package org.springframework.data.elasticsearch.repositories.cdi;
 
+import static org.elasticsearch.node.NodeBuilder.*;
+
+import javax.annotation.PreDestroy;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+
 import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -23,25 +31,17 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.xml.sax.SAXException;
 
-import javax.annotation.PreDestroy;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-
-import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
-
 /**
  * @author Mohsin Husen
  */
 @ApplicationScoped
 class ElasticsearchTemplateProducer {
 
- 	@Produces
+	@Produces
 	public ElasticsearchOperations createElasticsearchTemplate() throws IOException, ParserConfigurationException, SAXException {
-        ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder().put("http.enabled","false" );
-        NodeClient client = (NodeClient) nodeBuilder().settings(settings).clusterName("testClusterForCDI").local(true).node()
-                .client();
+		ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder().put("http.enabled", "false");
+		NodeClient client = (NodeClient) nodeBuilder().settings(settings).clusterName("testClusterForCDI").local(true).node()
+				.client();
 		return new ElasticsearchTemplate(client);
 	}
 
@@ -55,10 +55,10 @@ class ElasticsearchTemplateProducer {
 		ElasticsearchOperations template;
 		try {
 			template = createElasticsearchTemplate();
-            DeleteQuery deleteQuery = new DeleteQuery();
-            deleteQuery.setQuery(QueryBuilders.matchAllQuery());
-            deleteQuery.setIndex("test-product-index");
-            deleteQuery.setType("test-product-type");
+			DeleteQuery deleteQuery = new DeleteQuery();
+			deleteQuery.setQuery(QueryBuilders.matchAllQuery());
+			deleteQuery.setIndex("test-product-index");
+			deleteQuery.setType("test-product-type");
 			template.delete(deleteQuery);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -67,7 +67,5 @@ class ElasticsearchTemplateProducer {
 		} catch (SAXException e) {
 			throw new RuntimeException(e);
 		}
-
 	}
-
 }

@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
+import java.util.Date;
+
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.joda.time.ReadableInstant;
@@ -22,11 +24,9 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.core.convert.converter.Converter;
 
-import java.util.Date;
-
 /**
  * DateTimeConverters
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -74,5 +74,4 @@ public final class DateTimeConverters {
 		}
 
 	}
-
 }

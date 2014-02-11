@@ -22,20 +22,19 @@ package org.springframework.data.elasticsearch.core.geo;
  */
 public class GeoBox {
 
-    private GeoPoint topLeft;
-    private GeoPoint bottomRight;
+	private GeoPoint topLeft;
+	private GeoPoint bottomRight;
 
-    public GeoBox(GeoPoint topLeft, GeoPoint bottomRight) {
-        this.topLeft = topLeft;
-        this.bottomRight = bottomRight;
-    }
+	public GeoBox(GeoPoint topLeft, GeoPoint bottomRight) {
+		this.topLeft = topLeft;
+		this.bottomRight = bottomRight;
+	}
 
-    public GeoPoint getTopLeft() {
-        return topLeft;
-    }
+	public GeoPoint getTopLeft() {
+		return topLeft;
+	}
 
-    public GeoPoint getBottomRight() {
-        return bottomRight;
-    }
-
+	public GeoPoint getBottomRight() {
+		return bottomRight;
+	}
 }

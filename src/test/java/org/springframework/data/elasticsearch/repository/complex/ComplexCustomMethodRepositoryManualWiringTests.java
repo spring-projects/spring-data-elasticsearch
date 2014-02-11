@@ -15,6 +15,9 @@
  */
 package org.springframework.data.elasticsearch.repository.complex;
 
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,11 +27,6 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.annotation.Resource;
-
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-
 /**
  * @author Artur Konczak
  */
@@ -36,28 +34,26 @@ import static org.junit.Assert.assertThat;
 @ContextConfiguration("classpath:complex-custom-method-repository-manual-wiring-test.xml")
 public class ComplexCustomMethodRepositoryManualWiringTests {
 
-    @Resource
-    private ComplexElasticsearchRepositoryManualWiring complexRepository;
+	@Autowired
+	private ComplexElasticsearchRepositoryManualWiring complexRepository;
 
 	@Autowired
 	private ElasticsearchTemplate elasticsearchTemplate;
 
 	@Before
 	public void before() {
-        elasticsearchTemplate.deleteIndex(SampleEntity.class);
+		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 	}
 
-    @Test
-    public void shouldExecuteComplexCustomMethod() {
-        //Given
+	@Test
+	public void shouldExecuteComplexCustomMethod() {
+		//Given
 
-        //When
-        String result = complexRepository.doSomethingSpecial();
-        //Then
-        assertThat(result, is("3+3=6"));
-
-    }
-
+		//When
+		String result = complexRepository.doSomethingSpecial();
+		//Then
+		assertThat(result, is("3+3=6"));
+	}
 }

@@ -15,19 +15,19 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
-import org.springframework.data.mapping.Association;
-import org.springframework.data.mapping.PersistentEntity;
-import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
-import org.springframework.data.mapping.model.SimpleTypeHolder;
-
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
+import org.springframework.data.mapping.model.SimpleTypeHolder;
+
 /**
  * Elasticsearch specific {@link org.springframework.data.mapping.PersistentProperty} implementation processing
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -44,7 +44,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	}
 
 	public SimpleElasticsearchPersistentProperty(Field field, PropertyDescriptor propertyDescriptor,
-			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
+												 PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
 		super(field, propertyDescriptor, owner, simpleTypeHolder);
 	}
 
@@ -62,5 +62,4 @@ public class SimpleElasticsearchPersistentProperty extends
 	protected Association<ElasticsearchPersistentProperty> createAssociation() {
 		return null;
 	}
-
 }

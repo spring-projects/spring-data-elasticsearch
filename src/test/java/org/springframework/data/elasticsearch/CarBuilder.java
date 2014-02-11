@@ -20,19 +20,19 @@ package org.springframework.data.elasticsearch;
  */
 public class CarBuilder {
 
-    private Car car = new Car();
+	private Car car = new Car();
 
-    public CarBuilder name(String name) {
-        car.setName(name);
-        return this;
-    }
+	public CarBuilder name(String name) {
+		car.setName(name);
+		return this;
+	}
 
-    public CarBuilder model(String model) {
-        car.setModel(model);
-        return this;
-    }
+	public CarBuilder model(String model) {
+		car.setModel(model);
+		return this;
+	}
 
-    public Car build(){
-        return car;
-    }
+	public Car build() {
+		return car;
+	}
 }

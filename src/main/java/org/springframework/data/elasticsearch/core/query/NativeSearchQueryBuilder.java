@@ -15,6 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -22,9 +25,6 @@ import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * NativeSearchQuery
@@ -36,88 +36,88 @@ import java.util.List;
 
 public class NativeSearchQueryBuilder {
 
-    private QueryBuilder queryBuilder;
-    private FilterBuilder filterBuilder;
-    private SortBuilder sortBuilder;
-    private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
-    private HighlightBuilder.Field[] highlightFields;
-    private Pageable pageable;
-    private String[] indices;
-    private String[] types;
-    private String[] fields;
-    private float minScore;
+	private QueryBuilder queryBuilder;
+	private FilterBuilder filterBuilder;
+	private SortBuilder sortBuilder;
+	private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
+	private HighlightBuilder.Field[] highlightFields;
+	private Pageable pageable;
+	private String[] indices;
+	private String[] types;
+	private String[] fields;
+	private float minScore;
 
-    public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
-        this.queryBuilder = queryBuilder;
-        return this;
-    }
+	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
+		this.queryBuilder = queryBuilder;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withFilter(FilterBuilder filterBuilder) {
-        this.filterBuilder = filterBuilder;
-        return this;
-    }
+	public NativeSearchQueryBuilder withFilter(FilterBuilder filterBuilder) {
+		this.filterBuilder = filterBuilder;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withSort(SortBuilder sortBuilder) {
-        this.sortBuilder = sortBuilder;
-        return this;
-    }
+	public NativeSearchQueryBuilder withSort(SortBuilder sortBuilder) {
+		this.sortBuilder = sortBuilder;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withFacet(FacetRequest facetRequest) {
-        facetRequests.add(facetRequest);
-        return this;
-    }
+	public NativeSearchQueryBuilder withFacet(FacetRequest facetRequest) {
+		facetRequests.add(facetRequest);
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withHighlightFields(HighlightBuilder.Field... highlightFields){
-        this.highlightFields = highlightFields;
-        return this;
-    }
+	public NativeSearchQueryBuilder withHighlightFields(HighlightBuilder.Field... highlightFields) {
+		this.highlightFields = highlightFields;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withPageable(Pageable pageable) {
-        this.pageable = pageable;
-        return this;
-    }
+	public NativeSearchQueryBuilder withPageable(Pageable pageable) {
+		this.pageable = pageable;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withIndices(String... indices) {
-        this.indices = indices;
-        return this;
-    }
+	public NativeSearchQueryBuilder withIndices(String... indices) {
+		this.indices = indices;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withTypes(String... types) {
-        this.types = types;
-        return this;
-    }
+	public NativeSearchQueryBuilder withTypes(String... types) {
+		this.types = types;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withFields(String... fields) {
-        this.fields = fields;
-        return this;
-    }
+	public NativeSearchQueryBuilder withFields(String... fields) {
+		this.fields = fields;
+		return this;
+	}
 
-    public NativeSearchQueryBuilder withMinScore(float minScore) {
-        this.minScore = minScore;
-        return this;
-    }
+	public NativeSearchQueryBuilder withMinScore(float minScore) {
+		this.minScore = minScore;
+		return this;
+	}
 
-    public NativeSearchQuery build() {
-        NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilder, highlightFields);
-        if (pageable != null) {
-            nativeSearchQuery.setPageable(pageable);
-        }
-        if (indices != null) {
-            nativeSearchQuery.addIndices(indices);
-        }
-        if (types != null) {
-            nativeSearchQuery.addTypes(types);
-        }
-        if (fields != null) {
-            nativeSearchQuery.addFields(fields);
-        }
-        if (CollectionUtils.isNotEmpty(facetRequests)) {
-            nativeSearchQuery.setFacets(facetRequests);
-        }
+	public NativeSearchQuery build() {
+		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilder, highlightFields);
+		if (pageable != null) {
+			nativeSearchQuery.setPageable(pageable);
+		}
+		if (indices != null) {
+			nativeSearchQuery.addIndices(indices);
+		}
+		if (types != null) {
+			nativeSearchQuery.addTypes(types);
+		}
+		if (fields != null) {
+			nativeSearchQuery.addFields(fields);
+		}
+		if (CollectionUtils.isNotEmpty(facetRequests)) {
+			nativeSearchQuery.setFacets(facetRequests);
+		}
 
-        if(minScore>0){
-            nativeSearchQuery.setMinScore(minScore);
-        }
-        return nativeSearchQuery;
-    }
+		if (minScore > 0) {
+			nativeSearchQuery.setMinScore(minScore);
+		}
+		return nativeSearchQuery;
+	}
 }

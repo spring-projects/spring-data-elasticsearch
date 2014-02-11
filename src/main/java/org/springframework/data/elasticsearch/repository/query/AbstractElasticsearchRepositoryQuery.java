@@ -21,7 +21,7 @@ import org.springframework.data.repository.query.RepositoryQuery;
 
 /**
  * AbstractElasticsearchRepositoryQuery
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -32,7 +32,7 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 	protected ElasticsearchOperations elasticsearchOperations;
 
 	public AbstractElasticsearchRepositoryQuery(ElasticsearchQueryMethod queryMethod,
-			ElasticsearchOperations elasticsearchOperations) {
+												ElasticsearchOperations elasticsearchOperations) {
 		this.queryMethod = queryMethod;
 		this.elasticsearchOperations = elasticsearchOperations;
 	}
@@ -41,5 +41,4 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 	public QueryMethod getQueryMethod() {
 		return queryMethod;
 	}
-
 }

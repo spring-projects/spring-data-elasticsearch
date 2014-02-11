@@ -15,17 +15,17 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.util.List;
+import java.util.Set;
+
 import org.elasticsearch.action.update.UpdateResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.query.*;
 
-import java.util.List;
-import java.util.Set;
-
 /**
  * ElasticsearchOperations
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -38,7 +38,7 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * Create an index for a class
-	 * 
+	 *
 	 * @param clazz
 	 * @param <T>
 	 */
@@ -46,7 +46,7 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * Create mapping for a class
-	 * 
+	 *
 	 * @param clazz
 	 * @param <T>
 	 */
@@ -54,26 +54,26 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * Execute the query against elasticsearch and return the first returned object
-	 * 
+	 *
 	 * @param query
 	 * @param clazz
 	 * @return the first matching object
 	 */
 	<T> T queryForObject(GetQuery query, Class<T> clazz);
 
-    /**
-     * Execute the query against elasticsearch and return the first returned object using custom mapper
-     *
-     * @param query
-     * @param clazz
-     * @param mapper
-     * @return the first matching object
-     */
-    <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper);
+	/**
+	 * Execute the query against elasticsearch and return the first returned object using custom mapper
+	 *
+	 * @param query
+	 * @param clazz
+	 * @param mapper
+	 * @return the first matching object
+	 */
+	<T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper);
 
 	/**
 	 * Execute the query against elasticsearch and return the first returned object
-	 * 
+	 *
 	 * @param query
 	 * @param clazz
 	 * @return the first matching object
@@ -82,7 +82,7 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * Execute the query against elasticsearch and return the first returned object
-	 * 
+	 *
 	 * @param query
 	 * @param clazz
 	 * @return the first matching object
@@ -91,25 +91,25 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page}
-	 * 
+	 *
 	 * @param query
 	 * @param clazz
 	 * @return
 	 */
 	<T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz);
 
-    /**
-     * Execute the query against elasticsearch and return result as {@link Page} using custom mapper
-     *
-     * @param query
-     * @param clazz
-     * @return
-     */
-    <T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
+	/**
+	 * Execute the query against elasticsearch and return result as {@link Page} using custom mapper
+	 *
+	 * @param query
+	 * @param clazz
+	 * @return
+	 */
+	<T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page}
-	 * 
+	 *
 	 * @param query
 	 * @param clazz
 	 * @return
@@ -118,25 +118,25 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page}
-	 * 
+	 *
 	 * @param query
 	 * @param clazz
 	 * @return
 	 */
 	<T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz);
 
-    /**
-     * Execute the query against elasticsearch and return result as {@link Page} using custom mapper
-     *
-     * @param query
-     * @param clazz
-     * @return
-     */
-    <T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper);
+	/**
+	 * Execute the query against elasticsearch and return result as {@link Page} using custom mapper
+	 *
+	 * @param query
+	 * @param clazz
+	 * @return
+	 */
+	<T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
 	 * Execute the criteria query against elasticsearch and return result as {@link List}
-	 * 
+	 *
 	 * @param query
 	 * @param clazz
 	 * @param <T>
@@ -146,7 +146,7 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * Execute the string query against elasticsearch and return result as {@link List}
-	 * 
+	 *
 	 * @param query
 	 * @param clazz
 	 * @param <T>
@@ -154,19 +154,19 @@ public interface ElasticsearchOperations {
 	 */
 	<T> List<T> queryForList(StringQuery query, Class<T> clazz);
 
-    /**
-     * Execute the search query against elasticsearch and return result as {@link List}
-     *
-     * @param query
-     * @param clazz
-     * @param <T>
-     * @return
-     */
-    <T> List<T> queryForList(SearchQuery query, Class<T> clazz);
+	/**
+	 * Execute the search query against elasticsearch and return result as {@link List}
+	 *
+	 * @param query
+	 * @param clazz
+	 * @param <T>
+	 * @return
+	 */
+	<T> List<T> queryForList(SearchQuery query, Class<T> clazz);
 
 	/**
 	 * Execute the query against elasticsearch and return ids
-	 * 
+	 *
 	 * @param query
 	 * @return
 	 */
@@ -174,7 +174,7 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * return number of elements found by for given query
-	 * 
+	 *
 	 * @param query
 	 * @param clazz
 	 * @return
@@ -183,30 +183,30 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * Index an object. Will do save or update
-	 * 
+	 *
 	 * @param query
 	 * @return returns the document id
 	 */
 	String index(IndexQuery query);
 
-    /**
-     * Partial update of the document
-     *
-     * @param updateQuery
-     * @return
-     */
-    UpdateResponse update(UpdateQuery updateQuery);
+	/**
+	 * Partial update of the document
+	 *
+	 * @param updateQuery
+	 * @return
+	 */
+	UpdateResponse update(UpdateQuery updateQuery);
 
 	/**
 	 * Bulk index all objects. Will do save or update
-	 * 
+	 *
 	 * @param queries
 	 */
 	void bulkIndex(List<IndexQuery> queries);
 
 	/**
 	 * Delete the one object with provided id
-	 * 
+	 *
 	 * @param indexName
 	 * @param type
 	 * @param id
@@ -216,7 +216,7 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * Delete the one object with provided id
-	 * 
+	 *
 	 * @param clazz
 	 * @param id
 	 * @return documentId of the document deleted
@@ -225,18 +225,18 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * Delete all records matching the query
-	 * 
+	 *
 	 * @param clazz
 	 * @param query
 	 */
 	<T> void delete(DeleteQuery query, Class<T> clazz);
 
 	/**
-     * Delete all records matching the query
-     *
-     * @param query
-     */
-    void delete(DeleteQuery query);
+	 * Delete all records matching the query
+	 *
+	 * @param query
+	 */
+	void delete(DeleteQuery query);
 
 	/**
 	 * Deletes an index for given entity
@@ -248,34 +248,34 @@ public interface ElasticsearchOperations {
 	<T> boolean deleteIndex(Class<T> clazz);
 
 	/**
-     * Deletes a type in an index
-     *
-     * @param index
-     * @param type
-     */
-    void deleteType(String index, String type);
+	 * Deletes a type in an index
+	 *
+	 * @param index
+	 * @param type
+	 */
+	void deleteType(String index, String type);
 
 	/**
 	 * check if index is exists
-	 * 
+	 *
 	 * @param clazz
 	 * @param <T>
 	 * @return
 	 */
 	<T> boolean indexExists(Class<T> clazz);
 
-    /**
-     * check if type is exists in an index
-     *
-     * @param index
-     * @param type
-     * @return
-     */
-     boolean typeExists(String index, String type);
+	/**
+	 * check if type is exists in an index
+	 *
+	 * @param index
+	 * @param type
+	 * @return
+	 */
+	boolean typeExists(String index, String type);
 
 	/**
 	 * refresh the index
-	 * 
+	 *
 	 * @param indexName
 	 * @param waitForOperation
 	 */
@@ -283,7 +283,7 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * refresh the index
-	 * 
+	 *
 	 * @param clazz
 	 * @param waitForOperation
 	 */
@@ -291,7 +291,7 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * Returns scroll id for scan query
-	 * 
+	 *
 	 * @param query
 	 * @param scrollTimeInMillis
 	 * @param noFields
@@ -301,7 +301,7 @@ public interface ElasticsearchOperations {
 
 	/**
 	 * Scrolls the results for give scroll id
-	 * 
+	 *
 	 * @param scrollId
 	 * @param scrollTimeInMillis
 	 * @param clazz
@@ -310,20 +310,20 @@ public interface ElasticsearchOperations {
 	 */
 	<T> Page<T> scroll(String scrollId, long scrollTimeInMillis, Class<T> clazz);
 
-    /**
-     * Scrolls the results for give scroll id using custom result mapper
-     *
-     * @param scrollId
-     * @param scrollTimeInMillis
-     * @param mapper
-     * @param <T>
-     * @return
-     */
-    <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper);
+	/**
+	 * Scrolls the results for give scroll id using custom result mapper
+	 *
+	 * @param scrollId
+	 * @param scrollTimeInMillis
+	 * @param mapper
+	 * @param <T>
+	 * @return
+	 */
+	<T> Page<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper);
 
 	/**
 	 * more like this query to search for documents that are "like" a specific document.
-	 * 
+	 *
 	 * @param query
 	 * @param clazz
 	 * @param <T>
@@ -331,27 +331,27 @@ public interface ElasticsearchOperations {
 	 */
 	<T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz);
 
-    /**
-     * adding new alias
-     *
-     * @param query
-     * @return
-     */
-     Boolean addAlias(AliasQuery query);
+	/**
+	 * adding new alias
+	 *
+	 * @param query
+	 * @return
+	 */
+	Boolean addAlias(AliasQuery query);
 
-    /**
-     * removing previously created alias
-     *
-     * @param query
-     * @return
-     */
-     Boolean removeAlias(AliasQuery query);
+	/**
+	 * removing previously created alias
+	 *
+	 * @param query
+	 * @return
+	 */
+	Boolean removeAlias(AliasQuery query);
 
-    /**
-     * get all the alias pointing to specified index
-     *
-     * @param indexName
-     * @return
-     */
-     Set<String> queryForAlias(String indexName);
+	/**
+	 * get all the alias pointing to specified index
+	 *
+	 * @param indexName
+	 * @return
+	 */
+	Set<String> queryForAlias(String indexName);
 }

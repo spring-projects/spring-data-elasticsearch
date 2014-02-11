@@ -15,16 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-
 /**
  * SimpleElasticsearchMappingContext
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -39,8 +39,7 @@ public class SimpleElasticsearchMappingContext extends
 
 	@Override
 	protected ElasticsearchPersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor,
-			SimpleElasticsearchPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
+																	   SimpleElasticsearchPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
 		return new SimpleElasticsearchPersistentProperty(field, descriptor, owner, simpleTypeHolder);
 	}
-
 }

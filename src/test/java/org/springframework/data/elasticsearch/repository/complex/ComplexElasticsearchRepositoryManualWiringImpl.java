@@ -23,15 +23,15 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
  */
 public class ComplexElasticsearchRepositoryManualWiringImpl implements ComplexElasticsearchRepositoryCustom {
 
-    private ElasticsearchTemplate template;
+	private ElasticsearchTemplate template;
 
-    @Override
-    public String doSomethingSpecial() {
-        assert(template.getElasticsearchConverter()!=null);
-        return "3+3=6";
-    }
+	@Override
+	public String doSomethingSpecial() {
+		assert (template.getElasticsearchConverter() != null);
+		return "3+3=6";
+	}
 
-    public void setTemplate(ElasticsearchTemplate template) {
-        this.template = template;
-    }
+	public void setTemplate(ElasticsearchTemplate template) {
+		this.template = template;
+	}
 }

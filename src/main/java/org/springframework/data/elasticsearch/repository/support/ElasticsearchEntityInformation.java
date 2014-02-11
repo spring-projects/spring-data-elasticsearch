@@ -15,14 +15,13 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import org.springframework.data.repository.core.EntityInformation;
-
 import java.io.Serializable;
+
+import org.springframework.data.repository.core.EntityInformation;
 
 /**
  * @param <T>
  * @param <ID>
- * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -35,6 +34,6 @@ public interface ElasticsearchEntityInformation<T, ID extends Serializable> exte
 	String getType();
 
 	Long getVersion(T entity);
-	
+
 	String getParentId(T entity);
 }

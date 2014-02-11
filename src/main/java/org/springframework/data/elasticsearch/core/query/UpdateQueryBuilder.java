@@ -23,51 +23,51 @@ import org.elasticsearch.action.index.IndexRequest;
  */
 public class UpdateQueryBuilder {
 
-    private String id;
-    private IndexRequest indexRequest;
-    private String indexName;
-    private String type;
-    private Class clazz;
-    private boolean doUpsert;
+	private String id;
+	private IndexRequest indexRequest;
+	private String indexName;
+	private String type;
+	private Class clazz;
+	private boolean doUpsert;
 
-    public UpdateQueryBuilder withId(String id){
-        this.id = id;
-        return this;
-    }
+	public UpdateQueryBuilder withId(String id) {
+		this.id = id;
+		return this;
+	}
 
-    public UpdateQueryBuilder withIndexRequest(IndexRequest indexRequest){
-        this.indexRequest = indexRequest;
-        return this;
-    }
+	public UpdateQueryBuilder withIndexRequest(IndexRequest indexRequest) {
+		this.indexRequest = indexRequest;
+		return this;
+	}
 
-    public UpdateQueryBuilder withIndexName(String indexName){
-        this.indexName = indexName;
-        return this;
-    }
+	public UpdateQueryBuilder withIndexName(String indexName) {
+		this.indexName = indexName;
+		return this;
+	}
 
-    public UpdateQueryBuilder withType(String type){
-        this.type = type;
-        return this;
-    }
+	public UpdateQueryBuilder withType(String type) {
+		this.type = type;
+		return this;
+	}
 
-    public UpdateQueryBuilder withClass(Class clazz){
-        this.clazz = clazz;
-        return this;
-    }
+	public UpdateQueryBuilder withClass(Class clazz) {
+		this.clazz = clazz;
+		return this;
+	}
 
-    public UpdateQueryBuilder withDoUpsert(boolean doUpsert){
-        this.doUpsert = doUpsert;
-        return this;
-    }
+	public UpdateQueryBuilder withDoUpsert(boolean doUpsert) {
+		this.doUpsert = doUpsert;
+		return this;
+	}
 
-    public UpdateQuery build(){
-        UpdateQuery updateQuery = new UpdateQuery();
-        updateQuery.setId(id);
-        updateQuery.setIndexName(indexName);
-        updateQuery.setType(type);
-        updateQuery.setClazz(clazz);
-        updateQuery.setIndexRequest(indexRequest);
-        updateQuery.setDoUpsert(doUpsert);
-        return updateQuery;
-    }
+	public UpdateQuery build() {
+		UpdateQuery updateQuery = new UpdateQuery();
+		updateQuery.setId(id);
+		updateQuery.setIndexName(indexName);
+		updateQuery.setType(type);
+		updateQuery.setClazz(clazz);
+		updateQuery.setIndexRequest(indexRequest);
+		updateQuery.setDoUpsert(doUpsert);
+		return updateQuery;
+	}
 }

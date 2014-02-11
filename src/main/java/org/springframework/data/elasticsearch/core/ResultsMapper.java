@@ -25,6 +25,5 @@ package org.springframework.data.elasticsearch.core;
 
 public interface ResultsMapper extends SearchResultMapper, GetResultMapper {
 
-    EntityMapper getEntityMapper();
-
+	EntityMapper getEntityMapper();
 }

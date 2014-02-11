@@ -15,15 +15,15 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.util.List;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-import java.util.List;
-
 /**
  * Query
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -34,7 +34,7 @@ public interface Query {
 
 	/**
 	 * restrict result to entries on given page. Corresponds to the 'start' and 'rows' parameter in elasticsearch
-	 * 
+	 *
 	 * @param pageable
 	 * @return
 	 */
@@ -42,21 +42,21 @@ public interface Query {
 
 	/**
 	 * Get filter queries if defined
-	 * 
+	 *
 	 * @return
 	 */
 	// List<FilterQuery> getFilterQueries();
 
 	/**
 	 * Get page settings if defined
-	 * 
+	 *
 	 * @return
 	 */
 	Pageable getPageable();
 
 	/**
 	 * Add {@link org.springframework.data.domain.Sort} to query
-	 * 
+	 *
 	 * @param sort
 	 * @return
 	 */
@@ -69,49 +69,50 @@ public interface Query {
 
 	/**
 	 * Get Indices to be searched
-	 * 
+	 *
 	 * @return
 	 */
 	List<String> getIndices();
 
 	/**
 	 * Add Indices to be added as part of search request
-	 * 
+	 *
 	 * @param indices
 	 */
 	void addIndices(String... indices);
 
 	/**
 	 * Add types to be searched
-	 * 
+	 *
 	 * @param types
 	 */
 	void addTypes(String... types);
 
 	/**
 	 * Get types to be searched
-	 * 
+	 *
 	 * @return
 	 */
 	List<String> getTypes();
 
 	/**
 	 * Add fields to be added as part of search request
-	 * 
+	 *
 	 * @param fields
 	 */
 	void addFields(String... fields);
 
 	/**
 	 * Get fields to be returned as part of search request
-	 * 
+	 *
 	 * @return
 	 */
 	List<String> getFields();
 
-    /**
-     * Get minimum score
-     * @return
-     */
-    float getMinScore();
+	/**
+	 * Get minimum score
+	 *
+	 * @return
+	 */
+	float getMinScore();
 }

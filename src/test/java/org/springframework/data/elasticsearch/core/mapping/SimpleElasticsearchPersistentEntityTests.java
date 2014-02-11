@@ -15,15 +15,15 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
+
 import org.junit.Test;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
-
-import java.beans.IntrospectionException;
-import java.beans.PropertyDescriptor;
 
 /**
  * @author Rizwan Idrees
@@ -37,8 +37,8 @@ public class SimpleElasticsearchPersistentEntityTests {
 		TypeInformation typeInformation = ClassTypeInformation.from(EntityWithWrongVersionType.class);
 		SimpleElasticsearchPersistentProperty persistentProperty = new SimpleElasticsearchPersistentProperty(
 				EntityWithWrongVersionType.class.getDeclaredField("version"), new PropertyDescriptor("version",
-						EntityWithWrongVersionType.class), new SimpleElasticsearchPersistentEntity<EntityWithWrongVersionType>(
-						typeInformation), new SimpleTypeHolder());
+				EntityWithWrongVersionType.class), new SimpleElasticsearchPersistentEntity<EntityWithWrongVersionType>(
+				typeInformation), new SimpleTypeHolder());
 
 		// when
 		new SimpleElasticsearchPersistentEntity(typeInformation).addPersistentProperty(persistentProperty);
@@ -51,13 +51,13 @@ public class SimpleElasticsearchPersistentEntityTests {
 		TypeInformation typeInformation = ClassTypeInformation.from(EntityWithMultipleVersionField.class);
 		SimpleElasticsearchPersistentProperty persistentProperty1 = new SimpleElasticsearchPersistentProperty(
 				EntityWithMultipleVersionField.class.getDeclaredField("version1"), new PropertyDescriptor("version1",
-						EntityWithMultipleVersionField.class),
+				EntityWithMultipleVersionField.class),
 				new SimpleElasticsearchPersistentEntity<EntityWithMultipleVersionField>(typeInformation),
 				new SimpleTypeHolder());
 
 		SimpleElasticsearchPersistentProperty persistentProperty2 = new SimpleElasticsearchPersistentProperty(
 				EntityWithMultipleVersionField.class.getDeclaredField("version2"), new PropertyDescriptor("version2",
-						EntityWithMultipleVersionField.class),
+				EntityWithMultipleVersionField.class),
 				new SimpleElasticsearchPersistentEntity<EntityWithMultipleVersionField>(typeInformation),
 				new SimpleTypeHolder());
 
@@ -69,6 +69,7 @@ public class SimpleElasticsearchPersistentEntityTests {
 	}
 
 	private class EntityWithWrongVersionType {
+
 		@Version
 		private String version;
 
@@ -104,5 +105,4 @@ public class SimpleElasticsearchPersistentEntityTests {
 			this.version2 = version2;
 		}
 	}
-
 }

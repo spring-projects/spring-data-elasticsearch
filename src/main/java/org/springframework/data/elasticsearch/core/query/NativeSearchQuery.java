@@ -15,18 +15,18 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * NativeSearchQuery
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
@@ -36,18 +36,18 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	private QueryBuilder query;
 	private FilterBuilder filter;
 	private SortBuilder sort;
-    private List<FacetRequest> facets;
-    private HighlightBuilder.Field[] highlightFields;
+	private List<FacetRequest> facets;
+	private HighlightBuilder.Field[] highlightFields;
 
 
-    public NativeSearchQuery(QueryBuilder query) {
-        this.query = query;
-    }
+	public NativeSearchQuery(QueryBuilder query) {
+		this.query = query;
+	}
 
-    public NativeSearchQuery(QueryBuilder query, FilterBuilder filter) {
-        this.query = query;
-        this.filter = filter;
-    }
+	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter) {
+		this.query = query;
+		this.filter = filter;
+	}
 
 	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, SortBuilder sort) {
 		this.query = query;
@@ -55,12 +55,12 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 		this.sort = sort;
 	}
 
-    public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, SortBuilder sort, HighlightBuilder.Field[] highlightFields) {
-        this.query = query;
-        this.filter = filter;
-        this.sort = sort;
-        this.highlightFields = highlightFields;
-    }
+	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, SortBuilder sort, HighlightBuilder.Field[] highlightFields) {
+		this.query = query;
+		this.filter = filter;
+		this.sort = sort;
+		this.highlightFields = highlightFields;
+	}
 
 	public QueryBuilder getQuery() {
 		return query;
@@ -72,26 +72,26 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
 	public SortBuilder getElasticsearchSort() {
 		return sort;
-    }
-
-    @Override
-    public HighlightBuilder.Field[] getHighlightFields() {
-        return highlightFields;
 	}
 
-    public void addFacet(FacetRequest facetRequest){
-        if(facets==null){
-            facets = new ArrayList<FacetRequest>();
-        }
-        facets.add(facetRequest);
-    }
+	@Override
+	public HighlightBuilder.Field[] getHighlightFields() {
+		return highlightFields;
+	}
 
-    public void setFacets(List<FacetRequest> facets){
-        this.facets = facets;
-    }
+	public void addFacet(FacetRequest facetRequest) {
+		if (facets == null) {
+			facets = new ArrayList<FacetRequest>();
+		}
+		facets.add(facetRequest);
+	}
 
-    @Override
-    public List<FacetRequest> getFacets() {
-        return facets;
-    }
+	public void setFacets(List<FacetRequest> facets) {
+		this.facets = facets;
+	}
+
+	@Override
+	public List<FacetRequest> getFacets() {
+		return facets;
+	}
 }

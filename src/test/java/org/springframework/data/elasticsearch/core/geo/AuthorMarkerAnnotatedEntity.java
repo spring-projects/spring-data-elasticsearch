@@ -25,53 +25,53 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 @Document(indexName = "test-geo-index", type = "geo-annotation-point-type", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class AuthorMarkerAnnotatedEntity {
 
-    @Id
-    private String id;
-    private String name;
+	@Id
+	private String id;
+	private String name;
 
-    @GeoPointField
-    private String location;
+	@GeoPointField
+	private String location;
 
-    @GeoPointField
-    private double[] additionalLocation;
+	@GeoPointField
+	private double[] additionalLocation;
 
-    private AuthorMarkerAnnotatedEntity() {
+	private AuthorMarkerAnnotatedEntity() {
 
-    }
+	}
 
-    public AuthorMarkerAnnotatedEntity(String id) {
-        this.id = id;
-    }
+	public AuthorMarkerAnnotatedEntity(String id) {
+		this.id = id;
+	}
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getLocation() {
-        return location;
-    }
+	public String getLocation() {
+		return location;
+	}
 
-    public void setLocation(String location) {
-        this.location = location;
-    }
+	public void setLocation(String location) {
+		this.location = location;
+	}
 
-    public double[] getAdditionalLocation() {
-        return additionalLocation;
-    }
+	public double[] getAdditionalLocation() {
+		return additionalLocation;
+	}
 
-    public void setAdditionalLocation(double... additionalLocation) {
-        this.additionalLocation = additionalLocation;
-    }
+	public void setAdditionalLocation(double... additionalLocation) {
+		this.additionalLocation = additionalLocation;
+	}
 }

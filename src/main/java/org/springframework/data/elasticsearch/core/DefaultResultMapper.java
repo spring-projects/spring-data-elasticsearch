@@ -16,6 +16,14 @@
 package org.springframework.data.elasticsearch.core;
 
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.base.Strings;
@@ -34,115 +42,107 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
 
-import java.lang.reflect.Method;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 /**
  * @author Artur Konczak
  */
 public class DefaultResultMapper extends AbstractResultMapper {
 
-    private MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
-   
-    public DefaultResultMapper(){
-        super(new DefaultEntityMapper());
-    }
-    
-    public DefaultResultMapper(MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext){
-       super(new DefaultEntityMapper());
-       this.mappingContext = mappingContext;
-    }
+	private MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 
-    public DefaultResultMapper(EntityMapper entityMapper) {
-        super(entityMapper);
-    }
+	public DefaultResultMapper() {
+		super(new DefaultEntityMapper());
+	}
 
-    @Override
-    public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-        long totalHits = response.getHits().totalHits();
-        List<T> results = new ArrayList<T>();
-        for (SearchHit hit : response.getHits()) {
-            if (hit != null) {
-                T result = null;
-                if (!Strings.isNullOrEmpty(hit.sourceAsString())) {
-                    result = mapEntity(hit.sourceAsString(), clazz);
-                } else {
-                    result = mapEntity(hit.getFields().values(), clazz);
-                }
-                setPersistentEntityId(result, hit.getId(), clazz);
-                results.add(result);
-            }
-        }
-        List<FacetResult> facets = new ArrayList<FacetResult>();
-        if (response.getFacets() != null) {
-            for (Facet facet : response.getFacets()) {
-                FacetResult facetResult = DefaultFacetMapper.parse(facet);
-                if (facetResult != null) {
-                    facets.add(facetResult);
-                }
-            }
-        }
+	public DefaultResultMapper(MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
+		super(new DefaultEntityMapper());
+		this.mappingContext = mappingContext;
+	}
 
-        return new FacetedPageImpl<T>(results, pageable, totalHits, facets);
-    }
+	public DefaultResultMapper(EntityMapper entityMapper) {
+		super(entityMapper);
+	}
 
-    private <T> T mapEntity(Collection<SearchHitField> values, Class<T> clazz) {
-            return mapEntity(buildJSONFromFields(values), clazz);
-    }
+	@Override
+	public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+		long totalHits = response.getHits().totalHits();
+		List<T> results = new ArrayList<T>();
+		for (SearchHit hit : response.getHits()) {
+			if (hit != null) {
+				T result = null;
+				if (!Strings.isNullOrEmpty(hit.sourceAsString())) {
+					result = mapEntity(hit.sourceAsString(), clazz);
+				} else {
+					result = mapEntity(hit.getFields().values(), clazz);
+				}
+				setPersistentEntityId(result, hit.getId(), clazz);
+				results.add(result);
+			}
+		}
+		List<FacetResult> facets = new ArrayList<FacetResult>();
+		if (response.getFacets() != null) {
+			for (Facet facet : response.getFacets()) {
+				FacetResult facetResult = DefaultFacetMapper.parse(facet);
+				if (facetResult != null) {
+					facets.add(facetResult);
+				}
+			}
+		}
 
-    private String buildJSONFromFields(Collection<SearchHitField> values) {
-        JsonFactory nodeFactory = new JsonFactory();
-        try {
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            JsonGenerator generator = nodeFactory.createGenerator(stream, JsonEncoding.UTF8);
-            generator.writeStartObject();
-            for (SearchHitField value : values) {
-                if (value.getValues().size() > 1) {
-                    generator.writeArrayFieldStart(value.getName());
-                    for (Object val : value.getValues()) {
-                        generator.writeObject(val);
-                    }
-                    generator.writeEndArray();
-                } else {
-                    generator.writeObjectField(value.getName(), value.getValue());
-                }
-            }
-            generator.writeEndObject();
-            generator.flush();
-            return new String(stream.toByteArray(), Charset.forName("UTF-8"));
-        } catch (IOException e) {
-            return null;
-        }
-    }
+		return new FacetedPageImpl<T>(results, pageable, totalHits, facets);
+	}
 
-    @Override
-    public <T> T mapResult(GetResponse response, Class<T> clazz) {
-        T result = mapEntity(response.getSourceAsString(),clazz);
-        if (result != null){
-           setPersistentEntityId(result, response.getId(), clazz);
-        }
-        return result;
-    }
-    
-    private <T> void setPersistentEntityId(T result, String id, Class<T> clazz) {
-       if (mappingContext != null && clazz.isAnnotationPresent(Document.class)){
-          PersistentProperty<ElasticsearchPersistentProperty> idProperty = mappingContext.getPersistentEntity(clazz).getIdProperty();
-          // Only deal with String because ES generated Ids are strings !
-          if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)){
-              Method setter = idProperty.getSetter();
-              if (setter != null){
-                  try{
-                      setter.invoke(result, id);
-                  } catch (Throwable t) {
-                      t.printStackTrace();
-                  }
-              }
-          }
-      }
-    }
+	private <T> T mapEntity(Collection<SearchHitField> values, Class<T> clazz) {
+		return mapEntity(buildJSONFromFields(values), clazz);
+	}
+
+	private String buildJSONFromFields(Collection<SearchHitField> values) {
+		JsonFactory nodeFactory = new JsonFactory();
+		try {
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			JsonGenerator generator = nodeFactory.createGenerator(stream, JsonEncoding.UTF8);
+			generator.writeStartObject();
+			for (SearchHitField value : values) {
+				if (value.getValues().size() > 1) {
+					generator.writeArrayFieldStart(value.getName());
+					for (Object val : value.getValues()) {
+						generator.writeObject(val);
+					}
+					generator.writeEndArray();
+				} else {
+					generator.writeObjectField(value.getName(), value.getValue());
+				}
+			}
+			generator.writeEndObject();
+			generator.flush();
+			return new String(stream.toByteArray(), Charset.forName("UTF-8"));
+		} catch (IOException e) {
+			return null;
+		}
+	}
+
+	@Override
+	public <T> T mapResult(GetResponse response, Class<T> clazz) {
+		T result = mapEntity(response.getSourceAsString(), clazz);
+		if (result != null) {
+			setPersistentEntityId(result, response.getId(), clazz);
+		}
+		return result;
+	}
+
+	private <T> void setPersistentEntityId(T result, String id, Class<T> clazz) {
+		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
+			PersistentProperty<ElasticsearchPersistentProperty> idProperty = mappingContext.getPersistentEntity(clazz).getIdProperty();
+			// Only deal with String because ES generated Ids are strings !
+			if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
+				Method setter = idProperty.getSetter();
+				if (setter != null) {
+					try {
+						setter.invoke(result, id);
+					} catch (Throwable t) {
+						t.printStackTrace();
+					}
+				}
+			}
+		}
+	}
 }

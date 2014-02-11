@@ -22,24 +22,24 @@ import org.springframework.util.Assert;
  */
 public abstract class AbstractFacetRequest implements FacetRequest {
 
-    private String name;
-    private boolean applyQueryFilter;
+	private String name;
+	private boolean applyQueryFilter;
 
-    public AbstractFacetRequest(String name) {
-        Assert.hasText(name, "Facet can't be null or empty !!!");
-        this.name = name;
-    }
+	public AbstractFacetRequest(String name) {
+		Assert.hasText(name, "Facet can't be null or empty !!!");
+		this.name = name;
+	}
 
-    protected String getName(){
-        return name;
-    }
+	protected String getName() {
+		return name;
+	}
 
-    public void setApplyQueryFilter(boolean applyQueryFilter) {
-        this.applyQueryFilter = applyQueryFilter;
-    }
+	public void setApplyQueryFilter(boolean applyQueryFilter) {
+		this.applyQueryFilter = applyQueryFilter;
+	}
 
-    @Override
-    public boolean applyQueryFilter() {
-        return applyQueryFilter;
-    }
+	@Override
+	public boolean applyQueryFilter() {
+		return applyQueryFilter;
+	}
 }

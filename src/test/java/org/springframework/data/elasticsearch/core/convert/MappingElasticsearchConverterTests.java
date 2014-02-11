@@ -15,13 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
 import org.junit.Test;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.mapping.context.MappingContext;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Rizwan Idrees
@@ -54,5 +54,4 @@ public class MappingElasticsearchConverterTests {
 		// then
 		assertThat(conversionService, is(notNullValue()));
 	}
-
 }

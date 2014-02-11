@@ -24,30 +24,30 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 
 public class AuthorMarkerEntityBuilder {
 
-    private AuthorMarkerEntity result;
+	private AuthorMarkerEntity result;
 
-    public AuthorMarkerEntityBuilder(String id) {
-        result = new AuthorMarkerEntity(id);
-    }
+	public AuthorMarkerEntityBuilder(String id) {
+		result = new AuthorMarkerEntity(id);
+	}
 
-    public AuthorMarkerEntityBuilder name(String name) {
-        result.setName(name);
-        return this;
-    }
+	public AuthorMarkerEntityBuilder name(String name) {
+		result.setName(name);
+		return this;
+	}
 
-    public AuthorMarkerEntityBuilder location(double latitude, double longitude) {
-        result.setLocation(new GeoPoint(latitude, longitude));
-        return this;
-    }
+	public AuthorMarkerEntityBuilder location(double latitude, double longitude) {
+		result.setLocation(new GeoPoint(latitude, longitude));
+		return this;
+	}
 
-    public AuthorMarkerEntity build() {
-        return result;
-    }
+	public AuthorMarkerEntity build() {
+		return result;
+	}
 
-    public IndexQuery buildIndex() {
-        IndexQuery indexQuery = new IndexQuery();
-        indexQuery.setId(result.getId());
-        indexQuery.setObject(result);
-        return indexQuery;
-    }
+	public IndexQuery buildIndex() {
+		IndexQuery indexQuery = new IndexQuery();
+		indexQuery.setId(result.getId());
+		indexQuery.setObject(result);
+		return indexQuery;
+	}
 }

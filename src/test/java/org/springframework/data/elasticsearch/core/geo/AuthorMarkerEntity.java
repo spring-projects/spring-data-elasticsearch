@@ -25,40 +25,40 @@ import org.springframework.data.elasticsearch.annotations.Document;
 @Document(indexName = "test-geo-index", type = "geo-class-point-type", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class AuthorMarkerEntity {
 
-    @Id
-    private String id;
-    private String name;
+	@Id
+	private String id;
+	private String name;
 
-    private GeoPoint location;
+	private GeoPoint location;
 
-    private AuthorMarkerEntity(){
-    }
+	private AuthorMarkerEntity() {
+	}
 
-    public AuthorMarkerEntity(String id){
-        this.id = id;
-    }
+	public AuthorMarkerEntity(String id) {
+		this.id = id;
+	}
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public GeoPoint getLocation() {
-        return location;
-    }
+	public GeoPoint getLocation() {
+		return location;
+	}
 
-    public void setLocation(GeoPoint location) {
-        this.location = location;
-    }
+	public void setLocation(GeoPoint location) {
+		this.location = location;
+	}
 }

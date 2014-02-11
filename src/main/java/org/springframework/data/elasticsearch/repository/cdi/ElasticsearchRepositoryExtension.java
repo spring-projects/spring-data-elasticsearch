@@ -15,10 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.cdi;
 
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.repository.cdi.CdiRepositoryBean;
-import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
-
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.UnsatisfiedResolutionException;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
@@ -32,9 +28,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.repository.cdi.CdiRepositoryBean;
+import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
+
 /**
  * ElasticsearchRepositoryExtension
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Oliver Gierke
@@ -66,7 +66,7 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 	}
 
 	private <T> CdiRepositoryBean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers, BeanManager beanManager) {
-		
+
 		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers
 				.toString());
 
@@ -74,7 +74,7 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 			throw new UnsatisfiedResolutionException(String.format("Unable to resolve a bean for '%s' with qualifiers %s.",
 					ElasticsearchOperations.class.getName(), qualifiers));
 		}
-		
+
 		return new ElasticsearchRepositoryBean<T>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager);
 	}
 }

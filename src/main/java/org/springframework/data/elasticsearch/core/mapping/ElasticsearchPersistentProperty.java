@@ -20,7 +20,7 @@ import org.springframework.data.mapping.PersistentProperty;
 
 /**
  * ElasticsearchPersistentProperty
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -37,5 +37,4 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 			return source.getFieldName();
 		}
 	}
-
 }

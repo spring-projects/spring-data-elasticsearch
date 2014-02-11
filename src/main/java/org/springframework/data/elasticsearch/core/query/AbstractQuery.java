@@ -15,18 +15,18 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.util.Assert;
+import static org.apache.commons.collections.CollectionUtils.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.commons.collections.CollectionUtils.addAll;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.util.Assert;
 
 /**
  * AbstractQuery
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -37,7 +37,7 @@ abstract class AbstractQuery implements Query {
 	protected List<String> indices = new ArrayList<String>();
 	protected List<String> types = new ArrayList<String>();
 	protected List<String> fields = new ArrayList<String>();
-    protected float minScore;
+	protected float minScore;
 
 	@Override
 	public Sort getSort() {
@@ -101,11 +101,11 @@ abstract class AbstractQuery implements Query {
 		return (T) this;
 	}
 
-    public float getMinScore() {
-        return minScore;
-    }
+	public float getMinScore() {
+		return minScore;
+	}
 
-    public void setMinScore(float minScore) {
-        this.minScore = minScore;
-    }
+	public void setMinScore(float minScore) {
+		this.minScore = minScore;
+	}
 }

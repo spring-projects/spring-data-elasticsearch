@@ -20,7 +20,7 @@ import org.springframework.data.domain.Sort;
 
 /**
  * StringQuery
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -46,5 +46,4 @@ public class StringQuery extends AbstractQuery {
 	public String getSource() {
 		return source;
 	}
-
 }

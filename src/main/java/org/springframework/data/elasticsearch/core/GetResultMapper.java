@@ -23,6 +23,5 @@ import org.elasticsearch.action.get.GetResponse;
  */
 public interface GetResultMapper {
 
-    <T> T mapResult(GetResponse response, Class<T> clazz);
-
+	<T> T mapResult(GetResponse response, Class<T> clazz);
 }

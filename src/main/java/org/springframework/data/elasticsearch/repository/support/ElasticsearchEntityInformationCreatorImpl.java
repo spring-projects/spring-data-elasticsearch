@@ -15,16 +15,16 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import java.io.Serializable;
+
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.util.Assert;
 
-import java.io.Serializable;
-
 /**
  * ElasticsearchEntityInformationCreatorImpl
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Oliver Gierke
@@ -42,12 +42,12 @@ public class ElasticsearchEntityInformationCreatorImpl implements ElasticsearchE
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T, ID extends Serializable> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
-		
+
 		ElasticsearchPersistentEntity<T> persistentEntity = (ElasticsearchPersistentEntity<T>) mappingContext
 				.getPersistentEntity(domainClass);
-		
+
 		Assert.notNull(persistentEntity, String.format("Unable to obtain mapping metadata for %s!", domainClass));
-		
+
 		return new MappingElasticsearchEntityInformation<T, ID>(persistentEntity);
 	}
 }

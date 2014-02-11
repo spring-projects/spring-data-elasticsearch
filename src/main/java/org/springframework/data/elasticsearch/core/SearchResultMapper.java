@@ -23,6 +23,5 @@ import org.springframework.data.domain.Pageable;
  */
 public interface SearchResultMapper {
 
-    <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
-
+	<T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
 }

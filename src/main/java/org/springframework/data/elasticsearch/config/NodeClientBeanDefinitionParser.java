@@ -25,7 +25,7 @@ import org.w3c.dom.Element;
 
 /**
  * NodeClientBeanDefinitionParser
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -46,7 +46,7 @@ public class NodeClientBeanDefinitionParser extends AbstractBeanDefinitionParser
 	}
 
 	private AbstractBeanDefinition getSourcedBeanDefinition(BeanDefinitionBuilder builder, Element source,
-			ParserContext context) {
+															ParserContext context) {
 		AbstractBeanDefinition definition = builder.getBeanDefinition();
 		definition.setSource(context.extractSource(source));
 		return definition;

@@ -15,6 +15,13 @@
  */
 package org.springframework.data.elasticsearch.repositories;
 
+import static org.apache.commons.lang.RandomStringUtils.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,15 +34,6 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.apache.commons.lang.RandomStringUtils.random;
-import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
-
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -44,7 +42,7 @@ import static org.junit.Assert.assertThat;
 @ContextConfiguration("classpath:custom-method-repository-test.xml")
 public class CustomMethodRepositoryTests {
 
-	@Resource
+	@Autowired
 	private SampleCustomMethodRepository repository;
 
 	@Autowired
@@ -52,7 +50,7 @@ public class CustomMethodRepositoryTests {
 
 	@Before
 	public void before() {
-        elasticsearchTemplate.deleteIndex(SampleEntity.class);
+		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 	}
@@ -487,5 +485,4 @@ public class CustomMethodRepositoryTests {
 		assertThat(sampleEntities.isEmpty(), is(false));
 		assertThat(sampleEntities.size(), is(1));
 	}
-
 }

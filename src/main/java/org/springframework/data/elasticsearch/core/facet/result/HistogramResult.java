@@ -15,25 +15,24 @@
  */
 package org.springframework.data.elasticsearch.core.facet.result;
 
-import org.springframework.data.elasticsearch.core.facet.AbstactFacetResult;
-import org.springframework.data.elasticsearch.core.facet.FacetType;
-
 import java.util.List;
+
+import org.springframework.data.elasticsearch.core.facet.AbstractFacetResult;
+import org.springframework.data.elasticsearch.core.facet.FacetType;
 
 /**
  * @author Artur Konczak
  */
-public class HistogramResult extends AbstactFacetResult {
+public class HistogramResult extends AbstractFacetResult {
 
-    private List<IntervalUnit> terms;
+	private List<IntervalUnit> terms;
 
-    public HistogramResult(String name, List<IntervalUnit> terms) {
-        super(name, FacetType.term);
-        this.terms = terms;
-    }
+	public HistogramResult(String name, List<IntervalUnit> terms) {
+		super(name, FacetType.term);
+		this.terms = terms;
+	}
 
-    public List<IntervalUnit> getIntervalUnit() {
-        return terms;
-    }
-
+	public List<IntervalUnit> getIntervalUnit() {
+		return terms;
+	}
 }

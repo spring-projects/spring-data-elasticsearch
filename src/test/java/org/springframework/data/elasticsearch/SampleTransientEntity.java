@@ -15,13 +15,13 @@
  */
 package org.springframework.data.elasticsearch;
 
+import static org.springframework.data.elasticsearch.annotations.FieldIndex.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.String;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-
-import static org.springframework.data.elasticsearch.annotations.FieldIndex.not_analyzed;
-import static org.springframework.data.elasticsearch.annotations.FieldType.String;
 
 /**
  * @author Jakub Vavrik
@@ -29,48 +29,52 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.Strin
 @Document(indexName = "test-recursive-mapping", type = "mapping", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleTransientEntity {
 
-    @Id
-    private String id;
+	@Id
+	private String id;
 
-    @Field(type = String, index = not_analyzed, store = true, searchAnalyzer = "standard", indexAnalyzer = "standard")
-    private String message;
+	@Field(type = String, index = not_analyzed, store = true, searchAnalyzer = "standard", indexAnalyzer = "standard")
+	private String message;
 
-    @Transient
-    private NestedEntity nested;
+	@Transient
+	private NestedEntity nested;
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getMessage() {
-        return message;
-    }
+	public String getMessage() {
+		return message;
+	}
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+	public void setMessage(String message) {
+		this.message = message;
+	}
 
-    static class NestedEntity {
-        @Field
-        private static NestedEntity someField = new NestedEntity();
-        @Field
-        private Boolean something;
+	static class NestedEntity {
 
-        public NestedEntity getSomeField() {
-            return someField;
-        }
+		@Field
+		private static NestedEntity someField = new NestedEntity();
+		@Field
+		private Boolean something;
 
-        public void setSomeField(NestedEntity someField) {
-            this.someField = someField;
-        }
+		public NestedEntity getSomeField() {
+			return someField;
+		}
 
-        public Boolean getSomething() { return something; }
+		public void setSomeField(NestedEntity someField) {
+			this.someField = someField;
+		}
 
-        public void setSomething(Boolean something) { this.something = something; }
-    }
+		public Boolean getSomething() {
+			return something;
+		}
 
+		public void setSomething(Boolean something) {
+			this.something = something;
+		}
+	}
 }

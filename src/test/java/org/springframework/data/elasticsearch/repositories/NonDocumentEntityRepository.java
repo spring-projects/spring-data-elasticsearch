@@ -26,4 +26,5 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
  */
 @Lazy
 public interface NonDocumentEntityRepository extends ElasticsearchRepository<NonDocumentEntity, String> {
+
 }

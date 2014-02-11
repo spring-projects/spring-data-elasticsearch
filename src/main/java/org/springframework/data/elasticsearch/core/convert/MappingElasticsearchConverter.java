@@ -28,7 +28,7 @@ import org.springframework.util.Assert;
 
 /**
  * MappingElasticsearchConverter
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -62,5 +62,4 @@ public class MappingElasticsearchConverter implements ElasticsearchConverter, Ap
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
 	}
-
 }

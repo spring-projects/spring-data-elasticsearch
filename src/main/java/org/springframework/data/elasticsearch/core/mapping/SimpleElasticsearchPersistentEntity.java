@@ -15,6 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import static org.springframework.util.StringUtils.*;
+
+import java.util.Locale;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -27,15 +31,10 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
 
-import java.util.Locale;
-
-import static org.springframework.util.StringUtils.hasText;
-
 /**
  * Elasticsearch specific {@link org.springframework.data.mapping.PersistentEntity} implementation holding
- * 
+ *
  * @param <T>
- * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -119,7 +118,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
 		super.addPersistentProperty(property);
-		
+
 		Parent parent = property.getField().getAnnotation(Parent.class);
 		if (parent != null) {
 			Assert.isNull(this.parentIdProperty, "Only one field can hold a @Parent annotation");
@@ -128,7 +127,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.parentIdProperty = property;
 			this.parentType = parent.type();
 		}
-		
+
 		if (property.isVersionProperty()) {
 			Assert.isTrue(property.getType() == Long.class, "Version property should be Long");
 		}

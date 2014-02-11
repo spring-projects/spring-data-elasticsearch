@@ -15,14 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import org.elasticsearch.index.query.QueryBuilder;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.domain.*;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.FacetedPage;
-import org.springframework.data.elasticsearch.core.query.*;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.util.Assert;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
@@ -32,13 +25,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static org.elasticsearch.index.query.QueryBuilders.inQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.domain.*;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.FacetedPage;
+import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.util.Assert;
 
 /**
  * Elasticsearch specific repository implementation. Likely to be used as target within
  * {@link ElasticsearchRepositoryFactory}
- *
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -60,7 +58,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	}
 
 	public AbstractElasticsearchRepository(ElasticsearchEntityInformation<T, ID> metadata,
-			ElasticsearchOperations elasticsearchOperations) {
+										   ElasticsearchOperations elasticsearchOperations) {
 		this(elasticsearchOperations);
 		Assert.notNull(metadata);
 		this.entityInformation = metadata;
@@ -88,7 +86,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	public Iterable<T> findAll() {
 		int itemCount = (int) this.count();
 		if (itemCount == 0) {
-			return new PageImpl<T>(Collections.<T> emptyList());
+			return new PageImpl<T>(Collections.<T>emptyList());
 		}
 		return this.findAll(new PageRequest(0, Math.max(1, itemCount)));
 	}
@@ -103,7 +101,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	public Iterable<T> findAll(Sort sort) {
 		int itemCount = (int) this.count();
 		if (itemCount == 0) {
-			return new PageImpl<T>(Collections.<T> emptyList());
+			return new PageImpl<T>(Collections.<T>emptyList());
 		}
 		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(new PageRequest(0, itemCount, sort)).build();
@@ -173,7 +171,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(query).build();
 		int count = (int) elasticsearchOperations.count(searchQuery, getEntityClass());
 		if (count == 0) {
-			return new PageImpl<T>(Collections.<T> emptyList());
+			return new PageImpl<T>(Collections.<T>emptyList());
 		}
 		searchQuery.setPageable(new PageRequest(0, count));
 		return elasticsearchOperations.queryForPage(searchQuery, getEntityClass());
@@ -197,9 +195,9 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		MoreLikeThisQuery query = new MoreLikeThisQuery();
 		query.setId(stringIdRepresentation(extractIdFromBean(entity)));
 		query.setPageable(pageable);
-        if(fields != null){
-		    query.addFields(fields);
-        }
+		if (fields != null) {
+			query.addFields(fields);
+		}
 		return elasticsearchOperations.moreLikeThis(query, getEntityClass());
 	}
 

@@ -27,15 +27,15 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface NestedField {
 
-    String dotSuffix();
+	String dotSuffix();
 
-    FieldType type();
+	FieldType type();
 
-    FieldIndex index() default FieldIndex.analyzed;
+	FieldIndex index() default FieldIndex.analyzed;
 
-    boolean store() default false;
+	boolean store() default false;
 
-    String searchAnalyzer() default "";
+	String searchAnalyzer() default "";
 
-    String indexAnalyzer() default "";
+	String indexAnalyzer() default "";
 }

@@ -34,7 +34,7 @@ public class SampleEntity {
 	private String message;
 	private int rate;
 	private boolean available;
-    private String highlightedMessage;
+	private String highlightedMessage;
 	@Version
 	private Long version;
 
@@ -78,12 +78,12 @@ public class SampleEntity {
 		this.available = available;
 	}
 
-    public String getHighlightedMessage() {
-        return highlightedMessage;
-    }
+	public String getHighlightedMessage() {
+		return highlightedMessage;
+	}
 
-    public void setHighlightedMessage(String highlightedMessage) {
-        this.highlightedMessage = highlightedMessage;
+	public void setHighlightedMessage(String highlightedMessage) {
+		this.highlightedMessage = highlightedMessage;
 	}
 
 	public Long getVersion() {
@@ -113,16 +113,16 @@ public class SampleEntity {
 				.toHashCode();
 	}
 
-    @Override
-    public String toString() {
-        return "SampleEntity{" +
-                "id='" + id + '\'' +
-                ", type='" + type + '\'' +
-                ", message='" + message + '\'' +
-                ", rate=" + rate +
-                ", available=" + available +
-                ", highlightedMessage='" + highlightedMessage + '\'' +
-                ", version=" + version +
-                '}';
-    }
+	@Override
+	public String toString() {
+		return "SampleEntity{" +
+				"id='" + id + '\'' +
+				", type='" + type + '\'' +
+				", message='" + message + '\'' +
+				", rate=" + rate +
+				", available=" + available +
+				", highlightedMessage='" + highlightedMessage + '\'' +
+				", version=" + version +
+				'}';
+	}
 }

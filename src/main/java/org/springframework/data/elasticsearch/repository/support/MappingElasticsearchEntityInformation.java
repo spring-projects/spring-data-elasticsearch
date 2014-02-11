@@ -28,10 +28,9 @@ import org.springframework.util.Assert;
 /**
  * Elasticsearch specific implementation of
  * {@link org.springframework.data.repository.core.support.AbstractEntityInformation}
- * 
+ *
  * @param <T>
  * @param <ID>
- * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Ryan Henszey
@@ -104,7 +103,7 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
 		}
 		return null;
 	}
-	
+
 	@Override
 	public String getParentId(T entity) {
 		ElasticsearchPersistentProperty parentProperty = entityMetadata.getParentIdProperty();

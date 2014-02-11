@@ -23,58 +23,58 @@ import org.elasticsearch.action.index.IndexRequest;
  */
 public class UpdateQuery {
 
-    private String id;
-    private IndexRequest indexRequest;
-    private String indexName;
-    private String type;
-    private Class clazz;
-    private boolean doUpsert;
+	private String id;
+	private IndexRequest indexRequest;
+	private String indexName;
+	private String type;
+	private Class clazz;
+	private boolean doUpsert;
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public IndexRequest getIndexRequest() {
-        return indexRequest;
-    }
+	public IndexRequest getIndexRequest() {
+		return indexRequest;
+	}
 
-    public void setIndexRequest(IndexRequest indexRequest) {
-        this.indexRequest = indexRequest;
-    }
+	public void setIndexRequest(IndexRequest indexRequest) {
+		this.indexRequest = indexRequest;
+	}
 
-    public String getIndexName() {
-        return indexName;
-    }
+	public String getIndexName() {
+		return indexName;
+	}
 
-    public void setIndexName(String indexName) {
-        this.indexName = indexName;
-    }
+	public void setIndexName(String indexName) {
+		this.indexName = indexName;
+	}
 
-    public String getType() {
-        return type;
-    }
+	public String getType() {
+		return type;
+	}
 
-    public void setType(String type) {
-        this.type = type;
-    }
+	public void setType(String type) {
+		this.type = type;
+	}
 
-    public Class getClazz() {
-        return clazz;
-    }
+	public Class getClazz() {
+		return clazz;
+	}
 
-    public void setClazz(Class clazz) {
-        this.clazz = clazz;
-    }
+	public void setClazz(Class clazz) {
+		this.clazz = clazz;
+	}
 
-    public boolean DoUpsert() {
-        return doUpsert;
-    }
+	public boolean DoUpsert() {
+		return doUpsert;
+	}
 
-    public void setDoUpsert(boolean doUpsert) {
-        this.doUpsert = doUpsert;
-    }
+	public void setDoUpsert(boolean doUpsert) {
+		this.doUpsert = doUpsert;
+	}
 }

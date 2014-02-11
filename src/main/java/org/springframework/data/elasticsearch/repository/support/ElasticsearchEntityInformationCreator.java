@@ -19,12 +19,11 @@ import java.io.Serializable;
 
 /**
  * ElasticsearchEntityInformationCreator
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 public interface ElasticsearchEntityInformationCreator {
 
 	<T, ID extends Serializable> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass);
-
 }

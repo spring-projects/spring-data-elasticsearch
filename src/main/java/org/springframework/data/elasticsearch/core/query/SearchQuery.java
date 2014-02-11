@@ -15,29 +15,30 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.util.List;
+
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
-import java.util.List;
-
 /**
  * NativeSearchQuery
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
  */
 public interface SearchQuery extends Query {
+
 	QueryBuilder getQuery();
 
 	FilterBuilder getFilter();
 
 	SortBuilder getElasticsearchSort();
 
-    List<FacetRequest> getFacets();
+	List<FacetRequest> getFacets();
 
-    HighlightBuilder.Field[] getHighlightFields();
+	HighlightBuilder.Field[] getHighlightFields();
 }

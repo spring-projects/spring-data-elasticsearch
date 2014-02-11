@@ -65,5 +65,4 @@ public class DoubleIDEntity {
 	public void setVersion(Long version) {
 		this.version = version;
 	}
-
 }

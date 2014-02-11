@@ -15,17 +15,17 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.springframework.data.domain.Pageable;
+import static org.apache.commons.collections.CollectionUtils.*;
+import static org.springframework.data.elasticsearch.core.query.AbstractQuery.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.commons.collections.CollectionUtils.addAll;
-import static org.springframework.data.elasticsearch.core.query.AbstractQuery.DEFAULT_PAGE;
+import org.springframework.data.domain.Pageable;
 
 /**
  * MoreLikeThisQuery
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */

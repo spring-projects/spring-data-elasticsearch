@@ -21,6 +21,5 @@ package org.springframework.data.elasticsearch.repository.complex;
  */
 public interface ComplexElasticsearchRepositoryCustom {
 
-    public String doSomethingSpecial();
-
+	public String doSomethingSpecial();
 }

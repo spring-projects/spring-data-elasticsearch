@@ -26,8 +26,8 @@ import org.elasticsearch.index.query.QueryBuilder;
 public class DeleteQuery {
 
 	private QueryBuilder query;
-    private String index;
-    private String type;
+	private String index;
+	private String type;
 
 	public QueryBuilder getQuery() {
 		return query;
@@ -35,21 +35,21 @@ public class DeleteQuery {
 
 	public void setQuery(QueryBuilder query) {
 		this.query = query;
-    }
+	}
 
-    public String getIndex() {
-        return index;
-    }
+	public String getIndex() {
+		return index;
+	}
 
-    public void setIndex(String index) {
-        this.index = index;
-    }
+	public void setIndex(String index) {
+		this.index = index;
+	}
 
-    public String getType() {
-        return type;
-    }
+	public String getType() {
+		return type;
+	}
 
-    public void setType(String type) {
-        this.type = type;
+	public void setType(String type) {
+		this.type = type;
 	}
 }

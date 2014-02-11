@@ -15,20 +15,20 @@
  */
 package org.springframework.data.elasticsearch.repository.cdi;
 
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.repository.support.ElasticsearchRepositoryFactory;
-import org.springframework.data.repository.cdi.CdiRepositoryBean;
-import org.springframework.util.Assert;
-
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.repository.support.ElasticsearchRepositoryFactory;
+import org.springframework.data.repository.cdi.CdiRepositoryBean;
+import org.springframework.util.Assert;
+
 /**
  * Uses CdiRepositoryBean to create ElasticsearchRepository instances.
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -37,7 +37,7 @@ public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 	private final Bean<ElasticsearchOperations> elasticsearchOperationsBean;
 
 	public ElasticsearchRepositoryBean(Bean<ElasticsearchOperations> operations, Set<Annotation> qualifiers,
-			Class<T> repositoryType, BeanManager beanManager) {
+									   Class<T> repositoryType, BeanManager beanManager) {
 		super(qualifiers, repositoryType, beanManager);
 
 		Assert.notNull(operations, "Cannot create repository with 'null' for ElasticsearchOperations.");
@@ -55,5 +55,4 @@ public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 	public Class<? extends Annotation> getScope() {
 		return elasticsearchOperationsBean.getScope();
 	}
-
 }

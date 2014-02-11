@@ -15,46 +15,46 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.util.Map;
+
 import org.elasticsearch.index.query.FilterBuilder;
 
-import java.util.Map;
 /**
- *
  * @author Mohsin Husen
  */
 public class AliasBuilder {
 
-    private String indexName;
-    private String aliasName;
-    private FilterBuilder filterBuilder;
-    private Map<String, Object> filter;
+	private String indexName;
+	private String aliasName;
+	private FilterBuilder filterBuilder;
+	private Map<String, Object> filter;
 
-    public AliasBuilder withIndexName(String indexName){
-        this.indexName = indexName;
-        return this;
-    }
+	public AliasBuilder withIndexName(String indexName) {
+		this.indexName = indexName;
+		return this;
+	}
 
-    public AliasBuilder withAliasName(String aliasName){
-        this.aliasName = aliasName;
-        return this;
-    }
+	public AliasBuilder withAliasName(String aliasName) {
+		this.aliasName = aliasName;
+		return this;
+	}
 
-    public AliasBuilder withFilterBuilder(FilterBuilder filterBuilder){
-        this.filterBuilder = filterBuilder;
-        return this;
-    }
+	public AliasBuilder withFilterBuilder(FilterBuilder filterBuilder) {
+		this.filterBuilder = filterBuilder;
+		return this;
+	}
 
-    public  AliasBuilder withFilter(Map<String, Object> filter){
-        this.filter = filter;
-        return this;
-    }
+	public AliasBuilder withFilter(Map<String, Object> filter) {
+		this.filter = filter;
+		return this;
+	}
 
-    public AliasQuery build(){
-        AliasQuery aliasQuery = new AliasQuery();
-        aliasQuery.setIndexName(indexName);
-        aliasQuery.setAliasName(aliasName);
-        aliasQuery.setFilterBuilder(filterBuilder);
-        aliasQuery.setFilter(filter);
-        return aliasQuery;
-    }
+	public AliasQuery build() {
+		AliasQuery aliasQuery = new AliasQuery();
+		aliasQuery.setIndexName(indexName);
+		aliasQuery.setAliasName(aliasName);
+		aliasQuery.setFilterBuilder(filterBuilder);
+		aliasQuery.setFilter(filter);
+		return aliasQuery;
+	}
 }

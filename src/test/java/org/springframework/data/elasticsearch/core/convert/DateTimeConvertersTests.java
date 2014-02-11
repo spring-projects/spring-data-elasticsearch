@@ -15,20 +15,21 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
+import java.util.Calendar;
+import java.util.TimeZone;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Calendar;
-import java.util.TimeZone;
-
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 public class DateTimeConvertersTests {
+
 	@Test
 	public void testJodaDateTimeConverterWithNullValue() {
 		Assert.assertNull(DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(null));

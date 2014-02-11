@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.core.query;
 
 /**
  * GetQuery
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */

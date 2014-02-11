@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import static org.mockito.Mockito.*;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,8 +32,6 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-
-import static org.mockito.Mockito.when;
 
 /**
  * @author Rizwan Idrees
@@ -60,5 +60,4 @@ public class ElasticsearchRepositoryFactoryTests {
 		// when
 		factory.getRepositoryBaseClass(metadata);
 	}
-
 }

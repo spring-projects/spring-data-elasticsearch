@@ -28,7 +28,7 @@ import java.lang.annotation.*;
 @Documented
 public @interface MultiField {
 
-    public Field mainField();
+	public Field mainField();
 
-    public NestedField[] otherFields() default {};
+	public NestedField[] otherFields() default {};
 }

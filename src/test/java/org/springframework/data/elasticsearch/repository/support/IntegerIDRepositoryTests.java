@@ -15,6 +15,11 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
+
 import org.apache.commons.lang.math.RandomUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,11 +30,6 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.repositories.IntegerIDRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import javax.annotation.Resource;
-import java.util.Arrays;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Rizwan Idrees
@@ -40,19 +40,19 @@ import static org.junit.Assert.assertThat;
 @ContextConfiguration("classpath:/simple-repository-test.xml")
 public class IntegerIDRepositoryTests {
 
-	@Resource
+	@Autowired
 	private IntegerIDRepository repository;
 
-    @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired
+	private ElasticsearchTemplate elasticsearchTemplate;
 
 
-    @Before
-    public void before() {
-        elasticsearchTemplate.deleteIndex(IntegerIDEntity.class);
-        elasticsearchTemplate.createIndex(IntegerIDEntity.class);
-        elasticsearchTemplate.refresh(IntegerIDEntity.class, true);
-    }
+	@Before
+	public void before() {
+		elasticsearchTemplate.deleteIndex(IntegerIDEntity.class);
+		elasticsearchTemplate.createIndex(IntegerIDEntity.class);
+		elasticsearchTemplate.refresh(IntegerIDEntity.class, true);
+	}
 
 	@Test
 	public void shouldDoBulkIndexDocument() {

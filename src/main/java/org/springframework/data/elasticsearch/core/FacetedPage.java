@@ -15,13 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.facet.FacetResult;
 
-import java.util.List;
-
 /**
- *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
@@ -29,10 +28,9 @@ import java.util.List;
  */
 public interface FacetedPage<T> extends Page<T> {
 
-    boolean hasFacets();
+	boolean hasFacets();
 
-    List<FacetResult> getFacets();
+	List<FacetResult> getFacets();
 
-    FacetResult getFacet(String name);
-
+	FacetResult getFacet(String name);
 }

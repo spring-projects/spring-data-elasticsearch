@@ -23,4 +23,5 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
  * @author Mohsin Husen
  */
 public interface SampleElasticSearchBookRepository extends ElasticsearchRepository<Book, String> {
+
 }

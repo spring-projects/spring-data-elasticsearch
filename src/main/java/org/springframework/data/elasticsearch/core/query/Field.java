@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.core.query;
 
 /**
  * Defines a Field that can be used within a Criteria.
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -25,9 +25,8 @@ public interface Field {
 
 	/**
 	 * Get the name of the field used in schema.xml of elasticsearch server
-	 * 
+	 *
 	 * @return
 	 */
 	String getName();
-
 }

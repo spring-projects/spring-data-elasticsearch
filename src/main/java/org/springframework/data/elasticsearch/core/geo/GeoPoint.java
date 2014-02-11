@@ -22,24 +22,23 @@ package org.springframework.data.elasticsearch.core.geo;
  */
 public class GeoPoint {
 
-    private double lat;
-    private double lon;
+	private double lat;
+	private double lon;
 
-    private GeoPoint() {
-        //required by mapper to instantiate object
-    }
+	private GeoPoint() {
+		//required by mapper to instantiate object
+	}
 
-    public GeoPoint(double latitude, double longitude) {
-        this.lat = latitude;
-        this.lon = longitude;
-    }
+	public GeoPoint(double latitude, double longitude) {
+		this.lat = latitude;
+		this.lon = longitude;
+	}
 
-    public double getLat() {
-        return lat;
-    }
+	public double getLat() {
+		return lat;
+	}
 
-    public double getLon() {
-        return lon;
-    }
-
+	public double getLon() {
+		return lon;
+	}
 }

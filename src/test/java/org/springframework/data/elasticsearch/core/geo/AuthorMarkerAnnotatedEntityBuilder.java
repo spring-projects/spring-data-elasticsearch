@@ -19,35 +19,35 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 
 public class AuthorMarkerAnnotatedEntityBuilder {
 
-    private AuthorMarkerAnnotatedEntity result;
+	private AuthorMarkerAnnotatedEntity result;
 
-    public AuthorMarkerAnnotatedEntityBuilder(String id) {
-        result = new AuthorMarkerAnnotatedEntity(id);
-    }
+	public AuthorMarkerAnnotatedEntityBuilder(String id) {
+		result = new AuthorMarkerAnnotatedEntity(id);
+	}
 
-    public AuthorMarkerAnnotatedEntityBuilder name(String name) {
-        result.setName(name);
-        return this;
-    }
+	public AuthorMarkerAnnotatedEntityBuilder name(String name) {
+		result.setName(name);
+		return this;
+	}
 
-    public AuthorMarkerAnnotatedEntityBuilder location(String location) {
-        result.setLocation(location);
-        return this;
-    }
+	public AuthorMarkerAnnotatedEntityBuilder location(String location) {
+		result.setLocation(location);
+		return this;
+	}
 
-    public AuthorMarkerAnnotatedEntityBuilder additionalLocation(double... location) {
-        result.setAdditionalLocation(location);
-        return this;
-    }
+	public AuthorMarkerAnnotatedEntityBuilder additionalLocation(double... location) {
+		result.setAdditionalLocation(location);
+		return this;
+	}
 
-    public AuthorMarkerAnnotatedEntity build() {
-        return result;
-    }
+	public AuthorMarkerAnnotatedEntity build() {
+		return result;
+	}
 
-    public IndexQuery buildIndex() {
-        IndexQuery indexQuery = new IndexQuery();
-        indexQuery.setId(result.getId());
-        indexQuery.setObject(result);
-        return indexQuery;
-    }
+	public IndexQuery buildIndex() {
+		IndexQuery indexQuery = new IndexQuery();
+		indexQuery.setId(result.getId());
+		indexQuery.setObject(result);
+		return indexQuery;
+	}
 }

@@ -23,27 +23,27 @@ import org.springframework.data.domain.Pageable;
  * @author Artur Konczak
  * @author Mohsin Husen
  */
-public class CustomResultMapper implements ResultsMapper{
+public class CustomResultMapper implements ResultsMapper {
 
 
-    private EntityMapper entityMapper;
+	private EntityMapper entityMapper;
 
-    public CustomResultMapper(EntityMapper entityMapper) {
-        this.entityMapper = entityMapper;
-    }
+	public CustomResultMapper(EntityMapper entityMapper) {
+		this.entityMapper = entityMapper;
+	}
 
-    @Override
-    public EntityMapper getEntityMapper() {
-        return entityMapper;
-    }
+	@Override
+	public EntityMapper getEntityMapper() {
+		return entityMapper;
+	}
 
-    @Override
-    public <T> T mapResult(GetResponse response, Class<T> clazz) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
+	@Override
+	public <T> T mapResult(GetResponse response, Class<T> clazz) {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
 
-    @Override
-    public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
+	@Override
+	public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
 }

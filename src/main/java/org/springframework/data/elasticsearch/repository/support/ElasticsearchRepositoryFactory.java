@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.springframework.data.querydsl.QueryDslUtils.QUERY_DSL_PRESENT;
+import static org.springframework.data.querydsl.QueryDslUtils.*;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -35,7 +35,7 @@ import org.springframework.util.Assert;
 
 /**
  * Factory to create {@link ElasticsearchRepository}
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Ryan Henszey
@@ -58,7 +58,7 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	@Override
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	protected Object getTargetRepository(RepositoryMetadata metadata) {
 
 		ElasticsearchEntityInformation<?, ?> entityInformation = getEntityInformation(metadata.getDomainType());
@@ -117,5 +117,4 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 			return new ElasticsearchPartQuery(queryMethod, elasticsearchOperations);
 		}
 	}
-
 }

@@ -23,7 +23,7 @@ import javax.inject.Inject;
  */
 class CdiRepositoryClient {
 
-    private CdiProductRepository repository;
+	private CdiProductRepository repository;
 
 	public CdiProductRepository getRepository() {
 		return repository;
@@ -33,5 +33,4 @@ class CdiRepositoryClient {
 	public void setRepository(CdiProductRepository repository) {
 		this.repository = repository;
 	}
-
 }

@@ -19,7 +19,7 @@ import java.util.Map;
 
 /**
  * ElasticsearchException
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */

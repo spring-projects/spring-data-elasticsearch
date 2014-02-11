@@ -15,11 +15,11 @@
  */
 package org.springframework.data.elasticsearch;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-
 import java.util.Date;
 import java.util.List;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
 
 /**
  * @author Mohsin Husen
@@ -174,5 +174,4 @@ public class Product {
 	public void setText(String text) {
 		this.text = text;
 	}
-
 }

@@ -25,7 +25,7 @@ import org.springframework.data.repository.query.parser.PartTree;
 
 /**
  * ElasticsearchPartQuery
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */

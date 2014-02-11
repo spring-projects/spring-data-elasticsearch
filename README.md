@@ -133,7 +133,7 @@ Searching entities using Elasticsearch Template
 Indexing a single document with Repository
 
 ```java
-        @Resource
+        @Autowired
         private SampleElasticsearchRepository repository;
 
         String documentId = "123456";
@@ -147,7 +147,7 @@ Indexing a single document with Repository
 Indexing multiple Document(bulk index) using Repository
 
 ```java
-        @Resource
+        @Autowired
         private SampleElasticsearchRepository repository;
 
         String documentId = "123456";
@@ -370,6 +370,11 @@ Here are some ways for you to get involved in the community:
 * Watch for upcoming articles on Spring by [subscribing](http://www.springsource.org/node/feed) to springframework.org
 
 Before we accept a non-trivial patch or pull request we will need you to sign the [contributor's agreement](https://support.springsource.com/spring_committer_signup).  Signing the contributor's agreement does not grant anyone commit rights to the main repository, but it does mean that we can accept your contributions, and you will get an author credit if we do.  Active contributors might be asked to join the core team, and given the ability to merge pull requests.
+
+
+Code formatting for [Eclipse and Intellij](https://github.com/spring-projects/spring-data-build/tree/master/etc/ide)
+
+[More information about contributing to Spring Data](https://github.com/spring-projects/spring-data-build/blob/master/CONTRIBUTING.md)
 
 ### Contact Details
 

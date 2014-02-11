@@ -22,7 +22,7 @@ import org.springframework.data.repository.config.RepositoryConfigurationExtensi
 
 /**
  * ElasticsearchNamespaceHandler
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */

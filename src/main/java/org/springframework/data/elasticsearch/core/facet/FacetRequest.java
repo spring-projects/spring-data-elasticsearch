@@ -22,11 +22,10 @@ import org.elasticsearch.search.facet.FacetBuilder;
  */
 public interface FacetRequest {
 
-    public static final String FIELD_UNTOUCHED = "untouched";
-    public static final String FIELD_SORT = "sort";
+	public static final String FIELD_UNTOUCHED = "untouched";
+	public static final String FIELD_SORT = "sort";
 
-    FacetBuilder getFacet();
+	FacetBuilder getFacet();
 
-    boolean applyQueryFilter();
-
+	boolean applyQueryFilter();
 }

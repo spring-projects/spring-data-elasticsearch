@@ -22,12 +22,10 @@ package org.springframework.data.elasticsearch.core.facet;
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Jonathan Yan
- *
  */
 public interface FacetResult {
 
-    String getName();
+	String getName();
 
-    FacetType getType();
-
+	FacetType getType();
 }

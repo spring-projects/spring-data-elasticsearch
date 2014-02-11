@@ -15,12 +15,15 @@
  */
 package org.springframework.data.elasticsearch.repositories.cdi;
 
+import static org.junit.Assert.*;
+
 import org.apache.webbeans.cditest.CdiTestContainer;
 import org.apache.webbeans.cditest.CdiTestContainerLoader;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.springframework.data.elasticsearch.Product;
-
-import static org.junit.Assert.*;
 
 /**
  * @author Mohsin Husen
@@ -77,5 +80,4 @@ public class CdiRepositoryTests {
 		retrieved = repository.findOne(bean.getId());
 		assertNull(retrieved);
 	}
-
 }

@@ -15,6 +15,15 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import static org.apache.commons.lang.RandomStringUtils.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -31,16 +40,6 @@ import org.springframework.data.elasticsearch.repositories.SampleElasticsearchRe
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -50,19 +49,19 @@ import static org.junit.Assert.*;
 @ContextConfiguration("classpath:/simple-repository-test.xml")
 public class SimpleElasticsearchRepositoryTests {
 
-	@Resource
+	@Autowired
 	private SampleElasticsearchRepository repository;
 
-    @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired
+	private ElasticsearchTemplate elasticsearchTemplate;
 
 
-    @Before
-    public void before() {
-        elasticsearchTemplate.deleteIndex(SampleEntity.class);
-        elasticsearchTemplate.createIndex(SampleEntity.class);
-        elasticsearchTemplate.refresh(SampleEntity.class, true);
-    }
+	@Before
+	public void before() {
+		elasticsearchTemplate.deleteIndex(SampleEntity.class);
+		elasticsearchTemplate.createIndex(SampleEntity.class);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+	}
 
 	@Test
 	public void shouldDoBulkIndexDocument() {
@@ -105,16 +104,16 @@ public class SimpleElasticsearchRepositoryTests {
 	}
 
 	@Test
-   public void shouldSaveDocumentWithoutId() {
-      // given
-      SampleEntity sampleEntity = new SampleEntity();
-      sampleEntity.setMessage("some message");
-      sampleEntity.setVersion(System.currentTimeMillis());
-      // when
-      repository.save(sampleEntity);
-      // then
-      assertThat(sampleEntity.getId(), is(notNullValue()));
-   }
+	public void shouldSaveDocumentWithoutId() {
+		// given
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setMessage("some message");
+		sampleEntity.setVersion(System.currentTimeMillis());
+		// when
+		repository.save(sampleEntity);
+		// then
+		assertThat(sampleEntity.getId(), is(notNullValue()));
+	}
 
 	@Test
 	public void shouldFindDocumentById() {
@@ -410,7 +409,7 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.save(sampleEntities);
 
 		// when
-		Page<SampleEntity> results = repository.searchSimilar(sampleEntities.get(0), new String[]{"message"} ,new PageRequest(0, 5));
+		Page<SampleEntity> results = repository.searchSimilar(sampleEntities.get(0), new String[]{"message"}, new PageRequest(0, 5));
 
 		// then
 		assertThat(results.getTotalElements(), is(greaterThanOrEqualTo(1L)));

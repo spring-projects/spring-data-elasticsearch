@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repository;
 
+import java.io.Serializable;
+
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,12 +24,9 @@ import org.springframework.data.elasticsearch.core.FacetedPage;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.repository.NoRepositoryBean;
 
-import java.io.Serializable;
-
 /**
  * @param <T>
  * @param <ID>
- * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -40,7 +39,7 @@ public interface ElasticsearchRepository<T, ID extends Serializable> extends Ela
 
 	FacetedPage<T> search(QueryBuilder query, Pageable pageable);
 
-    FacetedPage<T> search(SearchQuery searchQuery);
+	FacetedPage<T> search(SearchQuery searchQuery);
 
-    Page<T> searchSimilar(T entity,String[] fields, Pageable pageable);
+	Page<T> searchSimilar(T entity, String[] fields, Pageable pageable);
 }

@@ -15,14 +15,12 @@
  */
 package org.springframework.data.elasticsearch;
 
+import static org.springframework.data.elasticsearch.annotations.FieldIndex.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.String;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldIndex;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-
-import static org.springframework.data.elasticsearch.annotations.FieldIndex.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 /**
  * @author Rizwan Idrees
@@ -31,41 +29,41 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 @Document(indexName = "test-mapping", type = "mapping", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleMappingEntity {
 
-    @Id
-    private String id;
+	@Id
+	private String id;
 
-    @Field(type = String, index = not_analyzed, store = true, searchAnalyzer = "standard", indexAnalyzer = "standard")
-    private String message;
+	@Field(type = String, index = not_analyzed, store = true, searchAnalyzer = "standard", indexAnalyzer = "standard")
+	private String message;
 
-    private NestedEntity nested;
+	private NestedEntity nested;
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getMessage() {
-        return message;
-    }
+	public String getMessage() {
+		return message;
+	}
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+	public void setMessage(String message) {
+		this.message = message;
+	}
 
-    static class NestedEntity {
-        @Field(type = String)
-        private String someField;
+	static class NestedEntity {
 
-        public String getSomeField() {
-            return someField;
-        }
+		@Field(type = String)
+		private String someField;
 
-        public void setSomeField(String someField) {
-            this.someField = someField;
-        }
-    }
+		public String getSomeField() {
+			return someField;
+		}
 
+		public void setSomeField(String someField) {
+			this.someField = someField;
+		}
+	}
 }
