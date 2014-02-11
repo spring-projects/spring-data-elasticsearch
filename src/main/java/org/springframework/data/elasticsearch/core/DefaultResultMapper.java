@@ -34,7 +34,9 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.facet.Facet;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.facet.DefaultFacetMapper;
 import org.springframework.data.elasticsearch.core.facet.FacetResult;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -75,6 +77,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 					result = mapEntity(hit.getFields().values(), clazz);
 				}
 				setPersistentEntityId(result, hit.getId(), clazz);
+                populateScriptFields(result, hit);
 				results.add(result);
 			}
 		}
@@ -91,7 +94,31 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		return new FacetedPageImpl<T>(results, pageable, totalHits, facets);
 	}
 
-	private <T> T mapEntity(Collection<SearchHitField> values, Class<T> clazz) {
+    private <T> void populateScriptFields(T result, SearchHit hit) {
+        if (hit.getFields() != null && !hit.getFields().isEmpty() && result != null) {
+            for (java.lang.reflect.Field field : result.getClass().getDeclaredFields()) {
+                ScriptedField scriptedField = field.getAnnotation(ScriptedField.class);
+                if (scriptedField != null) {
+                    String name = scriptedField.name().isEmpty() ? field.getName() : scriptedField.name();
+                    SearchHitField searchHitField = hit.getFields().get(name);
+                    if (searchHitField != null) {
+                        field.setAccessible(true);
+                        try {
+                            field.set(result, searchHitField.getValue());
+                        } catch (IllegalArgumentException e) {
+                            throw new ElasticsearchException("failed to set scripted field: " + name + " with value: "
+                                    + searchHitField.getValue(), e);
+                        } catch (IllegalAccessException e) {
+                            throw new ElasticsearchException("failed to access scripted field: " + name, e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    private <T> T mapEntity(Collection<SearchHitField> values, Class<T> clazz) {
 		return mapEntity(buildJSONFromFields(values), clazz);
 	}
 

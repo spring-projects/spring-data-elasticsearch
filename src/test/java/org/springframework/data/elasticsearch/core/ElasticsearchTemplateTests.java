@@ -21,9 +21,7 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -343,6 +341,36 @@ public class ElasticsearchTemplateTests {
 		// then
 		assertThat(sampleEntities.getTotalElements(), equalTo(1L));
 	}
+
+    @Test
+    public void shouldUseScriptedFields() {
+        // given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setRate(2);
+        sampleEntity.setMessage("some message");
+        sampleEntity.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery = new IndexQuery();
+        indexQuery.setId(documentId);
+        indexQuery.setObject(sampleEntity);
+
+        elasticsearchTemplate.index(indexQuery);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("factor", 2);
+        // when
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(matchAllQuery())
+                .withScriptField(new ScriptField("scriptedRate", "doc['rate'].value * factor", params))
+                .build();
+        Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+        // then
+        assertThat(sampleEntities.getTotalElements(), equalTo(1L));
+        assertThat(sampleEntities.getContent().get(0).getScriptedRate(), equalTo(4L));
+    }
 
 	@Test
 	public void shouldReturnPageableResultsGivenStringQuery() {
