@@ -41,6 +41,7 @@ public class NativeSearchQueryBuilder {
 
 	private QueryBuilder queryBuilder;
 	private FilterBuilder filterBuilder;
+    private List<ScriptField> scriptFields = new ArrayList<ScriptField>();
 	private List<SortBuilder> sortBuilders = new ArrayList<SortBuilder>();
 	private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
 	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<AbstractAggregationBuilder>();
@@ -68,6 +69,11 @@ public class NativeSearchQueryBuilder {
 		this.sortBuilders.add(sortBuilder);
 		return this;
 	}
+
+    public NativeSearchQueryBuilder withScriptField(ScriptField scriptField) {
+        this.scriptFields.add(scriptField);
+        return this;
+    }
 
 	public NativeSearchQueryBuilder addAggregation(AbstractAggregationBuilder aggregationBuilder) {
 		this.aggregationBuilders.add(aggregationBuilder);
@@ -141,6 +147,9 @@ public class NativeSearchQueryBuilder {
 		if (fields != null) {
 			nativeSearchQuery.addFields(fields);
 		}
+        if (CollectionUtils.isNotEmpty(scriptFields)) {
+            nativeSearchQuery.setScriptFields(scriptFields);
+        }
 
 		if (CollectionUtils.isNotEmpty(facetRequests)) {
 			nativeSearchQuery.setFacets(facetRequests);
