@@ -40,6 +40,9 @@ public class PersonMultipleLevelNested {
 	@Field(type = FieldType.Nested)
 	private List<GirlFriend> girlFriends;
 
+	@Field(type = FieldType.Nested)
+	private List<Car> cars;
+
 	public String getId() {
 		return id;
 	}
@@ -62,5 +65,13 @@ public class PersonMultipleLevelNested {
 
 	public void setGirlFriends(List<GirlFriend> girlFriends) {
 		this.girlFriends = girlFriends;
+	}
+
+	public List<Car> getCars() {
+		return cars;
+	}
+
+	public void setCars(List<Car> cars) {
+		this.cars = cars;
 	}
 }

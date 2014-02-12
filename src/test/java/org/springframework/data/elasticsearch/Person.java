@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,9 @@ public class Person {
 	@Field(type = FieldType.Nested)
 	private List<Car> car;
 
+	@Field(type = FieldType.Nested)
+	private List<Book> books;
+
 	public String getId() {
 		return id;
 	}
@@ -62,5 +65,13 @@ public class Person {
 
 	public void setCar(List<Car> car) {
 		this.car = car;
+	}
+
+	public List<Book> getBooks() {
+		return books;
+	}
+
+	public void setBooks(List<Book> books) {
+		this.books = books;
 	}
 }

@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch;
 
-import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -36,7 +35,6 @@ import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.repositories.SampleElasticSearchBookRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -48,9 +46,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/repository-test-nested-object.xml")
 public class NestedObjectTests {
-
-	@Autowired
-	private SampleElasticSearchBookRepository bookRepository;
 
 	@Autowired
 	private ElasticsearchTemplate elasticsearchTemplate;
@@ -172,22 +167,6 @@ public class NestedObjectTests {
 		assertThat(personIndexed.getContent().get(0).getId(), is("1"));
 	}
 
-	@Test
-	public void shouldIndexInnerObject() {
-		// given
-		String id = randomAlphanumeric(5);
-		Book book = new Book();
-		book.setId(id);
-		book.setName("xyz");
-		Author author = new Author();
-		author.setId("1");
-		author.setName("ABC");
-		book.setAuthor(author);
-		// when
-		bookRepository.save(book);
-		// then
-		assertThat(bookRepository.findOne(id), is(notNullValue()));
-	}
 
 	private List<IndexQuery> createPerson() {
 
@@ -244,5 +223,82 @@ public class NestedObjectTests {
 		indexQueries.add(indexQuery2);
 
 		return indexQueries;
+	}
+
+	@Test
+	public void shouldSearchBooksForPersonInitialLevelNestedType() {
+
+		List<Car> cars = new ArrayList<Car>();
+
+		Car saturn = new Car();
+		saturn.setName("Saturn");
+		saturn.setModel("SL");
+
+		Car subaru = new Car();
+		subaru.setName("Subaru");
+		subaru.setModel("Imprezza");
+
+		Car ford = new Car();
+		ford.setName("Ford");
+		ford.setModel("Focus");
+
+		cars.add(saturn);
+		cars.add(subaru);
+		cars.add(ford);
+
+		Book java = new Book();
+		java.setId("1");
+		java.setName("java");
+		Author javaAuthor = new Author();
+		javaAuthor.setId("1");
+		javaAuthor.setName("javaAuthor");
+		java.setAuthor(javaAuthor);
+
+		Book spring= new Book();
+		spring.setId("2");
+		spring.setName("spring");
+		Author springAuthor = new Author();
+		springAuthor.setId("2");
+		springAuthor.setName("springAuthor");
+		spring.setAuthor(springAuthor);
+
+		Person foo = new Person();
+		foo.setName("Foo");
+		foo.setId("1");
+		foo.setCar(cars);
+		foo.setBooks(Arrays.asList(java, spring));
+
+		Car car = new Car();
+		car.setName("Saturn");
+		car.setModel("Imprezza");
+
+		Person bar = new Person();
+		bar.setId("2");
+		bar.setName("Bar");
+		bar.setCar(Arrays.asList(car));
+
+		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		IndexQuery indexQuery1 = new IndexQuery();
+		indexQuery1.setId(foo.getId());
+		indexQuery1.setObject(foo);
+
+		IndexQuery indexQuery2 = new IndexQuery();
+		indexQuery2.setId(bar.getId());
+		indexQuery2.setObject(bar);
+
+		indexQueries.add(indexQuery1);
+		indexQueries.add(indexQuery2);
+
+		elasticsearchTemplate.putMapping(Person.class);
+		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.refresh(Person.class, true);
+
+		QueryBuilder builder = nestedQuery("books", boolQuery().must(termQuery("books.name", "java")));
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
+		List<Person> persons = elasticsearchTemplate.queryForList(searchQuery, Person.class);
+
+		assertThat(persons.size(), is(1));
+
 	}
 }
