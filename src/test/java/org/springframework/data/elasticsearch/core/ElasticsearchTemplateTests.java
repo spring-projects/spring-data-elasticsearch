@@ -60,6 +60,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class ElasticsearchTemplateTests {
 
+	private static final String INDEX_NAME = "test-index";
+	private static final String TYPE_NAME = "test-type";
+
 	@Autowired
 	private ElasticsearchTemplate elasticsearchTemplate;
 
@@ -189,7 +192,7 @@ public class ElasticsearchTemplateTests {
 
 		elasticsearchTemplate.index(indexQuery);
 		// when
-		elasticsearchTemplate.delete("test-index", "test-type", documentId);
+		elasticsearchTemplate.delete(INDEX_NAME, TYPE_NAME, documentId);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		// then
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(fieldQuery("id", documentId)).build();
@@ -467,8 +470,8 @@ public class ElasticsearchTemplateTests {
 
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices("test-index")
-				.withTypes("test-type").withFields("message").build();
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME).withFields("message").build();
 		// when
 		Page<String> page = elasticsearchTemplate.queryForPage(searchQuery, String.class, new SearchResultMapper() {
 			@Override
@@ -541,8 +544,8 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		// then
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices("test-index")
-				.withTypes("test-type").withPageable(new PageRequest(0, 10)).build();
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME).withPageable(new PageRequest(0, 10)).build();
 
 		String scrollId = elasticsearchTemplate.scan(searchQuery, 1000, false);
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
@@ -567,8 +570,8 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		// then
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices("test-index")
-				.withTypes("test-type").withPageable(new PageRequest(0, 10)).build();
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME).withPageable(new PageRequest(0, 10)).build();
 
 		String scrollId = elasticsearchTemplate.scan(searchQuery, 1000, false);
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
@@ -871,10 +874,10 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		// when
-		elasticsearchTemplate.deleteType("test-index", "test-type");
+		elasticsearchTemplate.deleteType(INDEX_NAME, TYPE_NAME);
 
 		//then
-		boolean typeExists = elasticsearchTemplate.typeExists("test-index", "test-type");
+		boolean typeExists = elasticsearchTemplate.typeExists(INDEX_NAME, TYPE_NAME);
 		assertThat(typeExists, is(false));
 	}
 
@@ -896,8 +899,8 @@ public class ElasticsearchTemplateTests {
 		// when
 		DeleteQuery deleteQuery = new DeleteQuery();
 		deleteQuery.setQuery(fieldQuery("id", documentId));
-		deleteQuery.setIndex("test-index");
-		deleteQuery.setType("test-type");
+		deleteQuery.setIndex(INDEX_NAME);
+		deleteQuery.setType(TYPE_NAME);
 		elasticsearchTemplate.delete(deleteQuery);
 		// then
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(fieldQuery("id", documentId)).build();
@@ -909,22 +912,23 @@ public class ElasticsearchTemplateTests {
 	public void shouldAddAlias() {
 		// given
 		elasticsearchTemplate.createIndex(SampleEntity.class);
+		String aliasName = "test-alias";
 		AliasQuery aliasQuery = new AliasBuilder()
-				.withIndexName("test-index")
-				.withAliasName("test-alias").build();
+				.withIndexName(INDEX_NAME)
+				.withAliasName(aliasName).build();
 		// when
 		elasticsearchTemplate.addAlias(aliasQuery);
 		// then
-		Set<String> aliases = elasticsearchTemplate.queryForAlias("test-index");
+		Set<String> aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME);
 		assertThat(aliases, is(notNullValue()));
-		assertThat(aliases.contains("test-alias"), is(true));
+		assertThat(aliases.contains(aliasName), is(true));
 	}
 
 	@Test
 	public void shouldRemoveAlias() {
 		// given
 		elasticsearchTemplate.createIndex(SampleEntity.class);
-		String indexName = "test-index";
+		String indexName = INDEX_NAME;
 		String aliasName = "test-alias";
 		AliasQuery aliasQuery = new AliasBuilder()
 				.withIndexName(indexName)
@@ -950,14 +954,14 @@ public class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = new IndexQuery();
 		indexQuery.setId("2333343434");
 		indexQuery.setSource(documentSource);
-		indexQuery.setIndexName("test-index");
-		indexQuery.setType("test-type");
+		indexQuery.setIndexName(INDEX_NAME);
+		indexQuery.setType(TYPE_NAME);
 		// when
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", indexQuery.getId()))
-				.withIndices("test-index")
-				.withTypes("test-type")
+				.withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME)
 				.build();
 		// then
 		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapper() {
@@ -983,8 +987,8 @@ public class ElasticsearchTemplateTests {
 		// given
 		IndexQuery indexQuery = new IndexQuery();
 		indexQuery.setId("2333343434");
-		indexQuery.setIndexName("test-index");
-		indexQuery.setType("test-type");
+		indexQuery.setIndexName(INDEX_NAME);
+		indexQuery.setType(TYPE_NAME);
 
 		//when
 		elasticsearchTemplate.index(indexQuery);
@@ -999,8 +1003,8 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(termQuery("message", "message"))
-				.withIndices("test-index")
-				.withTypes("test-type")
+				.withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME)
 				.withPageable(new PageRequest(0, 100))
 				.build();
 		// then
@@ -1024,8 +1028,8 @@ public class ElasticsearchTemplateTests {
 		// when
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(boolQuery().must(wildcardQuery("message", "*a*")).should(wildcardQuery("message", "*b*")))
-				.withIndices("test-index")
-				.withTypes("test-type")
+				.withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME)
 				.withMinScore(0.5F)
 				.build();
 
@@ -1110,14 +1114,14 @@ public class ElasticsearchTemplateTests {
 		IndexQuery indexQuery1 = new IndexQuery();
 		indexQuery1.setId("1");
 		indexQuery1.setObject(person1);
-		indexQuery1.setIndexName("test-index");
-		indexQuery1.setType("test-type");
+		indexQuery1.setIndexName(INDEX_NAME);
+		indexQuery1.setType(TYPE_NAME);
 
 		IndexQuery indexQuery2 = new IndexQuery();
 		indexQuery2.setId("2");
 		indexQuery2.setObject(person2);
-		indexQuery2.setIndexName("test-index");
-		indexQuery2.setType("test-type");
+		indexQuery2.setIndexName(INDEX_NAME);
+		indexQuery2.setType(TYPE_NAME);
 
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
 		indexQueries.add(indexQuery1);
@@ -1125,11 +1129,11 @@ public class ElasticsearchTemplateTests {
 
 		//when
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh("test-index", true);
+		elasticsearchTemplate.refresh(INDEX_NAME, true);
 
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices("test-index")
-				.withTypes("test-type").withQuery(matchAllQuery()).build();
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME).withQuery(matchAllQuery()).build();
 		Page<Map> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, Map.class, new SearchResultMapper() {
 			@Override
 			public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
@@ -1168,15 +1172,15 @@ public class ElasticsearchTemplateTests {
 
 		IndexQuery indexQuery = new IndexQuery();
 		indexQuery.setId(documentId);
-		indexQuery.setIndexName("test-index");
-		indexQuery.setType("test-type");
+		indexQuery.setIndexName(INDEX_NAME);
+		indexQuery.setType(TYPE_NAME);
 		indexQuery.setObject(sampleEntity);
 
 		elasticsearchTemplate.index(indexQuery);
-		elasticsearchTemplate.refresh("test-index", true);
+		elasticsearchTemplate.refresh(INDEX_NAME, true);
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices("test-index")
-				.withTypes("test-type").withQuery(matchAllQuery()).build();
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME).withQuery(matchAllQuery()).build();
 		// when
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		// then
