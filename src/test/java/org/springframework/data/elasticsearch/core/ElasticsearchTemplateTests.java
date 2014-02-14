@@ -24,6 +24,8 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -890,6 +892,7 @@ public class ElasticsearchTemplateTests {
 		indexQuery.setObject(sampleEntity);
 
 		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		// when
 		DeleteQuery deleteQuery = new DeleteQuery();
 		deleteQuery.setQuery(fieldQuery("id", documentId));
@@ -1059,13 +1062,11 @@ public class ElasticsearchTemplateTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
 		// first document
-		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setMessage("some message");
 		sampleEntity1.setVersion(System.currentTimeMillis());
 
 		IndexQuery indexQuery1 = new IndexQuery();
-		//indexQuery1.setId(documentId);
 		indexQuery1.setObject(sampleEntity1);
 		indexQueries.add(indexQuery1);
 
@@ -1087,5 +1088,99 @@ public class ElasticsearchTemplateTests {
 
 		assertThat(sampleEntities.getContent().get(0).getId(), is(notNullValue()));
 		assertThat(sampleEntities.getContent().get(1).getId(), is(notNullValue()));
+	}
+
+	@Test
+	public void shouldIndexMapWithIndexNameAndTypeAtRuntime() {
+		//given
+		Map<String, Object> person1 = new HashMap<String, Object>();
+		person1.put("userId", "1");
+		person1.put("email", "smhdiu@gmail.com");
+		person1.put("title", "Mr");
+		person1.put("firstName", "Mohsin");
+		person1.put("lastName", "Husen");
+
+		Map<String, Object> person2 = new HashMap<String, Object>();
+		person2.put("userId", "2");
+		person2.put("email", "akonczak@gmail.com");
+		person2.put("title", "Mr");
+		person2.put("firstName", "Artur");
+		person2.put("lastName", "Konczak");
+
+		IndexQuery indexQuery1 = new IndexQuery();
+		indexQuery1.setId("1");
+		indexQuery1.setObject(person1);
+		indexQuery1.setIndexName("test-index");
+		indexQuery1.setType("test-type");
+
+		IndexQuery indexQuery2 = new IndexQuery();
+		indexQuery2.setId("2");
+		indexQuery2.setObject(person2);
+		indexQuery2.setIndexName("test-index");
+		indexQuery2.setType("test-type");
+
+		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		indexQueries.add(indexQuery1);
+		indexQueries.add(indexQuery2);
+
+		//when
+		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.refresh("test-index", true);
+
+		// then
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices("test-index")
+				.withTypes("test-type").withQuery(matchAllQuery()).build();
+		Page<Map> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, Map.class, new SearchResultMapper() {
+			@Override
+			public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				List<Map> chunk = new ArrayList<Map>();
+				for (SearchHit searchHit : response.getHits()) {
+					if (response.getHits().getHits().length <= 0) {
+						return null;
+					}
+					Map<String, Object> person = new HashMap<String, Object>();
+					person.put("userId", searchHit.getSource().get("userId"));
+					person.put("email", searchHit.getSource().get("email"));
+					person.put("title", searchHit.getSource().get("title"));
+					person.put("firstName", searchHit.getSource().get("firstName"));
+					person.put("lastName", searchHit.getSource().get("lastName"));
+					chunk.add(person);
+				}
+				if (chunk.size() > 0) {
+					return new FacetedPageImpl<T>((List<T>) chunk);
+				}
+				return null;
+			}
+		});
+		assertThat(sampleEntities.getTotalElements(), is(equalTo(2L)));
+		assertThat(sampleEntities.getContent().get(0).get("userId"), is(person1.get("userId")));
+		assertThat(sampleEntities.getContent().get(1).get("userId"), is(person2.get("userId")));
+	}
+
+	@Test
+	public void shouldIndexSampleEntityWithIndexAndTypeAtRuntime() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setMessage("some message");
+		sampleEntity.setVersion(System.currentTimeMillis());
+
+		IndexQuery indexQuery = new IndexQuery();
+		indexQuery.setId(documentId);
+		indexQuery.setIndexName("test-index");
+		indexQuery.setType("test-type");
+		indexQuery.setObject(sampleEntity);
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh("test-index", true);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices("test-index")
+				.withTypes("test-type").withQuery(matchAllQuery()).build();
+		// when
+		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+		// then
+		assertThat(sampleEntities, is(notNullValue()));
+		assertThat(sampleEntities.getTotalElements(), greaterThanOrEqualTo(1L));
 	}
 }

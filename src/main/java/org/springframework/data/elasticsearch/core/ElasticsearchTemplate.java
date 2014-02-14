@@ -547,8 +547,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 			IndexRequestBuilder indexRequestBuilder = null;
 
 			if (query.getObject() != null) {
+				String entityId = null;
+				if (isDocument(query.getObject().getClass())) {
+					entityId = getPersistentEntityId(query.getObject());
+				}
 				// If we have a query id and a document id, do not ask ES to generate one.
-				String entityId = getPersistentEntityId(query.getObject());
 				if (query.getId() != null && entityId != null) {
 					indexRequestBuilder = client.prepareIndex(indexName, type, query.getId());
 				} else {
@@ -684,5 +687,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
 	protected ResultsMapper getResultsMapper() {
 		return resultsMapper;
+	}
+
+	private boolean isDocument(Class clazz) {
+		return clazz.isAnnotationPresent(Document.class);
 	}
 }
