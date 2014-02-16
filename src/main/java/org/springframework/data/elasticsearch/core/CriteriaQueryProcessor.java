@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.BoostableQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -117,18 +118,20 @@ class CriteriaQueryProcessor {
 		}
 		QueryBuilder query = null;
 
+		String searchText = StringUtils.toString(value);
+
 		switch (key) {
 			case EQUALS:
-				query = fieldQuery(fieldName, value);
+				query = queryString(searchText).field(fieldName);
 				break;
 			case CONTAINS:
-				query = fieldQuery(fieldName, "*" + value + "*").analyzeWildcard(true);
+				query = queryString("*" + searchText + "*").field(fieldName).analyzeWildcard(true);
 				break;
 			case STARTS_WITH:
-				query = fieldQuery(fieldName, value + "*").analyzeWildcard(true);
+				query = queryString(searchText + "*").field(fieldName).analyzeWildcard(true);
 				break;
 			case ENDS_WITH:
-				query = fieldQuery(fieldName, "*" + value).analyzeWildcard(true);
+				query = queryString("*" + searchText).field(fieldName).analyzeWildcard(true);
 				break;
 			case EXPRESSION:
 				query = queryString((String) value).field(fieldName);
@@ -144,20 +147,12 @@ class CriteriaQueryProcessor {
 				query = boolQuery();
 				Iterable<Object> collection = (Iterable<Object>) value;
 				for (Object item : collection) {
-					((BoolQueryBuilder) query).should(fieldQuery(fieldName, item));
+					((BoolQueryBuilder) query).should(queryString((String) item).field(fieldName));
 				}
 				break;
 		}
 
 		return query;
-	}
-
-	private QueryBuilder buildNegationQuery(String fieldName, Iterator<Criteria.CriteriaEntry> it) {
-		BoolQueryBuilder notQuery = boolQuery();
-		while (it.hasNext()) {
-			notQuery.mustNot(fieldQuery(fieldName, it.next().getValue()));
-		}
-		return notQuery;
 	}
 
 	private void addBoost(QueryBuilder query, float boost) {

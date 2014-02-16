@@ -21,11 +21,7 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -195,7 +191,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.delete(INDEX_NAME, TYPE_NAME, documentId);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(fieldQuery("id", documentId)).build();
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		assertThat(sampleEntities.getTotalElements(), equalTo(0L));
 	}
@@ -218,7 +214,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.delete(SampleEntity.class, documentId);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(fieldQuery("id", documentId)).build();
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		assertThat(sampleEntities.getTotalElements(), equalTo(0L));
 	}
@@ -239,10 +235,10 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.index(indexQuery);
 		// when
 		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(fieldQuery("id", documentId));
+		deleteQuery.setQuery(termQuery("id", documentId));
 		elasticsearchTemplate.delete(deleteQuery, SampleEntity.class);
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(fieldQuery("id", documentId)).build();
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		assertThat(sampleEntities.getTotalElements(), equalTo(0L));
 	}
@@ -415,7 +411,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 
-		StringQuery stringQuery = new StringQuery(fieldQuery("id", documentId).toString());
+		StringQuery stringQuery = new StringQuery(termQuery("id", documentId).toString());
 		// when
 		SampleEntity sampleEntity1 = elasticsearchTemplate.queryForObject(stringQuery, SampleEntity.class);
 		// then
@@ -898,12 +894,12 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		// when
 		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(fieldQuery("id", documentId));
+		deleteQuery.setQuery(termQuery("id", documentId));
 		deleteQuery.setIndex(INDEX_NAME);
 		deleteQuery.setType(TYPE_NAME);
 		elasticsearchTemplate.delete(deleteQuery);
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(fieldQuery("id", documentId)).build();
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		assertThat(sampleEntities.getTotalElements(), equalTo(0L));
 	}

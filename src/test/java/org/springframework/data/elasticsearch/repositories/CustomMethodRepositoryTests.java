@@ -94,10 +94,11 @@ public class CustomMethodRepositoryTests {
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setType("test");
-		sampleEntity.setMessage("customQuery");
+		String searchTerm = "customQuery";
+		sampleEntity.setMessage(searchTerm);
 		repository.save(sampleEntity);
 		// when
-		Page<SampleEntity> page = repository.findByMessage("customQuery", new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByMessage(searchTerm.toLowerCase(), new PageRequest(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(greaterThanOrEqualTo(1L)));
@@ -418,8 +419,7 @@ public class CustomMethodRepositoryTests {
 			repository.save(sampleEntity);
 		}
 		// when
-		Page<SampleEntity> pageResult = repository.findByMessage("message", new PageRequest(0, 23, new Sort(new Sort.Order(
-				Sort.Direction.ASC, "message"))));
+		Page<SampleEntity> pageResult = repository.findByMessage("message", new PageRequest(0, 23));
 		// then
 		assertThat(pageResult.getTotalElements(), is(equalTo(30L)));
 		assertThat(pageResult.getContent().size(), is(equalTo(23)));

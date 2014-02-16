@@ -193,7 +193,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 	public <T> List<String> queryForIds(SearchQuery query) {
 		SearchRequestBuilder request = prepareSearch(query).setQuery(query.getQuery()).setNoFields();
 		if (query.getFilter() != null) {
-			request.setFilter(query.getFilter());
+			request.setPostFilter(query.getFilter());
 		}
 		SearchResponse response = request.execute().actionGet();
 		return extractIds(response);
@@ -216,7 +216,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 		}
 
 		if (elasticsearchFilter != null)
-			searchRequestBuilder.setFilter(elasticsearchFilter);
+			searchRequestBuilder.setPostFilter(elasticsearchFilter);
 
 		SearchResponse response = searchRequestBuilder
 				.execute().actionGet();
@@ -318,7 +318,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 		ImmutableOpenMap<String, MappingMetaData> mappings = client.admin().cluster().prepareState().execute().actionGet()
 				.getState().metaData().index(index).mappings();
 		if (mappings.containsKey(type)) {
-			client.admin().indices().deleteMapping(new DeleteMappingRequest(index).type(type)).actionGet();
+			client.admin().indices().deleteMapping(new DeleteMappingRequest(index).types(type)).actionGet();
 		}
 	}
 
@@ -360,7 +360,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 				.setSize(searchQuery.getPageable().getPageSize());
 
 		if (searchQuery.getFilter() != null) {
-			requestBuilder.setFilter(searchQuery.getFilter());
+			requestBuilder.setPostFilter(searchQuery.getFilter());
 		}
 
 		if (noFields) {
@@ -448,7 +448,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
 	private SearchResponse doSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
 		if (searchQuery.getFilter() != null) {
-			searchRequest.setFilter(searchQuery.getFilter());
+			searchRequest.setPostFilter(searchQuery.getFilter());
 		}
 
 		if (searchQuery.getElasticsearchSort() != null) {
@@ -616,9 +616,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 	@Override
 	public Set<String> queryForAlias(String indexName) {
 		ClusterStateRequest clusterStateRequest = Requests.clusterStateRequest()
-				.filterRoutingTable(true)
-				.filterNodes(true)
-				.filteredIndices(indexName);
+				.routingTable(true).nodes(true).indices(indexName);
 		Iterator<String> iterator = client.admin().cluster().state(clusterStateRequest).actionGet().getState().getMetaData().aliases().keysIt();
 		return newHashSet(iterator);
 	}
