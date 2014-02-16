@@ -36,7 +36,7 @@ public interface SearchQuery extends Query {
 
 	FilterBuilder getFilter();
 
-	SortBuilder getElasticsearchSort();
+	List<SortBuilder> getElasticsearchSorts();
 
 	List<FacetRequest> getFacets();
 

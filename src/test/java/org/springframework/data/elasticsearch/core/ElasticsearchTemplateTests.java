@@ -322,6 +322,66 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.getContent().get(0).getRate(), is(sampleEntity2.getRate()));
 	}
 
+    @Test
+    public void shouldSortResultsGivenMultipleSortCriteria() {
+        // given
+        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+        // first document
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity1 = new SampleEntity();
+        sampleEntity1.setId(documentId);
+        sampleEntity1.setMessage("abc");
+        sampleEntity1.setRate(15);
+        sampleEntity1.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery1 = new IndexQuery();
+        indexQuery1.setId(documentId);
+        indexQuery1.setObject(sampleEntity1);
+
+        // second document
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setMessage("xyz");
+        sampleEntity2.setRate(5);
+        sampleEntity2.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery2 = new IndexQuery();
+        indexQuery2.setId(documentId2);
+        indexQuery2.setObject(sampleEntity2);
+
+        // third document
+        String documentId3 = randomNumeric(5);
+        SampleEntity sampleEntity3 = new SampleEntity();
+        sampleEntity3.setId(documentId3);
+        sampleEntity3.setMessage("xyz");
+        sampleEntity3.setRate(15);
+        sampleEntity3.setVersion(System.currentTimeMillis());
+
+        IndexQuery indexQuery3 = new IndexQuery();
+        indexQuery3.setId(documentId3);
+        indexQuery3.setObject(sampleEntity3);
+
+        indexQueries.add(indexQuery1);
+        indexQueries.add(indexQuery2);
+        indexQueries.add(indexQuery3);
+
+        elasticsearchTemplate.bulkIndex(indexQueries);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+
+
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+                .withSort(new FieldSortBuilder("rate").ignoreUnmapped(true).order(SortOrder.ASC))
+                .withSort(new FieldSortBuilder("message").ignoreUnmapped(true).order(SortOrder.ASC)).build();
+        // when
+        Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+        // then
+        assertThat(sampleEntities.getTotalElements(), equalTo(3L));
+        assertThat(sampleEntities.getContent().get(0).getRate(), is(sampleEntity2.getRate()));
+        assertThat(sampleEntities.getContent().get(1).getMessage(), is(sampleEntity1.getMessage()));
+    }
+
 	@Test
 	public void shouldExecuteStringQuery() {
 		// given
