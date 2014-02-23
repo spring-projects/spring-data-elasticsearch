@@ -254,15 +254,20 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 		return resultsMapper.mapResults(getMultiResponse(searchQuery, clazz), clazz);
 	}
 
-	private <T> MultiGetResponse getMultiResponse(SearchQuery searchQuery, Class<T> clazz) {
+	private <T> MultiGetResponse getMultiResponse(Query searchQuery, Class<T> clazz) {
 
-		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
+		String indexName = isNotEmpty(searchQuery.getIndices()) ? searchQuery.getIndices().get(0) : getPersistentEntityFor(clazz).getIndexName();
+		String type = isNotEmpty(searchQuery.getTypes()) ? searchQuery.getTypes().get(0) : getPersistentEntityFor(clazz).getIndexType();
+
+		Assert.notNull(indexName, "No index defined for Query");
+		Assert.notNull(type, "No type define for Query");
+		Assert.notEmpty(searchQuery.getIds(), "No Id define for Query");
 
 		MultiGetRequestBuilder builder = client.prepareMultiGet();
 
 		for (String id : searchQuery.getIds()) {
 
-			MultiGetRequest.Item item = new MultiGetRequest.Item(persistentEntity.getIndexName(), persistentEntity.getIndexType(), id);
+			MultiGetRequest.Item item = new MultiGetRequest.Item(indexName, type, id);
 
 			if (searchQuery.getRoute() != null) {
 				item = item.routing(searchQuery.getRoute());
