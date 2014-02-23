@@ -246,36 +246,37 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 		return countRequestBuilder.execute().actionGet().getCount();
 	}
 
-    @Override
-    public <T> LinkedList<T> getObjects(Collection<String> ids, String route, Class<T> clazz) {
-        ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
-        MultiGetRequestBuilder builder = client.prepareMultiGet();
-        for (String id : ids) {
-            builder.add(new MultiGetRequest.Item(persistentEntity.getIndexName(), persistentEntity.getIndexType(), id).routing(route));
-        }
-        MultiGetResponse responses = builder.execute().actionGet();
-        final LinkedList<T> result = new LinkedList<T>();
-        for (MultiGetItemResponse response : responses.getResponses()) {
-            if (!response.isFailed() && response.getResponse().isExists()) {
-                result.add(resultsMapper.mapResult(response.getResponse(), clazz));
-            }
-        }
-        return result;
-    }
+	@Override
+	public <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz) {
 
-    @Override
-    public <T> T getObject(String id, String route, Class<T> clazz) {
-        if (id != null) {
-            ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
-            GetResponse response = client
-                    .prepareGet(persistentEntity.getIndexName(), persistentEntity.getIndexType(), id).setRouting(route)
-                    .execute().actionGet();
-            return resultsMapper.mapResult(response, clazz);
-        }
-        return null;
-    }
+		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
 
-    @Override
+		MultiGetRequestBuilder builder = client.prepareMultiGet();
+
+		for (String id : searchQuery.getIds()) {
+
+			MultiGetRequest.Item item = new MultiGetRequest.Item(persistentEntity.getIndexName(), persistentEntity.getIndexType(), id);
+
+			if (searchQuery.getRoute() != null) {
+				item = item.routing(searchQuery.getRoute());
+			}
+
+			if (searchQuery.getFields() != null && !searchQuery.getFields().isEmpty()) {
+				item = item.fields(toArray(searchQuery.getFields()));
+			}
+			builder.add(item);
+		}
+		MultiGetResponse responses = builder.execute().actionGet();
+		final LinkedList<T> result = new LinkedList<T>();
+		for (MultiGetItemResponse response : responses.getResponses()) {
+			if (!response.isFailed() && response.getResponse().isExists()) {
+				result.add(resultsMapper.mapResult(response.getResponse(), clazz));
+			}
+		}
+		return result;
+	}
+
+	@Override
 	public String index(IndexQuery query) {
 		String documentId = prepareIndex(query).execute().actionGet().getId();
 		// We should call this because we are not going through a mapper.

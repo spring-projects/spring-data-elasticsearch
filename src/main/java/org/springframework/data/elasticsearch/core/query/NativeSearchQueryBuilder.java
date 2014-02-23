@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -46,6 +47,8 @@ public class NativeSearchQueryBuilder {
 	private String[] types;
 	private String[] fields;
 	private float minScore;
+	private Collection<String> ids;
+	private String route;
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -97,20 +100,34 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	public NativeSearchQueryBuilder withIds(Collection<String> ids) {
+		this.ids = ids;
+		return this;
+	}
+
+	public NativeSearchQueryBuilder withRoute(String route) {
+		this.route = route;
+		return this;
+	}
+
 	public NativeSearchQuery build() {
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightFields);
 		if (pageable != null) {
 			nativeSearchQuery.setPageable(pageable);
 		}
+
 		if (indices != null) {
 			nativeSearchQuery.addIndices(indices);
 		}
+
 		if (types != null) {
 			nativeSearchQuery.addTypes(types);
 		}
+
 		if (fields != null) {
 			nativeSearchQuery.addFields(fields);
 		}
+
 		if (CollectionUtils.isNotEmpty(facetRequests)) {
 			nativeSearchQuery.setFacets(facetRequests);
 		}
@@ -118,6 +135,15 @@ public class NativeSearchQueryBuilder {
 		if (minScore > 0) {
 			nativeSearchQuery.setMinScore(minScore);
 		}
+
+		if (ids != null) {
+			nativeSearchQuery.setIds(ids);
+		}
+
+		if (route != null) {
+			nativeSearchQuery.setRoute(route);
+		}
+
 		return nativeSearchQuery;
 	}
 }

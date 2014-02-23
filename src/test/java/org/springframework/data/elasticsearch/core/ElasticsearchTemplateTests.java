@@ -112,66 +112,46 @@ public class ElasticsearchTemplateTests {
 		assertEquals(sampleEntity, sampleEntity1);
 	}
 
-    @Test
-    public void shouldReturnObjectForGivenIdUsingGet() {
-        // given
-        String documentId = randomNumeric(5);
-        SampleEntity sampleEntity = new SampleEntity();
-        sampleEntity.setId(documentId);
-        sampleEntity.setMessage("some message");
-        sampleEntity.setVersion(System.currentTimeMillis());
+	@Test
+	public void shouldReturnObjectsForGivenIdsUsingMultiGet() {
+		// given
+		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		// first document
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(documentId);
+		sampleEntity1.setMessage("some message");
+		sampleEntity1.setVersion(System.currentTimeMillis());
 
-        IndexQuery indexQuery = new IndexQuery();
-        indexQuery.setId(documentId);
-        indexQuery.setObject(sampleEntity);
+		IndexQuery indexQuery1 = new IndexQuery();
+		indexQuery1.setId(documentId);
+		indexQuery1.setObject(sampleEntity1);
+		indexQueries.add(indexQuery1);
 
-        elasticsearchTemplate.index(indexQuery);
-        // when
-        SampleEntity sampleEntity1 = elasticsearchTemplate.getObject(documentId, "", SampleEntity.class);
-        // then
-        assertNotNull("not null....", sampleEntity1);
-        assertEquals(sampleEntity, sampleEntity1);
-    }
+		// second document
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setMessage("some message");
+		sampleEntity2.setVersion(System.currentTimeMillis());
 
-    @Test
-    public void shouldReturnObjectsForGivenIdsUsingMultiGet() {
-        // given
-        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
-        // first document
-        String documentId = randomNumeric(5);
-        SampleEntity sampleEntity1 = new SampleEntity();
-        sampleEntity1.setId(documentId);
-        sampleEntity1.setMessage("some message");
-        sampleEntity1.setVersion(System.currentTimeMillis());
+		IndexQuery indexQuery2 = new IndexQuery();
+		indexQuery2.setId(documentId2);
+		indexQuery2.setObject(sampleEntity2);
 
-        IndexQuery indexQuery1 = new IndexQuery();
-        indexQuery1.setId(documentId);
-        indexQuery1.setObject(sampleEntity1);
-        indexQueries.add(indexQuery1);
+		indexQueries.add(indexQuery2);
 
-        // second document
-        String documentId2 = randomNumeric(5);
-        SampleEntity sampleEntity2 = new SampleEntity();
-        sampleEntity2.setId(documentId2);
-        sampleEntity2.setMessage("some message");
-        sampleEntity2.setVersion(System.currentTimeMillis());
+		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
 
-        IndexQuery indexQuery2 = new IndexQuery();
-        indexQuery2.setId(documentId2);
-        indexQuery2.setObject(sampleEntity2);
-
-        indexQueries.add(indexQuery2);
-
-        elasticsearchTemplate.bulkIndex(indexQueries);
-        elasticsearchTemplate.refresh(SampleEntity.class, true);
-
-        // when
-        LinkedList<SampleEntity> sampleEntities = elasticsearchTemplate.getObjects(Arrays.asList(documentId, documentId2), "", SampleEntity.class);
-        // then
-        assertThat(sampleEntities.size(), is(equalTo(2)));
-        assertEquals(sampleEntities.get(0), sampleEntity1);
-        assertEquals(sampleEntities.get(1), sampleEntity2);
-    }
+		// when
+		SearchQuery query = new NativeSearchQueryBuilder().withIds(Arrays.asList(documentId, documentId2)).build();
+		LinkedList<SampleEntity> sampleEntities = elasticsearchTemplate.multiGet(query, SampleEntity.class);
+		// then
+		assertThat(sampleEntities.size(), is(equalTo(2)));
+		assertEquals(sampleEntities.get(0), sampleEntity1);
+		assertEquals(sampleEntities.get(1), sampleEntity2);
+	}
 
 	@Test
 	public void shouldReturnPageForGivenSearchQuery() {
