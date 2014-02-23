@@ -23,6 +23,8 @@ import static org.junit.Assert.*;
 
 import java.util.*;
 
+import org.elasticsearch.action.get.MultiGetItemResponse;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.engine.DocumentMissingException;
@@ -151,6 +153,63 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.size(), is(equalTo(2)));
 		assertEquals(sampleEntities.get(0), sampleEntity1);
 		assertEquals(sampleEntities.get(1), sampleEntity2);
+	}
+
+	@Test
+	public void shouldReturnObjectsForGivenIdsUsingMultiGetWithFields() {
+		// given
+		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		// first document
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(documentId);
+		sampleEntity1.setMessage("some message");
+		sampleEntity1.setType("type1");
+		sampleEntity1.setVersion(System.currentTimeMillis());
+
+		IndexQuery indexQuery1 = new IndexQuery();
+		indexQuery1.setId(documentId);
+		indexQuery1.setObject(sampleEntity1);
+		indexQueries.add(indexQuery1);
+
+		// second document
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setMessage("some message");
+		sampleEntity2.setType("type2");
+		sampleEntity2.setVersion(System.currentTimeMillis());
+
+		IndexQuery indexQuery2 = new IndexQuery();
+		indexQuery2.setId(documentId2);
+		indexQuery2.setObject(sampleEntity2);
+
+		indexQueries.add(indexQuery2);
+
+		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+		// when
+		SearchQuery query = new NativeSearchQueryBuilder()
+				.withIds(Arrays.asList(documentId, documentId2))
+				.withFields("message", "type")
+				.build();
+		LinkedList<SampleEntity> sampleEntities = elasticsearchTemplate.multiGet(query, SampleEntity.class, new MultiGetResultMapper() {
+			@Override
+			public <T> LinkedList<T> mapResults(MultiGetResponse responses, Class<T> clazz) {
+				LinkedList<T> list = new LinkedList<T>();
+				for (MultiGetItemResponse response : responses.getResponses()) {
+					SampleEntity entity = new SampleEntity();
+					entity.setId(response.getResponse().getId());
+					entity.setMessage((String) response.getResponse().getField("message").getValue());
+					entity.setType((String) response.getResponse().getField("type").getValue());
+					list.add((T) entity);
+				}
+				return list;
+			}
+		});
+		// then
+		assertThat(sampleEntities.size(), is(equalTo(2)));
 	}
 
 	@Test

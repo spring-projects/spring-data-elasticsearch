@@ -37,7 +37,10 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.count.CountRequestBuilder;
-import org.elasticsearch.action.get.*;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetRequest;
+import org.elasticsearch.action.get.MultiGetRequestBuilder;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.mlt.MoreLikeThisRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -248,6 +251,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
 	@Override
 	public <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz) {
+		return resultsMapper.mapResults(getMultiResponse(searchQuery, clazz), clazz);
+	}
+
+	private <T> MultiGetResponse getMultiResponse(SearchQuery searchQuery, Class<T> clazz) {
 
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
 
@@ -266,14 +273,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 			}
 			builder.add(item);
 		}
-		MultiGetResponse responses = builder.execute().actionGet();
-		final LinkedList<T> result = new LinkedList<T>();
-		for (MultiGetItemResponse response : responses.getResponses()) {
-			if (!response.isFailed() && response.getResponse().isExists()) {
-				result.add(resultsMapper.mapResult(response.getResponse(), clazz));
-			}
-		}
-		return result;
+		return builder.execute().actionGet();
+	}
+
+	@Override
+	public <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz, MultiGetResultMapper getResultMapper) {
+		return getResultMapper.mapResults(getMultiResponse(searchQuery, clazz), clazz);
 	}
 
 	@Override

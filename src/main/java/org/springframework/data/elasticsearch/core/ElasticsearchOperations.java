@@ -183,13 +183,23 @@ public interface ElasticsearchOperations {
 	<T> long count(SearchQuery query, Class<T> clazz);
 
 	/**
-	 * Execute a multiget against elasticsearch for the given ids
+	 * Execute a multiGet against elasticsearch for the given ids
 	 *
 	 * @param searchQuery
 	 * @param clazz
 	 * @return
 	 */
 	<T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz);
+
+	/**
+	 * Execute a multiGet against elasticsearch for the given ids with MultiGetResultMapper
+	 *
+	 * @param searchQuery
+	 * @param clazz
+	 * @param multiGetResultMapper
+	 * @return
+	 */
+	<T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz, MultiGetResultMapper multiGetResultMapper);
 
 	/**
 	 * Index an object. Will do save or update
