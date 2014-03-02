@@ -3,19 +3,17 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
        xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd
-		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
 
-    <elasticsearch:node-client id="client" local="true"
-                               cluster-name="testCluster" http-enabled="false"/>
+    <import resource="infrastructure.xml"/>
 
     <bean name="elasticsearchTemplate"
           class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
         <constructor-arg name="client" ref="client"/>
     </bean>
 
-    <elasticsearch:transport-client id="transportClient"/>
 
     <elasticsearch:repositories
-            base-package="org.springframework.data.elasticsearch.repositories.sample"/>
+            base-package="org.springframework.data.elasticsearch.repositories.doubleid"/>
 
 </beans>

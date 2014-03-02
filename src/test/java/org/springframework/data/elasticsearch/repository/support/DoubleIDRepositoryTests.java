@@ -27,7 +27,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.DoubleIDEntity;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.repositories.DoubleIDRepository;
+import org.springframework.data.elasticsearch.repositories.doubleid.DoubleIDRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -37,7 +37,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  */
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:/simple-repository-test.xml")
+@ContextConfiguration("classpath:/double-id-repository-test.xml")
 public class DoubleIDRepositoryTests {
 
 	@Autowired

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repositories;
+package org.springframework.data.elasticsearch.repositories.book;
 
 import org.springframework.data.elasticsearch.Book;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;

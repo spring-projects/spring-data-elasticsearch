@@ -18,7 +18,7 @@ package org.springframework.data.elasticsearch;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.data.elasticsearch.repositories.NonDocumentEntityRepository;
+import org.springframework.data.elasticsearch.repositories.nondocument.NonDocumentEntityRepository;
 
 /**
  * @author Rizwan Idrees

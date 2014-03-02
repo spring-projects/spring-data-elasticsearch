@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repositories;
+package org.springframework.data.elasticsearch.repositories.integer;
 
-import org.springframework.data.elasticsearch.DoubleIDEntity;
+import org.springframework.data.elasticsearch.IntegerIDEntity;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 /**
@@ -23,6 +23,6 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
  * @author Mohsin Husen
  */
 
-public interface DoubleIDRepository extends ElasticsearchRepository<DoubleIDEntity, Double> {
+public interface IntegerIDRepository extends ElasticsearchRepository<IntegerIDEntity, Integer> {
 
 }

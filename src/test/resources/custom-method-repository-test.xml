@@ -14,7 +14,6 @@
 
 
     <elasticsearch:repositories
-            base-package="org.springframework.data.elasticsearch.repositories"/>
-
+            base-package="org.springframework.data.elasticsearch.repositories.custom"/>
 
 </beans>
