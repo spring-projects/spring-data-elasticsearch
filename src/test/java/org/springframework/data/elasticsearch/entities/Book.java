@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch;
-
-
-import java.util.List;
+package org.springframework.data.elasticsearch.entities;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -26,22 +23,15 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
- * @author Artur Konczak
  */
-
-@Document(indexName = "person-multiple-level-nested", type = "user", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
-public class PersonMultipleLevelNested {
+@Document(indexName = "book", type = "book", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+public class Book {
 
 	@Id
 	private String id;
-
 	private String name;
-
-	@Field(type = FieldType.Nested)
-	private List<GirlFriend> girlFriends;
-
-	@Field(type = FieldType.Nested)
-	private List<Car> cars;
+	@Field(type = FieldType.Object)
+	private Author author;
 
 	public String getId() {
 		return id;
@@ -59,19 +49,11 @@ public class PersonMultipleLevelNested {
 		this.name = name;
 	}
 
-	public List<GirlFriend> getGirlFriends() {
-		return girlFriends;
+	public Author getAuthor() {
+		return author;
 	}
 
-	public void setGirlFriends(List<GirlFriend> girlFriends) {
-		this.girlFriends = girlFriends;
-	}
-
-	public List<Car> getCars() {
-		return cars;
-	}
-
-	public void setCars(List<Car> cars) {
-		this.cars = cars;
+	public void setAuthor(Author author) {
+		this.author = author;
 	}
 }

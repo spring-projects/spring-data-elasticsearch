@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,29 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch;
+package org.springframework.data.elasticsearch.entities;
 
-import static org.springframework.data.elasticsearch.annotations.FieldIndex.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.String;
+
+import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Artur Konczak
  */
-@Document(indexName = "test-mapping", type = "mapping", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
-public class SampleMappingEntity {
+
+@Document(indexName = "person-multiple-level-nested", type = "user", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+public class PersonMultipleLevelNested {
 
 	@Id
 	private String id;
 
-	@Field(type = String, index = not_analyzed, store = true, searchAnalyzer = "standard", indexAnalyzer = "standard")
-	private String message;
+	private String name;
 
-	private NestedEntity nested;
+	@Field(type = FieldType.Nested)
+	private List<GirlFriend> girlFriends;
+
+	@Field(type = FieldType.Nested)
+	private List<Car> cars;
 
 	public String getId() {
 		return id;
@@ -45,25 +51,27 @@ public class SampleMappingEntity {
 		this.id = id;
 	}
 
-	public String getMessage() {
-		return message;
+	public String getName() {
+		return name;
 	}
 
-	public void setMessage(String message) {
-		this.message = message;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	static class NestedEntity {
+	public List<GirlFriend> getGirlFriends() {
+		return girlFriends;
+	}
 
-		@Field(type = String)
-		private String someField;
+	public void setGirlFriends(List<GirlFriend> girlFriends) {
+		this.girlFriends = girlFriends;
+	}
 
-		public String getSomeField() {
-			return someField;
-		}
+	public List<Car> getCars() {
+		return cars;
+	}
 
-		public void setSomeField(String someField) {
-			this.someField = someField;
-		}
+	public void setCars(List<Car> cars) {
+		this.cars = cars;
 	}
 }

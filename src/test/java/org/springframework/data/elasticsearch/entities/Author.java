@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
+package org.springframework.data.elasticsearch.entities;
 
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-@Document(indexName = "book", type = "book", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
-public class Book {
+public class Author {
 
-	@Id
 	private String id;
 	private String name;
-	@Field(type = FieldType.Object)
-	private Author author;
 
 	public String getId() {
 		return id;
@@ -47,13 +38,5 @@ public class Book {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public Author getAuthor() {
-		return author;
-	}
-
-	public void setAuthor(Author author) {
-		this.author = author;
 	}
 }

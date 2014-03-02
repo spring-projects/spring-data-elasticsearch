@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repositories.sample;
 
-import org.springframework.data.elasticsearch.SampleEntity;
+import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 /**

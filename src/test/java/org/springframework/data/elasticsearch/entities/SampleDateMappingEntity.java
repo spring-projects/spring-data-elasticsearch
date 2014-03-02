@@ -1,4 +1,4 @@
-package org.springframework.data.elasticsearch;
+package org.springframework.data.elasticsearch.entities;
 
 import static org.springframework.data.elasticsearch.annotations.FieldIndex.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;

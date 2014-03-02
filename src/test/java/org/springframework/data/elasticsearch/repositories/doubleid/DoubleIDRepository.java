@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repositories.doubleid;
 
-import org.springframework.data.elasticsearch.DoubleIDEntity;
+import org.springframework.data.elasticsearch.entities.DoubleIDEntity;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 /**

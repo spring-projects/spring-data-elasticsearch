@@ -17,6 +17,11 @@ package org.springframework.data.elasticsearch.core.geo;
 
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 
+/**
+ * @author Artur Konczak
+ * @author Mohsin Husen
+ */
+
 public class AuthorMarkerAnnotatedEntityBuilder {
 
 	private AuthorMarkerAnnotatedEntity result;

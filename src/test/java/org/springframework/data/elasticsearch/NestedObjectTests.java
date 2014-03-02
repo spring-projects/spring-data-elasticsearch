@@ -35,6 +35,7 @@ import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.entities.*;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -254,7 +255,7 @@ public class NestedObjectTests {
 		javaAuthor.setName("javaAuthor");
 		java.setAuthor(javaAuthor);
 
-		Book spring= new Book();
+		Book spring = new Book();
 		spring.setId("2");
 		spring.setName("spring");
 		Author springAuthor = new Author();
@@ -299,6 +300,5 @@ public class NestedObjectTests {
 		List<Person> persons = elasticsearchTemplate.queryForList(searchQuery, Person.class);
 
 		assertThat(persons.size(), is(1));
-
 	}
 }

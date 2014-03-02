@@ -13,26 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch;
+package org.springframework.data.elasticsearch.entities;
 
 /**
+ * @author Rizwan Idrees
+ * @author Mohsin Husen
  * @author Artur Konczak
  */
-public class CarBuilder {
+public class Car {
 
-	private Car car = new Car();
+	private String name;
+	private String model;
 
-	public CarBuilder name(String name) {
-		car.setName(name);
-		return this;
+	public String getName() {
+		return name;
 	}
 
-	public CarBuilder model(String model) {
-		car.setModel(model);
-		return this;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public Car build() {
-		return car;
+	public String getModel() {
+		return model;
+	}
+
+	public void setModel(String model) {
+		this.model = model;
 	}
 }

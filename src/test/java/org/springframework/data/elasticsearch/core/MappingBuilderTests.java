@@ -28,9 +28,13 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.*;
+import org.springframework.data.elasticsearch.builder.StockPriceBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.entities.MinimalEntity;
+import org.springframework.data.elasticsearch.entities.SampleTransientEntity;
+import org.springframework.data.elasticsearch.entities.SimpleRecursiveEntity;
+import org.springframework.data.elasticsearch.entities.StockPrice;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 

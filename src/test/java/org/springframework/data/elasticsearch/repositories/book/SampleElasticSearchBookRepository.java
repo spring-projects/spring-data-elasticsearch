@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repositories.book;
 
-import org.springframework.data.elasticsearch.Book;
+import org.springframework.data.elasticsearch.entities.Book;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 /**

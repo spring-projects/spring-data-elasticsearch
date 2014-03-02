@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repositories.cdi;
 
-import org.springframework.data.elasticsearch.Product;
+import org.springframework.data.elasticsearch.entities.Product;
 import org.springframework.data.repository.CrudRepository;
 
 /**

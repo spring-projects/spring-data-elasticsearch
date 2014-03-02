@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repositories.integer;
 
-import org.springframework.data.elasticsearch.IntegerIDEntity;
+import org.springframework.data.elasticsearch.entities.IntegerIDEntity;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 /**

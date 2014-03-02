@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.repositories.nondocument;
 
 import org.springframework.context.annotation.Lazy;
-import org.springframework.data.elasticsearch.NonDocumentEntity;
+import org.springframework.data.elasticsearch.entities.NonDocumentEntity;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 /**

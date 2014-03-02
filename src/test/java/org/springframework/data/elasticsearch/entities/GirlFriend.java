@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch;
+package org.springframework.data.elasticsearch.entities;
+
+import java.util.List;
+
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 /**
- * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public class Author {
 
-	private String id;
+public class GirlFriend {
+
 	private String name;
 
-	public String getId() {
-		return id;
-	}
+	private String type;
 
-	public void setId(String id) {
-		this.id = id;
-	}
+	@Field(type = FieldType.Nested)
+	private List<Car> cars;
 
 	public String getName() {
 		return name;
@@ -38,5 +39,21 @@ public class Author {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public List<Car> getCars() {
+		return cars;
+	}
+
+	public void setCars(List<Car> cars) {
+		this.cars = cars;
 	}
 }

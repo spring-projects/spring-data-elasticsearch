@@ -13,55 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch;
+package org.springframework.data.elasticsearch.builder;
+
+import java.math.BigDecimal;
 
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.entities.StockPrice;
 
 /**
- * @author Rizwan Idrees
- * @author Mohsin Husen
  * @author Artur Konczak
+ * @author Mohsin Husen
  */
-public class SampleEntityBuilder {
+public class StockPriceBuilder {
 
-	private SampleEntity result;
+	private StockPrice result;
 
-	public SampleEntityBuilder(String id) {
-		result = new SampleEntity();
-		result.setId(id);
+	public StockPriceBuilder(String id) {
+		result = new StockPrice(id);
 	}
 
-	public SampleEntityBuilder type(String type) {
-		result.setType(type);
+	public StockPriceBuilder symbol(String symbol) {
+		result.setSymbol(symbol);
 		return this;
 	}
 
-	public SampleEntityBuilder message(String message) {
-		result.setMessage(message);
+	public StockPriceBuilder price(BigDecimal price) {
+		result.setPrice(price);
 		return this;
 	}
 
-	public SampleEntityBuilder rate(int rate) {
-		result.setRate(rate);
+	public StockPriceBuilder price(double price) {
+		result.setPrice(new BigDecimal(price));
 		return this;
 	}
 
-	public SampleEntityBuilder available(boolean available) {
-		result.setAvailable(available);
-		return this;
-	}
-
-	public SampleEntityBuilder highlightedMessage(String highlightedMessage) {
-		result.setHighlightedMessage(highlightedMessage);
-		return this;
-	}
-
-	public SampleEntityBuilder version(Long version) {
-		result.setVersion(version);
-		return this;
-	}
-
-	public SampleEntity build() {
+	public StockPrice build() {
 		return result;
 	}
 
