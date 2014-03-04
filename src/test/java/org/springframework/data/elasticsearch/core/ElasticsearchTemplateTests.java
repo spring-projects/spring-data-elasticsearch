@@ -1171,10 +1171,7 @@ public class ElasticsearchTemplateTests {
 	}
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
-		IndexQuery indexQuery = new IndexQuery();
-		indexQuery.setId(sampleEntity.getId());
-		indexQuery.setObject(sampleEntity);
-		return indexQuery;
+		return new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity).build();
 	}
 
 	private List<IndexQuery> getIndexQueries(List<SampleEntity> sampleEntities) {
