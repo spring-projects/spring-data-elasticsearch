@@ -555,7 +555,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
 		int startRecord = 0;
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(toArray(query.getIndices()))
-				.setSearchType(DFS_QUERY_THEN_FETCH).setTypes(toArray(query.getTypes()));
+				.setSearchType(query.getSearchType()).setTypes(toArray(query.getTypes()));
 
 		if (query.getPageable() != null) {
 			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
