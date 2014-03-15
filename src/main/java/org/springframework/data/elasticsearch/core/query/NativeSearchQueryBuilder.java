@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
@@ -49,6 +50,7 @@ public class NativeSearchQueryBuilder {
 	private float minScore;
 	private Collection<String> ids;
 	private String route;
+	private SearchType searchType;
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -110,6 +112,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	public NativeSearchQueryBuilder withSearchType(SearchType searchType) {
+		this.searchType = searchType;
+		return this;
+	}
+
 	public NativeSearchQuery build() {
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightFields);
 		if (pageable != null) {
@@ -142,6 +149,10 @@ public class NativeSearchQueryBuilder {
 
 		if (route != null) {
 			nativeSearchQuery.setRoute(route);
+		}
+
+		if (searchType != null) {
+			nativeSearchQuery.setSearchType(searchType);
 		}
 
 		return nativeSearchQuery;

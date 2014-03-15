@@ -1147,16 +1147,13 @@ public class ElasticsearchTemplateTests {
 	public void shouldIndexSampleEntityWithIndexAndTypeAtRuntime() {
 		// given
 		String documentId = randomNumeric(5);
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("some message");
-		sampleEntity.setVersion(System.currentTimeMillis());
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId)
+				.message("some message")
+				.version(System.currentTimeMillis()).build();
 
-		IndexQuery indexQuery = new IndexQuery();
-		indexQuery.setId(documentId);
-		indexQuery.setIndexName(INDEX_NAME);
-		indexQuery.setType(TYPE_NAME);
-		indexQuery.setObject(sampleEntity);
+		IndexQuery indexQuery = new IndexQueryBuilder().withId(documentId)
+				.withIndexName(INDEX_NAME).withType(TYPE_NAME)
+				.withObject(sampleEntity).build();
 
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(INDEX_NAME, true);
