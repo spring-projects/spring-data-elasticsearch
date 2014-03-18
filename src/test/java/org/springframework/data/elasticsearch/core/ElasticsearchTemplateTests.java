@@ -1167,6 +1167,75 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.getTotalElements(), greaterThanOrEqualTo(1L));
 	}
 
+	/*
+	DATAES-67
+	 */
+	@Test
+	public void shouldReturnCountForGivenSearchQueryWithGivenIndexUsingSearchQuery() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(matchAllQuery())
+				.withIndices("test-index")
+				.build();
+		// when
+		long count = elasticsearchTemplate.count(searchQuery);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-67
+	 */
+	@Test
+	public void shouldReturnCountForGivenSearchQueryWithGivenIndexAndTypeUsingSearchQuery() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(matchAllQuery())
+				.withIndices("test-index")
+				.withTypes("test-type")
+				.build();
+		// when
+		long count = elasticsearchTemplate.count(searchQuery);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-67
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void shouldThrowAnExceptionWhenNoIndexSpecifiedForCountQuery() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(matchAllQuery())
+				.build();
+		// when
+		long count = elasticsearchTemplate.count(searchQuery);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
 		return new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity).build();
 	}

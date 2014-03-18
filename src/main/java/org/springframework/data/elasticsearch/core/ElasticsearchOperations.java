@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -174,13 +174,21 @@ public interface ElasticsearchOperations {
 	<T> List<String> queryForIds(SearchQuery query);
 
 	/**
-	 * return number of elements found by for given query
+	 * return number of elements found by given query
 	 *
 	 * @param query
 	 * @param clazz
 	 * @return
 	 */
 	<T> long count(SearchQuery query, Class<T> clazz);
+
+	/**
+	 * return number of elements found by given query
+	 *
+	 * @param query
+	 * @return
+	 */
+	<T> long count(SearchQuery query);
 
 	/**
 	 * Execute a multiGet against elasticsearch for the given ids

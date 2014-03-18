@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -239,14 +239,26 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 	}
 
 	@Override
-	public <T> long count(SearchQuery query, Class<T> clazz) {
-		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
-		CountRequestBuilder countRequestBuilder = client.prepareCount(persistentEntity.getIndexName()).setTypes(
-				persistentEntity.getIndexType());
-		if (query.getQuery() != null) {
-			countRequestBuilder.setQuery(query.getQuery());
+	public <T> long count(SearchQuery searchQuery, Class<T> clazz) {
+		String indexName[] = isNotEmpty(searchQuery.getIndices()) ? searchQuery.getIndices().toArray(new String[searchQuery.getIndices().size()]) : retrieveIndexNameFromPersistentEntity(clazz);
+		String types[] = isNotEmpty(searchQuery.getTypes()) ? searchQuery.getTypes().toArray(new String[searchQuery.getTypes().size()]) : retrieveTypeFromPersistentEntity(clazz);
+
+		Assert.notNull(indexName, "No index defined for Query");
+
+		CountRequestBuilder countRequestBuilder = client.prepareCount(indexName);
+
+		if (types != null) {
+			countRequestBuilder.setTypes(types);
+		}
+		if (searchQuery.getQuery() != null) {
+			countRequestBuilder.setQuery(searchQuery.getQuery());
 		}
 		return countRequestBuilder.execute().actionGet().getCount();
+	}
+
+	@Override
+	public <T> long count(SearchQuery query) {
+		return count(query, null);
 	}
 
 	@Override
@@ -704,11 +716,17 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 	}
 
 	private String[] retrieveIndexNameFromPersistentEntity(Class clazz) {
-		return new String[]{getPersistentEntityFor(clazz).getIndexName()};
+		if (clazz != null) {
+			return new String[]{getPersistentEntityFor(clazz).getIndexName()};
+		}
+		return null;
 	}
 
 	private String[] retrieveTypeFromPersistentEntity(Class clazz) {
-		return new String[]{getPersistentEntityFor(clazz).getIndexType()};
+		if (clazz != null) {
+			return new String[]{getPersistentEntityFor(clazz).getIndexType()};
+		}
+		return null;
 	}
 
 	private List<String> extractIds(SearchResponse response) {
