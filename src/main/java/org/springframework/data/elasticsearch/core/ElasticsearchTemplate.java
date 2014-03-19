@@ -118,6 +118,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 	}
 
 	@Override
+	public boolean createIndex(String indexName) {
+		Assert.notNull(indexName, "No index defined for Query");
+		return client.admin().indices()
+				.create(Requests.createIndexRequest(indexName))
+				.actionGet().isAcknowledged();
+	}
+
+	@Override
 	public <T> boolean putMapping(Class<T> clazz) {
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
 		PutMappingRequestBuilder requestBuilder = client.admin().indices()

@@ -1256,6 +1256,23 @@ public class ElasticsearchTemplateTests {
 	private void cleanUpIndices() {
 		elasticsearchTemplate.deleteIndex("test-index-1");
 		elasticsearchTemplate.deleteIndex("test-index-2");
+		elasticsearchTemplate.createIndex("test-index-1");
+		elasticsearchTemplate.createIndex("test-index-2");
+		elasticsearchTemplate.refresh("test-index-1", true);
+		elasticsearchTemplate.refresh("test-index-2", true);
+	}
+
+	/*
+	DATAES-71
+	 */
+	@Test
+	public void shouldCreatedIndexWithSpecifiedIndexName() {
+		// given
+		elasticsearchTemplate.deleteIndex("test-index");
+		// when
+		elasticsearchTemplate.createIndex("test-index");
+		// then
+		assertThat(elasticsearchTemplate.indexExists("test-index"), is(true));
 	}
 
 	/*
@@ -1263,7 +1280,7 @@ public class ElasticsearchTemplateTests {
 	 */
 	@Test
 	public void shouldDeleteIndexForSpecifiedIndexName() {
-		//given
+		// given
 		elasticsearchTemplate.createIndex(SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 
