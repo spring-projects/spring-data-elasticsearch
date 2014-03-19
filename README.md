@@ -248,7 +248,4 @@ Code formatting for [Eclipse and Intellij](https://github.com/spring-projects/sp
 
 ### Contact Details
 
-* Rizwan Idrees (rizwan.idrees@biomedcentral.com)
-* Abdul Waheed (abdul.mohammed@biomedcentral.com)
-* Mohsin Husen (mohsin.husen@biomedcentral.com)
-* Artur Konczak(artur.konczak@biomedcentral.com)
+* [Spring Data Elasticsearch Support] (https://groups.google.com/d/forum/spring-data-elasticsearch-devs)
