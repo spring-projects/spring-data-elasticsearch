@@ -276,6 +276,14 @@ public interface ElasticsearchOperations {
 	<T> boolean deleteIndex(Class<T> clazz);
 
 	/**
+	 * Deletes an index for given indexName
+	 *
+	 * @param indexName
+	 * @return
+	 */
+	boolean deleteIndex(String indexName);
+
+	/**
 	 * Deletes a type in an index
 	 *
 	 * @param index
@@ -291,6 +299,14 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	<T> boolean indexExists(Class<T> clazz);
+
+	/**
+	 * check if index is exists for given IndexName
+	 *
+	 * @param indexName
+	 * @return
+	 */
+	boolean indexExists(String indexName);
 
 	/**
 	 * check if type is exists in an index

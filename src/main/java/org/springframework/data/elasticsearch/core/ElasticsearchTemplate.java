@@ -352,6 +352,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 	}
 
 	@Override
+	public boolean indexExists(String indexName) {
+		return client.admin().indices().exists(indicesExistsRequest(indexName)).actionGet().isExists();
+	}
+
+	@Override
 	public boolean typeExists(String index, String type) {
 		return client.admin().cluster().prepareState().execute().actionGet()
 				.getState().metaData().index(index).mappings().containsKey(type);
@@ -359,7 +364,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
 	@Override
 	public <T> boolean deleteIndex(Class<T> clazz) {
-		String indexName = getPersistentEntityFor(clazz).getIndexName();
+		return deleteIndex(getPersistentEntityFor(clazz).getIndexName());
+	}
+
+	@Override
+	public boolean deleteIndex(String indexName) {
 		if (indexExists(indexName)) {
 			return client.admin().indices().delete(new DeleteIndexRequest(indexName)).actionGet().isAcknowledged();
 		}
@@ -531,10 +540,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
 	private <T> boolean createIndexIfNotCreated(Class<T> clazz) {
 		return indexExists(getPersistentEntityFor(clazz).getIndexName()) || createIndexWithSettings(clazz);
-	}
-
-	private boolean indexExists(String indexName) {
-		return client.admin().indices().exists(indicesExistsRequest(indexName)).actionGet().isExists();
 	}
 
 	private <T> boolean createIndexWithSettings(Class<T> clazz) {

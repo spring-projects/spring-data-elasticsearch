@@ -1220,6 +1220,7 @@ public class ElasticsearchTemplateTests {
 	@Test
 	public void shouldReturnCountForGivenSearchQueryWithGivenMultiIndices() {
 		// given
+		cleanUpIndices();
 		String documentId1 = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntityBuilder(documentId1).message("some message")
 				.version(System.currentTimeMillis()).build();
@@ -1252,12 +1253,33 @@ public class ElasticsearchTemplateTests {
 		assertThat(count, is(equalTo(2L)));
 	}
 
+	private void cleanUpIndices() {
+		elasticsearchTemplate.deleteIndex("test-index-1");
+		elasticsearchTemplate.deleteIndex("test-index-2");
+	}
+
+	/*
+	DATAES-72
+	 */
+	@Test
+	public void shouldDeleteIndexForSpecifiedIndexName() {
+		//given
+		elasticsearchTemplate.createIndex(SampleEntity.class);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+		// when
+		elasticsearchTemplate.deleteIndex("test-index");
+		// then
+		assertThat(elasticsearchTemplate.indexExists("test-index"), is(false));
+	}
+
 	/*
 	DATAES-67
 	*/
 	@Test
 	public void shouldReturnCountForGivenSearchQueryWithGivenIndexNameForSpecificIndex() {
 		// given
+		cleanUpIndices();
 		String documentId1 = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntityBuilder(documentId1).message("some message")
 				.version(System.currentTimeMillis()).build();
