@@ -1217,6 +1217,82 @@ public class ElasticsearchTemplateTests {
 	/*
 	DATAES-67
 	 */
+	@Test
+	public void shouldReturnCountForGivenSearchQueryWithGivenMultiIndices() {
+		// given
+		String documentId1 = randomNumeric(5);
+		SampleEntity sampleEntity1 = new SampleEntityBuilder(documentId1).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery1 = new IndexQueryBuilder().withId(sampleEntity1.getId())
+				.withIndexName("test-index-1")
+				.withObject(sampleEntity1)
+				.build();
+
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntityBuilder(documentId2).message("some test message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery2 = new IndexQueryBuilder().withId(sampleEntity2.getId())
+				.withIndexName("test-index-2")
+				.withObject(sampleEntity2)
+				.build();
+
+		elasticsearchTemplate.bulkIndex(Arrays.asList(indexQuery1, indexQuery2));
+		elasticsearchTemplate.refresh("test-index-1", true);
+		elasticsearchTemplate.refresh("test-index-2", true);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(matchAllQuery())
+				.withIndices("test-index-1", "test-index-2")
+				.build();
+		// when
+		long count = elasticsearchTemplate.count(searchQuery);
+		// then
+		assertThat(count, is(equalTo(2L)));
+	}
+
+	/*
+	DATAES-67
+	*/
+	@Test
+	public void shouldReturnCountForGivenSearchQueryWithGivenIndexNameForSpecificIndex() {
+		// given
+		String documentId1 = randomNumeric(5);
+		SampleEntity sampleEntity1 = new SampleEntityBuilder(documentId1).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery1 = new IndexQueryBuilder().withId(sampleEntity1.getId())
+				.withIndexName("test-index-1")
+				.withObject(sampleEntity1)
+				.build();
+
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntityBuilder(documentId2).message("some test message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery2 = new IndexQueryBuilder().withId(sampleEntity2.getId())
+				.withIndexName("test-index-2")
+				.withObject(sampleEntity2)
+				.build();
+
+		elasticsearchTemplate.bulkIndex(Arrays.asList(indexQuery1, indexQuery2));
+		elasticsearchTemplate.refresh("test-index-1", true);
+		elasticsearchTemplate.refresh("test-index-2", true);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(matchAllQuery())
+				.withIndices("test-index-1")
+				.build();
+		// when
+		long count = elasticsearchTemplate.count(searchQuery);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-67
+	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldThrowAnExceptionWhenNoIndexSpecifiedForCountQuery() {
 		// given
