@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.elasticsearch.action.update.UpdateResponse;
@@ -52,6 +53,13 @@ public interface ElasticsearchOperations {
 	 */
 	boolean createIndex(String indexName);
 
+	/**
+	 * Create an index for given indexName and Settings
+	 *
+	 * @param indexName
+	 * @param settings
+	 */
+	boolean createIndex(String indexName, Object settings);
 
 	/**
 	 * Create mapping for a class
@@ -60,6 +68,21 @@ public interface ElasticsearchOperations {
 	 * @param <T>
 	 */
 	<T> boolean putMapping(Class<T> clazz);
+
+	/**
+	 * Get settings for a given indexName
+	 *
+	 * @param indexName
+	 */
+	Map getSetting(String indexName);
+
+	/**
+	 * Get settings for a given class
+	 *
+	 * @param clazz
+	 */
+	<T> Map getSetting(Class<T> clazz);
+
 
 	/**
 	 * Execute the query against elasticsearch and return the first returned object

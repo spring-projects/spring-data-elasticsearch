@@ -1264,7 +1264,7 @@ public class ElasticsearchTemplateTests {
 
 	/*
 	DATAES-71
-	 */
+	*/
 	@Test
 	public void shouldCreatedIndexWithSpecifiedIndexName() {
 		// given
@@ -1277,7 +1277,7 @@ public class ElasticsearchTemplateTests {
 
 	/*
 	DATAES-72
-	 */
+	*/
 	@Test
 	public void shouldDeleteIndexForSpecifiedIndexName() {
 		// given
@@ -1331,7 +1331,7 @@ public class ElasticsearchTemplateTests {
 
 	/*
 	DATAES-67
-	 */
+	*/
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldThrowAnExceptionWhenNoIndexSpecifiedForCountQuery() {
 		// given
@@ -1349,6 +1349,61 @@ public class ElasticsearchTemplateTests {
 		long count = elasticsearchTemplate.count(searchQuery);
 		// then
 		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-71
+	*/
+	@Test
+	public void shouldCreateIndexWithGivenSettings() {
+		// given
+		String settings =
+				"{ " +
+						"\"settings\" : { " +
+						"\"index\": { " +
+						"\"analysis\" :{ " +
+						"\"analyzer\": { " +
+						"\"email-analyzer\": { " +
+						"\"type\" : \"custom\"," +
+						"\"tokenizer\" : \"uax_url_email\"," +
+						"\"filter\" : [\"standard\", \"lowercase\", \"stop\"]\n" +
+						"}\n" +
+						"}\n" +
+						"}\n" +
+						"}\n" +
+						"}\n" +
+						"}";
+		elasticsearchTemplate.deleteIndex("test-index");
+		// when
+		elasticsearchTemplate.createIndex("test-index", settings);
+		// then
+		Map map = elasticsearchTemplate.getSetting("test-index");
+		boolean hasAnalyzer = map.containsKey("index.settings.index.analysis.analyzer.email-analyzer.tokenizer");
+		String emailAnalyzer = (String) map.get("index.settings.index.analysis.analyzer.email-analyzer.tokenizer");
+		assertThat(elasticsearchTemplate.indexExists("test-index"), is(true));
+		assertThat(hasAnalyzer, is(true));
+		assertThat(emailAnalyzer, is("uax_url_email"));
+	}
+
+	/*
+	DATAES-71
+	*/
+	@Test
+	public void shouldCreateGivenSettingsForGivenIndex() {
+		//given
+		//delete , create and apply mapping in before method
+
+		// then
+		Map map = elasticsearchTemplate.getSetting(SampleEntity.class);
+		assertThat(elasticsearchTemplate.indexExists("test-index"), is(true));
+		assertThat(map.containsKey("index.refresh_interval"), is(true));
+		assertThat(map.containsKey("index.number_of_replicas"), is(true));
+		assertThat(map.containsKey("index.number_of_shards"), is(true));
+		assertThat(map.containsKey("index.store.type"), is(true));
+		assertThat((String) map.get("index.refresh_interval"), is("-1"));
+		assertThat((String) map.get("index.number_of_replicas"), is("0"));
+		assertThat((String) map.get("index.number_of_shards"), is("1"));
+		assertThat((String) map.get("index.store.type"), is("memory"));
 	}
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {

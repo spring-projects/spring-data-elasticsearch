@@ -30,9 +30,11 @@ import java.util.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -377,6 +379,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
 	@Override
 	public boolean deleteIndex(String indexName) {
+		Assert.notNull(indexName, "No index defined for delete operation");
 		if (indexExists(indexName)) {
 			return client.admin().indices().delete(new DeleteIndexRequest(indexName)).actionGet().isAcknowledged();
 		}
@@ -551,17 +554,40 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 	}
 
 	private <T> boolean createIndexWithSettings(Class<T> clazz) {
-		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
-		return client.admin().indices()
-				.create(Requests.createIndexRequest(persistentEntity.getIndexName()).settings(getSettings(persistentEntity)))
-				.actionGet().isAcknowledged();
+		return createIndex(getPersistentEntityFor(clazz).getIndexName(), getDefaultSettings(getPersistentEntityFor(clazz)));
 	}
 
-	private <T> Map getSettings(ElasticsearchPersistentEntity<T> persistentEntity) {
+
+	@Override
+	public boolean createIndex(String indexName, Object settings) {
+		CreateIndexRequestBuilder createIndexRequestBuilder = client.admin().indices().prepareCreate(indexName);
+		if (settings instanceof String) {
+			createIndexRequestBuilder.setSettings(String.valueOf(settings));
+		} else if (settings instanceof Map) {
+			createIndexRequestBuilder.setSettings((Map) settings);
+		} else if (settings instanceof XContentBuilder) {
+			createIndexRequestBuilder.setSettings((XContentBuilder) settings);
+		}
+		return createIndexRequestBuilder.execute().actionGet().isAcknowledged();
+	}
+
+	private <T> Map getDefaultSettings(ElasticsearchPersistentEntity<T> persistentEntity) {
 		return new MapBuilder<String, String>().put("index.number_of_shards", String.valueOf(persistentEntity.getShards()))
 				.put("index.number_of_replicas", String.valueOf(persistentEntity.getReplicas()))
 				.put("index.refresh_interval", persistentEntity.getRefreshInterval())
 				.put("index.store.type", persistentEntity.getIndexStoreType()).map();
+	}
+
+	@Override
+	public <T> Map getSetting(Class<T> clazz) {
+		return getSetting(getPersistentEntityFor(clazz).getIndexName());
+	}
+
+	@Override
+	public Map getSetting(String indexName) {
+		Assert.notNull(indexName, "No index defined for getSettings");
+		return client.admin().indices().getSettings(new GetSettingsRequest())
+				.actionGet().getIndexToSettings().get(indexName).getAsMap();
 	}
 
 	private <T> SearchRequestBuilder prepareSearch(Query query, Class<T> clazz) {
