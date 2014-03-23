@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,13 +119,15 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
 		super.addPersistentProperty(property);
 
-		Parent parent = property.getField().getAnnotation(Parent.class);
-		if (parent != null) {
-			Assert.isNull(this.parentIdProperty, "Only one field can hold a @Parent annotation");
-			Assert.isNull(this.parentType, "Only one field can hold a @Parent annotation");
-			Assert.isTrue(property.getType() == String.class, "Parent ID property should be String");
-			this.parentIdProperty = property;
-			this.parentType = parent.type();
+		if (property.getField() != null) {
+			Parent parent = property.getField().getAnnotation(Parent.class);
+			if (parent != null) {
+				Assert.isNull(this.parentIdProperty, "Only one field can hold a @Parent annotation");
+				Assert.isNull(this.parentType, "Only one field can hold a @Parent annotation");
+				Assert.isTrue(property.getType() == String.class, "Parent ID property should be String");
+				this.parentIdProperty = property;
+				this.parentType = parent.type();
+			}
 		}
 
 		if (property.isVersionProperty()) {

@@ -49,6 +49,7 @@ public class InnerObjectTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(Book.class);
 		elasticsearchTemplate.createIndex(Book.class);
+		elasticsearchTemplate.putMapping(Book.class);
 		elasticsearchTemplate.refresh(Book.class, true);
 	}
 
