@@ -55,7 +55,7 @@ public class SimpleElasticsearchPersistentProperty extends
 
 	@Override
 	public boolean isIdProperty() {
-		return super.isIdProperty() || field != null ? SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName()) : false;
+		return super.isIdProperty() || (field != null ? SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName()) : false);
 	}
 
 	@Override
