@@ -26,6 +26,7 @@ import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Parent;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -50,6 +51,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private String indexStoreType;
 	private String parentType;
 	private ElasticsearchPersistentProperty parentIdProperty;
+	private String settingPath;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 		super(typeInformation);
@@ -65,6 +67,9 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.replicas = typeInformation.getType().getAnnotation(Document.class).replicas();
 			this.refreshInterval = typeInformation.getType().getAnnotation(Document.class).refreshInterval();
 			this.indexStoreType = typeInformation.getType().getAnnotation(Document.class).indexStoreType();
+		}
+		if(clazz.isAnnotationPresent(Setting.class)) {
+			this.settingPath = typeInformation.getType().getAnnotation(Setting.class).settingPath();
 		}
 	}
 
@@ -113,6 +118,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public ElasticsearchPersistentProperty getParentIdProperty() {
 		return parentIdProperty;
+	}
+
+	@Override
+	public String settingPath() {
+		return settingPath;
 	}
 
 	@Override

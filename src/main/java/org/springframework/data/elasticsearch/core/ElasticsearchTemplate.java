@@ -23,7 +23,9 @@ import static org.elasticsearch.common.collect.Sets.*;
 import static org.elasticsearch.index.VersionType.*;
 import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -64,10 +66,14 @@ import org.elasticsearch.search.facet.FacetBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
@@ -87,6 +93,7 @@ import org.springframework.util.Assert;
 
 public class ElasticsearchTemplate implements ElasticsearchOperations {
 
+	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchTemplate.class);
 	private Client client;
 	private ElasticsearchConverter elasticsearchConverter;
 	private ResultsMapper resultsMapper;
@@ -554,6 +561,17 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 	}
 
 	private <T> boolean createIndexWithSettings(Class<T> clazz) {
+		if(clazz.isAnnotationPresent(Setting.class)) {
+			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
+			if(isNotBlank(settingPath)) {
+				String settings = readFileFromClasspath(settingPath);
+				if(isNotBlank(settings)) {
+					return createIndex(getPersistentEntityFor(clazz).getIndexName(), settings);
+				}
+			} else {
+				logger.info("settingPath in @Setting has to be defined. Using default instead.");
+			}
+		}
 		return createIndex(getPersistentEntityFor(clazz).getIndexName(), getDefaultSettings(getPersistentEntityFor(clazz)));
 	}
 
@@ -789,5 +807,34 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
 	private boolean isDocument(Class clazz) {
 		return clazz.isAnnotationPresent(Document.class);
+	}
+
+	public static String readFileFromClasspath(String url) {
+		StringBuilder stringBuilder = new StringBuilder();
+
+		BufferedReader bufferedReader = null;
+
+		try {
+			ClassPathResource classPathResource = new ClassPathResource(url);
+			InputStreamReader inputStreamReader = new InputStreamReader(classPathResource.getInputStream());
+			bufferedReader = new BufferedReader(inputStreamReader);
+			String line;
+
+			while ((line = bufferedReader.readLine()) != null) {
+				stringBuilder.append(line);
+			}
+		} catch (Exception e) {
+			logger.debug(String.format("Failed to load file from url: %s: %s", url, e.getMessage()));
+			return null;
+		} finally {
+			if (bufferedReader != null)
+				try {
+					bufferedReader.close();
+				}  catch (IOException e) {
+					logger.debug(String.format("Unable to close buffered reader.. %s", e.getMessage()));
+				}
+		}
+
+		return stringBuilder.toString();
 	}
 }
