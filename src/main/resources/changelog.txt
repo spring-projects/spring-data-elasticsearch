@@ -77,6 +77,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M2 (2014-03-27)
     * [DATAES-54] - Upgrade to elasticsearch 1.0
     * [DATAES-47] - Spring Application(Context) is not getting started up if elasticsearch nodes are not available
     * [DATAES-14] - Dynamic Search Type Support
+    * [DATAES-79] - Upgrade to elasticsearch 1.1.0
 
 ** New Feature
 
