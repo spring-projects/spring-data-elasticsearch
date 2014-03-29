@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.elasticsearch.action.update.UpdateResponse;
@@ -45,12 +47,42 @@ public interface ElasticsearchOperations {
 	<T> boolean createIndex(Class<T> clazz);
 
 	/**
+	 * Create an index for given indexName
+	 *
+	 * @param indexName
+	 */
+	boolean createIndex(String indexName);
+
+	/**
+	 * Create an index for given indexName and Settings
+	 *
+	 * @param indexName
+	 * @param settings
+	 */
+	boolean createIndex(String indexName, Object settings);
+
+	/**
 	 * Create mapping for a class
 	 *
 	 * @param clazz
 	 * @param <T>
 	 */
 	<T> boolean putMapping(Class<T> clazz);
+
+	/**
+	 * Get settings for a given indexName
+	 *
+	 * @param indexName
+	 */
+	Map getSetting(String indexName);
+
+	/**
+	 * Get settings for a given class
+	 *
+	 * @param clazz
+	 */
+	<T> Map getSetting(Class<T> clazz);
+
 
 	/**
 	 * Execute the query against elasticsearch and return the first returned object
@@ -173,13 +205,40 @@ public interface ElasticsearchOperations {
 	<T> List<String> queryForIds(SearchQuery query);
 
 	/**
-	 * return number of elements found by for given query
+	 * return number of elements found by given query
 	 *
 	 * @param query
 	 * @param clazz
 	 * @return
 	 */
 	<T> long count(SearchQuery query, Class<T> clazz);
+
+	/**
+	 * return number of elements found by given query
+	 *
+	 * @param query
+	 * @return
+	 */
+	<T> long count(SearchQuery query);
+
+	/**
+	 * Execute a multiGet against elasticsearch for the given ids
+	 *
+	 * @param searchQuery
+	 * @param clazz
+	 * @return
+	 */
+	<T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz);
+
+	/**
+	 * Execute a multiGet against elasticsearch for the given ids with MultiGetResultMapper
+	 *
+	 * @param searchQuery
+	 * @param clazz
+	 * @param multiGetResultMapper
+	 * @return
+	 */
+	<T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz, MultiGetResultMapper multiGetResultMapper);
 
 	/**
 	 * Index an object. Will do save or update
@@ -248,6 +307,14 @@ public interface ElasticsearchOperations {
 	<T> boolean deleteIndex(Class<T> clazz);
 
 	/**
+	 * Deletes an index for given indexName
+	 *
+	 * @param indexName
+	 * @return
+	 */
+	boolean deleteIndex(String indexName);
+
+	/**
 	 * Deletes a type in an index
 	 *
 	 * @param index
@@ -263,6 +330,14 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	<T> boolean indexExists(Class<T> clazz);
+
+	/**
+	 * check if index is exists for given IndexName
+	 *
+	 * @param indexName
+	 * @return
+	 */
+	boolean indexExists(String indexName);
 
 	/**
 	 * check if type is exists in an index

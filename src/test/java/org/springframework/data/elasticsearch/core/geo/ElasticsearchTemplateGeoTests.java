@@ -22,8 +22,8 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.elasticsearch.common.geo.GeoHashUtils;
 import org.elasticsearch.index.query.FilterBuilders;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,11 +47,6 @@ public class ElasticsearchTemplateGeoTests {
 
 	@Autowired
 	private ElasticsearchTemplate elasticsearchTemplate;
-
-	@Before
-	public void before() {
-
-	}
 
 	private void loadClassBaseEntities() {
 		elasticsearchTemplate.deleteIndex(AuthorMarkerEntity.class);
@@ -178,7 +173,7 @@ public class ElasticsearchTemplateGeoTests {
 	public void shouldFindAllMarkersForNativeSearchQuery() {
 		//Given
 		loadAnnotationBaseEntities();
-		NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder().withFilter(FilterBuilders.geoBoundingBoxFilter("additionalLocation").topLeft("52, -1").bottomRight("50,1"));
+		NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder().withFilter(FilterBuilders.geoBoundingBoxFilter("additionalLocation").topLeft(52, -1).bottomRight(50, 1));
 		//When
 		List<AuthorMarkerAnnotatedEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(queryBuilder.build(), AuthorMarkerAnnotatedEntity.class);
 		//Then
@@ -202,11 +197,11 @@ public class ElasticsearchTemplateGeoTests {
 	}
 
 	@Test
-	public void shouldFindAuthorMarkersInBoxForGivenCriteriaQueryUsingString() {
+	public void shouldFindAuthorMarkersInBoxForGivenCriteriaQueryUsingGeohash() {
 		//given
 		loadClassBaseEntities();
 		CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
-				new Criteria("location").boundedBy("53.5171d, 0", "49.5171d, 0.2062d"));
+				new Criteria("location").boundedBy(GeoHashUtils.encode(53.5171d, 0), GeoHashUtils.encode(49.5171d, 0.2062d)));
 		//when
 		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3, AuthorMarkerEntity.class);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -45,6 +48,7 @@ import org.springframework.util.Assert;
 public abstract class AbstractElasticsearchRepository<T, ID extends Serializable> implements
 		ElasticsearchRepository<T, ID> {
 
+	static final Logger LOGGER = LoggerFactory.getLogger(AbstractElasticsearchRepository.class);
 	protected ElasticsearchOperations elasticsearchOperations;
 	protected Class<T> entityClass;
 	protected ElasticsearchEntityInformation<T, ID> entityInformation;
@@ -63,8 +67,12 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		Assert.notNull(metadata);
 		this.entityInformation = metadata;
 		setEntityClass(this.entityInformation.getJavaType());
-		createIndex();
-		putMapping();
+		try {
+			createIndex();
+			putMapping();
+		} catch (ElasticsearchException exception) {
+			LOGGER.error("failed to load elasticsearch nodes : " + exception.getDetailedMessage());
+		}
 	}
 
 	private void createIndex() {

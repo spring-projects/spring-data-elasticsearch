@@ -37,7 +37,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	private QueryBuilder query;
 	private FilterBuilder filter;
     private final List<ScriptField> scriptFields = new ArrayList<ScriptField>();
-    private SortBuilder sort;
+	private List<SortBuilder> sorts;
 	private List<FacetRequest> facets;
 	private HighlightBuilder.Field[] highlightFields;
 
@@ -51,16 +51,16 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 		this.filter = filter;
 	}
 
-	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, SortBuilder sort) {
+	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, List<SortBuilder> sorts) {
 		this.query = query;
 		this.filter = filter;
-		this.sort = sort;
+		this.sorts = sorts;
 	}
 
-	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, SortBuilder sort, HighlightBuilder.Field[] highlightFields) {
+	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, List<SortBuilder> sorts, HighlightBuilder.Field[] highlightFields) {
 		this.query = query;
 		this.filter = filter;
-		this.sort = sort;
+		this.sorts = sorts;
 		this.highlightFields = highlightFields;
 	}
 
@@ -72,8 +72,8 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 		return filter;
 	}
 
-	public SortBuilder getElasticsearchSort() {
-		return sort;
+	public List<SortBuilder> getElasticsearchSorts() {
+		return sorts;
 	}
 
 	@Override

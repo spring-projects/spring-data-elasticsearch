@@ -18,8 +18,10 @@ package org.springframework.data.elasticsearch.core.query;
 import static org.apache.commons.collections.CollectionUtils.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import org.elasticsearch.action.search.SearchType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.Assert;
@@ -38,6 +40,9 @@ abstract class AbstractQuery implements Query {
 	protected List<String> types = new ArrayList<String>();
 	protected List<String> fields = new ArrayList<String>();
 	protected float minScore;
+	protected Collection<String> ids;
+	protected String route;
+	protected SearchType searchType = SearchType.DFS_QUERY_THEN_FETCH;
 
 	@Override
 	public Sort getSort() {
@@ -107,5 +112,29 @@ abstract class AbstractQuery implements Query {
 
 	public void setMinScore(float minScore) {
 		this.minScore = minScore;
+	}
+
+	public Collection<String> getIds() {
+		return ids;
+	}
+
+	public void setIds(Collection<String> ids) {
+		this.ids = ids;
+	}
+
+	public String getRoute() {
+		return route;
+	}
+
+	public void setRoute(String route) {
+		this.route = route;
+	}
+
+	public void setSearchType(SearchType searchType) {
+		this.searchType = searchType;
+	}
+
+	public SearchType getSearchType() {
+		return searchType;
 	}
 }

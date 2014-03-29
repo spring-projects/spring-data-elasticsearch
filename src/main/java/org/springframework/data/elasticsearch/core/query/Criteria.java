@@ -53,7 +53,7 @@ public class Criteria {
 	}
 
 	/**
-	 * Creates a new CriterSimpleFieldia for the Filed with provided name
+	 * Creates a new Criteria with provided field name
 	 *
 	 * @param fieldname
 	 */
@@ -394,14 +394,14 @@ public class Criteria {
 	/**
 	 * Creates new CriteriaEntry for bounding box created from points
 	 *
-	 * @param topLeftPoint left top corner of bounding box
-	 * @param bottomRightPoint right bottom corner of bounding box
+	 * @param topLeftGeohash left top corner of bounding box as geohash
+	 * @param bottomRightGeohash right bottom corner of bounding box as geohash
 	 * @return Criteria the chaind criteria with the new 'boundedBy' criteria included.
 	 */
-	public Criteria boundedBy(String topLeftPoint, String bottomRightPoint) {
-		Assert.isTrue(StringUtils.isNotBlank(topLeftPoint), "topLeftPoint must not be empty");
-		Assert.isTrue(StringUtils.isNotBlank(bottomRightPoint), "bottomRightPoint must not be empty");
-		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{topLeftPoint, bottomRightPoint}));
+	public Criteria boundedBy(String topLeftGeohash, String bottomRightGeohash) {
+		Assert.isTrue(StringUtils.isNotBlank(topLeftGeohash), "topLeftGeohash must not be empty");
+		Assert.isTrue(StringUtils.isNotBlank(bottomRightGeohash), "bottomRightGeohash must not be empty");
+		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{topLeftGeohash, bottomRightGeohash}));
 		return this;
 	}
 

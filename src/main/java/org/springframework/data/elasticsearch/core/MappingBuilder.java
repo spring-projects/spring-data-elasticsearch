@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,20 +67,20 @@ class MappingBuilder {
 		// Properties
 		XContentBuilder xContentBuilder = mapping.startObject(FIELD_PROPERTIES);
 
-		mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY, false);
+		mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY, false, FieldType.Auto);
 
 		return xContentBuilder.endObject().endObject().endObject();
 	}
 
 	private static void mapEntity(XContentBuilder xContentBuilder, Class clazz, boolean isRootObject, String idFieldName,
-								  String nestedObjectFieldName, boolean nestedAnnotaion) throws IOException {
+								  String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType) throws IOException {
 
 		java.lang.reflect.Field[] fields = clazz.getDeclaredFields();
 
-		if (!isRootObject && (isAnyPropertyAnnotatedAsField(fields) || nestedAnnotaion)) {
+		if (!isRootObject && (isAnyPropertyAnnotatedAsField(fields) || nestedOrObjectField)) {
 			String type = FieldType.Object.toString().toLowerCase();
-			if (nestedAnnotaion) {
-				type = FieldType.Nested.toString().toLowerCase();
+			if (nestedOrObjectField) {
+				type = fieldType.toString().toLowerCase();
 			}
 			xContentBuilder.startObject(nestedObjectFieldName).field(FIELD_TYPE, type).startObject(FIELD_PROPERTIES);
 		}
@@ -98,9 +98,9 @@ class MappingBuilder {
 				if (singleField == null) {
 					continue;
 				}
-				boolean nestedField = isNestedField(field);
-				mapEntity(xContentBuilder, getFieldType(field), false, EMPTY, field.getName(), nestedField);
-				if (nestedField) {
+				boolean nestedOrObject = isNestedOrObjectField(field);
+				mapEntity(xContentBuilder, getFieldType(field), false, EMPTY, field.getName(), nestedOrObject, field.getAnnotation(Field.class).type());
+				if (nestedOrObject) {
 					continue;
 				}
 			}
@@ -120,7 +120,7 @@ class MappingBuilder {
 			}
 		}
 
-		if (!isRootObject && isAnyPropertyAnnotatedAsField(fields)) {
+		if (!isRootObject && isAnyPropertyAnnotatedAsField(fields) || nestedOrObjectField) {
 			xContentBuilder.endObject().endObject();
 		}
 	}
@@ -296,7 +296,7 @@ class MappingBuilder {
 		return false;
 	}
 
-	private static boolean isNestedField(java.lang.reflect.Field field) {
+	private static boolean isNestedOrObjectField(java.lang.reflect.Field field) {
 		Field fieldAnnotation = field.getAnnotation(Field.class);
 		return fieldAnnotation != null && (FieldType.Nested == fieldAnnotation.type() || FieldType.Object == fieldAnnotation.type());
 	}

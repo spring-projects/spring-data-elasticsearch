@@ -28,10 +28,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.ParentEntity;
-import org.springframework.data.elasticsearch.ParentEntity.ChildEntity;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.entities.ParentEntity;
+import org.springframework.data.elasticsearch.entities.ParentEntity.ChildEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -75,7 +75,7 @@ public class ElasticsearchTemplateParentChildTests {
 		elasticsearchTemplate.refresh(ChildEntity.class, true);
 
 		// find all parents that have the first child
-		QueryBuilder query = hasChildQuery(ParentEntity.CHILD_TYPE, QueryBuilders.fieldQuery("name", child1name));
+		QueryBuilder query = hasChildQuery(ParentEntity.CHILD_TYPE, QueryBuilders.termQuery("name", child1name.toLowerCase()));
 		List<ParentEntity> parents = elasticsearchTemplate.queryForList(new NativeSearchQuery(query), ParentEntity.class);
 
 		// we're expecting only the first parent as result
@@ -97,7 +97,7 @@ public class ElasticsearchTemplateParentChildTests {
 		elasticsearchTemplate.refresh(ChildEntity.class, true);
 
 		// find all parents that have the first child using topChildren Query
-		QueryBuilder query = topChildrenQuery(ParentEntity.CHILD_TYPE, QueryBuilders.fieldQuery("name", child1name));
+		QueryBuilder query = topChildrenQuery(ParentEntity.CHILD_TYPE, QueryBuilders.termQuery("name", child1name.toLowerCase()));
 		List<ParentEntity> parents = elasticsearchTemplate.queryForList(new NativeSearchQuery(query), ParentEntity.class);
 
 		// we're expecting only the first parent as result

@@ -21,7 +21,7 @@ import java.io.IOException;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.data.elasticsearch.SampleDateMappingEntity;
+import org.springframework.data.elasticsearch.entities.SampleDateMappingEntity;
 
 /**
  * @author Jakub Vavrik

@@ -22,9 +22,12 @@ import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.base.Strings;
 import org.elasticsearch.common.jackson.core.JsonEncoding;
@@ -154,6 +157,18 @@ public class DefaultResultMapper extends AbstractResultMapper {
 			setPersistentEntityId(result, response.getId(), clazz);
 		}
 		return result;
+	}
+
+	@Override
+	public <T> LinkedList<T> mapResults(MultiGetResponse responses, Class<T> clazz) {
+		LinkedList<T> list = new LinkedList<T>();
+		for (MultiGetItemResponse response : responses.getResponses()) {
+			if (!response.isFailed() && response.getResponse().isExists()) {
+				T result = mapEntity(response.getResponse().getSourceAsString(), clazz);
+				list.add(result);
+			}
+		}
+		return list;
 	}
 
 	private <T> void setPersistentEntityId(T result, String id, Class<T> clazz) {

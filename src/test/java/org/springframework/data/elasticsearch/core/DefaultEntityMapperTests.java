@@ -22,8 +22,8 @@ import java.io.IOException;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.data.elasticsearch.Car;
-import org.springframework.data.elasticsearch.CarBuilder;
+import org.springframework.data.elasticsearch.builder.CarBuilder;
+import org.springframework.data.elasticsearch.entities.Car;
 
 /**
  * @author Artur Konczak

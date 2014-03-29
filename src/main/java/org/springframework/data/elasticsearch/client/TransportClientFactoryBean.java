@@ -36,14 +36,15 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Jakub Vavrik
+ * @author Piotr Betkier
  */
 
 public class TransportClientFactoryBean implements FactoryBean<TransportClient>, InitializingBean, DisposableBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(TransportClientFactoryBean.class);
-	private String clusterNodes;
-	private String clusterName;
-	private Boolean clientTransportSniff;
+	private String clusterNodes = "127.0.0.1:9300";
+	private String clusterName = "elasticsearch";
+	private Boolean clientTransportSniff = true;
 	private Boolean clientIgnoreClusterName = Boolean.FALSE;
 	private String clientPingTimeout = "5s";
 	private String clientNodesSamplerInterval = "5s";

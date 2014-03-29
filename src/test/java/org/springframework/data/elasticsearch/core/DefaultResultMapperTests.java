@@ -34,7 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.elasticsearch.Car;
+import org.springframework.data.elasticsearch.entities.Car;
 
 /**
  * @author Artur Konczak

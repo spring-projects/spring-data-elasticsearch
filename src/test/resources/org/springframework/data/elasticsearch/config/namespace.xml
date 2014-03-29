@@ -16,7 +16,6 @@
     <elasticsearch:transport-client id="transportClient"/>
 
     <elasticsearch:repositories
-            base-package="org.springframework.data.elasticsearch.repositories"/>
-
+            base-package="org.springframework.data.elasticsearch.repositories.sample"/>
 
 </beans>

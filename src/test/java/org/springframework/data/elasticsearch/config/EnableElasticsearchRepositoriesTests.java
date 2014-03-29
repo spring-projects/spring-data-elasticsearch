@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.repositories.SampleElasticsearchRepository;
+import org.springframework.data.elasticsearch.repositories.sample.SampleElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -40,7 +40,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class EnableElasticsearchRepositoriesTests {
 
 	@Configuration
-	@EnableElasticsearchRepositories(basePackages = "org.springframework.data.elasticsearch.repositories")
+	@EnableElasticsearchRepositories(basePackages = "org.springframework.data.elasticsearch.repositories.sample")
 	static class Config {
 
 		@Bean

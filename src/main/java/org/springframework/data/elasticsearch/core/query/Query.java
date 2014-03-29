@@ -15,8 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.util.Collection;
 import java.util.List;
 
+import org.elasticsearch.action.search.SearchType;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -115,4 +117,25 @@ public interface Query {
 	 * @return
 	 */
 	float getMinScore();
+
+	/**
+	 * Get Ids
+	 *
+	 * @return
+	 */
+	Collection<String> getIds();
+
+	/**
+	 * Get route
+	 *
+	 * @return
+	 */
+	String getRoute();
+
+
+	/**
+	 * Type of search
+	 * @return
+	 */
+	SearchType getSearchType();
 }

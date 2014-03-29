@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Parent;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -50,6 +51,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private String indexStoreType;
 	private String parentType;
 	private ElasticsearchPersistentProperty parentIdProperty;
+	private String settingPath;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 		super(typeInformation);
@@ -65,6 +67,9 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.replicas = typeInformation.getType().getAnnotation(Document.class).replicas();
 			this.refreshInterval = typeInformation.getType().getAnnotation(Document.class).refreshInterval();
 			this.indexStoreType = typeInformation.getType().getAnnotation(Document.class).indexStoreType();
+		}
+		if(clazz.isAnnotationPresent(Setting.class)) {
+			this.settingPath = typeInformation.getType().getAnnotation(Setting.class).settingPath();
 		}
 	}
 
@@ -116,16 +121,23 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
+	public String settingPath() {
+		return settingPath;
+	}
+
+	@Override
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
 		super.addPersistentProperty(property);
 
-		Parent parent = property.getField().getAnnotation(Parent.class);
-		if (parent != null) {
-			Assert.isNull(this.parentIdProperty, "Only one field can hold a @Parent annotation");
-			Assert.isNull(this.parentType, "Only one field can hold a @Parent annotation");
-			Assert.isTrue(property.getType() == String.class, "Parent ID property should be String");
-			this.parentIdProperty = property;
-			this.parentType = parent.type();
+		if (property.getField() != null) {
+			Parent parent = property.getField().getAnnotation(Parent.class);
+			if (parent != null) {
+				Assert.isNull(this.parentIdProperty, "Only one field can hold a @Parent annotation");
+				Assert.isNull(this.parentType, "Only one field can hold a @Parent annotation");
+				Assert.isTrue(property.getType() == String.class, "Parent ID property should be String");
+				this.parentIdProperty = property;
+				this.parentType = parent.type();
+			}
 		}
 
 		if (property.isVersionProperty()) {

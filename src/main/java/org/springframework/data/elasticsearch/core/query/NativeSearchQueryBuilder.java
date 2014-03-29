@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,11 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
@@ -38,8 +40,8 @@ public class NativeSearchQueryBuilder {
 
 	private QueryBuilder queryBuilder;
 	private FilterBuilder filterBuilder;
-	private SortBuilder sortBuilder;
     private List<ScriptField> scriptFields = new ArrayList<ScriptField>();
+	private List<SortBuilder> sortBuilders = new ArrayList<SortBuilder>();
 	private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
 	private HighlightBuilder.Field[] highlightFields;
 	private Pageable pageable;
@@ -47,6 +49,9 @@ public class NativeSearchQueryBuilder {
 	private String[] types;
 	private String[] fields;
 	private float minScore;
+	private Collection<String> ids;
+	private String route;
+	private SearchType searchType;
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -59,7 +64,7 @@ public class NativeSearchQueryBuilder {
 	}
 
 	public NativeSearchQueryBuilder withSort(SortBuilder sortBuilder) {
-		this.sortBuilder = sortBuilder;
+		this.sortBuilders.add(sortBuilder);
 		return this;
 	}
 
@@ -103,23 +108,39 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	public NativeSearchQueryBuilder withIds(Collection<String> ids) {
+		this.ids = ids;
+		return this;
+	}
+
+	public NativeSearchQueryBuilder withRoute(String route) {
+		this.route = route;
+		return this;
+	}
+
+	public NativeSearchQueryBuilder withSearchType(SearchType searchType) {
+		this.searchType = searchType;
+		return this;
+	}
+
 	public NativeSearchQuery build() {
-		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilder, highlightFields);
+		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightFields);
 		if (pageable != null) {
 			nativeSearchQuery.setPageable(pageable);
 		}
+
 		if (indices != null) {
 			nativeSearchQuery.addIndices(indices);
 		}
+
 		if (types != null) {
 			nativeSearchQuery.addTypes(types);
 		}
+
 		if (fields != null) {
 			nativeSearchQuery.addFields(fields);
 		}
-        if (CollectionUtils.isNotEmpty(scriptFields)) {
-            nativeSearchQuery.setScriptFields(scriptFields);
-        }
+
 		if (CollectionUtils.isNotEmpty(facetRequests)) {
 			nativeSearchQuery.setFacets(facetRequests);
 		}
@@ -127,6 +148,19 @@ public class NativeSearchQueryBuilder {
 		if (minScore > 0) {
 			nativeSearchQuery.setMinScore(minScore);
 		}
+
+		if (ids != null) {
+			nativeSearchQuery.setIds(ids);
+		}
+
+		if (route != null) {
+			nativeSearchQuery.setRoute(route);
+		}
+
+		if (searchType != null) {
+			nativeSearchQuery.setSearchType(searchType);
+		}
+
 		return nativeSearchQuery;
 	}
 }
