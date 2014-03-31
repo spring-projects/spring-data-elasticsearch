@@ -23,7 +23,7 @@
         </legalnotice>
 
         <copyright>
-            <year>2013</year>
+            <year>2013-2014</year>
             <holder>The original author(s)</holder>
         </copyright>
     </bookinfo>
@@ -36,7 +36,7 @@
         <title>Reference Documentation</title>
 
         <xi:include
-                href="https://raw.github.com/SpringSource/spring-data-commons/1.4.0.RC1/src/docbkx/repositories.xml">
+                href="https://raw.github.com/SpringSource/spring-data-commons/1.8.0.M1/src/docbkx/repositories.xml">
             <xi:fallback
                     href="../../../spring-data-commons/src/docbkx/repositories.xml"/>
         </xi:include>
@@ -48,12 +48,12 @@
     <part id="appendix">
         <title>Appendix</title>
         <xi:include
-                href="https://raw.github.com/SpringSource/spring-data-commons/1.4.0.RC1/src/docbkx/repository-namespace-reference.xml">
+                href="https://raw.github.com/SpringSource/spring-data-commons/1.8.0.M1/src/docbkx/repository-namespace-reference.xml">
             <xi:fallback
                     href="../../../spring-data-commons/src/docbkx/repository-namespace-reference.xml"/>
         </xi:include>
         <xi:include
-                href="https://raw.github.com/SpringSource/spring-data-commons/1.4.0.RC1/src/docbkx/repository-query-keywords-reference.xml">
+                href="https://raw.github.com/SpringSource/spring-data-commons/1.8.0.M1/src/docbkx/repository-query-keywords-reference.xml">
             <xi:fallback
                     href="../../../spring-data-commons/src/docbkx/repository-query-keywords-reference.xml"/>
         </xi:include>

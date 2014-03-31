@@ -1,5 +1,5 @@
 Spring Data Elasticsearch
-========================= 
+=========================
 
 Spring Data implementation for ElasticSearch
 
@@ -10,10 +10,10 @@ The Spring Data Elasticsearch project provides integration with the [elasticsear
 Guide
 ------------
 
-* [Reference Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/1.0.0.M1/reference/html/)
-* [PDF Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/1.0.0.M1/reference/pdf/spring-data-elasticsearch-reference.pdf)
-* [API Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/1.0.0.M1/api/)
-* [Spring Data Project](http://www.springsource.org/spring-data)
+* [Reference Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/1.0.0.M2/reference/html/)
+* [PDF Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/1.0.0.M2/reference/pdf/spring-data-elasticsearch-reference.pdf)
+* [API Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/1.0.0.M2/api/)
+* [Spring Data Project](http://project.spring.io/spring-data)
 * [Sample Test Application](https://github.com/BioMedCentralLtd/spring-data-elasticsearch-sample-application)
 * for more detailed questions, use the [forum](http://forum.springsource.org/forumdisplay.php?f=80).
 
@@ -30,13 +30,13 @@ Add the Maven dependency:
 <dependency>
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-elasticsearch</artifactId>
-    <version>1.0.0.M1</version>
+    <version>1.1.0.M1</version>
 </dependency>
 
 <repository>
   <id>spring-libs-milestone</id>
   <name>Spring Milestone Repository</name>
-  <url>http://repo.springsource.org/libs-milestone</url>
+  <url>http://repo.spring.io/libs-milestone</url>
 </repository>
 ```
 
@@ -53,7 +53,7 @@ the appropriate dependency version.
 <repository>
   <id>spring-libs-snapshot</id>
   <name>Spring Snapshot Repository</name>
-  <url>http://repo.springsource.org/libs-snapshot</url>
+  <url>http://repo.spring.io/libs-snapshot</url>
 </repository>
 ```
 

@@ -1,15 +1,15 @@
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.springframework.data.elasticsearch
 Bundle-Name: ${project.name}
-Bundle-Vendor: SpringSource
+Bundle-Vendor: Pivotal Software, Inc.
 Bundle-Version: ${project.version}
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
-Export-Template: 
+Export-Template:
  org.springframework.data.elasticsearch.*;version="${project.version}"
 Import-Template:
  javax.enterprise.*;version="${cdi:[=.=.=,+1.0.0)}";resolution:=optional,
- org.apache.commons.collections.*;version="${commonscollections:[=.=.=,+1.0.0)}";resolution:=optional, 
- org.apache.commons.lang.*;version="${commonslang:[=.=.=,+1.0.0)}", 
+ org.apache.commons.collections.*;version="${commonscollections:[=.=.=,+1.0.0)}";resolution:=optional,
+ org.apache.commons.lang.*;version="${commonslang:[=.=.=,+1.0.0)}",
  com.fasterxml.jackson.*;version="${jackson:[=.=.=,+1.0.0)}";resolution:=optional,
  org.elasticsearch.*;version="${elasticsearch:[=.=.=,+1.0.0)}",
  org.apache.lucene.*;version="4.6.1",

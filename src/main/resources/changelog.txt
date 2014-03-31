@@ -28,13 +28,13 @@ Issues maintaine in GitHub tracker:
 - #40 - how to create index for json objects?
 - #38 - Configure with native Client with embedded elasticsearch
 - #37 - embedded elasticsearch client - how to recover data after process is restarted?
-- #36 - FieldType.Date annotation 
+- #36 - FieldType.Date annotation
 - #35 - @Transient property still inserted into elastic
 - #33 - timestamp mapping
 - #32 - BigDecimal @Field(type = FieldType.Double)
 - #31 - DATAES-33: Mapping of parent-child relationships
 - #29 - Added DefaultMapper support to map only partial fields from result instead of whole source field.
-- #28 - Documentation (README.md) for Geo Location / Filter Feature 
+- #28 - Documentation (README.md) for Geo Location / Filter Feature
 - #27 - Adding support for letting Elasticsearch generate Id for document
 - #25 - Aliases
 - #24 - DATAES-31 Adding ability to use ES Java API setSource directly
