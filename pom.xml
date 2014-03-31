@@ -15,7 +15,7 @@
 
     <name>Spring Data Elasticsearch</name>
     <description>Spring Data Implementation for Elasticsearch</description>
-    <url>https://github.com/SpringSource/spring-data-elasticsearch</url>
+    <url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 
     <properties>
 
