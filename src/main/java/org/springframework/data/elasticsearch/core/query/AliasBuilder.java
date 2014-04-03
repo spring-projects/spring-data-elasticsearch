@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,9 @@ public class AliasBuilder {
 	private String aliasName;
 	private FilterBuilder filterBuilder;
 	private Map<String, Object> filter;
+	private String searchRouting;
+	private String indexRouting;
+	private String routing;
 
 	public AliasBuilder withIndexName(String indexName) {
 		this.indexName = indexName;
@@ -49,12 +52,30 @@ public class AliasBuilder {
 		return this;
 	}
 
+	public AliasBuilder withSearchRouting(String searchRouting) {
+		this.searchRouting = searchRouting;
+		return this;
+	}
+
+	public AliasBuilder withIndexRouting(String indexRouting) {
+		this.indexRouting = indexRouting;
+		return this;
+	}
+
+	public AliasBuilder withRouting(String routing) {
+		this.routing = routing;
+		return this;
+	}
+
 	public AliasQuery build() {
 		AliasQuery aliasQuery = new AliasQuery();
 		aliasQuery.setIndexName(indexName);
 		aliasQuery.setAliasName(aliasName);
 		aliasQuery.setFilterBuilder(filterBuilder);
 		aliasQuery.setFilter(filter);
+		aliasQuery.setSearchRouting(searchRouting);
+		aliasQuery.setIndexRouting(indexRouting);
+		aliasQuery.setRouting(routing);
 		return aliasQuery;
 	}
 }

@@ -19,6 +19,7 @@ import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.*;
 import static org.elasticsearch.action.search.SearchType.*;
 import static org.elasticsearch.client.Requests.*;
+import static org.elasticsearch.cluster.metadata.AliasAction.Type.ADD;
 import static org.elasticsearch.common.collect.Sets.*;
 import static org.elasticsearch.index.VersionType.*;
 import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
@@ -53,6 +54,7 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
+import org.elasticsearch.cluster.metadata.AliasAction;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.collect.MapBuilder;
@@ -706,15 +708,19 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 	public Boolean addAlias(AliasQuery query) {
 		Assert.notNull(query.getIndexName(), "No index defined for Alias");
 		Assert.notNull(query.getAliasName(), "No alias defined");
-		IndicesAliasesRequestBuilder indicesAliasesRequestBuilder = null;
+		AliasAction aliasAction = new AliasAction(ADD, query.getIndexName(), query.getAliasName());
 		if (query.getFilterBuilder() != null) {
-			indicesAliasesRequestBuilder = client.admin().indices().prepareAliases().addAlias(query.getIndexName(), query.getAliasName(), query.getFilterBuilder());
+			aliasAction.filter(query.getFilterBuilder());
 		} else if (query.getFilter() != null) {
-			indicesAliasesRequestBuilder = client.admin().indices().prepareAliases().addAlias(query.getIndexName(), query.getAliasName(), query.getFilter());
-		} else {
-			indicesAliasesRequestBuilder = client.admin().indices().prepareAliases().addAlias(query.getIndexName(), query.getAliasName());
+			aliasAction.filter(query.getFilter());
+		} else if (isNotBlank(query.getRouting())) {
+			aliasAction.routing(query.getRouting());
+		} else if (isNotBlank(query.getSearchRouting())) {
+			aliasAction.searchRouting(query.getSearchRouting());
+		} else if (isNotBlank(query.getIndexRouting())) {
+			aliasAction.indexRouting(query.getIndexRouting());
 		}
-		return indicesAliasesRequestBuilder.execute().actionGet().isAcknowledged();
+		return client.admin().indices().prepareAliases().addAliasAction(aliasAction).execute().actionGet().isAcknowledged();
 	}
 
 	@Override
