@@ -15,7 +15,7 @@
 
     <name>Spring Data Elasticsearch</name>
     <description>Spring Data Implementation for Elasticsearch</description>
-    <url>https://github.com/SpringSource/spring-data-elasticsearch</url>
+    <url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 
     <properties>
 
@@ -159,9 +159,9 @@
     </pluginRepositories>
 
     <scm>
-        <url>https://github.com/SpringSource/spring-data-elasticsearch</url>
-        <connection>scm:git:git://github.com/SpringSource/spring-data-elasticsearch.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:SpringSource/spring-data-elasticsearch.git
+        <url>https://github.com/spring-projects/spring-data-elasticsearch</url>
+        <connection>scm:git:git://github.com/spring-projects/spring-data-elasticsearch.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/spring-projects/spring-data-elasticsearch.git
         </developerConnection>
     </scm>
 
