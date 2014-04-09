@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.facet;
 
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -22,7 +24,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
 
 /**
  * Simple type to test facets
@@ -31,7 +32,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
  * @author Mohsin Husen
  */
 
-@Document(indexName = "logs", type = "log", shards = 1, replicas = 0, refreshInterval = "-1", indexStoreType = "memory")
+@Document(indexName = "test-log-index", type = "test-log-type", shards = 1, replicas = 0, refreshInterval = "-1", indexStoreType = "memory")
 public class LogEntity {
 
 	private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -43,7 +44,10 @@ public class LogEntity {
 
 	private long sequenceCode;
 
-	@Field(type = FieldType.Date, format = DateFormat.basic_date_time)
+	@Field(type = Ip)
+	private String ip;
+
+	@Field(type = Date, format = DateFormat.basic_date_time)
 	private Date date;
 
 	private LogEntity() {
@@ -79,6 +83,14 @@ public class LogEntity {
 
 	public void setSequenceCode(long sequenceCode) {
 		this.sequenceCode = sequenceCode;
+	}
+
+	public String getIp() {
+		return ip;
+	}
+
+	public void setIp(String ip) {
+		this.ip = ip;
 	}
 
 	public Date getDate() {

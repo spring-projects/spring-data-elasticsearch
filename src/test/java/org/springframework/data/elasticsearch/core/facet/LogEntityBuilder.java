@@ -49,6 +49,11 @@ public class LogEntityBuilder {
 		return this;
 	}
 
+	public LogEntityBuilder ip(String ip) {
+		result.setIp(ip);
+		return this;
+	}
+
 	public LogEntity build() {
 		return result;
 	}
