@@ -39,14 +39,14 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * DynamicMappingAndSettingTests
+ * LogEntityTests
  *
  * @author Artur Konczak
  * @author Mohsin Husen
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
-public class DynamicMappingAndSettingTests {
+public class LogEntityTests {
 
 	@Autowired
 	private ElasticsearchTemplate template;
