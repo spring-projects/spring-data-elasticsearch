@@ -41,4 +41,7 @@ public interface SearchQuery extends Query {
 	List<FacetRequest> getFacets();
 
 	HighlightBuilder.Field[] getHighlightFields();
+
+    List<ScriptField> getScriptFields();
+
 }

@@ -40,6 +40,7 @@ public class NativeSearchQueryBuilder {
 
 	private QueryBuilder queryBuilder;
 	private FilterBuilder filterBuilder;
+    private List<ScriptField> scriptFields = new ArrayList<ScriptField>();
 	private List<SortBuilder> sortBuilders = new ArrayList<SortBuilder>();
 	private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
 	private HighlightBuilder.Field[] highlightFields;
@@ -67,6 +68,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+    public NativeSearchQueryBuilder withScriptField(ScriptField scriptField) {
+        this.scriptFields.add(scriptField);
+        return this;
+    }
+
 	public NativeSearchQueryBuilder withFacet(FacetRequest facetRequest) {
 		facetRequests.add(facetRequest);
 		return this;
@@ -92,7 +98,7 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withFields(String... fields) {
+    public NativeSearchQueryBuilder withFields(String... fields) {
 		this.fields = fields;
 		return this;
 	}

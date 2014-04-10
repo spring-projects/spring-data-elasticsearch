@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.ScriptedField;
 
 /**
  * @author Rizwan Idrees
@@ -33,6 +34,8 @@ public class SampleEntity {
 	private String type;
 	private String message;
 	private int rate;
+    @ScriptedField
+    private Long scriptedRate;
 	private boolean available;
 	private String highlightedMessage;
 	@Version
@@ -69,6 +72,14 @@ public class SampleEntity {
 	public void setRate(int rate) {
 		this.rate = rate;
 	}
+
+    public Long getScriptedRate() {
+        return scriptedRate;
+    }
+
+    public void setScriptedRate(Long scriptedRate) {
+        this.scriptedRate = scriptedRate;
+    }
 
 	public boolean isAvailable() {
 		return available;
