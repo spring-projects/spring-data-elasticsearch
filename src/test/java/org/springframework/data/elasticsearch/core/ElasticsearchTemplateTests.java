@@ -32,9 +32,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -53,12 +51,15 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Franck Marchand
+ * @author Abdul Mohammed
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class ElasticsearchTemplateTests {
 
 	private static final String INDEX_NAME = "test-index";
+	private static final String INDEX_1_NAME = "test-index-1";
+	private static final String INDEX_2_NAME = "test-index-2";
 	private static final String TYPE_NAME = "test-type";
 
 	@Autowired
@@ -68,8 +69,22 @@ public class ElasticsearchTemplateTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
-		elasticsearchTemplate.refresh(SampleEntity.class, true);
+        elasticsearchTemplate.deleteIndex(INDEX_1_NAME);
+        elasticsearchTemplate.deleteIndex(INDEX_2_NAME);
+        elasticsearchTemplate.refresh(SampleEntity.class, true);
 	}
+
+    @After
+    /** // doing a cleanup to ensure that no indexes are left behind after the test run */
+    public void after() {
+
+        // it is safe to call deleteIndex as it checks for index existance before deleting it
+        elasticsearchTemplate.deleteIndex(INDEX_NAME);
+        elasticsearchTemplate.deleteIndex(INDEX_1_NAME);
+        elasticsearchTemplate.deleteIndex(INDEX_2_NAME);
+
+    }
+
 
 	@Test
 	public void shouldReturnCountForGivenSearchQuery() {
@@ -1503,6 +1518,43 @@ public class ElasticsearchTemplateTests {
 		assertThat((String) map.get("index.number_of_shards"), is("2"));
 		assertThat((String) map.get("index.store.type"), is("memory"));
 	}
+
+
+    @Test
+    public void shouldTestResultsAcrossMultipleIndices() {
+        // given
+        String documentId1 = randomNumeric(5);
+        SampleEntity sampleEntity1 = new SampleEntityBuilder(documentId1).message("some message")
+                .version(System.currentTimeMillis()).build();
+
+        IndexQuery indexQuery1 = new IndexQueryBuilder().withId(sampleEntity1.getId())
+                .withIndexName("test-index-1")
+                .withObject(sampleEntity1)
+                .build();
+
+        String documentId2 = randomNumeric(5);
+        SampleEntity sampleEntity2 = new SampleEntityBuilder(documentId2).message("some test message")
+                .version(System.currentTimeMillis()).build();
+
+        IndexQuery indexQuery2 = new IndexQueryBuilder().withId(sampleEntity2.getId())
+                .withIndexName("test-index-2")
+                .withObject(sampleEntity2)
+                .build();
+
+        elasticsearchTemplate.bulkIndex(Arrays.asList(indexQuery1, indexQuery2));
+        elasticsearchTemplate.refresh("test-index-1", true);
+        elasticsearchTemplate.refresh("test-index-2", true);
+
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(matchAllQuery())
+                .withIndices("test-index-1", "test-index-2")
+                .build();
+        // when
+        List<SampleEntity> sampleEntities = elasticsearchTemplate.queryForList(searchQuery, SampleEntity.class);
+
+        // then
+        assertThat(sampleEntities.size(), is(equalTo(2)));
+    }
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
 		return new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity).build();
