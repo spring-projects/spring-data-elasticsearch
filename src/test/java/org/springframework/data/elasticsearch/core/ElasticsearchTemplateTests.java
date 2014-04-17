@@ -23,6 +23,7 @@ import static org.junit.Assert.*;
 
 import java.util.*;
 
+import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -35,13 +36,18 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.builder.SampleEntityBuilder;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.entities.HetroEntity1;
+import org.springframework.data.elasticsearch.entities.HetroEntity2;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.entities.SampleMappingEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -74,8 +80,10 @@ public class ElasticsearchTemplateTests {
         elasticsearchTemplate.refresh(SampleEntity.class, true);
 	}
 
-    @After
+
+    // @After
     /** // doing a cleanup to ensure that no indexes are left behind after the test run */
+    /**
     public void after() {
 
         // it is safe to call deleteIndex as it checks for index existance before deleting it
@@ -83,7 +91,7 @@ public class ElasticsearchTemplateTests {
         elasticsearchTemplate.deleteIndex(INDEX_1_NAME);
         elasticsearchTemplate.deleteIndex(INDEX_2_NAME);
 
-    }
+    }**/
 
 
 	@Test
@@ -706,7 +714,6 @@ public class ElasticsearchTemplateTests {
 	@Test
 	public void shouldReturnListForGivenStringQuery() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntityBuilder(documentId)
@@ -727,7 +734,7 @@ public class ElasticsearchTemplateTests {
 				.rate(15)
 				.version(System.currentTimeMillis()).build();
 
-		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+        List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		// when
 		elasticsearchTemplate.bulkIndex(indexQueries);
@@ -1556,6 +1563,47 @@ public class ElasticsearchTemplateTests {
         assertThat(sampleEntities.size(), is(equalTo(2)));
     }
 
+    @Test
+    /**
+     * This is basically a demonstration to show composing entities out of heterogeneous indexes.
+     */
+    public void shouldComposeObjectsReturnedFromHeterogeneousIndexes() {
+
+        // Given
+
+        HetroEntity1 entity1 = new HetroEntity1(randomNumeric(3), "aFirstName");
+        HetroEntity2 entity2 = new HetroEntity2(randomNumeric(4), "aLastName");
+
+        IndexQuery idxQuery1 = new IndexQueryBuilder().withIndexName(INDEX_1_NAME).withId(entity1.getId()).withObject(entity1).build();
+        IndexQuery idxQuery2 = new IndexQueryBuilder().withIndexName(INDEX_2_NAME).withId(entity2.getId()).withObject(entity2).build();
+
+
+        elasticsearchTemplate.bulkIndex(Arrays.asList(idxQuery1, idxQuery2));
+        elasticsearchTemplate.refresh(INDEX_1_NAME, true);
+        elasticsearchTemplate.refresh(INDEX_2_NAME, true);
+
+        // When
+
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withTypes("hetro").withIndices(INDEX_1_NAME, INDEX_2_NAME).build();
+        Page<ResultAggregator> page = elasticsearchTemplate.queryForPage(searchQuery, ResultAggregator.class, new SearchResultMapper() {
+            @Override
+            public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+                List<ResultAggregator> values = new ArrayList<ResultAggregator>();
+                for (SearchHit searchHit : response.getHits()) {
+                    String id = String.valueOf(searchHit.getSource().get("id"));
+                    String firstName = StringUtils.isNotEmpty((String)searchHit.getSource().get("firstName"))?(String)searchHit.getSource().get("firstName"):"";
+                    String lastName = StringUtils.isNotEmpty((String)searchHit.getSource().get("lastName"))?(String)searchHit.getSource().get("lastName"):"";
+                    values.add(new ResultAggregator(id, firstName, lastName));
+                }
+                return new FacetedPageImpl<T>((List<T>) values);
+            }
+        });
+
+        assertThat(page.getTotalElements(), is(2l));
+
+    }
+
+
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
 		return new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity).build();
 	}
@@ -1567,4 +1615,23 @@ public class ElasticsearchTemplateTests {
 		}
 		return indexQueries;
 	}
+
+    @Document(indexName = INDEX_2_NAME, replicas = 0, shards = 1)
+    class ResultAggregator {
+
+        private String id;
+        private String firstName;
+        private String lastName;
+
+        ResultAggregator(String id, String firstName, String lastName) {
+            this.id = id;
+            this.firstName = firstName;
+            this.lastName = lastName;
+        }
+
+    }
+
+
+
+
 }
