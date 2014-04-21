@@ -68,7 +68,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.refreshInterval = typeInformation.getType().getAnnotation(Document.class).refreshInterval();
 			this.indexStoreType = typeInformation.getType().getAnnotation(Document.class).indexStoreType();
 		}
-		if(clazz.isAnnotationPresent(Setting.class)) {
+		if (clazz.isAnnotationPresent(Setting.class)) {
 			this.settingPath = typeInformation.getType().getAnnotation(Setting.class).settingPath();
 		}
 	}

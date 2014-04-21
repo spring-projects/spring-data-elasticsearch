@@ -19,7 +19,7 @@ import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.*;
 import static org.elasticsearch.action.search.SearchType.*;
 import static org.elasticsearch.client.Requests.*;
-import static org.elasticsearch.cluster.metadata.AliasAction.Type.ADD;
+import static org.elasticsearch.cluster.metadata.AliasAction.Type.*;
 import static org.elasticsearch.common.collect.Sets.*;
 import static org.elasticsearch.index.VersionType.*;
 import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
@@ -32,7 +32,6 @@ import java.util.*;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
-import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingRequest;
@@ -345,7 +344,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 		return updateRequestBuilder.execute().actionGet();
 	}
 
-
 	@Override
 	public void bulkIndex(List<IndexQuery> queries) {
 		BulkRequestBuilder bulkRequest = client.prepareBulk();
@@ -563,11 +561,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 	}
 
 	private <T> boolean createIndexWithSettings(Class<T> clazz) {
-		if(clazz.isAnnotationPresent(Setting.class)) {
+		if (clazz.isAnnotationPresent(Setting.class)) {
 			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
-			if(isNotBlank(settingPath)) {
+			if (isNotBlank(settingPath)) {
 				String settings = readFileFromClasspath(settingPath);
-				if(isNotBlank(settings)) {
+				if (isNotBlank(settings)) {
 					return createIndex(getPersistentEntityFor(clazz).getIndexName(), settings);
 				}
 			} else {
@@ -576,7 +574,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 		}
 		return createIndex(getPersistentEntityFor(clazz).getIndexName(), getDefaultSettings(getPersistentEntityFor(clazz)));
 	}
-
 
 	@Override
 	public boolean createIndex(String indexName, Object settings) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,11 +33,11 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -75,24 +75,10 @@ public class ElasticsearchTemplateTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
-        elasticsearchTemplate.deleteIndex(INDEX_1_NAME);
-        elasticsearchTemplate.deleteIndex(INDEX_2_NAME);
-        elasticsearchTemplate.refresh(SampleEntity.class, true);
+		elasticsearchTemplate.deleteIndex(INDEX_1_NAME);
+		elasticsearchTemplate.deleteIndex(INDEX_2_NAME);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
 	}
-
-
-    // @After
-    /** // doing a cleanup to ensure that no indexes are left behind after the test run */
-    /**
-    public void after() {
-
-        // it is safe to call deleteIndex as it checks for index existance before deleting it
-        elasticsearchTemplate.deleteIndex(INDEX_NAME);
-        elasticsearchTemplate.deleteIndex(INDEX_1_NAME);
-        elasticsearchTemplate.deleteIndex(INDEX_2_NAME);
-
-    }**/
-
 
 	@Test
 	public void shouldReturnCountForGivenSearchQuery() {
@@ -734,7 +720,7 @@ public class ElasticsearchTemplateTests {
 				.rate(15)
 				.version(System.currentTimeMillis()).build();
 
-        List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+		List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		// when
 		elasticsearchTemplate.bulkIndex(indexQueries);
@@ -1045,7 +1031,6 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.removeAlias(aliasQuery2);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 	}
-
 
 
 	@Test
@@ -1527,81 +1512,79 @@ public class ElasticsearchTemplateTests {
 	}
 
 
-    @Test
-    public void shouldTestResultsAcrossMultipleIndices() {
-        // given
-        String documentId1 = randomNumeric(5);
-        SampleEntity sampleEntity1 = new SampleEntityBuilder(documentId1).message("some message")
-                .version(System.currentTimeMillis()).build();
+	@Test
+	public void shouldTestResultsAcrossMultipleIndices() {
+		// given
+		String documentId1 = randomNumeric(5);
+		SampleEntity sampleEntity1 = new SampleEntityBuilder(documentId1).message("some message")
+				.version(System.currentTimeMillis()).build();
 
-        IndexQuery indexQuery1 = new IndexQueryBuilder().withId(sampleEntity1.getId())
-                .withIndexName("test-index-1")
-                .withObject(sampleEntity1)
-                .build();
+		IndexQuery indexQuery1 = new IndexQueryBuilder().withId(sampleEntity1.getId())
+				.withIndexName("test-index-1")
+				.withObject(sampleEntity1)
+				.build();
 
-        String documentId2 = randomNumeric(5);
-        SampleEntity sampleEntity2 = new SampleEntityBuilder(documentId2).message("some test message")
-                .version(System.currentTimeMillis()).build();
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntityBuilder(documentId2).message("some test message")
+				.version(System.currentTimeMillis()).build();
 
-        IndexQuery indexQuery2 = new IndexQueryBuilder().withId(sampleEntity2.getId())
-                .withIndexName("test-index-2")
-                .withObject(sampleEntity2)
-                .build();
+		IndexQuery indexQuery2 = new IndexQueryBuilder().withId(sampleEntity2.getId())
+				.withIndexName("test-index-2")
+				.withObject(sampleEntity2)
+				.build();
 
-        elasticsearchTemplate.bulkIndex(Arrays.asList(indexQuery1, indexQuery2));
-        elasticsearchTemplate.refresh("test-index-1", true);
-        elasticsearchTemplate.refresh("test-index-2", true);
+		elasticsearchTemplate.bulkIndex(Arrays.asList(indexQuery1, indexQuery2));
+		elasticsearchTemplate.refresh("test-index-1", true);
+		elasticsearchTemplate.refresh("test-index-2", true);
 
-        SearchQuery searchQuery = new NativeSearchQueryBuilder()
-                .withQuery(matchAllQuery())
-                .withIndices("test-index-1", "test-index-2")
-                .build();
-        // when
-        List<SampleEntity> sampleEntities = elasticsearchTemplate.queryForList(searchQuery, SampleEntity.class);
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(matchAllQuery())
+				.withIndices("test-index-1", "test-index-2")
+				.build();
+		// when
+		List<SampleEntity> sampleEntities = elasticsearchTemplate.queryForList(searchQuery, SampleEntity.class);
 
-        // then
-        assertThat(sampleEntities.size(), is(equalTo(2)));
-    }
+		// then
+		assertThat(sampleEntities.size(), is(equalTo(2)));
+	}
 
-    @Test
-    /**
-     * This is basically a demonstration to show composing entities out of heterogeneous indexes.
-     */
-    public void shouldComposeObjectsReturnedFromHeterogeneousIndexes() {
+	@Test
+	/**
+	 * This is basically a demonstration to show composing entities out of heterogeneous indexes.
+	 */
+	public void shouldComposeObjectsReturnedFromHeterogeneousIndexes() {
 
-        // Given
+		// Given
 
-        HetroEntity1 entity1 = new HetroEntity1(randomNumeric(3), "aFirstName");
-        HetroEntity2 entity2 = new HetroEntity2(randomNumeric(4), "aLastName");
+		HetroEntity1 entity1 = new HetroEntity1(randomNumeric(3), "aFirstName");
+		HetroEntity2 entity2 = new HetroEntity2(randomNumeric(4), "aLastName");
 
-        IndexQuery idxQuery1 = new IndexQueryBuilder().withIndexName(INDEX_1_NAME).withId(entity1.getId()).withObject(entity1).build();
-        IndexQuery idxQuery2 = new IndexQueryBuilder().withIndexName(INDEX_2_NAME).withId(entity2.getId()).withObject(entity2).build();
+		IndexQuery idxQuery1 = new IndexQueryBuilder().withIndexName(INDEX_1_NAME).withId(entity1.getId()).withObject(entity1).build();
+		IndexQuery idxQuery2 = new IndexQueryBuilder().withIndexName(INDEX_2_NAME).withId(entity2.getId()).withObject(entity2).build();
 
+		elasticsearchTemplate.bulkIndex(Arrays.asList(idxQuery1, idxQuery2));
+		elasticsearchTemplate.refresh(INDEX_1_NAME, true);
+		elasticsearchTemplate.refresh(INDEX_2_NAME, true);
 
-        elasticsearchTemplate.bulkIndex(Arrays.asList(idxQuery1, idxQuery2));
-        elasticsearchTemplate.refresh(INDEX_1_NAME, true);
-        elasticsearchTemplate.refresh(INDEX_2_NAME, true);
+		// When
 
-        // When
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withTypes("hetro").withIndices(INDEX_1_NAME, INDEX_2_NAME).build();
+		Page<ResultAggregator> page = elasticsearchTemplate.queryForPage(searchQuery, ResultAggregator.class, new SearchResultMapper() {
+			@Override
+			public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				List<ResultAggregator> values = new ArrayList<ResultAggregator>();
+				for (SearchHit searchHit : response.getHits()) {
+					String id = String.valueOf(searchHit.getSource().get("id"));
+					String firstName = StringUtils.isNotEmpty((String) searchHit.getSource().get("firstName")) ? (String) searchHit.getSource().get("firstName") : "";
+					String lastName = StringUtils.isNotEmpty((String) searchHit.getSource().get("lastName")) ? (String) searchHit.getSource().get("lastName") : "";
+					values.add(new ResultAggregator(id, firstName, lastName));
+				}
+				return new FacetedPageImpl<T>((List<T>) values);
+			}
+		});
 
-        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withTypes("hetro").withIndices(INDEX_1_NAME, INDEX_2_NAME).build();
-        Page<ResultAggregator> page = elasticsearchTemplate.queryForPage(searchQuery, ResultAggregator.class, new SearchResultMapper() {
-            @Override
-            public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-                List<ResultAggregator> values = new ArrayList<ResultAggregator>();
-                for (SearchHit searchHit : response.getHits()) {
-                    String id = String.valueOf(searchHit.getSource().get("id"));
-                    String firstName = StringUtils.isNotEmpty((String)searchHit.getSource().get("firstName"))?(String)searchHit.getSource().get("firstName"):"";
-                    String lastName = StringUtils.isNotEmpty((String)searchHit.getSource().get("lastName"))?(String)searchHit.getSource().get("lastName"):"";
-                    values.add(new ResultAggregator(id, firstName, lastName));
-                }
-                return new FacetedPageImpl<T>((List<T>) values);
-            }
-        });
-
-        assertThat(page.getTotalElements(), is(2l));
-
-    }
+		assertThat(page.getTotalElements(), is(2l));
+	}
 
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
@@ -1616,22 +1599,17 @@ public class ElasticsearchTemplateTests {
 		return indexQueries;
 	}
 
-    @Document(indexName = INDEX_2_NAME, replicas = 0, shards = 1)
-    class ResultAggregator {
+	@Document(indexName = INDEX_2_NAME, replicas = 0, shards = 1)
+	class ResultAggregator {
 
-        private String id;
-        private String firstName;
-        private String lastName;
+		private String id;
+		private String firstName;
+		private String lastName;
 
-        ResultAggregator(String id, String firstName, String lastName) {
-            this.id = id;
-            this.firstName = firstName;
-            this.lastName = lastName;
-        }
-
-    }
-
-
-
-
+		ResultAggregator(String id, String firstName, String lastName) {
+			this.id = id;
+			this.firstName = firstName;
+			this.lastName = lastName;
+		}
+	}
 }

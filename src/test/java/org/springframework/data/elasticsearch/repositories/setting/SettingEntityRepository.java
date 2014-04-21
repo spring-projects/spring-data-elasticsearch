@@ -23,6 +23,6 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchCrudReposi
  *
  * @author Mohsin Husen
  */
-public interface SettingEntityRepository extends ElasticsearchCrudRepository<SettingEntity, String>{
+public interface SettingEntityRepository extends ElasticsearchCrudRepository<SettingEntity, String> {
 
 }

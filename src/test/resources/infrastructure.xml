@@ -7,6 +7,6 @@
 
     <elasticsearch:node-client id="client" local="true" cluster-name="testCluster" http-enabled="false"/>
 
-    <!--<elasticsearch:transport-client id="client" cluster-name="elasticsearch" cluster-nodes="127.0.1.1:9300" />-->
+    <!--<elasticsearch:transport-client id="client" cluster-name="elasticsearch" cluster-nodes="127.0.0.1:9300" />-->
 
 </beans>

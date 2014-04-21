@@ -38,7 +38,8 @@ public class SimpleElasticsearchPersistentEntityTests {
 		SimpleElasticsearchPersistentProperty persistentProperty = new SimpleElasticsearchPersistentProperty(
 				EntityWithWrongVersionType.class.getDeclaredField("version"), new PropertyDescriptor("version",
 				EntityWithWrongVersionType.class), new SimpleElasticsearchPersistentEntity<EntityWithWrongVersionType>(
-				typeInformation), new SimpleTypeHolder());
+				typeInformation), new SimpleTypeHolder()
+		);
 
 		// when
 		new SimpleElasticsearchPersistentEntity(typeInformation).addPersistentProperty(persistentProperty);
@@ -53,13 +54,15 @@ public class SimpleElasticsearchPersistentEntityTests {
 				EntityWithMultipleVersionField.class.getDeclaredField("version1"), new PropertyDescriptor("version1",
 				EntityWithMultipleVersionField.class),
 				new SimpleElasticsearchPersistentEntity<EntityWithMultipleVersionField>(typeInformation),
-				new SimpleTypeHolder());
+				new SimpleTypeHolder()
+		);
 
 		SimpleElasticsearchPersistentProperty persistentProperty2 = new SimpleElasticsearchPersistentProperty(
 				EntityWithMultipleVersionField.class.getDeclaredField("version2"), new PropertyDescriptor("version2",
 				EntityWithMultipleVersionField.class),
 				new SimpleElasticsearchPersistentEntity<EntityWithMultipleVersionField>(typeInformation),
-				new SimpleTypeHolder());
+				new SimpleTypeHolder()
+		);
 
 		SimpleElasticsearchPersistentEntity simpleElasticsearchPersistentEntity = new SimpleElasticsearchPersistentEntity(
 				typeInformation);
