@@ -443,6 +443,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 			requestBuilder.setPostFilter(searchQuery.getFilter());
 		}
 
+		if(isNotEmpty(searchQuery.getFields())) {
+			requestBuilder.addFields(toArray(searchQuery.getFields()));
+		}
+
 		if (noFields) {
 			requestBuilder.setNoFields();
 		}

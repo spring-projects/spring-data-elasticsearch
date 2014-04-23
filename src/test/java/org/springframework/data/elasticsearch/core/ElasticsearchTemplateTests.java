@@ -594,6 +594,56 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
 
+	/*
+	DATAES-84
+	*/
+	@Test
+	public void shouldReturnResultsWithScanAndScrollForSpecifiedFields() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		// then
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME)
+				.withFields("message")
+				.withPageable(new PageRequest(0, 10))
+				.build();
+
+		String scrollId = elasticsearchTemplate.scan(searchQuery, 5000, false);
+		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		boolean hasRecords = true;
+		while (hasRecords) {
+			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new SearchResultMapper() {
+				@Override
+				public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+					List<SampleEntity> result = new ArrayList<SampleEntity>();
+					for(SearchHit searchHit : response.getHits()){
+						String message = searchHit.getFields().get("message").getValue();
+						SampleEntity sampleEntity = new SampleEntity();
+						sampleEntity.setId(searchHit.getId());
+						sampleEntity.setMessage(message);
+						result.add(sampleEntity);
+					}
+
+					if(result.size() > 0) {
+						return new FacetedPageImpl<T>((List<T>) result);
+					}
+					return null;
+				}
+			});
+			if (page != null) {
+				sampleEntities.addAll(page.getContent());
+			} else {
+				hasRecords = false;
+			}
+		}
+		assertThat(sampleEntities.size(), is(equalTo(30)));
+	}
+
 	@Test
 	public void shouldReturnResultsForScanAndScrollWithCustomResultMapper() {
 		//given
@@ -897,141 +947,6 @@ public class ElasticsearchTemplateTests {
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		assertThat(sampleEntities.getTotalElements(), equalTo(0L));
 	}
-
-	@Test
-	public void shouldAddAlias() {
-		// given
-		elasticsearchTemplate.createIndex(SampleEntity.class);
-		String aliasName = "test-alias";
-		AliasQuery aliasQuery = new AliasBuilder()
-				.withIndexName(INDEX_NAME)
-				.withAliasName(aliasName).build();
-		// when
-		elasticsearchTemplate.addAlias(aliasQuery);
-		// then
-		Set<String> aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME);
-		assertThat(aliases, is(notNullValue()));
-		assertThat(aliases.contains(aliasName), is(true));
-	}
-
-	@Test
-	public void shouldRemoveAlias() {
-		// given
-		elasticsearchTemplate.createIndex(SampleEntity.class);
-		String indexName = INDEX_NAME;
-		String aliasName = "test-alias";
-		AliasQuery aliasQuery = new AliasBuilder()
-				.withIndexName(indexName)
-				.withAliasName(aliasName).build();
-		// when
-		elasticsearchTemplate.addAlias(aliasQuery);
-		Set<String> aliases = elasticsearchTemplate.queryForAlias(indexName);
-		assertThat(aliases, is(notNullValue()));
-		assertThat(aliases.contains(aliasName), is(true));
-		// then
-		elasticsearchTemplate.removeAlias(aliasQuery);
-		aliases = elasticsearchTemplate.queryForAlias(indexName);
-		assertThat(aliases, is(notNullValue()));
-		assertThat(aliases.size(), is(0));
-	}
-
-	/*
-	DATAES-70
-	*/
-	@Test
-	public void shouldAddAliasWithGivenRoutingValue() {
-		//given
-		String indexName = INDEX_NAME;
-		String alias = "test-alias";
-
-		AliasQuery aliasQuery = new AliasBuilder()
-				.withIndexName(indexName)
-				.withAliasName(alias)
-				.withRouting("0").build();
-
-		//when
-		elasticsearchTemplate.addAlias(aliasQuery);
-
-		String documentId = randomNumeric(5);
-		SampleEntity sampleEntity = new SampleEntityBuilder(documentId)
-				.message("some message")
-				.version(System.currentTimeMillis()).build();
-
-		IndexQuery indexQuery = new IndexQueryBuilder()
-				.withIndexName(alias)
-				.withId(sampleEntity.getId())
-				.withObject(sampleEntity).build();
-
-		elasticsearchTemplate.index(indexQuery);
-		elasticsearchTemplate.refresh(SampleEntity.class, true);
-
-		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withIndices(alias).build();
-		long count = elasticsearchTemplate.count(query, SampleEntity.class);
-		//then
-		Set<String> aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME);
-		assertThat(aliases, is(notNullValue()));
-		assertThat(aliases.contains(alias), is(true));
-		assertThat(count, is(1L));
-
-		//cleanup
-		elasticsearchTemplate.removeAlias(aliasQuery);
-		elasticsearchTemplate.refresh(SampleEntity.class, true);
-	}
-
-	/*
-	DATAES-70
-	*/
-	@Test
-	public void shouldAddAliasForVariousRoutingValues() {
-		//given
-		String indexName = INDEX_NAME;
-		String alias1 = "test-alias-1";
-		String alias2 = "test-alias-2";
-
-		AliasQuery aliasQuery1 = new AliasBuilder()
-				.withIndexName(indexName)
-				.withAliasName(alias1)
-				.withIndexRouting("0").build();
-
-		AliasQuery aliasQuery2 = new AliasBuilder()
-				.withIndexName(indexName)
-				.withAliasName(alias2)
-				.withSearchRouting("1").build();
-
-		//when
-		elasticsearchTemplate.addAlias(aliasQuery1);
-		elasticsearchTemplate.addAlias(aliasQuery2);
-
-		String documentId = randomNumeric(5);
-		SampleEntity sampleEntity = new SampleEntityBuilder(documentId)
-				.message("some message")
-				.version(System.currentTimeMillis()).build();
-
-		IndexQuery indexQuery = new IndexQueryBuilder()
-				.withIndexName(alias1)
-				.withId(sampleEntity.getId())
-				.withObject(sampleEntity).build();
-
-		elasticsearchTemplate.index(indexQuery);
-		elasticsearchTemplate.refresh(SampleEntity.class, true);
-
-		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withIndices(alias2).build();
-		long count = elasticsearchTemplate.count(query, SampleEntity.class);
-		// then
-		Set<String> aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME);
-		assertThat(aliases, is(notNullValue()));
-		assertThat(aliases.contains(alias1), is(true));
-		assertThat(aliases.contains(alias2), is(true));
-		assertThat(count, is(0L));
-
-		//cleanup
-		elasticsearchTemplate.removeAlias(aliasQuery1);
-		elasticsearchTemplate.removeAlias(aliasQuery2);
-		elasticsearchTemplate.refresh(SampleEntity.class, true);
-	}
-
 
 	@Test
 	public void shouldIndexDocumentForSpecifiedSource() {
@@ -1507,7 +1422,7 @@ public class ElasticsearchTemplateTests {
 		assertThat(map.containsKey("index.store.type"), is(true));
 		assertThat((String) map.get("index.refresh_interval"), is("-1"));
 		assertThat((String) map.get("index.number_of_replicas"), is("0"));
-		assertThat((String) map.get("index.number_of_shards"), is("2"));
+		assertThat((String) map.get("index.number_of_shards"), is("1"));
 		assertThat((String) map.get("index.store.type"), is("memory"));
 	}
 
