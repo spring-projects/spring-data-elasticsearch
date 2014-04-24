@@ -109,4 +109,18 @@ public class SettingEntityRepositoryTest {
 		assertThat(entityList.size(), is(1));
 		assertThat(entityList.get(0).getEmail(), is(settingEntity1.getEmail()));
 	}
+
+	@Test
+	public void shouldGetMappingForGivenIndexAndType() {
+		//given
+		//delete , create and apply mapping in before method
+		//when
+		Map mapping = elasticsearchTemplate.getMapping(SettingEntity.class);
+		//then
+		Map properties = (Map) mapping.get("properties");
+		assertThat(mapping, is(notNullValue()));
+		assertThat(properties, is(notNullValue()));
+		assertThat(((String) ((Map) properties.get("email")).get("type")), is("string"));
+		assertThat((String) ((Map)properties.get("email")).get("analyzer"), is("emailAnalyzer"));
+	}
 }

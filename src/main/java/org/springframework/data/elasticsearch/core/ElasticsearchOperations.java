@@ -70,6 +70,22 @@ public interface ElasticsearchOperations {
 	<T> boolean putMapping(Class<T> clazz);
 
 	/**
+	 * Get mapping for a class
+	 *
+	 * @param clazz
+	 * @param <T>
+	 */
+	<T> Map getMapping(Class<T> clazz);
+
+	/**
+	 * Get mapping for a given indexName and type
+	 *
+	 * @param indexName
+	 * @param type
+	 */
+	Map getMapping(String indexName, String type);
+
+	/**
 	 * Get settings for a given indexName
 	 *
 	 * @param indexName
