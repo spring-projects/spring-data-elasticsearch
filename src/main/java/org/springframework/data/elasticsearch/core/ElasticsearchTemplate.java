@@ -139,16 +139,35 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 	@Override
 	public <T> boolean putMapping(Class<T> clazz) {
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
-		PutMappingRequestBuilder requestBuilder = client.admin().indices()
-				.preparePutMapping(persistentEntity.getIndexName()).setType(persistentEntity.getIndexType());
-
+		XContentBuilder xContentBuilder = null;
 		try {
-			XContentBuilder xContentBuilder = buildMapping(clazz, persistentEntity.getIndexType(), persistentEntity
+			xContentBuilder = buildMapping(clazz, persistentEntity.getIndexType(), persistentEntity
 					.getIdProperty().getFieldName(), persistentEntity.getParentType());
-			return requestBuilder.setSource(xContentBuilder).execute().actionGet().isAcknowledged();
 		} catch (Exception e) {
 			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
 		}
+		return putMapping(clazz, xContentBuilder);
+	}
+
+	@Override
+	public <T> boolean putMapping(Class<T> clazz, Object mapping) {
+		return putMapping(getPersistentEntityFor(clazz).getIndexName(), getPersistentEntityFor(clazz).getIndexType(), mapping);
+	}
+
+	@Override
+	public boolean putMapping(String indexName, String type, Object mapping) {
+		Assert.notNull(indexName, "No index defined for putMapping()");
+		Assert.notNull(type, "No type defined for putMapping()");
+		PutMappingRequestBuilder requestBuilder = client.admin().indices()
+				.preparePutMapping(indexName).setType(type);
+		if (mapping instanceof String) {
+			requestBuilder.setSource(String.valueOf(mapping));
+		} else if (mapping instanceof Map) {
+			requestBuilder.setSource((Map) mapping);
+		} else if (mapping instanceof XContentBuilder) {
+			requestBuilder.setSource((XContentBuilder) mapping);
+		}
+		return requestBuilder.execute().actionGet().isAcknowledged();
 	}
 
 	@Override

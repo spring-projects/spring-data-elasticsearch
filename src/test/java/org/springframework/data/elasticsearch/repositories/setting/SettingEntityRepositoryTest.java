@@ -123,4 +123,29 @@ public class SettingEntityRepositoryTest {
 		assertThat(((String) ((Map) properties.get("email")).get("type")), is("string"));
 		assertThat((String) ((Map)properties.get("email")).get("analyzer"), is("emailAnalyzer"));
 	}
+
+	@Test
+	public void shouldCreateMappingWithSpecifiedMappings() {
+		//given
+		elasticsearchTemplate.deleteIndex(SettingEntity.class);
+		elasticsearchTemplate.createIndex(SettingEntity.class);
+		elasticsearchTemplate.refresh(SettingEntity.class, true);
+		//when
+		String mappings = "{\n" +
+				"    \"test-setting-type\" : {\n" +
+				"        \"properties\" : {\n" +
+				"            \"email\" : {\"type\" : \"string\", \"analyzer\" : \"emailAnalyzer\" }\n" +
+				"        }\n" +
+				"    }\n" +
+				"}";
+		elasticsearchTemplate.putMapping(SettingEntity.class, mappings);
+		elasticsearchTemplate.refresh(SettingEntity.class, true);
+		//then
+		Map mapping = elasticsearchTemplate.getMapping(SettingEntity.class);
+		Map properties = (Map) mapping.get("properties");
+		assertThat(mapping, is(notNullValue()));
+		assertThat(properties, is(notNullValue()));
+		assertThat(((String) ((Map) properties.get("email")).get("type")), is("string"));
+		assertThat((String) ((Map)properties.get("email")).get("analyzer"), is("emailAnalyzer"));
+	}
 }
