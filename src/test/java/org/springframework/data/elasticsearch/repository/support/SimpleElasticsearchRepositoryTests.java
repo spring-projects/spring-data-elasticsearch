@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.elasticsearch.common.collect.Lists;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -204,10 +204,11 @@ public class SimpleElasticsearchRepositoryTests {
 		assertThat(page.getNumberOfElements(), is(greaterThanOrEqualTo(1)));
 	}
 
+	/*
+	DATAES-82
+	*/
 	@Test
-	@Ignore
 	public void shouldFindAllByIdQuery() {
-		// todo : find solution for findAll(Iterable<Ids> ids)
 		// given
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity = new SampleEntity();
@@ -228,6 +229,8 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// then
 		assertNotNull("sample entities cant be null..", sampleEntities);
+		List<SampleEntity> entities = Lists.newArrayList(sampleEntities);
+		assertThat(entities.size(), is(2));
 	}
 
 	@Test

@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.common.collect.Lists;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,7 +119,9 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 
 	@Override
 	public Iterable<T> findAll(Iterable<ID> ids) {
-		SearchQuery query = new NativeSearchQueryBuilder().withQuery(inQuery(entityInformation.getIdAttribute(), ids))
+		Assert.notNull(ids, "ids can't be null.");
+		SearchQuery query = new NativeSearchQueryBuilder()
+				.withQuery(inQuery(entityInformation.getIdAttribute(), Lists.newArrayList(ids)))
 				.build();
 		return elasticsearchOperations.queryForPage(query, getEntityClass());
 	}
