@@ -13,16 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repositories.setting;
+package org.springframework.data.elasticsearch.annotations;
 
-import org.springframework.data.elasticsearch.entities.SettingEntity;
-import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
+import java.lang.annotation.*;
+import org.springframework.data.annotation.Persistent;
 
 /**
- * SettingEntityRepository
+ * Elasticsearch Mapping
  *
  * @author Mohsin Husen
  */
-public interface SettingEntityRepository extends ElasticsearchCrudRepository<SettingEntity, String> {
+@Persistent
+@Inherited
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE})
+public @interface Mapping {
+
+	String mappingPath() default "";
 
 }

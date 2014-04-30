@@ -75,6 +75,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
@@ -138,6 +139,17 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz) {
+		if (clazz.isAnnotationPresent(Mapping.class)) {
+			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
+			if (isNotBlank(mappingPath)) {
+				String mappings = readFileFromClasspath(mappingPath);
+				if (isNotBlank(mappings)) {
+					return putMapping(clazz, mappings);
+				}
+			} else {
+				logger.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
+			}
+		}
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
 		XContentBuilder xContentBuilder = null;
 		try {

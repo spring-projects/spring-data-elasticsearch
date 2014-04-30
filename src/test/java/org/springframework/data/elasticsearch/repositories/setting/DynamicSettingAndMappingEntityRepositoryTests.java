@@ -30,31 +30,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.entities.SettingEntity;
+import org.springframework.data.elasticsearch.entities.DynamicSettingAndMappingEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * SettingEntityRepositoryTest
+ * DynamicSettingAndMappingEntityRepositoryTests
  *
  * @author Mohsin Husen
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:dynamic-settings-test.xml")
-public class SettingEntityRepositoryTest {
+public class DynamicSettingAndMappingEntityRepositoryTests {
 
 	@Autowired
-	private SettingEntityRepository repository;
+	private DynamicSettingAndMappingEntityRepository repository;
 
 	@Autowired
 	private ElasticsearchTemplate elasticsearchTemplate;
 
 	@Before
 	public void before() {
-		elasticsearchTemplate.deleteIndex(SettingEntity.class);
-		elasticsearchTemplate.createIndex(SettingEntity.class);
-		elasticsearchTemplate.putMapping(SettingEntity.class);
-		elasticsearchTemplate.refresh(SettingEntity.class, true);
+		elasticsearchTemplate.deleteIndex(DynamicSettingAndMappingEntity.class);
+		elasticsearchTemplate.createIndex(DynamicSettingAndMappingEntity.class);
+		elasticsearchTemplate.putMapping(DynamicSettingAndMappingEntity.class);
+		elasticsearchTemplate.refresh(DynamicSettingAndMappingEntity.class, true);
 	}
 
 	/*
@@ -66,8 +66,8 @@ public class SettingEntityRepositoryTest {
 		//delete , create and apply mapping in before method
 
 		// then
-		assertThat(elasticsearchTemplate.indexExists(SettingEntity.class), is(true));
-		Map map = elasticsearchTemplate.getSetting(SettingEntity.class);
+		assertThat(elasticsearchTemplate.indexExists(DynamicSettingAndMappingEntity.class), is(true));
+		Map map = elasticsearchTemplate.getSetting(DynamicSettingAndMappingEntity.class);
 		assertThat(map.containsKey("index.number_of_replicas"), is(true));
 		assertThat(map.containsKey("index.number_of_shards"), is(true));
 		assertThat(map.containsKey("index.analysis.analyzer.emailAnalyzer.tokenizer"), is(true));
@@ -82,32 +82,32 @@ public class SettingEntityRepositoryTest {
 	@Test
 	public void shouldSearchOnGivenTokenizerUsingGivenDynamicSettingsForGivenIndex() {
 		//given
-		SettingEntity settingEntity1 = new SettingEntity();
-		settingEntity1.setId(RandomStringUtils.randomNumeric(5));
-		settingEntity1.setName("test-setting1");
-		settingEntity1.setEmail("test_setting1@test.com");
+		DynamicSettingAndMappingEntity dynamicSettingAndMappingEntity1 = new DynamicSettingAndMappingEntity();
+		dynamicSettingAndMappingEntity1.setId(RandomStringUtils.randomNumeric(5));
+		dynamicSettingAndMappingEntity1.setName("test-setting1");
+		dynamicSettingAndMappingEntity1.setEmail("test_setting1@test.com");
 
-		repository.save(settingEntity1);
+		repository.save(dynamicSettingAndMappingEntity1);
 
-		SettingEntity settingEntity2 = new SettingEntity();
-		settingEntity2.setId(RandomStringUtils.randomNumeric(5));
-		settingEntity2.setName("test-setting2");
-		settingEntity2.setEmail("test_setting2@test.com");
+		DynamicSettingAndMappingEntity dynamicSettingAndMappingEntity2 = new DynamicSettingAndMappingEntity();
+		dynamicSettingAndMappingEntity2.setId(RandomStringUtils.randomNumeric(5));
+		dynamicSettingAndMappingEntity2.setName("test-setting2");
+		dynamicSettingAndMappingEntity2.setEmail("test_setting2@test.com");
 
-		repository.save(settingEntity2);
+		repository.save(dynamicSettingAndMappingEntity2);
 
 		//when
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
-				.withQuery(QueryBuilders.termQuery("email", settingEntity1.getEmail())).build();
+				.withQuery(QueryBuilders.termQuery("email", dynamicSettingAndMappingEntity1.getEmail())).build();
 
-		long count = elasticsearchTemplate.count(searchQuery, SettingEntity.class);
-		List<SettingEntity> entityList = elasticsearchTemplate.queryForList(searchQuery, SettingEntity.class);
+		long count = elasticsearchTemplate.count(searchQuery, DynamicSettingAndMappingEntity.class);
+		List<DynamicSettingAndMappingEntity> entityList = elasticsearchTemplate.queryForList(searchQuery, DynamicSettingAndMappingEntity.class);
 
 		//then
 		assertThat(count, is(1L));
 		assertThat(entityList, is(notNullValue()));
 		assertThat(entityList.size(), is(1));
-		assertThat(entityList.get(0).getEmail(), is(settingEntity1.getEmail()));
+		assertThat(entityList.get(0).getEmail(), is(dynamicSettingAndMappingEntity1.getEmail()));
 	}
 
 	@Test
@@ -115,7 +115,7 @@ public class SettingEntityRepositoryTest {
 		//given
 		//delete , create and apply mapping in before method
 		//when
-		Map mapping = elasticsearchTemplate.getMapping(SettingEntity.class);
+		Map mapping = elasticsearchTemplate.getMapping(DynamicSettingAndMappingEntity.class);
 		//then
 		Map properties = (Map) mapping.get("properties");
 		assertThat(mapping, is(notNullValue()));
@@ -127,9 +127,9 @@ public class SettingEntityRepositoryTest {
 	@Test
 	public void shouldCreateMappingWithSpecifiedMappings() {
 		//given
-		elasticsearchTemplate.deleteIndex(SettingEntity.class);
-		elasticsearchTemplate.createIndex(SettingEntity.class);
-		elasticsearchTemplate.refresh(SettingEntity.class, true);
+		elasticsearchTemplate.deleteIndex(DynamicSettingAndMappingEntity.class);
+		elasticsearchTemplate.createIndex(DynamicSettingAndMappingEntity.class);
+		elasticsearchTemplate.refresh(DynamicSettingAndMappingEntity.class, true);
 		//when
 		String mappings = "{\n" +
 				"    \"test-setting-type\" : {\n" +
@@ -138,10 +138,26 @@ public class SettingEntityRepositoryTest {
 				"        }\n" +
 				"    }\n" +
 				"}";
-		elasticsearchTemplate.putMapping(SettingEntity.class, mappings);
-		elasticsearchTemplate.refresh(SettingEntity.class, true);
+		elasticsearchTemplate.putMapping(DynamicSettingAndMappingEntity.class, mappings);
+		elasticsearchTemplate.refresh(DynamicSettingAndMappingEntity.class, true);
 		//then
-		Map mapping = elasticsearchTemplate.getMapping(SettingEntity.class);
+		Map mapping = elasticsearchTemplate.getMapping(DynamicSettingAndMappingEntity.class);
+		Map properties = (Map) mapping.get("properties");
+		assertThat(mapping, is(notNullValue()));
+		assertThat(properties, is(notNullValue()));
+		assertThat(((String) ((Map) properties.get("email")).get("type")), is("string"));
+		assertThat((String) ((Map)properties.get("email")).get("analyzer"), is("emailAnalyzer"));
+	}
+
+	/*
+	DATAES-86
+	*/
+	@Test
+	public void shouldCreateMappingWithUsingMappingAnnotation() {
+		//given
+
+		//then
+		Map mapping = elasticsearchTemplate.getMapping(DynamicSettingAndMappingEntity.class);
 		Map properties = (Map) mapping.get("properties");
 		assertThat(mapping, is(notNullValue()));
 		assertThat(properties, is(notNullValue()));

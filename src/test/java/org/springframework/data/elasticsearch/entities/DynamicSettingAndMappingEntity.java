@@ -16,24 +16,21 @@
 package org.springframework.data.elasticsearch.entities;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.*;
 
 /**
- * Sample SettingEntity for test out dynamic setting using @Setting Annotation
+ * Sample DynamicSettingAndMappingEntity for test out dynamic setting using @Setting Annotation
  *
  * @author Mohsin Husen
  */
-@Setting(settingPath = "/settings/test-settings.json")
 @Document(indexName = "test-setting-index", type = "test-setting-type")
-public class SettingEntity {
+@Setting(settingPath = "/settings/test-settings.json")
+@Mapping(mappingPath = "/mappings/test-mappings.json")
+public class DynamicSettingAndMappingEntity {
 
 	@Id
 	private String id;
 	private String name;
-	@Field(type = FieldType.String, searchAnalyzer = "emailAnalyzer", indexAnalyzer = "emailAnalyzer")
 	private String email;
 
 	public String getId() {
