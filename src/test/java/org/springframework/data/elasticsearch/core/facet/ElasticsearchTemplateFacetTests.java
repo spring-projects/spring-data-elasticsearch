@@ -474,6 +474,42 @@ public class ElasticsearchTemplateFacetTests {
 	}
 
 	@Test
+	public void shouldReturnKeyValueRangeFacetForStringValuesInGivenQuery() {
+		// given
+		String facetName = "rangeScoreOverYears";
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withFacet(
+						new RangeFacetRequestBuilder(facetName).fields(PUBLISHED_YEARS, "score")
+								.to("2000").range("2000", "2002").from("2002").build()
+				).build();
+		// when
+		FacetedPage<ArticleEntity> result = elasticsearchTemplate.queryForPage(searchQuery, ArticleEntity.class);
+		// then
+		assertThat(result.getNumberOfElements(), is(equalTo(4)));
+
+		RangeResult facet = (RangeResult) result.getFacet(facetName);
+		assertThat(facet.getRanges().size(), is(equalTo(3)));
+
+		Range range = facet.getRanges().get(0);
+		assertThat(range.getFrom(), nullValue());
+		assertThat(range.getTo(), is((double) YEAR_2000));
+		assertThat(range.getCount(), is(0L));
+		assertThat(range.getTotal(), is(0.0));
+
+		range = facet.getRanges().get(1);
+		assertThat(range.getFrom(), is((double) YEAR_2000));
+		assertThat(range.getTo(), is((double) YEAR_2002));
+		assertThat(range.getCount(), is(3L));
+		assertThat(range.getTotal(), is(90.0));
+
+		range = facet.getRanges().get(2);
+		assertThat(range.getFrom(), is((double) YEAR_2002));
+		assertThat(range.getTo(), nullValue());
+		assertThat(range.getCount(), is(1L));
+		assertThat(range.getTotal(), is(40.0));
+	}
+
+	@Test
 	public void shouldReturnStatisticalFacetForGivenQuery() {
 		// given
 		String facetName = "statPublishedYear";

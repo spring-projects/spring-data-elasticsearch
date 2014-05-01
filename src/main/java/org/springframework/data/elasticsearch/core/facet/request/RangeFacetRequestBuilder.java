@@ -46,12 +46,27 @@ public class RangeFacetRequestBuilder {
 		return this;
 	}
 
+	public RangeFacetRequestBuilder range(String from, String to) {
+		result.range(from, to);
+		return this;
+	}
+
 	public RangeFacetRequestBuilder from(double from) {
 		result.range(from, null);
 		return this;
 	}
 
 	public RangeFacetRequestBuilder to(double to) {
+		result.range(null, to);
+		return this;
+	}
+
+	public RangeFacetRequestBuilder from(String from) {
+		result.range(from, null);
+		return this;
+	}
+
+	public RangeFacetRequestBuilder to(String to) {
 		result.range(null, to);
 		return this;
 	}

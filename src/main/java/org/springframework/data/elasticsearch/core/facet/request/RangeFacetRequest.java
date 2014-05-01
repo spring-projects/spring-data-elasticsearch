@@ -29,6 +29,7 @@ import org.springframework.util.Assert;
  * Range facet for numeric fields
  *
  * @author Artur Konczak
+ * @author Akos Bordas
  */
 public class RangeFacetRequest extends AbstractFacetRequest {
 
@@ -36,8 +37,7 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 	private String keyField;
 	private String valueField;
 
-	private List<Double> from = new ArrayList<Double>();
-	private List<Double> to = new ArrayList<Double>();
+	private List<Entry> entries = new ArrayList<Entry>();
 
 	public RangeFacetRequest(String name) {
 		super(name);
@@ -53,17 +53,19 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 	}
 
 	public void range(Double from, Double to) {
-		if (from == null) {
-			this.from.add(Double.NEGATIVE_INFINITY);
-		} else {
-			this.from.add(from);
-		}
+		entries.add(new DoubleEntry(from, to));
+	}
 
-		if (to == null) {
-			this.to.add(Double.POSITIVE_INFINITY);
-		} else {
-			this.to.add(to);
-		}
+	public void range(String from, String to) {
+		entries.add(new StringEntry(from, to));
+	}
+
+	public void addRange(Double from, Double to) {
+		entries.add(new DoubleEntry(from, to));
+	}
+
+	public void addRange(String from, String to) {
+		entries.add(new StringEntry(from, to));
 	}
 
 	@Override
@@ -77,11 +79,54 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 		} else {
 			builder.field(field);
 		}
-		Assert.notEmpty(from, "Please select at last one range");
-		Assert.notEmpty(to, "Please select at last one range");
-		for (int i = 0; i < from.size(); i++) {
-			builder.addRange(from.get(i), to.get(i));
+
+		for (Entry entry : entries) {
+			if (entry instanceof DoubleEntry) {
+				DoubleEntry doubleEntry = (DoubleEntry) entry;
+				builder.addRange(validateValue(doubleEntry.getFrom(), Double.NEGATIVE_INFINITY), validateValue(doubleEntry.getTo(), Double.POSITIVE_INFINITY));
+			} else {
+				StringEntry stringEntry = (StringEntry) entry;
+				builder.addRange(stringEntry.getFrom(), stringEntry.getTo());
+			}
 		}
+
 		return builder;
+	}
+
+	private double validateValue(Double value, double defaultValue) {
+		return value == null ? defaultValue : value;
+	}
+
+	static class DoubleEntry extends Entry<Double> {
+
+		DoubleEntry(Double from, Double to) {
+			super(from, to);
+		}
+	}
+
+	static class StringEntry extends Entry<String> {
+
+		StringEntry(String from, String to) {
+			super(from, to);
+		}
+	}
+
+	static class Entry<T> {
+
+		T from;
+		T to;
+
+		Entry(T from, T to) {
+			this.from = from;
+			this.to = to;
+		}
+
+		public T getFrom() {
+			return from;
+		}
+
+		public T getTo() {
+			return to;
+		}
 	}
 }
