@@ -643,6 +643,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 		return createIndexRequestBuilder.execute().actionGet().isAcknowledged();
 	}
 
+	@Override
+	public <T> boolean createIndex(Class<T> clazz, Object settings) {
+		return createIndex(getPersistentEntityFor(clazz).getIndexName(), settings);
+	}
+
 	private <T> Map getDefaultSettings(ElasticsearchPersistentEntity<T> persistentEntity) {
 		return new MapBuilder<String, String>().put("index.number_of_shards", String.valueOf(persistentEntity.getShards()))
 				.put("index.number_of_replicas", String.valueOf(persistentEntity.getReplicas()))

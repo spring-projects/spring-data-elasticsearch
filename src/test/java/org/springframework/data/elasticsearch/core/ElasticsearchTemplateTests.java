@@ -1377,29 +1377,28 @@ public class ElasticsearchTemplateTests {
 	@Test
 	public void shouldCreateIndexWithGivenSettings() {
 		// given
-		String settings =
-				"{ " +
-						"\"settings\" : { " +
-						"\"index\": { " +
-						"\"analysis\" :{ " +
-						"\"analyzer\": { " +
-						"\"email-analyzer\": { " +
-						"\"type\" : \"custom\"," +
-						"\"tokenizer\" : \"uax_url_email\"," +
-						"\"filter\" : [\"standard\", \"lowercase\", \"stop\"]\n" +
-						"}\n" +
-						"}\n" +
-						"}\n" +
-						"}\n" +
-						"}\n" +
-						"}";
+		String settings = "{\n" +
+				    "        \"index\": {\n" +
+				        "            \"number_of_shards\": \"1\",\n" +
+				        "            \"number_of_replicas\": \"0\",\n" +
+				        "            \"analysis\": {\n" +
+				        "                \"analyzer\": {\n" +
+				        "                    \"emailAnalyzer\": {\n" +
+				        "                        \"type\": \"custom\",\n" +
+				        "                        \"tokenizer\": \"uax_url_email\"\n" +
+				        "                    }\n" +
+				        "                }\n" +
+				        "            }\n" +
+				        "        }\n" +
+				        "}";
+
 		elasticsearchTemplate.deleteIndex("test-index");
 		// when
 		elasticsearchTemplate.createIndex("test-index", settings);
 		// then
 		Map map = elasticsearchTemplate.getSetting("test-index");
-		boolean hasAnalyzer = map.containsKey("index.settings.index.analysis.analyzer.email-analyzer.tokenizer");
-		String emailAnalyzer = (String) map.get("index.settings.index.analysis.analyzer.email-analyzer.tokenizer");
+		boolean hasAnalyzer = map.containsKey("index.analysis.analyzer.emailAnalyzer.tokenizer");
+		String emailAnalyzer = (String) map.get("index.analysis.analyzer.emailAnalyzer.tokenizer");
 		assertThat(elasticsearchTemplate.indexExists("test-index"), is(true));
 		assertThat(hasAnalyzer, is(true));
 		assertThat(emailAnalyzer, is("uax_url_email"));
@@ -1426,6 +1425,39 @@ public class ElasticsearchTemplateTests {
 		assertThat((String) map.get("index.store.type"), is("memory"));
 	}
 
+	/*
+	DATAES-88
+	*/
+	@Test
+	public void shouldCreateIndexWithGivenClassAndSettings() {
+		//given
+		String settings = "{\n" +
+				"        \"index\": {\n" +
+				"            \"number_of_shards\": \"1\",\n" +
+				"            \"number_of_replicas\": \"0\",\n" +
+				"            \"analysis\": {\n" +
+				"                \"analyzer\": {\n" +
+				"                    \"emailAnalyzer\": {\n" +
+				"                        \"type\": \"custom\",\n" +
+				"                        \"tokenizer\": \"uax_url_email\"\n" +
+				"                    }\n" +
+				"                }\n" +
+				"            }\n" +
+				"        }\n" +
+				"}";
+
+		elasticsearchTemplate.deleteIndex(SampleEntity.class);
+		elasticsearchTemplate.createIndex(SampleEntity.class, settings);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+		// then
+		Map map = elasticsearchTemplate.getSetting(SampleEntity.class);
+		assertThat(elasticsearchTemplate.indexExists("test-index"), is(true));
+		assertThat(map.containsKey("index.number_of_replicas"), is(true));
+		assertThat(map.containsKey("index.number_of_shards"), is(true));
+		assertThat((String) map.get("index.number_of_replicas"), is("0"));
+		assertThat((String) map.get("index.number_of_shards"), is("1"));
+	}
 
 	@Test
 	public void shouldTestResultsAcrossMultipleIndices() {
