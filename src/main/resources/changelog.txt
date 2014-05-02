@@ -1,6 +1,34 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 1.0.0.RC1 (2014-05-02)
+-----------------------------------------
+* DATAES-79 - Upgrade to elasticsearch 1.1.0.
+* DATAES-78 - Release 1.0 M2.
+* DATAES-74 - NPE in MappingElasticsearchEntityInformation.
+* DATAES-73 - NullPointerException while persist a Map as part of persistent entity.
+* DATAES-72 - Enhance Delete Index in ElasticsearchTemplate.
+* DATAES-71 - Enhance Create Index in ElasticsearchTemplate.
+* DATAES-69 - Sorting on String field not working.
+* DATAES-67 - ElasticsearchTemplate#count does not respect specified index.
+* DATAES-65 - Overhaul README.md.
+* DATAES-64 - Add dynamic settings using @Setting annotation.
+* DATAES-61 - Upgrade to elasticsearch 1.0.1.
+* DATAES-60 - Java config support - default values in TransportClientFactoryBean.
+* DATAES-56 - while specifying index and type at runtime indexing is failing.
+* DATAES-55 - polish test cases and remove unwanted files.
+* DATAES-54 - Upgrade to elasticsearch 1.0.
+* DATAES-53 - @Field annotations (perhaps others?) ignored in included objects on mapping creation.
+* DATAES-52 - Support Get & Multi Get.
+* DATAES-51 - Allow for multiple sort builders when using NativeSearchQuery.
+* DATAES-48 - Mapping for multiple level nested document is getting created wrong.
+* DATAES-47 - Spring Application(Context) is not getting started up if elasticsearch nodes are not available.
+* DATAES-46 - Remove unused imports & class.
+* DATAES-35 - Investigate why build failed.
+* DATAES-14 - Dynamic Search Type Support.
+* DATAES-2 - Apply Spring Data formatting to sources.
+
+
 Release Notes - Spring Data Elasticsearch - Version 1.0 M2 (2014-03-27)
 -----------------------------------------------------------------------
 * DATAES-74 - NPE in MappingElasticsearchEntityInformation
