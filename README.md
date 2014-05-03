@@ -15,7 +15,8 @@ Guide
 * [API Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/1.0.0.M2/api/)
 * [Spring Data Project](http://project.spring.io/spring-data)
 * [Sample Test Application](https://github.com/BioMedCentralLtd/spring-data-elasticsearch-sample-application)
-* for more detailed questions, use the [forum](http://forum.springsource.org/forumdisplay.php?f=80).
+* [Spring Data Elasticsearch Google Group] (https://groups.google.com/d/forum/spring-data-elasticsearch-devs)
+* For more detailed questions, use the [forum](http://forum.springsource.org/forumdisplay.php?f=80).
 
 
 Quick Start
@@ -30,7 +31,7 @@ Add the Maven dependency:
 <dependency>
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-elasticsearch</artifactId>
-    <version>1.0.0.M2</version>
+    <version>1.0.0.RC1</version>
 </dependency>
 
 <repository>
@@ -245,7 +246,3 @@ Before we accept a non-trivial patch or pull request we will need you to sign th
 Code formatting for [Eclipse and Intellij](https://github.com/spring-projects/spring-data-build/tree/master/etc/ide)
 
 [More information about contributing to Spring Data](https://github.com/spring-projects/spring-data-build/blob/master/CONTRIBUTING.md)
-
-### Contact Details
-
-* [Spring Data Elasticsearch Support] (https://groups.google.com/d/forum/spring-data-elasticsearch-devs)
