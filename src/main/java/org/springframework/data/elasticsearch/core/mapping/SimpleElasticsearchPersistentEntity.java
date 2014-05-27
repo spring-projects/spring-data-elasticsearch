@@ -29,6 +29,9 @@ import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ParserContext;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
 
@@ -43,6 +46,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
 
 	private final StandardEvaluationContext context;
+	private final SpelExpressionParser parser;
+
 	private String indexName;
 	private String indexType;
 	private short shards;
@@ -56,6 +61,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 		super(typeInformation);
 		this.context = new StandardEvaluationContext();
+        this.parser = new SpelExpressionParser();
+
 		Class<T> clazz = typeInformation.getType();
 		if (clazz.isAnnotationPresent(Document.class)) {
 			Document document = clazz.getAnnotation(Document.class);
@@ -82,7 +89,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 	@Override
 	public String getIndexName() {
-		return indexName;
+		Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
+		return expression.getValue(context, String.class);
 	}
 
 	@Override
