@@ -70,6 +70,9 @@ import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -94,7 +97,7 @@ import org.springframework.util.Assert;
  * @author Artur Konczak
  */
 
-public class ElasticsearchTemplate implements ElasticsearchOperations {
+public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
 	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchTemplate.class);
 	private Client client;
@@ -119,8 +122,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter, ResultsMapper resultsMapper) {
 		this.client = client;
-		this.elasticsearchConverter = (elasticsearchConverter == null) ? new MappingElasticsearchConverter(
-				new SimpleElasticsearchMappingContext()) : elasticsearchConverter;
+        this.elasticsearchConverter = (elasticsearchConverter == null) ? new MappingElasticsearchConverter(
+                new SimpleElasticsearchMappingContext()) : elasticsearchConverter;
 		this.resultsMapper = (resultsMapper == null) ? new DefaultResultMapper(this.elasticsearchConverter.getMappingContext()) : resultsMapper;
 	}
 
@@ -859,7 +862,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 		return ids;
 	}
 
-	private static String[] toArray(List<String> values) {
+    @Override
+    public void setApplicationContext(ApplicationContext context) throws BeansException {
+        if(elasticsearchConverter instanceof ApplicationContextAware){
+            ((ApplicationContextAware)elasticsearchConverter).setApplicationContext(context);
+        }
+    }
+
+    private static String[] toArray(List<String> values) {
 		String[] valuesAsArray = new String[values.size()];
 		return values.toArray(valuesAsArray);
 	}
