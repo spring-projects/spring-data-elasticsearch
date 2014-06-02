@@ -30,8 +30,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repositories.custom.SampleCustomMethodRepository;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -53,6 +57,7 @@ public class CustomMethodRepositoryTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
+		elasticsearchTemplate.putMapping(SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 	}
 
@@ -486,4 +491,44 @@ public class CustomMethodRepositoryTests {
 		assertThat(sampleEntities.isEmpty(), is(false));
 		assertThat(sampleEntities.size(), is(1));
 	}
+
+    @Test
+    public void shouldExecuteCustomMethodWithWithinGeoPoint() {
+        // given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setType("test");
+        sampleEntity.setRate(10);
+        sampleEntity.setMessage("foo");
+        sampleEntity.setLocation(new GeoPoint(45.7806d, 3.0875d));
+
+        repository.save(sampleEntity);
+
+        // when
+        Page<SampleEntity> page = repository.findByLocationWithin(new GeoPoint(45.7806d, 3.0875d), "2km", new PageRequest(0, 10));
+        // then
+        assertThat(page, is(notNullValue()));
+        assertThat(page.getTotalElements(), is(equalTo(1L)));
+    }
+
+    @Test
+    public void shouldExecuteCustomMethodWithWithinPoint() {
+        // given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setType("test");
+        sampleEntity.setRate(10);
+        sampleEntity.setMessage("foo");
+        sampleEntity.setLocation(new GeoPoint(45.7806d, 3.0875d));
+
+        repository.save(sampleEntity);
+
+        // when
+        Page<SampleEntity> page = repository.findByLocationWithin(new Point(3.0875d, 45.7806d), new Distance(2, Metrics.KILOMETERS), new PageRequest(0, 10));
+        // then
+        assertThat(page, is(notNullValue()));
+        assertThat(page.getTotalElements(), is(equalTo(1L)));
+    }
 }

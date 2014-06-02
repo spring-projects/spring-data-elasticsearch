@@ -20,8 +20,11 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Point;
 
 /**
  * @author Rizwan Idrees
@@ -64,4 +67,8 @@ public interface SampleCustomMethodRepository extends ElasticsearchRepository<Sa
 	Page<SampleEntity> findByAvailableFalse(Pageable pageable);
 
 	Page<SampleEntity> findByMessageOrderByTypeAsc(String message, Pageable pageable);
+
+    Page<SampleEntity> findByLocationWithin(GeoPoint point, String distance, Pageable pageable);
+
+    Page<SampleEntity> findByLocationWithin(Point point, Distance distance, Pageable pageable);
 }

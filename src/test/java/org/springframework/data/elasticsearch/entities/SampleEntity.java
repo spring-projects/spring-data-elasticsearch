@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
 /**
  * @author Rizwan Idrees
@@ -35,6 +36,9 @@ public class SampleEntity {
 	private int rate;
 	private boolean available;
 	private String highlightedMessage;
+
+    private GeoPoint location;
+
 	@Version
 	private Long version;
 
@@ -85,6 +89,14 @@ public class SampleEntity {
 	public void setHighlightedMessage(String highlightedMessage) {
 		this.highlightedMessage = highlightedMessage;
 	}
+
+    public GeoPoint getLocation() {
+        return location;
+    }
+
+    public void setLocation(GeoPoint location) {
+        this.location = location;
+    }
 
 	public Long getVersion() {
 		return version;

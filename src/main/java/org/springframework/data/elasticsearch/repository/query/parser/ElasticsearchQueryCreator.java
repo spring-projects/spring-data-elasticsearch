@@ -20,9 +20,12 @@ import java.util.Iterator;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.repository.query.ParameterAccessor;
@@ -120,6 +123,21 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 				return criteria.in(asArray(parameters.next()));
 			case NOT_IN:
 				return criteria.in(asArray(parameters.next())).not();
+            case WITHIN: {
+                Object firstParameter = parameters.next();
+                Object secondParameter = parameters.next();
+
+                if(firstParameter instanceof GeoPoint && secondParameter instanceof String)
+                    return criteria.within((GeoPoint)firstParameter, (String)secondParameter);
+
+                if(firstParameter instanceof Point && secondParameter instanceof Distance)
+                    return criteria.within((Point)firstParameter, (Distance)secondParameter);
+
+
+                if(firstParameter instanceof String && secondParameter instanceof String)
+                    return  criteria.within((String)firstParameter, (String)secondParameter);
+            }
+
 			default:
 				throw new InvalidDataAccessApiUsageException("Illegal criteria found '" + type + "'.");
 		}

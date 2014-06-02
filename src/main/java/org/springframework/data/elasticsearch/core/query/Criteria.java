@@ -21,6 +21,8 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Point;
 import org.springframework.util.Assert;
 
 /**
@@ -359,6 +361,21 @@ public class Criteria {
 		filterCriteria.add(new CriteriaEntry(OperationKey.WITHIN, new Object[]{location, distance}));
 		return this;
 	}
+
+    /**
+     * Creates new CriteriaEntry for {@code location WITHIN distance}
+     *
+     * @param location {@link org.springframework.data.geo.Point} center coordinates
+     * @param distance {@link org.springframework.data.geo.Distance} radius
+     *                                                              .
+     * @return Criteria the chaind criteria with the new 'within' criteria included.
+     */
+    public Criteria within(Point location, Distance distance) {
+        Assert.notNull(location, "Location value for near criteria must not be null");
+        Assert.notNull(location, "Distance value for near criteria must not be null");
+        filterCriteria.add(new CriteriaEntry(OperationKey.WITHIN, new Object[]{location, distance}));
+        return this;
+    }
 
 	/**
 	 * Creates new CriteriaEntry for {@code geoLocation WITHIN distance}

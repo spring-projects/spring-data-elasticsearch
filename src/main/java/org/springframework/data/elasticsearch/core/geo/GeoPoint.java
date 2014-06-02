@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.geo;
 
+import org.springframework.data.geo.Point;
+
 /**
  * geo-location used for #{@link org.springframework.data.elasticsearch.core.query.Criteria}.
  *
@@ -41,4 +43,16 @@ public class GeoPoint {
 	public double getLon() {
 		return lon;
 	}
+
+    /**
+     * build a GeoPoint from a {@link org.springframework.data.geo.Point}
+     *
+     * @param point {@link org.springframework.data.geo.Point}
+     * @return a {@link org.springframework.data.elasticsearch.core.geo.GeoPoint}
+     */
+    public static GeoPoint fromPoint(Point point) {
+        return new GeoPoint(point.getY(), point.getX());
+    }
 }
+
+
