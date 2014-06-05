@@ -13,7 +13,7 @@ Guide
 * [Reference Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/)
 * [PDF Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/current/reference/pdf/spring-data-elasticsearch-reference.pdf)
 * [API Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/current/api/)
-* [Spring Data Project](http://project.spring.io/spring-data)
+* [Spring Data Project](http://projects.spring.io/spring-data)
 * [Sample Test Application](https://github.com/BioMedCentralLtd/spring-data-elasticsearch-sample-application)
 * [Spring Data Elasticsearch Google Group](https://groups.google.com/d/forum/spring-data-elasticsearch-devs)
 * For more detailed questions, use the [forum](http://forum.springsource.org/forumdisplay.php?f=80).
