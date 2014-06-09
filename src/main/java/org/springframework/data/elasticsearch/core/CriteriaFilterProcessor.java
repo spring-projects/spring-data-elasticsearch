@@ -29,6 +29,7 @@ import org.elasticsearch.index.query.GeoDistanceFilterBuilder;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
@@ -189,9 +190,17 @@ class CriteriaFilterProcessor {
     }
 
     private void oneParameterBBox(GeoBoundingBoxFilterBuilder filter, Object value) {
-		Assert.isTrue(value instanceof GeoBox, "single-element of boundedBy filter must be type of GeoBox");
-		GeoBox geoBBox = (GeoBox) value;
-		filter.topLeft(geoBBox.getTopLeft().getLat(), geoBBox.getTopLeft().getLon());
+		Assert.isTrue(value instanceof GeoBox || value instanceof Box, "single-element of boundedBy filter must be type of GeoBox or Box");
+
+		GeoBox geoBBox;
+        if(value instanceof Box) {
+            Box sdbox = (Box) value;
+            geoBBox = GeoBox.fromBox(sdbox);
+        } else {
+            geoBBox = (GeoBox) value;
+        }
+
+        filter.topLeft(geoBBox.getTopLeft().getLat(), geoBBox.getTopLeft().getLon());
 		filter.bottomRight(geoBBox.getBottomRight().getLat(), geoBBox.getBottomRight().getLon());
 	}
 

@@ -408,6 +408,7 @@ public class Criteria {
 	}
 
 
+
 	/**
 	 * Creates new CriteriaEntry for bounding box created from points
 	 *

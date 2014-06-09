@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.geo;
 
+import org.springframework.data.geo.Box;
+
 /**
  * Geo bbox used for #{@link org.springframework.data.elasticsearch.core.query.Criteria}.
  *
@@ -37,4 +39,18 @@ public class GeoBox {
 	public GeoPoint getBottomRight() {
 		return bottomRight;
 	}
+
+    /**
+     * return a {@link org.springframework.data.elasticsearch.core.geo.GeoBox}
+     * from a {@link org.springframework.data.geo.Box}.
+     *
+     * @param box {@link org.springframework.data.geo.Box} to use
+     * @return a {@link org.springframework.data.elasticsearch.core.geo.GeoBox}
+     */
+    public static GeoBox fromBox(Box box) {
+        GeoPoint topLeft = GeoPoint.fromPoint(box.getFirst());
+        GeoPoint bottomRight = GeoPoint.fromPoint(box.getSecond());
+
+        return new GeoBox(topLeft, bottomRight);
+    }
 }
