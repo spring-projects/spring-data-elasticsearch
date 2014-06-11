@@ -27,6 +27,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 @Documented
+@Inherited
 public @interface Field {
 
 	FieldType type() default FieldType.Auto;
