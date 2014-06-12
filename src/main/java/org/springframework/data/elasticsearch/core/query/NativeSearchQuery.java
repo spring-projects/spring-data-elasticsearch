@@ -15,14 +15,15 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * NativeSearchQuery
@@ -37,6 +38,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	private FilterBuilder filter;
 	private List<SortBuilder> sorts;
 	private List<FacetRequest> facets;
+    private List<AbstractAggregationBuilder> aggregations;
 	private HighlightBuilder.Field[] highlightFields;
 
 
@@ -94,4 +96,21 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	public List<FacetRequest> getFacets() {
 		return facets;
 	}
+
+    @Override
+    public List<AbstractAggregationBuilder> getAggregations() {
+        return aggregations;
+    }
+
+
+    public void addAggregation(AbstractAggregationBuilder aggregationBuilder) {
+        if (aggregations == null) {
+            aggregations = new ArrayList<AbstractAggregationBuilder>();
+        }
+        aggregations.add(aggregationBuilder);
+    }
+
+    public void setAggregations(List<AbstractAggregationBuilder> aggregations) {
+        this.aggregations = aggregations;
+    }
 }

@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
@@ -39,6 +40,8 @@ public interface SearchQuery extends Query {
 	List<SortBuilder> getElasticsearchSorts();
 
 	List<FacetRequest> getFacets();
+
+    List<AbstractAggregationBuilder> getAggregations();
 
 	HighlightBuilder.Field[] getHighlightFields();
 }

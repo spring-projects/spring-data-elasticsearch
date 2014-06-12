@@ -23,6 +23,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +43,7 @@ public class NativeSearchQueryBuilder {
 	private FilterBuilder filterBuilder;
 	private List<SortBuilder> sortBuilders = new ArrayList<SortBuilder>();
 	private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
+    private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<AbstractAggregationBuilder>();
 	private HighlightBuilder.Field[] highlightFields;
 	private Pageable pageable;
 	private String[] indices;
@@ -66,6 +68,11 @@ public class NativeSearchQueryBuilder {
 		this.sortBuilders.add(sortBuilder);
 		return this;
 	}
+
+    public NativeSearchQueryBuilder addAggregation(AbstractAggregationBuilder aggregationBuilder){
+        this.aggregationBuilders.add(aggregationBuilder);
+        return this;
+    }
 
 	public NativeSearchQueryBuilder withFacet(FacetRequest facetRequest) {
 		facetRequests.add(facetRequest);
@@ -138,6 +145,10 @@ public class NativeSearchQueryBuilder {
 		if (CollectionUtils.isNotEmpty(facetRequests)) {
 			nativeSearchQuery.setFacets(facetRequests);
 		}
+
+        if (CollectionUtils.isNotEmpty(aggregationBuilders)) {
+            nativeSearchQuery.setAggregations(aggregationBuilders);
+        }
 
 		if (minScore > 0) {
 			nativeSearchQuery.setMinScore(minScore);
