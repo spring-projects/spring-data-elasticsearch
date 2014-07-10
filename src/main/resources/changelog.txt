@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 1.1.0.M1 (2014-07-10)
+----------------------------------------
+* DATAES-102 - Release 1.1 M1.
+* DATAES-96 - Add support for aggregation in ElasticsearchTemplate.
+* DATAES-94 - Bump to support ES 1.2.0.
+
+
 Changes in version 1.0.1.RELEASE (2014-06-30)
 ---------------------------------------------
 * DATAES-99 - Release 1.0.1.
