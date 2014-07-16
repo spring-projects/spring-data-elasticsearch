@@ -38,6 +38,7 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 	private static final Logger logger = LoggerFactory.getLogger(NodeClientFactoryBean.class);
 	private boolean local;
 	private boolean enableHttp;
+	private boolean client = false;
 	private String clusterName;
 	private NodeClient nodeClient;
 
@@ -68,7 +69,7 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 		ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder().put("http.enabled",
 				String.valueOf(this.enableHttp));
 
-		nodeClient = (NodeClient) nodeBuilder().settings(settings).clusterName(this.clusterName).local(this.local).node()
+		nodeClient = (NodeClient) nodeBuilder().settings(settings).clusterName(this.clusterName).client(this.client).local(this.local).node()
 				.client();
 	}
 
@@ -82,6 +83,10 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
 	public void setClusterName(String clusterName) {
 		this.clusterName = clusterName;
+	}
+
+	public void setClient(boolean client) {
+		this.client = client;
 	}
 
 	@Override
