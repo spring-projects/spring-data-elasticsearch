@@ -41,7 +41,7 @@ public interface SearchQuery extends Query {
 
 	List<FacetRequest> getFacets();
 
-    List<AbstractAggregationBuilder> getAggregations();
+	List<AbstractAggregationBuilder> getAggregations();
 
 	HighlightBuilder.Field[] getHighlightFields();
 }

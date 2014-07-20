@@ -16,7 +16,9 @@
 package org.springframework.data.elasticsearch.entities;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.Setting;
 
 /**
  * Sample DynamicSettingAndMappingEntity for test out dynamic setting using @Setting Annotation

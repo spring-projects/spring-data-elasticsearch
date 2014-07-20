@@ -35,10 +35,11 @@ public class ArticleEntityBuilder {
 		result.setTitle(title);
 		return this;
 	}
-    public ArticleEntityBuilder subject(String subject) {
-        result.setSubject(subject);
-        return this;
-    }
+
+	public ArticleEntityBuilder subject(String subject) {
+		result.setSubject(subject);
+		return this;
+	}
 
 	public ArticleEntityBuilder addAuthor(String author) {
 		result.getAuthors().add(author);

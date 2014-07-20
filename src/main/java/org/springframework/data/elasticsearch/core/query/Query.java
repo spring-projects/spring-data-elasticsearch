@@ -135,6 +135,7 @@ public interface Query {
 
 	/**
 	 * Type of search
+	 *
 	 * @return
 	 */
 	SearchType getSearchType();

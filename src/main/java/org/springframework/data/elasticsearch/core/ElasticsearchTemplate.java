@@ -189,7 +189,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 		Assert.notNull(type, "No type defined for putMapping()");
 		Map mappings = null;
 		try {
-			mappings  = client.admin().indices().getMappings(new GetMappingsRequest().indices(indexName).types(type))
+			mappings = client.admin().indices().getMappings(new GetMappingsRequest().indices(indexName).types(type))
 					.actionGet().getMappings().get(indexName).get(type).getSourceAsMap();
 		} catch (Exception e) {
 			throw new ElasticsearchException("Error while getting mapping for indexName : " + indexName + " type : " + type + " " + e.getMessage());
@@ -248,13 +248,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 		return mapper.mapResults(response, clazz, query.getPageable());
 	}
 
-    @Override
-    public <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor) {
-        SearchResponse response = doSearch(prepareSearch(query), query);
-        return resultsExtractor.extract(response);
-    }
+	@Override
+	public <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor) {
+		SearchResponse response = doSearch(prepareSearch(query), query);
+		return resultsExtractor.extract(response);
+	}
 
-    @Override
+	@Override
 	public <T> List<T> queryForList(CriteriaQuery query, Class<T> clazz) {
 		return queryForPage(query, clazz).getContent();
 	}
@@ -417,7 +417,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 			}
 			throw new ElasticsearchException(
 					"Bulk indexing has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
-							+ failedDocuments + "]", failedDocuments);
+							+ failedDocuments + "]", failedDocuments
+			);
 		}
 	}
 
@@ -501,7 +502,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 			requestBuilder.setPostFilter(searchQuery.getFilter());
 		}
 
-		if(isNotEmpty(searchQuery.getFields())) {
+		if (isNotEmpty(searchQuery.getFields())) {
 			requestBuilder.addFields(toArray(searchQuery.getFields()));
 		}
 
@@ -615,11 +616,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 			}
 		}
 
-        if(CollectionUtils.isNotEmpty(searchQuery.getAggregations())){
-             for(AbstractAggregationBuilder aggregationBuilder : searchQuery.getAggregations()){
-                 searchRequest.addAggregation(aggregationBuilder);
-             }
-        }
+		if (CollectionUtils.isNotEmpty(searchQuery.getAggregations())) {
+			for (AbstractAggregationBuilder aggregationBuilder : searchQuery.getAggregations()) {
+				searchRequest.addAggregation(aggregationBuilder);
+			}
+		}
 
 		return searchRequest.setQuery(searchQuery.getQuery()).execute().actionGet();
 	}
@@ -906,7 +907,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations {
 			if (bufferedReader != null)
 				try {
 					bufferedReader.close();
-				}  catch (IOException e) {
+				} catch (IOException e) {
 					logger.debug(String.format("Unable to close buffered reader.. %s", e.getMessage()));
 				}
 		}

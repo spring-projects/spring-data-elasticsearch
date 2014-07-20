@@ -126,43 +126,42 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 				return criteria.in(asArray(parameters.next()));
 			case NOT_IN:
 				return criteria.in(asArray(parameters.next())).not();
-            case WITHIN: {
-                Object firstParameter = parameters.next();
-                Object secondParameter = parameters.next();
+			case WITHIN: {
+				Object firstParameter = parameters.next();
+				Object secondParameter = parameters.next();
 
-                if(firstParameter instanceof GeoPoint && secondParameter instanceof String)
-                    return criteria.within((GeoPoint)firstParameter, (String)secondParameter);
+				if (firstParameter instanceof GeoPoint && secondParameter instanceof String)
+					return criteria.within((GeoPoint) firstParameter, (String) secondParameter);
 
-                if(firstParameter instanceof Point && secondParameter instanceof Distance)
-                    return criteria.within((Point)firstParameter, (Distance)secondParameter);
+				if (firstParameter instanceof Point && secondParameter instanceof Distance)
+					return criteria.within((Point) firstParameter, (Distance) secondParameter);
 
+				if (firstParameter instanceof String && secondParameter instanceof String)
+					return criteria.within((String) firstParameter, (String) secondParameter);
+			}
+			case NEAR: {
+				Object firstParameter = parameters.next();
 
-                if(firstParameter instanceof String && secondParameter instanceof String)
-                    return  criteria.within((String)firstParameter, (String)secondParameter);
-            }
-            case NEAR : {
-                Object firstParameter = parameters.next();
+				if (firstParameter instanceof GeoBox) {
+					return criteria.boundedBy((GeoBox) firstParameter);
+				}
 
-                if(firstParameter instanceof GeoBox) {
-                    return criteria.boundedBy((GeoBox)firstParameter);
-                }
+				if (firstParameter instanceof Box) {
+					return criteria.boundedBy(GeoBox.fromBox((Box) firstParameter));
+				}
 
-                if(firstParameter instanceof Box) {
-                    return criteria.boundedBy(GeoBox.fromBox((Box) firstParameter));
-                }
+				Object secondParameter = parameters.next();
 
-                Object secondParameter = parameters.next();
+				// "near" query can be the same query as the "within" query
+				if (firstParameter instanceof GeoPoint && secondParameter instanceof String)
+					return criteria.within((GeoPoint) firstParameter, (String) secondParameter);
 
-                // "near" query can be the same query as the "within" query
-                if(firstParameter instanceof GeoPoint && secondParameter instanceof String)
-                    return criteria.within((GeoPoint)firstParameter, (String)secondParameter);
+				if (firstParameter instanceof Point && secondParameter instanceof Distance)
+					return criteria.within((Point) firstParameter, (Distance) secondParameter);
 
-                if(firstParameter instanceof Point && secondParameter instanceof Distance)
-                    return criteria.within((Point)firstParameter, (Distance)secondParameter);
-
-                if(firstParameter instanceof String && secondParameter instanceof String)
-                    return  criteria.within((String)firstParameter, (String)secondParameter);
-            }
+				if (firstParameter instanceof String && secondParameter instanceof String)
+					return criteria.within((String) firstParameter, (String) secondParameter);
+			}
 
 			default:
 				throw new InvalidDataAccessApiUsageException("Illegal criteria found '" + type + "'.");

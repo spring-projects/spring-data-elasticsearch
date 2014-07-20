@@ -40,7 +40,7 @@ public class ArticleEntity {
 	@Id
 	private String id;
 	private String title;
-    private String subject;
+	private String subject;
 
 	@MultiField(
 			mainField = @Field(type = String, index = analyzed),
@@ -80,15 +80,15 @@ public class ArticleEntity {
 		this.title = title;
 	}
 
-    public String getSubject() {
-        return subject;
-    }
+	public String getSubject() {
+		return subject;
+	}
 
-    public void setSubject(String subject) {
-        this.subject = subject;
-    }
+	public void setSubject(String subject) {
+		this.subject = subject;
+	}
 
-    public List<String> getAuthors() {
+	public List<String> getAuthors() {
 		return authors;
 	}
 

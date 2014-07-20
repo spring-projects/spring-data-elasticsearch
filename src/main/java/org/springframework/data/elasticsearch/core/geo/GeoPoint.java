@@ -44,15 +44,15 @@ public class GeoPoint {
 		return lon;
 	}
 
-    /**
-     * build a GeoPoint from a {@link org.springframework.data.geo.Point}
-     *
-     * @param point {@link org.springframework.data.geo.Point}
-     * @return a {@link org.springframework.data.elasticsearch.core.geo.GeoPoint}
-     */
-    public static GeoPoint fromPoint(Point point) {
-        return new GeoPoint(point.getY(), point.getX());
-    }
+	/**
+	 * build a GeoPoint from a {@link org.springframework.data.geo.Point}
+	 *
+	 * @param point {@link org.springframework.data.geo.Point}
+	 * @return a {@link org.springframework.data.elasticsearch.core.geo.GeoPoint}
+	 */
+	public static GeoPoint fromPoint(Point point) {
+		return new GeoPoint(point.getY(), point.getX());
+	}
 }
 
 

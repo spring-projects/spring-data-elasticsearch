@@ -473,5 +473,5 @@ public interface ElasticsearchOperations {
 	Set<String> queryForAlias(String indexName);
 
 
-    <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor);
+	<T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor);
 }

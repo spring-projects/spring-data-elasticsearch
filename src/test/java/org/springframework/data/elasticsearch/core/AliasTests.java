@@ -199,5 +199,4 @@ public class AliasTests {
 		elasticsearchTemplate.putMapping(SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 	}
-
 }

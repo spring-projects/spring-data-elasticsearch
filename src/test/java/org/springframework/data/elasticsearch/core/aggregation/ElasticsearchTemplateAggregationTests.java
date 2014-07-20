@@ -30,7 +30,6 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
 import static org.elasticsearch.action.search.SearchType.COUNT;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.terms;
@@ -48,56 +47,55 @@ import static org.junit.Assert.assertThat;
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class ElasticsearchTemplateAggregationTests {
 
-    public static final String RIZWAN_IDREES = "Rizwan Idrees";
-    public static final String MOHSIN_HUSEN = "Mohsin Husen";
-    public static final String JONATHAN_YAN = "Jonathan Yan";
-    public static final String ARTUR_KONCZAK = "Artur Konczak";
-    public static final int YEAR_2002 = 2002;
-    public static final int YEAR_2001 = 2001;
-    public static final int YEAR_2000 = 2000;
-    @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
+	public static final String RIZWAN_IDREES = "Rizwan Idrees";
+	public static final String MOHSIN_HUSEN = "Mohsin Husen";
+	public static final String JONATHAN_YAN = "Jonathan Yan";
+	public static final String ARTUR_KONCZAK = "Artur Konczak";
+	public static final int YEAR_2002 = 2002;
+	public static final int YEAR_2001 = 2001;
+	public static final int YEAR_2000 = 2000;
+	@Autowired
+	private ElasticsearchTemplate elasticsearchTemplate;
 
-    @Before
-    public void before() {
-        elasticsearchTemplate.deleteIndex(ArticleEntity.class);
-        elasticsearchTemplate.createIndex(ArticleEntity.class);
-        elasticsearchTemplate.putMapping(ArticleEntity.class);
-        elasticsearchTemplate.refresh(ArticleEntity.class, true);
+	@Before
+	public void before() {
+		elasticsearchTemplate.deleteIndex(ArticleEntity.class);
+		elasticsearchTemplate.createIndex(ArticleEntity.class);
+		elasticsearchTemplate.putMapping(ArticleEntity.class);
+		elasticsearchTemplate.refresh(ArticleEntity.class, true);
 
-        IndexQuery article1 = new ArticleEntityBuilder("1").title("article four").subject("computing").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addAuthor(JONATHAN_YAN).score(10).buildIndex();
-        IndexQuery article2 = new ArticleEntityBuilder("2").title("article three").subject("computing").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addPublishedYear(YEAR_2000).score(20).buildIndex();
-        IndexQuery article3 = new ArticleEntityBuilder("3").title("article two").subject("computing").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addPublishedYear(YEAR_2001).addPublishedYear(YEAR_2000).score(30).buildIndex();
-        IndexQuery article4 = new ArticleEntityBuilder("4").title("article one").subject("accounting").addAuthor(RIZWAN_IDREES).addPublishedYear(YEAR_2002).addPublishedYear(YEAR_2001).addPublishedYear(YEAR_2000).score(40).buildIndex();
+		IndexQuery article1 = new ArticleEntityBuilder("1").title("article four").subject("computing").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addAuthor(JONATHAN_YAN).score(10).buildIndex();
+		IndexQuery article2 = new ArticleEntityBuilder("2").title("article three").subject("computing").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addPublishedYear(YEAR_2000).score(20).buildIndex();
+		IndexQuery article3 = new ArticleEntityBuilder("3").title("article two").subject("computing").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addPublishedYear(YEAR_2001).addPublishedYear(YEAR_2000).score(30).buildIndex();
+		IndexQuery article4 = new ArticleEntityBuilder("4").title("article one").subject("accounting").addAuthor(RIZWAN_IDREES).addPublishedYear(YEAR_2002).addPublishedYear(YEAR_2001).addPublishedYear(YEAR_2000).score(40).buildIndex();
 
-        elasticsearchTemplate.index(article1);
-        elasticsearchTemplate.index(article2);
-        elasticsearchTemplate.index(article3);
-        elasticsearchTemplate.index(article4);
-        elasticsearchTemplate.refresh(ArticleEntity.class, true);
-    }
+		elasticsearchTemplate.index(article1);
+		elasticsearchTemplate.index(article2);
+		elasticsearchTemplate.index(article3);
+		elasticsearchTemplate.index(article4);
+		elasticsearchTemplate.refresh(ArticleEntity.class, true);
+	}
 
-    @Test
-    public void shouldReturnAggregatedResponseForGivenSearchQuery() {
-        // given
-        SearchQuery searchQuery = new NativeSearchQueryBuilder()
-                .withQuery(matchAllQuery())
-                .withSearchType(COUNT)
-                .withIndices("articles").withTypes("article")
-                .addAggregation(terms("subjects").field("subject"))
-                .build();
-        // when
-        Aggregations aggregations = elasticsearchTemplate.query(searchQuery, new ResultsExtractor<Aggregations>() {
-            @Override
-            public Aggregations extract(SearchResponse response) {
-                return response.getAggregations();
-            }
-        });
-        // then
-        assertThat(aggregations, is(notNullValue()));
-        assertThat(aggregations.asMap().get("subjects"), is(notNullValue()));
-    }
-
+	@Test
+	public void shouldReturnAggregatedResponseForGivenSearchQuery() {
+		// given
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(matchAllQuery())
+				.withSearchType(COUNT)
+				.withIndices("articles").withTypes("article")
+				.addAggregation(terms("subjects").field("subject"))
+				.build();
+		// when
+		Aggregations aggregations = elasticsearchTemplate.query(searchQuery, new ResultsExtractor<Aggregations>() {
+			@Override
+			public Aggregations extract(SearchResponse response) {
+				return response.getAggregations();
+			}
+		});
+		// then
+		assertThat(aggregations, is(notNullValue()));
+		assertThat(aggregations.asMap().get("subjects"), is(notNullValue()));
+	}
 }
 
 

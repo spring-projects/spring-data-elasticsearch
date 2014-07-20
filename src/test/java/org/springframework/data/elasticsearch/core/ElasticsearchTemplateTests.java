@@ -621,7 +621,7 @@ public class ElasticsearchTemplateTests {
 				@Override
 				public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 					List<SampleEntity> result = new ArrayList<SampleEntity>();
-					for(SearchHit searchHit : response.getHits()){
+					for (SearchHit searchHit : response.getHits()) {
 						String message = searchHit.getFields().get("message").getValue();
 						SampleEntity sampleEntity = new SampleEntity();
 						sampleEntity.setId(searchHit.getId());
@@ -629,7 +629,7 @@ public class ElasticsearchTemplateTests {
 						result.add(sampleEntity);
 					}
 
-					if(result.size() > 0) {
+					if (result.size() > 0) {
 						return new FacetedPageImpl<T>((List<T>) result);
 					}
 					return null;
@@ -1378,19 +1378,19 @@ public class ElasticsearchTemplateTests {
 	public void shouldCreateIndexWithGivenSettings() {
 		// given
 		String settings = "{\n" +
-				    "        \"index\": {\n" +
-				        "            \"number_of_shards\": \"1\",\n" +
-				        "            \"number_of_replicas\": \"0\",\n" +
-				        "            \"analysis\": {\n" +
-				        "                \"analyzer\": {\n" +
-				        "                    \"emailAnalyzer\": {\n" +
-				        "                        \"type\": \"custom\",\n" +
-				        "                        \"tokenizer\": \"uax_url_email\"\n" +
-				        "                    }\n" +
-				        "                }\n" +
-				        "            }\n" +
-				        "        }\n" +
-				        "}";
+				"        \"index\": {\n" +
+				"            \"number_of_shards\": \"1\",\n" +
+				"            \"number_of_replicas\": \"0\",\n" +
+				"            \"analysis\": {\n" +
+				"                \"analyzer\": {\n" +
+				"                    \"emailAnalyzer\": {\n" +
+				"                        \"type\": \"custom\",\n" +
+				"                        \"tokenizer\": \"uax_url_email\"\n" +
+				"                    }\n" +
+				"                }\n" +
+				"            }\n" +
+				"        }\n" +
+				"}";
 
 		elasticsearchTemplate.deleteIndex("test-index");
 		// when

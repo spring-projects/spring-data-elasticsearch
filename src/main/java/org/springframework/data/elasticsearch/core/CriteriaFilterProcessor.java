@@ -113,21 +113,20 @@ class CriteriaFilterProcessor {
 				Assert.isTrue(valArray[0] instanceof GeoPoint || valArray[0] instanceof String || valArray[0] instanceof Point, "First element of a geo distance filter must be a GeoPoint, a Point or a String");
 				Assert.isTrue(valArray[1] instanceof String || valArray[1] instanceof Distance, "Second element of a geo distance filter must be a String or a Distance");
 
-                
 				StringBuilder dist = new StringBuilder();
 
-                if(valArray[1] instanceof Distance) {
-                    extractDistanceString((Distance)valArray[1], dist);
-                }  else {
-                    dist.append((String) valArray[1]);
-                }
-                
-                if (valArray[0] instanceof GeoPoint) {
-                    GeoPoint loc = (GeoPoint) valArray[0];
-                    ((GeoDistanceFilterBuilder) filter).lat(loc.getLat()).lon(loc.getLon()).distance(dist.toString());
-                } else if (valArray[0] instanceof Point) {
-                    GeoPoint loc = GeoPoint.fromPoint((Point)valArray[0]);
-                    ((GeoDistanceFilterBuilder) filter).lat(loc.getLat()).lon(loc.getLon()).distance(dist.toString());
+				if (valArray[1] instanceof Distance) {
+					extractDistanceString((Distance) valArray[1], dist);
+				} else {
+					dist.append((String) valArray[1]);
+				}
+
+				if (valArray[0] instanceof GeoPoint) {
+					GeoPoint loc = (GeoPoint) valArray[0];
+					((GeoDistanceFilterBuilder) filter).lat(loc.getLat()).lon(loc.getLon()).distance(dist.toString());
+				} else if (valArray[0] instanceof Point) {
+					GeoPoint loc = GeoPoint.fromPoint((Point) valArray[0]);
+					((GeoDistanceFilterBuilder) filter).lat(loc.getLat()).lon(loc.getLon()).distance(dist.toString());
 				} else {
 					String loc = (String) valArray[0];
 					if (loc.contains(",")) {
@@ -167,40 +166,40 @@ class CriteriaFilterProcessor {
 	}
 
 
-    /**
-     * extract the distance string from a {@link org.springframework.data.geo.Distance} object.
-     *
-     * @param distance distance object to extract string from
-     * @param sb StringBuilder to build the distance string
-     */
-    private void extractDistanceString(Distance distance, StringBuilder sb) {
-        // handle Distance object
-        sb.append((int) distance.getValue());
+	/**
+	 * extract the distance string from a {@link org.springframework.data.geo.Distance} object.
+	 *
+	 * @param distance distance object to extract string from
+	 * @param sb StringBuilder to build the distance string
+	 */
+	private void extractDistanceString(Distance distance, StringBuilder sb) {
+		// handle Distance object
+		sb.append((int) distance.getValue());
 
-        Metrics metric = (Metrics) distance.getMetric();
+		Metrics metric = (Metrics) distance.getMetric();
 
-        switch (metric) {
-                case KILOMETERS :
-                    sb.append("km");
-                    break;
-                case MILES:
-                    sb.append("mi");
-                    break;
-        }
-    }
+		switch (metric) {
+			case KILOMETERS:
+				sb.append("km");
+				break;
+			case MILES:
+				sb.append("mi");
+				break;
+		}
+	}
 
-    private void oneParameterBBox(GeoBoundingBoxFilterBuilder filter, Object value) {
+	private void oneParameterBBox(GeoBoundingBoxFilterBuilder filter, Object value) {
 		Assert.isTrue(value instanceof GeoBox || value instanceof Box, "single-element of boundedBy filter must be type of GeoBox or Box");
 
 		GeoBox geoBBox;
-        if(value instanceof Box) {
-            Box sdbox = (Box) value;
-            geoBBox = GeoBox.fromBox(sdbox);
-        } else {
-            geoBBox = (GeoBox) value;
-        }
+		if (value instanceof Box) {
+			Box sdbox = (Box) value;
+			geoBBox = GeoBox.fromBox(sdbox);
+		} else {
+			geoBBox = (GeoBox) value;
+		}
 
-        filter.topLeft(geoBBox.getTopLeft().getLat(), geoBBox.getTopLeft().getLon());
+		filter.topLeft(geoBBox.getTopLeft().getLat(), geoBBox.getTopLeft().getLon());
 		filter.bottomRight(geoBBox.getBottomRight().getLat(), geoBBox.getBottomRight().getLon());
 	}
 

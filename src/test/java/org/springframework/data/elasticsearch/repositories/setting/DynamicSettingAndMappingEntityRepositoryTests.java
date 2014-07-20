@@ -121,7 +121,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		assertThat(mapping, is(notNullValue()));
 		assertThat(properties, is(notNullValue()));
 		assertThat(((String) ((Map) properties.get("email")).get("type")), is("string"));
-		assertThat((String) ((Map)properties.get("email")).get("analyzer"), is("emailAnalyzer"));
+		assertThat((String) ((Map) properties.get("email")).get("analyzer"), is("emailAnalyzer"));
 	}
 
 	@Test
@@ -146,7 +146,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		assertThat(mapping, is(notNullValue()));
 		assertThat(properties, is(notNullValue()));
 		assertThat(((String) ((Map) properties.get("email")).get("type")), is("string"));
-		assertThat((String) ((Map)properties.get("email")).get("analyzer"), is("emailAnalyzer"));
+		assertThat((String) ((Map) properties.get("email")).get("analyzer"), is("emailAnalyzer"));
 	}
 
 	/*
@@ -162,6 +162,6 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		assertThat(mapping, is(notNullValue()));
 		assertThat(properties, is(notNullValue()));
 		assertThat(((String) ((Map) properties.get("email")).get("type")), is("string"));
-		assertThat((String) ((Map)properties.get("email")).get("analyzer"), is("emailAnalyzer"));
+		assertThat((String) ((Map) properties.get("email")).get("analyzer"), is("emailAnalyzer"));
 	}
 }

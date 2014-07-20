@@ -37,7 +37,7 @@ public class SampleEntity {
 	private boolean available;
 	private String highlightedMessage;
 
-    private GeoPoint location;
+	private GeoPoint location;
 
 	@Version
 	private Long version;
@@ -90,13 +90,13 @@ public class SampleEntity {
 		this.highlightedMessage = highlightedMessage;
 	}
 
-    public GeoPoint getLocation() {
-        return location;
-    }
+	public GeoPoint getLocation() {
+		return location;
+	}
 
-    public void setLocation(GeoPoint location) {
-        this.location = location;
-    }
+	public void setLocation(GeoPoint location) {
+		this.location = location;
+	}
 
 	public Long getVersion() {
 		return version;

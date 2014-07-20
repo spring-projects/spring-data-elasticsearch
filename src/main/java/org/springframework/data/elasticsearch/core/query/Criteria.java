@@ -362,20 +362,20 @@ public class Criteria {
 		return this;
 	}
 
-    /**
-     * Creates new CriteriaEntry for {@code location WITHIN distance}
-     *
-     * @param location {@link org.springframework.data.geo.Point} center coordinates
-     * @param distance {@link org.springframework.data.geo.Distance} radius
-     *                                                              .
-     * @return Criteria the chaind criteria with the new 'within' criteria included.
-     */
-    public Criteria within(Point location, Distance distance) {
-        Assert.notNull(location, "Location value for near criteria must not be null");
-        Assert.notNull(location, "Distance value for near criteria must not be null");
-        filterCriteria.add(new CriteriaEntry(OperationKey.WITHIN, new Object[]{location, distance}));
-        return this;
-    }
+	/**
+	 * Creates new CriteriaEntry for {@code location WITHIN distance}
+	 *
+	 * @param location {@link org.springframework.data.geo.Point} center coordinates
+	 * @param distance {@link org.springframework.data.geo.Distance} radius
+	 * .
+	 * @return Criteria the chaind criteria with the new 'within' criteria included.
+	 */
+	public Criteria within(Point location, Distance distance) {
+		Assert.notNull(location, "Location value for near criteria must not be null");
+		Assert.notNull(location, "Distance value for near criteria must not be null");
+		filterCriteria.add(new CriteriaEntry(OperationKey.WITHIN, new Object[]{location, distance}));
+		return this;
+	}
 
 	/**
 	 * Creates new CriteriaEntry for {@code geoLocation WITHIN distance}
@@ -406,7 +406,6 @@ public class Criteria {
 		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{boundingBox}));
 		return this;
 	}
-
 
 
 	/**

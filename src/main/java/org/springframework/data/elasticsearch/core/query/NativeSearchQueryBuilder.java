@@ -43,7 +43,7 @@ public class NativeSearchQueryBuilder {
 	private FilterBuilder filterBuilder;
 	private List<SortBuilder> sortBuilders = new ArrayList<SortBuilder>();
 	private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
-    private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<AbstractAggregationBuilder>();
+	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<AbstractAggregationBuilder>();
 	private HighlightBuilder.Field[] highlightFields;
 	private Pageable pageable;
 	private String[] indices;
@@ -69,10 +69,10 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-    public NativeSearchQueryBuilder addAggregation(AbstractAggregationBuilder aggregationBuilder){
-        this.aggregationBuilders.add(aggregationBuilder);
-        return this;
-    }
+	public NativeSearchQueryBuilder addAggregation(AbstractAggregationBuilder aggregationBuilder) {
+		this.aggregationBuilders.add(aggregationBuilder);
+		return this;
+	}
 
 	public NativeSearchQueryBuilder withFacet(FacetRequest facetRequest) {
 		facetRequests.add(facetRequest);
@@ -146,9 +146,9 @@ public class NativeSearchQueryBuilder {
 			nativeSearchQuery.setFacets(facetRequests);
 		}
 
-        if (CollectionUtils.isNotEmpty(aggregationBuilders)) {
-            nativeSearchQuery.setAggregations(aggregationBuilders);
-        }
+		if (CollectionUtils.isNotEmpty(aggregationBuilders)) {
+			nativeSearchQuery.setAggregations(aggregationBuilders);
+		}
 
 		if (minScore > 0) {
 			nativeSearchQuery.setMinScore(minScore);
