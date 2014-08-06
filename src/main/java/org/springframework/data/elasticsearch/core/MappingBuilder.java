@@ -94,12 +94,12 @@ class MappingBuilder {
 			boolean isGeoField = isGeoField(field);
 
 			Field singleField = field.getAnnotation(Field.class);
-			if (!isGeoField && isEntity(field) && !isAnnotated(field)) {
+			if (!isGeoField && isEntity(field) && isAnnotated(field)) {
 				if (singleField == null) {
 					continue;
 				}
 				boolean nestedOrObject = isNestedOrObjectField(field);
-				mapEntity(xContentBuilder, getFieldType(field), false, EMPTY, field.getName(), nestedOrObject, field.getAnnotation(Field.class).type());
+				mapEntity(xContentBuilder, getFieldType(field), false, EMPTY, field.getName(), nestedOrObject, singleField.type());
 				if (nestedOrObject) {
 					continue;
 				}
@@ -126,7 +126,7 @@ class MappingBuilder {
 	}
 
 	private static boolean isAnnotated(java.lang.reflect.Field field) {
-		return field.getAnnotation(Field.class) == null && field.getAnnotation(MultiField.class) == null && field.getAnnotation(GeoPointField.class) == null;
+		return field.getAnnotation(Field.class) != null || field.getAnnotation(MultiField.class) != null || field.getAnnotation(GeoPointField.class) != null;
 	}
 
 	private static void applyGeoPointFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
@@ -146,9 +146,6 @@ class MappingBuilder {
 	/**
 	 * Apply mapping for a single @Field annotation
 	 *
-	 * @param xContentBuilder
-	 * @param field
-	 * @param fieldAnnotation
 	 * @throws IOException
 	 */
 	private static void addSingleFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field,
@@ -177,9 +174,6 @@ class MappingBuilder {
 	/**
 	 * Apply mapping for a single nested @Field annotation
 	 *
-	 * @param builder
-	 * @param field
-	 * @param annotation
 	 * @throws IOException
 	 */
 	private static void addNestedFieldMapping(XContentBuilder builder, java.lang.reflect.Field field,
@@ -204,9 +198,6 @@ class MappingBuilder {
 	/**
 	 * Multi field mappings for string type fields, support for sorts and facets
 	 *
-	 * @param builder
-	 * @param field
-	 * @param annotation
 	 * @throws IOException
 	 */
 	private static void addMultiFieldMapping(XContentBuilder builder, java.lang.reflect.Field field,
@@ -226,9 +217,6 @@ class MappingBuilder {
 	/**
 	 * Facet field for string type, for other types we don't need it(long, int, double, float)
 	 *
-	 * @param builder
-	 * @param field
-	 * @param annotation
 	 * @throws IOException
 	 */
 	private static void addFacetMapping(XContentBuilder builder, java.lang.reflect.Field field, Field annotation) throws IOException {
@@ -243,9 +231,6 @@ class MappingBuilder {
 	 * Sort field for string type, for other types we don't need it(long, int, double, float)
 	 * value of the field should be converted to lowercase and not analise
 	 *
-	 * @param builder
-	 * @param field
-	 * @param annotation
 	 * @throws IOException
 	 */
 	private static void addSortMapping(XContentBuilder builder, java.lang.reflect.Field field, Field annotation) throws IOException {
