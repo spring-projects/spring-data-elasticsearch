@@ -126,7 +126,7 @@ class MappingBuilder {
 	}
 
 	private static boolean isAnnotated(java.lang.reflect.Field field) {
-		return field.getAnnotation(Field.class) != null || field.getAnnotation(MultiField.class) != null || field.getAnnotation(GeoPointField.class) == null;
+		return field.getAnnotation(Field.class) != null || field.getAnnotation(MultiField.class) != null || field.getAnnotation(GeoPointField.class) != null;
 	}
 
 	private static void applyGeoPointFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
