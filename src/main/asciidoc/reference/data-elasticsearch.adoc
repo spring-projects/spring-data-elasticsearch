@@ -1,0 +1,288 @@
+[[elasticsearch.repositories]]
+= Elasticsearch Repositories
+
+This chapter includes details of the Elasticsearch repository implementation.
+
+[[elasticsearch.introduction]]
+== Introduction
+
+[[elasticsearch.namespace]]
+=== Spring Namespace
+
+The Spring Data Elasticsearch module contains a custom namespace allowing definition of repository beans as well as elements for instantiating a `ElasticsearchServer` .
+
+Using the `repositories` element looks up Spring Data repositories as described in <<repositories.create-instances>> .
+
+.Setting up Elasticsearch repositories using Namespace
+====
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.springframework.org/schema/data/elasticsearch
+http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd">
+
+    <elasticsearch:repositories base-package="com.acme.repositories" />
+    
+</beans>
+----
+====
+
+Using the `Transport Client` or `Node Client` element registers an instance of `Elasticsearch Server` in the context. 
+
+.Transport Client using Namespace
+====
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.springframework.org/schema/data/elasticsearch
+http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd">
+
+    <elasticsearch:transport-client id="client" cluster-nodes="localhost:9300,someip:9300" />
+    
+</beans> 
+----
+====
+
+.Node Client using Namespace
+====
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.springframework.org/schema/data/elasticsearch
+http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd">
+
+    <elasticsearch:node-client id="client" local="true"" />
+    
+</beans> 
+----
+====
+
+[[elasticsearch.annotation]]
+=== Annotation based configuration
+
+The Spring Data Elasticsearch repositories support cannot only be activated through an XML namespace but also using an annotation through JavaConfig.
+
+.Spring Data Elasticsearch repositories using JavaConfig
+====
+[source,java]
+----
+@Configuration
+@EnableElasticsearchRepositories(basePackages = "org/springframework/data/elasticsearch/repositories")
+static class Config {
+
+    @Bean
+    public ElasticsearchOperations elasticsearchTemplate() {
+        return new ElasticsearchTemplate(nodeBuilder().local(true).node().client());
+    }
+}                
+----
+====
+
+The configuration above sets up an `Embedded Elasticsearch Server` which is used by the `ElasticsearchTemplate` . Spring Data Elasticsearch Repositories are activated using the `@EnableElasticsearchRepositories` annotation, which essentially carries the same attributes as the XML namespace does. If no base package is configured, it will use the one the configuration class resides in.
+
+[[elasticsearch.cdi]]
+=== Elasticsearch Repositores using CDI
+
+The Spring Data Elasticsearch repositories can also be set up using CDI functionality.
+
+.Spring Data Elasticsearch repositories using JavaConfig
+====
+[source,java]
+----
+class ElasticsearchTemplateProducer {
+
+    @Produces
+    @ApplicationScoped
+    public ElasticsearchOperations createElasticsearchTemplate() {
+        return new ElasticsearchTemplate(nodeBuilder().local(true).node().client());
+    }
+}
+
+class ProductService {
+
+    private ProductRepository repository;
+
+    public Page<Product> findAvailableBookByName(String name, Pageable pageable) {
+        return repository.findByAvailableTrueAndNameStartingWith(name, pageable);
+    }
+
+    @Inject
+    public void setRepository(ProductRepository repository) {
+        this.repository = repository;
+    }
+}                
+----
+====
+
+[[elasticsearch.query-methods]]
+== Query methods
+
+[[elasticsearch.query-methods.finders]]
+=== Query lookup strategies
+
+The Elasticsearch module supports all basic query building  feature as String,Abstract,Criteria or have it being derived from the method name.
+
+==== Declared queries
+
+Deriving the query from the method name is not always sufficient and/or may result in unreadable method names. In this case one might make either use of `@Query` annotation (see <<elasticsearch.query-methods.at-query>> ).
+
+[[elasticsearch.query-methods.criterions]]
+=== Query creation
+
+Generally the query creation mechanism for Elasticsearch works as described in <<repositories.query-methods>> . Here's a short example of what a Elasticsearch query method translates into: 
+
+.Query creation from method names
+====
+[source,java]
+----
+public interface BookRepository extends Repository<Book, String>
+{
+    List<Book> findByNameAndPrice(String name, Integer price);
+}                
+----
+====
+
+The method name above will be translated into the following Elasticsearch json query
+
+[source]
+----
+{ "bool" :
+    { "must" :
+        [
+            { "field" : {"name" : "?"} },
+            { "field" : {"price" : "?"} }
+        ] 
+    }
+}                    
+----
+
+A list of supported keywords for Elasticsearch is shown below. 
+
+[cols="1,2,3", options="header"]
+.Supported keywords inside method names
+|===
+| Keyword
+| Sample
+| Elasticsearch Query String| `And`
+| `findByNameAndPrice`
+| `{"bool" : {"must" : [ {"field" : {"name" : "?"}},
+                                        {"field" : {"price" : "?"}} ]}}`
+
+| `Or`
+| `findByNameOrPrice`
+| `{"bool" : {"should" : [ {"field" : {"name" : "?"}},
+                                        {"field" : {"price" : "?"}} ]}}`
+
+| `Is`
+| `findByName`
+| `{"bool" : {"must" : {"field" : {"name" : "?"}}}}`
+
+| `Not`
+| `findByNameNot`
+| `{"bool" : {"must_not" : {"field" : {"name" : "?"}}}}`
+
+| `Between`
+| `findByPriceBetween`
+| `{"bool" : {"must" : {"range" : {"price" : {"from" :
+                                        ?,"to" : ?,"include_lower" : true,"include_upper" : true}}}}}`
+
+| `LessThanEqual`
+| `findByPriceLessThan`
+| `{"bool" : {"must" : {"range" : {"price" : {"from" :
+                                        null,"to" : ?,"include_lower" : true,"include_upper" :
+                                        true}}}}}`
+
+| `GreaterThanEqual`
+| `findByPriceGreaterThan`
+| `{"bool" : {"must" : {"range" : {"price" : {"from" :
+                                        ?,"to" : null,"include_lower" : true,"include_upper" :
+                                        true}}}}}`
+
+| `Before`
+| `findByPriceBefore`
+| `{"bool" : {"must" : {"range" : {"price" : {"from" :
+                                        null,"to" : ?,"include_lower" : true,"include_upper" :
+                                        true}}}}}`
+
+| `After`
+| `findByPriceAfter`
+| `{"bool" : {"must" : {"range" : {"price" : {"from" :
+                                        ?,"to" : null,"include_lower" : true,"include_upper" :
+                                        true}}}}}`
+
+| `Like`
+| `findByNameLike`
+| `{"bool" : {"must" : {"field" : {"name" : {"query" :
+                                        "?*","analyze_wildcard" : true}}}}}`
+
+| `StartingWith`
+| `findByNameStartingWith`
+| `{"bool" : {"must" : {"field" : {"name" : {"query" :
+                                        "?*","analyze_wildcard" : true}}}}}`
+
+| `EndingWith`
+| `findByNameEndingWith`
+| `{"bool" : {"must" : {"field" : {"name" : {"query" :
+                                        "*?","analyze_wildcard" : true}}}}}`
+
+| `Contains/Containing`
+| `findByNameContaining`
+| `{"bool" : {"must" : {"field" : {"name" : {"query" :
+                                        "*?*","analyze_wildcard" : true}}}}}`
+
+| `In`
+| `findByNameIn(Collection<String>names)`
+| `{"bool" : {"must" : {"bool" : {"should" : [ {"field" :
+                                        {"name" : "?"}}, {"field" : {"name" : "?"}} ]}}}}`
+
+| `NotIn`
+| `findByNameNotIn(Collection<String>names)`
+| `{"bool" : {"must_not" : {"bool" : {"should" : {"field" :
+                                        {"name" : "?"}}}}}}`
+
+| `Near`
+| `findByStoreNear`
+| `Not Supported Yet !`
+
+| `True`
+| `findByAvailableTrue`
+| `{"bool" : {"must" : {"field" : {"available" : true}}}}`
+
+| `False`
+| `findByAvailableFalse`
+| `{"bool" : {"must" : {"field" : {"available" : false}}}}`
+
+| `OrderBy`
+| `findByAvailableTrueOrderByNameDesc`
+| `{"sort" : [{ "name" : {"order" : "desc"} }],"bool" :
+                                        {"must" : {"field" : {"available" : true}}}}`
+|===
+
+[[elasticsearch.query-methods.at-query]]
+=== Using @Query Annotation
+
+.Declare query at the method using the `@Query` annotation.
+====
+[source,java]
+----
+public interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @Query("{"bool" : {"must" : {"field" : {"name" : "?0"}}}}")
+    Page<Book> findByName(String name,Pageable pageable);
+}                
+----
+====

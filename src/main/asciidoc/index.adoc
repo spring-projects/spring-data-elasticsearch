@@ -1,0 +1,28 @@
+= Spring Data Elasticsearch
+BioMed Central Development Team
+:toc:
+:spring-data-commons-docs: https://raw.githubusercontent.com/spring-projects/spring-data-commons/issue/DATACMNS-551/src/main/asciidoc
+
+{version}
+
+(C) 2013-2014 The original author(s)
+
+NOTE: _Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically._
+
+include::preface.adoc[]
+
+[[reference]]
+= Reference Documentation
+
+:leveloffset: 1
+include::{spring-data-commons-docs}/repositories.adoc[]
+include::reference/data-elasticsearch.adoc[]
+include::reference/elasticsearch-misc.adoc[]
+
+:leveloffset: 0
+:numbered!:
+[[appendix]]
+= Appendix
+
+include::{spring-data-commons-docs}/repository-namespace-reference.adoc[]
+include::{spring-data-commons-docs}/repository-query-keywords-reference.adoc[]
