@@ -1,0 +1,15 @@
+[preface]
+= Preface
+
+The Spring Data Elasticsearch project applies core Spring concepts to the development of solutions using the Elasticsearch Search Engine. We have povided a "template" as a high-level abstraction for storing,querying,sorting and faceting documents. You will notice similarities to the Spring data solr and mongodb support in the Spring Framework.
+
+[[project]]
+== Project Metadata
+
+* Version Control - `git://github.com/BioMedCentralLtd/spring-data-elasticsearch.git`
+
+[[requirements]]
+== Requirements
+
+Requires http://www.elasticsearch.org/download/[Elasticsearch] 0.20.2 and above or optional dependency or not even that if you are using Embedded Node Client
+

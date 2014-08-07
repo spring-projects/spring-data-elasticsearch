@@ -1,0 +1,72 @@
+[[elasticsearch.misc]]
+= Miscellaneous Elasticsearch Operation Support
+
+This chapter covers additional support for Elasticsearch operations that cannot be directly accessed via the repository interface. It is recommended to add those operations as custom implementation as described in <<repositories.custom-implementations>> .
+
+[[elasticsearch.misc.filter]]
+== Filter Builder
+
+Filter Builder improves query speed.
+
+====
+[source,java]
+----
+private ElasticsearchTemplate elasticsearchTemplate;
+
+SearchQuery searchQuery = new NativeSearchQueryBuilder()
+    .withQuery(matchAllQuery())
+    .withFilter(boolFilter().must(termFilter("id", documentId)))
+    .build();
+    
+Page<SampleEntity> sampleEntities =
+    elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);            
+----
+====
+
+[[elasticsearch.scan.and.scroll]]
+== Using Scan And Scroll For Big Result Set
+
+Elasticsearch has scan and scroll feature for getting big result set in chunks. `ElasticsearchTemplate` has scan and scroll methods that can be used as below.
+
+.Using Scan and Scroll
+====
+[source,java]
+----
+SearchQuery searchQuery = new NativeSearchQueryBuilder()
+    .withQuery(matchAllQuery())
+    .withIndices("test-index")
+    .withTypes("test-type")
+    .withPageable(new PageRequest(0,1))
+    .build();
+String scrollId = elasticsearchTemplate.scan(searchQuery,1000,false);
+List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+boolean hasRecords = true;
+while (hasRecords){
+    Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L , new ResultsMapper<SampleEntity>()
+    {
+        @Override
+        public Page<SampleEntity> mapResults(SearchResponse response) {
+            List<SampleEntity> chunk = new ArrayList<SampleEntity>();
+            for(SearchHit searchHit : response.getHits()){
+                if(response.getHits().getHits().length <= 0) {
+                    return null;
+                }
+                SampleEntity user = new SampleEntity();
+                user.setId(searchHit.getId());
+                user.setMessage((String)searchHit.getSource().get("message"));
+                chunk.add(user);
+            }
+            return new PageImpl<SampleEntity>(chunk);
+        }
+    });
+    if(page != null) {
+        sampleEntities.addAll(page.getContent());
+        hasRecords = page.hasNextPage();
+    }
+    else{
+        hasRecords = false;
+    }
+    }
+}            
+----
+====

@@ -134,6 +134,102 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>wagon-maven-plugin</artifactId>
             </plugin>
+			<plugin>
+				<groupId>org.asciidoctor</groupId>
+				<artifactId>asciidoctor-maven-plugin</artifactId>
+				<version>0.1.4</version>
+				<executions>
+
+					<execution>
+						<id>html</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>process-asciidoc</goal>
+						</goals>
+						<configuration>
+							<backend>html5</backend>
+							<sourceHighlighter>prettify</sourceHighlighter>
+							<outputDirectory>${project.root}/target/site/reference/htmlsingle</outputDirectory>
+							<attributes>
+								<linkcss>true</linkcss>
+								<numbered>true</numbered>
+								<icons>font</icons>
+								<sectanchors>true</sectanchors>
+								<stylesheet>spring.css</stylesheet>
+							</attributes>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>docbook</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>process-asciidoc</goal>
+						</goals>
+						<configuration>
+							<backend>docbook5</backend>
+						</configuration>
+					</execution>
+
+				</executions>
+
+				<configuration>
+					<sourceDirectory>${project.root}/src/main/asciidoc</sourceDirectory>
+					<sourceDocumentName>index.adoc</sourceDocumentName>
+					<doctype>book</doctype>
+					<attributes>
+						<version>${project.version}</version>
+						<allow-uri-read>true</allow-uri-read>
+						<sectids>false</sectids>
+					</attributes>
+				</configuration>
+
+			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<dependencies>
+					<dependency>
+						<groupId>org.springframework.build</groupId>
+						<artifactId>org.springframework.build.aws.ant</artifactId>
+						<version>3.0.6.RELEASE</version>
+					</dependency>
+					<dependency>
+						<groupId>org.jets3t</groupId>
+						<artifactId>com.springsource.org.jets3t</artifactId>
+						<version>0.8.1</version>
+					</dependency>
+				</dependencies>
+				<executions>
+
+					<execution>
+						<id>copy-documentation-resources</id>
+						<phase>generate-resources</phase>
+						<configuration>
+							<target>
+								<copy todir="${project.root}/target/site/reference/htmlsingle">
+									<fileset dir="${project.root}/src/main/resources/asciidoc" erroronmissingdir="false">
+										<include name="**/*.css"/>
+									</fileset>
+									<flattenmapper/>
+								</copy>
+								<copy todir="${project.root}/target/site/reference/htmlsingle/images">
+									<fileset dir="${project.root}/src/main/asciidoc" erroronmissingdir="false">
+										<include name="**/*.png"/>
+										<include name="**/*.gif"/>
+										<include name="**/*.jpg"/>
+									</fileset>
+									<flattenmapper/>
+								</copy>
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+					
+				</executions>
+			</plugin>
         </plugins>
     </build>
 
