@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repositories.cdi;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 import org.apache.webbeans.cditest.CdiTestContainer;
@@ -33,6 +34,7 @@ public class CdiRepositoryTests {
 
 	private static CdiTestContainer cdiContainer;
 	private CdiProductRepository repository;
+	private SamplePersonRepository personRepository;
 
 	@BeforeClass
 	public static void init() throws Exception {
@@ -51,6 +53,7 @@ public class CdiRepositoryTests {
 	public void setUp() {
 		CdiRepositoryClient client = cdiContainer.getInstance(CdiRepositoryClient.class);
 		repository = client.getRepository();
+		personRepository = client.getSamplePersonRepository();
 	}
 
 	@Test
@@ -79,5 +82,14 @@ public class CdiRepositoryTests {
 		assertEquals(0, repository.count());
 		retrieved = repository.findOne(bean.getId());
 		assertNull(retrieved);
+	}
+
+	/**
+	 * @see DATAES-113
+	 */
+	@Test
+	public void returnOneFromCustomImpl() {
+
+		assertThat(personRepository.returnOne(), is(1));
 	}
 }

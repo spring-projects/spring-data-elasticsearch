@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,24 +31,35 @@ import org.springframework.util.Assert;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
 public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 
 	private final Bean<ElasticsearchOperations> elasticsearchOperationsBean;
 
+	/**
+	 * Creates a new {@link ElasticsearchRepositoryBean}.
+	 *
+	 * @param operations must not be {@literal null}.
+	 * @param qualifiers must not be {@literal null}.
+	 * @param repositoryType must not be {@literal null}.
+	 * @param beanManager must not be {@literal null}.
+	 * @param customImplementationBean the bean for the custom implementation of the
+	 *          {@link org.springframework.data.repository.Repository}, can be {@literal null}.
+	 */
 	public ElasticsearchRepositoryBean(Bean<ElasticsearchOperations> operations, Set<Annotation> qualifiers,
-									   Class<T> repositoryType, BeanManager beanManager) {
-		super(qualifiers, repositoryType, beanManager);
+									   Class<T> repositoryType, BeanManager beanManager, Bean<?> customImplementationBean) {
+		super(qualifiers, repositoryType, beanManager, customImplementationBean);
 
 		Assert.notNull(operations, "Cannot create repository with 'null' for ElasticsearchOperations.");
 		this.elasticsearchOperationsBean = operations;
 	}
 
 	@Override
-	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType) {
+	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType, Object customImplementation) {
 		ElasticsearchOperations elasticsearchOperations = getDependencyInstance(elasticsearchOperationsBean,
 				ElasticsearchOperations.class);
-		return new ElasticsearchRepositoryFactory(elasticsearchOperations).getRepository(repositoryType);
+		return new ElasticsearchRepositoryFactory(elasticsearchOperations).getRepository(repositoryType, customImplementation);
 	}
 
 	@Override
