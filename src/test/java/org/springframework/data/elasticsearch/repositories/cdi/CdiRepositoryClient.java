@@ -24,6 +24,8 @@ import javax.inject.Inject;
 class CdiRepositoryClient {
 
 	private CdiProductRepository repository;
+	private  SamplePersonRepository samplePersonRepository;
+
 
 	public CdiProductRepository getRepository() {
 		return repository;
@@ -32,5 +34,14 @@ class CdiRepositoryClient {
 	@Inject
 	public void setRepository(CdiProductRepository repository) {
 		this.repository = repository;
+	}
+
+	public SamplePersonRepository getSamplePersonRepository() {
+		return samplePersonRepository;
+	}
+
+	@Inject
+	public void setSamplePersonRepository(SamplePersonRepository samplePersonRepository) {
+		this.samplePersonRepository = samplePersonRepository;
 	}
 }

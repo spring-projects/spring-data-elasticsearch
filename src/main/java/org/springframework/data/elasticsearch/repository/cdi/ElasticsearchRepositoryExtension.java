@@ -38,6 +38,7 @@ import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupport {
 
@@ -74,7 +75,8 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 			throw new UnsatisfiedResolutionException(String.format("Unable to resolve a bean for '%s' with qualifiers %s.",
 					ElasticsearchOperations.class.getName(), qualifiers));
 		}
+		Bean<?> customImplementationBean = getCustomImplementationBean(repositoryType, beanManager, qualifiers);
 
-		return new ElasticsearchRepositoryBean<T>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager);
+		return new ElasticsearchRepositoryBean<T>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager, customImplementationBean);
 	}
 }
