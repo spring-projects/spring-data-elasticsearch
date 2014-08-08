@@ -81,7 +81,7 @@ public class ElasticsearchTemplateTests {
 	}
 
 	@Test
-	public void shouldReturnCountForGivenSearchQuery() {
+	public void shouldReturnCountForGivenCriteriaQuery() {
 		// given
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity = new SampleEntityBuilder(documentId).message("some message")
@@ -93,6 +93,23 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		// when
 		long count = elasticsearchTemplate.count(searchQuery, SampleEntity.class);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	@Test
+	public void shouldReturnCountForGivenSearchQuery() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		// when
+		long count = elasticsearchTemplate.count(criteriaQuery, SampleEntity.class);
 		// then
 		assertThat(count, is(equalTo(1L)));
 	}
@@ -1210,6 +1227,24 @@ public class ElasticsearchTemplateTests {
 		assertThat(count, is(equalTo(1L)));
 	}
 
+	@Test
+	public void shouldReturnCountForGivenCriteriaQueryWithGivenIndexUsingCriteriaQuery() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		criteriaQuery.addIndices("test-index");
+		// when
+		long count = elasticsearchTemplate.count(criteriaQuery);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
 	/*
 	DATAES-67
 	 */
@@ -1230,6 +1265,25 @@ public class ElasticsearchTemplateTests {
 				.build();
 		// when
 		long count = elasticsearchTemplate.count(searchQuery);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	@Test
+	public void shouldReturnCountForGivenCriteriaQueryWithGivenIndexAndTypeUsingCriteriaQuery() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		criteriaQuery.addIndices("test-index");
+		criteriaQuery.addTypes("test-type");
+		// when
+		long count = elasticsearchTemplate.count(criteriaQuery);
 		// then
 		assertThat(count, is(equalTo(1L)));
 	}
@@ -1269,6 +1323,40 @@ public class ElasticsearchTemplateTests {
 				.build();
 		// when
 		long count = elasticsearchTemplate.count(searchQuery);
+		// then
+		assertThat(count, is(equalTo(2L)));
+	}
+
+	@Test
+	public void shouldReturnCountForGivenCriteriaQueryWithGivenMultiIndices() {
+		// given
+		cleanUpIndices();
+		String documentId1 = randomNumeric(5);
+		SampleEntity sampleEntity1 = new SampleEntityBuilder(documentId1).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery1 = new IndexQueryBuilder().withId(sampleEntity1.getId())
+				.withIndexName("test-index-1")
+				.withObject(sampleEntity1)
+				.build();
+
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntityBuilder(documentId2).message("some test message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery2 = new IndexQueryBuilder().withId(sampleEntity2.getId())
+				.withIndexName("test-index-2")
+				.withObject(sampleEntity2)
+				.build();
+
+		elasticsearchTemplate.bulkIndex(Arrays.asList(indexQuery1, indexQuery2));
+		elasticsearchTemplate.refresh("test-index-1", true);
+		elasticsearchTemplate.refresh("test-index-2", true);
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		criteriaQuery.addIndices("test-index-1", "test-index-2");
+		// when
+		long count = elasticsearchTemplate.count(criteriaQuery);
 		// then
 		assertThat(count, is(equalTo(2L)));
 	}
@@ -1349,11 +1437,45 @@ public class ElasticsearchTemplateTests {
 		assertThat(count, is(equalTo(1L)));
 	}
 
+	@Test
+	public void shouldReturnCountForGivenCriteriaQueryWithGivenIndexNameForSpecificIndex() {
+		// given
+		cleanUpIndices();
+		String documentId1 = randomNumeric(5);
+		SampleEntity sampleEntity1 = new SampleEntityBuilder(documentId1).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery1 = new IndexQueryBuilder().withId(sampleEntity1.getId())
+				.withIndexName("test-index-1")
+				.withObject(sampleEntity1)
+				.build();
+
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntityBuilder(documentId2).message("some test message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery2 = new IndexQueryBuilder().withId(sampleEntity2.getId())
+				.withIndexName("test-index-2")
+				.withObject(sampleEntity2)
+				.build();
+
+		elasticsearchTemplate.bulkIndex(Arrays.asList(indexQuery1, indexQuery2));
+		elasticsearchTemplate.refresh("test-index-1", true);
+		elasticsearchTemplate.refresh("test-index-2", true);
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		criteriaQuery.addIndices("test-index-1");
+		// when
+		long count = elasticsearchTemplate.count(criteriaQuery);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
 	/*
 	DATAES-67
 	*/
 	@Test(expected = IllegalArgumentException.class)
-	public void shouldThrowAnExceptionWhenNoIndexSpecifiedForCountQuery() {
+	public void shouldThrowAnExceptionWhenNoIndexSpecifiedForCountQueryForGivenSearchQuery() {
 		// given
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity = new SampleEntityBuilder(documentId).message("some message")
@@ -1367,6 +1489,23 @@ public class ElasticsearchTemplateTests {
 				.build();
 		// when
 		long count = elasticsearchTemplate.count(searchQuery);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void shouldThrowAnExceptionWhenNoIndexSpecifiedForCountQueryForGivenCriteriaQuery() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		// when
+		long count = elasticsearchTemplate.count(criteriaQuery);
 		// then
 		assertThat(count, is(equalTo(1L)));
 	}

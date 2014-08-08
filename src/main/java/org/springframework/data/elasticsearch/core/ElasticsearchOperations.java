@@ -253,6 +253,23 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @return
 	 */
+	<T> long count(CriteriaQuery query, Class<T> clazz);
+
+	/**
+	 * return number of elements found by given query
+	 *
+	 * @param query
+	 * @return
+	 */
+	<T> long count(CriteriaQuery query);
+
+	/**
+	 * return number of elements found by given query
+	 *
+	 * @param query
+	 * @param clazz
+	 * @return
+	 */
 	<T> long count(SearchQuery query, Class<T> clazz);
 
 	/**
