@@ -394,13 +394,17 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		Assert.notNull(indexName, "No index defined for Query");
 		Assert.notNull(type, "No type define for Query");
 		Assert.notNull(query.getId(), "No Id define for Query");
-		Assert.notNull(query.getIndexRequest(), "No IndexRequest define for Query");
+		Assert.notNull(query.getUpdateRequest(), "No IndexRequest define for Query");
 		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
 		if (query.DoUpsert()) {
 			updateRequestBuilder.setDocAsUpsert(true)
-					.setUpsert(query.getIndexRequest()).setDoc(query.getIndexRequest());
+					.setUpsert(query.getUpdateRequest())
+					.setDoc(query.getUpdateRequest().doc())
+					.setScript(query.getUpdateRequest().script())
+					.setScriptParams(query.getUpdateRequest().scriptParams())
+					.setScriptLang(query.getUpdateRequest().scriptLang());
 		} else {
-			updateRequestBuilder.setDoc(query.getIndexRequest());
+			updateRequestBuilder.setDoc(query.getUpdateRequest().doc());
 		}
 		return updateRequestBuilder.execute().actionGet();
 	}
