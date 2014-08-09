@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,28 +32,27 @@ import static org.mockito.Mockito.doReturn;
 @RunWith(MockitoJUnitRunner.class)
 public class ElasticsearchEntityInformationCreatorImplTest {
 
-    @Mock
-    private MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
-    @Mock
-    private ElasticsearchPersistentEntity<String> persistentEntity;
-    private ElasticsearchEntityInformationCreatorImpl entityInfoCreator;
-    
-    @Before
-    public void before() {
-	entityInfoCreator = new ElasticsearchEntityInformationCreatorImpl(mappingContext);
-    }
-    
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowIllegalArgumentExceptionOnMissingEntity() {
-	entityInfoCreator.getEntityInformation(String.class);
-    }
-    
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowIllegalArgumentExceptionOnMissingIdAnnotation() {
-	doReturn(persistentEntity).when(mappingContext).getPersistentEntity(String.class);
-	doReturn(String.class).when(persistentEntity).getType();
-	doReturn(null).when(persistentEntity).getIdProperty();
-	entityInfoCreator.getEntityInformation(String.class);
-    }
-    
+	@Mock
+	private MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
+	@Mock
+	private ElasticsearchPersistentEntity<String> persistentEntity;
+	private ElasticsearchEntityInformationCreatorImpl entityInfoCreator;
+
+	@Before
+	public void before() {
+		entityInfoCreator = new ElasticsearchEntityInformationCreatorImpl(mappingContext);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void shouldThrowIllegalArgumentExceptionOnMissingEntity() {
+		entityInfoCreator.getEntityInformation(String.class);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void shouldThrowIllegalArgumentExceptionOnMissingIdAnnotation() {
+		doReturn(persistentEntity).when(mappingContext).getPersistentEntity(String.class);
+		doReturn(String.class).when(persistentEntity).getType();
+		doReturn(null).when(persistentEntity).getIdProperty();
+		entityInfoCreator.getEntityInformation(String.class);
+	}
 }
