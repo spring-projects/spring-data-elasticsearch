@@ -398,7 +398,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
 		if (query.DoUpsert()) {
 			updateRequestBuilder.setDocAsUpsert(true)
-					.setUpsert(query.getUpdateRequest())
 					.setDoc(query.getUpdateRequest().doc())
 					.setScript(query.getUpdateRequest().script())
 					.setScriptParams(query.getUpdateRequest().scriptParams())
