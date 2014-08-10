@@ -62,6 +62,13 @@
                             <xsd:documentation><![CDATA[to enable or desable http port]]> </xsd:documentation>
                         </xsd:annotation>
                     </xsd:attribute>
+                    <xsd:attribute name="client" type="xsd:boolean" default="false">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[Client should hold data or not. true to set just a client, false to allow this client to hold data.]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
                 </xsd:extension>
             </xsd:complexContent>
         </xsd:complexType>
