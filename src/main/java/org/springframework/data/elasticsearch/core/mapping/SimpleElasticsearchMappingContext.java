@@ -33,19 +33,18 @@ import org.springframework.data.util.TypeInformation;
  */
 
 public class SimpleElasticsearchMappingContext extends
-		AbstractMappingContext<SimpleElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> implements ApplicationContextAware{
+		AbstractMappingContext<SimpleElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> implements ApplicationContextAware {
 
-    private ApplicationContext context;
+	private ApplicationContext context;
 
-    @Override
+	@Override
 	protected <T> SimpleElasticsearchPersistentEntity<?> createPersistentEntity(TypeInformation<T> typeInformation) {
-        final SimpleElasticsearchPersistentEntity<T> persistentEntity =
-                new SimpleElasticsearchPersistentEntity<T>(typeInformation);
-        if(context != null)
-        {
-            persistentEntity.setApplicationContext(context);
-        }
-        return persistentEntity;
+		final SimpleElasticsearchPersistentEntity<T> persistentEntity =
+				new SimpleElasticsearchPersistentEntity<T>(typeInformation);
+		if (context != null) {
+			persistentEntity.setApplicationContext(context);
+		}
+		return persistentEntity;
 	}
 
 	@Override
@@ -54,8 +53,8 @@ public class SimpleElasticsearchMappingContext extends
 		return new SimpleElasticsearchPersistentProperty(field, descriptor, owner, simpleTypeHolder);
 	}
 
-    @Override
-    public void setApplicationContext(ApplicationContext context) throws BeansException {
-        this.context = context;
-    }
+	@Override
+	public void setApplicationContext(ApplicationContext context) throws BeansException {
+		this.context = context;
+	}
 }

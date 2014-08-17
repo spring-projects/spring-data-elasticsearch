@@ -61,7 +61,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 		super(typeInformation);
 		this.context = new StandardEvaluationContext();
-        this.parser = new SpelExpressionParser();
+		this.parser = new SpelExpressionParser();
 
 		Class<T> clazz = typeInformation.getType();
 		if (clazz.isAnnotationPresent(Document.class)) {

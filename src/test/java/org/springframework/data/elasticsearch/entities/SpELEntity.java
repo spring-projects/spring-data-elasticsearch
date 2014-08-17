@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 /**
- * User: akonczak@gmail.com
- * Date: 07/08/14
- * Time: 22:26
+ * SpELEntity
+ *
+ * @author Artur Konczak
+ *
  */
 @Document(indexName = "#{'abz'+'-'+'entity'}", type = "spel", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SpELEntity {

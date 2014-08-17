@@ -61,8 +61,8 @@ public class MappingElasticsearchConverter implements ElasticsearchConverter, Ap
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
-        if(mappingContext instanceof ApplicationContextAware){
-            ((ApplicationContextAware)mappingContext).setApplicationContext(applicationContext);
-        }
+		if (mappingContext instanceof ApplicationContextAware) {
+			((ApplicationContextAware) mappingContext).setApplicationContext(applicationContext);
+		}
 	}
 }

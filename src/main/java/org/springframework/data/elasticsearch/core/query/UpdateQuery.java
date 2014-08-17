@@ -46,7 +46,7 @@ public class UpdateQuery {
 	public void setUpdateRequest(UpdateRequest updateRequest) {
 		this.updateRequest = updateRequest;
 	}
-	
+
 	public String getIndexName() {
 		return indexName;
 	}

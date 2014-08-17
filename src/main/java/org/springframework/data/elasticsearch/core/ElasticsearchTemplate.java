@@ -123,8 +123,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter, ResultsMapper resultsMapper) {
 		this.client = client;
-        this.elasticsearchConverter = (elasticsearchConverter == null) ? new MappingElasticsearchConverter(
-                new SimpleElasticsearchMappingContext()) : elasticsearchConverter;
+		this.elasticsearchConverter = (elasticsearchConverter == null) ? new MappingElasticsearchConverter(
+				new SimpleElasticsearchMappingContext()) : elasticsearchConverter;
 		this.resultsMapper = (resultsMapper == null) ? new DefaultResultMapper(this.elasticsearchConverter.getMappingContext()) : resultsMapper;
 	}
 
@@ -879,14 +879,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		return ids;
 	}
 
-    @Override
-    public void setApplicationContext(ApplicationContext context) throws BeansException {
-        if(elasticsearchConverter instanceof ApplicationContextAware){
-            ((ApplicationContextAware)elasticsearchConverter).setApplicationContext(context);
-        }
-    }
+	@Override
+	public void setApplicationContext(ApplicationContext context) throws BeansException {
+		if (elasticsearchConverter instanceof ApplicationContextAware) {
+			((ApplicationContextAware) elasticsearchConverter).setApplicationContext(context);
+		}
+	}
 
-    private static String[] toArray(List<String> values) {
+	private static String[] toArray(List<String> values) {
 		String[] valuesAsArray = new String[values.size()];
 		return values.toArray(valuesAsArray);
 	}

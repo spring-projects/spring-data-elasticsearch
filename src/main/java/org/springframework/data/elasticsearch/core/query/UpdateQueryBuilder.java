@@ -41,7 +41,7 @@ public class UpdateQueryBuilder {
 		this.updateRequest = updateRequest;
 		return this;
 	}
-	
+
 	public UpdateQueryBuilder withIndexRequest(IndexRequest indexRequest) {
 		this.indexRequest = indexRequest;
 		return this;
@@ -76,7 +76,7 @@ public class UpdateQueryBuilder {
 		if (this.indexRequest != null) {
 			if (this.updateRequest == null) {
 				updateRequest = new UpdateRequest();
-			} 
+			}
 			updateRequest.doc(indexRequest);
 		}
 		updateQuery.setUpdateRequest(updateRequest);

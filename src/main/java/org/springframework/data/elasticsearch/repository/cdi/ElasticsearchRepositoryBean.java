@@ -45,7 +45,7 @@ public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 	 * @param repositoryType must not be {@literal null}.
 	 * @param beanManager must not be {@literal null}.
 	 * @param customImplementationBean the bean for the custom implementation of the
-	 *          {@link org.springframework.data.repository.Repository}, can be {@literal null}.
+	 * {@link org.springframework.data.repository.Repository}, can be {@literal null}.
 	 */
 	public ElasticsearchRepositoryBean(Bean<ElasticsearchOperations> operations, Set<Annotation> qualifiers,
 									   Class<T> repositoryType, BeanManager beanManager, Bean<?> customImplementationBean) {
