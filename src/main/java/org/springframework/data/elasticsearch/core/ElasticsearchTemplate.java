@@ -399,7 +399,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		if (query.DoUpsert()) {
 			updateRequestBuilder.setDocAsUpsert(true)
 					.setDoc(query.getUpdateRequest().doc())
-					.setScript(query.getUpdateRequest().script())
+					.setScript(query.getUpdateRequest().script(), query.getUpdateRequest().scriptType())
 					.setScriptParams(query.getUpdateRequest().scriptParams())
 					.setScriptLang(query.getUpdateRequest().scriptLang());
 		} else {
