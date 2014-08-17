@@ -29,6 +29,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 
 /**
+ * @author Kevin Leturc
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -62,7 +63,7 @@ public interface SampleCustomMethodRepository extends ElasticsearchRepository<Sa
 
 	Page<SampleEntity> findByIdIn(List<String> ids, Pageable pageable);
 
-	Page<SampleEntity> findByIdNotIn(List<String> messages, Pageable pageable);
+	Page<SampleEntity> findByIdNotIn(List<String> ids, Pageable pageable);
 
 	Page<SampleEntity> findByAvailableTrue(Pageable pageable);
 
@@ -81,4 +82,45 @@ public interface SampleCustomMethodRepository extends ElasticsearchRepository<Sa
 	Page<SampleEntity> findByLocationNear(Point point, Distance distance, Pageable pageable);
 
 	Page<SampleEntity> findByLocationNear(GeoPoint point, String distance, Pageable pageable);
+
+	long countByType(String type);
+
+	long countByTypeNot(String type);
+
+	long countByAvailable(boolean available);
+
+	long countByRateLessThan(int rate);
+
+	long countByRateBefore(int rate);
+
+	long countByRateAfter(int rate);
+
+	long countByMessageLike(String message);
+
+	long countByMessageStartingWith(String message);
+
+	long countByMessageEndingWith(String message);
+
+	long countByMessageContaining(String message);
+
+	long countByIdIn(List<String> ids);
+
+	long countByIdNotIn(List<String> ids);
+
+	long countByAvailableTrue();
+
+	long countByAvailableFalse();
+
+	long countByLocationWithin(GeoPoint point, String distance);
+
+	long countByLocationWithin(Point point, Distance distance);
+
+	long countByLocationNear(GeoBox box);
+
+	long countByLocationNear(Box box);
+
+	long countByLocationNear(Point point, Distance distance);
+
+	long countByLocationNear(GeoPoint point, String distance);
+
 }

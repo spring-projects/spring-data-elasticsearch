@@ -28,6 +28,7 @@ import org.springframework.data.elasticsearch.core.query.*;
 /**
  * ElasticsearchOperations
  *
+ * @author Kevin Leturc
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
@@ -245,6 +246,23 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	<T> List<String> queryForIds(SearchQuery query);
+
+	/**
+	 * return number of elements found by given query
+	 *
+	 * @param query
+	 * @param clazz
+	 * @return
+	 */
+	<T> long count(CriteriaQuery query, Class<T> clazz);
+
+	/**
+	 * return number of elements found by given query
+	 *
+	 * @param query
+	 * @return
+	 */
+	<T> long count(CriteriaQuery query);
 
 	/**
 	 * return number of elements found by given query
