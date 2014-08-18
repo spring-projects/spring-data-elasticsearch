@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.facet;
 
+import java.io.Serializable;
+
 /**
  * Generic interface for all facets
  *
@@ -23,7 +25,7 @@ package org.springframework.data.elasticsearch.core.facet;
  * @author Artur Konczak
  * @author Jonathan Yan
  */
-public interface FacetResult {
+public interface FacetResult extends Serializable {
 
 	String getName();
 
