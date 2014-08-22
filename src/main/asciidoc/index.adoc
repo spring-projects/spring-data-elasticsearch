@@ -1,28 +1,35 @@
 = Spring Data Elasticsearch
 BioMed Central Development Team
+:revnumber: {version}
+:revdate: {localdate}
 :toc:
-:spring-data-commons-docs: https://raw.githubusercontent.com/spring-projects/spring-data-commons/issue/DATACMNS-551/src/main/asciidoc
+:toc-placement!:
+:spring-data-commons-docs: https://raw.githubusercontent.com/spring-projects/spring-data-commons/master/src/main/asciidoc
 
-{version}
+(C) 2013-2014 The original author(s).
 
-(C) 2013-2014 The original author(s)
+NOTE: Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
 
-NOTE: _Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically._
+toc::[]
 
 include::preface.adoc[]
+:leveloffset: +1
+include::{spring-data-commons-docs}/repositories.adoc[]
+:leveloffset: -1
 
 [[reference]]
 = Reference Documentation
 
-:leveloffset: 1
-include::{spring-data-commons-docs}/repositories.adoc[]
+:leveloffset: +1
 include::reference/data-elasticsearch.adoc[]
 include::reference/elasticsearch-misc.adoc[]
+:leveloffset: -1
 
-:leveloffset: 0
-:numbered!:
 [[appendix]]
 = Appendix
-
+:numbered!:
+:leveloffset: +1
 include::{spring-data-commons-docs}/repository-namespace-reference.adoc[]
+include::{spring-data-commons-docs}/repository-populator-namespace-reference.adoc[]
 include::{spring-data-commons-docs}/repository-query-keywords-reference.adoc[]
+:leveloffset: -1
