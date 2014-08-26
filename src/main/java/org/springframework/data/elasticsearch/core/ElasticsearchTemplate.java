@@ -50,6 +50,7 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.mlt.MoreLikeThisRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
@@ -96,6 +97,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
+ * @author Kevin Leturc
  */
 
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
@@ -318,9 +320,64 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
+	public <T> long count(CriteriaQuery criteriaQuery, Class<T> clazz) {
+		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
+		FilterBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
+
+		if (elasticsearchFilter == null) {
+			return doCount(prepareCount(criteriaQuery, clazz), elasticsearchQuery);
+		} else {
+			// filter could not be set into CountRequestBuilder, convert request into search request
+			return doCount(prepareSearch(criteriaQuery, clazz), elasticsearchQuery, elasticsearchFilter);
+		}
+	}
+
+	@Override
 	public <T> long count(SearchQuery searchQuery, Class<T> clazz) {
-		String indexName[] = isNotEmpty(searchQuery.getIndices()) ? searchQuery.getIndices().toArray(new String[searchQuery.getIndices().size()]) : retrieveIndexNameFromPersistentEntity(clazz);
-		String types[] = isNotEmpty(searchQuery.getTypes()) ? searchQuery.getTypes().toArray(new String[searchQuery.getTypes().size()]) : retrieveTypeFromPersistentEntity(clazz);
+		QueryBuilder elasticsearchQuery = searchQuery.getQuery();
+		FilterBuilder elasticsearchFilter = searchQuery.getFilter();
+
+		if (elasticsearchFilter == null) {
+			return doCount(prepareCount(searchQuery, clazz), elasticsearchQuery);
+		} else {
+			// filter could not be set into CountRequestBuilder, convert request into search request
+			return doCount(prepareSearch(searchQuery, clazz), elasticsearchQuery, elasticsearchFilter);
+		}
+	}
+
+	@Override
+	public <T> long count(CriteriaQuery query) {
+		return count(query, null);
+	}
+
+	@Override
+	public <T> long count(SearchQuery query) {
+		return count(query, null);
+	}
+
+	private long doCount(CountRequestBuilder countRequestBuilder, QueryBuilder elasticsearchQuery) {
+		if (elasticsearchQuery != null) {
+			countRequestBuilder.setQuery(elasticsearchQuery);
+		}
+		return countRequestBuilder.execute().actionGet().getCount();
+	}
+
+	private long doCount(SearchRequestBuilder searchRequestBuilder, QueryBuilder elasticsearchQuery, FilterBuilder elasticsearchFilter) {
+		if (elasticsearchQuery != null) {
+			searchRequestBuilder.setQuery(elasticsearchQuery);
+		} else {
+			searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
+		}
+		if (elasticsearchFilter != null) {
+			searchRequestBuilder.setPostFilter(elasticsearchFilter);
+		}
+		searchRequestBuilder.setSearchType(SearchType.COUNT);
+		return searchRequestBuilder.execute().actionGet().getHits().getTotalHits();
+	}
+
+	private <T> CountRequestBuilder prepareCount(Query query, Class<T> clazz) {
+		String indexName[] = isNotEmpty(query.getIndices()) ? query.getIndices().toArray(new String[query.getIndices().size()]) : retrieveIndexNameFromPersistentEntity(clazz);
+		String types[] = isNotEmpty(query.getTypes()) ? query.getTypes().toArray(new String[query.getTypes().size()]) : retrieveTypeFromPersistentEntity(clazz);
 
 		Assert.notNull(indexName, "No index defined for Query");
 
@@ -329,15 +386,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		if (types != null) {
 			countRequestBuilder.setTypes(types);
 		}
-		if (searchQuery.getQuery() != null) {
-			countRequestBuilder.setQuery(searchQuery.getQuery());
-		}
-		return countRequestBuilder.execute().actionGet().getCount();
-	}
-
-	@Override
-	public <T> long count(SearchQuery query) {
-		return count(query, null);
+		return countRequestBuilder;
 	}
 
 	@Override
