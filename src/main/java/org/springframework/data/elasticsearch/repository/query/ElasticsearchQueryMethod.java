@@ -33,14 +33,10 @@ import org.springframework.util.StringUtils;
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
-	private final ElasticsearchEntityInformation<?, ?> entityInformation;
 	private Method method;
 
-	public ElasticsearchQueryMethod(Method method, RepositoryMetadata metadata,
-									ElasticsearchEntityInformationCreator elasticsearchEntityInformationCreator) {
+	public ElasticsearchQueryMethod(Method method, RepositoryMetadata metadata) {
 		super(method, metadata);
-		this.entityInformation = elasticsearchEntityInformationCreator.getEntityInformation(metadata
-				.getReturnedDomainClass(method));
 		this.method = method;
 	}
 

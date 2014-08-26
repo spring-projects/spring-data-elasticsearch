@@ -105,7 +105,7 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 		@Override
 		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, NamedQueries namedQueries) {
 
-			ElasticsearchQueryMethod queryMethod = new ElasticsearchQueryMethod(method, metadata, entityInformationCreator);
+			ElasticsearchQueryMethod queryMethod = new ElasticsearchQueryMethod(method, metadata);
 			String namedQueryName = queryMethod.getNamedQueryName();
 
 			if (namedQueries.hasQuery(namedQueryName)) {
