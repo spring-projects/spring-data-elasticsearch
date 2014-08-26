@@ -44,6 +44,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Franck Marchand
+ * @author Kevin Leturc
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:custom-method-repository-test.xml")
@@ -589,5 +590,540 @@ public class CustomMethodRepositoryTests {
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
 	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethod() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setMessage("some message");
+
+		repository.save(sampleEntity);
+
+		documentId = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId);
+		sampleEntity2.setType("test2");
+		sampleEntity2.setMessage("some message");
+
+		repository.save(sampleEntity2);
+
+		// when
+		long count = repository.countByType("test");
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodForNot() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("some");
+		sampleEntity.setMessage("some message");
+
+		repository.save(sampleEntity);
+
+		documentId = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId);
+		sampleEntity2.setType("test");
+		sampleEntity2.setMessage("some message");
+
+		repository.save(sampleEntity2);
+
+		// when
+		long count = repository.countByTypeNot("test");
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodWithBooleanParameter() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setMessage("foo");
+		sampleEntity.setAvailable(true);
+		repository.save(sampleEntity);
+
+		// given
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setType("test");
+		sampleEntity2.setMessage("bar");
+		sampleEntity2.setAvailable(false);
+		repository.save(sampleEntity2);
+		// when
+		long count = repository.countByAvailable(false);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodWithLessThan() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setRate(10);
+		sampleEntity.setMessage("some message");
+		repository.save(sampleEntity);
+
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setType("test");
+		sampleEntity2.setRate(20);
+		sampleEntity2.setMessage("some message");
+		repository.save(sampleEntity2);
+
+		// when
+		long count = repository.countByRateLessThan(10);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodWithBefore() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setRate(10);
+		sampleEntity.setMessage("some message");
+
+		repository.save(sampleEntity);
+
+		documentId = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId);
+		sampleEntity2.setType("test");
+		sampleEntity2.setRate(20);
+		sampleEntity2.setMessage("some message");
+
+		repository.save(sampleEntity2);
+
+		// when
+		long count = repository.countByRateBefore(10);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodWithAfter() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setRate(10);
+		sampleEntity.setMessage("some message");
+
+		repository.save(sampleEntity);
+
+		documentId = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId);
+		sampleEntity2.setType("test");
+		sampleEntity2.setRate(0);
+		sampleEntity2.setMessage("some message");
+
+		repository.save(sampleEntity2);
+
+		// when
+		long count = repository.countByRateAfter(10);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodWithLike() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setRate(10);
+		sampleEntity.setMessage("foo");
+
+		repository.save(sampleEntity);
+
+		documentId = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId);
+		sampleEntity2.setType("test");
+		sampleEntity2.setRate(10);
+		sampleEntity2.setMessage("some message");
+
+		repository.save(sampleEntity2);
+
+		// when
+		long count = repository.countByMessageLike("fo");
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodForStartingWith() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setRate(10);
+		sampleEntity.setMessage("foo");
+
+		repository.save(sampleEntity);
+
+		documentId = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId);
+		sampleEntity2.setType("test");
+		sampleEntity2.setRate(10);
+		sampleEntity2.setMessage("some message");
+
+		repository.save(sampleEntity2);
+
+		// when
+		long count = repository.countByMessageStartingWith("fo");
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodForEndingWith() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setRate(10);
+		sampleEntity.setMessage("foo");
+
+		repository.save(sampleEntity);
+
+		documentId = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId);
+		sampleEntity2.setType("test");
+		sampleEntity2.setRate(10);
+		sampleEntity2.setMessage("some message");
+
+		repository.save(sampleEntity2);
+
+		// when
+		long count = repository.countByMessageEndingWith("o");
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodForContains() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setRate(10);
+		sampleEntity.setMessage("foo");
+
+		repository.save(sampleEntity);
+
+		documentId = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId);
+		sampleEntity2.setType("test");
+		sampleEntity2.setRate(10);
+		sampleEntity2.setMessage("some message");
+
+		repository.save(sampleEntity2);
+
+		// when
+		long count = repository.countByMessageContaining("fo");
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodForIn() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setMessage("foo");
+		repository.save(sampleEntity);
+
+		// given
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setType("test");
+		sampleEntity2.setMessage("bar");
+		repository.save(sampleEntity2);
+
+		List<String> ids = Arrays.asList(documentId, documentId2);
+
+		// when
+		long count = repository.countByIdIn(ids);
+		// then
+		assertThat(count, is(equalTo(2L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodForNotIn() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setMessage("foo");
+		repository.save(sampleEntity);
+
+		// given
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setType("test");
+		sampleEntity2.setMessage("bar");
+		repository.save(sampleEntity2);
+
+		List<String> ids = Arrays.asList(documentId);
+
+		// when
+		long count = repository.countByIdNotIn(ids);
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodForTrue() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setMessage("foo");
+		sampleEntity.setAvailable(true);
+		repository.save(sampleEntity);
+
+		// given
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setType("test");
+		sampleEntity2.setMessage("bar");
+		sampleEntity2.setAvailable(false);
+		repository.save(sampleEntity2);
+		// when
+		long count = repository.countByAvailableTrue();
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodForFalse() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setMessage("foo");
+		sampleEntity.setAvailable(true);
+		repository.save(sampleEntity);
+
+		// given
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setType("test");
+		sampleEntity2.setMessage("bar");
+		sampleEntity2.setAvailable(false);
+		repository.save(sampleEntity2);
+		// when
+		long count = repository.countByAvailableFalse();
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodWithWithinGeoPoint() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setRate(10);
+		sampleEntity.setMessage("foo");
+		sampleEntity.setLocation(new GeoPoint(45.7806d, 3.0875d));
+
+		repository.save(sampleEntity);
+
+		documentId = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId);
+		sampleEntity2.setType("test");
+		sampleEntity2.setRate(10);
+		sampleEntity2.setMessage("foo");
+		sampleEntity2.setLocation(new GeoPoint(30.7806d, 0.0875d));
+
+		repository.save(sampleEntity2);
+
+		// when
+		long count = repository.countByLocationWithin(new GeoPoint(45.7806d, 3.0875d), "2km");
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodWithWithinPoint() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setRate(10);
+		sampleEntity.setMessage("foo");
+		sampleEntity.setLocation(new GeoPoint(45.7806d, 3.0875d));
+
+		repository.save(sampleEntity);
+
+		documentId = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId);
+		sampleEntity2.setType("test");
+		sampleEntity2.setRate(10);
+		sampleEntity2.setMessage("foo");
+		sampleEntity2.setLocation(new GeoPoint(30.7806d, 0.0875d));
+
+		repository.save(sampleEntity2);
+
+		// when
+		long count = repository.countByLocationWithin(new Point(3.0875d, 45.7806d), new Distance(2, Metrics.KILOMETERS));
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodWithNearBox() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setRate(10);
+		sampleEntity.setMessage("foo");
+		sampleEntity.setLocation(new GeoPoint(45.7806d, 3.0875d));
+
+		repository.save(sampleEntity);
+
+		documentId = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId);
+		sampleEntity2.setType("test2");
+		sampleEntity2.setRate(10);
+		sampleEntity2.setMessage("foo");
+		sampleEntity2.setLocation(new GeoPoint(30.7806d, 0.0875d));
+
+		repository.save(sampleEntity2);
+
+		// when
+		long count = repository.countByLocationNear(new Box(new Point(3d, 46d), new Point(4d, 45d)));
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-106
+	 */
+	@Test
+	public void shouldCountCustomMethodWithNearPointAndDistance() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setRate(10);
+		sampleEntity.setMessage("foo");
+		sampleEntity.setLocation(new GeoPoint(45.7806d, 3.0875d));
+
+		repository.save(sampleEntity);
+
+		documentId = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId);
+		sampleEntity2.setType("test");
+		sampleEntity2.setRate(10);
+		sampleEntity2.setMessage("foo");
+		sampleEntity2.setLocation(new GeoPoint(30.7806d, 0.0875d));
+
+		repository.save(sampleEntity2);
+
+		// when
+		long count = repository.countByLocationNear(new Point(3.0875d, 45.7806d), new Distance(2, Metrics.KILOMETERS));
+		// then
+		assertThat(count, is(equalTo(1L)));
+	}
+
 }
 

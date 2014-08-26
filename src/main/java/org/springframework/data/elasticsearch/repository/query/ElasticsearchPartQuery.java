@@ -28,6 +28,7 @@ import org.springframework.data.repository.query.parser.PartTree;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Kevin Leturc
  */
 public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery {
 
@@ -52,6 +53,8 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 				query.setPageable(accessor.getPageable());
 			}
 			return elasticsearchOperations.queryForList(query, queryMethod.getEntityInformation().getJavaType());
+		} else if (tree.isCountProjection()) {
+			return elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
 		}
 		return elasticsearchOperations.queryForObject(query, queryMethod.getEntityInformation().getJavaType());
 	}
