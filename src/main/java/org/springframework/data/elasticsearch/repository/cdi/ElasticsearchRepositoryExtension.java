@@ -66,7 +66,8 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 		}
 	}
 
-	private <T> CdiRepositoryBean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers, BeanManager beanManager) {
+	private <T> CdiRepositoryBean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers,
+			BeanManager beanManager) {
 
 		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers
 				.toString());
@@ -75,8 +76,8 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 			throw new UnsatisfiedResolutionException(String.format("Unable to resolve a bean for '%s' with qualifiers %s.",
 					ElasticsearchOperations.class.getName(), qualifiers));
 		}
-		Bean<?> customImplementationBean = getCustomImplementationBean(repositoryType, beanManager, qualifiers);
 
-		return new ElasticsearchRepositoryBean<T>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager, customImplementationBean);
+		return new ElasticsearchRepositoryBean<T>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager,
+				getCustomImplementationDetector());
 	}
 }

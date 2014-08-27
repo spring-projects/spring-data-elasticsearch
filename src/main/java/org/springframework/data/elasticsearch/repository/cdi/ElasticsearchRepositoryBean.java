@@ -24,6 +24,7 @@ import java.util.Set;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.support.ElasticsearchRepositoryFactory;
 import org.springframework.data.repository.cdi.CdiRepositoryBean;
+import org.springframework.data.repository.config.CustomRepositoryImplementationDetector;
 import org.springframework.util.Assert;
 
 /**
@@ -44,12 +45,12 @@ public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 	 * @param qualifiers must not be {@literal null}.
 	 * @param repositoryType must not be {@literal null}.
 	 * @param beanManager must not be {@literal null}.
-	 * @param customImplementationBean the bean for the custom implementation of the
-	 * {@link org.springframework.data.repository.Repository}, can be {@literal null}.
+	 * @param detector detector for the custom {@link org.springframework.data.repository.Repository} implementations
+	 *          {@link CustomRepositoryImplementationDetector}, can be {@literal null}.
 	 */
 	public ElasticsearchRepositoryBean(Bean<ElasticsearchOperations> operations, Set<Annotation> qualifiers,
-									   Class<T> repositoryType, BeanManager beanManager, Bean<?> customImplementationBean) {
-		super(qualifiers, repositoryType, beanManager, customImplementationBean);
+			Class<T> repositoryType, BeanManager beanManager, CustomRepositoryImplementationDetector detector) {
+		super(qualifiers, repositoryType, beanManager, detector);
 
 		Assert.notNull(operations, "Cannot create repository with 'null' for ElasticsearchOperations.");
 		this.elasticsearchOperationsBean = operations;
@@ -59,7 +60,8 @@ public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType, Object customImplementation) {
 		ElasticsearchOperations elasticsearchOperations = getDependencyInstance(elasticsearchOperationsBean,
 				ElasticsearchOperations.class);
-		return new ElasticsearchRepositoryFactory(elasticsearchOperations).getRepository(repositoryType, customImplementation);
+		return new ElasticsearchRepositoryFactory(elasticsearchOperations).getRepository(repositoryType,
+				customImplementation);
 	}
 
 	@Override
