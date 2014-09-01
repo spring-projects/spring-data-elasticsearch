@@ -56,7 +56,7 @@ public class DefaultFacetMapper {
 		for (TermsFacet.Entry entry : facet.getEntries()) {
 			entries.add(new Term(entry.getTerm().toString(), entry.getCount()));
 		}
-		return new TermResult(facet.getName(), entries);
+		return new TermResult(facet.getName(), entries, facet.getTotalCount(), facet.getOtherCount(), facet.getMissingCount());
 	}
 
 	private static FacetResult parseRange(RangeFacet facet) {
