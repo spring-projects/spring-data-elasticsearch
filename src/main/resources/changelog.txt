@@ -1,6 +1,15 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 1.1.0.RELEASE (2014-09-05)
+---------------------------------------------
+* DATAES-128 - Release 1.1 GA.
+* DATAES-125 - the name of the isAnnotated method doesn't correspond to method body.
+* DATAES-123 - Custom repository implementations are not picked up when using CDI.
+* DATAES-120 - Polish reference documentation.
+* DATAES-106 - Add support for countBy projections.
+
+
 Changes in version 1.0.4.RELEASE (2014-08-27)
 ---------------------------------------------
 * DATAES-122 - Release 1.0.4.
