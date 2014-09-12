@@ -495,6 +495,55 @@ public class CustomMethodRepositoryTests {
 		assertThat(sampleEntities.size(), is(1));
 	}
 
+    @Test
+    public void shouldExecuteCustomMethodWithGeoPoint() {
+        // given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setType("test");
+        sampleEntity.setRate(10);
+        sampleEntity.setMessage("foo");
+        sampleEntity.setLocation(new GeoPoint(45.7806d, 3.0875d));
+
+        repository.save(sampleEntity);
+
+        // when
+        Page<SampleEntity> page = repository.findByLocation(new GeoPoint(45.7806d, 3.0875d), new PageRequest(0, 10));
+        // then
+        assertThat(page, is(notNullValue()));
+        assertThat(page.getTotalElements(), is(equalTo(1L)));
+    }
+    @Test
+    public void shouldExecuteCustomMethodWithGeoPointAndString() {
+        // given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setType("test");
+        sampleEntity.setRate(10);
+        sampleEntity.setMessage("foo");
+        sampleEntity.setLocation(new GeoPoint(45.7806d, 3.0875d));
+
+        repository.save(sampleEntity);
+
+        documentId = randomNumeric(5);
+        sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setType("test");
+        sampleEntity.setRate(10);
+        sampleEntity.setMessage("foo");
+        sampleEntity.setLocation(new GeoPoint(48.7806d, 3.0875d));
+
+        repository.save(sampleEntity);
+
+        // when
+        Page<SampleEntity> page = repository.findByLocationAndMessage(new GeoPoint(45.7806d, 3.0875d), "foo", new PageRequest(0, 10));
+        // then
+        assertThat(page, is(notNullValue()));
+        assertThat(page.getTotalElements(), is(equalTo(1L)));
+    }
+
 	@Test
 	public void shouldExecuteCustomMethodWithWithinGeoPoint() {
 		// given
