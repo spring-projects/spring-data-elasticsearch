@@ -24,10 +24,10 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.BoostableQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.*;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.geo.Point;
 import org.springframework.util.Assert;
 
 /**
@@ -118,9 +118,9 @@ class CriteriaQueryProcessor {
 		}
 		QueryBuilder query = null;
 
-		String searchText = StringUtils.toString(value);
+        String searchText = StringUtils.toString(value);
 
-		switch (key) {
+        switch (key) {
 			case EQUALS:
 				query = queryString(searchText).field(fieldName);
 				break;
