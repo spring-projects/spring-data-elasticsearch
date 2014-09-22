@@ -23,10 +23,12 @@ import java.lang.annotation.*;
  * @author Artur Konczak
  * @author Jonathan Yan
  * @author Jakub Vavrik
+ * @author Kevin Leturc
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 @Documented
+@Inherited
 public @interface Field {
 
 	FieldType type() default FieldType.Auto;
