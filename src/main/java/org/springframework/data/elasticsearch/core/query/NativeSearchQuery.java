@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.elasticsearch.common.collect.Lists;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
@@ -39,30 +40,30 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	private List<SortBuilder> sorts;
 	private List<FacetRequest> facets;
 	private List<AbstractAggregationBuilder> aggregations;
-	private HighlightBuilder.Field[] highlightFields;
-
+	private List<HighlightBuilder.Field> highlightFields;
 
 	public NativeSearchQuery(QueryBuilder query) {
-		this.query = query;
+        this(query, null);
 	}
 
 	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter) {
-		this.query = query;
-		this.filter = filter;
+        this(query, filter, null);
 	}
 
 	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, List<SortBuilder> sorts) {
-		this.query = query;
-		this.filter = filter;
-		this.sorts = sorts;
+	    this(query, filter, sorts, (List<HighlightBuilder.Field>) null);
+    }
+
+	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, List<SortBuilder> sorts, HighlightBuilder.Field ... highlightFields) {
+        this(query, filter, sorts, highlightFields == null ? null : Lists.newArrayList(highlightFields));
 	}
 
-	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, List<SortBuilder> sorts, HighlightBuilder.Field[] highlightFields) {
-		this.query = query;
-		this.filter = filter;
-		this.sorts = sorts;
-		this.highlightFields = highlightFields;
-	}
+    public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, List<SortBuilder> sorts, List<HighlightBuilder.Field> highlightFields) {
+        this.query = query;
+        this.filter = filter;
+        this.sorts = sorts;
+        this.highlightFields = highlightFields;
+    }
 
 	public QueryBuilder getQuery() {
 		return query;
@@ -77,7 +78,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	}
 
 	@Override
-	public HighlightBuilder.Field[] getHighlightFields() {
+	public List<HighlightBuilder.Field> getHighlightFields() {
 		return highlightFields;
 	}
 
