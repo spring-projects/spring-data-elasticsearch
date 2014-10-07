@@ -34,19 +34,15 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * SpELEntityTest
  *
  * @author Artur Konczak
- *
  */
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/spel-repository-test.xml")
-public class SpELEntityTest {
+public class SpELEntityTests {
 
+	@Autowired private SpELRepository repository;
 
-	@Autowired
-	private SpELRepository repository;
-
-	@Autowired
-	private ElasticsearchTemplate template;
+	@Autowired private ElasticsearchTemplate template;
 
 	@Before
 	public void init() {
@@ -55,15 +51,31 @@ public class SpELEntityTest {
 
 	@Test
 	public void shouldDo() {
-		//Given
+		// Given
 		repository.save(new SpELEntity());
 		repository.save(new SpELEntity());
-		//When
+		// When
 
-		//Then
+		// Then
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(QueryBuilders.matchAllQuery());
 		nativeSearchQuery.addIndices("abz-entity");
 		long count = template.count(nativeSearchQuery);
 		assertThat(count, is(2L));
+	}
+
+	@Test
+	public void shouldSupportSpelInType() {
+		// Given
+		SpELEntity spELEntity = new SpELEntity();
+		repository.save(spELEntity);
+
+		// When
+
+		// Then
+		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(QueryBuilders.matchAllQuery());
+		nativeSearchQuery.addIndices("abz-entity");
+		nativeSearchQuery.addTypes("myType");
+		long count = template.count(nativeSearchQuery);
+		assertThat(count, is(1L));
 	}
 }
