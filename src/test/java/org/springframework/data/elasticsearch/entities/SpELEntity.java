@@ -22,13 +22,12 @@ import org.springframework.data.elasticsearch.annotations.Document;
  * SpELEntity
  *
  * @author Artur Konczak
- *
  */
-@Document(indexName = "#{'abz'+'-'+'entity'}", type = "spel", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "#{'abz'+'-'+'entity'}", type = "#{'my'+'Type'}", indexStoreType = "memory", shards = 1,
+		replicas = 0, refreshInterval = "-1")
 public class SpELEntity {
 
-	@Id
-	private String id;
+	@Id private String id;
 
 	public String getId() {
 		return id;
