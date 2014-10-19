@@ -20,7 +20,9 @@ import static org.elasticsearch.common.xcontent.XContentFactory.*;
 import static org.springframework.util.StringUtils.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -37,6 +39,7 @@ import org.springframework.data.util.TypeInformation;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
+ * @author Kevin Leturc
  */
 
 class MappingBuilder {
@@ -75,7 +78,7 @@ class MappingBuilder {
 	private static void mapEntity(XContentBuilder xContentBuilder, Class clazz, boolean isRootObject, String idFieldName,
 								  String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType) throws IOException {
 
-		java.lang.reflect.Field[] fields = clazz.getDeclaredFields();
+		java.lang.reflect.Field[] fields = retrievesFields(clazz);
 
 		if (!isRootObject && (isAnyPropertyAnnotatedAsField(fields) || nestedOrObjectField)) {
 			String type = FieldType.Object.toString().toLowerCase();
@@ -123,6 +126,21 @@ class MappingBuilder {
 		if (!isRootObject && isAnyPropertyAnnotatedAsField(fields) || nestedOrObjectField) {
 			xContentBuilder.endObject().endObject();
 		}
+	}
+
+	private static java.lang.reflect.Field[] retrievesFields(Class clazz) {
+		// Create list of fields.
+		List<java.lang.reflect.Field> fields = new ArrayList<java.lang.reflect.Field>();
+
+		// Keep backing up the inheritance hierarchy.
+		Class targetClass = clazz;
+		do {
+			fields.addAll(Arrays.asList(targetClass.getDeclaredFields()));
+			targetClass = targetClass.getSuperclass();
+		}
+		while(targetClass != null && targetClass != Object.class);
+
+		return fields.toArray(new java.lang.reflect.Field[fields.size()]);
 	}
 
 	private static boolean isAnnotated(java.lang.reflect.Field field) {

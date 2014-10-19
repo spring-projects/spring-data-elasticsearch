@@ -22,19 +22,18 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.builder.SampleInheritedEntityBuilder;
 import org.springframework.data.elasticsearch.builder.StockPriceBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.entities.MinimalEntity;
-import org.springframework.data.elasticsearch.entities.SampleTransientEntity;
-import org.springframework.data.elasticsearch.entities.SimpleRecursiveEntity;
-import org.springframework.data.elasticsearch.entities.StockPrice;
+import org.springframework.data.elasticsearch.entities.*;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -42,6 +41,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Stuart Stevenson
  * @author Jakub Vavrik
  * @author Mohsin Husen
+ * @author Keivn Leturc
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -106,5 +106,45 @@ public class MappingBuilderTests {
 		final String expected = "{\"mapping\":{\"_parent\":{\"type\":\"parentType\"},\"properties\":{}}}";
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(MinimalEntity.class, "mapping", "id", "parentType");
 		assertThat(xContentBuilder.string(), is(expected));
+	}
+
+	/*
+	 * DATAES-76
+	 */
+	@Test
+	public void shouldBuildMappingWithSuperclass() throws IOException {
+		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\"" +
+				"type\":\"string\",\"index\":\"not_analyzed\",\"search_analyzer\":\"standard\"," +
+				"\"index_analyzer\":\"standard\"},\"createdDate\":{\"store\":false," +
+				"\"type\":\"date\",\"index\":\"not_analyzed\"}}}}";
+
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleInheritedEntity.class, "mapping", "id", null);
+		assertThat(xContentBuilder.string(), is(expected));
+	}
+
+	/*
+	 * DATAES-76
+	 */
+	@Test
+	public void shouldAddSampleInheritedEntityDocumentToIndex() throws IOException {
+		//Given
+
+		//When
+		elasticsearchTemplate.deleteIndex(SampleInheritedEntity.class);
+		elasticsearchTemplate.createIndex(SampleInheritedEntity.class);
+		elasticsearchTemplate.putMapping(SampleInheritedEntity.class);
+		Date createdDate = new Date();
+		String message = "msg";
+		String id = "abc";
+		elasticsearchTemplate.index(new SampleInheritedEntityBuilder(id).createdDate(createdDate).message(message).buildIndex());
+		elasticsearchTemplate.refresh(SampleInheritedEntity.class, true);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		List<SampleInheritedEntity> result = elasticsearchTemplate.queryForList(searchQuery, SampleInheritedEntity.class);
+		//Then
+		assertThat(result.size(), is(1));
+		SampleInheritedEntity entry = result.get(0);
+		assertThat(entry.getCreatedDate(), is(createdDate));
+		assertThat(entry.getMessage(), is(message));
 	}
 }
