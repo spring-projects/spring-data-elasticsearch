@@ -31,7 +31,7 @@ Add the Maven dependency:
 <dependency>
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-elasticsearch</artifactId>
-    <version>1.0.0.RELEASE</version>
+    <version>1.1.0.RELEASE</version>
 </dependency>
 ```
 
@@ -42,7 +42,7 @@ the appropriate dependency version.
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-elasticsearch</artifactId>
-  <version>1.0.0.BUILD-SNAPSHOT</version>
+  <version>1.2.0.BUILD-SNAPSHOT</version>
 </dependency>
 
 <repository>
@@ -53,9 +53,9 @@ the appropriate dependency version.
 ```
 
 ###Note:
-Spring data elaticsearch 1.0.0.RELEASE version is on elasticsearch 1.1.1 library which uses java 1.6 or later version.
-As latest version of elasticsearch 1.2.x is now supporting java 1.7, future releases of spring data elasticsearch library can be used with Java 7 or later version.
-In order to use with java 6 it has to be with elasticsearch 1.1.x.
+Spring data elaticsearch until 1.0.0.RELEASE version is on elasticsearch 1.1.x library, which uses java 1.6 or later version.
+
+From spring data elastic search 1.1.0.RELEASE (current) on, the version of elasticsearch 1.3.x  is supporting java 1.7 or later.
 
 ### ElasticsearchRepository
 A default implementation of ElasticsearchRepository, aligning to the generic Repository Interfaces, is provided. Spring can do the Repository implementation for you depending on method names in the interface definition.
