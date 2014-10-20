@@ -79,13 +79,13 @@ class MappingBuilder {
 		// Properties
 		XContentBuilder xContentBuilder = mapping.startObject(FIELD_PROPERTIES);
 
-		mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY, false, FieldType.Auto);
+		mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY, false, FieldType.Auto,null);
 
 		return xContentBuilder.endObject().endObject().endObject();
 	}
 
 	private static void mapEntity(XContentBuilder xContentBuilder, Class clazz, boolean isRootObject, String idFieldName,
-								  String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType) throws IOException {
+								  String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType, Field fieldAnnotation) throws IOException {
 
 		java.lang.reflect.Field[] fields = retrieveFields(clazz);
 
@@ -94,7 +94,12 @@ class MappingBuilder {
 			if (nestedOrObjectField) {
 				type = fieldType.toString().toLowerCase();
 			}
-			xContentBuilder.startObject(nestedObjectFieldName).field(FIELD_TYPE, type).startObject(FIELD_PROPERTIES);
+			XContentBuilder t = xContentBuilder.startObject(nestedObjectFieldName).field(FIELD_TYPE, type);
+			
+			if (nestedOrObjectField && FieldType.Nested == fieldType && fieldAnnotation.includeInParent()) {
+				t.field("include_in_parent", fieldAnnotation.includeInParent());
+			}
+			t.startObject(FIELD_PROPERTIES);
 		}
 
 		for (java.lang.reflect.Field field : fields) {
@@ -112,7 +117,7 @@ class MappingBuilder {
 					continue;
 				}
 				boolean nestedOrObject = isNestedOrObjectField(field);
-				mapEntity(xContentBuilder, getFieldType(field), false, EMPTY, field.getName(), nestedOrObject, singleField.type());
+				mapEntity(xContentBuilder, getFieldType(field), false, EMPTY, field.getName(), nestedOrObject, singleField.type(),field.getAnnotation(Field.class));
 				if (nestedOrObject) {
 					continue;
 				}

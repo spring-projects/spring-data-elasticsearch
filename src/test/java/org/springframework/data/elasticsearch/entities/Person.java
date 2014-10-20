@@ -40,7 +40,7 @@ public class Person {
 	@Field(type = FieldType.Nested)
 	private List<Car> car;
 
-	@Field(type = FieldType.Nested)
+	@Field(type = FieldType.Nested, includeInParent=true)
 	private List<Book> books;
 
 	public String getId() {
