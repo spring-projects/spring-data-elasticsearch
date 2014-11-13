@@ -51,9 +51,6 @@ import org.elasticsearch.action.mlt.MoreLikeThisRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.action.suggest.SuggestRequest;
-import org.elasticsearch.action.suggest.SuggestRequestBuilder;
-import org.elasticsearch.action.suggest.SuggestResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
@@ -63,7 +60,6 @@ import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -74,7 +70,6 @@ import org.elasticsearch.search.facet.FacetBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
-import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -981,14 +976,4 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 		return stringBuilder.toString();
 	}
-
-    public SuggestResponse suggest(SuggestBuilder.SuggestionBuilder<?> suggestion, String... indices) {
-	SuggestRequestBuilder suggestRequestBuilder = client.prepareSuggest(indices);
-	suggestRequestBuilder.addSuggestion(suggestion);
-	return suggestRequestBuilder.execute().actionGet();
-    }
-
-    public SuggestResponse suggest(SuggestBuilder.SuggestionBuilder<?> suggestion, Class clazz) {
-	return suggest(suggestion, retrieveIndexNameFromPersistentEntity(clazz));
-    }
 }

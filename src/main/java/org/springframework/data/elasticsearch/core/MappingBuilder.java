@@ -29,7 +29,6 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.core.GenericCollectionTypeResolver;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
-import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -56,8 +55,7 @@ class MappingBuilder {
 
 	public static final String INDEX_VALUE_NOT_ANALYZED = "not_analyzed";
 	public static final String TYPE_VALUE_STRING = "string";
-    public static final String TYPE_VALUE_GEO_POINT = "geo_point";
-    public static final String TYPE_VALUE_COMPLETION = "completion";
+	public static final String TYPE_VALUE_GEO_POINT = "geo_point";
 
 	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = new SimpleTypeHolder();
 
@@ -96,11 +94,10 @@ class MappingBuilder {
 				continue;
 			}
 
-	    boolean isGeoField = isGeoField(field);
-	    boolean isCompletionField = isCompletionField(field);
+			boolean isGeoField = isGeoField(field);
 
 			Field singleField = field.getAnnotation(Field.class);
-			if (!isGeoField && !isCompletionField && isEntity(field) && isAnnotated(field)) {
+			if (!isGeoField && isEntity(field) && isAnnotated(field)) {
 				if (singleField == null) {
 					continue;
 				}
@@ -113,13 +110,9 @@ class MappingBuilder {
 
 			MultiField multiField = field.getAnnotation(MultiField.class);
 
-	    if (isGeoField) {
-		applyGeoPointFieldMapping(xContentBuilder, field);
-	    }
-
-	    if (isCompletionField) {
-		applyCompletionFieldMapping(xContentBuilder, field);
-	    }
+			if (isGeoField) {
+				applyGeoPointFieldMapping(xContentBuilder, field);
+			}
 
 			if (isRootObject && singleField != null && isIdField(field, idFieldName)) {
 				applyDefaultIdFieldMapping(xContentBuilder, field);
@@ -159,12 +152,6 @@ class MappingBuilder {
 		xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_GEO_POINT)
 				.endObject();
 	}
-
-    private static void applyCompletionFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
-	xContentBuilder.startObject(field.getName());
-	xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_COMPLETION)
-		.endObject();
-    }
 
 	private static void applyDefaultIdFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field)
 			throws IOException {
@@ -317,11 +304,7 @@ class MappingBuilder {
 		return fieldAnnotation != null && (FieldType.Nested == fieldAnnotation.type() || FieldType.Object == fieldAnnotation.type());
 	}
 
-    private static boolean isGeoField(java.lang.reflect.Field field) {
-	return field.getType() == GeoPoint.class || field.getAnnotation(GeoPointField.class) != null;
-    }
-
-    private static boolean isCompletionField(java.lang.reflect.Field field) {
-	return field.getType() == Completion.class;
-    }
+	private static boolean isGeoField(java.lang.reflect.Field field) {
+		return field.getType() == GeoPoint.class || field.getAnnotation(GeoPointField.class) != null;
+	}
 }
