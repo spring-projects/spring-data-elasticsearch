@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -109,7 +109,7 @@ public class ElasticsearchTemplateCompletionTests {
 
 	//then
 	assertThat(options.size(), is(2));
-	assertEquals("Marchand", options.get(0).getText().string());
+		assertThat(options.get(0).getText().string(), isOneOf("Marchand","Mohsin Husen"));
     }
 
     @Test
@@ -127,6 +127,6 @@ public class ElasticsearchTemplateCompletionTests {
 
 	//then
 	assertThat(options.size(), is(2));
-	assertEquals("Marchand", options.get(0).getText().string());
+	assertThat(options.get(0).getText().string(), isOneOf("Marchand","Mohsin Husen"));
     }
 }
