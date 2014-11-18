@@ -24,47 +24,47 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
  */
 public class AnnotatedCompletionEntityBuilder {
 
-    private CompletionEntity result;
+	private AnnotatedCompletionEntity result;
 
-    public AnnotatedCompletionEntityBuilder(String id) {
-	result = new CompletionEntity(id);
-    }
+	public AnnotatedCompletionEntityBuilder(String id) {
+		result = new AnnotatedCompletionEntity(id);
+	}
 
-    public AnnotatedCompletionEntityBuilder name(String name) {
-	result.setName(name);
-	return this;
-    }
+	public AnnotatedCompletionEntityBuilder name(String name) {
+		result.setName(name);
+		return this;
+	}
 
-    public AnnotatedCompletionEntityBuilder suggest(String[] input) {
-	return suggest(input, null, null, null);
-    }
+	public AnnotatedCompletionEntityBuilder suggest(String[] input) {
+		return suggest(input, null, null, null);
+	}
 
-    public AnnotatedCompletionEntityBuilder suggest(String[] input, String output) {
-	return suggest(input, output, null, null);
-    }
+	public AnnotatedCompletionEntityBuilder suggest(String[] input, String output) {
+		return suggest(input, output, null, null);
+	}
 
-    public AnnotatedCompletionEntityBuilder suggest(String[] input, String output, Object payload) {
-	return suggest(input, output, payload, null);
-    }
+	public AnnotatedCompletionEntityBuilder suggest(String[] input, String output, Object payload) {
+		return suggest(input, output, payload, null);
+	}
 
-    public AnnotatedCompletionEntityBuilder suggest(String[] input, String output, Object payload, Integer weight) {
-	Completion suggest = new Completion(input);
-	suggest.setOutput(output);
-	suggest.setPayload(payload);
-	suggest.setWeight(weight);
+	public AnnotatedCompletionEntityBuilder suggest(String[] input, String output, Object payload, Integer weight) {
+		Completion suggest = new Completion(input);
+		suggest.setOutput(output);
+		suggest.setPayload(payload);
+		suggest.setWeight(weight);
 
-	result.setSuggest(suggest);
-	return this;
-    }
+		result.setSuggest(suggest);
+		return this;
+	}
 
-    public CompletionEntity build() {
-	return result;
-    }
+	public AnnotatedCompletionEntity build() {
+		return result;
+	}
 
-    public IndexQuery buildIndex() {
-	IndexQuery indexQuery = new IndexQuery();
-	indexQuery.setId(result.getId());
-	indexQuery.setObject(result);
-	return indexQuery;
-    }
+	public IndexQuery buildIndex() {
+		IndexQuery indexQuery = new IndexQuery();
+		indexQuery.setId(result.getId());
+		indexQuery.setObject(result);
+		return indexQuery;
+	}
 }

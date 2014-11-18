@@ -22,47 +22,47 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
  */
 public class CompletionEntityBuilder {
 
-    private CompletionEntity result;
+	private CompletionEntity result;
 
-    public CompletionEntityBuilder(String id) {
-	result = new CompletionEntity(id);
-    }
+	public CompletionEntityBuilder(String id) {
+		result = new CompletionEntity(id);
+	}
 
-    public CompletionEntityBuilder name(String name) {
-	result.setName(name);
-	return this;
-    }
+	public CompletionEntityBuilder name(String name) {
+		result.setName(name);
+		return this;
+	}
 
-    public CompletionEntityBuilder suggest(String[] input) {
-	return suggest(input, null, null, null);
-    }
+	public CompletionEntityBuilder suggest(String[] input) {
+		return suggest(input, null, null, null);
+	}
 
-    public CompletionEntityBuilder suggest(String[] input, String output) {
-	return suggest(input, output, null, null);
-    }
+	public CompletionEntityBuilder suggest(String[] input, String output) {
+		return suggest(input, output, null, null);
+	}
 
-    public CompletionEntityBuilder suggest(String[] input, String output, Object payload) {
-	return suggest(input, output, payload, null);
-    }
+	public CompletionEntityBuilder suggest(String[] input, String output, Object payload) {
+		return suggest(input, output, payload, null);
+	}
 
-    public CompletionEntityBuilder suggest(String[] input, String output, Object payload, Integer weight) {
-	Completion suggest = new Completion(input);
-	suggest.setOutput(output);
-	suggest.setPayload(payload);
-	suggest.setWeight(weight);
+	public CompletionEntityBuilder suggest(String[] input, String output, Object payload, Integer weight) {
+		Completion suggest = new Completion(input);
+		suggest.setOutput(output);
+		suggest.setPayload(payload);
+		suggest.setWeight(weight);
 
-	result.setSuggest(suggest);
-	return this;
-    }
+		result.setSuggest(suggest);
+		return this;
+	}
 
-    public CompletionEntity build() {
-	return result;
-    }
+	public CompletionEntity build() {
+		return result;
+	}
 
-    public IndexQuery buildIndex() {
-	IndexQuery indexQuery = new IndexQuery();
-	indexQuery.setId(result.getId());
-	indexQuery.setObject(result);
-	return indexQuery;
-    }
+	public IndexQuery buildIndex() {
+		IndexQuery indexQuery = new IndexQuery();
+		indexQuery.setId(result.getId());
+		indexQuery.setObject(result);
+		return indexQuery;
+	}
 }
