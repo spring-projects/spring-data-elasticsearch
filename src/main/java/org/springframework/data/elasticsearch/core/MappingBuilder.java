@@ -54,10 +54,15 @@ class MappingBuilder {
 	public static final String FIELD_PROPERTIES = "properties";
 	public static final String FIELD_PARENT = "_parent";
 
+	public static final String COMPLETION_PAYLOADS = "payloads";
+	public static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
+	public static final String COMPLETION_PRESERVE_POSITION_INCREMENTS = "preserve_position_increments";
+	public static final String COMPLETION_MAX_INPUT_LENGTH = "max_input_length";
+
 	public static final String INDEX_VALUE_NOT_ANALYZED = "not_analyzed";
 	public static final String TYPE_VALUE_STRING = "string";
-    public static final String TYPE_VALUE_GEO_POINT = "geo_point";
-    public static final String TYPE_VALUE_COMPLETION = "completion";
+	public static final String TYPE_VALUE_GEO_POINT = "geo_point";
+	public static final String TYPE_VALUE_COMPLETION = "completion";
 
 	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = new SimpleTypeHolder();
 
@@ -96,8 +101,8 @@ class MappingBuilder {
 				continue;
 			}
 
-	    boolean isGeoField = isGeoField(field);
-	    boolean isCompletionField = isCompletionField(field);
+			boolean isGeoField = isGeoField(field);
+			boolean isCompletionField = isCompletionField(field);
 
 			Field singleField = field.getAnnotation(Field.class);
 			if (!isGeoField && !isCompletionField && isEntity(field) && isAnnotated(field)) {
@@ -113,13 +118,14 @@ class MappingBuilder {
 
 			MultiField multiField = field.getAnnotation(MultiField.class);
 
-	    if (isGeoField) {
-		applyGeoPointFieldMapping(xContentBuilder, field);
-	    }
+			if (isGeoField) {
+				applyGeoPointFieldMapping(xContentBuilder, field);
+			}
 
-	    if (isCompletionField) {
-		applyCompletionFieldMapping(xContentBuilder, field);
-	    }
+			if (isCompletionField) {
+				CompletionField completionField = field.getAnnotation(CompletionField.class);
+				applyCompletionFieldMapping(xContentBuilder, field, completionField);
+			}
 
 			if (isRootObject && singleField != null && isIdField(field, idFieldName)) {
 				applyDefaultIdFieldMapping(xContentBuilder, field);
@@ -145,13 +151,13 @@ class MappingBuilder {
 			fields.addAll(Arrays.asList(targetClass.getDeclaredFields()));
 			targetClass = targetClass.getSuperclass();
 		}
-		while(targetClass != null && targetClass != Object.class);
+		while (targetClass != null && targetClass != Object.class);
 
 		return fields.toArray(new java.lang.reflect.Field[fields.size()]);
 	}
 
 	private static boolean isAnnotated(java.lang.reflect.Field field) {
-		return field.getAnnotation(Field.class) != null || field.getAnnotation(MultiField.class) != null || field.getAnnotation(GeoPointField.class) != null;
+		return field.getAnnotation(Field.class) != null || field.getAnnotation(MultiField.class) != null || field.getAnnotation(GeoPointField.class) != null || field.getAnnotation(CompletionField.class) != null;
 	}
 
 	private static void applyGeoPointFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
@@ -160,11 +166,23 @@ class MappingBuilder {
 				.endObject();
 	}
 
-    private static void applyCompletionFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
-	xContentBuilder.startObject(field.getName());
-	xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_COMPLETION)
-		.endObject();
-    }
+	private static void applyCompletionFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field, CompletionField annotation) throws IOException {
+		xContentBuilder.startObject(field.getName());
+		xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_COMPLETION);
+		if (annotation != null) {
+			xContentBuilder.field(COMPLETION_MAX_INPUT_LENGTH, annotation.maxInputLength());
+			xContentBuilder.field(COMPLETION_PAYLOADS, annotation.payloads());
+			xContentBuilder.field(COMPLETION_PRESERVE_POSITION_INCREMENTS, annotation.preservePositionIncrements());
+			xContentBuilder.field(COMPLETION_PRESERVE_SEPARATORS, annotation.preserveSeparators());
+			if (isNotBlank(annotation.searchAnalyzer())) {
+				xContentBuilder.field(FIELD_SEARCH_ANALYZER, annotation.searchAnalyzer());
+			}
+			if (isNotBlank(annotation.indexAnalyzer())) {
+				xContentBuilder.field(FIELD_INDEX_ANALYZER, annotation.indexAnalyzer());
+			}
+		}
+		xContentBuilder.endObject();
+	}
 
 	private static void applyDefaultIdFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field)
 			throws IOException {
@@ -317,11 +335,11 @@ class MappingBuilder {
 		return fieldAnnotation != null && (FieldType.Nested == fieldAnnotation.type() || FieldType.Object == fieldAnnotation.type());
 	}
 
-    private static boolean isGeoField(java.lang.reflect.Field field) {
-	return field.getType() == GeoPoint.class || field.getAnnotation(GeoPointField.class) != null;
-    }
+	private static boolean isGeoField(java.lang.reflect.Field field) {
+		return field.getType() == GeoPoint.class || field.getAnnotation(GeoPointField.class) != null;
+	}
 
-    private static boolean isCompletionField(java.lang.reflect.Field field) {
-	return field.getType() == Completion.class;
-    }
+	private static boolean isCompletionField(java.lang.reflect.Field field) {
+		return field.getType() == Completion.class;
+	}
 }

@@ -12,41 +12,41 @@ import org.springframework.data.elasticsearch.annotations.Document;
 @Document(indexName = "test-completion-index", type = "completion-annotation-type", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class CompletionAnnotatedEntity {
 
-    @Id
-    private String id;
-    private String name;
+	@Id
+	private String id;
+	private String name;
 
-    @CompletionField(payloads = true)
-    private Completion suggest;
+	@CompletionField(payloads = true)
+	private Completion suggest;
 
-    private CompletionAnnotatedEntity() {
-    }
+	private CompletionAnnotatedEntity() {
+	}
 
-    public CompletionAnnotatedEntity(String id) {
-	this.id = id;
-    }
+	public CompletionAnnotatedEntity(String id) {
+		this.id = id;
+	}
 
-    public String getId() {
-	return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-	this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getName() {
-	return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public Completion getSuggest() {
-	return suggest;
-    }
+	public Completion getSuggest() {
+		return suggest;
+	}
 
-    public void setSuggest(Completion suggest) {
-	this.suggest = suggest;
-    }
+	public void setSuggest(Completion suggest) {
+		this.suggest = suggest;
+	}
 }

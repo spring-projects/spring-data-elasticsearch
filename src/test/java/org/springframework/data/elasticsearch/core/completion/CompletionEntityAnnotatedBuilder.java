@@ -24,52 +24,52 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
  */
 public class CompletionEntityAnnotatedBuilder {
 
-    private CompletionAnnotatedEntity result;
+	private CompletionAnnotatedEntity result;
 
-    public CompletionEntityAnnotatedBuilder(String id) {
-	result = new CompletionAnnotatedEntity(id);
-    }
-
-    public CompletionEntityAnnotatedBuilder name(String name) {
-	result.setName(name);
-	return this;
-    }
-
-    public CompletionEntityAnnotatedBuilder suggest(String[] input) {
-	return suggest(input, null, null, null);
-    }
-
-    public CompletionEntityAnnotatedBuilder suggest(String[] input, String output) {
-	return suggest(input, output, null, null);
-    }
-
-    public CompletionEntityAnnotatedBuilder suggest(String[] input, String output, Object payload) {
-	return suggest(input, output, payload, null);
-    }
-
-    public CompletionEntityAnnotatedBuilder suggest(String[] input, String output, Object payload, Integer weight) {
-	Completion suggest = new Completion(input);
-	if (output != null) {
-	    suggest.setOutput(output);
+	public CompletionEntityAnnotatedBuilder(String id) {
+		result = new CompletionAnnotatedEntity(id);
 	}
-	if (payload != null) {
-	    suggest.setPayload(payload);
-	}
-	if (weight != null) {
-	    suggest.setWeight(weight);
-	}
-	result.setSuggest(suggest);
-	return this;
-    }
 
-    public CompletionAnnotatedEntity build() {
-	return result;
-    }
+	public CompletionEntityAnnotatedBuilder name(String name) {
+		result.setName(name);
+		return this;
+	}
 
-    public IndexQuery buildIndex() {
-	IndexQuery indexQuery = new IndexQuery();
-	indexQuery.setId(result.getId());
-	indexQuery.setObject(result);
-	return indexQuery;
-    }
+	public CompletionEntityAnnotatedBuilder suggest(String[] input) {
+		return suggest(input, null, null, null);
+	}
+
+	public CompletionEntityAnnotatedBuilder suggest(String[] input, String output) {
+		return suggest(input, output, null, null);
+	}
+
+	public CompletionEntityAnnotatedBuilder suggest(String[] input, String output, Object payload) {
+		return suggest(input, output, payload, null);
+	}
+
+	public CompletionEntityAnnotatedBuilder suggest(String[] input, String output, Object payload, Integer weight) {
+		Completion suggest = new Completion(input);
+		if (output != null) {
+			suggest.setOutput(output);
+		}
+		if (payload != null) {
+			suggest.setPayload(payload);
+		}
+		if (weight != null) {
+			suggest.setWeight(weight);
+		}
+		result.setSuggest(suggest);
+		return this;
+	}
+
+	public CompletionAnnotatedEntity build() {
+		return result;
+	}
+
+	public IndexQuery buildIndex() {
+		IndexQuery indexQuery = new IndexQuery();
+		indexQuery.setId(result.getId());
+		indexQuery.setObject(result);
+		return indexQuery;
+	}
 }
