@@ -41,6 +41,8 @@ import org.springframework.data.util.TypeInformation;
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Kevin Leturc
+ * @author Alexander Volz
+ * @author Dennis Maaß
  */
 
 class MappingBuilder {
@@ -208,7 +210,7 @@ class MappingBuilder {
 						? fieldAnnotation.pattern() : fieldAnnotation.format());
 			}
 		}
-		if (FieldIndex.not_analyzed == fieldAnnotation.index()) {
+		if (FieldIndex.not_analyzed == fieldAnnotation.index() || FieldIndex.no == fieldAnnotation.index()) {
 			xContentBuilder.field(FIELD_INDEX, fieldAnnotation.index().name().toLowerCase());
 		}
 		if (isNotBlank(fieldAnnotation.searchAnalyzer())) {
