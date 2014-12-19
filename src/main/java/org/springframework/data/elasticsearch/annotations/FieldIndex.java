@@ -18,9 +18,7 @@ package org.springframework.data.elasticsearch.annotations;
 /**
  * @author Artur Konczak
  * @author Mohsin Husen
- * @author Alexander Volz
- * @author Dennis Maaß
  */
 public enum FieldIndex {
-    not_analyzed, analyzed, no
+	not_analyzed, analyzed
 }
