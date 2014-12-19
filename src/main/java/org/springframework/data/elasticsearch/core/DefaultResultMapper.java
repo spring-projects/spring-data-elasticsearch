@@ -65,6 +65,13 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		super(entityMapper);
 	}
 
+	public DefaultResultMapper(
+			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext,
+			EntityMapper entityMapper) {
+		super(entityMapper);
+		this.mappingContext = mappingContext;
+	}
+
 	@Override
 	public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 		long totalHits = response.getHits().totalHits();
