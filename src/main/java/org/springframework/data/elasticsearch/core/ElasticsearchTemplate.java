@@ -116,26 +116,34 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	private String searchTimeout;
 
 	public ElasticsearchTemplate(Client client) {
-		this(client, null, null);
+		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()));
 	}
 
 	public ElasticsearchTemplate(Client client, EntityMapper entityMapper) {
-		this(client, null, new DefaultResultMapper(entityMapper));
+		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()), entityMapper);
+	}
+
+	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter, EntityMapper entityMapper) {
+		this(client, elasticsearchConverter, new DefaultResultMapper(elasticsearchConverter.getMappingContext(), entityMapper));
 	}
 
 	public ElasticsearchTemplate(Client client, ResultsMapper resultsMapper) {
-		this(client, null, resultsMapper);
+		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()), resultsMapper);
 	}
 
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter) {
-		this(client, elasticsearchConverter, null);
+		this(client, elasticsearchConverter, new DefaultResultMapper(elasticsearchConverter.getMappingContext()));
 	}
 
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter, ResultsMapper resultsMapper) {
+
+		Assert.notNull(client, "Client must not be null!");
+		Assert.notNull(elasticsearchConverter, "ElasticsearchConverter must not be null!");
+		Assert.notNull(resultsMapper, "ResultsMapper must not be null!");
+
 		this.client = client;
-		this.elasticsearchConverter = (elasticsearchConverter == null) ? new MappingElasticsearchConverter(
-				new SimpleElasticsearchMappingContext()) : elasticsearchConverter;
-		this.resultsMapper = (resultsMapper == null) ? new DefaultResultMapper(this.elasticsearchConverter.getMappingContext()) : resultsMapper;
+		this.elasticsearchConverter = elasticsearchConverter;
+		this.resultsMapper = resultsMapper;
 	}
 
 	public void setSearchTimeout(String searchTimeout) {
