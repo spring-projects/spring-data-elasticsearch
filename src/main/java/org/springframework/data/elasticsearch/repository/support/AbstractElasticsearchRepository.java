@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
@@ -30,19 +30,10 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.FacetedPage;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.util.Assert;
 
@@ -78,8 +69,10 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		this.entityInformation = metadata;
 		setEntityClass(this.entityInformation.getJavaType());
 		try {
-			createIndex();
-			putMapping();
+			if (createIndexAndMapping()) {
+				createIndex();
+				putMapping();
+			}
 		} catch (ElasticsearchException exception) {
 			LOGGER.error("failed to load elasticsearch nodes : " + exception.getDetailedMessage());
 		}
@@ -91,6 +84,10 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 
 	private void putMapping() {
 		elasticsearchOperations.putMapping(getEntityClass());
+	}
+
+	private boolean createIndexAndMapping() {
+		return elasticsearchOperations.getPersistentEntityFor(getEntityClass()).isCreateIndexAndMapping();
 	}
 
 	@Override
@@ -311,14 +308,14 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		return null;
 	}
 
-    private List<String> stringIdsRepresentation(Iterable<ID> ids) {
-        Assert.notNull(ids, "ids can't be null.");
-        List<String> stringIds = new ArrayList<String>();
-        for (ID id : ids) {
-            stringIds.add(stringIdRepresentation(id));
-        }
-        return stringIds;
-    }
+	private List<String> stringIdsRepresentation(Iterable<ID> ids) {
+		Assert.notNull(ids, "ids can't be null.");
+		List<String> stringIds = new ArrayList<String>();
+		for (ID id : ids) {
+			stringIds.add(stringIdRepresentation(id));
+		}
+		return stringIds;
+	}
 
 	protected abstract String stringIdRepresentation(ID id);
 

@@ -104,6 +104,7 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Kevin Leturc
+ * @author Mason Chan
  */
 
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
@@ -1026,7 +1027,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		return newHashSet(iterator);
 	}
 
-	private ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz) {
+	@Override
+	public ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz) {
 		Assert.isTrue(clazz.isAnnotationPresent(Document.class), "Unable to identify index name. " + clazz.getSimpleName()
 				+ " is not a Document. Make sure the document class is annotated with @Document(indexName=\"foo\")");
 		return elasticsearchConverter.getMappingContext().getPersistentEntity(clazz);

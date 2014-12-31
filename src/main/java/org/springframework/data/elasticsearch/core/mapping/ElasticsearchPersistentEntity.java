@@ -47,4 +47,6 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	ElasticsearchPersistentProperty getParentIdProperty();
 
 	String settingPath();
+
+	boolean isCreateIndexAndMapping();
 }

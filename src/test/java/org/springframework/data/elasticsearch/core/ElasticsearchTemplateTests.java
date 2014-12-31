@@ -48,6 +48,7 @@ import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.entities.*;
+import org.springframework.data.elasticsearch.repositories.existing.index.CreateIndexFalseEntity;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -58,6 +59,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Franck Marchand
  * @author Abdul Mohammed
  * @author Kevin Leturc
+ * @author Mason Chan
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")

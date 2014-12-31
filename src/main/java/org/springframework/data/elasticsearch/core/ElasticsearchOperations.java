@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.util.CloseableIterator;
 
@@ -558,4 +559,7 @@ public interface ElasticsearchOperations {
 
 
 	<T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor);
+
+
+	ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz);
 }

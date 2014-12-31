@@ -58,6 +58,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private String parentType;
 	private ElasticsearchPersistentProperty parentIdProperty;
 	private String settingPath;
+	private boolean createIndexAndMapping;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 		super(typeInformation);
@@ -76,6 +77,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.replicas = document.replicas();
 			this.refreshInterval = document.refreshInterval();
 			this.indexStoreType = document.indexStoreType();
+			this.createIndexAndMapping = document.createIndex();
 		}
 		if (clazz.isAnnotationPresent(Setting.class)) {
 			this.settingPath = typeInformation.getType().getAnnotation(Setting.class).settingPath();
@@ -139,6 +141,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public String settingPath() {
 		return settingPath;
+	}
+
+	@Override
+	public boolean isCreateIndexAndMapping() {
+		return createIndexAndMapping;
 	}
 
 	@Override
