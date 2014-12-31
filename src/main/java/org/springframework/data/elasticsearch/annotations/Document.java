@@ -24,6 +24,7 @@ import org.springframework.data.annotation.Persistent;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mason Chan
  */
 
 @Persistent
@@ -43,4 +44,8 @@ public @interface Document {
 	String refreshInterval() default "1s";
 
 	String indexStoreType() default "fs";
+
+	String createIndex() default "true";
+
+
 }

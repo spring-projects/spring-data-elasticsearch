@@ -104,6 +104,7 @@ import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMa
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Kevin Leturc
+ * @author Mason Chan
  */
 
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
@@ -736,7 +737,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private <T> boolean createIndexIfNotCreated(Class<T> clazz) {
-		return indexExists(getPersistentEntityFor(clazz).getIndexName()) || createIndexWithSettings(clazz);
+		return indexExists(getPersistentEntityFor(clazz).getIndexName()) || documentCreateIndexFalse(clazz) || createIndexWithSettings(clazz);
+	}
+
+	private <T> boolean documentCreateIndexFalse(Class<T> clazz) {
+		return (clazz.isAnnotationPresent(Document.class) && !new Boolean(clazz.getAnnotation(Document.class).createIndex()));
 	}
 
 	private <T> boolean createIndexWithSettings(Class<T> clazz) {
@@ -1031,7 +1036,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 		return stringBuilder.toString();
 	}
-
+	
 	public SuggestResponse suggest(SuggestBuilder.SuggestionBuilder<?> suggestion, String... indices) {
 		SuggestRequestBuilder suggestRequestBuilder = client.prepareSuggest(indices);
 		suggestRequestBuilder.addSuggestion(suggestion);
