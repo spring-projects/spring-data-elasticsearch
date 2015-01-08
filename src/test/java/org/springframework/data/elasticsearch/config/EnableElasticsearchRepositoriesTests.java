@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-15 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,15 +29,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repositories.sample.SampleElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
+import org.springframework.data.repository.Repository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Kevin Leturc
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -51,7 +54,8 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 	}
 
 	@Configuration
-	@EnableElasticsearchRepositories(basePackages = "org.springframework.data.elasticsearch.repositories.sample")
+	@EnableElasticsearchRepositories(basePackages = {"org.springframework.data.elasticsearch.repositories.sample",
+			"org.springframework.data.elasticsearch.config"})
 	static class Config {
 
 		@Bean
@@ -62,6 +66,11 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 
 	@Autowired
 	private SampleElasticsearchRepository repository;
+
+	@Autowired(required = false)
+	private SampleRepository nestedRepository;
+
+	interface SampleRepository extends Repository<SampleEntity, Long> {};
 
 	@Test
 	public void bootstrapsRepository() {
@@ -78,5 +87,10 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 		//then
 		assertThat(beanNamesForType.length, is(1));
 		assertThat(beanNamesForType[0], is("sampleElasticsearchRepository"));
+	}
+
+	@Test
+	public void hasNotNestedRepository() {
+		assertNull(nestedRepository);
 	}
 }
