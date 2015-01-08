@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.data.repository.query.QueryLookupStrategy.Key;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Kevin Leturc
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -111,4 +112,10 @@ public @interface EnableElasticsearchRepositories {
 	 * @return
 	 */
 	String elasticsearchTemplateRef() default "elasticsearchTemplate";
+
+	/**
+	 * Configures whether nested repository-interfaces (e.g. defined as inner classes) should be discovered by the
+	 * repositories infrastructure.
+	 */
+	boolean considerNestedRepositories() default false;
 }
