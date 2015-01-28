@@ -147,4 +147,17 @@ public class MappingBuilderTests {
 		assertThat(entry.getCreatedDate(), is(createdDate));
 		assertThat(entry.getMessage(), is(message));
 	}
+
+    /*
+	 * DATAES-148
+	 */
+    @Test
+    public void shouldBuildMappingWithDynamicAnnotation() throws IOException {
+        final String expected = "{\"mapping\":{\"dynamic\":\"strict\",\"properties\":{\"message\":{\"store\":true," +
+                "\"type\":\"string\",\"index\":\"not_analyzed\",\"search_analyzer\":\"standard\"," +
+                "\"index_analyzer\":\"standard\"}}}}";
+
+        XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleDynamicEntity.class, "mapping", "id", null);
+        assertThat(xContentBuilder.string(), is(expected));
+    }
 }

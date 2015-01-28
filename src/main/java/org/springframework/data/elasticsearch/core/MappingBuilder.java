@@ -46,7 +46,7 @@ import org.springframework.data.util.TypeInformation;
  */
 
 class MappingBuilder {
-
+    public static final String FIELD_DYNAMIC = "dynamic";
 	public static final String FIELD_STORE = "store";
 	public static final String FIELD_TYPE = "type";
 	public static final String FIELD_INDEX = "index";
@@ -70,7 +70,15 @@ class MappingBuilder {
 
 	static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName, String parentType) throws IOException {
 
+        org.elasticsearch.index.mapper.object.ObjectMapper.Dynamic dynamicMapping = null;
+        if (clazz.isAnnotationPresent(Dynamic.class)) {
+            dynamicMapping = ((Dynamic) clazz.getAnnotation(Dynamic.class)).value();
+        }
+
 		XContentBuilder mapping = jsonBuilder().startObject().startObject(indexType);
+        if (dynamicMapping != null)
+            mapping.field(FIELD_DYNAMIC, dynamicMapping.toString().toLowerCase());
+
 		// Parent
 		if (hasText(parentType)) {
 			mapping.startObject(FIELD_PARENT).field(FIELD_TYPE, parentType).endObject();
@@ -150,10 +158,10 @@ class MappingBuilder {
 		// Keep backing up the inheritance hierarchy.
 		Class targetClass = clazz;
 		do {
-			fields.addAll(Arrays.asList(targetClass.getDeclaredFields()));
-			targetClass = targetClass.getSuperclass();
-		}
-		while (targetClass != null && targetClass != Object.class);
+            fields.addAll(Arrays.asList(targetClass.getDeclaredFields()));
+            targetClass = targetClass.getSuperclass();
+        }
+        while (targetClass != null && targetClass != Object.class);
 
 		return fields.toArray(new java.lang.reflect.Field[fields.size()]);
 	}
