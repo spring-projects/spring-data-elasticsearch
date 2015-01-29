@@ -779,6 +779,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		if (query.getMinScore() > 0) {
 			searchRequestBuilder.setMinScore(query.getMinScore());
 		}
+
+        searchRequestBuilder.setExplain(query.isExplain());
+
 		return searchRequestBuilder;
 	}
 

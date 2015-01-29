@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
@@ -85,6 +86,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 					result = mapEntity(hit.getFields().values(), clazz);
 				}
 				setPersistentEntityId(result, hit.getId(), clazz);
+                mapExplanation(result, hit);
 				results.add(result);
 			}
 		}
@@ -167,4 +169,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 			}
 		}
 	}
+
+    public <T> void mapExplanation(T result, SearchHit hit) {
+    }
 }

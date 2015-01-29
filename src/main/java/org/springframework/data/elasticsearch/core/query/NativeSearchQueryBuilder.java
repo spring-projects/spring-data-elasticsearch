@@ -54,10 +54,17 @@ public class NativeSearchQueryBuilder {
 	private String route;
 	private SearchType searchType;
 
-	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
+    private boolean withExplanation;
+
+    public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
 		return this;
 	}
+
+    public NativeSearchQueryBuilder withExplanation(boolean withExplanation) {
+        this.withExplanation = withExplanation;
+        return this;
+    }
 
 	public NativeSearchQueryBuilder withFilter(FilterBuilder filterBuilder) {
 		this.filterBuilder = filterBuilder;
@@ -165,6 +172,9 @@ public class NativeSearchQueryBuilder {
 		if (searchType != null) {
 			nativeSearchQuery.setSearchType(searchType);
 		}
+
+        if (withExplanation)
+            nativeSearchQuery.setExplain(withExplanation);
 
 		return nativeSearchQuery;
 	}

@@ -40,6 +40,7 @@ abstract class AbstractQuery implements Query {
 	protected List<String> types = new ArrayList<String>();
 	protected List<String> fields = new ArrayList<String>();
 	protected float minScore;
+    protected boolean explain;
 	protected Collection<String> ids;
 	protected String route;
 	protected SearchType searchType = SearchType.DFS_QUERY_THEN_FETCH;
@@ -80,6 +81,15 @@ abstract class AbstractQuery implements Query {
 	public void addIndices(String... indices) {
 		addAll(this.indices, indices);
 	}
+
+    @Override
+    public  boolean isExplain() {
+        return explain;
+    }
+
+    public void setExplain(boolean explain) {
+        this.explain = explain;
+    }
 
 	@Override
 	public void addTypes(String... types) {

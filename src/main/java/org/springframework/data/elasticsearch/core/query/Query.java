@@ -139,4 +139,7 @@ public interface Query {
 	 * @return
 	 */
 	SearchType getSearchType();
+
+
+    boolean isExplain();
 }
