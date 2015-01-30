@@ -90,7 +90,7 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 	}
 
 	private Criteria from(Part part, Criteria instance, Iterator<?> parameters) {
-        Part.Type type = part.getType();
+		Part.Type type = part.getType();
 
 		Criteria criteria = instance;
 		if (criteria == null) {
@@ -126,24 +126,24 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 				return criteria.in(asArray(parameters.next()));
 			case NOT_IN:
 				return criteria.in(asArray(parameters.next())).not();
-            case SIMPLE_PROPERTY:
+			case SIMPLE_PROPERTY:
 			case WITHIN: {
 				Object firstParameter = parameters.next();
 				Object secondParameter = null;
-                if(type == Part.Type.SIMPLE_PROPERTY) {
-                    if(part.getProperty().getType() != GeoPoint.class)
-                        return criteria.is(firstParameter);
-                    else {
-                        // it means it's a simple find with exact geopoint matching (e.g. findByLocation)
-                        // and because Elasticsearch does not have any kind of query with just a geopoint
-                        // as argument we use a "geo distance" query with a distance of one meter.
-                        secondParameter = ".001km";
-                    }
-                } else {
-                    secondParameter = parameters.next();
-                }
+				if (type == Part.Type.SIMPLE_PROPERTY) {
+					if (part.getProperty().getType() != GeoPoint.class)
+						return criteria.is(firstParameter);
+					else {
+						// it means it's a simple find with exact geopoint matching (e.g. findByLocation)
+						// and because Elasticsearch does not have any kind of query with just a geopoint
+						// as argument we use a "geo distance" query with a distance of one meter.
+						secondParameter = ".001km";
+					}
+				} else {
+					secondParameter = parameters.next();
+				}
 
-                if (firstParameter instanceof GeoPoint && secondParameter instanceof String)
+				if (firstParameter instanceof GeoPoint && secondParameter instanceof String)
 					return criteria.within((GeoPoint) firstParameter, (String) secondParameter);
 
 				if (firstParameter instanceof Point && secondParameter instanceof Distance)

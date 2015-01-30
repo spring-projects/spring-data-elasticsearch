@@ -46,10 +46,10 @@ public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 	 * @param repositoryType must not be {@literal null}.
 	 * @param beanManager must not be {@literal null}.
 	 * @param detector detector for the custom {@link org.springframework.data.repository.Repository} implementations
-	 *          {@link CustomRepositoryImplementationDetector}, can be {@literal null}.
+	 * {@link CustomRepositoryImplementationDetector}, can be {@literal null}.
 	 */
 	public ElasticsearchRepositoryBean(Bean<ElasticsearchOperations> operations, Set<Annotation> qualifiers,
-			Class<T> repositoryType, BeanManager beanManager, CustomRepositoryImplementationDetector detector) {
+									   Class<T> repositoryType, BeanManager beanManager, CustomRepositoryImplementationDetector detector) {
 		super(qualifiers, repositoryType, beanManager, detector);
 
 		Assert.notNull(operations, "Cannot create repository with 'null' for ElasticsearchOperations.");

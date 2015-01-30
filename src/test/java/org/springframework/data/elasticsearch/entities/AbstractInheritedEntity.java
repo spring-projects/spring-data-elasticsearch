@@ -48,5 +48,4 @@ public class AbstractInheritedEntity {
 	public void setCreatedDate(Date createdDate) {
 		this.createdDate = createdDate;
 	}
-
 }

@@ -37,6 +37,4 @@ public class SampleInheritedEntity extends AbstractInheritedEntity {
 	public void setMessage(String message) {
 		this.message = message;
 	}
-
-
 }

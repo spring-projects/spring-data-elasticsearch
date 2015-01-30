@@ -118,9 +118,9 @@ class CriteriaQueryProcessor {
 		}
 		QueryBuilder query = null;
 
-        String searchText = StringUtils.toString(value);
+		String searchText = StringUtils.toString(value);
 
-        switch (key) {
+		switch (key) {
 			case EQUALS:
 				query = queryString(searchText).field(fieldName);
 				break;

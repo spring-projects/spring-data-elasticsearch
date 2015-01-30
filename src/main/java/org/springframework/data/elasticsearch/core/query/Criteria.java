@@ -193,7 +193,7 @@ public class Criteria {
 	 * @return
 	 */
 	public Criteria is(Object o) {
-        queryCriteria.add(new CriteriaEntry(OperationKey.EQUALS, o));
+		queryCriteria.add(new CriteriaEntry(OperationKey.EQUALS, o));
 		return this;
 	}
 

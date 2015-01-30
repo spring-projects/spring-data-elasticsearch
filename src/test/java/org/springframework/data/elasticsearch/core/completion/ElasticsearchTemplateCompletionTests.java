@@ -154,7 +154,7 @@ public class ElasticsearchTemplateCompletionTests {
 		assertThat(options.size(), is(2));
 		assertThat(options.get(0).getText().string(), isOneOf("Marchand", "Mohsin Husen"));
 		assertThat(options.get(1).getText().string(), isOneOf("Marchand", "Mohsin Husen"));
-    }
+	}
 
 	@Test
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingAnnotatedCompletionEntity() {
@@ -171,8 +171,8 @@ public class ElasticsearchTemplateCompletionTests {
 
 		//then
 		assertThat(options.size(), is(2));
-		assertThat(options.get(0).getText().string(), isOneOf("Marchand","Mohsin Husen"));
-		assertThat(options.get(1).getText().string(), isOneOf("Marchand","Mohsin Husen"));
+		assertThat(options.get(0).getText().string(), isOneOf("Marchand", "Mohsin Husen"));
+		assertThat(options.get(1).getText().string(), isOneOf("Marchand", "Mohsin Husen"));
 	}
 
 	@Test
@@ -193,14 +193,11 @@ public class ElasticsearchTemplateCompletionTests {
 		for (CompletionSuggestion.Entry.Option option : options) {
 			if (option.getText().string().equals("Mewes Kochheim1")) {
 				assertEquals(Double.MAX_VALUE, option.getPayloadAsDouble(), 0);
-			}
-			else if (option.getText().string().equals("Mewes Kochheim2")) {
+			} else if (option.getText().string().equals("Mewes Kochheim2")) {
 				assertEquals(Long.MAX_VALUE, option.getPayloadAsLong());
-			}
-			else if (option.getText().string().equals("Mewes Kochheim3")) {
+			} else if (option.getText().string().equals("Mewes Kochheim3")) {
 				assertEquals("Payload test", option.getPayloadAsString());
-			}
-			else if (option.getText().string().equals("Mewes Kochheim4")) {
+			} else if (option.getText().string().equals("Mewes Kochheim4")) {
 				assertEquals("Payload", option.getPayloadAsMap().get("someField1"));
 				assertEquals("test", option.getPayloadAsMap().get("someField2"));
 			} else {
@@ -227,14 +224,11 @@ public class ElasticsearchTemplateCompletionTests {
 		for (CompletionSuggestion.Entry.Option option : options) {
 			if (option.getText().string().equals("Mewes Kochheim1")) {
 				assertEquals(4, option.getScore(), 0);
-			}
-			else if (option.getText().string().equals("Mewes Kochheim2")) {
+			} else if (option.getText().string().equals("Mewes Kochheim2")) {
 				assertEquals(0, option.getScore(), 0);
-			}
-			else if (option.getText().string().equals("Mewes Kochheim3")) {
+			} else if (option.getText().string().equals("Mewes Kochheim3")) {
 				assertEquals(1, option.getScore(), 0);
-			}
-			else if (option.getText().string().equals("Mewes Kochheim4")) {
+			} else if (option.getText().string().equals("Mewes Kochheim4")) {
 				assertEquals(Integer.MAX_VALUE, option.getScore(), 0);
 			} else {
 				fail("Unexpected option");

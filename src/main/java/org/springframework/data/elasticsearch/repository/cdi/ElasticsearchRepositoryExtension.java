@@ -67,7 +67,7 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 	}
 
 	private <T> CdiRepositoryBean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers,
-			BeanManager beanManager) {
+														  BeanManager beanManager) {
 
 		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers
 				.toString());

@@ -28,15 +28,15 @@ import java.lang.annotation.*;
 @Inherited
 public @interface CompletionField {
 
-    String searchAnalyzer() default "simple";
+	String searchAnalyzer() default "simple";
 
-    String indexAnalyzer() default "simple";
+	String indexAnalyzer() default "simple";
 
-    boolean payloads() default false;
+	boolean payloads() default false;
 
-    boolean preserveSeparators() default true;
+	boolean preserveSeparators() default true;
 
-    boolean preservePositionIncrements() default true;
+	boolean preservePositionIncrements() default true;
 
-    int maxInputLength() default 50;
+	int maxInputLength() default 50;
 }

@@ -168,11 +168,11 @@ public class NestedObjectTests {
 
 		final Map mapping = elasticsearchTemplate.getMapping(PersonMultipleLevelNested.class);
 
-		assertThat(mapping,is(notNullValue()));
+		assertThat(mapping, is(notNullValue()));
 		final Map propertyMap = (Map) mapping.get("properties");
-		assertThat(propertyMap,is(notNullValue()));
+		assertThat(propertyMap, is(notNullValue()));
 		final Map bestCarsAttributes = (Map) propertyMap.get("bestCars");
-		assertThat(bestCarsAttributes.get("include_in_parent"),is(notNullValue()));
+		assertThat(bestCarsAttributes.get("include_in_parent"), is(notNullValue()));
 	}
 
 
@@ -189,11 +189,11 @@ public class NestedObjectTests {
 		//then
 		final BoolQueryBuilder builder = boolQuery();
 		builder.must(nestedQuery("girlFriends", termQuery("girlFriends.type", "temp")))
-		.must(nestedQuery("girlFriends.cars", termQuery("girlFriends.cars.name", "Ford".toLowerCase())));
+				.must(nestedQuery("girlFriends.cars", termQuery("girlFriends.cars.name", "Ford".toLowerCase())));
 
 		final SearchQuery searchQuery = new NativeSearchQueryBuilder()
-		.withQuery(builder)
-		.build();
+				.withQuery(builder)
+				.build();
 
 		final Page<PersonMultipleLevelNested> personIndexed = elasticsearchTemplate.queryForPage(searchQuery, PersonMultipleLevelNested.class);
 		assertThat(personIndexed, is(notNullValue()));
@@ -375,8 +375,8 @@ public class NestedObjectTests {
 		elasticsearchTemplate.refresh(Book.class, true);
 		//then
 		final SearchQuery searchQuery = new NativeSearchQueryBuilder()
-		.withQuery(nestedQuery("buckets", termQuery("buckets.1", "test3")))
-		.build();
+				.withQuery(nestedQuery("buckets", termQuery("buckets.1", "test3")))
+				.build();
 		final Page<Book> books = elasticsearchTemplate.queryForPage(searchQuery, Book.class);
 
 		assertThat(books.getContent().size(), is(1));

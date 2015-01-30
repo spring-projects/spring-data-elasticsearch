@@ -79,7 +79,7 @@ class MappingBuilder {
 		// Properties
 		XContentBuilder xContentBuilder = mapping.startObject(FIELD_PROPERTIES);
 
-		mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY, false, FieldType.Auto,null);
+		mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY, false, FieldType.Auto, null);
 
 		return xContentBuilder.endObject().endObject().endObject();
 	}
@@ -95,7 +95,7 @@ class MappingBuilder {
 				type = fieldType.toString().toLowerCase();
 			}
 			XContentBuilder t = xContentBuilder.startObject(nestedObjectFieldName).field(FIELD_TYPE, type);
-			
+
 			if (nestedOrObjectField && FieldType.Nested == fieldType && fieldAnnotation.includeInParent()) {
 				t.field("include_in_parent", fieldAnnotation.includeInParent());
 			}
@@ -117,7 +117,7 @@ class MappingBuilder {
 					continue;
 				}
 				boolean nestedOrObject = isNestedOrObjectField(field);
-				mapEntity(xContentBuilder, getFieldType(field), false, EMPTY, field.getName(), nestedOrObject, singleField.type(),field.getAnnotation(Field.class));
+				mapEntity(xContentBuilder, getFieldType(field), false, EMPTY, field.getName(), nestedOrObject, singleField.type(), field.getAnnotation(Field.class));
 				if (nestedOrObject) {
 					continue;
 				}

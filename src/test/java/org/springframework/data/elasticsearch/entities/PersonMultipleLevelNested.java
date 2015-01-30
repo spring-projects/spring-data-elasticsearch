@@ -43,7 +43,7 @@ public class PersonMultipleLevelNested {
 	@Field(type = FieldType.Nested)
 	private List<Car> cars;
 
-	@Field(type = FieldType.Nested, includeInParent=true)
+	@Field(type = FieldType.Nested, includeInParent = true)
 	private List<Car> bestCars;
 
 	public String getId() {
@@ -85,5 +85,4 @@ public class PersonMultipleLevelNested {
 	public void setBestCars(List<Car> bestCars) {
 		this.bestCars = bestCars;
 	}
-
 }
