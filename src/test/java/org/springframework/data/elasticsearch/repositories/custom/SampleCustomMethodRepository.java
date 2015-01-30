@@ -71,7 +71,11 @@ public interface SampleCustomMethodRepository extends ElasticsearchRepository<Sa
 
 	Page<SampleEntity> findByMessageOrderByTypeAsc(String message, Pageable pageable);
 
-	Page<SampleEntity> findByLocationWithin(GeoPoint point, String distance, Pageable pageable);
+	Page<SampleEntity> findByLocation(GeoPoint point, Pageable pageable);
+
+	Page<SampleEntity> findByLocationAndMessage(GeoPoint point, String msg, Pageable pageable);
+
+    Page<SampleEntity> findByLocationWithin(GeoPoint point, String distance, Pageable pageable);
 
 	Page<SampleEntity> findByLocationWithin(Point point, Distance distance, Pageable pageable);
 
