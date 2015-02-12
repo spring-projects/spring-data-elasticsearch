@@ -15,8 +15,16 @@
  */
 package org.springframework.data.elasticsearch.repository.config;
 
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.support.ElasticsearchRepositoryFactoryBean;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
@@ -71,5 +79,23 @@ public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurat
 
 		Element element = config.getElement();
 		builder.addPropertyReference("elasticsearchOperations", element.getAttribute("elasticsearch-template-ref"));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getIdentifyingAnnotations()
+	 */
+	@Override
+	protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
+		return Collections.<Class<? extends Annotation>>singleton(Document.class);
+	}
+
+	/*
+	* (non-Javadoc)
+	* @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getIdentifyingTypes()
+	*/
+	@Override
+	protected Collection<Class<?>> getIdentifyingTypes() {
+		return Arrays.<Class<?>>asList(ElasticsearchRepository.class, ElasticsearchCrudRepository.class);
 	}
 }
