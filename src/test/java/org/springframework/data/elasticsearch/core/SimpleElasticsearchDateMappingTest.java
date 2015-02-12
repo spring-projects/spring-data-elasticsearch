@@ -37,7 +37,8 @@ public class SimpleElasticsearchDateMappingTest {
 
 	@Test
 	public void testCorrectDateMappings() throws NoSuchFieldException, IntrospectionException, IOException {
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleDateMappingEntity.class, "mapping", "id", null);
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleDateMappingEntity.class, "mapping", "id",
+				null, "", false);
 		Assert.assertEquals(EXPECTED_MAPPING, xContentBuilder.string());
 	}
 }

@@ -20,6 +20,7 @@ package org.springframework.data.elasticsearch.core.query;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Matthias Melitzer
  */
 
 public class IndexQuery {
@@ -31,6 +32,7 @@ public class IndexQuery {
 	private String type;
 	private String source;
 	private String parentId;
+	private String routingId;
 
 	public String getId() {
 		return id;
@@ -86,5 +88,13 @@ public class IndexQuery {
 
 	public void setParentId(String parentId) {
 		this.parentId = parentId;
+	}
+
+	public String getRoutingId() {
+		return routingId;
+	}
+
+	public void setRoutingId(String routingId) {
+		this.routingId = routingId;
 	}
 }

@@ -22,6 +22,7 @@ import org.springframework.data.mapping.PersistentEntity;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Matthias Melitzer
  */
 
 public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, ElasticsearchPersistentProperty> {
@@ -43,6 +44,12 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	String getParentType();
 
 	ElasticsearchPersistentProperty getParentIdProperty();
+
+	ElasticsearchPersistentProperty getRoutingIdProperty();
+
+	boolean getRoutingRequired();
+
+	String getRoutingPath();
 
 	String settingPath();
 }

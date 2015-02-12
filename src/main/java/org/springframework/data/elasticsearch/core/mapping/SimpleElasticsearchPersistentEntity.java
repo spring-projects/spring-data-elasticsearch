@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
-import static org.springframework.util.StringUtils.*;
+import static org.springframework.util.StringUtils.hasText;
 
 import java.util.Locale;
 
@@ -24,9 +24,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Parent;
-import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
@@ -41,6 +39,7 @@ import org.springframework.util.Assert;
  * @param <T>
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Matthias Melitzer
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
@@ -56,7 +55,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private String indexStoreType;
 	private String parentType;
 	private ElasticsearchPersistentProperty parentIdProperty;
+	private ElasticsearchPersistentProperty routingIdProperty;
 	private String settingPath;
+	private boolean routingRequired;
+	private String routingPath;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 		super(typeInformation);
@@ -130,6 +132,21 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
+	public ElasticsearchPersistentProperty getRoutingIdProperty() {
+		return routingIdProperty;
+	}
+
+	@Override
+	public boolean getRoutingRequired() {
+		return routingRequired;
+	}
+
+	@Override
+	public String getRoutingPath() {
+		return routingPath;
+	}
+
+	@Override
 	public String settingPath() {
 		return settingPath;
 	}
@@ -147,10 +164,18 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 				this.parentIdProperty = property;
 				this.parentType = parent.type();
 			}
+			Routing routing = property.getField().getAnnotation(Routing.class);
+			if (routing != null) {
+				Assert.isNull(this.routingIdProperty, "Only one field can hold a @Routing annotation");
+				this.routingIdProperty = property;
+				this.routingPath = routing.path();
+				this.routingRequired = routing.required();
+			}
 		}
 
 		if (property.isVersionProperty()) {
 			Assert.isTrue(property.getType() == Long.class, "Version property should be Long");
 		}
 	}
+
 }

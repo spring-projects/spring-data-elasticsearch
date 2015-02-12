@@ -16,9 +16,9 @@
 
 package org.springframework.data.elasticsearch.core;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -62,7 +62,8 @@ public class MappingBuilderTests {
 				"type\":\"string\",\"index\":\"not_analyzed\",\"search_analyzer\":\"standard\"," +
 				"\"index_analyzer\":\"standard\"}}}}";
 
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class, "mapping", "id", null);
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class, "mapping", "id",
+				null, "", false);
 		assertThat(xContentBuilder.string(), is(expected));
 	}
 
@@ -72,7 +73,8 @@ public class MappingBuilderTests {
 		final String expected = "{\"mapping\":{\"properties\":{\"price\":{\"store\":false,\"type\":\"double\"}}}}";
 
 		//When
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(StockPrice.class, "mapping", "id", null);
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(StockPrice.class, "mapping", "id", null, "",
+				false);
 
 		//Then
 		assertThat(xContentBuilder.string(), is(expected));
@@ -104,7 +106,8 @@ public class MappingBuilderTests {
 	@Test
 	public void shouldCreateMappingForSpecifiedParentType() throws IOException {
 		final String expected = "{\"mapping\":{\"_parent\":{\"type\":\"parentType\"},\"properties\":{}}}";
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(MinimalEntity.class, "mapping", "id", "parentType");
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(MinimalEntity.class, "mapping", "id",
+				"parentType", "", false);
 		assertThat(xContentBuilder.string(), is(expected));
 	}
 
@@ -118,7 +121,8 @@ public class MappingBuilderTests {
 				"\"index_analyzer\":\"standard\"},\"createdDate\":{\"store\":false," +
 				"\"type\":\"date\",\"index\":\"not_analyzed\"}}}}";
 
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleInheritedEntity.class, "mapping", "id", null);
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleInheritedEntity.class, "mapping", "id",
+				null, "", false);
 		assertThat(xContentBuilder.string(), is(expected));
 	}
 

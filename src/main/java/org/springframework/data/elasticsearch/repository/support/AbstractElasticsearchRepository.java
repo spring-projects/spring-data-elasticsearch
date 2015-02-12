@@ -15,15 +15,13 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.index.query.QueryBuilders.inQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.collect.Lists;
@@ -45,6 +43,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Ryan Henszey
+ * @author Matthias Melitzer
  */
 public abstract class AbstractElasticsearchRepository<T, ID extends Serializable> implements
 		ElasticsearchRepository<T, ID> {
@@ -249,6 +248,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		query.setId(stringIdRepresentation(extractIdFromBean(entity)));
 		query.setVersion(extractVersionFromBean(entity));
 		query.setParentId(extractParentIdFromBean(entity));
+		query.setRoutingId(extractRoutingIdFromBean(entity));
 		return query;
 	}
 
@@ -314,6 +314,13 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	private String extractParentIdFromBean(T entity) {
 		if (entityInformation != null) {
 			return entityInformation.getParentId(entity);
+		}
+		return null;
+	}
+
+	private String extractRoutingIdFromBean(T entity) {
+		if (entityInformation != null) {
+			return entityInformation.getRoutingId(entity);
 		}
 		return null;
 	}

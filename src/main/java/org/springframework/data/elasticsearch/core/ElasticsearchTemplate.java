@@ -102,6 +102,7 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Kevin Leturc
+ * @author Matthias Melitzer
  */
 
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
@@ -168,8 +169,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
 		XContentBuilder xContentBuilder = null;
 		try {
-			xContentBuilder = buildMapping(clazz, persistentEntity.getIndexType(), persistentEntity
-					.getIdProperty().getFieldName(), persistentEntity.getParentType());
+			xContentBuilder = xContentBuilder = buildMapping(clazz, persistentEntity.getIndexType(), persistentEntity.getIdProperty()
+					.getFieldName(), persistentEntity.getParentType(), persistentEntity.getRoutingPath(),
+					persistentEntity.getRoutingRequired());
 		} catch (Exception e) {
 			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
 		}
@@ -822,6 +824,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 			if (query.getParentId() != null) {
 				indexRequestBuilder.setParent(query.getParentId());
+			}
+			
+			if (query.getRoutingId() != null) {
+				indexRequestBuilder.setRouting(query.getRoutingId());
 			}
 
 			return indexRequestBuilder;

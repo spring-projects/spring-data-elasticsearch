@@ -43,6 +43,7 @@ import org.springframework.data.util.TypeInformation;
  * @author Kevin Leturc
  * @author Alexander Volz
  * @author Dennis Maaß
+ * @author Matthias Melitzer
  */
 
 class MappingBuilder {
@@ -55,6 +56,9 @@ class MappingBuilder {
 	public static final String FIELD_INDEX_ANALYZER = "index_analyzer";
 	public static final String FIELD_PROPERTIES = "properties";
 	public static final String FIELD_PARENT = "_parent";
+	public static final String FIELD_ROUTING = "_routing";
+	public static final String FIELD_REQUIRED = "required";
+	public static final String FIELD_PATH = "path";
 
 	public static final String COMPLETION_PAYLOADS = "payloads";
 	public static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
@@ -68,12 +72,22 @@ class MappingBuilder {
 
 	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = new SimpleTypeHolder();
 
-	static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName, String parentType) throws IOException {
+	static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName, String parentType, String routingPath, boolean routingRequired) throws IOException {
 
 		XContentBuilder mapping = jsonBuilder().startObject().startObject(indexType);
 		// Parent
 		if (hasText(parentType)) {
 			mapping.startObject(FIELD_PARENT).field(FIELD_TYPE, parentType).endObject();
+		}
+		
+		// Routing
+		if (hasText(routingPath) || routingRequired) {
+			XContentBuilder routing = mapping.startObject(FIELD_ROUTING);
+			if (hasText(routingPath)) {
+				routing.field(FIELD_PATH, routingPath);
+			}
+			routing.field(FIELD_REQUIRED, routingRequired);
+			routing.endObject();
 		}
 
 		// Properties

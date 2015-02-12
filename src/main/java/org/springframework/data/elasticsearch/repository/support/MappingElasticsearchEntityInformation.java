@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.repository.support;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -34,6 +35,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Ryan Henszey
+ * @author Matthias Melitzer
  */
 public class MappingElasticsearchEntityInformation<T, ID extends Serializable> extends AbstractEntityInformation<T, ID>
 		implements ElasticsearchEntityInformation<T, ID> {
@@ -113,6 +115,24 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
 			}
 		} catch (Exception e) {
 			throw new IllegalStateException("failed to load parent ID: " + e, e);
+		}
+		return null;
+	}
+
+	@Override
+	public String getRoutingId(T entity) {
+		ElasticsearchPersistentProperty routingProperty = entityMetadata.getRoutingIdProperty();
+		String routingPath = entityMetadata.getRoutingPath();
+		if (StringUtils.isNotBlank(routingPath)) {
+			logger.debug("Discarded routing property in favor of path");
+			return null;
+		}
+		try {
+			if (routingProperty != null) {
+				return (String) BeanWrapper.create(entity, null).getProperty(routingProperty);
+			}
+		} catch (Exception e) {
+			throw new IllegalStateException("failed to load routing ID: " + e, e);
 		}
 		return null;
 	}
