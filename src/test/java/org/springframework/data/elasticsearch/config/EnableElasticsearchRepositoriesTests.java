@@ -21,12 +21,16 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.repositories.sample.SampleElasticsearchRepository;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -37,7 +41,14 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
-public class EnableElasticsearchRepositoriesTests {
+public class EnableElasticsearchRepositoriesTests implements ApplicationContextAware {
+
+	ApplicationContext context;
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.context = applicationContext;
+	}
 
 	@Configuration
 	@EnableElasticsearchRepositories(basePackages = "org.springframework.data.elasticsearch.repositories.sample")
@@ -55,5 +66,17 @@ public class EnableElasticsearchRepositoriesTests {
 	@Test
 	public void bootstrapsRepository() {
 		assertThat(repository, is(notNullValue()));
+	}
+
+	@Test
+	public void shouldScanSelectedPackage() {
+		//given
+
+		//when
+		String[] beanNamesForType = context.getBeanNamesForType(ElasticsearchRepository.class);
+
+		//then
+		assertThat(beanNamesForType.length, is(1));
+		assertThat(beanNamesForType[0], is("sampleElasticsearchRepository"));
 	}
 }
