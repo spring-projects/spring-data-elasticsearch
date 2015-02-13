@@ -42,6 +42,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Jakub Vavrik
  * @author Mohsin Husen
  * @author Keivn Leturc
+ * @author Matthias Melitzer
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -108,6 +109,22 @@ public class MappingBuilderTests {
 		final String expected = "{\"mapping\":{\"_parent\":{\"type\":\"parentType\"},\"properties\":{}}}";
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(MinimalEntity.class, "mapping", "id",
 				"parentType", "", false);
+		assertThat(xContentBuilder.string(), is(expected));
+	}
+	
+	@Test
+	public void shouldCreateMappingForSpecifiedRouting() throws IOException {
+		final String expected = "{\"mapping\":{\"_routing\":{\"required\":true},\"properties\":{}}}";
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(MinimalEntity.class, "mapping", "id",
+				"", "", true);
+		assertThat(xContentBuilder.string(), is(expected));
+	}
+	
+	@Test
+	public void shouldCreateMappingForSpecifiedRoutingWithPath() throws IOException {
+		final String expected = "{\"mapping\":{\"_routing\":{\"path\":\"somePath.toField\",\"required\":false},\"properties\":{}}}";
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(MinimalEntity.class, "mapping", "id",
+				"", "somePath.toField", false);
 		assertThat(xContentBuilder.string(), is(expected));
 	}
 

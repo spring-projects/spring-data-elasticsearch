@@ -24,6 +24,7 @@ import org.springframework.data.elasticsearch.annotations.*;
  *
  * @author Philipp Jardas
  * @author Mohsin Husen
+ * @author Matthias Melitzer
  */
 @Document(indexName = ParentEntity.INDEX, type = ParentEntity.PARENT_TYPE, indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class ParentEntity {
@@ -31,6 +32,7 @@ public class ParentEntity {
 	public static final String INDEX = "parent-child";
 	public static final String PARENT_TYPE = "parent-entity";
 	public static final String CHILD_TYPE = "child-entity";
+	public static final String GRAND_CHILD_TYPE = "grand-child-entity";
 
 	@Id
 	private String id;
@@ -59,40 +61,90 @@ public class ParentEntity {
 	}
 
 	@Document(indexName = INDEX, type = CHILD_TYPE, indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
-	public static class ChildEntity {
+    public static class ChildEntity {
 
-		@Id
-		private String id;
-		@Field(type = FieldType.String, store = true)
-		@Parent(type = PARENT_TYPE)
-		private String parentId;
-		@Field(type = FieldType.String, index = FieldIndex.analyzed, store = true)
-		private String name;
+        @Id
+        private String id;
+        @Field(type = FieldType.String, store = true)
+        @Parent(type = PARENT_TYPE)
+        private String parentId;
+        @Field(type = FieldType.String, index = FieldIndex.analyzed, store = true)
+        private String name;
 
-		public ChildEntity() {
-		}
+        public ChildEntity() {
+        }
 
-		public ChildEntity(String id, String parentId, String name) {
-			this.id = id;
-			this.parentId = parentId;
-			this.name = name;
-		}
+        public ChildEntity(String id, String parentId, String name) {
+            this.id = id;
+            this.parentId = parentId;
+            this.name = name;
+        }
 
-		public String getId() {
-			return id;
-		}
+        public String getId() {
+            return id;
+        }
 
-		public String getParentId() {
-			return parentId;
-		}
+        public String getParentId() {
+            return parentId;
+        }
 
-		public String getName() {
-			return name;
-		}
+        public String getName() {
+            return name;
+        }
 
-		@Override
-		public String toString() {
-			return new ToStringCreator(this).append("id", id).append("parentId", parentId).append("name", name).toString();
-		}
+        @Override
+        public String toString() {
+            return new ToStringCreator(this).append("id", id).append("parentId", parentId).append("name", name).toString();
+        }
+    	
+        @Document(indexName = INDEX, type = GRAND_CHILD_TYPE, indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+        public static class GrandChildEntity {
+    
+            @Id
+            private String id;
+            
+            @Field(type = FieldType.String, store = true)
+            @Parent(type = CHILD_TYPE)
+            private String parentId;
+            
+            @Field(type = FieldType.String, store = true)
+            @Routing
+            private String grandParentId;
+            
+            @Field(type = FieldType.String, index = FieldIndex.analyzed, store = true)
+            private String name;
+            
+    
+            public GrandChildEntity() {
+            }
+    
+            public GrandChildEntity(String id, String parentId, String grandParentId, String name) {
+                this.id = id;
+                this.parentId = parentId;
+                this.grandParentId = grandParentId;
+                this.name = name;
+            }
+    
+            public String getId() {
+                return id;
+            }
+    
+            public String getParentId() {
+                return parentId;
+            }
+            
+			public String getGrandParentId() {
+				return grandParentId;
+			}
+
+			public String getName() {
+                return name;
+            }
+    
+            @Override
+            public String toString() {
+                return new ToStringCreator(this).append("id", id).append("parentId", parentId).append("grandParentId", grandParentId).append("name", name).toString();
+            }
+        }
 	}
 }
