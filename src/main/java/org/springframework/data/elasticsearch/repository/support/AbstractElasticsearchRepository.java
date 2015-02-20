@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
@@ -26,15 +26,23 @@ import java.util.Collections;
 import java.util.List;
 
 import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.common.collect.Lists;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.FacetedPage;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.util.Assert;
 
@@ -45,6 +53,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Ryan Henszey
+ * @author Kevin Leturc
  */
 public abstract class AbstractElasticsearchRepository<T, ID extends Serializable> implements
 		ElasticsearchRepository<T, ID> {
@@ -121,9 +130,9 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	public Iterable<T> findAll(Iterable<ID> ids) {
 		Assert.notNull(ids, "ids can't be null.");
 		SearchQuery query = new NativeSearchQueryBuilder()
-				.withQuery(inQuery(entityInformation.getIdAttribute(), Lists.newArrayList(ids)))
+				.withIds(stringIdsRepresentation(ids))
 				.build();
-		return elasticsearchOperations.queryForPage(query, getEntityClass());
+		return elasticsearchOperations.multiGet(query, getEntityClass());
 	}
 
 	@Override
@@ -301,6 +310,15 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		}
 		return null;
 	}
+
+    private List<String> stringIdsRepresentation(Iterable<ID> ids) {
+        Assert.notNull(ids, "ids can't be null.");
+        List<String> stringIds = new ArrayList<String>();
+        for (ID id : ids) {
+            stringIds.add(stringIdRepresentation(id));
+        }
+        return stringIds;
+    }
 
 	protected abstract String stringIdRepresentation(ID id);
 
