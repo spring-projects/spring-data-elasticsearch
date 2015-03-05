@@ -1,6 +1,21 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 1.2.0.RC1 (2015-03-05)
+-----------------------------------------
+* DATAES-152 - Release 1.2 RC1.
+* DATAES-151 - findAll(Iterable<ID> ids) uses id representation in source instead of ES id.
+* DATAES-140 - Document fields should not be indexed for search.
+* DATAES-135 - Add necessary implementation for improved multi-store behavior.
+* DATAES-132 - support include_in_parent for nested fieldtype.
+* DATAES-130 - Allow Spring EL usage in type attribute of @Document.
+* DATAES-129 - Custom Repository Method for simple geo request does not work.
+* DATAES-115 - FindBy projections for list returns only 10 results.
+* DATAES-100 - Allow configurable searchTimeout.
+* DATAES-94 - Bump to support ES 1.2.0.
+* DATAES-91 - Support for 'suggest' operations.
+
+
 Changes in version 1.1.2.RELEASE (2015-01-28)
 ---------------------------------------------
 * DATAES-146 - Release 1.1.2.
