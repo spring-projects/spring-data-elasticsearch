@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 1.2.0.RELEASE (2015-03-23)
+---------------------------------------------
+* DATAES-154 - Release 1.2 GA.
+
+
 Changes in version 1.2.0.RC1 (2015-03-05)
 -----------------------------------------
 * DATAES-152 - Release 1.2 RC1.
