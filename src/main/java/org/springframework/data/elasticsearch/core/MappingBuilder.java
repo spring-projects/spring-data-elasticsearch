@@ -53,6 +53,7 @@ class MappingBuilder {
 	public static final String FIELD_FORMAT = "format";
 	public static final String FIELD_SEARCH_ANALYZER = "search_analyzer";
 	public static final String FIELD_INDEX_ANALYZER = "index_analyzer";
+	public static final String FIELD_COPY_TO = "copy_to";
 	public static final String FIELD_PROPERTIES = "properties";
 	public static final String FIELD_PARENT = "_parent";
 
@@ -98,10 +99,6 @@ class MappingBuilder {
 
 			if (nestedOrObjectField && FieldType.Nested == fieldType && fieldAnnotation.includeInParent()) {
 				t.field("include_in_parent", fieldAnnotation.includeInParent());
-			}
-
-			if (nestedOrObjectField && FieldType.Nested == fieldType && fieldAnnotation.copyTo() != null && fieldAnnotation.copyTo().length > 0) {
-				t.field("copy_to", fieldAnnotation.copyTo());
 			}
 
 			t.startObject(FIELD_PROPERTIES);
@@ -228,6 +225,9 @@ class MappingBuilder {
 		}
 		if (isNotBlank(fieldAnnotation.indexAnalyzer())) {
 			xContentBuilder.field(FIELD_INDEX_ANALYZER, fieldAnnotation.indexAnalyzer());
+		}
+		if (fieldAnnotation.copyTo() != null && fieldAnnotation.copyTo().length > 0) {
+			xContentBuilder.field(FIELD_COPY_TO, fieldAnnotation.copyTo());
 		}
 		xContentBuilder.endObject();
 	}
