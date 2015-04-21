@@ -31,26 +31,26 @@ import java.lang.annotation.Target;
  * @author Kevin Leturc
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target(value = { ElementType.FIELD, ElementType.METHOD })
 @Documented
 @Inherited
 public @interface Field {
 
-	FieldType type() default FieldType.Auto;
+    FieldType type() default FieldType.Auto;
 
-	FieldIndex index() default FieldIndex.analyzed;
+    FieldIndex index() default FieldIndex.analyzed;
 
-	DateFormat format() default DateFormat.none;
+    DateFormat format() default DateFormat.none;
 
-	String pattern() default "";
+    String pattern() default "";
 
-	boolean store() default false;
+    boolean store() default false;
 
-	String searchAnalyzer() default "";
+    String searchAnalyzer() default "";
 
-	String indexAnalyzer() default "";
+    String indexAnalyzer() default "";
 
-	String[] ignoreFields() default {};
+    String[] ignoreFields() default { };
 
-	boolean includeInParent() default false;
+    boolean includeInParent() default false;
 }
