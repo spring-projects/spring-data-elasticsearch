@@ -99,6 +99,11 @@ class MappingBuilder {
 			if (nestedOrObjectField && FieldType.Nested == fieldType && fieldAnnotation.includeInParent()) {
 				t.field("include_in_parent", fieldAnnotation.includeInParent());
 			}
+
+			if (nestedOrObjectField && FieldType.Nested == fieldType && fieldAnnotation.copyTo() != null && fieldAnnotation.copyTo().length > 0) {
+				t.field("copy_to", fieldAnnotation.copyTo());
+			}
+
 			t.startObject(FIELD_PROPERTIES);
 		}
 
