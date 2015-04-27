@@ -15,21 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang.StringUtils.*;
-import static org.elasticsearch.action.search.SearchType.*;
-import static org.elasticsearch.client.Requests.*;
-import static org.elasticsearch.cluster.metadata.AliasAction.Type.*;
-import static org.elasticsearch.common.collect.Sets.*;
-import static org.elasticsearch.index.VersionType.*;
-import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Method;
-import java.util.*;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
@@ -94,6 +79,23 @@ import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMa
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.util.Assert;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Method;
+import java.util.*;
+
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.elasticsearch.action.search.SearchType.SCAN;
+import static org.elasticsearch.client.Requests.indicesExistsRequest;
+import static org.elasticsearch.client.Requests.refreshRequest;
+import static org.elasticsearch.cluster.metadata.AliasAction.Type.ADD;
+import static org.elasticsearch.common.collect.Sets.newHashSet;
+import static org.elasticsearch.index.VersionType.EXTERNAL;
+import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMapping;
 
 /**
  * ElasticsearchTemplate
@@ -447,6 +449,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public UpdateResponse update(UpdateQuery query) {
+		return this.prepareUpdate(query).execute().actionGet();
+	}
+
+	private UpdateRequestBuilder prepareUpdate(UpdateQuery query) {
 		String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName() : getPersistentEntityFor(query.getClazz()).getIndexName();
 		String type = isNotBlank(query.getType()) ? query.getType() : getPersistentEntityFor(query.getClazz()).getIndexType();
 		Assert.notNull(indexName, "No index defined for Query");
@@ -454,16 +460,24 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		Assert.notNull(query.getId(), "No Id define for Query");
 		Assert.notNull(query.getUpdateRequest(), "No IndexRequest define for Query");
 		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
-		if (query.DoUpsert()) {
-			updateRequestBuilder.setDocAsUpsert(true)
-					.setDoc(query.getUpdateRequest().doc())
+
+		if(query.getUpdateRequest().script() == null) {
+			// doc
+			if (query.DoUpsert()) {
+				updateRequestBuilder.setDocAsUpsert(true)
+						.setDoc(query.getUpdateRequest().doc());
+			} else {
+				updateRequestBuilder.setDoc(query.getUpdateRequest().doc());
+			}
+		} else {
+			// or script
+			updateRequestBuilder
 					.setScript(query.getUpdateRequest().script(), query.getUpdateRequest().scriptType())
 					.setScriptParams(query.getUpdateRequest().scriptParams())
 					.setScriptLang(query.getUpdateRequest().scriptLang());
-		} else {
-			updateRequestBuilder.setDoc(query.getUpdateRequest().doc());
 		}
-		return updateRequestBuilder.execute().actionGet();
+
+		return updateRequestBuilder;
 	}
 
 	@Override
@@ -471,6 +485,26 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		BulkRequestBuilder bulkRequest = client.prepareBulk();
 		for (IndexQuery query : queries) {
 			bulkRequest.add(prepareIndex(query));
+		}
+		BulkResponse bulkResponse = bulkRequest.execute().actionGet();
+		if (bulkResponse.hasFailures()) {
+			Map<String, String> failedDocuments = new HashMap<String, String>();
+			for (BulkItemResponse item : bulkResponse.getItems()) {
+				if (item.isFailed())
+					failedDocuments.put(item.getId(), item.getFailureMessage());
+			}
+			throw new ElasticsearchException(
+					"Bulk indexing has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
+							+ failedDocuments + "]", failedDocuments
+			);
+		}
+	}
+
+	@Override
+	public void bulkUpdate(List<UpdateQuery> queries) {
+		BulkRequestBuilder bulkRequest = client.prepareBulk();
+		for (UpdateQuery query : queries) {
+			bulkRequest.add(prepareUpdate(query));
 		}
 		BulkResponse bulkResponse = bulkRequest.execute().actionGet();
 		if (bulkResponse.hasFailures()) {

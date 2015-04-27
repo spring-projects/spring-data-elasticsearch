@@ -15,14 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.apache.commons.lang.RandomStringUtils.*;
-import static org.elasticsearch.index.query.FilterBuilders.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
-import java.util.*;
-
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
@@ -52,6 +44,15 @@ import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.entities.SampleMappingEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.*;
+
+import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
+import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
+import static org.elasticsearch.index.query.FilterBuilders.termFilter;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 /**
  * @author Rizwan Idrees
@@ -252,6 +253,41 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		assertThat(sampleEntities.getTotalElements(), is(equalTo(2L)));
+	}
+
+
+	@Test
+	public void shouldDoBulkUpdate() {
+		//given
+		String documentId = randomNumeric(5);
+		String messageBeforeUpdate = "some test message";
+		String messageAfterUpdate = "test message";
+
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId)
+				.message(messageBeforeUpdate)
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+		IndexRequest indexRequest = new IndexRequest();
+		indexRequest.source("message", messageAfterUpdate);
+		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId)
+				.withClass(SampleEntity.class).withIndexRequest(indexRequest).build();
+
+
+		List<UpdateQuery> queries = new ArrayList<UpdateQuery>();
+		queries.add(updateQuery);
+
+		// when
+		elasticsearchTemplate.bulkUpdate(queries);
+		//then
+		GetQuery getQuery = new GetQuery();
+		getQuery.setId(documentId);
+		SampleEntity indexedEntity = elasticsearchTemplate.queryForObject(getQuery, SampleEntity.class);
+		assertThat(indexedEntity.getMessage(), is(messageAfterUpdate));
 	}
 
 	@Test

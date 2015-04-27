@@ -15,15 +15,15 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.elasticsearch.action.update.UpdateResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.query.*;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * ElasticsearchOperations
@@ -322,6 +322,13 @@ public interface ElasticsearchOperations {
 	 * @param queries
 	 */
 	void bulkIndex(List<IndexQuery> queries);
+
+	/**
+	 * Bulk update all objects. Will do update
+	 *
+	 * @param queries
+	 */
+	void bulkUpdate(List<UpdateQuery> queries);
 
 	/**
 	 * Delete the one object with provided id
