@@ -48,6 +48,13 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		if (!conversionService.canConvert(org.joda.time.LocalDateTime.class, String.class)) {
 			conversionService.addConverter(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE);
 		}
+		// https://jira.spring.io/browse/DATAES-161
+		conversionService.addConverter(new Converter<String, String>() {
+			@Override
+			public String convert(String source) {
+				return source.replace("\"", "\\\"");
+			}
+        	});
 	}
 
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod,
