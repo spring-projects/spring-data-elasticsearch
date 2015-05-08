@@ -27,6 +27,7 @@ import org.springframework.data.elasticsearch.repository.query.ElasticsearchQuer
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchStringQuery;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.repository.core.NamedQueries;
+import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.query.QueryLookupStrategy;
@@ -59,28 +60,8 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
 	@Override
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	protected Object getTargetRepository(RepositoryMetadata metadata) {
-
-		ElasticsearchEntityInformation<?, ?> entityInformation = getEntityInformation(metadata.getDomainType());
-
-		AbstractElasticsearchRepository repository;
-
-		// Probably a better way to store and look these up.
-		if (Integer.class.isAssignableFrom(entityInformation.getIdType())
-				|| Long.class.isAssignableFrom(entityInformation.getIdType())
-				|| Double.class.isAssignableFrom(entityInformation.getIdType())) {
-			// logger.debug("Using NumberKeyedRepository for " + metadata.getRepositoryInterface());
-			repository = new NumberKeyedRepository(getEntityInformation(metadata.getDomainType()), elasticsearchOperations);
-		} else if (entityInformation.getIdType() == String.class) {
-			// logger.debug("Using SimpleElasticsearchRepository for " + metadata.getRepositoryInterface());
-			repository = new SimpleElasticsearchRepository(getEntityInformation(metadata.getDomainType()),
-					elasticsearchOperations);
-		} else {
-			throw new IllegalArgumentException("Unsuppored ID type " + entityInformation.getIdType());
-		}
-		repository.setEntityClass(metadata.getDomainType());
-
-		return repository;
+	protected Object getTargetRepository(RepositoryInformation metadata) {
+		return getTargetRepositoryViaReflection(metadata,getEntityInformation(metadata.getDomainType()), elasticsearchOperations);
 	}
 
 	@Override
@@ -88,7 +69,15 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 		if (isQueryDslRepository(metadata.getRepositoryInterface())) {
 			throw new IllegalArgumentException("QueryDsl Support has not been implemented yet.");
 		}
-		return SimpleElasticsearchRepository.class;
+		if (Integer.class.isAssignableFrom(metadata.getIdType())
+				|| Long.class.isAssignableFrom(metadata.getIdType())
+				|| Double.class.isAssignableFrom(metadata.getIdType())) {
+			return NumberKeyedRepository.class;
+		} else if (metadata.getIdType() == String.class) {
+			return SimpleElasticsearchRepository.class;
+		} else {
+			throw new IllegalArgumentException("Unsuppored ID type " + metadata.getIdType());
+		}
 	}
 
 	private static boolean isQueryDslRepository(Class<?> repositoryInterface) {

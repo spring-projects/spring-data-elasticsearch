@@ -21,6 +21,7 @@ import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.repository.support.ElasticsearchRepositoryFactoryBean;
+import org.springframework.data.repository.config.DefaultRepositoryBaseClass;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 
 /**
@@ -102,6 +103,13 @@ public @interface EnableElasticsearchRepositories {
 	 * @return
 	 */
 	Class<?> repositoryFactoryBeanClass() default ElasticsearchRepositoryFactoryBean.class;
+
+	/**
+	 * Configure the repository base class to be used to create repository proxies for this particular configuration.
+	 *
+	 * @return
+	 */
+	Class<?> repositoryBaseClass() default DefaultRepositoryBaseClass.class;
 
 	// Elasticsearch specific configuration
 
