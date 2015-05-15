@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repositories.sample;
 
+import java.util.List;
+
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
@@ -23,5 +25,10 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
  * @author Mohsin Husen
  */
 public interface SampleElasticsearchRepository extends ElasticsearchRepository<SampleEntity, String> {
+
+	long deleteById(String id);
+	List<SampleEntity> deleteByAvailable(boolean available);
+	List<SampleEntity> deleteByMessage(String message);
+	void deleteByType(String type);
 
 }

@@ -340,6 +340,14 @@ public interface ElasticsearchOperations {
 	 */
 	String delete(String indexName, String type, String id);
 
+
+	/**
+	 * Delete all records matching the criteria
+	 *
+	 * @param clazz
+	 * @param criteriaQuery
+	 */
+	<T> void delete(CriteriaQuery criteriaQuery, Class<T> clazz);
 	/**
 	 * Delete the one object with provided id
 	 *

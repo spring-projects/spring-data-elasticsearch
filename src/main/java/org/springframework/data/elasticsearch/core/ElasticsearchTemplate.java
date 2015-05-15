@@ -586,6 +586,15 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
+	public <T> void delete(CriteriaQuery criteriaQuery, Class<T> clazz) {
+		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
+		Assert.notNull(elasticsearchQuery, "Query can not be null.");
+		DeleteQuery deleteQuery = new DeleteQuery();
+		deleteQuery.setQuery(elasticsearchQuery);
+		delete(deleteQuery, clazz);
+	}
+
+	@Override
 	public String scan(SearchQuery searchQuery, long scrollTimeInMillis, boolean noFields) {
 		Assert.notNull(searchQuery.getIndices(), "No index defined for Query");
 		Assert.notNull(searchQuery.getTypes(), "No type define for Query");

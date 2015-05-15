@@ -560,6 +560,28 @@ public class ElasticsearchTemplateTests {
 	}
 
 	@Test
+	public void shouldDeleteGivenCriteriaQuery() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId).message("test message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("test"));
+
+		// when
+		elasticsearchTemplate.delete(criteriaQuery, SampleEntity.class);
+		// then
+		StringQuery stringQuery = new StringQuery(matchAllQuery().toString());
+		List<SampleEntity> sampleEntities = elasticsearchTemplate.queryForList(stringQuery, SampleEntity.class);
+
+		assertThat(sampleEntities.size(), is(0));
+	}
+
+	@Test
 	public void shouldReturnSpecifiedFields() {
 		// given
 		String documentId = randomNumeric(5);
