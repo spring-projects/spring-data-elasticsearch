@@ -145,6 +145,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		for (MultiGetItemResponse response : responses.getResponses()) {
 			if (!response.isFailed() && response.getResponse().isExists()) {
 				T result = mapEntity(response.getResponse().getSourceAsString(), clazz);
+				setPersistentEntityId(result, response.getResponse().getId(), clazz);
 				list.add(result);
 			}
 		}
