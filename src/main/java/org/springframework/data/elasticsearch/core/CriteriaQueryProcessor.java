@@ -122,7 +122,7 @@ class CriteriaQueryProcessor {
 
 		switch (key) {
 			case EQUALS:
-				query = queryString(searchText).field(fieldName);
+				query = queryString(searchText).field(fieldName).defaultOperator(QueryStringQueryBuilder.Operator.AND);
 				break;
 			case CONTAINS:
 				query = queryString("*" + searchText + "*").field(fieldName).analyzeWildcard(true);
