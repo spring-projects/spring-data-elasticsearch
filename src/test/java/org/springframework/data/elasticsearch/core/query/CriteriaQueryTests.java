@@ -223,12 +223,12 @@ public class CriteriaQueryTests {
 
 		elasticsearchTemplate.bulkIndex(indexQueries);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
-		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("some message").is("test message"));
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("some message"));
 		// when
 		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(criteriaQuery, SampleEntity.class);
 		// then
 		assertThat("message", is(criteriaQuery.getCriteria().getField().getName()));
-		assertThat(page.getTotalElements(), is(greaterThanOrEqualTo(2L)));
+		assertThat(page.getTotalElements(), is(equalTo(1L)));
 	}
 
 	@Test
