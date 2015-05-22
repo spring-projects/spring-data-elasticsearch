@@ -1,0 +1,13 @@
+{
+  "synonym-type": {
+    "_all": {
+      "enabled": true
+    },
+    "properties": {
+      "text": {
+        "type": "string",
+        "analyzer": "synonym_analyzer"
+      }
+    }
+  }
+}
