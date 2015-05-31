@@ -440,6 +440,16 @@ public interface ElasticsearchOperations {
 	<T> void refresh(Class<T> clazz, boolean waitForOperation);
 
 	/**
+	 * Returns scroll id for criteria query
+	 *
+	 * @param query
+	 * @param scrollTimeInMillis
+	 * @param noFields
+	 * @return
+	 */
+	String scan(CriteriaQuery query, long scrollTimeInMillis, boolean noFields);
+
+	/**
 	 * Returns scroll id for scan query
 	 *
 	 * @param query
