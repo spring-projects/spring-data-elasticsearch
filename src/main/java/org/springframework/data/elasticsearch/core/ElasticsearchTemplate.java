@@ -78,6 +78,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 
 import java.io.BufferedReader;
@@ -328,6 +329,80 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public <T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper) {
 		SearchResponse response = getSearchResponse(prepareSearch(query, clazz).setQuery(query.getSource()).execute());
 		return mapper.mapResults(response, clazz, query.getPageable());
+	}
+
+	@Override
+	public <T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz) {
+		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
+		final String initScrollId = scan(query, scrollTimeInMillis, false);
+		return doStream(initScrollId, scrollTimeInMillis, clazz, resultsMapper);
+	}
+
+	@Override
+	public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz) {
+		return stream(query, clazz, resultsMapper);
+	}
+
+	@Override
+	public <T> CloseableIterator<T> stream(SearchQuery query, final Class<T> clazz, final SearchResultMapper mapper) {
+		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
+		final String initScrollId = scan(query, scrollTimeInMillis, false);
+		return doStream(initScrollId, scrollTimeInMillis, clazz, mapper);
+	}
+
+	private <T> CloseableIterator<T> doStream(final String initScrollId, final long scrollTimeInMillis, final Class<T> clazz, final SearchResultMapper mapper) {
+		return new CloseableIterator<T>() {
+
+			/** As we couldn't retrieve single result with scroll, store current hits. */
+			private volatile Iterator<T> currentHits;
+
+			/** The scroll id. */
+			private volatile String scrollId = initScrollId;
+
+			/** If stream is finished (ie: cluster returns no results. */
+			private volatile boolean finished;
+
+			@Override
+			public void close() {
+				try {
+					// Clear scroll on cluster only in case of error (cause elasticsearch auto clear scroll when it's done)
+					if (!finished && scrollId != null && currentHits != null && currentHits.hasNext()) {
+						client.prepareClearScroll().addScrollId(scrollId).execute().actionGet();
+					}
+				} finally {
+					currentHits = null;
+					scrollId = null;
+				}
+			}
+
+			@Override
+			public boolean hasNext() {
+				// Test if stream is finished
+				if (finished) {
+					return false;
+				}
+				// Test if it remains hits
+				if (currentHits == null || !currentHits.hasNext()) {
+					// Do a new request
+					SearchResponse response = getSearchResponse(client.prepareSearchScroll(scrollId)
+							.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
+					// Save hits and scroll id
+					currentHits = mapper.mapResults(response, clazz, null).iterator();
+					finished = !currentHits.hasNext();
+					scrollId = response.getScrollId();
+				}
+				return currentHits.hasNext();
+			}
+
+			@Override
+			public T next() {
+				if (hasNext()) {
+					return currentHits.next();
+				}
+				throw new NoSuchElementException();
+			}
+
+		};
 	}
 
 	@Override

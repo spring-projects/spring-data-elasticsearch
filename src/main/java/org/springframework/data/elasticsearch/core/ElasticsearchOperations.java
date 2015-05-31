@@ -19,6 +19,7 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.util.CloseableIterator;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -208,6 +209,46 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	<T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper);
+
+	/**
+	 * Executes the given {@link CriteriaQuery} against elasticsearch and return result as {@link CloseableIterator}.
+	 * <p>
+	 * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of error.
+	 *
+	 * @param <T> element return type
+	 * @param query
+	 * @param clazz
+	 * @return
+	 * @since 1.3
+	 */
+	<T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz);
+
+	/**
+	 * Executes the given {@link SearchQuery} against elasticsearch and return result as {@link CloseableIterator}.
+	 * <p>
+	 * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of error.
+	 *
+	 * @param <T> element return type
+	 * @param query
+	 * @param clazz
+	 * @return
+	 * @since 1.3
+	 */
+	<T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz);
+
+	/**
+	 * Executes the given {@link SearchQuery} against elasticsearch and return result as {@link CloseableIterator} using custom mapper.
+	 * <p>
+	 * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of error.
+	 *
+	 * @param <T> element return type
+	 * @param query
+	 * @param clazz
+	 * @param mapper
+	 * @return
+	 * @since 1.3
+	 */
+	<T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
 	 * Execute the criteria query against elasticsearch and return result as {@link List}
