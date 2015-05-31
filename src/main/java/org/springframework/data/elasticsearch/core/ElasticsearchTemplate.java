@@ -595,28 +595,57 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
+	public String scan(CriteriaQuery criteriaQuery, long scrollTimeInMillis, boolean noFields) {
+		Assert.notNull(criteriaQuery.getIndices(), "No index defined for Query");
+		Assert.notNull(criteriaQuery.getTypes(), "No type define for Query");
+		Assert.notNull(criteriaQuery.getPageable(), "Query.pageable is required for scan & scroll");
+
+		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
+		FilterBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
+		SearchRequestBuilder requestBuilder = prepareScan(criteriaQuery, scrollTimeInMillis, noFields);
+
+		if (elasticsearchQuery != null) {
+			requestBuilder.setQuery(elasticsearchQuery);
+		} else {
+			requestBuilder.setQuery(QueryBuilders.matchAllQuery());
+		}
+
+		if (elasticsearchFilter != null) {
+			requestBuilder.setPostFilter(elasticsearchFilter);
+		}
+
+		return getSearchResponse(requestBuilder.execute()).getScrollId();
+	}
+
+	@Override
 	public String scan(SearchQuery searchQuery, long scrollTimeInMillis, boolean noFields) {
 		Assert.notNull(searchQuery.getIndices(), "No index defined for Query");
 		Assert.notNull(searchQuery.getTypes(), "No type define for Query");
 		Assert.notNull(searchQuery.getPageable(), "Query.pageable is required for scan & scroll");
 
-		SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(searchQuery.getIndices())).setSearchType(SCAN)
-				.setQuery(searchQuery.getQuery()).setTypes(toArray(searchQuery.getTypes()))
-				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).setFrom(0)
-				.setSize(searchQuery.getPageable().getPageSize());
+		SearchRequestBuilder requestBuilder = prepareScan(searchQuery, scrollTimeInMillis, noFields);
 
 		if (searchQuery.getFilter() != null) {
 			requestBuilder.setPostFilter(searchQuery.getFilter());
 		}
 
-		if (isNotEmpty(searchQuery.getFields())) {
-			requestBuilder.addFields(toArray(searchQuery.getFields()));
+		return getSearchResponse(requestBuilder.setQuery(searchQuery.getQuery()).execute()).getScrollId();
+	}
+
+	private SearchRequestBuilder prepareScan(Query query, long scrollTimeInMillis, boolean noFields) {
+		SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(query.getIndices())).setSearchType(SCAN)
+				.setTypes(toArray(query.getTypes()))
+				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).setFrom(0)
+				.setSize(query.getPageable().getPageSize());
+
+		if (isNotEmpty(query.getFields())) {
+			requestBuilder.addFields(toArray(query.getFields()));
 		}
 
 		if (noFields) {
 			requestBuilder.setNoFields();
 		}
-		return getSearchResponse(requestBuilder.execute()).getScrollId();
+		return requestBuilder;
 	}
 
 	@Override
