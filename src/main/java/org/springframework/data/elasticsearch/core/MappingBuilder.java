@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.elasticsearch.common.lang3.StringUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.core.GenericCollectionTypeResolver;
 import org.springframework.data.annotation.Transient;
@@ -65,6 +66,8 @@ class MappingBuilder {
 	public static final String TYPE_VALUE_STRING = "string";
 	public static final String TYPE_VALUE_GEO_POINT = "geo_point";
 	public static final String TYPE_VALUE_COMPLETION = "completion";
+	public static final String TYPE_VALUE_GEO_HASH_PREFIX = "geohash_prefix" ;
+	public static final String TYPE_VALUE_GEO_HASH_PRECISION = "geohash_precision";
 
 	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = new SimpleTypeHolder();
 
@@ -169,8 +172,18 @@ class MappingBuilder {
 
 	private static void applyGeoPointFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
 		xContentBuilder.startObject(field.getName());
-		xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_GEO_POINT)
-				.endObject();
+		xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_GEO_POINT);
+
+		GeoPointField annotation = field.getAnnotation(GeoPointField.class);
+		if (annotation != null) {
+			if (annotation.geoHashPrefix())
+				xContentBuilder.field(TYPE_VALUE_GEO_HASH_PREFIX, true);
+
+			if (StringUtils.isNotEmpty(annotation.geoHashPrecision()))
+				xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, annotation.geoHashPrecision());
+		}
+
+		xContentBuilder.endObject();
 	}
 
 	private static void applyCompletionFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field, CompletionField annotation) throws IOException {
