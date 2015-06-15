@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.elasticsearch.common.lang3.StringUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.core.GenericCollectionTypeResolver;
 import org.springframework.data.annotation.Transient;
@@ -178,7 +179,7 @@ class MappingBuilder {
 			if (annotation.geoHashPrefix())
 				xContentBuilder.field(TYPE_VALUE_GEO_HASH_PREFIX, true);
 
-			if ("" .equals(annotation.geoHashPrecision()))
+			if (StringUtils.isNotEmpty(annotation.geoHashPrecision()))
 				xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, annotation.geoHashPrecision());
 		}
 
