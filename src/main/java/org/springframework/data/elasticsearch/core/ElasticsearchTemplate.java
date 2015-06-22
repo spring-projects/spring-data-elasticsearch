@@ -78,6 +78,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 
 import java.io.BufferedReader;
@@ -328,6 +329,80 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public <T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper) {
 		SearchResponse response = getSearchResponse(prepareSearch(query, clazz).setQuery(query.getSource()).execute());
 		return mapper.mapResults(response, clazz, query.getPageable());
+	}
+
+	@Override
+	public <T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz) {
+		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
+		final String initScrollId = scan(query, scrollTimeInMillis, false);
+		return doStream(initScrollId, scrollTimeInMillis, clazz, resultsMapper);
+	}
+
+	@Override
+	public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz) {
+		return stream(query, clazz, resultsMapper);
+	}
+
+	@Override
+	public <T> CloseableIterator<T> stream(SearchQuery query, final Class<T> clazz, final SearchResultMapper mapper) {
+		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
+		final String initScrollId = scan(query, scrollTimeInMillis, false);
+		return doStream(initScrollId, scrollTimeInMillis, clazz, mapper);
+	}
+
+	private <T> CloseableIterator<T> doStream(final String initScrollId, final long scrollTimeInMillis, final Class<T> clazz, final SearchResultMapper mapper) {
+		return new CloseableIterator<T>() {
+
+			/** As we couldn't retrieve single result with scroll, store current hits. */
+			private volatile Iterator<T> currentHits;
+
+			/** The scroll id. */
+			private volatile String scrollId = initScrollId;
+
+			/** If stream is finished (ie: cluster returns no results. */
+			private volatile boolean finished;
+
+			@Override
+			public void close() {
+				try {
+					// Clear scroll on cluster only in case of error (cause elasticsearch auto clear scroll when it's done)
+					if (!finished && scrollId != null && currentHits != null && currentHits.hasNext()) {
+						client.prepareClearScroll().addScrollId(scrollId).execute().actionGet();
+					}
+				} finally {
+					currentHits = null;
+					scrollId = null;
+				}
+			}
+
+			@Override
+			public boolean hasNext() {
+				// Test if stream is finished
+				if (finished) {
+					return false;
+				}
+				// Test if it remains hits
+				if (currentHits == null || !currentHits.hasNext()) {
+					// Do a new request
+					SearchResponse response = getSearchResponse(client.prepareSearchScroll(scrollId)
+							.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
+					// Save hits and scroll id
+					currentHits = mapper.mapResults(response, clazz, null).iterator();
+					finished = !currentHits.hasNext();
+					scrollId = response.getScrollId();
+				}
+				return currentHits.hasNext();
+			}
+
+			@Override
+			public T next() {
+				if (hasNext()) {
+					return currentHits.next();
+				}
+				throw new NoSuchElementException();
+			}
+
+		};
 	}
 
 	@Override
@@ -595,28 +670,57 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
+	public String scan(CriteriaQuery criteriaQuery, long scrollTimeInMillis, boolean noFields) {
+		Assert.notNull(criteriaQuery.getIndices(), "No index defined for Query");
+		Assert.notNull(criteriaQuery.getTypes(), "No type define for Query");
+		Assert.notNull(criteriaQuery.getPageable(), "Query.pageable is required for scan & scroll");
+
+		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
+		FilterBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
+		SearchRequestBuilder requestBuilder = prepareScan(criteriaQuery, scrollTimeInMillis, noFields);
+
+		if (elasticsearchQuery != null) {
+			requestBuilder.setQuery(elasticsearchQuery);
+		} else {
+			requestBuilder.setQuery(QueryBuilders.matchAllQuery());
+		}
+
+		if (elasticsearchFilter != null) {
+			requestBuilder.setPostFilter(elasticsearchFilter);
+		}
+
+		return getSearchResponse(requestBuilder.execute()).getScrollId();
+	}
+
+	@Override
 	public String scan(SearchQuery searchQuery, long scrollTimeInMillis, boolean noFields) {
 		Assert.notNull(searchQuery.getIndices(), "No index defined for Query");
 		Assert.notNull(searchQuery.getTypes(), "No type define for Query");
 		Assert.notNull(searchQuery.getPageable(), "Query.pageable is required for scan & scroll");
 
-		SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(searchQuery.getIndices())).setSearchType(SCAN)
-				.setQuery(searchQuery.getQuery()).setTypes(toArray(searchQuery.getTypes()))
-				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).setFrom(0)
-				.setSize(searchQuery.getPageable().getPageSize());
+		SearchRequestBuilder requestBuilder = prepareScan(searchQuery, scrollTimeInMillis, noFields);
 
 		if (searchQuery.getFilter() != null) {
 			requestBuilder.setPostFilter(searchQuery.getFilter());
 		}
 
-		if (isNotEmpty(searchQuery.getFields())) {
-			requestBuilder.addFields(toArray(searchQuery.getFields()));
+		return getSearchResponse(requestBuilder.setQuery(searchQuery.getQuery()).execute()).getScrollId();
+	}
+
+	private SearchRequestBuilder prepareScan(Query query, long scrollTimeInMillis, boolean noFields) {
+		SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(query.getIndices())).setSearchType(SCAN)
+				.setTypes(toArray(query.getTypes()))
+				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).setFrom(0)
+				.setSize(query.getPageable().getPageSize());
+
+		if (isNotEmpty(query.getFields())) {
+			requestBuilder.addFields(toArray(query.getFields()));
 		}
 
 		if (noFields) {
 			requestBuilder.setNoFields();
 		}
-		return getSearchResponse(requestBuilder.execute()).getScrollId();
+		return requestBuilder;
 	}
 
 	@Override

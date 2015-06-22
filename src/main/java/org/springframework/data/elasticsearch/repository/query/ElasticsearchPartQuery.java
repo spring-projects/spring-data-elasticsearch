@@ -24,6 +24,8 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.ClassUtils;
+import org.springframework.data.util.CloseableIterator;
+import org.springframework.data.util.StreamUtils;
 
 /**
  * ElasticsearchPartQuery
@@ -54,6 +56,14 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		} else if (queryMethod.isPageQuery()) {
 			query.setPageable(accessor.getPageable());
 			return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
+		} else if (queryMethod.isStreamQuery()) {
+			Class<?> entityType = queryMethod.getEntityInformation().getJavaType();
+			if (query.getPageable() == null) {
+				query.setPageable(new PageRequest(0, 20));
+			}
+
+			return StreamUtils.createStreamFromIterator((CloseableIterator<Object>) elasticsearchOperations.stream(query, entityType));
+
 		} else if (queryMethod.isCollectionQuery()) {
 			if (accessor.getPageable() == null) {
 				int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
