@@ -800,7 +800,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		return resultsMapper.mapResults(response, clazz, query.getPageable());
 	}
 
-	private SearchResponse doSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
+	protected SearchResponse doSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
 		if (searchQuery.getFilter() != null) {
 			searchRequest.setPostFilter(searchQuery.getFilter());
 		}
