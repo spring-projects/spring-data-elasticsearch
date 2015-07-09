@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.repository.support;
 import java.io.Serializable;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
@@ -51,6 +52,7 @@ public class ElasticsearchRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	 */
 	@Override
 	public void afterPropertiesSet() {
+		setMappingContext(new SimpleElasticsearchMappingContext());
 		super.afterPropertiesSet();
 		Assert.notNull(operations, "ElasticsearchOperations must be configured!");
 	}
