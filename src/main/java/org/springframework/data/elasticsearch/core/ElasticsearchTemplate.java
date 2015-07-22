@@ -15,21 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang.StringUtils.*;
-import static org.elasticsearch.action.search.SearchType.*;
-import static org.elasticsearch.client.Requests.*;
-import static org.elasticsearch.cluster.metadata.AliasAction.Type.*;
-import static org.elasticsearch.common.collect.Sets.*;
-import static org.elasticsearch.index.VersionType.*;
-import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Method;
-import java.util.*;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -87,9 +72,41 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.util.Assert;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.elasticsearch.action.search.SearchType.SCAN;
+import static org.elasticsearch.client.Requests.indicesExistsRequest;
+import static org.elasticsearch.client.Requests.refreshRequest;
+import static org.elasticsearch.cluster.metadata.AliasAction.Type.ADD;
+import static org.elasticsearch.common.collect.Sets.newHashSet;
+import static org.elasticsearch.index.VersionType.EXTERNAL;
+import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMapping;
 
 /**
  * ElasticsearchTemplate
@@ -583,7 +600,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz) {
-		int startRecord = 0;
+		return moreLikeThis(query, clazz, resultsMapper);
+	}
+
+	@Override
+	public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz, SearchResultMapper mapper) {
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
 		String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName() : persistentEntity.getIndexName();
 		String type = isNotBlank(query.getType()) ? query.getType() : persistentEntity.getIndexType();
@@ -592,56 +613,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		Assert.notNull(type, "No 'type' defined for MoreLikeThisQuery");
 		Assert.notNull(query.getId(), "No document id defined for MoreLikeThisQuery");
 
-		MoreLikeThisRequestBuilder requestBuilder = client.prepareMoreLikeThis(indexName, type, query.getId());
+		MoreLikeThisRequestBuilder builder = client.prepareMoreLikeThis(indexName, type, query.getId());
+		SearchResponse response = doMoreLikeThis(builder, query);
 
-		if (query.getPageable() != null) {
-			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
-			requestBuilder.setSearchSize(query.getPageable().getPageSize());
-		}
-		requestBuilder.setSearchFrom(startRecord);
-
-		if (isNotEmpty(query.getSearchIndices())) {
-			requestBuilder.setSearchIndices(toArray(query.getSearchIndices()));
-		}
-		if (isNotEmpty(query.getSearchTypes())) {
-			requestBuilder.setSearchTypes(toArray(query.getSearchTypes()));
-		}
-		if (isNotEmpty(query.getFields())) {
-			requestBuilder.setField(toArray(query.getFields()));
-		}
-		if (isNotBlank(query.getRouting())) {
-			requestBuilder.setRouting(query.getRouting());
-		}
-		if (query.getPercentTermsToMatch() != null) {
-			requestBuilder.setPercentTermsToMatch(query.getPercentTermsToMatch());
-		}
-		if (query.getMinTermFreq() != null) {
-			requestBuilder.setMinTermFreq(query.getMinTermFreq());
-		}
-		if (query.getMaxQueryTerms() != null) {
-			requestBuilder.maxQueryTerms(query.getMaxQueryTerms());
-		}
-		if (isNotEmpty(query.getStopWords())) {
-			requestBuilder.setStopWords(toArray(query.getStopWords()));
-		}
-		if (query.getMinDocFreq() != null) {
-			requestBuilder.setMinDocFreq(query.getMinDocFreq());
-		}
-		if (query.getMaxDocFreq() != null) {
-			requestBuilder.setMaxDocFreq(query.getMaxDocFreq());
-		}
-		if (query.getMinWordLen() != null) {
-			requestBuilder.setMinWordLen(query.getMinWordLen());
-		}
-		if (query.getMaxWordLen() != null) {
-			requestBuilder.setMaxWordLen(query.getMaxWordLen());
-		}
-		if (query.getBoostTerms() != null) {
-			requestBuilder.setBoostTerms(query.getBoostTerms());
-		}
-
-		SearchResponse response = requestBuilder.execute().actionGet();
-		return resultsMapper.mapResults(response, clazz, query.getPageable());
+		return mapper.mapResults(response, clazz, query.getPageable());
 	}
 
 	private SearchResponse doSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
@@ -678,6 +653,58 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		}
 
 		return searchRequest.setQuery(searchQuery.getQuery()).execute().actionGet();
+	}
+
+	private SearchResponse doMoreLikeThis(MoreLikeThisRequestBuilder builder, MoreLikeThisQuery query) {
+		int startRecord = 0;
+
+		if (query.getPageable() != null) {
+			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
+			builder.setSearchSize(query.getPageable().getPageSize());
+		}
+		builder.setSearchFrom(startRecord);
+
+		if (isNotEmpty(query.getSearchIndices())) {
+			builder.setSearchIndices(toArray(query.getSearchIndices()));
+		}
+		if (isNotEmpty(query.getSearchTypes())) {
+			builder.setSearchTypes(toArray(query.getSearchTypes()));
+		}
+		if (isNotEmpty(query.getFields())) {
+			builder.setField(toArray(query.getFields()));
+		}
+		if (isNotBlank(query.getRouting())) {
+			builder.setRouting(query.getRouting());
+		}
+		if (query.getPercentTermsToMatch() != null) {
+			builder.setPercentTermsToMatch(query.getPercentTermsToMatch());
+		}
+		if (query.getMinTermFreq() != null) {
+			builder.setMinTermFreq(query.getMinTermFreq());
+		}
+		if (query.getMaxQueryTerms() != null) {
+			builder.maxQueryTerms(query.getMaxQueryTerms());
+		}
+		if (isNotEmpty(query.getStopWords())) {
+			builder.setStopWords(toArray(query.getStopWords()));
+		}
+		if (query.getMinDocFreq() != null) {
+			builder.setMinDocFreq(query.getMinDocFreq());
+		}
+		if (query.getMaxDocFreq() != null) {
+			builder.setMaxDocFreq(query.getMaxDocFreq());
+		}
+		if (query.getMinWordLen() != null) {
+			builder.setMinWordLen(query.getMinWordLen());
+		}
+		if (query.getMaxWordLen() != null) {
+			builder.setMaxWordLen(query.getMaxWordLen());
+		}
+		if (query.getBoostTerms() != null) {
+			builder.setBoostTerms(query.getBoostTerms());
+		}
+
+		return builder.execute().actionGet();
 	}
 
 	private <T> boolean createIndexIfNotCreated(Class<T> clazz) {
@@ -913,7 +940,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	private String[] retrieveTypeFromPersistentEntity(Class clazz) {
 		if (clazz != null) {
-			return new String[]{getPersistentEntityFor(clazz).getIndexType()};
+			return new String[] { getPersistentEntityFor(clazz).getIndexType()};
 		}
 		return null;
 	}
