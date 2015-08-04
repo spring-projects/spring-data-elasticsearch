@@ -1,6 +1,34 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 1.3.0.RC1 (2015-08-04)
+-----------------------------------------
+* DATAES-186 - Release 1.3 RC1 (Gosling).
+* DATAES-182 - Switch from BeanWrapper to PersistentPropertyAccessor.
+
+
+Changes in version 1.2.2.RELEASE (2015-07-28)
+---------------------------------------------
+* DATAES-184 - Release 1.2.2 (Fowler).
+
+
+Changes in version 1.0.6.RELEASE (2015-07-01)
+---------------------------------------------
+* DATAES-173 - Release 1.0.6 (Dijkstra).
+
+
+Changes in version 1.1.3.RELEASE (2015-07-01)
+---------------------------------------------
+* DATAES-174 - Release 1.1.3 (Evans).
+
+
+Changes in version 1.2.1.RELEASE (2015-06-30)
+---------------------------------------------
+* DATAES-175 - Release 1.2.1 (Fowler).
+* DATAES-164 - CriteriaQuery equals method has to use AND operator instead of OR.
+* DATAES-155 - findAll(Iterable<ID> ids) doesn't set persistent entity id.
+
+
 Changes in version 1.3.0.M1 (2015-06-02)
 ----------------------------------------
 * DATAES-168 - Release 1.3 M1 (Gosling).
