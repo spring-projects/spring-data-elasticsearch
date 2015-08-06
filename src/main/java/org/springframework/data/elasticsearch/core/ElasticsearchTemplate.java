@@ -536,7 +536,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		Assert.notNull(query.getUpdateRequest(), "No IndexRequest define for Query");
 		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
 
-		if(query.getUpdateRequest().script() == null) {
+		if (query.getUpdateRequest().script() == null) {
 			// doc
 			if (query.DoUpsert()) {
 				updateRequestBuilder.setDocAsUpsert(true)
@@ -912,6 +912,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		int startRecord = 0;
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(toArray(query.getIndices()))
 				.setSearchType(query.getSearchType()).setTypes(toArray(query.getTypes()));
+
+		if (query.getFetchSourceFilter() != null) {
+			SourceFilter sourceFilter = query.getFetchSourceFilter();
+			searchRequestBuilder.setFetchSource(sourceFilter.getIncludes(), sourceFilter.getExcludes());
+		}
 
 		if (query.getPageable() != null) {
 			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();

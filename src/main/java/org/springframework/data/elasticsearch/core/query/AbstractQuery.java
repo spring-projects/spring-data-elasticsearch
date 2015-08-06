@@ -39,6 +39,7 @@ abstract class AbstractQuery implements Query {
 	protected List<String> indices = new ArrayList<String>();
 	protected List<String> types = new ArrayList<String>();
 	protected List<String> fields = new ArrayList<String>();
+	protected SourceFilter sourceFilter;
 	protected float minScore;
 	protected Collection<String> ids;
 	protected String route;
@@ -89,6 +90,16 @@ abstract class AbstractQuery implements Query {
 	@Override
 	public List<String> getTypes() {
 		return types;
+	}
+
+	@Override
+	public void addSourceFilter(SourceFilter sourceFilter) {
+		this.sourceFilter = sourceFilter;
+	}
+
+	@Override
+	public SourceFilter getFetchSourceFilter() {
+		return sourceFilter;
 	}
 
 	@SuppressWarnings("unchecked")

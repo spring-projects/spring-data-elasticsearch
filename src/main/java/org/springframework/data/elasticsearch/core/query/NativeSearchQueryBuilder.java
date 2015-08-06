@@ -49,6 +49,7 @@ public class NativeSearchQueryBuilder {
 	private String[] indices;
 	private String[] types;
 	private String[] fields;
+	private SourceFilter sourceFilter;
 	private float minScore;
 	private Collection<String> ids;
 	private String route;
@@ -104,6 +105,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	public NativeSearchQueryBuilder withSourceFilter(SourceFilter sourceFilter) {
+		this.sourceFilter = sourceFilter;
+		return this;
+	}
+
 	public NativeSearchQueryBuilder withMinScore(float minScore) {
 		this.minScore = minScore;
 		return this;
@@ -140,6 +146,10 @@ public class NativeSearchQueryBuilder {
 
 		if (fields != null) {
 			nativeSearchQuery.addFields(fields);
+		}
+
+		if (sourceFilter != null) {
+			nativeSearchQuery.addSourceFilter(sourceFilter);
 		}
 
 		if (CollectionUtils.isNotEmpty(facetRequests)) {
