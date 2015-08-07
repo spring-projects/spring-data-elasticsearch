@@ -20,6 +20,7 @@ import static org.elasticsearch.node.NodeBuilder.*;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.node.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -39,6 +40,8 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 	private boolean local;
 	private boolean enableHttp;
 	private String clusterName;
+    private boolean data;
+    private Node node;
 	private NodeClient nodeClient;
 
 	NodeClientFactoryBean() {
@@ -68,8 +71,8 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 		ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder().put("http.enabled",
 				String.valueOf(this.enableHttp));
 
-		nodeClient = (NodeClient) nodeBuilder().settings(settings).clusterName(this.clusterName).local(this.local).node()
-				.client();
+        node = nodeBuilder().settings(settings).clusterName(this.clusterName).local(this.local).data(this.data).node();
+        nodeClient = (NodeClient) node.client();
 	}
 
 	public void setLocal(boolean local) {
@@ -84,6 +87,10 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 		this.clusterName = clusterName;
 	}
 
+    public void setData(boolean data) {
+        this.data = data;
+    }
+
 	@Override
 	public void destroy() throws Exception {
 		try {
@@ -91,6 +98,9 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 			if (nodeClient != null) {
 				nodeClient.close();
 			}
+            if (node != null) {
+                node.close();
+            }
 		} catch (final Exception e) {
 			logger.error("Error closing ElasticSearch client: ", e);
 		}
