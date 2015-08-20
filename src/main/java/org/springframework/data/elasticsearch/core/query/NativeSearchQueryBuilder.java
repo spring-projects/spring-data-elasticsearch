@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
@@ -53,6 +54,7 @@ public class NativeSearchQueryBuilder {
 	private Collection<String> ids;
 	private String route;
 	private SearchType searchType;
+	private IndicesOptions indicesOptions;
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -124,6 +126,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	public NativeSearchQueryBuilder withIndicesOptions(IndicesOptions indicesOptions) {
+		this.indicesOptions = indicesOptions;
+		return this;
+	}
+
 	public NativeSearchQuery build() {
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightFields);
 		if (pageable != null) {
@@ -164,6 +171,10 @@ public class NativeSearchQueryBuilder {
 
 		if (searchType != null) {
 			nativeSearchQuery.setSearchType(searchType);
+		}
+
+		if (indicesOptions != null) {
+			nativeSearchQuery.setIndicesOptions(indicesOptions);
 		}
 
 		return nativeSearchQuery;

@@ -20,6 +20,7 @@ import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.highlight.HighlightBuilder;
@@ -229,6 +230,29 @@ public class ElasticsearchTemplateTests {
 		// then
 		assertThat(sampleEntities, is(notNullValue()));
 		assertThat(sampleEntities.getTotalElements(), greaterThanOrEqualTo(1L));
+	}
+
+	@Test
+	public void shouldPassIndicesOptionsForGivenSearchQuery() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery idxQuery = new IndexQueryBuilder().withIndexName(INDEX_1_NAME)
+				.withId(sampleEntity.getId())
+				.withObject(sampleEntity).build();
+
+		elasticsearchTemplate.index(idxQuery);
+		elasticsearchTemplate.refresh(INDEX_1_NAME, true);
+
+		// when
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withIndices(INDEX_1_NAME, INDEX_2_NAME).withIndicesOptions(IndicesOptions.lenientExpandOpen()).build();
+		Page<SampleEntity> entities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+		// then
+		assertThat(entities, is(notNullValue()));
+		assertThat(entities.getTotalElements(), greaterThanOrEqualTo(1L));
 	}
 
 	@Test
