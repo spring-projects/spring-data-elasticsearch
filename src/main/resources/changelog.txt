@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 1.3.0.RELEASE (2015-09-01)
+---------------------------------------------
+* DATAES-193 - Release 1.3 GA (Gosling).
+* DATAES-137 - Should work out of the box with Spring Data REST.
+
+
 Changes in version 1.3.0.RC1 (2015-08-04)
 -----------------------------------------
 * DATAES-186 - Release 1.3 RC1 (Gosling).
