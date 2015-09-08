@@ -557,5 +557,7 @@ public interface ElasticsearchOperations {
 	Set<String> queryForAlias(String indexName);
 
 
+	<T, R> Page<R> queryForPage(SearchQuery query, Class<T> clazz, PageSearchResultMapper<T, R> mapper);
+
 	<T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor);
 }
