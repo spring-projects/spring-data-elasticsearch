@@ -53,4 +53,7 @@ public @interface Field {
 	String[] ignoreFields() default {};
 
 	boolean includeInParent() default false;
+
+	boolean excludeFromSource() default false;
+
 }

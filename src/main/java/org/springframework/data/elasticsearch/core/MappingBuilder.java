@@ -47,6 +47,8 @@ import org.springframework.data.util.TypeInformation;
 
 class MappingBuilder {
 
+	public static final String ARRAY_EXCLUDES = "excludes";
+
 	public static final String FIELD_STORE = "store";
 	public static final String FIELD_TYPE = "type";
 	public static final String FIELD_INDEX = "index";
@@ -55,6 +57,7 @@ class MappingBuilder {
 	public static final String FIELD_INDEX_ANALYZER = "index_analyzer";
 	public static final String FIELD_PROPERTIES = "properties";
 	public static final String FIELD_PARENT = "_parent";
+	public static final String FIELD_SOURCE = "_source";
 
 	public static final String COMPLETION_PAYLOADS = "payloads";
 	public static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
@@ -76,12 +79,37 @@ class MappingBuilder {
 			mapping.startObject(FIELD_PARENT).field(FIELD_TYPE, parentType).endObject();
 		}
 
+		// Field level source exclusions
+		mapFieldExclusions(mapping, clazz);
+
 		// Properties
 		XContentBuilder xContentBuilder = mapping.startObject(FIELD_PROPERTIES);
 
 		mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY, false, FieldType.Auto, null);
 
 		return xContentBuilder.endObject().endObject().endObject();
+	}
+
+	private static void mapFieldExclusions(XContentBuilder mapping, Class clazz) throws IOException {
+		List<String> exclusions = new ArrayList<String>();
+		java.lang.reflect.Field[] fields = retrieveFields(clazz);
+		for (java.lang.reflect.Field field: fields) {
+			Field singleField = field.getAnnotation(Field.class);
+			if (singleField == null) {
+				continue;
+			}
+			if (singleField.excludeFromSource()) {
+				exclusions.add(field.getName());
+			}
+		}
+
+		if (exclusions.isEmpty()) {
+			return;
+		}
+
+		XContentBuilder sourceFieldBuilder = mapping.startObject(FIELD_SOURCE);
+		sourceFieldBuilder.array(ARRAY_EXCLUDES, exclusions.toArray());
+		sourceFieldBuilder.endObject();
 	}
 
 	private static void mapEntity(XContentBuilder xContentBuilder, Class clazz, boolean isRootObject, String idFieldName,

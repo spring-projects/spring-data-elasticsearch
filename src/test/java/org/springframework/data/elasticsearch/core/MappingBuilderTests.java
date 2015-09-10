@@ -16,6 +16,8 @@
 
 package org.springframework.data.elasticsearch.core;
 
+import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
+import static org.elasticsearch.index.query.FilterBuilders.termFilter;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
@@ -30,6 +32,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.builder.SampleInheritedEntityBuilder;
+import org.springframework.data.elasticsearch.builder.SourceExcludedEntityBuilder;
 import org.springframework.data.elasticsearch.builder.StockPriceBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
@@ -122,6 +125,16 @@ public class MappingBuilderTests {
 		assertThat(xContentBuilder.string(), is(expected));
 	}
 
+	@Test
+	public void shouldBuildMappingWithExcludedFields() throws IOException {
+		final String expected = "{\"mapping\":{\"_source\":{\"excludes\":[\"indexOnlyField\"]}," +
+			"\"properties\":{\"indexOnlyField\":{\"store\":false,\"type\":\"string\"}," +
+			"\"simpleField\":{\"store\":false,\"type\":\"string\"}}}}";
+
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SourceExcludedEntity.class, "mapping", "id", null);
+		assertThat(xContentBuilder.string(), is(expected));
+	}
+
 	/*
 	 * DATAES-76
 	 */
@@ -147,4 +160,28 @@ public class MappingBuilderTests {
 		assertThat(entry.getCreatedDate(), is(createdDate));
 		assertThat(entry.getMessage(), is(message));
 	}
+
+	@Test
+	public void shouldNotStoreInSourceButSuccessfullySearchInExcludedField() throws IOException {
+		elasticsearchTemplate.deleteIndex(SourceExcludedEntity.class);
+		elasticsearchTemplate.createIndex(SourceExcludedEntity.class);
+		elasticsearchTemplate.putMapping(SourceExcludedEntity.class);
+
+		String id = "abc";
+		String indexOnlyField = "xyz";
+		String simpleField = "someContent";
+
+		elasticsearchTemplate.index(new SourceExcludedEntityBuilder(id).indexOnlyField(indexOnlyField).simpleField(simpleField).buildIndex());
+		elasticsearchTemplate.refresh(SourceExcludedEntity.class, true);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+			.withFilter(boolFilter().must(termFilter("indexOnlyField", indexOnlyField)))
+			.build();
+		List<SourceExcludedEntity> result = elasticsearchTemplate.queryForList(searchQuery, SourceExcludedEntity.class);
+		assertThat(result.size(), is(1));
+		SourceExcludedEntity entry = result.get(0);
+		assertThat(entry.getSimpleField(), is(simpleField));
+		assertNull(entry.getIndexOnlyField());
+	}
+
 }
