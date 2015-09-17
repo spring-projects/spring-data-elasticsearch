@@ -18,12 +18,21 @@ package org.springframework.data.elasticsearch.entities;
 import java.util.Date;
 import java.util.List;
 
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 /**
  * @author Mohsin Husen
+ * @author Artur Konczak
  */
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Document(indexName = "test-product-index", type = "test-product-type", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class Product {
 
@@ -42,6 +51,7 @@ public class Product {
 
 	private Float weight;
 
+	@Field(type = FieldType.Float)
 	private Float price;
 
 	private Integer popularity;
@@ -52,93 +62,6 @@ public class Product {
 
 	private Date lastModified;
 
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public List<String> getTitle() {
-		return title;
-	}
-
-	public void setTitle(List<String> title) {
-		this.title = title;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public List<String> getCategories() {
-		return categories;
-	}
-
-	public void setCategories(List<String> categories) {
-		this.categories = categories;
-	}
-
-	public Float getWeight() {
-		return weight;
-	}
-
-	public void setWeight(Float weight) {
-		this.weight = weight;
-	}
-
-	public Float getPrice() {
-		return price;
-	}
-
-	public void setPrice(Float price) {
-		this.price = price;
-	}
-
-	public Integer getPopularity() {
-		return popularity;
-	}
-
-	public void setPopularity(Integer popularity) {
-		this.popularity = popularity;
-	}
-
-	public boolean isAvailable() {
-		return available;
-	}
-
-	public void setAvailable(boolean available) {
-		this.available = available;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getLocation() {
-		return location;
-	}
-
-	public void setLocation(String location) {
-		this.location = location;
-	}
-
-	public Date getLastModified() {
-		return lastModified;
-	}
-
-	public void setLastModified(Date lastModified) {
-		this.lastModified = lastModified;
-	}
 
 	@Override
 	public int hashCode() {
@@ -165,13 +88,5 @@ public class Product {
 			return false;
 		}
 		return true;
-	}
-
-	public String getText() {
-		return text;
-	}
-
-	public void setText(String text) {
-		this.text = text;
 	}
 }

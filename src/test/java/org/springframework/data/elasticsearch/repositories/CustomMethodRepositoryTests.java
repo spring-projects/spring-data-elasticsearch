@@ -122,7 +122,7 @@ public class CustomMethodRepositoryTests {
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setType("test");
-		sampleEntity.setRate(10);
+		sampleEntity.setRate(9);
 		sampleEntity.setMessage("some message");
 		repository.save(sampleEntity);
 
@@ -753,7 +753,7 @@ public class CustomMethodRepositoryTests {
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setType("test");
-		sampleEntity.setRate(10);
+		sampleEntity.setRate(9);
 		sampleEntity.setMessage("some message");
 		repository.save(sampleEntity);
 

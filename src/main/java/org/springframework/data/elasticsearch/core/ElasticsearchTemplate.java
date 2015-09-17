@@ -15,6 +15,21 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.*;
+import static org.elasticsearch.action.search.SearchType.*;
+import static org.elasticsearch.client.Requests.*;
+import static org.elasticsearch.cluster.metadata.AliasAction.Type.*;
+import static org.elasticsearch.common.collect.Sets.*;
+import static org.elasticsearch.index.VersionType.*;
+import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Method;
+import java.util.*;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
@@ -80,23 +95,6 @@ import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Method;
-import java.util.*;
-
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.elasticsearch.action.search.SearchType.SCAN;
-import static org.elasticsearch.client.Requests.indicesExistsRequest;
-import static org.elasticsearch.client.Requests.refreshRequest;
-import static org.elasticsearch.cluster.metadata.AliasAction.Type.ADD;
-import static org.elasticsearch.common.collect.Sets.newHashSet;
-import static org.elasticsearch.index.VersionType.EXTERNAL;
-import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMapping;
 
 /**
  * ElasticsearchTemplate
@@ -314,6 +312,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 		if (elasticsearchFilter != null)
 			searchRequestBuilder.setPostFilter(elasticsearchFilter);
+		if (logger.isDebugEnabled()) {
+			logger.debug("doSearch query:\n" + searchRequestBuilder.toString());
+		}
 
 		SearchResponse response = getSearchResponse(searchRequestBuilder
 				.execute());
@@ -401,7 +402,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				}
 				throw new NoSuchElementException();
 			}
-
 		};
 	}
 
@@ -536,7 +536,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		Assert.notNull(query.getUpdateRequest(), "No IndexRequest define for Query");
 		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
 
-		if(query.getUpdateRequest().script() == null) {
+		if (query.getUpdateRequest().script() == null) {
 			// doc
 			if (query.DoUpsert()) {
 				updateRequestBuilder.setDocAsUpsert(true)
