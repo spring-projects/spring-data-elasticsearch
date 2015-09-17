@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -770,14 +770,15 @@ public class ElasticsearchTemplateTests {
 				.withIndices(INDEX_NAME)
 				.withTypes(TYPE_NAME)
 				.withFields("message")
+				.withQuery(matchAllQuery())
 				.withPageable(new PageRequest(0, 10))
 				.build();
 
-		String scrollId = elasticsearchTemplate.scan(searchQuery, 5000, false);
+		String scrollId = elasticsearchTemplate.scan(searchQuery, 10000, false);
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
 		boolean hasRecords = true;
 		while (hasRecords) {
-			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new SearchResultMapper() {
+			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 10000L, new SearchResultMapper() {
 				@Override
 				public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 					List<SampleEntity> result = new ArrayList<SampleEntity>();
@@ -821,7 +822,7 @@ public class ElasticsearchTemplateTests {
 		criteriaQuery.addTypes(TYPE_NAME);
 		criteriaQuery.setPageable(new PageRequest(0, 10));
 
-		String scrollId = elasticsearchTemplate.scan(criteriaQuery, 1000, false);
+		String scrollId = elasticsearchTemplate.scan(criteriaQuery, 5000, false);
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
 		boolean hasRecords = true;
 		while (hasRecords) {
@@ -925,7 +926,7 @@ public class ElasticsearchTemplateTests {
 	private static List<IndexQuery> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
 		for (int i = 0; i < numberOfEntities; i++) {
-			String documentId = randomNumeric(5);
+			String documentId = UUID.randomUUID().toString();
 			SampleEntity sampleEntity = new SampleEntity();
 			sampleEntity.setId(documentId);
 			sampleEntity.setMessage(message);
@@ -1152,6 +1153,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		// when
 		elasticsearchTemplate.deleteType(INDEX_NAME, TYPE_NAME);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
 
 		//then
 		boolean typeExists = elasticsearchTemplate.typeExists(INDEX_NAME, TYPE_NAME);

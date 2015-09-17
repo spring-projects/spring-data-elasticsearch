@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 	private boolean enableHttp;
 	private String clusterName;
 	private NodeClient nodeClient;
+	private String pathData;
 
 	NodeClientFactoryBean() {
 	}
@@ -65,8 +66,10 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder().put("http.enabled",
-				String.valueOf(this.enableHttp));
+		ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder()
+				.put("http.enabled", String.valueOf(this.enableHttp))
+				.put("path.data", this.pathData);
+
 
 		nodeClient = (NodeClient) nodeBuilder().settings(settings).clusterName(this.clusterName).local(this.local).node()
 				.client();
@@ -82,6 +85,10 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
 	public void setClusterName(String clusterName) {
 		this.clusterName = clusterName;
+	}
+
+	public void setPathData(String pathData) {
+		this.pathData = pathData;
 	}
 
 	@Override

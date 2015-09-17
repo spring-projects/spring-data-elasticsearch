@@ -5,7 +5,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <elasticsearch:node-client id="client" local="true" cluster-name="testCluster" http-enabled="false"/>
+    <elasticsearch:node-client id="client" local="true" cluster-name="#{T(java.util.UUID).randomUUID().toString()}" http-enabled="false" path-data="target/elasticsearchTestData"/>
 
     <!--<elasticsearch:transport-client id="client" cluster-name="elasticsearch" cluster-nodes="127.0.0.1:9300" />-->
 
