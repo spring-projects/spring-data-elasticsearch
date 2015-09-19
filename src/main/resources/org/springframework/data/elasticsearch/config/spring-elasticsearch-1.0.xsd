@@ -67,6 +67,13 @@
                             </xsd:documentation>
                         </xsd:annotation>
                     </xsd:attribute>
+                    <xsd:attribute name="path-data" type="xsd:string" default="">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[ path to the data folder for node client ]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
                 </xsd:extension>
             </xsd:complexContent>
         </xsd:complexType>
