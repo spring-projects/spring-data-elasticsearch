@@ -25,13 +25,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.math.NumberUtils;
 import org.elasticsearch.common.lang3.StringUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.core.GenericCollectionTypeResolver;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.completion.Completion;
-import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
@@ -66,7 +66,7 @@ class MappingBuilder {
 	public static final String TYPE_VALUE_STRING = "string";
 	public static final String TYPE_VALUE_GEO_POINT = "geo_point";
 	public static final String TYPE_VALUE_COMPLETION = "completion";
-	public static final String TYPE_VALUE_GEO_HASH_PREFIX = "geohash_prefix" ;
+	public static final String TYPE_VALUE_GEO_HASH_PREFIX = "geohash_prefix";
 	public static final String TYPE_VALUE_GEO_HASH_PRECISION = "geohash_precision";
 
 	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = new SimpleTypeHolder();
@@ -176,11 +176,16 @@ class MappingBuilder {
 
 		GeoPointField annotation = field.getAnnotation(GeoPointField.class);
 		if (annotation != null) {
-			if (annotation.geoHashPrefix())
+			if (annotation.geoHashPrefix()) {
 				xContentBuilder.field(TYPE_VALUE_GEO_HASH_PREFIX, true);
-
-			if (StringUtils.isNotEmpty(annotation.geoHashPrecision()))
-				xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, annotation.geoHashPrecision());
+				if (StringUtils.isNotEmpty(annotation.geoHashPrecision())) {
+					if (NumberUtils.isNumber(annotation.geoHashPrecision())) {
+						xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, Integer.parseInt(annotation.geoHashPrecision()));
+					} else {
+						xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, annotation.geoHashPrecision());
+					}
+				}
+			}
 		}
 
 		xContentBuilder.endObject();
@@ -280,33 +285,6 @@ class MappingBuilder {
 			addNestedFieldMapping(builder, field, nestedField);
 		}
 		builder.endObject();
-		builder.endObject();
-	}
-
-	/**
-	 * Facet field for string type, for other types we don't need it(long, int, double, float)
-	 *
-	 * @throws IOException
-	 */
-	private static void addFacetMapping(XContentBuilder builder, java.lang.reflect.Field field, Field annotation) throws IOException {
-		builder.startObject(FacetRequest.FIELD_UNTOUCHED)
-				.field(FIELD_TYPE, TYPE_VALUE_STRING)
-				.field(FIELD_INDEX, INDEX_VALUE_NOT_ANALYZED)
-				.field(FIELD_STORE, true);
-		builder.endObject();
-	}
-
-	/**
-	 * Sort field for string type, for other types we don't need it(long, int, double, float)
-	 * value of the field should be converted to lowercase and not analise
-	 *
-	 * @throws IOException
-	 */
-	private static void addSortMapping(XContentBuilder builder, java.lang.reflect.Field field, Field annotation) throws IOException {
-		builder.startObject(FacetRequest.FIELD_SORT)
-				.field(FIELD_TYPE, TYPE_VALUE_STRING)
-				.field(FIELD_INDEX, "keyword")
-				.field(FIELD_STORE, true);
 		builder.endObject();
 	}
 

@@ -24,10 +24,11 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
-import org.elasticsearch.index.query.*;
-import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.BoostableQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Criteria;
-import org.springframework.data.geo.Point;
 import org.springframework.util.Assert;
 
 /**
@@ -36,6 +37,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Franck Marchand
+ * @author Artur Konczak
  */
 class CriteriaQueryProcessor {
 
@@ -49,17 +51,37 @@ class CriteriaQueryProcessor {
 		List<QueryBuilder> mustQueryBuilderList = new LinkedList<QueryBuilder>();
 
 		ListIterator<Criteria> chainIterator = criteria.getCriteriaChain().listIterator();
+
+		QueryBuilder firstQuery = null;
+		boolean negateFirstQuery = false;
+
 		while (chainIterator.hasNext()) {
 			Criteria chainedCriteria = chainIterator.next();
 			QueryBuilder queryFragmentForCriteria = createQueryFragmentForCriteria(chainedCriteria);
-
 			if (queryFragmentForCriteria != null) {
+				if (firstQuery == null) {
+					firstQuery = queryFragmentForCriteria;
+					negateFirstQuery = chainedCriteria.isNegating();
+					continue;
+				}
 				if (chainedCriteria.isOr()) {
 					shouldQueryBuilderList.add(queryFragmentForCriteria);
 				} else if (chainedCriteria.isNegating()) {
 					mustNotQueryBuilderList.add(queryFragmentForCriteria);
 				} else {
 					mustQueryBuilderList.add(queryFragmentForCriteria);
+				}
+			}
+		}
+
+		if (firstQuery != null) {
+			if (!shouldQueryBuilderList.isEmpty() && mustNotQueryBuilderList.isEmpty() && mustQueryBuilderList.isEmpty()) {
+				shouldQueryBuilderList.add(0, firstQuery);
+			} else {
+				if (negateFirstQuery) {
+					mustNotQueryBuilderList.add(0, firstQuery);
+				} else {
+					mustQueryBuilderList.add(0, firstQuery);
 				}
 			}
 		}
@@ -98,12 +120,12 @@ class CriteriaQueryProcessor {
 
 		if (singeEntryCriteria) {
 			Criteria.CriteriaEntry entry = it.next();
-			query = processCriteriaEntry(entry.getKey(), entry.getValue(), fieldName);
+			query = processCriteriaEntry(entry, fieldName);
 		} else {
 			query = boolQuery();
 			while (it.hasNext()) {
 				Criteria.CriteriaEntry entry = it.next();
-				((BoolQueryBuilder) query).must(processCriteriaEntry(entry.getKey(), entry.getValue(), fieldName));
+				((BoolQueryBuilder) query).must(processCriteriaEntry(entry, fieldName));
 			}
 		}
 
@@ -112,13 +134,17 @@ class CriteriaQueryProcessor {
 	}
 
 
-	private QueryBuilder processCriteriaEntry(OperationKey key, Object value, String fieldName) {
+	private QueryBuilder processCriteriaEntry(Criteria.CriteriaEntry entry,/* OperationKey key, Object value,*/ String fieldName) {
+		Object value = entry.getValue();
 		if (value == null) {
 			return null;
 		}
+		OperationKey key = entry.getKey();
 		QueryBuilder query = null;
 
 		String searchText = StringUtils.toString(value);
+
+		Iterable<Object> collection = null;
 
 		switch (key) {
 			case EQUALS:
@@ -134,24 +160,42 @@ class CriteriaQueryProcessor {
 				query = queryString("*" + searchText).field(fieldName).analyzeWildcard(true);
 				break;
 			case EXPRESSION:
-				query = queryString((String) value).field(fieldName);
+				query = queryString(searchText).field(fieldName);
+				break;
+			case LESS_EQUAL:
+				query = rangeQuery(fieldName).lte(value);
+				break;
+			case GREATER_EQUAL:
+				query = rangeQuery(fieldName).gte(value);
 				break;
 			case BETWEEN:
 				Object[] ranges = (Object[]) value;
 				query = rangeQuery(fieldName).from(ranges[0]).to(ranges[1]);
 				break;
+			case LESS:
+				query = rangeQuery(fieldName).lt(value);
+				break;
+			case GREATER:
+				query = rangeQuery(fieldName).gt(value);
+				break;
 			case FUZZY:
-				query = fuzzyQuery(fieldName, (String) value);
+				query = fuzzyQuery(fieldName, searchText);
 				break;
 			case IN:
 				query = boolQuery();
-				Iterable<Object> collection = (Iterable<Object>) value;
+				collection = (Iterable<Object>) value;
 				for (Object item : collection) {
-					((BoolQueryBuilder) query).should(queryString((String) item).field(fieldName));
+					((BoolQueryBuilder) query).should(queryString(item.toString()).field(fieldName));
+				}
+				break;
+			case NOT_IN:
+				query = boolQuery();
+				collection = (Iterable<Object>) value;
+				for (Object item : collection) {
+					((BoolQueryBuilder) query).mustNot(queryString(item.toString()).field(fieldName));
 				}
 				break;
 		}
-
 		return query;
 	}
 
