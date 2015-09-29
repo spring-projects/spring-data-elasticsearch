@@ -34,6 +34,8 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 
 	short getReplicas();
 
+	boolean isUseServerConfiguration();
+
 	String getRefreshInterval();
 
 	String getIndexStoreType();

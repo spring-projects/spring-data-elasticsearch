@@ -34,6 +34,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -46,10 +47,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.query.*;
-import org.springframework.data.elasticsearch.entities.HetroEntity1;
-import org.springframework.data.elasticsearch.entities.HetroEntity2;
-import org.springframework.data.elasticsearch.entities.SampleEntity;
-import org.springframework.data.elasticsearch.entities.SampleMappingEntity;
+import org.springframework.data.elasticsearch.entities.*;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -79,6 +77,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.createIndex(SampleEntity.class);
 		elasticsearchTemplate.deleteIndex(INDEX_1_NAME);
 		elasticsearchTemplate.deleteIndex(INDEX_2_NAME);
+		elasticsearchTemplate.deleteIndex(UseServerConfigurationEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 	}
 
@@ -535,8 +534,11 @@ public class ElasticsearchTemplateTests {
 	public void shouldCreateIndexGivenEntityClass() {
 		// when
 		boolean created = elasticsearchTemplate.createIndex(SampleEntity.class);
+		final Map setting = elasticsearchTemplate.getSetting(SampleEntity.class);
 		// then
 		assertThat(created, is(true));
+		assertThat(setting.get("index.number_of_shards"), Matchers.<Object>is("1"));
+		assertThat(setting.get("index.number_of_replicas"), Matchers.<Object>is("0"));
 	}
 
 	@Test
@@ -1901,6 +1903,18 @@ public class ElasticsearchTemplateTests {
 		assertThat(page.getTotalElements(), is(2l));
 	}
 
+	@Test
+	public void shouldCreateIndexUsingServerDefaultConfiguration() {
+		//given
+
+		//when
+		boolean created = elasticsearchTemplate.createIndex(UseServerConfigurationEntity.class);
+		//then
+		assertThat(created, is(true));
+		final Map setting = elasticsearchTemplate.getSetting(UseServerConfigurationEntity.class);
+		assertThat(setting.get("index.number_of_shards"), Matchers.<Object>is("5"));
+		assertThat(setting.get("index.number_of_replicas"), Matchers.<Object>is("1"));
+	}
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
 		return new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity).build();
