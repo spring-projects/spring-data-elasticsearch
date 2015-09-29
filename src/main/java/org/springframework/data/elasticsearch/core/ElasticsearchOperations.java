@@ -34,6 +34,7 @@ import java.util.Map;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Kevin Leturc
+ * @author Sascha Woo
  */
 public interface ElasticsearchOperations {
 
@@ -532,6 +533,50 @@ public interface ElasticsearchOperations {
 	<T> String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields, Class<T> clazz);
 
 	/**
+	 * Starts scroll the results for the given query
+	 *
+	 * @param query
+	 * @param scrollTimeInMillis
+	 * @param noFields
+	 * @param clazz
+	 * @return The page including the scroll id
+	 */
+	<T> ScrollPage<T> scroll(CriteriaQuery query, long scrollTimeInMillis, boolean noFields, Class<T> clazz);
+
+	/**
+	 * Starts scroll the results for the given query
+	 *
+	 * @param query
+	 * @param scrollTimeInMillis
+	 * @param noFields
+	 * @param clazz
+	 * @return The page including the scroll id
+	 */
+	<T> ScrollPage<T> scroll(SearchQuery query, long scrollTimeInMillis, boolean noFields, Class<T> clazz);
+
+	/**
+	 * Starts scroll the results for the given query
+	 *
+	 * @param query
+	 * @param scrollTimeInMillis
+	 * @param noFields
+	 * @param mapper
+	 * @return The page including the scroll id
+	 */
+	<T> ScrollPage<T> scroll(CriteriaQuery query, long scrollTimeInMillis, boolean noFields, SearchResultMapper mapper);
+
+	/**
+	 * Starts scroll the results for the given query
+	 *
+	 * @param query
+	 * @param scrollTimeInMillis
+	 * @param noFields
+	 * @param mapper
+	 * @return The page including the scroll id
+	 */
+	<T> ScrollPage<T> scroll(SearchQuery query, long scrollTimeInMillis, boolean noFields, SearchResultMapper mapper);
+
+	/**
 	 * Scrolls the results for give scroll id
 	 *
 	 * @param scrollId
@@ -540,7 +585,7 @@ public interface ElasticsearchOperations {
 	 * @param <T>
 	 * @return
 	 */
-	<T> Page<T> scroll(String scrollId, long scrollTimeInMillis, Class<T> clazz);
+	<T> ScrollPage<T> scroll(String scrollId, long scrollTimeInMillis, Class<T> clazz);
 
 	/**
 	 * Scrolls the results for give scroll id using custom result mapper
@@ -551,7 +596,7 @@ public interface ElasticsearchOperations {
 	 * @param <T>
 	 * @return
 	 */
-	<T> Page<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper);
+	<T> ScrollPage<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper);
 
 	/**
 	 * Clears the search contexts associated with specified scroll ids.

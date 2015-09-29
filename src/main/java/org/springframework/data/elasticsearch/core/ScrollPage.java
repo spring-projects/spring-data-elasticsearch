@@ -15,15 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.elasticsearch.action.search.SearchResponse;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 
 /**
- * @author Artur Konczak
- * @author Petar Tahchiev
  * @author Sascha Woo
  */
-public interface SearchResultMapper {
+public interface ScrollPage<T> extends AggregatedPage<T> {
 
-	<T> ScrollPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
+	String getScrollId();
 }
