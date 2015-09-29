@@ -26,7 +26,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-@Document(indexName = "test-index", type = "test-type", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index", type = "test-type", serverConfig = false, indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleEntity {
 
 	@Id
