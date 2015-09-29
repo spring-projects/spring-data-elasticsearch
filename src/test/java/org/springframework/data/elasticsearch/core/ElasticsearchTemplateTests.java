@@ -879,6 +879,227 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
 
+	/**
+	 * @see DATAES-166
+	 */
+	@Test
+	public void shouldReturnResultsWithScrollForGivenCriteriaQuery() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+		// then
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addTypes(TYPE_NAME);
+		criteriaQuery.setPageable(new PageRequest(0, 10));
+
+		ScrollPage<SampleEntity> page = elasticsearchTemplate.scroll(criteriaQuery, 1000, false, SampleEntity.class);
+		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		while (page.hasContent()) {
+			sampleEntities.addAll(page.getContent());
+			page = elasticsearchTemplate.scroll(page.getScrollId(), 5000L, SampleEntity.class);
+		}
+		assertThat(sampleEntities.size(), is(equalTo(30)));
+	}
+
+	/**
+	 * @see DATAES-166
+	 */
+	@Test
+	public void shouldReturnResultsWithScrollForGivenSearchQuery() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+		// then
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME).withPageable(new PageRequest(0, 10)).build();
+
+		ScrollPage<SampleEntity> page = elasticsearchTemplate.scroll(searchQuery, 1000, false, SampleEntity.class);
+		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		while (page.hasContent()) {
+			sampleEntities.addAll(page.getContent());
+			page = elasticsearchTemplate.scroll(page.getScrollId(), 5000L, SampleEntity.class);
+		}
+		assertThat(sampleEntities.size(), is(equalTo(30)));
+	}
+
+	/**
+	 * @see DATAES-166
+	 */
+	@Test
+	public void shouldReturnResultsWithScrollForSpecifiedFieldsForCriteria() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+		// then
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addTypes(TYPE_NAME);
+		criteriaQuery.addFields("message");
+		criteriaQuery.setPageable(new PageRequest(0, 10));
+
+		SearchResultMapper searchResultMapper = new SearchResultMapper() {
+			@Override
+			public <T> ScrollPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				List<SampleEntity> result = new ArrayList<SampleEntity>();
+				for (SearchHit searchHit : response.getHits()) {
+					String message = searchHit.getFields().get("message").getValue();
+					SampleEntity sampleEntity = new SampleEntity();
+					sampleEntity.setId(searchHit.getId());
+					sampleEntity.setMessage(message);
+					result.add(sampleEntity);
+				}
+				return new ScrollPageImpl<T>((List<T>) result, response.getScrollId());
+			}
+		};
+
+		ScrollPage<SampleEntity> page = elasticsearchTemplate.scroll(criteriaQuery, 5000, false, searchResultMapper);
+		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		while (page.hasContent()) {
+			sampleEntities.addAll(page.getContent());
+			page = elasticsearchTemplate.scroll(page.getScrollId(), 5000L, searchResultMapper);
+		}
+		assertThat(sampleEntities.size(), is(equalTo(30)));
+	}
+
+	/**
+	 * @see DATAES-166
+	 */
+	@Test
+	public void shouldReturnResultsWithScrollForSpecifiedFieldsForSearchCriteria() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+		// then
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME)
+				.withFields("message")
+				.withQuery(matchAllQuery())
+				.withPageable(new PageRequest(0, 10))
+				.build();
+
+		SearchResultMapper searchResultMapper = new SearchResultMapper() {
+			@Override
+			public <T> ScrollPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				List<SampleEntity> result = new ArrayList<SampleEntity>();
+				for (SearchHit searchHit : response.getHits()) {
+					String message = searchHit.getFields().get("message").getValue();
+					SampleEntity sampleEntity = new SampleEntity();
+					sampleEntity.setId(searchHit.getId());
+					sampleEntity.setMessage(message);
+					result.add(sampleEntity);
+				}
+				return new ScrollPageImpl<T>((List<T>) result, response.getScrollId());
+			}
+		};
+
+		ScrollPage<SampleEntity> page = elasticsearchTemplate.scroll(searchQuery, 10000, false, searchResultMapper);
+		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		while (page.hasContent()) {
+			sampleEntities.addAll(page.getContent());
+			page = elasticsearchTemplate.scroll(page.getScrollId(), 10000L, searchResultMapper);
+		}
+		assertThat(sampleEntities.size(), is(equalTo(30)));
+	}
+
+	/**
+	 * @see DATAES-166
+	 */
+	@Test
+	public void shouldReturnResultsForScrollWithCustomResultMapperForGivenCriteriaQuery() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+		// then
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addTypes(TYPE_NAME);
+		criteriaQuery.setPageable(new PageRequest(0, 10));
+
+		SearchResultMapper searchResultMapper = new SearchResultMapper() {
+			@Override
+			public <T> ScrollPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				List<SampleEntity> result = new ArrayList<SampleEntity>();
+				for (SearchHit searchHit : response.getHits()) {
+					if (response.getHits().getHits().length <= 0) {
+						break;
+					}
+					SampleEntity user = new SampleEntity();
+					user.setId(searchHit.getId());
+					user.setMessage((String) searchHit.getSource().get("message"));
+					result.add(user);
+				}
+				return new ScrollPageImpl<T>((List<T>) result, response.getScrollId());
+			}
+		};
+
+		ScrollPage<SampleEntity> page = elasticsearchTemplate.scroll(criteriaQuery, 5000, false, searchResultMapper);
+		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		while (page.hasContent()) {
+			sampleEntities.addAll(page.getContent());
+			page = elasticsearchTemplate.scroll(page.getScrollId(), 5000L, searchResultMapper);
+		}
+		assertThat(sampleEntities.size(), is(equalTo(30)));
+	}
+
+	/**
+	 * @see DATAES-166
+	 */
+	@Test
+	public void shouldReturnResultsForScrollWithCustomResultMapperForGivenSearchQuery() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+		// then
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME).withPageable(new PageRequest(0, 10)).build();
+
+
+		SearchResultMapper searchResultMapper = new SearchResultMapper() {
+			@Override
+			public <T> ScrollPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				List<SampleEntity> result = new ArrayList<SampleEntity>();
+				for (SearchHit searchHit : response.getHits()) {
+					if (response.getHits().getHits().length <= 0) {
+						break;
+					}
+					SampleEntity user = new SampleEntity();
+					user.setId(searchHit.getId());
+					user.setMessage((String) searchHit.getSource().get("message"));
+					result.add(user);
+				}
+				return new ScrollPageImpl<T>((List<T>) result, response.getScrollId());
+			}
+		};
+
+		ScrollPage<SampleEntity> page = elasticsearchTemplate.scroll(searchQuery, 1000, false, searchResultMapper);
+		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		while (page.hasContent()) {
+			sampleEntities.addAll(page.getContent());
+			page = elasticsearchTemplate.scroll(page.getScrollId(), 5000L, searchResultMapper);
+		}
+		assertThat(sampleEntities.size(), is(equalTo(30)));
+	}
+
 	/*
 	DATAES-167
 	 */
@@ -900,7 +1121,7 @@ public class ElasticsearchTemplateTests {
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
 		boolean hasRecords = true;
 		while (hasRecords) {
-			ScrollPage<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new ScrollResultMapper() {
+			ScrollPage<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new SearchResultMapper() {
 				@Override
 				public <T> ScrollPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 					List<SampleEntity> chunk = new ArrayList<SampleEntity>();
