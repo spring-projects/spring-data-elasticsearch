@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.elasticsearch.core;
-
-import static org.apache.commons.lang.RandomStringUtils.*;
-import static org.elasticsearch.index.query.FilterBuilders.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
-import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.get.MultiGetItemResponse;
@@ -50,8 +42,18 @@ import org.springframework.data.elasticsearch.entities.HetroEntity1;
 import org.springframework.data.elasticsearch.entities.HetroEntity2;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.entities.SampleMappingEntity;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.*;
+
+import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
+import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
+import static org.elasticsearch.index.query.FilterBuilders.termFilter;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 /**
  * @author Rizwan Idrees
@@ -252,6 +254,41 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		assertThat(sampleEntities.getTotalElements(), is(equalTo(2L)));
+	}
+
+
+	@Test
+	public void shouldDoBulkUpdate() {
+		//given
+		String documentId = randomNumeric(5);
+		String messageBeforeUpdate = "some test message";
+		String messageAfterUpdate = "test message";
+
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId)
+				.message(messageBeforeUpdate)
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+		IndexRequest indexRequest = new IndexRequest();
+		indexRequest.source("message", messageAfterUpdate);
+		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId)
+				.withClass(SampleEntity.class).withIndexRequest(indexRequest).build();
+
+
+		List<UpdateQuery> queries = new ArrayList<UpdateQuery>();
+		queries.add(updateQuery);
+
+		// when
+		elasticsearchTemplate.bulkUpdate(queries);
+		//then
+		GetQuery getQuery = new GetQuery();
+		getQuery.setId(documentId);
+		SampleEntity indexedEntity = elasticsearchTemplate.queryForObject(getQuery, SampleEntity.class);
+		assertThat(indexedEntity.getMessage(), is(messageAfterUpdate));
 	}
 
 	@Test
@@ -524,6 +561,28 @@ public class ElasticsearchTemplateTests {
 	}
 
 	@Test
+	public void shouldDeleteGivenCriteriaQuery() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId).message("test message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("test"));
+
+		// when
+		elasticsearchTemplate.delete(criteriaQuery, SampleEntity.class);
+		// then
+		StringQuery stringQuery = new StringQuery(matchAllQuery().toString());
+		List<SampleEntity> sampleEntities = elasticsearchTemplate.queryForList(stringQuery, SampleEntity.class);
+
+		assertThat(sampleEntities.size(), is(0));
+	}
+
+	@Test
 	public void shouldReturnSpecifiedFields() {
 		// given
 		String documentId = randomNumeric(5);
@@ -589,8 +648,39 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.getContent(), hasItem(sampleEntity));
 	}
 
+	/*
+	DATAES-167
+	 */
 	@Test
-	public void shouldReturnResultsWithScanAndScroll() {
+	public void shouldReturnResultsWithScanAndScrollForGivenCriteriaQuery() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		// then
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addTypes(TYPE_NAME);
+		criteriaQuery.setPageable(new PageRequest(0, 10));
+
+		String scrollId = elasticsearchTemplate.scan(criteriaQuery, 1000, false);
+		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		boolean hasRecords = true;
+		while (hasRecords) {
+			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, SampleEntity.class);
+			if (page.hasContent()) {
+				sampleEntities.addAll(page.getContent());
+			} else {
+				hasRecords = false;
+			}
+		}
+		assertThat(sampleEntities.size(), is(equalTo(30)));
+	}
+
+	@Test
+	public void shouldReturnResultsWithScanAndScrollForGivenSearchQuery() {
 		//given
 		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
 		// when
@@ -616,10 +706,10 @@ public class ElasticsearchTemplateTests {
 	}
 
 	/*
-	DATAES-84
+	DATAES-167
 	*/
 	@Test
-	public void shouldReturnResultsWithScanAndScrollForSpecifiedFields() {
+	public void shouldReturnResultsWithScanAndScrollForSpecifiedFieldsForCriteriaCriteria() {
 		//given
 		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
 		// when
@@ -627,14 +717,13 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		// then
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withIndices(INDEX_NAME)
-				.withTypes(TYPE_NAME)
-				.withFields("message")
-				.withPageable(new PageRequest(0, 10))
-				.build();
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addTypes(TYPE_NAME);
+		criteriaQuery.addFields("message");
+		criteriaQuery.setPageable(new PageRequest(0, 10));
 
-		String scrollId = elasticsearchTemplate.scan(searchQuery, 5000, false);
+		String scrollId = elasticsearchTemplate.scan(criteriaQuery, 5000, false);
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
 		boolean hasRecords = true;
 		while (hasRecords) {
@@ -665,8 +754,108 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
 
+	/*
+	DATAES-84
+	*/
 	@Test
-	public void shouldReturnResultsForScanAndScrollWithCustomResultMapper() {
+	public void shouldReturnResultsWithScanAndScrollForSpecifiedFieldsForSearchCriteria() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		// then
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME)
+				.withFields("message")
+				.withQuery(matchAllQuery())
+				.withPageable(new PageRequest(0, 10))
+				.build();
+
+		String scrollId = elasticsearchTemplate.scan(searchQuery, 10000, false);
+		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		boolean hasRecords = true;
+		while (hasRecords) {
+			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 10000L, new SearchResultMapper() {
+				@Override
+				public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+					List<SampleEntity> result = new ArrayList<SampleEntity>();
+					for (SearchHit searchHit : response.getHits()) {
+						String message = searchHit.getFields().get("message").getValue();
+						SampleEntity sampleEntity = new SampleEntity();
+						sampleEntity.setId(searchHit.getId());
+						sampleEntity.setMessage(message);
+						result.add(sampleEntity);
+					}
+
+					if (result.size() > 0) {
+						return new FacetedPageImpl<T>((List<T>) result);
+					}
+					return null;
+				}
+			});
+			if (page != null) {
+				sampleEntities.addAll(page.getContent());
+			} else {
+				hasRecords = false;
+			}
+		}
+		assertThat(sampleEntities.size(), is(equalTo(30)));
+	}
+
+	/*
+	DATAES-167
+	 */
+	@Test
+	public void shouldReturnResultsForScanAndScrollWithCustomResultMapperForGivenCriteriaQuery() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		// then
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addTypes(TYPE_NAME);
+		criteriaQuery.setPageable(new PageRequest(0, 10));
+
+		String scrollId = elasticsearchTemplate.scan(criteriaQuery, 5000, false);
+		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		boolean hasRecords = true;
+		while (hasRecords) {
+			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new SearchResultMapper() {
+				@Override
+				public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+					List<SampleEntity> chunk = new ArrayList<SampleEntity>();
+					for (SearchHit searchHit : response.getHits()) {
+						if (response.getHits().getHits().length <= 0) {
+							return null;
+						}
+						SampleEntity user = new SampleEntity();
+						user.setId(searchHit.getId());
+						user.setMessage((String) searchHit.getSource().get("message"));
+						chunk.add(user);
+					}
+					if (chunk.size() > 0) {
+						return new FacetedPageImpl<T>((List<T>) chunk);
+					}
+					return null;
+				}
+			});
+			if (page != null) {
+				sampleEntities.addAll(page.getContent());
+			} else {
+				hasRecords = false;
+			}
+		}
+		assertThat(sampleEntities.size(), is(equalTo(30)));
+	}
+
+	@Test
+	public void shouldReturnResultsForScanAndScrollWithCustomResultMapperForGivenSearchQuery() {
 		//given
 		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
 		// when
@@ -709,10 +898,35 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
 
+	/*
+	DATAES-167
+	 */
+	@Test
+	public void shouldReturnResultsWithStreamForGivenCriteriaQuery() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		// then
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addTypes(TYPE_NAME);
+		criteriaQuery.setPageable(new PageRequest(0, 10));
+
+		CloseableIterator<SampleEntity> stream = elasticsearchTemplate.stream(criteriaQuery, SampleEntity.class);
+		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		while (stream.hasNext()) {
+			sampleEntities.add(stream.next());
+		}
+		assertThat(sampleEntities.size(), is(equalTo(30)));
+	}
+
 	private static List<IndexQuery> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
 		for (int i = 0; i < numberOfEntities; i++) {
-			String documentId = randomNumeric(5);
+			String documentId = UUID.randomUUID().toString();
 			SampleEntity sampleEntity = new SampleEntity();
 			sampleEntity.setId(documentId);
 			sampleEntity.setMessage(message);
@@ -939,6 +1153,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 		// when
 		elasticsearchTemplate.deleteType(INDEX_NAME, TYPE_NAME);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
 
 		//then
 		boolean typeExists = elasticsearchTemplate.typeExists(INDEX_NAME, TYPE_NAME);

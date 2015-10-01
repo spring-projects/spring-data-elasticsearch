@@ -20,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.Utils;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
@@ -28,7 +29,6 @@ import org.springframework.data.repository.Repository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -45,7 +45,7 @@ public class EnableNestedElasticsearchRepositoriesTests {
 
 		@Bean
 		public ElasticsearchOperations elasticsearchTemplate() {
-			return new ElasticsearchTemplate(nodeBuilder().local(true).clusterName("testCluster2").node().client());
+			return new ElasticsearchTemplate(Utils.getNodeClient());
 		}
 	}
 

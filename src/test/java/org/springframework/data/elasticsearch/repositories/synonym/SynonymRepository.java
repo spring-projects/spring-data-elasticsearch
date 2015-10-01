@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.annotations;
+package org.springframework.data.elasticsearch.repositories.synonym;
+
+import org.springframework.data.elasticsearch.entities.SynonymEntity;
+import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
 
 /**
- * @author Rizwan Idrees
- * @author Mohsin Husen
+ * SynonymRepository
+ *
  * @author Artur Konczak
  */
-public enum FieldType {
-	String, Integer, Long, Date, Float, Double, Boolean, Object, Auto, Nested, Ip, Attachment
+public interface SynonymRepository extends ElasticsearchCrudRepository<SynonymEntity, String> {
+
 }

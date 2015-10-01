@@ -19,8 +19,10 @@ import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -120,7 +122,7 @@ public class CustomMethodRepositoryTests {
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setType("test");
-		sampleEntity.setRate(10);
+		sampleEntity.setRate(9);
 		sampleEntity.setMessage("some message");
 		repository.save(sampleEntity);
 
@@ -642,6 +644,22 @@ public class CustomMethodRepositoryTests {
 	}
 
 	/*
+	DATAES-165
+	 */
+	@Test
+	public void shouldAllowReturningJava8StreamInCustomQuery() {
+		// given
+		List<SampleEntity> entities = createSampleEntities("abc", 30);
+		repository.save(entities);
+
+		// when
+		Stream<SampleEntity> stream = repository.findByType("abc");
+		// then
+		assertThat(stream, is(notNullValue()));
+		assertThat(stream.count(), is(equalTo(30L)));
+	}
+
+	/*
 	DATAES-106
 	 */
 	@Test
@@ -735,7 +753,7 @@ public class CustomMethodRepositoryTests {
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setType("test");
-		sampleEntity.setRate(10);
+		sampleEntity.setRate(9);
 		sampleEntity.setMessage("some message");
 		repository.save(sampleEntity);
 
@@ -1173,6 +1191,19 @@ public class CustomMethodRepositoryTests {
 		long count = repository.countByLocationNear(new Point(3.0875d, 45.7806d), new Distance(2, Metrics.KILOMETERS));
 		// then
 		assertThat(count, is(equalTo(1L)));
+	}
+
+	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
+		List<SampleEntity> entities = new ArrayList<SampleEntity>();
+		for (int i = 0; i < numberOfEntities; i++) {
+			SampleEntity entity = new SampleEntity();
+			entity.setId(randomNumeric(numberOfEntities));
+			entity.setAvailable(true);
+			entity.setMessage("Message");
+			entity.setType(type);
+			entities.add(entity);
+		}
+		return entities;
 	}
 }
 

@@ -4,12 +4,12 @@
 
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-elasticsearch</artifactId>
-    <version>1.3.0.BUILD-SNAPSHOT</version>
+    <version>1.4.0.BUILD-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.data.build</groupId>
         <artifactId>spring-data-parent</artifactId>
-        <version>1.7.0.BUILD-SNAPSHOT</version>
+        <version>1.8.0.BUILD-SNAPSHOT</version>
         <relativePath>../spring-data-build/parent/pom.xml</relativePath>
     </parent>
 
@@ -23,8 +23,8 @@
 
         <commonscollections>3.2.1</commonscollections>
         <commonslang>2.6</commonslang>
-        <elasticsearch>1.4.4</elasticsearch>
-        <springdata.commons>1.11.0.BUILD-SNAPSHOT</springdata.commons>
+        <elasticsearch>1.7.2</elasticsearch>
+        <springdata.commons>1.12.0.BUILD-SNAPSHOT</springdata.commons>
 
     </properties>
 
@@ -118,6 +118,13 @@
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>3.0-alpha-1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.16.4</version>
             <scope>test</scope>
         </dependency>
 

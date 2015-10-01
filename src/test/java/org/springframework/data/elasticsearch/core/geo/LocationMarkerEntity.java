@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.geo;
 
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
@@ -22,56 +23,27 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 /**
  * @author Franck Marchand
  */
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Document(indexName = "test-geo-index", type = "geo-annotation-point-type", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
-public class AuthorMarkerAnnotatedEntity {
+public class LocationMarkerEntity {
 
 	@Id
 	private String id;
 	private String name;
 
 	@GeoPointField
-	private String location;
+	private String locationAsString;
 
 	@GeoPointField
-	private double[] additionalLocation;
+	private double[] locationAsArray;
 
-	private AuthorMarkerAnnotatedEntity() {
+	@GeoPointField(geoHashPrefix = true, geoHashPrecision = "100km")
+	private String locationWithPrefixAsDistance;
 
-	}
-
-	public AuthorMarkerAnnotatedEntity(String id) {
-		this.id = id;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getLocation() {
-		return location;
-	}
-
-	public void setLocation(String location) {
-		this.location = location;
-	}
-
-	public double[] getAdditionalLocation() {
-		return additionalLocation;
-	}
-
-	public void setAdditionalLocation(double... additionalLocation) {
-		this.additionalLocation = additionalLocation;
-	}
+	@GeoPointField(geoHashPrefix = true, geoHashPrecision = "5")
+	private String locationWithPrefixAsLengthOfGeoHash;
 }

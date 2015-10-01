@@ -35,6 +35,17 @@ import org.springframework.util.Assert;
  */
 public class Criteria {
 
+	@Override
+	public String toString() {
+		return "Criteria{" +
+				"field=" + field.getName() +
+				", boost=" + boost +
+				", negating=" + negating +
+				", queryCriteria=" + StringUtils.join(queryCriteria, '|') +
+				", filterCriteria=" + StringUtils.join(filterCriteria, '|') +
+				'}';
+	}
+
 	public static final String WILDCARD = "*";
 	public static final String CRITERIA_VALUE_SEPERATOR = " ";
 
@@ -71,7 +82,6 @@ public class Criteria {
 	public Criteria(Field field) {
 		Assert.notNull(field, "Field for criteria must not be null");
 		Assert.hasText(field.getName(), "Field.name for criteria must not be null/empty");
-
 		this.criteriaChain.add(this);
 		this.field = field;
 	}
@@ -304,7 +314,18 @@ public class Criteria {
 	 * @return
 	 */
 	public Criteria lessThanEqual(Object upperBound) {
-		between(null, upperBound);
+		if (upperBound == null) {
+			throw new InvalidDataAccessApiUsageException("UpperBound can't be null");
+		}
+		queryCriteria.add(new CriteriaEntry(OperationKey.LESS_EQUAL, upperBound));
+		return this;
+	}
+
+	public Criteria lessThan(Object upperBound) {
+		if (upperBound == null) {
+			throw new InvalidDataAccessApiUsageException("UpperBound can't be null");
+		}
+		queryCriteria.add(new CriteriaEntry(OperationKey.LESS, upperBound));
 		return this;
 	}
 
@@ -315,7 +336,18 @@ public class Criteria {
 	 * @return
 	 */
 	public Criteria greaterThanEqual(Object lowerBound) {
-		between(lowerBound, null);
+		if (lowerBound == null) {
+			throw new InvalidDataAccessApiUsageException("LowerBound can't be null");
+		}
+		queryCriteria.add(new CriteriaEntry(OperationKey.GREATER_EQUAL, lowerBound));
+		return this;
+	}
+
+	public Criteria greaterThan(Object lowerBound) {
+		if (lowerBound == null) {
+			throw new InvalidDataAccessApiUsageException("LowerBound can't be null");
+		}
+		queryCriteria.add(new CriteriaEntry(OperationKey.GREATER, lowerBound));
 		return this;
 	}
 
@@ -326,12 +358,7 @@ public class Criteria {
 	 * @return
 	 */
 	public Criteria in(Object... values) {
-		if (values.length == 0 || (values.length > 1 && values[1] instanceof Collection)) {
-			throw new InvalidDataAccessApiUsageException("At least one element "
-					+ (values.length > 0 ? ("of argument of type " + values[1].getClass().getName()) : "")
-					+ " has to be present.");
-		}
-		return in(Arrays.asList(values));
+		return in(toCollection(values));
 	}
 
 	/**
@@ -343,6 +370,25 @@ public class Criteria {
 	public Criteria in(Iterable<?> values) {
 		Assert.notNull(values, "Collection of 'in' values must not be null");
 		queryCriteria.add(new CriteriaEntry(OperationKey.IN, values));
+		return this;
+	}
+
+	private List<Object> toCollection(Object... values) {
+		if (values.length == 0 || (values.length > 1 && values[1] instanceof Collection)) {
+			throw new InvalidDataAccessApiUsageException("At least one element "
+					+ (values.length > 0 ? ("of argument of type " + values[1].getClass().getName()) : "")
+					+ " has to be present.");
+		}
+		return Arrays.asList(values);
+	}
+
+	public Criteria notIn(Object... values) {
+		return notIn(toCollection(values));
+	}
+
+	public Criteria notIn(Iterable<?> values) {
+		Assert.notNull(values, "Collection of 'NotIn' values must not be null");
+		queryCriteria.add(new CriteriaEntry(OperationKey.NOT_IN, values));
 		return this;
 	}
 
@@ -522,7 +568,7 @@ public class Criteria {
 	}
 
 	public enum OperationKey {
-		EQUALS, CONTAINS, STARTS_WITH, ENDS_WITH, EXPRESSION, BETWEEN, FUZZY, IN, WITHIN, BBOX, NEAR;
+		EQUALS, CONTAINS, STARTS_WITH, ENDS_WITH, EXPRESSION, BETWEEN, FUZZY, IN, NOT_IN, WITHIN, BBOX, NEAR, LESS, LESS_EQUAL, GREATER, GREATER_EQUAL;
 	}
 
 	public static class CriteriaEntry {
@@ -541,6 +587,14 @@ public class Criteria {
 
 		public Object getValue() {
 			return value;
+		}
+
+		@Override
+		public String toString() {
+			return "CriteriaEntry{" +
+					"key=" + key +
+					", value=" + value +
+					'}';
 		}
 	}
 }

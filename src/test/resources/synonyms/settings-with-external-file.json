@@ -1,0 +1,23 @@
+{
+  "index": {
+    "number_of_shards": "1",
+    "number_of_replicas": "0",
+    "analysis": {
+      "analyzer": {
+        "synonym_analyzer": {
+          "tokenizer": "whitespace",
+          "filter": [
+            "synonym_filter"
+          ]
+        }
+      },
+      "filter": {
+        "synonym_filter": {
+          "type": "synonym",
+          "synonyms_path": "synonyms.txt",
+          "ignore_case": "true"
+        }
+      }
+    }
+  }
+}

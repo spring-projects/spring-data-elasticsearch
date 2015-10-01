@@ -42,6 +42,7 @@ public class ElasticsearchRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	 */
 	public void setElasticsearchOperations(ElasticsearchOperations operations) {
 		Assert.notNull(operations);
+		setMappingContext(operations.getElasticsearchConverter().getMappingContext());
 		this.operations = operations;
 	}
 

@@ -93,6 +93,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 
 /**
@@ -311,6 +312,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 		if (elasticsearchFilter != null)
 			searchRequestBuilder.setPostFilter(elasticsearchFilter);
+		if (logger.isDebugEnabled()) {
+			logger.debug("doSearch query:\n" + searchRequestBuilder.toString());
+		}
 
 		SearchResponse response = getSearchResponse(searchRequestBuilder
 				.execute());
@@ -326,6 +330,81 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public <T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper) {
 		SearchResponse response = getSearchResponse(prepareSearch(query, clazz).setQuery(query.getSource()).execute());
 		return mapper.mapResults(response, clazz, query.getPageable());
+	}
+
+	@Override
+	public <T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz) {
+		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
+		setPersistentEntityIndexAndType(query, clazz);
+		final String initScrollId = scan(query, scrollTimeInMillis, false);
+		return doStream(initScrollId, scrollTimeInMillis, clazz, resultsMapper);
+	}
+
+	@Override
+	public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz) {
+		return stream(query, clazz, resultsMapper);
+	}
+
+	@Override
+	public <T> CloseableIterator<T> stream(SearchQuery query, final Class<T> clazz, final SearchResultMapper mapper) {
+		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
+		setPersistentEntityIndexAndType(query, clazz);
+		final String initScrollId = scan(query, scrollTimeInMillis, false);
+		return doStream(initScrollId, scrollTimeInMillis, clazz, mapper);
+	}
+
+	private <T> CloseableIterator<T> doStream(final String initScrollId, final long scrollTimeInMillis, final Class<T> clazz, final SearchResultMapper mapper) {
+		return new CloseableIterator<T>() {
+
+			/** As we couldn't retrieve single result with scroll, store current hits. */
+			private volatile Iterator<T> currentHits;
+
+			/** The scroll id. */
+			private volatile String scrollId = initScrollId;
+
+			/** If stream is finished (ie: cluster returns no results. */
+			private volatile boolean finished;
+
+			@Override
+			public void close() {
+				try {
+					// Clear scroll on cluster only in case of error (cause elasticsearch auto clear scroll when it's done)
+					if (!finished && scrollId != null && currentHits != null && currentHits.hasNext()) {
+						client.prepareClearScroll().addScrollId(scrollId).execute().actionGet();
+					}
+				} finally {
+					currentHits = null;
+					scrollId = null;
+				}
+			}
+
+			@Override
+			public boolean hasNext() {
+				// Test if stream is finished
+				if (finished) {
+					return false;
+				}
+				// Test if it remains hits
+				if (currentHits == null || !currentHits.hasNext()) {
+					// Do a new request
+					SearchResponse response = getSearchResponse(client.prepareSearchScroll(scrollId)
+							.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
+					// Save hits and scroll id
+					currentHits = mapper.mapResults(response, clazz, null).iterator();
+					finished = !currentHits.hasNext();
+					scrollId = response.getScrollId();
+				}
+				return currentHits.hasNext();
+			}
+
+			@Override
+			public T next() {
+				if (hasNext()) {
+					return currentHits.next();
+				}
+				throw new NoSuchElementException();
+			}
+		};
 	}
 
 	@Override
@@ -447,6 +526,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public UpdateResponse update(UpdateQuery query) {
+		return this.prepareUpdate(query).execute().actionGet();
+	}
+
+	private UpdateRequestBuilder prepareUpdate(UpdateQuery query) {
 		String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName() : getPersistentEntityFor(query.getClazz()).getIndexName();
 		String type = isNotBlank(query.getType()) ? query.getType() : getPersistentEntityFor(query.getClazz()).getIndexType();
 		Assert.notNull(indexName, "No index defined for Query");
@@ -454,16 +537,24 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		Assert.notNull(query.getId(), "No Id define for Query");
 		Assert.notNull(query.getUpdateRequest(), "No IndexRequest define for Query");
 		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
-		if (query.DoUpsert()) {
-			updateRequestBuilder.setDocAsUpsert(true)
-					.setDoc(query.getUpdateRequest().doc())
+
+		if (query.getUpdateRequest().script() == null) {
+			// doc
+			if (query.DoUpsert()) {
+				updateRequestBuilder.setDocAsUpsert(true)
+						.setDoc(query.getUpdateRequest().doc());
+			} else {
+				updateRequestBuilder.setDoc(query.getUpdateRequest().doc());
+			}
+		} else {
+			// or script
+			updateRequestBuilder
 					.setScript(query.getUpdateRequest().script(), query.getUpdateRequest().scriptType())
 					.setScriptParams(query.getUpdateRequest().scriptParams())
 					.setScriptLang(query.getUpdateRequest().scriptLang());
-		} else {
-			updateRequestBuilder.setDoc(query.getUpdateRequest().doc());
 		}
-		return updateRequestBuilder.execute().actionGet();
+
+		return updateRequestBuilder;
 	}
 
 	@Override
@@ -471,6 +562,26 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		BulkRequestBuilder bulkRequest = client.prepareBulk();
 		for (IndexQuery query : queries) {
 			bulkRequest.add(prepareIndex(query));
+		}
+		BulkResponse bulkResponse = bulkRequest.execute().actionGet();
+		if (bulkResponse.hasFailures()) {
+			Map<String, String> failedDocuments = new HashMap<String, String>();
+			for (BulkItemResponse item : bulkResponse.getItems()) {
+				if (item.isFailed())
+					failedDocuments.put(item.getId(), item.getFailureMessage());
+			}
+			throw new ElasticsearchException(
+					"Bulk indexing has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
+							+ failedDocuments + "]", failedDocuments
+			);
+		}
+	}
+
+	@Override
+	public void bulkUpdate(List<UpdateQuery> queries) {
+		BulkRequestBuilder bulkRequest = client.prepareBulk();
+		for (UpdateQuery query : queries) {
+			bulkRequest.add(prepareUpdate(query));
 		}
 		BulkResponse bulkResponse = bulkRequest.execute().actionGet();
 		if (bulkResponse.hasFailures()) {
@@ -552,28 +663,66 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
+	public <T> void delete(CriteriaQuery criteriaQuery, Class<T> clazz) {
+		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
+		Assert.notNull(elasticsearchQuery, "Query can not be null.");
+		DeleteQuery deleteQuery = new DeleteQuery();
+		deleteQuery.setQuery(elasticsearchQuery);
+		delete(deleteQuery, clazz);
+	}
+
+	@Override
+	public String scan(CriteriaQuery criteriaQuery, long scrollTimeInMillis, boolean noFields) {
+		Assert.notNull(criteriaQuery.getIndices(), "No index defined for Query");
+		Assert.notNull(criteriaQuery.getTypes(), "No type define for Query");
+		Assert.notNull(criteriaQuery.getPageable(), "Query.pageable is required for scan & scroll");
+
+		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
+		FilterBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
+		SearchRequestBuilder requestBuilder = prepareScan(criteriaQuery, scrollTimeInMillis, noFields);
+
+		if (elasticsearchQuery != null) {
+			requestBuilder.setQuery(elasticsearchQuery);
+		} else {
+			requestBuilder.setQuery(QueryBuilders.matchAllQuery());
+		}
+
+		if (elasticsearchFilter != null) {
+			requestBuilder.setPostFilter(elasticsearchFilter);
+		}
+
+		return getSearchResponse(requestBuilder.execute()).getScrollId();
+	}
+
+	@Override
 	public String scan(SearchQuery searchQuery, long scrollTimeInMillis, boolean noFields) {
 		Assert.notNull(searchQuery.getIndices(), "No index defined for Query");
 		Assert.notNull(searchQuery.getTypes(), "No type define for Query");
 		Assert.notNull(searchQuery.getPageable(), "Query.pageable is required for scan & scroll");
 
-		SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(searchQuery.getIndices())).setSearchType(SCAN)
-				.setQuery(searchQuery.getQuery()).setTypes(toArray(searchQuery.getTypes()))
-				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).setFrom(0)
-				.setSize(searchQuery.getPageable().getPageSize());
+		SearchRequestBuilder requestBuilder = prepareScan(searchQuery, scrollTimeInMillis, noFields);
 
 		if (searchQuery.getFilter() != null) {
 			requestBuilder.setPostFilter(searchQuery.getFilter());
 		}
 
-		if (isNotEmpty(searchQuery.getFields())) {
-			requestBuilder.addFields(toArray(searchQuery.getFields()));
+		return getSearchResponse(requestBuilder.setQuery(searchQuery.getQuery()).execute()).getScrollId();
+	}
+
+	private SearchRequestBuilder prepareScan(Query query, long scrollTimeInMillis, boolean noFields) {
+		SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(query.getIndices())).setSearchType(SCAN)
+				.setTypes(toArray(query.getTypes()))
+				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).setFrom(0)
+				.setSize(query.getPageable().getPageSize());
+
+		if (isNotEmpty(query.getFields())) {
+			requestBuilder.addFields(toArray(query.getFields()));
 		}
 
 		if (noFields) {
 			requestBuilder.setNoFields();
 		}
-		return getSearchResponse(requestBuilder.execute()).getScrollId();
+		return requestBuilder;
 	}
 
 	@Override
@@ -749,12 +898,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private <T> SearchRequestBuilder prepareSearch(Query query, Class<T> clazz) {
-		if (query.getIndices().isEmpty()) {
-			query.addIndices(retrieveIndexNameFromPersistentEntity(clazz));
-		}
-		if (query.getTypes().isEmpty()) {
-			query.addTypes(retrieveTypeFromPersistentEntity(clazz));
-		}
+		setPersistentEntityIndexAndType(query, clazz);
 		return prepareSearch(query);
 	}
 
@@ -913,6 +1057,15 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 					t.printStackTrace();
 				}
 			}
+		}
+	}
+
+	private void setPersistentEntityIndexAndType(Query query, Class clazz) {
+		if (query.getIndices().isEmpty()) {
+			query.addIndices(retrieveIndexNameFromPersistentEntity(clazz));
+		}
+		if (query.getTypes().isEmpty()) {
+			query.addTypes(retrieveTypeFromPersistentEntity(clazz));
 		}
 	}
 

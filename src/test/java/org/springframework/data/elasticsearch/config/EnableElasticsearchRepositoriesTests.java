@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.config;
 
-import static org.elasticsearch.node.NodeBuilder.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
@@ -27,6 +26,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.Utils;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
@@ -60,7 +60,7 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 
 		@Bean
 		public ElasticsearchOperations elasticsearchTemplate() {
-			return new ElasticsearchTemplate(nodeBuilder().local(true).clusterName("testCluster2").node().client());
+			return new ElasticsearchTemplate(Utils.getNodeClient());
 		}
 	}
 

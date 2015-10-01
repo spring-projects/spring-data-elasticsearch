@@ -15,12 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.apache.commons.lang.math.NumberUtils;
+import org.elasticsearch.common.lang3.StringUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.core.GenericCollectionTypeResolver;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.completion.Completion;
-import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
@@ -69,6 +70,8 @@ class MappingBuilder {
     public static final String TYPE_VALUE_STRING = "string";
     public static final String TYPE_VALUE_GEO_POINT = "geo_point";
     public static final String TYPE_VALUE_COMPLETION = "completion";
+    public static final String TYPE_VALUE_GEO_HASH_PREFIX = "geohash_prefix";
+    public static final String TYPE_VALUE_GEO_HASH_PRECISION = "geohash_precision";
 
     private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = new SimpleTypeHolder();
 
@@ -91,12 +94,7 @@ class MappingBuilder {
     private static void mapEntity(XContentBuilder xContentBuilder, Class clazz, boolean isRootObject, String idFieldName,
                                   String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType, Field fieldAnnotation) throws IOException {
 
-        final List<AccessibleObject> members = new ArrayList<AccessibleObject>();
-
-        final java.lang.reflect.Field[] fields = clazz.getDeclaredFields();
-
-        members.addAll(Arrays.asList(fields));
-        members.addAll(Arrays.asList(clazz.getDeclaredMethods()));
+        List<AccessibleObject> members = new ArrayList<AccessibleObject>();
 
         if (!isRootObject && (isAnyPropertyAnnotatedAsField(members) || nestedOrObjectField)) {
             String type = FieldType.Object.toString().toLowerCase();
@@ -111,7 +109,7 @@ class MappingBuilder {
             t.startObject(FIELD_PROPERTIES);
         }
 
-        for (final java.lang.reflect.AccessibleObject member : members) {
+        for (java.lang.reflect.AccessibleObject member : members) {
 
             if (member.isAnnotationPresent(Transient.class) || isInIgnoreFields(member)) {
                 continue;
@@ -172,17 +170,32 @@ class MappingBuilder {
         return fields.toArray(new java.lang.reflect.Field[fields.size()]);
     }
 
-    private static boolean isAnnotated(AccessibleObject member) {
+    private static boolean isAnnotated(java.lang.reflect.AccessibleObject member) {
         return member.getAnnotation(Field.class) != null || member.getAnnotation(MultiField.class) != null || member.getAnnotation(GeoPointField.class) != null || member.getAnnotation(CompletionField.class) != null;
     }
 
-    private static void applyGeoPointFieldMapping(XContentBuilder xContentBuilder, AccessibleObject member) throws IOException {
+    private static void applyGeoPointFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.AccessibleObject member) throws IOException {
         xContentBuilder.startObject(getMemberName(member));
-        xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_GEO_POINT)
-                .endObject();
+        xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_GEO_POINT);
+
+        GeoPointField annotation = member.getAnnotation(GeoPointField.class);
+        if (annotation != null) {
+            if (annotation.geoHashPrefix()) {
+                xContentBuilder.field(TYPE_VALUE_GEO_HASH_PREFIX, true);
+                if (StringUtils.isNotEmpty(annotation.geoHashPrecision())) {
+                    if (NumberUtils.isNumber(annotation.geoHashPrecision())) {
+                        xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, Integer.parseInt(annotation.geoHashPrecision()));
+                    } else {
+                        xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, annotation.geoHashPrecision());
+                    }
+                }
+            }
+        }
+
+        xContentBuilder.endObject();
     }
 
-    private static void applyCompletionFieldMapping(XContentBuilder xContentBuilder, AccessibleObject member, CompletionField annotation) throws IOException {
+    private static void applyCompletionFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.AccessibleObject member, CompletionField annotation) throws IOException {
         xContentBuilder.startObject(getMemberName(member));
         xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_COMPLETION);
         if (annotation != null) {
@@ -200,7 +213,7 @@ class MappingBuilder {
         xContentBuilder.endObject();
     }
 
-    private static void applyDefaultIdFieldMapping(XContentBuilder xContentBuilder, AccessibleObject member)
+    private static void applyDefaultIdFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.AccessibleObject member)
             throws IOException {
         xContentBuilder.startObject(getMemberName(member))
                 .field(FIELD_TYPE, TYPE_VALUE_STRING)
@@ -213,7 +226,7 @@ class MappingBuilder {
      *
      * @throws IOException
      */
-    private static void addSingleFieldMapping(XContentBuilder xContentBuilder, AccessibleObject member,
+    private static void addSingleFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.AccessibleObject member,
                                               Field fieldAnnotation) throws IOException {
         xContentBuilder.startObject(getMemberName(member));
         xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
@@ -241,7 +254,7 @@ class MappingBuilder {
      *
      * @throws IOException
      */
-    private static void addNestedFieldMapping(XContentBuilder builder, AccessibleObject member,
+    private static void addNestedFieldMapping(XContentBuilder builder, java.lang.reflect.AccessibleObject member,
                                               NestedField annotation) throws IOException {
         builder.startObject(getMemberName(member) + "." + annotation.dotSuffix());
         builder.field(FIELD_STORE, annotation.store());
@@ -265,7 +278,7 @@ class MappingBuilder {
      *
      * @throws IOException
      */
-    private static void addMultiFieldMapping(XContentBuilder builder, AccessibleObject member,
+    private static void addMultiFieldMapping(XContentBuilder builder, java.lang.reflect.AccessibleObject member,
                                              MultiField annotation) throws IOException {
         builder.startObject(getMemberName(member));
         builder.field(FIELD_TYPE, "multi_field");
@@ -279,50 +292,26 @@ class MappingBuilder {
         builder.endObject();
     }
 
-    /**
-     * Facet field for string type, for other types we don't need it(long, int, double, float)
-     *
-     * @throws IOException
-     */
-    private static void addFacetMapping(XContentBuilder builder, java.lang.reflect.Field field, Field annotation) throws IOException {
-        builder.startObject(FacetRequest.FIELD_UNTOUCHED)
-                .field(FIELD_TYPE, TYPE_VALUE_STRING)
-                .field(FIELD_INDEX, INDEX_VALUE_NOT_ANALYZED)
-                .field(FIELD_STORE, true);
-        builder.endObject();
-    }
-
-    /**
-     * Sort field for string type, for other types we don't need it(long, int, double, float)
-     * value of the field should be converted to lowercase and not analise
-     *
-     * @throws IOException
-     */
-    private static void addSortMapping(XContentBuilder builder, java.lang.reflect.Field field, Field annotation) throws IOException {
-        builder.startObject(FacetRequest.FIELD_SORT)
-                .field(FIELD_TYPE, TYPE_VALUE_STRING)
-                .field(FIELD_INDEX, "keyword")
-                .field(FIELD_STORE, true);
-        builder.endObject();
-    }
-
-    protected static boolean isEntity(AccessibleObject member) {
+    protected static boolean isEntity(java.lang.reflect.AccessibleObject member) {
         final Class<?> memberType = getMemberType(member);
         if (memberType == null) {
             return false;
         }
-        final TypeInformation typeInformation = ClassTypeInformation.from(memberType);
-        final Class<?> clazz = getFieldType(member);
-        final boolean isComplexType = !SIMPLE_TYPE_HOLDER.isSimpleType(clazz);
+
+        TypeInformation typeInformation = ClassTypeInformation.from(memberType);
+        Class<?> clazz = getFieldType(member);
+        boolean isComplexType = !SIMPLE_TYPE_HOLDER.isSimpleType(clazz);
         return isComplexType && !Map.class.isAssignableFrom(typeInformation.getType());
     }
 
-    protected static Class<?> getFieldType(AccessibleObject member) {
+    protected static Class<?> getFieldType(java.lang.reflect.AccessibleObject member) {
         Class<?> clazz = getMemberType(member);
-        final TypeInformation typeInformation = ClassTypeInformation.from(clazz);
+        TypeInformation typeInformation = ClassTypeInformation.from(clazz);
         if (typeInformation.isCollectionLike()) {
             if (member instanceof java.lang.reflect.Field) {
                 clazz = GenericCollectionTypeResolver.getCollectionFieldType((java.lang.reflect.Field) member) != null ? GenericCollectionTypeResolver.getCollectionFieldType((java.lang.reflect.Field) member) : typeInformation.getComponentType().getType();
+            } else {
+                clazz = GenericCollectionTypeResolver.getCollectionReturnType((java.lang.reflect.Method) member) != null ? GenericCollectionTypeResolver.getCollectionReturnType((java.lang.reflect.Method) member) : typeInformation.getComponentType().getType();
             }
         }
         return clazz;
@@ -330,7 +319,7 @@ class MappingBuilder {
 
     private static boolean isAnyPropertyAnnotatedAsField(List<java.lang.reflect.AccessibleObject> members) {
         if (members != null) {
-            for (AccessibleObject member : members) {
+            for (java.lang.reflect.AccessibleObject member : members) {
                 if (member.isAnnotationPresent(Field.class)) {
                     return true;
                 }
@@ -339,11 +328,11 @@ class MappingBuilder {
         return false;
     }
 
-    private static boolean isIdField(AccessibleObject member, String idFieldName) {
+    private static boolean isIdField(java.lang.reflect.AccessibleObject member, String idFieldName) {
         return idFieldName.equals(getMemberName(member));
     }
 
-    private static boolean isInIgnoreFields(AccessibleObject member) {
+    private static boolean isInIgnoreFields(java.lang.reflect.AccessibleObject member) {
         Field fieldAnnotation = member.getAnnotation(Field.class);
         if (null != fieldAnnotation) {
             String[] ignoreFields = fieldAnnotation.ignoreFields();
@@ -352,20 +341,20 @@ class MappingBuilder {
         return false;
     }
 
-    private static boolean isNestedOrObjectField(AccessibleObject member) {
+    private static boolean isNestedOrObjectField(java.lang.reflect.AccessibleObject member) {
         Field fieldAnnotation = member.getAnnotation(Field.class);
         return fieldAnnotation != null && (FieldType.Nested == fieldAnnotation.type() || FieldType.Object == fieldAnnotation.type());
     }
 
-    private static boolean isGeoField(AccessibleObject member) {
+    private static boolean isGeoField(java.lang.reflect.AccessibleObject member) {
         return getMemberType(member) == GeoPoint.class || member.getAnnotation(GeoPointField.class) != null;
     }
 
-    private static boolean isCompletionField(AccessibleObject member) {
+    private static boolean isCompletionField(java.lang.reflect.AccessibleObject member) {
         return getMemberType(member) == Completion.class;
     }
 
-    private static String getMemberName(final java.lang.reflect.AccessibleObject member) {
+    private static String getMemberName(java.lang.reflect.AccessibleObject member) {
         if (member instanceof java.lang.reflect.Field) {
             return ((java.lang.reflect.Field) member).getName();
         } else {
@@ -378,7 +367,7 @@ class MappingBuilder {
         }
     }
 
-    private static Class<?> getMemberType(final java.lang.reflect.AccessibleObject member) {
+    private static Class<?> getMemberType(java.lang.reflect.AccessibleObject member) {
         if (member instanceof java.lang.reflect.Field) {
             return ((java.lang.reflect.Field) member).getType();
         } else {

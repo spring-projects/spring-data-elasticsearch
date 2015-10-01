@@ -15,15 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.elasticsearch.action.update.UpdateResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.util.CloseableIterator;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * ElasticsearchOperations
@@ -210,6 +211,46 @@ public interface ElasticsearchOperations {
 	<T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
+	 * Executes the given {@link CriteriaQuery} against elasticsearch and return result as {@link CloseableIterator}.
+	 * <p>
+	 * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of error.
+	 *
+	 * @param <T> element return type
+	 * @param query
+	 * @param clazz
+	 * @return
+	 * @since 1.3
+	 */
+	<T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz);
+
+	/**
+	 * Executes the given {@link SearchQuery} against elasticsearch and return result as {@link CloseableIterator}.
+	 * <p>
+	 * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of error.
+	 *
+	 * @param <T> element return type
+	 * @param query
+	 * @param clazz
+	 * @return
+	 * @since 1.3
+	 */
+	<T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz);
+
+	/**
+	 * Executes the given {@link SearchQuery} against elasticsearch and return result as {@link CloseableIterator} using custom mapper.
+	 * <p>
+	 * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of error.
+	 *
+	 * @param <T> element return type
+	 * @param query
+	 * @param clazz
+	 * @param mapper
+	 * @return
+	 * @since 1.3
+	 */
+	<T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
+
+	/**
 	 * Execute the criteria query against elasticsearch and return result as {@link List}
 	 *
 	 * @param query
@@ -324,6 +365,13 @@ public interface ElasticsearchOperations {
 	void bulkIndex(List<IndexQuery> queries);
 
 	/**
+	 * Bulk update all objects. Will do update
+	 *
+	 * @param queries
+	 */
+	void bulkUpdate(List<UpdateQuery> queries);
+
+	/**
 	 * Delete the one object with provided id
 	 *
 	 * @param indexName
@@ -333,6 +381,14 @@ public interface ElasticsearchOperations {
 	 */
 	String delete(String indexName, String type, String id);
 
+
+	/**
+	 * Delete all records matching the criteria
+	 *
+	 * @param clazz
+	 * @param criteriaQuery
+	 */
+	<T> void delete(CriteriaQuery criteriaQuery, Class<T> clazz);
 	/**
 	 * Delete the one object with provided id
 	 *
@@ -423,6 +479,16 @@ public interface ElasticsearchOperations {
 	 * @param waitForOperation
 	 */
 	<T> void refresh(Class<T> clazz, boolean waitForOperation);
+
+	/**
+	 * Returns scroll id for criteria query
+	 *
+	 * @param query
+	 * @param scrollTimeInMillis
+	 * @param noFields
+	 * @return
+	 */
+	String scan(CriteriaQuery query, long scrollTimeInMillis, boolean noFields);
 
 	/**
 	 * Returns scroll id for scan query
