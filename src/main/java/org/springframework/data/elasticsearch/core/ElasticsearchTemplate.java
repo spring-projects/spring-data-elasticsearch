@@ -15,21 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang.StringUtils.*;
-import static org.elasticsearch.action.search.SearchType.*;
-import static org.elasticsearch.client.Requests.*;
-import static org.elasticsearch.cluster.metadata.AliasAction.Type.*;
-import static org.elasticsearch.common.collect.Sets.*;
-import static org.elasticsearch.index.VersionType.*;
-import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Method;
-import java.util.*;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
@@ -59,9 +44,11 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.cluster.metadata.AliasAction;
+import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.collect.MapBuilder;
+import org.elasticsearch.common.hppc.cursors.ObjectCursor;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
@@ -95,6 +82,23 @@ import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Method;
+import java.util.*;
+
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.elasticsearch.action.search.SearchType.SCAN;
+import static org.elasticsearch.client.Requests.indicesExistsRequest;
+import static org.elasticsearch.client.Requests.refreshRequest;
+import static org.elasticsearch.cluster.metadata.AliasAction.Type.ADD;
+import static org.elasticsearch.common.collect.Sets.newHashSet;
+import static org.elasticsearch.index.VersionType.EXTERNAL;
+import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMapping;
 
 /**
  * ElasticsearchTemplate
@@ -1019,6 +1023,23 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				.routingTable(true).nodes(true).indices(indexName);
 		Iterator<String> iterator = client.admin().cluster().state(clusterStateRequest).actionGet().getState().getMetaData().aliases().keysIt();
 		return newHashSet(iterator);
+	}
+
+	@Override
+	public Set<String> queryByAlias(String aliasName) {
+		ClusterStateRequest clusterStateRequest = Requests.clusterStateRequest()
+				.routingTable(true).nodes(true).indices(aliasName);
+		Iterator<ImmutableOpenMap<String,AliasMetaData>> iterator = client.admin().cluster().state(clusterStateRequest).actionGet().getState().getMetaData().aliases().valuesIt();
+
+		Set<String> keys = newHashSet();
+		while(iterator.hasNext()) {
+			ImmutableOpenMap<String,AliasMetaData> entry = iterator.next();
+			for (ObjectCursor<String> stringObjectCursor : entry.keys()) {
+				keys.add(stringObjectCursor.value);
+			}
+		}
+
+		return keys;
 	}
 
 	private ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz) {
