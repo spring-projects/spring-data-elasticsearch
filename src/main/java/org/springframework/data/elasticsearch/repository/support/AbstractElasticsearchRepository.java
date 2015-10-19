@@ -144,13 +144,13 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	@Override
 	public <S extends T> S save(S entity) {
 		entity = index(entity);
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		refresh();
 		return entity;
 	}
 
 	public <S extends T> List<S> save(List<S> entities) {
 		entities = index(entities);
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		refresh();
 		return entities;
 	}
 
@@ -188,9 +188,19 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	}
 
 	@Override
+	public void refresh() {
+		refresh(true);
+	}
+
+	@Override
+	public void refresh(boolean waitForOperation) {
+		elasticsearchOperations.refresh(entityInformation.getIndexName(), waitForOperation);
+	}
+
+	@Override
 	public <S extends T> Iterable<S> save(Iterable<S> entities) {
 		entities = index(entities);
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		refresh();
 		return entities;
 	}
 
@@ -239,14 +249,14 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		Assert.notNull(id, "Cannot delete entity with id 'null'.");
 		elasticsearchOperations.delete(entityInformation.getIndexName(), entityInformation.getType(),
 				stringIdRepresentation(id));
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		refresh();
 	}
 
 	@Override
 	public void delete(T entity) {
 		Assert.notNull(entity, "Cannot delete 'null' entity.");
 		delete(extractIdFromBean(entity));
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		refresh();
 	}
 
 	@Override
@@ -262,7 +272,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		DeleteQuery deleteQuery = new DeleteQuery();
 		deleteQuery.setQuery(matchAllQuery());
 		elasticsearchOperations.delete(deleteQuery, getEntityClass());
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		refresh();
 	}
 
 	private IndexQuery createIndexQuery(T entity) {

@@ -40,6 +40,10 @@ public interface ElasticsearchRepository<T, ID extends Serializable> extends Ela
 
 	<S extends T> S index(S entity);
 
+	void refresh();
+
+	void refresh(boolean waitForOperation);
+
 	Iterable<T> search(QueryBuilder query);
 
 	FacetedPage<T> search(QueryBuilder query, Pageable pageable);
