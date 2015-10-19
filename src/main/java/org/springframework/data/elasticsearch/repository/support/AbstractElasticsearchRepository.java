@@ -149,6 +149,13 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	}
 
 	public <S extends T> List<S> save(List<S> entities) {
+		entities = index(entities);
+		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		return entities;
+	}
+
+	@Override
+	public <S extends T> List<S> index(List<S> entities) {
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
 		Assert.notEmpty(entities, "Cannot insert empty List.");
 		List<IndexQuery> queries = new ArrayList<IndexQuery>();
@@ -156,7 +163,20 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 			queries.add(createIndexQuery(s));
 		}
 		elasticsearchOperations.bulkIndex(queries);
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		return entities;
+	}
+	
+	@Override
+	public <S extends T> Iterable<S> index(Iterable<S> entities) {
+		Assert.notNull(entities, "Cannot insert 'null' as a List.");
+		if (!(entities instanceof Collection<?>)) {
+			throw new InvalidDataAccessApiUsageException("Entities have to be inside a collection");
+		}
+		List<IndexQuery> queries = new ArrayList<IndexQuery>();
+		for (S s : entities) {
+			queries.add(createIndexQuery(s));
+		}
+		elasticsearchOperations.bulkIndex(queries);
 		return entities;
 	}
 
@@ -169,15 +189,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 
 	@Override
 	public <S extends T> Iterable<S> save(Iterable<S> entities) {
-		Assert.notNull(entities, "Cannot insert 'null' as a List.");
-		if (!(entities instanceof Collection<?>)) {
-			throw new InvalidDataAccessApiUsageException("Entities have to be inside a collection");
-		}
-		List<IndexQuery> queries = new ArrayList<IndexQuery>();
-		for (S s : entities) {
-			queries.add(createIndexQuery(s));
-		}
-		elasticsearchOperations.bulkIndex(queries);
+		entities = index(entities);
 		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
 		return entities;
 	}

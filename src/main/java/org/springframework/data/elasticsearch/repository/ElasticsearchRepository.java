@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.domain.Page;
@@ -32,6 +33,10 @@ import org.springframework.data.repository.NoRepositoryBean;
  */
 @NoRepositoryBean
 public interface ElasticsearchRepository<T, ID extends Serializable> extends ElasticsearchCrudRepository<T, ID> {
+
+	<S extends T> List<S> index(List<S> entities);
+
+	<S extends T> Iterable<S> index(Iterable<S> entities);
 
 	<S extends T> S index(S entity);
 
