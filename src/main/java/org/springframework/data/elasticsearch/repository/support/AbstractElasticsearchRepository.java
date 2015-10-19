@@ -143,8 +143,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 
 	@Override
 	public <S extends T> S save(S entity) {
-		Assert.notNull(entity, "Cannot save 'null' entity.");
-		elasticsearchOperations.index(createIndexQuery(entity));
+		entity = index(entity);
 		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
 		return entity;
 	}
@@ -163,7 +162,9 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 
 	@Override
 	public <S extends T> S index(S entity) {
-		return save(entity);
+		Assert.notNull(entity, "Cannot save 'null' entity.");
+		elasticsearchOperations.index(createIndexQuery(entity));
+		return entity;
 	}
 
 	@Override
