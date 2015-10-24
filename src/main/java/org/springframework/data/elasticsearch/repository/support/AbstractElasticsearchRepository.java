@@ -166,9 +166,6 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	@Override
 	public <S extends T> Iterable<S> save(Iterable<S> entities) {
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
-		if (!(entities instanceof Collection<?>)) {
-			throw new InvalidDataAccessApiUsageException("Entities have to be inside a collection");
-		}
 		List<IndexQuery> queries = new ArrayList<IndexQuery>();
 		for (S s : entities) {
 			queries.add(createIndexQuery(s));
