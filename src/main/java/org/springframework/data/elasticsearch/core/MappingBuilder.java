@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,11 +29,11 @@ import org.apache.commons.lang.math.NumberUtils;
 import org.elasticsearch.common.lang3.StringUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.core.GenericCollectionTypeResolver;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
-import org.springframework.data.geo.*;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
@@ -110,6 +110,17 @@ class MappingBuilder {
 
 			if (field.isAnnotationPresent(Transient.class) || isInIgnoreFields(field)) {
 				continue;
+			}
+
+			if (field.isAnnotationPresent(Mapping.class)) {
+				String mappingPath = field.getAnnotation(Mapping.class).mappingPath();
+				if (isNotBlank(mappingPath)) {
+					ClassPathResource mappings = new ClassPathResource(mappingPath);
+					if (mappings.exists()) {
+						xContentBuilder.rawField(field.getName(), mappings.getInputStream());
+						continue;
+					}
+				}
 			}
 
 			boolean isGeoPointField = isGeoPointField(field);
