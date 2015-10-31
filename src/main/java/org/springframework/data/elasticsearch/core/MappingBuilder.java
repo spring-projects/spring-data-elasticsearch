@@ -29,6 +29,7 @@ import org.apache.commons.lang.math.NumberUtils;
 import org.elasticsearch.common.lang3.StringUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.core.GenericCollectionTypeResolver;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.completion.Completion;
@@ -109,6 +110,17 @@ class MappingBuilder {
 
 			if (field.isAnnotationPresent(Transient.class) || isInIgnoreFields(field)) {
 				continue;
+			}
+
+			if (field.isAnnotationPresent(Mapping.class)) {
+				String mappingPath = field.getAnnotation(Mapping.class).mappingPath();
+				if (isNotBlank(mappingPath)) {
+					ClassPathResource mappings = new ClassPathResource(mappingPath);
+					if (mappings.exists()) {
+						xContentBuilder.rawField(field.getName(), mappings.getInputStream());
+						continue;
+					}
+				}
 			}
 
 			boolean isGeoField = isGeoField(field);
