@@ -62,8 +62,9 @@ public class FieldDynamicMappingEntityRepositoryTests {
 
 		//then
 		Map mapping = elasticsearchTemplate.getMapping(FieldDynamicMappingEntity.class);
-		Map properties = (Map) mapping.get("properties");
 		assertThat(mapping, is(notNullValue()));
+
+		Map properties = (Map) mapping.get("properties");
 		assertThat(properties, is(notNullValue()));
 
 		assertThat(properties.containsKey("file"), is(true));
