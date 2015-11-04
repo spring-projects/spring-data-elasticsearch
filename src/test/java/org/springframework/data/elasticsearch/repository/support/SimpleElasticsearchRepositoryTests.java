@@ -485,6 +485,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity.setMessage("some message");
 		// when
 		repository.index(sampleEntity);
+		repository.refresh();
 		// then
 		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), new PageRequest(0, 50));
 		assertThat(entities.getTotalElements(), equalTo(1L));

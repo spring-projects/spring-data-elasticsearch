@@ -143,13 +143,19 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 
 	@Override
 	public <S extends T> S save(S entity) {
-		Assert.notNull(entity, "Cannot save 'null' entity.");
-		elasticsearchOperations.index(createIndexQuery(entity));
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		entity = index(entity);
+		refresh();
 		return entity;
 	}
 
 	public <S extends T> List<S> save(List<S> entities) {
+		entities = index(entities);
+		refresh();
+		return entities;
+	}
+
+	@Override
+	public <S extends T> List<S> index(List<S> entities) {
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
 		Assert.notEmpty(entities, "Cannot insert empty List.");
 		List<IndexQuery> queries = new ArrayList<IndexQuery>();
@@ -157,17 +163,11 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 			queries.add(createIndexQuery(s));
 		}
 		elasticsearchOperations.bulkIndex(queries);
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
 		return entities;
 	}
-
+	
 	@Override
-	public <S extends T> S index(S entity) {
-		return save(entity);
-	}
-
-	@Override
-	public <S extends T> Iterable<S> save(Iterable<S> entities) {
+	public <S extends T> Iterable<S> index(Iterable<S> entities) {
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
 		if (!(entities instanceof Collection<?>)) {
 			throw new InvalidDataAccessApiUsageException("Entities have to be inside a collection");
@@ -177,7 +177,30 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 			queries.add(createIndexQuery(s));
 		}
 		elasticsearchOperations.bulkIndex(queries);
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		return entities;
+	}
+
+	@Override
+	public <S extends T> S index(S entity) {
+		Assert.notNull(entity, "Cannot save 'null' entity.");
+		elasticsearchOperations.index(createIndexQuery(entity));
+		return entity;
+	}
+
+	@Override
+	public void refresh() {
+		refresh(true);
+	}
+
+	@Override
+	public void refresh(boolean waitForOperation) {
+		elasticsearchOperations.refresh(entityInformation.getIndexName(), waitForOperation);
+	}
+
+	@Override
+	public <S extends T> Iterable<S> save(Iterable<S> entities) {
+		entities = index(entities);
+		refresh();
 		return entities;
 	}
 
@@ -226,14 +249,14 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		Assert.notNull(id, "Cannot delete entity with id 'null'.");
 		elasticsearchOperations.delete(entityInformation.getIndexName(), entityInformation.getType(),
 				stringIdRepresentation(id));
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		refresh();
 	}
 
 	@Override
 	public void delete(T entity) {
 		Assert.notNull(entity, "Cannot delete 'null' entity.");
 		delete(extractIdFromBean(entity));
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		refresh();
 	}
 
 	@Override
@@ -249,7 +272,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		DeleteQuery deleteQuery = new DeleteQuery();
 		deleteQuery.setQuery(matchAllQuery());
 		elasticsearchOperations.delete(deleteQuery, getEntityClass());
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		refresh();
 	}
 
 	private IndexQuery createIndexQuery(T entity) {
