@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -158,12 +159,18 @@ public class DefaultResultMapper extends AbstractResultMapper {
 			// Only deal with String because ES generated Ids are strings !
 			if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
 				Method setter = idProperty.getSetter();
-				if (setter != null) {
-					try {
+				try {
+					if (setter != null) {
 						setter.invoke(result, id);
-					} catch (Throwable t) {
-						t.printStackTrace();
+					} else if(idProperty.getField() != null){
+						final Field field = idProperty.getField();
+						if(!field.isAccessible()) {
+							field.setAccessible(true);
+						}
+						field.set(result, id);
 					}
+				} catch (Throwable t) {
+					t.printStackTrace();
 				}
 			}
 		}

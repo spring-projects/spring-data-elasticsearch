@@ -34,7 +34,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.entities.Car;
+import org.springframework.data.elasticsearch.entities.ImmutableCar;
+import org.springframework.data.elasticsearch.entities.MutableCar;
 
 /**
  * @author Artur Konczak
@@ -50,7 +53,7 @@ public class DefaultResultMapperTests {
 	@Before
 	public void init() {
 		MockitoAnnotations.initMocks(this);
-		resultMapper = new DefaultResultMapper();
+		resultMapper = new DefaultResultMapper(new SimpleElasticsearchMappingContext());
 	}
 
 	@Test
@@ -100,6 +103,42 @@ public class DefaultResultMapperTests {
 
 		//Then
 		assertThat(result, notNullValue());
+		assertThat(result.getModel(), is("Grat"));
+		assertThat(result.getName(), is("Ford"));
+	}
+	
+	@Test
+	public void shouldMapImmutableCar() {
+		//Given
+		GetResponse response = mock(GetResponse.class);
+		final String id = "carId";
+		when(response.getId()).thenReturn(id);
+		when(response.getSourceAsString()).thenReturn(createJsonCar("Ford", "Grat"));
+
+		//When
+		ImmutableCar result = resultMapper.mapResult(response, ImmutableCar.class);
+
+		//Then
+		assertThat(result, notNullValue());
+		assertThat(result.getId(), is(id));
+		assertThat(result.getModel(), is("Grat"));
+		assertThat(result.getName(), is("Ford"));
+	}
+	
+	@Test
+	public void shouldMapMutableCar() {
+		//Given
+		GetResponse response = mock(GetResponse.class);
+		final String id = "carId";
+		when(response.getId()).thenReturn(id);
+		when(response.getSourceAsString()).thenReturn(createJsonCar("Ford", "Grat"));
+
+		//When
+		MutableCar result = resultMapper.mapResult(response, MutableCar.class);
+
+		//Then
+		assertThat(result, notNullValue());
+		assertThat(result.getId(), is(id));
 		assertThat(result.getModel(), is("Grat"));
 		assertThat(result.getName(), is("Ford"));
 	}
