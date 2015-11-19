@@ -13,22 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.annotations;
+package org.springframework.data.elasticsearch.repositories.setting;
 
-import java.lang.annotation.*;
-import org.springframework.data.annotation.Persistent;
+import org.springframework.data.elasticsearch.entities.FieldDynamicMappingEntity;
+import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
 
 /**
- * Elasticsearch Mapping
+ * FieldDynamicMappingEntityRepository
  *
- * @author Mohsin Husen
+ * @author Ted Liang
  */
-@Persistent
-@Inherited
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.FIELD})
-public @interface Mapping {
-
-	String mappingPath() default "";
+public interface FieldDynamicMappingEntityRepository extends ElasticsearchCrudRepository<FieldDynamicMappingEntity, String> {
 
 }
