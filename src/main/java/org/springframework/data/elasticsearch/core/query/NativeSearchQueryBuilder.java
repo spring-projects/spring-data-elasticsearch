@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ public class NativeSearchQueryBuilder {
 	private String[] indices;
 	private String[] types;
 	private String[] fields;
+	private IndexBoost[] indicesBoost;
 	private float minScore;
 	private Collection<String> ids;
 	private String route;
@@ -87,6 +88,11 @@ public class NativeSearchQueryBuilder {
 
 	public NativeSearchQueryBuilder withHighlightFields(HighlightBuilder.Field... highlightFields) {
 		this.highlightFields = highlightFields;
+		return this;
+	}
+
+	public NativeSearchQueryBuilder withIndicesBoost(IndexBoost... indicesBoost) {
+		this.indicesBoost = indicesBoost;
 		return this;
 	}
 
@@ -147,6 +153,11 @@ public class NativeSearchQueryBuilder {
 		if (fields != null) {
 			nativeSearchQuery.addFields(fields);
 		}
+		
+		if(indicesBoost != null) {
+		    nativeSearchQuery.setIndicesBoost(indicesBoost);
+		}
+		
         if (CollectionUtils.isNotEmpty(scriptFields)) {
             nativeSearchQuery.setScriptFields(scriptFields);
         }

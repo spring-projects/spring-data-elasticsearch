@@ -863,6 +863,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				searchRequest.addHighlightedField(highlightField);
 			}
 		}
+		
+		if (searchQuery.getIndicesBoost() != null) {
+			for (IndexBoost indexBoost : searchQuery.getIndicesBoost()) {
+				searchRequest.addIndexBoost(indexBoost.getIndexName(), indexBoost.getBoost());
+			}
+		}
 
 		if (CollectionUtils.isNotEmpty(searchQuery.getAggregations())) {
 			for (AbstractAggregationBuilder aggregationBuilder : searchQuery.getAggregations()) {

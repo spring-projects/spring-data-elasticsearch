@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	private List<FacetRequest> facets;
 	private List<AbstractAggregationBuilder> aggregations;
 	private HighlightBuilder.Field[] highlightFields;
+	private IndexBoost[] indicesBoost;
 
 
 	public NativeSearchQuery(QueryBuilder query) {
@@ -129,4 +130,14 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	public void setAggregations(List<AbstractAggregationBuilder> aggregations) {
 		this.aggregations = aggregations;
 	}
+
+	@Override
+	public IndexBoost[] getIndicesBoost() {
+		return indicesBoost;
+	}
+
+	public void setIndicesBoost(IndexBoost... indicesBoost) {
+		this.indicesBoost = indicesBoost;
+	}
+
 }
