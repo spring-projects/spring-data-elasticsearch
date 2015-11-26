@@ -49,6 +49,7 @@ public class NativeSearchQueryBuilder {
 	private String[] indices;
 	private String[] types;
 	private String[] fields;
+	private IndexBoost[] indicesBoost;
 	private float minScore;
 	private Collection<String> ids;
 	private String route;
@@ -83,6 +84,11 @@ public class NativeSearchQueryBuilder {
 		this.highlightFields = highlightFields;
 		return this;
 	}
+
+    public NativeSearchQueryBuilder withIndicesBoost(IndexBoost... indicesBoost) {
+        this.indicesBoost = indicesBoost;
+        return this;
+    }
 
 	public NativeSearchQueryBuilder withPageable(Pageable pageable) {
 		this.pageable = pageable;
@@ -140,6 +146,10 @@ public class NativeSearchQueryBuilder {
 
 		if (fields != null) {
 			nativeSearchQuery.addFields(fields);
+		}
+		
+		if(indicesBoost != null) {
+		    nativeSearchQuery.setIndicesBoost(indicesBoost);
 		}
 
 		if (CollectionUtils.isNotEmpty(facetRequests)) {
