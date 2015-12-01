@@ -829,10 +829,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			}
 		}
 		
-		if(searchQuery.getIndicesBoost() != null) {
-		    for(IndexBoost indexBoost : searchQuery.getIndicesBoost()) {
-		        searchRequest.addIndexBoost(indexBoost.getIndexName(), indexBoost.getBoost());
-		    }
+		if (searchQuery.getIndicesBoost() != null) {
+			for (IndexBoost indexBoost : searchQuery.getIndicesBoost()) {
+				searchRequest.addIndexBoost(indexBoost.getIndexName(), indexBoost.getBoost());
+			}
 		}
 
 		if (CollectionUtils.isNotEmpty(searchQuery.getAggregations())) {

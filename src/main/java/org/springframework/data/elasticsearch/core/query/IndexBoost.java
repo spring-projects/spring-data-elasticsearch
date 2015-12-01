@@ -22,23 +22,21 @@ package org.springframework.data.elasticsearch.core.query;
  * @author Thiago Locatelli
  */
 public class IndexBoost {
-    
-    private String indexName;
-    private float boost;
-    
-    public IndexBoost(String indexName, float boost) {
-        this.indexName = indexName;
-        this.boost = boost;
-    }
 
-    public String getIndexName() {
-        return indexName;
-    }
+	private String indexName;
+	private float boost;
 
-    public float getBoost() {
-        return boost;
-    }
-    
-    
+	public IndexBoost(String indexName, float boost) {
+		this.indexName = indexName;
+		this.boost = boost;
+	}
+
+	public String getIndexName() {
+		return indexName;
+	}
+
+	public float getBoost() {
+		return boost;
+	}
 
 }

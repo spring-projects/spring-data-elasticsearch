@@ -85,10 +85,10 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-    public NativeSearchQueryBuilder withIndicesBoost(IndexBoost... indicesBoost) {
-        this.indicesBoost = indicesBoost;
-        return this;
-    }
+	public NativeSearchQueryBuilder withIndicesBoost(IndexBoost... indicesBoost) {
+		this.indicesBoost = indicesBoost;
+		return this;
+	}
 
 	public NativeSearchQueryBuilder withPageable(Pageable pageable) {
 		this.pageable = pageable;
