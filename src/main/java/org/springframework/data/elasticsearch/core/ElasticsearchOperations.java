@@ -484,22 +484,54 @@ public interface ElasticsearchOperations {
 	/**
 	 * Returns scroll id for criteria query
 	 *
-	 * @param query
-	 * @param scrollTimeInMillis
-	 * @param noFields
-	 * @return
+	 * @param query The criteria query.
+	 * @param scrollTimeInMillis The time in millisecond for scroll feature
+	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
+	 * @param noFields The no fields support
+	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setNoFields()}.
+	 * @return The scan id for input query.
 	 */
 	String scan(CriteriaQuery query, long scrollTimeInMillis, boolean noFields);
 
 	/**
+	 * Returns scroll id for criteria query
+	 *
+	 * @param query The criteria query.
+	 * @param scrollTimeInMillis The time in millisecond for scroll feature
+	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
+	 * @param noFields The no fields support
+	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setNoFields()}.
+	 * @param clazz The class of entity to retrieve.
+	 * @param <T> The type of entity to retrieve.
+	 * @return The scan id for input query.
+	 */
+	<T> String scan(CriteriaQuery query, long scrollTimeInMillis, boolean noFields, Class<T> clazz);
+
+	/**
 	 * Returns scroll id for scan query
 	 *
-	 * @param query
-	 * @param scrollTimeInMillis
-	 * @param noFields
-	 * @return
+	 * @param query The search query.
+	 * @param scrollTimeInMillis The time in millisecond for scroll feature
+	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
+	 * @param noFields The no fields support
+	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setNoFields()}.
+	 * @return The scan id for input query.
 	 */
 	String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields);
+
+	/**
+	 * Returns scroll id for scan query
+	 *
+	 * @param query The search query.
+	 * @param scrollTimeInMillis The time in millisecond for scroll feature
+	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
+	 * @param noFields The no fields support
+	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setNoFields()}.
+	 * @param clazz The class of entity to retrieve.
+	 * @param <T> The type of entity to retrieve.
+	 * @return The scan id for input query.
+	 */
+	<T> String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields, Class<T> clazz);
 
 	/**
 	 * Scrolls the results for give scroll id

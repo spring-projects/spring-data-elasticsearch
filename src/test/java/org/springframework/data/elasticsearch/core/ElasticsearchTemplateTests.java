@@ -901,6 +901,64 @@ public class ElasticsearchTemplateTests {
 	}
 
 	/*
+	DATAES-217
+	 */
+	@Test
+	public void shouldReturnResultsWithScanAndScrollForGivenCriteriaQueryAndClass() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		// then
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		criteriaQuery.setPageable(new PageRequest(0, 10));
+
+		String scrollId = elasticsearchTemplate.scan(criteriaQuery, 1000, false, SampleEntity.class);
+		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		boolean hasRecords = true;
+		while (hasRecords) {
+			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, SampleEntity.class);
+			if (page.hasContent()) {
+				sampleEntities.addAll(page.getContent());
+			} else {
+				hasRecords = false;
+			}
+		}
+		assertThat(sampleEntities.size(), is(equalTo(30)));
+	}
+
+	/*
+	DATAES-217
+	 */
+	@Test
+	public void shouldReturnResultsWithScanAndScrollForGivenSearchQueryAndClass() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		// then
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withPageable(new PageRequest(0, 10)).build();
+
+		String scrollId = elasticsearchTemplate.scan(searchQuery, 1000, false, SampleEntity.class);
+		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		boolean hasRecords = true;
+		while (hasRecords) {
+			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, SampleEntity.class);
+			if (page.hasContent()) {
+				sampleEntities.addAll(page.getContent());
+			} else {
+				hasRecords = false;
+			}
+		}
+		assertThat(sampleEntities.size(), is(equalTo(30)));
+	}
+
+	/*
 	DATAES-167
 	 */
 	@Test
