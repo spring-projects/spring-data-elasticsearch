@@ -341,6 +341,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz) {
 		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
+		setPersistentEntityIndexAndType(query, clazz);
 		final String initScrollId = scan(query, scrollTimeInMillis, false);
 		return doStream(initScrollId, scrollTimeInMillis, clazz, resultsMapper);
 	}
@@ -353,6 +354,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> CloseableIterator<T> stream(SearchQuery query, final Class<T> clazz, final SearchResultMapper mapper) {
 		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
+		setPersistentEntityIndexAndType(query, clazz);
 		final String initScrollId = scan(query, scrollTimeInMillis, false);
 		return doStream(initScrollId, scrollTimeInMillis, clazz, mapper);
 	}
@@ -902,12 +904,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private <T> SearchRequestBuilder prepareSearch(Query query, Class<T> clazz) {
-		if (query.getIndices().isEmpty()) {
-			query.addIndices(retrieveIndexNameFromPersistentEntity(clazz));
-		}
-		if (query.getTypes().isEmpty()) {
-			query.addTypes(retrieveTypeFromPersistentEntity(clazz));
-		}
+		setPersistentEntityIndexAndType(query, clazz);
 		return prepareSearch(query);
 	}
 
@@ -1066,6 +1063,15 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 					t.printStackTrace();
 				}
 			}
+		}
+	}
+
+	private void setPersistentEntityIndexAndType(Query query, Class clazz) {
+		if (query.getIndices().isEmpty()) {
+			query.addIndices(retrieveIndexNameFromPersistentEntity(clazz));
+		}
+		if (query.getTypes().isEmpty()) {
+			query.addTypes(retrieveTypeFromPersistentEntity(clazz));
 		}
 	}
 
