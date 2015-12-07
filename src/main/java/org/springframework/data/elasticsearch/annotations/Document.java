@@ -36,6 +36,8 @@ public @interface Document {
 
 	String type() default "";
 
+	boolean serverConfig() default true;
+
 	short shards() default 5;
 
 	short replicas() default 1;
