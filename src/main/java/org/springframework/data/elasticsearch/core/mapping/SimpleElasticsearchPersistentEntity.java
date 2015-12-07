@@ -69,13 +69,13 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			Document document = clazz.getAnnotation(Document.class);
 			Assert.hasText(document.indexName(),
 					" Unknown indexName. Make sure the indexName is defined. e.g @Document(indexName=\"foo\")");
-			this.indexName = typeInformation.getType().getAnnotation(Document.class).indexName();
+			this.indexName = document.indexName();
 			this.indexType = hasText(document.type()) ? document.type() : clazz.getSimpleName().toLowerCase(Locale.ENGLISH);
-			this.serverConfig = typeInformation.getType().getAnnotation(Document.class).serverConfig();
-			this.shards = typeInformation.getType().getAnnotation(Document.class).shards();
-			this.replicas = typeInformation.getType().getAnnotation(Document.class).replicas();
-			this.refreshInterval = typeInformation.getType().getAnnotation(Document.class).refreshInterval();
-			this.indexStoreType = typeInformation.getType().getAnnotation(Document.class).indexStoreType();
+			this.serverConfig = document.serverConfig();
+			this.shards = document.shards();
+			this.replicas = document.replicas();
+			this.refreshInterval = document.refreshInterval();
+			this.indexStoreType = document.indexStoreType();
 		}
 		if (clazz.isAnnotationPresent(Setting.class)) {
 			this.settingPath = typeInformation.getType().getAnnotation(Setting.class).settingPath();

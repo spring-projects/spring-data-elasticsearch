@@ -881,8 +881,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	private <T> Map getDefaultSettings(ElasticsearchPersistentEntity<T> persistentEntity) {
 
-        if (persistentEntity.isServerConfig())
-            return Maps.newHashMap();
+		if (persistentEntity.isServerConfig())
+			return Maps.newHashMap();
 
 		return new MapBuilder<String, String>().put("index.number_of_shards", String.valueOf(persistentEntity.getShards()))
 				.put("index.number_of_replicas", String.valueOf(persistentEntity.getReplicas()))
