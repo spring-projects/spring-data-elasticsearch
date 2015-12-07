@@ -276,7 +276,6 @@ public class ElasticsearchTemplateTests {
 		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId)
 				.withClass(SampleEntity.class).withIndexRequest(indexRequest).build();
 
-
 		List<UpdateQuery> queries = new ArrayList<UpdateQuery>();
 		queries.add(updateQuery);
 
@@ -1907,10 +1906,10 @@ public class ElasticsearchTemplateTests {
 	 */
 	public void shouldComposeIntermittentObjectFromResult() {
 
-        String indexName = Person.class.getAnnotation(Document.class).indexName();
-        Person person = new Person();
-        person.setName("John Smith");
-        person.setCar(Lists.newArrayList(new Car("BMW", "330i")));
+		String indexName = Person.class.getAnnotation(Document.class).indexName();
+		Person person = new Person();
+		person.setName("John Smith");
+		person.setCar(Lists.newArrayList(new Car("BMW", "330i")));
 
 		IndexQuery idxQuery1 = new IndexQueryBuilder().withIndexName(indexName).withObject(person).build();
 
@@ -1919,27 +1918,27 @@ public class ElasticsearchTemplateTests {
 
 		// When
 
-        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
 		Page<AugmentedIndexResult> page = elasticsearchTemplate.queryForPage(searchQuery, Person.class, new PageSearchResultMapper<Person, AugmentedIndexResult>() {
-            @Override
-            public Page<AugmentedIndexResult> mapResults(SearchResponse response, Class<Person> clazz, Pageable pageable) {
+			@Override
+			public Page<AugmentedIndexResult> mapResults(SearchResponse response, Class<Person> clazz, Pageable pageable) {
 
-                List<AugmentedIndexResult> results = new ArrayList<AugmentedIndexResult>();
-                long totalHits = response.getHits().totalHits();
+				List<AugmentedIndexResult> results = new ArrayList<AugmentedIndexResult>();
+				long totalHits = response.getHits().totalHits();
 
-                for (SearchHit searchHit : response.getHits()) {
+				for (SearchHit searchHit : response.getHits()) {
 					String name = searchHit.getSource().get("name").toString();
-                    List<Map<String, Object>> cars = (List<Map<String, Object>>) searchHit.getSource().get("car");
-                    Map<String, Object> myCar = cars.get(0);
-                    results.add(new AugmentedIndexResult(name, myCar));
-                }
+					List<Map<String, Object>> cars = (List<Map<String, Object>>) searchHit.getSource().get("car");
+					Map<String, Object> myCar = cars.get(0);
+					results.add(new AugmentedIndexResult(name, myCar));
+				}
 
-                return new PageImpl<AugmentedIndexResult>(results, pageable, totalHits);
-            }
+				return new PageImpl<AugmentedIndexResult>(results, pageable, totalHits);
+			}
 		});
 
-        assertThat(page.getTotalElements(), is(1l));
+		assertThat(page.getTotalElements(), is(1l));
 	}
 
 
@@ -1970,12 +1969,13 @@ public class ElasticsearchTemplateTests {
 	}
 
 	static class AugmentedIndexResult {
-        private String indexId;
-        private Map<String, Object> data;
 
-        public AugmentedIndexResult(String indexId, Map<String, Object> data) {
-            this.indexId = indexId;
-            this.data = data;
-        }
-    }
+		private String indexId;
+		private Map<String, Object> data;
+
+		public AugmentedIndexResult(String indexId, Map<String, Object> data) {
+			this.indexId = indexId;
+			this.data = data;
+		}
+	}
 }
