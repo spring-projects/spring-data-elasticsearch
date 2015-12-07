@@ -264,6 +264,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
+	public <T, R> Page<R> queryForPage(SearchQuery query, Class<T> clazz,  PageSearchResultMapper<T, R>  mapper) {
+		SearchResponse response = doSearch(prepareSearch(query, clazz), query);
+		return mapper.mapResults(response, clazz, query.getPageable());
+	}
+
+	@Override
 	public <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor) {
 		SearchResponse response = doSearch(prepareSearch(query), query);
 		return resultsExtractor.extract(response);

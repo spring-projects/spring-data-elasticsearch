@@ -20,8 +20,12 @@ import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.collect.Lists;
 import org.elasticsearch.index.engine.DocumentMissingException;
+import org.elasticsearch.index.query.NestedQueryBuilder;
+import org.elasticsearch.index.query.support.QueryInnerHitBuilder;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
@@ -30,18 +34,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.builder.SampleEntityBuilder;
 import org.springframework.data.elasticsearch.core.query.*;
-import org.springframework.data.elasticsearch.entities.HetroEntity1;
-import org.springframework.data.elasticsearch.entities.HetroEntity2;
-import org.springframework.data.elasticsearch.entities.SampleEntity;
-import org.springframework.data.elasticsearch.entities.SampleMappingEntity;
+import org.springframework.data.elasticsearch.entities.*;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -277,7 +275,6 @@ public class ElasticsearchTemplateTests {
 		indexRequest.source("message", messageAfterUpdate);
 		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId)
 				.withClass(SampleEntity.class).withIndexRequest(indexRequest).build();
-
 
 		List<UpdateQuery> queries = new ArrayList<UpdateQuery>();
 		queries.add(updateQuery);
@@ -1903,6 +1900,47 @@ public class ElasticsearchTemplateTests {
 		assertThat(page.getTotalElements(), is(2l));
 	}
 
+	@Test
+	/**
+	 * This is a demonstration to show composing entities out of index that are different type than the index class.
+	 */
+	public void shouldComposeIntermittentObjectFromResult() {
+
+		String indexName = Person.class.getAnnotation(Document.class).indexName();
+		Person person = new Person();
+		person.setName("John Smith");
+		person.setCar(Lists.newArrayList(new Car("BMW", "330i")));
+
+		IndexQuery idxQuery1 = new IndexQueryBuilder().withIndexName(indexName).withObject(person).build();
+
+		elasticsearchTemplate.bulkIndex(Lists.newArrayList(idxQuery1));
+		elasticsearchTemplate.refresh(indexName, true);
+
+		// When
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+
+		Page<AugmentedIndexResult> page = elasticsearchTemplate.queryForPage(searchQuery, Person.class, new PageSearchResultMapper<Person, AugmentedIndexResult>() {
+			@Override
+			public Page<AugmentedIndexResult> mapResults(SearchResponse response, Class<Person> clazz, Pageable pageable) {
+
+				List<AugmentedIndexResult> results = new ArrayList<AugmentedIndexResult>();
+				long totalHits = response.getHits().totalHits();
+
+				for (SearchHit searchHit : response.getHits()) {
+					String name = searchHit.getSource().get("name").toString();
+					List<Map<String, Object>> cars = (List<Map<String, Object>>) searchHit.getSource().get("car");
+					Map<String, Object> myCar = cars.get(0);
+					results.add(new AugmentedIndexResult(name, myCar));
+				}
+
+				return new PageImpl<AugmentedIndexResult>(results, pageable, totalHits);
+			}
+		});
+
+		assertThat(page.getTotalElements(), is(1l));
+	}
+
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
 		return new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity).build();
@@ -1927,6 +1965,17 @@ public class ElasticsearchTemplateTests {
 			this.id = id;
 			this.firstName = firstName;
 			this.lastName = lastName;
+		}
+	}
+
+	static class AugmentedIndexResult {
+
+		private String indexId;
+		private Map<String, Object> data;
+
+		public AugmentedIndexResult(String indexId, Map<String, Object> data) {
+			this.indexId = indexId;
+			this.data = data;
 		}
 	}
 }
