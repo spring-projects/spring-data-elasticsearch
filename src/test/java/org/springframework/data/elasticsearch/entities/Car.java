@@ -15,11 +15,18 @@
  */
 package org.springframework.data.elasticsearch.entities;
 
+import lombok.*;
+
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
  */
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Car {
 
 	private String name;

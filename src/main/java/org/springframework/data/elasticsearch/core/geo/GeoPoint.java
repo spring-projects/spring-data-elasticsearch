@@ -53,6 +53,10 @@ public class GeoPoint {
 	public static GeoPoint fromPoint(Point point) {
 		return new GeoPoint(point.getY(), point.getX());
 	}
+
+	public static Point toPoint(GeoPoint point) {
+		return new Point(point.getLat(), point.getLon());
+	}
 }
 
 

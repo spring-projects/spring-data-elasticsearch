@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.elasticsearch.common.geo.GeoHashUtils;
 import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +32,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.geo.Point;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -239,6 +239,23 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("location").boundedBy(
 						new GeoPoint(53.5171d, 0),
 						new GeoPoint(49.5171d, 0.2062d))
+		);
+		//when
+		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3, AuthorMarkerEntity.class);
+
+		//then
+		assertThat(geoAuthorsForGeoCriteria3.size(), is(2));
+		assertThat(geoAuthorsForGeoCriteria3, containsInAnyOrder(hasProperty("name", equalTo("Mohsin Husen")), hasProperty("name", equalTo("Rizwan Idrees"))));
+	}
+
+	@Test
+	public void shouldFindAuthorMarkersInBoxForGivenCriteriaQueryUsingPoints() {
+		//given
+		loadClassBaseEntities();
+		CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
+				new Criteria("location").boundedBy(
+						new Point(0, 53.5171d),
+						new Point(0.2062d, 49.5171d))
 		);
 		//when
 		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3, AuthorMarkerEntity.class);

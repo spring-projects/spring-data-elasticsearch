@@ -28,7 +28,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.builder.SampleEntityBuilder;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -113,7 +112,7 @@ public class AliasTests {
 		elasticsearchTemplate.addAlias(aliasQuery);
 
 		String documentId = randomNumeric(5);
-		SampleEntity sampleEntity = new SampleEntityBuilder(documentId)
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId)
 				.message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -168,7 +167,7 @@ public class AliasTests {
 		elasticsearchTemplate.addAlias(aliasQuery2);
 
 		String documentId = randomNumeric(5);
-		SampleEntity sampleEntity = new SampleEntityBuilder(documentId)
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId)
 				.message("some message")
 				.version(System.currentTimeMillis()).build();
 

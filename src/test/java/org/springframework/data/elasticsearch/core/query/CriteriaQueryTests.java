@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.query;
 import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.elasticsearch.builder.SampleEntityBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -707,9 +707,9 @@ public class CriteriaQueryTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
 
-		indexQueries.add(new SampleEntityBuilder("1").message("ab").buildIndex());
-		indexQueries.add(new SampleEntityBuilder("2").message("bc").buildIndex());
-		indexQueries.add(new SampleEntityBuilder("3").message("ac").buildIndex());
+		indexQueries.add(buildIndex(SampleEntity.builder().id("1").message("ab").build()));
+		indexQueries.add(buildIndex(SampleEntity.builder().id("2").message("bc").build()));
+		indexQueries.add(buildIndex(SampleEntity.builder().id("3").message("ac").build()));
 
 		elasticsearchTemplate.bulkIndex(indexQueries);
 		elasticsearchTemplate.refresh(SampleEntity.class, true);

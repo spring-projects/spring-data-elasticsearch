@@ -19,6 +19,7 @@ package org.springframework.data.elasticsearch.core;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -30,10 +31,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.builder.SampleInheritedEntityBuilder;
-import org.springframework.data.elasticsearch.builder.StockPriceBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.entities.*;
+import org.springframework.data.elasticsearch.entities.GeoEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -89,7 +90,7 @@ public class MappingBuilderTests {
 		String symbol = "AU";
 		double price = 2.34;
 		String id = "abc";
-		elasticsearchTemplate.index(new StockPriceBuilder(id).symbol(symbol).price(price).buildIndex());
+		elasticsearchTemplate.index(buildIndex(StockPrice.builder().id(id).symbol(symbol).price(new BigDecimal(price)).build()));
 		elasticsearchTemplate.refresh(StockPrice.class, true);
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
@@ -146,5 +147,21 @@ public class MappingBuilderTests {
 		SampleInheritedEntity entry = result.get(0);
 		assertThat(entry.getCreatedDate(), is(createdDate));
 		assertThat(entry.getMessage(), is(message));
+	}
+
+	@Test
+	public void shouldBuildMappingsForGeoPoint() throws IOException {
+		//given
+
+		//when
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(GeoEntity.class, "mapping", "id", null);
+
+		//then
+		final String result = xContentBuilder.string();
+
+		assertThat(result, containsString("\"pointA\":{\"type\":\"geo_point\""));
+		assertThat(result, containsString("\"pointB\":{\"type\":\"geo_point\""));
+		assertThat(result, containsString("\"pointC\":{\"type\":\"geo_point\""));
+		assertThat(result, containsString("\"pointD\":{\"type\":\"geo_point\""));
 	}
 }
