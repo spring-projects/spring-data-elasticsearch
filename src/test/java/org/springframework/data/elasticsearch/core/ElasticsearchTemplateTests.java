@@ -48,6 +48,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.entities.HetroEntity1;
 import org.springframework.data.elasticsearch.entities.HetroEntity2;
+import org.springframework.data.elasticsearch.entities.CreateIndexFalseEntity;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.entities.SampleMappingEntity;
 import org.springframework.data.util.CloseableIterator;
@@ -60,6 +61,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Franck Marchand
  * @author Abdul Mohammed
  * @author Kevin Leturc
+ * @author Mason Chan
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -1620,6 +1622,19 @@ public class ElasticsearchTemplateTests {
 
 		// when
 		elasticsearchTemplate.deleteIndex("test-index");
+		// then
+		assertThat(elasticsearchTemplate.indexExists("test-index"), is(false));
+	}
+
+	/*
+	DATAES-143
+	*/
+	@Test
+	public void shouldNotCreateIndexWithCreateIndexFalse() {
+		// given
+		elasticsearchTemplate.deleteIndex("test-index");
+		// when
+		elasticsearchTemplate.createIndex(CreateIndexFalseEntity.class);
 		// then
 		assertThat(elasticsearchTemplate.indexExists("test-index"), is(false));
 	}
