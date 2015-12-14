@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.util.StringUtils;
@@ -28,26 +29,23 @@ import org.springframework.util.StringUtils;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Oliver Gierke
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
-	private Method method;
+	private final Query queryAnnotation;
 
-	public ElasticsearchQueryMethod(Method method, RepositoryMetadata metadata) {
-		super(method, metadata);
-		this.method = method;
+	public ElasticsearchQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory) {
+		super(method, metadata, factory);
+		this.queryAnnotation = method.getAnnotation(Query.class);
 	}
 
 	public boolean hasAnnotatedQuery() {
-		return getQueryAnnotation() != null;
+		return this.queryAnnotation != null;
 	}
 
 	public String getAnnotatedQuery() {
-		String query = (String) AnnotationUtils.getValue(getQueryAnnotation(), "value");
+		String query = (String) AnnotationUtils.getValue(queryAnnotation, "value");
 		return StringUtils.hasText(query) ? query : null;
-	}
-
-	private Query getQueryAnnotation() {
-		return this.method.getAnnotation(Query.class);
 	}
 }

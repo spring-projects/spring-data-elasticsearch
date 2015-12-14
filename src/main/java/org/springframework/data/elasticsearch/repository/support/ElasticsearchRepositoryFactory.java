@@ -25,6 +25,7 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchPartQuery;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchQueryMethod;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchStringQuery;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
@@ -90,11 +91,16 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	private class ElasticsearchQueryLookupStrategy implements QueryLookupStrategy {
-
+		
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.QueryLookupStrategy#resolveQuery(java.lang.reflect.Method, org.springframework.data.repository.core.RepositoryMetadata, org.springframework.data.projection.ProjectionFactory, org.springframework.data.repository.core.NamedQueries)
+		 */
 		@Override
-		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, NamedQueries namedQueries) {
+		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
+				NamedQueries namedQueries) {
 
-			ElasticsearchQueryMethod queryMethod = new ElasticsearchQueryMethod(method, metadata);
+			ElasticsearchQueryMethod queryMethod = new ElasticsearchQueryMethod(method, metadata, factory);
 			String namedQueryName = queryMethod.getNamedQueryName();
 
 			if (namedQueries.hasQuery(namedQueryName)) {
