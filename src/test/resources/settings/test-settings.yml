@@ -5,4 +5,4 @@ index:
     analyzer:
       emailAnalyzer:
         type: custom
-        tokenizer": uax_url_email
+        tokenizer: uax_url_email

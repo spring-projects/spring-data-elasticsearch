@@ -1992,7 +1992,7 @@ public class ElasticsearchTemplateTests {
 				"    analyzer:\n" +
 				"      emailAnalyzer:\n" +
 				"        type: custom\n" +
-				"        tokenizer\": uax_url_email\n"));
+				"        tokenizer: uax_url_email\n"));
 	}
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
