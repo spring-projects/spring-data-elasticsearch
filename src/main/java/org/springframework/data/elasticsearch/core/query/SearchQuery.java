@@ -44,4 +44,6 @@ public interface SearchQuery extends Query {
 	List<AbstractAggregationBuilder> getAggregations();
 
 	HighlightBuilder.Field[] getHighlightFields();
+
+	IndexBoost[] getIndicesBoost();
 }
