@@ -5,12 +5,19 @@ import java.io.IOException;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.data.elasticsearch.entities.SampleDynamicTemplatesEntity;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * @author Petr Kukrál
+ * Dynamic templates tests
+ *
+ * @author Petr Kukral
  */
-public class SimpleDynamicTemplatesMappingTest {
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("classpath:elasticsearch-template-test.xml")
+public class SimpleDynamicTemplatesMappingTests {
     private final String EXPECTED_MAPPING = "{\"test-dynamictemplatestype\":{\"dynamic_templates\":" +
             "[{\"with_custom_analyzer\":{\"mapping\":{\"type\":\"string\",\"indexAnalyzer\":" +
             "\"standard_lowercase_asciifolding\",\"searchAnalyzer\":\"standard_lowercase_asciifolding\"}," +

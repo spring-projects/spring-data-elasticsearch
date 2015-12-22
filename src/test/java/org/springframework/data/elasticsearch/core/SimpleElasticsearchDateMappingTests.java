@@ -21,13 +21,18 @@ import java.io.IOException;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.data.elasticsearch.entities.SampleDateMappingEntity;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * @author Jakub Vavrik
  * @author Mohsin Husen
  */
-public class SimpleElasticsearchDateMappingTest {
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("classpath:elasticsearch-template-test.xml")
+public class SimpleElasticsearchDateMappingTests {
 
 	private static final String EXPECTED_MAPPING = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true," +
 			"\"type\":\"string\",\"index\":\"not_analyzed\",\"search_analyzer\":\"standard\",\"index_analyzer\"" +
