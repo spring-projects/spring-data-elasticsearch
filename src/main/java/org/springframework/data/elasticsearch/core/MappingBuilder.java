@@ -25,6 +25,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.math.NumberUtils;
 import org.elasticsearch.common.lang3.StringUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -33,7 +35,6 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
-import org.springframework.data.geo.*;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
@@ -57,6 +58,7 @@ class MappingBuilder {
 	public static final String FIELD_INDEX_ANALYZER = "index_analyzer";
 	public static final String FIELD_PROPERTIES = "properties";
 	public static final String FIELD_PARENT = "_parent";
+	public static final String FIELD_DYNAMIC_TEMPLATES = "dynamic_templates";
 
 	public static final String COMPLETION_PAYLOADS = "payloads";
 	public static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
@@ -75,6 +77,18 @@ class MappingBuilder {
 	static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName, String parentType) throws IOException {
 
 		XContentBuilder mapping = jsonBuilder().startObject().startObject(indexType);
+
+        // Dynamic templates
+        if (clazz.isAnnotationPresent(DynamicTemplates.class)){
+            String mappingPath = ((DynamicTemplates) clazz.getAnnotation(DynamicTemplates.class)).mappingPath();
+            if (isNotBlank(mappingPath)) {
+                String jsonString = ElasticsearchTemplate.readFileFromClasspath(mappingPath);
+                if (isNotBlank(jsonString)) {
+                    addDynamicTemplatesMapping(mapping, jsonString);
+                }
+            }
+        }
+
 		// Parent
 		if (hasText(parentType)) {
 			mapping.startObject(FIELD_PARENT).field(FIELD_TYPE, parentType).endObject();
@@ -291,6 +305,18 @@ class MappingBuilder {
 		builder.endObject();
 		builder.endObject();
 	}
+
+    /**
+     * Apply mapping for dynamic templates.
+     *
+     * @throws IOException
+     */
+    private static void addDynamicTemplatesMapping(XContentBuilder builder, String jsonString) throws IOException {
+		JsonNode jsonNode = new ObjectMapper().readTree(jsonString).get("dynamic_templates");
+        if (jsonNode != null && isNotBlank(jsonNode.toString())){
+		    builder.rawField(FIELD_DYNAMIC_TEMPLATES, jsonNode.toString().getBytes());
+        }
+    }
 
 	protected static boolean isEntity(java.lang.reflect.Field field) {
 		TypeInformation typeInformation = ClassTypeInformation.from(field.getType());
