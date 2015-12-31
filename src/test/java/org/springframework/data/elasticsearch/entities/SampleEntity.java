@@ -19,6 +19,7 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
 /**
@@ -39,6 +40,8 @@ public class SampleEntity {
 	private String type;
 	private String message;
 	private int rate;
+	@ScriptedField
+	private Long scriptedRate;
 	private boolean available;
 	private String highlightedMessage;
 

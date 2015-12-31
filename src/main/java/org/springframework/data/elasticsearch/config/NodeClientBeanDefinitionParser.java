@@ -44,6 +44,7 @@ public class NodeClientBeanDefinitionParser extends AbstractBeanDefinitionParser
 		builder.addPropertyValue("clusterName", element.getAttribute("cluster-name"));
 		builder.addPropertyValue("enableHttp", Boolean.valueOf(element.getAttribute("http-enabled")));
 		builder.addPropertyValue("pathData", element.getAttribute("path-data"));
+		builder.addPropertyValue("pathConfiguration", element.getAttribute("path-configuration"));
 	}
 
 	private AbstractBeanDefinition getSourcedBeanDefinition(BeanDefinitionBuilder builder, Element source,

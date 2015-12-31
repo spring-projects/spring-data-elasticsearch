@@ -17,14 +17,21 @@ package org.springframework.data.elasticsearch.client;
 
 import static org.elasticsearch.node.NodeBuilder.*;
 
+import java.io.IOException;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.lucene.util.IOUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
+import org.elasticsearch.common.io.stream.InputStreamStreamInput;
 import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.core.io.ClassPathResource;
 
 /**
  * NodeClientFactoryBean
@@ -41,6 +48,7 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 	private String clusterName;
 	private NodeClient nodeClient;
 	private String pathData;
+	private String pathConfiguration;
 
 	NodeClientFactoryBean() {
 	}
@@ -67,12 +75,23 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder()
+				.put(loadConfig())
 				.put("http.enabled", String.valueOf(this.enableHttp))
 				.put("path.data", this.pathData);
 
-
 		nodeClient = (NodeClient) nodeBuilder().settings(settings).clusterName(this.clusterName).local(this.local).node()
 				.client();
+	}
+
+	private Settings loadConfig() {
+		if (StringUtils.isNotBlank(pathConfiguration)) {
+			try {
+				return ImmutableSettings.builder().loadFromUrl(new ClassPathResource(pathConfiguration).getURL()).build();
+			} catch (IOException e) {
+				logger.error(String.format("Unable to read node configuration from file [%s]", pathConfiguration), e);
+			}
+		}
+		return ImmutableSettings.builder().build();
 	}
 
 	public void setLocal(boolean local) {
@@ -89,6 +108,10 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
 	public void setPathData(String pathData) {
 		this.pathData = pathData;
+	}
+
+	public void setPathConfiguration(String configuration) {
+		this.pathConfiguration = configuration;
 	}
 
 	@Override
