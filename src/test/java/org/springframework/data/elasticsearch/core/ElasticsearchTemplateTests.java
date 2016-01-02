@@ -31,6 +31,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
@@ -646,6 +647,32 @@ public class ElasticsearchTemplateTests {
 	}
 
 	@Test
+	public void shouldReturnFieldsBasedOnSourceFilter() {
+		// given
+		String documentId = randomNumeric(5);
+		String message = "some test message";
+		SampleEntity sampleEntity = new SampleEntityBuilder(documentId).message(message)
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
+
+		FetchSourceFilterBuilder sourceFilter = new FetchSourceFilterBuilder();
+		sourceFilter.withIncludes("message");
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME).withSourceFilter(sourceFilter.build()).build();
+		// when
+		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+		// then
+		assertThat(page, is(notNullValue()));
+		assertThat(page.getTotalElements(), is(equalTo(1L)));
+		assertThat(page.getContent().get(0).getMessage(), is(message));
+	}
+
+	@Test
 	public void shouldReturnSimilarResultsGivenMoreLikeThisQuery() {
 		// given
 		String sampleMessage = "So we build a web site or an application and want to add search to it, "
@@ -1235,6 +1262,7 @@ public class ElasticsearchTemplateTests {
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId)
 				.message("some message")
+				.type(TYPE_NAME)
 				.version(System.currentTimeMillis()).build();
 
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);

@@ -949,6 +949,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(toArray(query.getIndices()))
 				.setSearchType(query.getSearchType()).setTypes(toArray(query.getTypes()));
 
+		if (query.getFetchSourceFilter() != null) {
+			SourceFilter sourceFilter = query.getFetchSourceFilter();
+			searchRequestBuilder.setFetchSource(sourceFilter.getIncludes(), sourceFilter.getExcludes());
+		}
+
 		if (query.getPageable() != null) {
 			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
 			searchRequestBuilder.setSize(query.getPageable().getPageSize());
