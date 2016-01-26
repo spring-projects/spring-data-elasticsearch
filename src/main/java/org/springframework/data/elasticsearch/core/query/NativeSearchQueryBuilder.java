@@ -50,7 +50,7 @@ public class NativeSearchQueryBuilder {
 	private String[] indices;
 	private String[] types;
 	private String[] fields;
-	private IndexBoost[] indicesBoost;
+	private List<IndexBoost> indicesBoost;
 	private float minScore;
 	private Collection<String> ids;
 	private String route;
@@ -91,7 +91,7 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withIndicesBoost(IndexBoost... indicesBoost) {
+	public NativeSearchQueryBuilder withIndicesBoost(List<IndexBoost> indicesBoost) {
 		this.indicesBoost = indicesBoost;
 		return this;
 	}

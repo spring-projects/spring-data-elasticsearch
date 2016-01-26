@@ -45,7 +45,7 @@ public interface SearchQuery extends Query {
 
 	HighlightBuilder.Field[] getHighlightFields();
 
-	IndexBoost[] getIndicesBoost();
+	List<IndexBoost> getIndicesBoost();
 
     List<ScriptField> getScriptFields();
 

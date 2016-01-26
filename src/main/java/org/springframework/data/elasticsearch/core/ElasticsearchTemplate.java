@@ -864,7 +864,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			}
 		}
 		
-		if (searchQuery.getIndicesBoost() != null) {
+		if (CollectionUtils.isNotEmpty(searchQuery.getIndicesBoost())) {
 			for (IndexBoost indexBoost : searchQuery.getIndicesBoost()) {
 				searchRequest.addIndexBoost(indexBoost.getIndexName(), indexBoost.getBoost());
 			}

@@ -45,7 +45,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	private List<FacetRequest> facets;
 	private List<AbstractAggregationBuilder> aggregations;
 	private HighlightBuilder.Field[] highlightFields;
-	private IndexBoost[] indicesBoost;
+	private List<IndexBoost> indicesBoost;
 
 
 	public NativeSearchQuery(QueryBuilder query) {
@@ -132,11 +132,11 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	}
 
 	@Override
-	public IndexBoost[] getIndicesBoost() {
+	public List<IndexBoost> getIndicesBoost() {
 		return indicesBoost;
 	}
 
-	public void setIndicesBoost(IndexBoost... indicesBoost) {
+	public void setIndicesBoost(List<IndexBoost> indicesBoost) {
 		this.indicesBoost = indicesBoost;
 	}
 
