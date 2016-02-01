@@ -41,6 +41,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Ryan Henszey
+ * @author Kevin Leturc
  */
 public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
@@ -68,9 +69,8 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 	@Override
 	protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
 		if (isQueryDslRepository(metadata.getRepositoryInterface())) {
-			throw new IllegalArgumentException("QueryDsl Support has not been implemented yet.");
-		}
-		if (Integer.class.isAssignableFrom(metadata.getIdType())
+			return QueryDslElasticsearchRepository.class;
+		} else if (Integer.class.isAssignableFrom(metadata.getIdType())
 				|| Long.class.isAssignableFrom(metadata.getIdType())
 				|| Double.class.isAssignableFrom(metadata.getIdType())) {
 			return NumberKeyedRepository.class;

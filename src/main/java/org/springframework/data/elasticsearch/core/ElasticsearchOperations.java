@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.Client;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -40,6 +41,16 @@ public interface ElasticsearchOperations {
 	 * @return Converter in use
 	 */
 	ElasticsearchConverter getElasticsearchConverter();
+
+	/**
+	 * @return Client in use
+	 */
+	Client getClient();
+
+	/**
+	 * @return ResultsMapper in use
+	 */
+	ResultsMapper getResultsMapper();
 
 	/**
 	 * Create an index for a class

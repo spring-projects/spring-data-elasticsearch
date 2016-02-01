@@ -7,7 +7,11 @@ Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Export-Template:
  org.springframework.data.elasticsearch.*;version="${project.version}"
 Import-Template:
+ com.google.common.base.*;version="[11.0.0,14.0.0)";resolution:=optional,
+ com.querydsl.*;version="${querydsl:[=.=.=,+1.0.0)}";resolution:=optional,
+ javax.annotation.processing.*;version="0",
  javax.enterprise.*;version="${cdi:[=.=.=,+1.0.0)}";resolution:=optional,
+ javax.tools.*;version="0",
  org.apache.commons.collections.*;version="${commonscollections:[=.=.=,+1.0.0)}";resolution:=optional,
  org.apache.commons.lang.*;version="${commonslang:[=.=.=,+1.0.0)}",
  com.fasterxml.jackson.*;version="${jackson:[=.=.=,+1.0.0)}";resolution:=optional,
