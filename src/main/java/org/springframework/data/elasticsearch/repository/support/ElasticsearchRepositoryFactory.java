@@ -77,7 +77,7 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 		} else if (metadata.getIdType() == String.class) {
 			return SimpleElasticsearchRepository.class;
 		} else {
-			throw new IllegalArgumentException("Unsuppored ID type " + metadata.getIdType());
+			throw new IllegalArgumentException("Unsupported ID type " + metadata.getIdType());
 		}
 	}
 
