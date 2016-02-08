@@ -186,4 +186,17 @@
         <url>https://jira.springsource.org/browse/DATAES</url>
     </issueManagement>
 
+    <distributionManagement>
+        <repository>
+            <id>libs-release-local</id>
+            <name>libs-release-local</name>
+            <url>http://forge.softbridge.fr:8081/artifactory/libs-release-local</url>
+        </repository>
+        <snapshotRepository>
+            <id>libs-snapshot-local</id>
+            <name>libs-snapshot-local</name>
+            <url>http://forge.softbridge.fr:8081/artifactory/libs-snapshot-local</url>
+        </snapshotRepository>
+    </distributionManagement>
+
 </project>
