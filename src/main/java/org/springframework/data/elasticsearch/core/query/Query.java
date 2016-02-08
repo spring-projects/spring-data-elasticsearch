@@ -112,6 +112,21 @@ public interface Query {
 	List<String> getFields();
 
 	/**
+	 * Add source filter to be added as part of search request
+	 *
+	 * @param sourceFilter
+	 */
+	void addSourceFilter(SourceFilter sourceFilter);
+
+	/**
+	 * Get SourceFilter to be returned to get include and exclude source
+	 * fields as part of search request.
+	 *
+	 * @return SourceFilter
+	 */
+	SourceFilter getFetchSourceFilter();
+
+	/**
 	 * Get minimum score
 	 *
 	 * @return
