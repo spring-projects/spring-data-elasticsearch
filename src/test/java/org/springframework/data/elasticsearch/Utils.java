@@ -31,7 +31,7 @@ public class Utils {
 		return (NodeClient) nodeBuilder().settings(Settings.builder()
 				.put("http.enabled", "false")
 				.put("path.data", "target/elasticsearchTestData")
-				.put("path.home", "target/test-home-dir"))
+				.put("path.home", "test-home-dir"))
 				.clusterName(UUID.randomUUID().toString()).local(true).node()
 				.client();
 	}

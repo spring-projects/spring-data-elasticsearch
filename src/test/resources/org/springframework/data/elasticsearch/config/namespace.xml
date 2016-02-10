@@ -7,7 +7,7 @@
 
     <elasticsearch:node-client id="client" local="true"
                                cluster-name="#{T(java.util.UUID).randomUUID().toString()}" http-enabled="false"
-                               path-data="target/elasticsearchTestData" path-home="target/test-home-dir"/>
+                               path-data="target/elasticsearchTestData" path-home="test-home-dir"/>
 
     <bean name="elasticsearchTemplate"
           class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
