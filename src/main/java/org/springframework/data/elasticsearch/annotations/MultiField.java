@@ -30,5 +30,5 @@ public @interface MultiField {
 
 	public Field mainField();
 
-	public NestedField[] otherFields() default {};
+	public InnerField[] otherFields() default {};
 }

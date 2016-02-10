@@ -26,7 +26,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.NestedField;
+import org.springframework.data.elasticsearch.annotations.InnerField;
 
 /**
  * Simple type to test facets
@@ -45,8 +45,8 @@ public class ArticleEntity {
 	@MultiField(
 			mainField = @Field(type = String, index = analyzed),
 			otherFields = {
-					@NestedField(dotSuffix = "untouched", type = String, store = true, index = not_analyzed),
-					@NestedField(dotSuffix = "sort", type = String, store = true, indexAnalyzer = "keyword")
+					@InnerField(suffix = "untouched", type = String, store = true, index = not_analyzed),
+					@InnerField(suffix = "sort", type = String, store = true, indexAnalyzer = "keyword")
 			}
 	)
 	private List<String> authors = new ArrayList<String>();
