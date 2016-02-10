@@ -18,13 +18,11 @@ package org.springframework.data.elasticsearch.client;
 import static org.elasticsearch.node.NodeBuilder.*;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.lucene.util.IOUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
-import org.elasticsearch.common.io.stream.InputStreamStreamInput;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +46,7 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 	private String clusterName;
 	private NodeClient nodeClient;
 	private String pathData;
+	private String pathHome;
 	private String pathConfiguration;
 
 	NodeClientFactoryBean() {
@@ -74,24 +73,23 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder()
-				.put(loadConfig())
+		nodeClient = (NodeClient) nodeBuilder().settings(Settings.builder().put(loadConfig())
 				.put("http.enabled", String.valueOf(this.enableHttp))
-				.put("path.data", this.pathData);
-
-		nodeClient = (NodeClient) nodeBuilder().settings(settings).clusterName(this.clusterName).local(this.local).node()
+				.put("path.home", this.pathHome)
+				.put("path.data", this.pathData))
+				.clusterName(this.clusterName).local(this.local).node()
 				.client();
 	}
 
 	private Settings loadConfig() {
 		if (StringUtils.isNotBlank(pathConfiguration)) {
 			try {
-				return ImmutableSettings.builder().loadFromUrl(new ClassPathResource(pathConfiguration).getURL()).build();
+				return Settings.builder().loadFromPath(Paths.get(new ClassPathResource(pathConfiguration).getURI())).build();
 			} catch (IOException e) {
 				logger.error(String.format("Unable to read node configuration from file [%s]", pathConfiguration), e);
 			}
 		}
-		return ImmutableSettings.builder().build();
+		return Settings.builder().build();
 	}
 
 	public void setLocal(boolean local) {
@@ -108,6 +106,10 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
 	public void setPathData(String pathData) {
 		this.pathData = pathData;
+	}
+
+	public void setPathHome(String pathHome) {
+		this.pathHome = pathHome;
 	}
 
 	public void setPathConfiguration(String configuration) {

@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.apache.commons.lang.RandomStringUtils.*;
-import static org.elasticsearch.index.query.FilterBuilders.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -30,6 +29,8 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.engine.DocumentMissingException;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -48,7 +49,6 @@ import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.entities.*;
-import org.springframework.data.elasticsearch.repositories.existing.index.CreateIndexFalseEntity;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -360,7 +360,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class, true);
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withFilter(boolFilter().must(termFilter("id", documentId))).build();
+				.withFilter(boolQuery().filter(termQuery("id", documentId))).build();
 		// when
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		// then
@@ -466,35 +466,35 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.getTotalElements(), equalTo(1L));
 	}
 
-    @Test
-    public void shouldUseScriptedFields() {
-        // given
-        String documentId = randomNumeric(5);
-        SampleEntity sampleEntity = new SampleEntity();
-        sampleEntity.setId(documentId);
-        sampleEntity.setRate(2);
-        sampleEntity.setMessage("some message");
-        sampleEntity.setVersion(System.currentTimeMillis());
+	@Test
+	public void shouldUseScriptedFields() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setRate(2);
+		sampleEntity.setMessage("some message");
+		sampleEntity.setVersion(System.currentTimeMillis());
 
-        IndexQuery indexQuery = new IndexQuery();
-        indexQuery.setId(documentId);
-        indexQuery.setObject(sampleEntity);
+		IndexQuery indexQuery = new IndexQuery();
+		indexQuery.setId(documentId);
+		indexQuery.setObject(sampleEntity);
 
-        elasticsearchTemplate.index(indexQuery);
-        elasticsearchTemplate.refresh(SampleEntity.class, true);
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class, true);
 
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("factor", 2);
-        // when
-        SearchQuery searchQuery = new NativeSearchQueryBuilder()
-                .withQuery(matchAllQuery())
-                .withScriptField(new ScriptField("scriptedRate", "doc['rate'].value * factor", params))
-                .build();
-        Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
-        // then
-        assertThat(sampleEntities.getTotalElements(), equalTo(1L));
-        assertThat(sampleEntities.getContent().get(0).getScriptedRate(), equalTo(4L));
-    }
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("factor", 2);
+		// when
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(matchAllQuery())
+				.withScriptField(new ScriptField("scriptedRate", new Script("doc['rate'].value * factor", ScriptService.ScriptType.INLINE, "groovy", params)))
+						.build();
+		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+		// then
+		assertThat(sampleEntities.getTotalElements(), equalTo(1L));
+		assertThat(sampleEntities.getContent().get(0).getScriptedRate(), equalTo(4L));
+	}
 
 	@Test
 	public void shouldReturnPageableResultsGivenStringQuery() {
@@ -1230,27 +1230,6 @@ public class ElasticsearchTemplateTests {
 	}
 
 	@Test
-	public void shouldDeleteSpecifiedTypeFromAnIndex() {
-		// given
-		String documentId = randomNumeric(5);
-		SampleEntity sampleEntity = SampleEntity.builder().id(documentId)
-				.message("some message")
-				.version(System.currentTimeMillis()).build();
-
-		IndexQuery indexQuery = getIndexQuery(sampleEntity);
-
-		elasticsearchTemplate.index(indexQuery);
-		elasticsearchTemplate.refresh(SampleEntity.class, true);
-		// when
-		elasticsearchTemplate.deleteType(INDEX_NAME, TYPE_NAME);
-		elasticsearchTemplate.refresh(SampleEntity.class, true);
-
-		//then
-		boolean typeExists = elasticsearchTemplate.typeExists(INDEX_NAME, TYPE_NAME);
-		assertThat(typeExists, is(false));
-	}
-
-	@Test
 	public void shouldDeleteDocumentBySpecifiedTypeUsingDeleteQuery() {
 		// given
 		String documentId = randomNumeric(5);
@@ -1882,7 +1861,7 @@ public class ElasticsearchTemplateTests {
 		assertThat((String) map.get("index.refresh_interval"), is("-1"));
 		assertThat((String) map.get("index.number_of_replicas"), is("0"));
 		assertThat((String) map.get("index.number_of_shards"), is("1"));
-		assertThat((String) map.get("index.store.type"), is("memory"));
+		assertThat((String) map.get("index.store.type"), is("fs"));
 	}
 
 	/*

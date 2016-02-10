@@ -25,8 +25,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
-import org.elasticsearch.common.lang3.StringUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.core.GenericCollectionTypeResolver;
 import org.springframework.core.io.ClassPathResource;
@@ -152,9 +152,9 @@ class MappingBuilder {
 			if (isRootObject && singleField != null && isIdField(field, idFieldName)) {
 				applyDefaultIdFieldMapping(xContentBuilder, field);
 			} else if (multiField != null) {
-				addMultiFieldMapping(xContentBuilder, field, multiField);
+				addMultiFieldMapping(xContentBuilder, field, multiField, isNestedOrObjectField(field));
 			} else if (singleField != null) {
-				addSingleFieldMapping(xContentBuilder, field, singleField);
+				addSingleFieldMapping(xContentBuilder, field, singleField, isNestedOrObjectField(field));
 			}
 		}
 
@@ -238,9 +238,11 @@ class MappingBuilder {
 	 * @throws IOException
 	 */
 	private static void addSingleFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field,
-											  Field fieldAnnotation) throws IOException {
+											  Field fieldAnnotation, boolean nestedOrObjectField) throws IOException {
 		xContentBuilder.startObject(field.getName());
-		xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
+		if(!nestedOrObjectField) {
+			xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
+		}
 		if (FieldType.Auto != fieldAnnotation.type()) {
 			xContentBuilder.field(FIELD_TYPE, fieldAnnotation.type().name().toLowerCase());
 			if (FieldType.Date == fieldAnnotation.type() && DateFormat.none != fieldAnnotation.format()) {
@@ -268,7 +270,7 @@ class MappingBuilder {
 	private static void addNestedFieldMapping(XContentBuilder builder, java.lang.reflect.Field field,
 											  NestedField annotation) throws IOException {
 		builder.startObject(field.getName() + "." + annotation.dotSuffix());
-		builder.field(FIELD_STORE, annotation.store());
+		//builder.field(FIELD_STORE, annotation.store());
 		if (FieldType.Auto != annotation.type()) {
 			builder.field(FIELD_TYPE, annotation.type().name().toLowerCase());
 		}
@@ -290,12 +292,12 @@ class MappingBuilder {
 	 * @throws IOException
 	 */
 	private static void addMultiFieldMapping(XContentBuilder builder, java.lang.reflect.Field field,
-											 MultiField annotation) throws IOException {
+											 MultiField annotation, boolean nestedOrObjectField) throws IOException {
 		builder.startObject(field.getName());
 		builder.field(FIELD_TYPE, "multi_field");
 		builder.startObject("fields");
 		//add standard field
-		addSingleFieldMapping(builder, field, annotation.mainField());
+		addSingleFieldMapping(builder, field, annotation.mainField(),nestedOrObjectField);
 		for (NestedField nestedField : annotation.otherFields()) {
 			addNestedFieldMapping(builder, field, nestedField);
 		}

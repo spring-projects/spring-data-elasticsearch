@@ -437,7 +437,8 @@ public interface ElasticsearchOperations {
 	 * @param index
 	 * @param type
 	 */
-	void deleteType(String index, String type);
+	//TODo: ako remove this
+	/*void deleteType(String index, String type);*/
 
 	/**
 	 * check if index is exists

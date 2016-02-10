@@ -12,14 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ *//*
+
 package org.springframework.data.elasticsearch.core.facet;
 
 import org.springframework.util.Assert;
 
+*/
 /**
  * @author Artur Konczak
- */
+ *//*
+
 public abstract class AbstractFacetRequest implements FacetRequest {
 
 	private String name;
@@ -43,3 +46,4 @@ public abstract class AbstractFacetRequest implements FacetRequest {
 		return applyQueryFilter;
 	}
 }
+*/

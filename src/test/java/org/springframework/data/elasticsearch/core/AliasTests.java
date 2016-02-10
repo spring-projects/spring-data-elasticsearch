@@ -52,7 +52,7 @@ public class AliasTests {
 		settings.put("index.refresh_interval", "-1");
 		settings.put("index.number_of_replicas", "0");
 		settings.put("index.number_of_shards", "2");
-		settings.put("index.store.type", "memory");
+		settings.put("index.store.type", "fs");
 
 		elasticsearchTemplate.deleteIndex(INDEX_NAME);
 		elasticsearchTemplate.createIndex(INDEX_NAME, settings);

@@ -18,16 +18,12 @@ package org.springframework.data.elasticsearch.core.query;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
-import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * NativeSearchQuery
@@ -39,10 +35,10 @@ import java.util.List;
 public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
 	private QueryBuilder query;
-	private FilterBuilder filter;
+	private QueryBuilder filter;
 	private List<SortBuilder> sorts;
     private final List<ScriptField> scriptFields = new ArrayList<ScriptField>();
-	private List<FacetRequest> facets;
+	/*private List<FacetRequest> facets;*/
 	private List<AbstractAggregationBuilder> aggregations;
 	private HighlightBuilder.Field[] highlightFields;
 	private List<IndexBoost> indicesBoost;
@@ -52,18 +48,18 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 		this.query = query;
 	}
 
-	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter) {
+	public NativeSearchQuery(QueryBuilder query, QueryBuilder filter) {
 		this.query = query;
 		this.filter = filter;
 	}
 
-	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, List<SortBuilder> sorts) {
+	public NativeSearchQuery(QueryBuilder query, QueryBuilder filter, List<SortBuilder> sorts) {
 		this.query = query;
 		this.filter = filter;
 		this.sorts = sorts;
 	}
 
-	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, List<SortBuilder> sorts, HighlightBuilder.Field[] highlightFields) {
+	public NativeSearchQuery(QueryBuilder query, QueryBuilder filter, List<SortBuilder> sorts, HighlightBuilder.Field[] highlightFields) {
 		this.query = query;
 		this.filter = filter;
 		this.sorts = sorts;
@@ -74,7 +70,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 		return query;
 	}
 
-	public FilterBuilder getFilter() {
+	public QueryBuilder getFilter() {
 		return filter;
 	}
 
@@ -98,7 +94,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
         scriptFields.addAll(Arrays.asList(scriptField));
     }
 
-	public void addFacet(FacetRequest facetRequest) {
+/*	public void addFacet(FacetRequest facetRequest) {
 		if (facets == null) {
 			facets = new ArrayList<FacetRequest>();
 		}
@@ -112,7 +108,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	@Override
 	public List<FacetRequest> getFacets() {
 		return facets;
-	}
+	}*/
 
 	@Override
 	public List<AbstractAggregationBuilder> getAggregations() {

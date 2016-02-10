@@ -48,8 +48,10 @@ public class FacetedPageImpl<T> extends PageImpl<T> implements FacetedPage<T> {
 	public FacetedPageImpl(List<T> content, Pageable pageable, long total, List<FacetResult> facets) {
 		super(content, pageable, total);
 		this.facets = facets;
-		for (FacetResult facet : facets) {
-			mapOfFacets.put(facet.getName(), facet);
+		if(facets!=null) {
+			for (FacetResult facet : facets) {
+				mapOfFacets.put(facet.getName(), facet);
+			}
 		}
 	}
 

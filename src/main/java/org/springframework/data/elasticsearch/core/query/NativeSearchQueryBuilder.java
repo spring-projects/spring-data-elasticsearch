@@ -21,13 +21,11 @@ import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
 /**
  * NativeSearchQuery
@@ -40,10 +38,10 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 public class NativeSearchQueryBuilder {
 
 	private QueryBuilder queryBuilder;
-	private FilterBuilder filterBuilder;
+	private QueryBuilder filterBuilder;
     private List<ScriptField> scriptFields = new ArrayList<ScriptField>();
 	private List<SortBuilder> sortBuilders = new ArrayList<SortBuilder>();
-	private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
+	/*private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();*/
 	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<AbstractAggregationBuilder>();
 	private HighlightBuilder.Field[] highlightFields;
 	private Pageable pageable;
@@ -61,7 +59,7 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withFilter(FilterBuilder filterBuilder) {
+	public NativeSearchQueryBuilder withFilter(QueryBuilder filterBuilder) {
 		this.filterBuilder = filterBuilder;
 		return this;
 	}
@@ -81,10 +79,10 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withFacet(FacetRequest facetRequest) {
+/*	public NativeSearchQueryBuilder withFacet(FacetRequest facetRequest) {
 		facetRequests.add(facetRequest);
 		return this;
-	}
+	}*/
 
 	public NativeSearchQueryBuilder withHighlightFields(HighlightBuilder.Field... highlightFields) {
 		this.highlightFields = highlightFields;
@@ -162,9 +160,9 @@ public class NativeSearchQueryBuilder {
             nativeSearchQuery.setScriptFields(scriptFields);
         }
 
-		if (CollectionUtils.isNotEmpty(facetRequests)) {
+/*		if (CollectionUtils.isNotEmpty(facetRequests)) {
 			nativeSearchQuery.setFacets(facetRequests);
-		}
+		}*/
 
 		if (CollectionUtils.isNotEmpty(aggregationBuilders)) {
 			nativeSearchQuery.setAggregations(aggregationBuilders);

@@ -1,31 +1,26 @@
 package org.springframework.data.elasticsearch.core.query;
 
-import java.util.Map;
+import org.elasticsearch.script.Script;
 
 /**
  * @author Ryan Murfitt
+ * @author Artur Konczak
  */
 public class ScriptField {
 
 	private final String fieldName;
-	private final String script;
-	private final Map<String, Object> params;
+	private final Script script;
 
-	public ScriptField(String fieldName, String script, Map<String, Object> params) {
+	public ScriptField(String fieldName, Script script) {
 		this.fieldName = fieldName;
 		this.script = script;
-		this.params = params;
 	}
 
 	public String fieldName() {
 		return fieldName;
 	}
 
-	public String script() {
+	public Script script() {
 		return script;
-	}
-
-	public Map<String, Object> params() {
-		return params;
 	}
 }

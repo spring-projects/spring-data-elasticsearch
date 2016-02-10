@@ -12,14 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ *//*
+
 package org.springframework.data.elasticsearch.core.facet;
 
 import org.elasticsearch.search.facet.FacetBuilder;
 
+*/
 /**
  * @author Artur Koczak
- */
+ *//*
+
 public interface FacetRequest {
 
 	public static final String FIELD_UNTOUCHED = "untouched";
@@ -29,3 +32,4 @@ public interface FacetRequest {
 
 	boolean applyQueryFilter();
 }
+*/

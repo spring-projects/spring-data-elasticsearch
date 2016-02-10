@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.core.query;
 
 import java.util.Map;
 
-import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 
 /**
  * @author Mohsin Husen
@@ -26,7 +26,7 @@ public class AliasBuilder {
 
 	private String indexName;
 	private String aliasName;
-	private FilterBuilder filterBuilder;
+	private QueryBuilder filterBuilder;
 	private Map<String, Object> filter;
 	private String searchRouting;
 	private String indexRouting;
@@ -42,7 +42,7 @@ public class AliasBuilder {
 		return this;
 	}
 
-	public AliasBuilder withFilterBuilder(FilterBuilder filterBuilder) {
+	public AliasBuilder withFilterBuilder(QueryBuilder filterBuilder) {
 		this.filterBuilder = filterBuilder;
 		return this;
 	}

@@ -9,7 +9,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
  * @author Mohsin Husen
  * @author Mewes Kochheim
  */
-@Document(indexName = "test-completion-index", type = "completion-annotation-type", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-completion-index", type = "completion-annotation-type", shards = 1, replicas = 0, refreshInterval = "-1")
 public class CompletionAnnotatedEntity {
 
 	@Id

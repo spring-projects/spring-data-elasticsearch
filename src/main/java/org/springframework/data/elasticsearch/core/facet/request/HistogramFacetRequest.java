@@ -12,7 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ *//*
+
 package org.springframework.data.elasticsearch.core.facet.request;
 
 import java.util.concurrent.TimeUnit;
@@ -24,10 +25,12 @@ import org.elasticsearch.search.facet.histogram.HistogramFacetBuilder;
 import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.util.Assert;
 
+*/
 /**
  * @author Artur Konczak
  * @author Mohsin Husen
- */
+ *//*
+
 public class HistogramFacetRequest extends AbstractFacetRequest {
 
 	private String field;
@@ -67,3 +70,4 @@ public class HistogramFacetRequest extends AbstractFacetRequest {
 		return builder;
 	}
 }
+*/
