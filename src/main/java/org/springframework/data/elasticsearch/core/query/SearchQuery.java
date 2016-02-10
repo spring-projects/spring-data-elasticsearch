@@ -17,12 +17,10 @@ package org.springframework.data.elasticsearch.core.query;
 
 import java.util.List;
 
-import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
-import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
 /**
  * NativeSearchQuery
@@ -35,11 +33,11 @@ public interface SearchQuery extends Query {
 
 	QueryBuilder getQuery();
 
-	FilterBuilder getFilter();
+	QueryBuilder getFilter();
 
 	List<SortBuilder> getElasticsearchSorts();
 
-	List<FacetRequest> getFacets();
+	/*List<FacetRequest> getFacets();*/
 
 	List<AbstractAggregationBuilder> getAggregations();
 

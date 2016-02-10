@@ -12,14 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ *//*
+
 package org.springframework.data.elasticsearch.core.facet.request;
 
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
+*/
 /**
  * @author Petar Tahchiev
- */
+ *//*
+
 public class StatisticalFacetRequestBuilder {
 
 	StatisticalFacetRequest result;
@@ -47,3 +50,4 @@ public class StatisticalFacetRequestBuilder {
 		return result;
 	}
 }
+*/

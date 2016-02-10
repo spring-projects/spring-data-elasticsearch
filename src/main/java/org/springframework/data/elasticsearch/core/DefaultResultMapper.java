@@ -25,23 +25,20 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.common.base.Strings;
-import org.elasticsearch.common.jackson.core.JsonEncoding;
-import org.elasticsearch.common.jackson.core.JsonFactory;
-import org.elasticsearch.common.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
-import org.elasticsearch.search.facet.Facet;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
-import org.springframework.data.elasticsearch.core.facet.DefaultFacetMapper;
-import org.springframework.data.elasticsearch.core.facet.FacetResult;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.PersistentProperty;
@@ -81,7 +78,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		for (SearchHit hit : response.getHits()) {
 			if (hit != null) {
 				T result = null;
-				if (!Strings.isNullOrEmpty(hit.sourceAsString())) {
+				if (StringUtils.isNotBlank(hit.sourceAsString())) {
 					result = mapEntity(hit.sourceAsString(), clazz);
 				} else {
 					result = mapEntity(hit.getFields().values(), clazz);
@@ -91,7 +88,8 @@ public class DefaultResultMapper extends AbstractResultMapper {
 				results.add(result);
 			}
 		}
-		List<FacetResult> facets = new ArrayList<FacetResult>();
+		//TODO: ako facets !!!
+/*		List<FacetResult> facets = new ArrayList<FacetResult>();
 		if (response.getFacets() != null) {
 			for (Facet facet : response.getFacets()) {
 				FacetResult facetResult = DefaultFacetMapper.parse(facet);
@@ -99,9 +97,8 @@ public class DefaultResultMapper extends AbstractResultMapper {
 					facets.add(facetResult);
 				}
 			}
-		}
-
-		return new FacetedPageImpl<T>(results, pageable, totalHits, facets);
+		}*/
+		return new FacetedPageImpl<T>(results, pageable, totalHits, null );
 	}
 
     private <T> void populateScriptFields(T result, SearchHit hit) {

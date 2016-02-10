@@ -34,7 +34,7 @@ import org.springframework.data.elasticsearch.annotations.NestedField;
  * @author Artur Konczak
  * @author Mohsin Husen
  */
-@Document(indexName = "articles", type = "article", shards = 1, replicas = 0, refreshInterval = "-1", indexStoreType = "memory")
+@Document(indexName = "articles", type = "article", shards = 1, replicas = 0, refreshInterval = "-1")
 public class ArticleEntity {
 
 	@Id

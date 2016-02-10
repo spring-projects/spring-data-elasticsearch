@@ -20,8 +20,8 @@ import static org.apache.commons.lang.StringUtils.*;
 import static org.elasticsearch.action.search.SearchType.*;
 import static org.elasticsearch.client.Requests.*;
 import static org.elasticsearch.cluster.metadata.AliasAction.Type.*;
-import static org.elasticsearch.common.collect.Sets.*;
 import static org.elasticsearch.index.VersionType.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
 
 import java.io.BufferedReader;
@@ -35,7 +35,6 @@ import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
@@ -48,7 +47,6 @@ import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetRequestBuilder;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
-import org.elasticsearch.action.mlt.MoreLikeThisRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
@@ -59,18 +57,15 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.cluster.metadata.AliasAction;
-import org.elasticsearch.cluster.metadata.MappingMetaData;
-import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.collect.MapBuilder;
-import org.elasticsearch.common.collect.Maps;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.script.Script;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
-import org.elasticsearch.search.facet.FacetBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
@@ -82,6 +77,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -89,7 +86,6 @@ import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -307,7 +303,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> Page<T> queryForPage(CriteriaQuery criteriaQuery, Class<T> clazz) {
 		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
-		FilterBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
+		QueryBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
 		SearchRequestBuilder searchRequestBuilder = prepareSearch(criteriaQuery, clazz);
 
 		if (elasticsearchQuery != null) {
@@ -418,7 +414,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> long count(CriteriaQuery criteriaQuery, Class<T> clazz) {
 		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
-		FilterBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
+		QueryBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
 
 		if (elasticsearchFilter == null) {
 			return doCount(prepareCount(criteriaQuery, clazz), elasticsearchQuery);
@@ -431,7 +427,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> long count(SearchQuery searchQuery, Class<T> clazz) {
 		QueryBuilder elasticsearchQuery = searchQuery.getQuery();
-		FilterBuilder elasticsearchFilter = searchQuery.getFilter();
+		QueryBuilder elasticsearchFilter = searchQuery.getFilter();
 
 		if (elasticsearchFilter == null) {
 			return doCount(prepareCount(searchQuery, clazz), elasticsearchQuery);
@@ -458,7 +454,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		return countRequestBuilder.execute().actionGet().getCount();
 	}
 
-	private long doCount(SearchRequestBuilder searchRequestBuilder, QueryBuilder elasticsearchQuery, FilterBuilder elasticsearchFilter) {
+	private long doCount(SearchRequestBuilder searchRequestBuilder, QueryBuilder elasticsearchQuery, QueryBuilder elasticsearchFilter) {
 		if (elasticsearchQuery != null) {
 			searchRequestBuilder.setQuery(elasticsearchQuery);
 		} else {
@@ -556,10 +552,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			}
 		} else {
 			// or script
-			updateRequestBuilder
-					.setScript(query.getUpdateRequest().script(), query.getUpdateRequest().scriptType())
-					.setScriptParams(query.getUpdateRequest().scriptParams())
-					.setScriptLang(query.getUpdateRequest().scriptLang());
+			updateRequestBuilder.setScript(query.getUpdateRequest().script());
 		}
 
 		return updateRequestBuilder;
@@ -618,7 +611,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public boolean typeExists(String index, String type) {
 		return client.admin().cluster().prepareState().execute().actionGet()
-				.getState().metaData().index(index).mappings().containsKey(type);
+				.getState().metaData().index(index).getMappings().containsKey(type);
 	}
 
 	@Override
@@ -636,15 +629,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
-	public void deleteType(String index, String type) {
-		ImmutableOpenMap<String, MappingMetaData> mappings = client.admin().cluster().prepareState().execute().actionGet()
-				.getState().metaData().index(index).mappings();
-		if (mappings.containsKey(type)) {
-			client.admin().indices().deleteMapping(new DeleteMappingRequest(index).types(type)).actionGet();
-		}
-	}
-
-	@Override
 	public String delete(String indexName, String type, String id) {
 		return client.prepareDelete(indexName, type, id).execute().actionGet().getId();
 	}
@@ -657,17 +641,59 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> void delete(DeleteQuery deleteQuery, Class<T> clazz) {
-		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
-		client.prepareDeleteByQuery(persistentEntity.getIndexName()).setTypes(persistentEntity.getIndexType())
-				.setQuery(deleteQuery.getQuery()).execute().actionGet();
+
+		String iName = deleteQuery.getIndex();
+		String tName = deleteQuery.getType();
+		if(clazz!=null){
+			ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
+			iName = persistentEntity.getIndexName();
+			tName =persistentEntity.getIndexType();
+		}
+
+		final String indexName = iName;
+		final String typeName = tName;
+
+				SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery())
+				.withIndices(indexName)
+				.withTypes(typeName)
+						//TOD: ako - check that id is all the time avaialable
+				//.withFields("_id")
+				.withPageable(new PageRequest(0, 1000))
+				.build();
+
+		final String scrollId = scan(searchQuery, 10000, true);
+
+		final BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
+		boolean hasMoreRecords = true;
+		while (hasMoreRecords) {
+			final Page<Object> scroll = scroll(scrollId, 10000L, new SearchResultMapper() {
+				@Override
+				public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+					boolean hasItems = false;
+					for (SearchHit searchHit : response.getHits()) {
+						hasItems = true;
+						bulkRequestBuilder.add(client.prepareDelete(indexName, typeName, searchHit.getId()));
+					}
+					if(hasItems){
+						return new FacetedPageImpl<T>((List<T>)Arrays.asList(new Object()));
+					}
+					return null;
+				}
+			});
+			if (scroll == null) {
+				hasMoreRecords = false;
+			}
+		}
+		if(bulkRequestBuilder.numberOfActions()>0) {
+			bulkRequestBuilder.execute().actionGet();
+		}
 	}
 
 	@Override
 	public void delete(DeleteQuery deleteQuery) {
 		Assert.notNull(deleteQuery.getIndex(), "No index defined for Query");
 		Assert.notNull(deleteQuery.getType(), "No type define for Query");
-		client.prepareDeleteByQuery(deleteQuery.getIndex()).setTypes(deleteQuery.getType())
-				.setQuery(deleteQuery.getQuery()).execute().actionGet();
+		delete(deleteQuery, null);
 	}
 
 	@Override
@@ -726,7 +752,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		Assert.notNull(criteriaQuery.getPageable(), "Query.pageable is required for scan & scroll");
 
 		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
-		FilterBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
+		QueryBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
 
 		if (elasticsearchQuery != null) {
 			requestBuilder.setQuery(elasticsearchQuery);
@@ -778,7 +804,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		Assert.notNull(type, "No 'type' defined for MoreLikeThisQuery");
 		Assert.notNull(query.getId(), "No document id defined for MoreLikeThisQuery");
 
-		MoreLikeThisRequestBuilder requestBuilder = client.prepareMoreLikeThis(indexName, type, query.getId());
+		final MoreLikeThisQueryBuilder.Item item = new MoreLikeThisQueryBuilder.Item(indexName, type, query.getId());
+		final NativeSearchQuery build = new NativeSearchQueryBuilder().withQuery(moreLikeThisQuery().addLikeItem(item)).build();
+		return queryForPage(build,clazz);
+
+		//TODO: Mohins - set all other params for moreLikeThis
+/*		MoreLikeThisRequestBuilder requestBuilder = client.prepareMoreLikeThis(indexName, type, query.getId());
 
 		if (query.getPageable() != null) {
 			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
@@ -827,7 +858,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		}
 
 		SearchResponse response = getSearchResponse(requestBuilder.execute());
-		return resultsMapper.mapResults(response, clazz, query.getPageable());
+		return resultsMapper.mapResults(response, clazz, query.getPageable());*/
 	}
 
 	private SearchResponse doSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
@@ -844,10 +875,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		if (!searchQuery.getScriptFields().isEmpty()) {
 			searchRequest.addField("_source");
 			for (ScriptField scriptedField : searchQuery.getScriptFields()) {
-				searchRequest.addScriptField(scriptedField.fieldName(), scriptedField.script(), scriptedField.params());
+				searchRequest.addScriptField(scriptedField.fieldName(), scriptedField.script());
 			}
 		}
 
+/*
 		if (CollectionUtils.isNotEmpty(searchQuery.getFacets())) {
 			for (FacetRequest facetRequest : searchQuery.getFacets()) {
 				FacetBuilder facet = facetRequest.getFacet();
@@ -857,6 +889,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				searchRequest.addFacet(facet);
 			}
 		}
+*/
 
 		if (searchQuery.getHighlightFields() != null) {
 			for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
@@ -922,7 +955,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	private <T> Map getDefaultSettings(ElasticsearchPersistentEntity<T> persistentEntity) {
 
 		if (persistentEntity.isUseServerConfiguration())
-			return Maps.newHashMap();
+			return new HashMap();
 
 		return new MapBuilder<String, String>().put("index.number_of_shards", String.valueOf(persistentEntity.getShards()))
 				.put("index.number_of_replicas", String.valueOf(persistentEntity.getReplicas()))
@@ -1021,14 +1054,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public void refresh(String indexName, boolean waitForOperation) {
-		client.admin().indices().refresh(refreshRequest(indexName).force(waitForOperation)).actionGet();
+		client.admin().indices().refresh(refreshRequest(indexName)).actionGet();
 	}
 
 	@Override
 	public <T> void refresh(Class<T> clazz, boolean waitForOperation) {
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
 		client.admin().indices()
-				.refresh(refreshRequest(persistentEntity.getIndexName()).force(waitForOperation)).actionGet();
+				.refresh(refreshRequest(persistentEntity.getIndexName())).actionGet();
 	}
 
 	@Override
@@ -1062,8 +1095,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public Set<String> queryForAlias(String indexName) {
 		ClusterStateRequest clusterStateRequest = Requests.clusterStateRequest()
 				.routingTable(true).nodes(true).indices(indexName);
-		Iterator<String> iterator = client.admin().cluster().state(clusterStateRequest).actionGet().getState().getMetaData().aliases().keysIt();
-		return newHashSet(iterator);
+		//TODO: ako check how to find aliases for index
+/*		Iterator<String> iterator = client.admin().cluster().state(clusterStateRequest).actionGet().getState().getMetaData().aliases().keysIt();
+		return newHashSet(iterator);*/
+		return null;
 	}
 
 	@Override
