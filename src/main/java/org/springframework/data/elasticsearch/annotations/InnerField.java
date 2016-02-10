@@ -25,9 +25,9 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface NestedField {
+public @interface InnerField {
 
-	String dotSuffix();
+	String suffix();
 
 	FieldType type();
 
