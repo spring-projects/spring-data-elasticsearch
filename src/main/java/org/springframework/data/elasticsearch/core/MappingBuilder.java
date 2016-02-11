@@ -54,7 +54,7 @@ class MappingBuilder {
 	public static final String FIELD_INDEX = "index";
 	public static final String FIELD_FORMAT = "format";
 	public static final String FIELD_SEARCH_ANALYZER = "search_analyzer";
-	public static final String FIELD_INDEX_ANALYZER = "index_analyzer";
+	public static final String FIELD_INDEX_ANALYZER = "analyzer";
 	public static final String FIELD_PROPERTIES = "properties";
 	public static final String FIELD_PARENT = "_parent";
 
@@ -217,8 +217,8 @@ class MappingBuilder {
 			if (isNotBlank(annotation.searchAnalyzer())) {
 				xContentBuilder.field(FIELD_SEARCH_ANALYZER, annotation.searchAnalyzer());
 			}
-			if (isNotBlank(annotation.indexAnalyzer())) {
-				xContentBuilder.field(FIELD_INDEX_ANALYZER, annotation.indexAnalyzer());
+			if (isNotBlank(annotation.analyzer())) {
+				xContentBuilder.field(FIELD_INDEX_ANALYZER, annotation.analyzer());
 			}
 		}
 		xContentBuilder.endObject();
@@ -256,8 +256,8 @@ class MappingBuilder {
 		if (isNotBlank(fieldAnnotation.searchAnalyzer())) {
 			xContentBuilder.field(FIELD_SEARCH_ANALYZER, fieldAnnotation.searchAnalyzer());
 		}
-		if (isNotBlank(fieldAnnotation.indexAnalyzer())) {
-			xContentBuilder.field(FIELD_INDEX_ANALYZER, fieldAnnotation.indexAnalyzer());
+		if (isNotBlank(fieldAnnotation.analyzer())) {
+			xContentBuilder.field(FIELD_INDEX_ANALYZER, fieldAnnotation.analyzer());
 		}
 		xContentBuilder.endObject();
 	}

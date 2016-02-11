@@ -48,7 +48,7 @@ public @interface Field {
 
 	String searchAnalyzer() default "";
 
-	String indexAnalyzer() default "";
+	String analyzer() default "";
 
 	String[] ignoreFields() default {};
 
