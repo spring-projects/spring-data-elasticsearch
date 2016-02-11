@@ -32,7 +32,7 @@ public class SampleTransientEntity {
 	@Id
 	private String id;
 
-	@Field(type = String, index = not_analyzed, store = true, searchAnalyzer = "standard", indexAnalyzer = "standard")
+	@Field(type = String, index = not_analyzed, store = true, analyzer = "standard")
 	private String message;
 
 	@Transient
