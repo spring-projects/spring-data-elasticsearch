@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.Assert;
@@ -43,6 +44,7 @@ abstract class AbstractQuery implements Query {
 	protected Collection<String> ids;
 	protected String route;
 	protected SearchType searchType = SearchType.DFS_QUERY_THEN_FETCH;
+	protected IndicesOptions indicesOptions;
 
 	@Override
 	public Sort getSort() {
@@ -136,5 +138,13 @@ abstract class AbstractQuery implements Query {
 
 	public SearchType getSearchType() {
 		return searchType;
+	}
+
+	public IndicesOptions getIndicesOptions() {
+		return indicesOptions;
+	}
+
+	public void setIndicesOptions(IndicesOptions indicesOptions) {
+		this.indicesOptions = indicesOptions;
 	}
 }

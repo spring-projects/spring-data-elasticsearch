@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -139,4 +140,11 @@ public interface Query {
 	 * @return
 	 */
 	SearchType getSearchType();
+
+	/**
+	 * Get indices options
+	 *
+	 * @return null if not set
+	 */
+	IndicesOptions getIndicesOptions();
 }
