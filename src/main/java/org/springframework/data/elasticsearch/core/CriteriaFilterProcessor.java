@@ -107,7 +107,7 @@ class CriteriaFilterProcessor {
 
 		switch (key) {
 			case WITHIN: {
-				filter = QueryBuilders.geoDistanceRangeQuery(fieldName);
+				GeoDistanceQueryBuilder geoDistanceQueryBuilder = QueryBuilders.geoDistanceQuery(fieldName);
 
 				Assert.isTrue(value instanceof Object[], "Value of a geo distance filter should be an array of two values.");
 				Object[] valArray = (Object[]) value;
@@ -126,19 +126,20 @@ class CriteriaFilterProcessor {
 
 				if (valArray[0] instanceof GeoPoint) {
 					GeoPoint loc = (GeoPoint) valArray[0];
-					((GeoDistanceRangeQueryBuilder) filter).lat(loc.getLat()).lon(loc.getLon()).geoDistance(GeoDistance.fromString(dist.toString()));
+					geoDistanceQueryBuilder.lat(loc.getLat()).lon(loc.getLon()).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 				} else if (valArray[0] instanceof Point) {
 					GeoPoint loc = GeoPoint.fromPoint((Point) valArray[0]);
-					((GeoDistanceRangeQueryBuilder) filter).lat(loc.getLat()).lon(loc.getLon()).geoDistance(GeoDistance.fromString(dist.toString()));
+					geoDistanceQueryBuilder.lat(loc.getLat()).lon(loc.getLon()).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 				} else {
 					String loc = (String) valArray[0];
 					if (loc.contains(",")) {
 						String c[] = loc.split(",");
-						((GeoDistanceRangeQueryBuilder) filter).lat(Double.parseDouble(c[0])).lon(Double.parseDouble(c[1])).geoDistance(GeoDistance.fromString(dist.toString()));
+						geoDistanceQueryBuilder.lat(Double.parseDouble(c[0])).lon(Double.parseDouble(c[1])).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 					} else {
-						((GeoDistanceRangeQueryBuilder) filter).geohash(loc).geoDistance(GeoDistance.fromString(dist.toString()));
+						geoDistanceQueryBuilder.geohash(loc).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 					}
 				}
+				filter = geoDistanceQueryBuilder;
 
 				break;
 			}
