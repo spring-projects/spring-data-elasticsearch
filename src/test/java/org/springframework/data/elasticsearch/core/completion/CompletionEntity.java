@@ -1,6 +1,7 @@
 package org.springframework.data.elasticsearch.core.completion;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 /**
@@ -13,6 +14,7 @@ public class CompletionEntity {
 	private String id;
 	private String name;
 
+	@CompletionField(maxInputLength = 100)
 	private Completion suggest;
 
 	private CompletionEntity() {
