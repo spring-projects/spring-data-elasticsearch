@@ -15,13 +15,15 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.io.Serializable;
+
 /**
  * Defines a Field that can be used within a Criteria.
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public interface Field {
+public interface Field extends Serializable {
 
 	/**
 	 * Get the name of the field used in schema.xml of elasticsearch server

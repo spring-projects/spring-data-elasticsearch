@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
@@ -29,7 +30,7 @@ import org.springframework.data.domain.Sort;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-public interface Query {
+public interface Query extends Serializable {
 
 	public static final int DEFAULT_PAGE_SIZE = 10;
 	public static final Pageable DEFAULT_PAGE = new PageRequest(0, DEFAULT_PAGE_SIZE);

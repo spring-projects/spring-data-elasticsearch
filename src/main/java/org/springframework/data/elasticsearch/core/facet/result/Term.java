@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.facet.result;
 
+import java.io.Serializable;
+
 /**
  * Single term
  *
@@ -23,7 +25,7 @@ package org.springframework.data.elasticsearch.core.facet.result;
  * @author Artur Konczak
  * @author Jonathan Yan
  */
-public class Term {
+public class Term implements Serializable {
 
 	private String term;
 	private int count;

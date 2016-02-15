@@ -17,10 +17,12 @@ package org.springframework.data.elasticsearch.core.facet;
 
 import org.elasticsearch.search.facet.FacetBuilder;
 
+import java.io.Serializable;
+
 /**
  * @author Artur Koczak
  */
-public interface FacetRequest {
+public interface FacetRequest extends Serializable {
 
 	public static final String FIELD_UNTOUCHED = "untouched";
 	public static final String FIELD_SORT = "sort";
