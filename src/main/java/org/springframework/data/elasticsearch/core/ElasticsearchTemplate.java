@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import java.util.*;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.ListenableActionFuture;
-import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
@@ -57,13 +57,13 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.cluster.metadata.AliasAction;
+import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.script.Script;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
@@ -642,6 +642,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> void delete(DeleteQuery deleteQuery, Class<T> clazz) {
 
+		//TODO : clean up expose parameter for scan and scroll
 		String iName = deleteQuery.getIndex();
 		String tName = deleteQuery.getType();
 		if(clazz!=null){
@@ -656,37 +657,46 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery())
 				.withIndices(indexName)
 				.withTypes(typeName)
-						//TOD: ako - check that id is all the time avaialable
-				//.withFields("_id")
 				.withPageable(new PageRequest(0, 1000))
 				.build();
 
 		final String scrollId = scan(searchQuery, 10000, true);
 
 		final BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-		boolean hasMoreRecords = true;
-		while (hasMoreRecords) {
-			final Page<Object> scroll = scroll(scrollId, 10000L, new SearchResultMapper() {
+		List<String> ids = new ArrayList<String>();
+		boolean hasRecords = true;
+		while (hasRecords) {
+			Page<String> page = scroll(scrollId, 5000, new SearchResultMapper() {
 				@Override
 				public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-					boolean hasItems = false;
+					List<String> result = new ArrayList<String>();
 					for (SearchHit searchHit : response.getHits()) {
-						hasItems = true;
-						bulkRequestBuilder.add(client.prepareDelete(indexName, typeName, searchHit.getId()));
+						String id = searchHit.getId();
+						result.add(id);
 					}
-					if(hasItems){
-						return new FacetedPageImpl<T>((List<T>)Arrays.asList(new Object()));
+
+					if (result.size() > 0) {
+						return new FacetedPageImpl<T>((List<T>) result);
 					}
 					return null;
 				}
 			});
-			if (scroll == null) {
-				hasMoreRecords = false;
+			if (page != null && page.getContent().size() > 0) {
+				ids.addAll(page.getContent());
+			} else {
+				hasRecords = false;
 			}
 		}
-		if(bulkRequestBuilder.numberOfActions()>0) {
+
+		for(String id : ids) {
+			bulkRequestBuilder.add(client.prepareDelete(indexName, typeName, id));
+		}
+
+		if(bulkRequestBuilder.numberOfActions() > 0) {
 			bulkRequestBuilder.execute().actionGet();
 		}
+
+		refresh(indexName, false);
 	}
 
 	@Override
@@ -795,7 +805,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz) {
-		int startRecord = 0;
+		//todo : clean up
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
 		String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName() : persistentEntity.getIndexName();
 		String type = isNotBlank(query.getType()) ? query.getType() : persistentEntity.getIndexType();
@@ -805,60 +815,35 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		Assert.notNull(query.getId(), "No document id defined for MoreLikeThisQuery");
 
 		final MoreLikeThisQueryBuilder.Item item = new MoreLikeThisQueryBuilder.Item(indexName, type, query.getId());
-		final NativeSearchQuery build = new NativeSearchQueryBuilder().withQuery(moreLikeThisQuery().addLikeItem(item)).build();
-		return queryForPage(build,clazz);
+		MoreLikeThisQueryBuilder moreLikeThisQueryBuilder = moreLikeThisQuery().addLikeItem(item);
 
-		//TODO: Mohins - set all other params for moreLikeThis
-/*		MoreLikeThisRequestBuilder requestBuilder = client.prepareMoreLikeThis(indexName, type, query.getId());
-
-		if (query.getPageable() != null) {
-			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
-			requestBuilder.setSearchSize(query.getPageable().getPageSize());
-		}
-		requestBuilder.setSearchFrom(startRecord);
-
-		if (isNotEmpty(query.getSearchIndices())) {
-			requestBuilder.setSearchIndices(toArray(query.getSearchIndices()));
-		}
-		if (isNotEmpty(query.getSearchTypes())) {
-			requestBuilder.setSearchTypes(toArray(query.getSearchTypes()));
-		}
-		if (isNotEmpty(query.getFields())) {
-			requestBuilder.setField(toArray(query.getFields()));
-		}
-		if (isNotBlank(query.getRouting())) {
-			requestBuilder.setRouting(query.getRouting());
-		}
-		if (query.getPercentTermsToMatch() != null) {
-			requestBuilder.setPercentTermsToMatch(query.getPercentTermsToMatch());
-		}
 		if (query.getMinTermFreq() != null) {
-			requestBuilder.setMinTermFreq(query.getMinTermFreq());
+			moreLikeThisQueryBuilder.minTermFreq(query.getMinTermFreq());
 		}
 		if (query.getMaxQueryTerms() != null) {
-			requestBuilder.maxQueryTerms(query.getMaxQueryTerms());
+			moreLikeThisQueryBuilder.maxQueryTerms(query.getMaxQueryTerms());
 		}
 		if (isNotEmpty(query.getStopWords())) {
-			requestBuilder.setStopWords(toArray(query.getStopWords()));
+			moreLikeThisQueryBuilder.stopWords(toArray(query.getStopWords()));
 		}
 		if (query.getMinDocFreq() != null) {
-			requestBuilder.setMinDocFreq(query.getMinDocFreq());
+			moreLikeThisQueryBuilder.minDocFreq(query.getMinDocFreq());
 		}
 		if (query.getMaxDocFreq() != null) {
-			requestBuilder.setMaxDocFreq(query.getMaxDocFreq());
+			moreLikeThisQueryBuilder.maxDocFreq(query.getMaxDocFreq());
 		}
 		if (query.getMinWordLen() != null) {
-			requestBuilder.setMinWordLen(query.getMinWordLen());
+			moreLikeThisQueryBuilder.minWordLength(query.getMinWordLen());
 		}
 		if (query.getMaxWordLen() != null) {
-			requestBuilder.setMaxWordLen(query.getMaxWordLen());
+			moreLikeThisQueryBuilder.maxWordLength(query.getMaxWordLen());
 		}
 		if (query.getBoostTerms() != null) {
-			requestBuilder.setBoostTerms(query.getBoostTerms());
+			moreLikeThisQueryBuilder.boostTerms(query.getBoostTerms());
 		}
 
-		SearchResponse response = getSearchResponse(requestBuilder.execute());
-		return resultsMapper.mapResults(response, clazz, query.getPageable());*/
+		final NativeSearchQuery build = new NativeSearchQueryBuilder().withQuery(moreLikeThisQueryBuilder).build();
+		return queryForPage(build,clazz);
 	}
 
 	private SearchResponse doSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
@@ -1052,11 +1037,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		}
 	}
 
+	//TODO : remove or waitForOperation
 	@Override
 	public void refresh(String indexName, boolean waitForOperation) {
 		client.admin().indices().refresh(refreshRequest(indexName)).actionGet();
 	}
 
+	//TODO : remove or waitForOperation
 	@Override
 	public <T> void refresh(Class<T> clazz, boolean waitForOperation) {
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
@@ -1092,13 +1079,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
-	public Set<String> queryForAlias(String indexName) {
-		ClusterStateRequest clusterStateRequest = Requests.clusterStateRequest()
-				.routingTable(true).nodes(true).indices(indexName);
-		//TODO: ako check how to find aliases for index
-/*		Iterator<String> iterator = client.admin().cluster().state(clusterStateRequest).actionGet().getState().getMetaData().aliases().keysIt();
-		return newHashSet(iterator);*/
-		return null;
+	public List<AliasMetaData> queryForAlias(String indexName) {
+		return client.admin().indices().getAliases(new GetAliasesRequest().indices(indexName))
+				.actionGet().getAliases().get(indexName);
 	}
 
 	@Override
