@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -146,7 +146,7 @@ public class ElasticsearchTemplateGeoTests {
 		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery, LocationMarkerEntity.class);
 
 		//then
-		assertThat(geoAuthorsForGeoCriteria.size(), is(3));
+		assertThat(geoAuthorsForGeoCriteria.size(), is(2));
 	}
 
 	@Test
@@ -180,7 +180,7 @@ public class ElasticsearchTemplateGeoTests {
 		//given
 		loadAnnotationBaseEntities();
 		CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(
-				new Criteria("locationAsArray").within("u1044", "1km"));
+				new Criteria("locationAsArray").within("u1044", "3km"));
 		//when
 		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery, LocationMarkerEntity.class);
 
