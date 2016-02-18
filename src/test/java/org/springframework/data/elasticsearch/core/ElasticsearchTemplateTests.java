@@ -41,10 +41,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -490,7 +487,8 @@ public class ElasticsearchTemplateTests {
 		// when
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(matchAllQuery())
-				.withScriptField(new ScriptField("scriptedRate", new Script("doc['rate'].value * factor", ScriptService.ScriptType.INLINE, "groovy", params)))
+				.withScriptField(new ScriptField("scriptedRate",
+						new Script("doc['rate'].value * factor", ScriptService.ScriptType.INLINE, null , params)))
 						.build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		// then
@@ -521,7 +519,6 @@ public class ElasticsearchTemplateTests {
 	@Test
 	@Ignore("By default, the search request will fail if there is no mapping associated with a field. The ignore_unmapped option allows to ignore fields that have no mapping and not sort by them")
 	public void shouldReturnSortedPageableResultsGivenStringQuery() {
-		// todo
 		// given
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity = new SampleEntity();
@@ -633,12 +630,12 @@ public class ElasticsearchTemplateTests {
 		// when
 		Page<String> page = elasticsearchTemplate.queryForPage(searchQuery, String.class, new SearchResultMapper() {
 			@Override
-			public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+			public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<String> values = new ArrayList<String>();
 				for (SearchHit searchHit : response.getHits()) {
 					values.add((String) searchHit.field("message").value());
 				}
-				return new FacetedPageImpl<T>((List<T>) values);
+				return new PageImpl<T>((List<T>) values);
 			}
 		});
 		// then
@@ -763,7 +760,7 @@ public class ElasticsearchTemplateTests {
 		while (hasRecords) {
 			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new SearchResultMapper() {
 				@Override
-				public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 					List<SampleEntity> result = new ArrayList<SampleEntity>();
 					for (SearchHit searchHit : response.getHits()) {
 						String message = searchHit.getFields().get("message").getValue();
@@ -774,7 +771,7 @@ public class ElasticsearchTemplateTests {
 					}
 
 					if (result.size() > 0) {
-						return new FacetedPageImpl<T>((List<T>) result);
+						return new PageImpl<T>((List<T>) result);
 					}
 					return null;
 				}
@@ -814,7 +811,7 @@ public class ElasticsearchTemplateTests {
 		while (hasRecords) {
 			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 10000L, new SearchResultMapper() {
 				@Override
-				public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 					List<SampleEntity> result = new ArrayList<SampleEntity>();
 					for (SearchHit searchHit : response.getHits()) {
 						String message = searchHit.getFields().get("message").getValue();
@@ -825,7 +822,7 @@ public class ElasticsearchTemplateTests {
 					}
 
 					if (result.size() > 0) {
-						return new FacetedPageImpl<T>((List<T>) result);
+						return new PageImpl<T>((List<T>) result);
 					}
 					return null;
 				}
@@ -862,7 +859,7 @@ public class ElasticsearchTemplateTests {
 		while (hasRecords) {
 			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new SearchResultMapper() {
 				@Override
-				public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 					List<SampleEntity> chunk = new ArrayList<SampleEntity>();
 					for (SearchHit searchHit : response.getHits()) {
 						if (response.getHits().getHits().length <= 0) {
@@ -874,7 +871,7 @@ public class ElasticsearchTemplateTests {
 						chunk.add(user);
 					}
 					if (chunk.size() > 0) {
-						return new FacetedPageImpl<T>((List<T>) chunk);
+						return new PageImpl<T>((List<T>) chunk);
 					}
 					return null;
 				}
@@ -906,7 +903,7 @@ public class ElasticsearchTemplateTests {
 		while (hasRecords) {
 			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new SearchResultMapper() {
 				@Override
-				public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 					List<SampleEntity> chunk = new ArrayList<SampleEntity>();
 					for (SearchHit searchHit : response.getHits()) {
 						if (response.getHits().getHits().length <= 0) {
@@ -918,7 +915,7 @@ public class ElasticsearchTemplateTests {
 						chunk.add(user);
 					}
 					if (chunk.size() > 0) {
-						return new FacetedPageImpl<T>((List<T>) chunk);
+						return new PageImpl<T>((List<T>) chunk);
 					}
 					return null;
 				}
@@ -1209,7 +1206,7 @@ public class ElasticsearchTemplateTests {
 
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapper() {
 			@Override
-			public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+			public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<SampleEntity> chunk = new ArrayList<SampleEntity>();
 				for (SearchHit searchHit : response.getHits()) {
 					if (response.getHits().getHits().length <= 0) {
@@ -1222,7 +1219,7 @@ public class ElasticsearchTemplateTests {
 					chunk.add(user);
 				}
 				if (chunk.size() > 0) {
-					return new FacetedPageImpl<T>((List<T>) chunk);
+					return new PageImpl<T>((List<T>) chunk);
 				}
 				return null;
 			}
@@ -1275,7 +1272,7 @@ public class ElasticsearchTemplateTests {
 		// then
 		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapper() {
 			@Override
-			public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+			public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<SampleEntity> values = new ArrayList<SampleEntity>();
 				for (SearchHit searchHit : response.getHits()) {
 					SampleEntity sampleEntity = new SampleEntity();
@@ -1283,7 +1280,7 @@ public class ElasticsearchTemplateTests {
 					sampleEntity.setMessage((String) searchHit.getSource().get("message"));
 					values.add(sampleEntity);
 				}
-				return new FacetedPageImpl<T>((List<T>) values);
+				return new PageImpl<T>((List<T>) values);
 			}
 		});
 		assertThat(page, is(notNullValue()));
@@ -1445,7 +1442,7 @@ public class ElasticsearchTemplateTests {
 				.withTypes(TYPE_NAME).withQuery(matchAllQuery()).build();
 		Page<Map> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, Map.class, new SearchResultMapper() {
 			@Override
-			public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+			public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<Map> chunk = new ArrayList<Map>();
 				for (SearchHit searchHit : response.getHits()) {
 					if (response.getHits().getHits().length <= 0) {
@@ -1460,7 +1457,7 @@ public class ElasticsearchTemplateTests {
 					chunk.add(person);
 				}
 				if (chunk.size() > 0) {
-					return new FacetedPageImpl<T>((List<T>) chunk);
+					return new PageImpl<T>((List<T>) chunk);
 				}
 				return null;
 			}
@@ -1959,7 +1956,7 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withTypes("hetro").withIndices(INDEX_1_NAME, INDEX_2_NAME).build();
 		Page<ResultAggregator> page = elasticsearchTemplate.queryForPage(searchQuery, ResultAggregator.class, new SearchResultMapper() {
 			@Override
-			public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+			public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<ResultAggregator> values = new ArrayList<ResultAggregator>();
 				for (SearchHit searchHit : response.getHits()) {
 					String id = String.valueOf(searchHit.getSource().get("id"));
@@ -1967,7 +1964,7 @@ public class ElasticsearchTemplateTests {
 					String lastName = StringUtils.isNotEmpty((String) searchHit.getSource().get("lastName")) ? (String) searchHit.getSource().get("lastName") : "";
 					values.add(new ResultAggregator(id, firstName, lastName));
 				}
-				return new FacetedPageImpl<T>((List<T>) values);
+				return new PageImpl<T>((List<T>) values);
 			}
 		});
 

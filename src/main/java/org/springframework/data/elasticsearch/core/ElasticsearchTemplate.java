@@ -76,10 +76,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
@@ -259,12 +256,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
-	public <T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz) {
+	public <T> Page<T> queryForPage(SearchQuery query, Class<T> clazz) {
 		return queryForPage(query, clazz, resultsMapper);
 	}
 
 	@Override
-	public <T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
+	public <T> Page<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
 		SearchResponse response = doSearch(prepareSearch(query, clazz), query);
 		return mapper.mapResults(response, clazz, query.getPageable());
 	}
@@ -328,12 +325,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
-	public <T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz) {
+	public <T> Page<T> queryForPage(StringQuery query, Class<T> clazz) {
 		return queryForPage(query, clazz, resultsMapper);
 	}
 
 	@Override
-	public <T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper) {
+	public <T> Page<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper) {
 		SearchResponse response = getSearchResponse(prepareSearch(query, clazz).setQuery(query.getSource()).execute());
 		return mapper.mapResults(response, clazz, query.getPageable());
 	}
@@ -668,7 +665,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		while (hasRecords) {
 			Page<String> page = scroll(scrollId, 5000, new SearchResultMapper() {
 				@Override
-				public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 					List<String> result = new ArrayList<String>();
 					for (SearchHit searchHit : response.getHits()) {
 						String id = searchHit.getId();
@@ -676,7 +673,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 					}
 
 					if (result.size() > 0) {
-						return new FacetedPageImpl<T>((List<T>) result);
+						return new PageImpl<T>((List<T>) result);
 					}
 					return null;
 				}
@@ -863,18 +860,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				searchRequest.addScriptField(scriptedField.fieldName(), scriptedField.script());
 			}
 		}
-
-/*
-		if (CollectionUtils.isNotEmpty(searchQuery.getFacets())) {
-			for (FacetRequest facetRequest : searchQuery.getFacets()) {
-				FacetBuilder facet = facetRequest.getFacet();
-				if (facetRequest.applyQueryFilter() && searchQuery.getFilter() != null) {
-					facet.facetFilter(searchQuery.getFilter());
-				}
-				searchRequest.addFacet(facet);
-			}
-		}
-*/
 
 		if (searchQuery.getHighlightFields() != null) {
 			for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {

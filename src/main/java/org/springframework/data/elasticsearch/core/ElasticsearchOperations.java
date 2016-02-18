@@ -173,7 +173,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @return
 	 */
-	<T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz);
+	<T> Page<T> queryForPage(SearchQuery query, Class<T> clazz);
 
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page} using custom mapper
@@ -182,7 +182,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @return
 	 */
-	<T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
+	<T> Page<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page}
@@ -200,7 +200,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @return
 	 */
-	<T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz);
+	<T> Page<T> queryForPage(StringQuery query, Class<T> clazz);
 
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page} using custom mapper
@@ -209,7 +209,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @return
 	 */
-	<T> FacetedPage<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper);
+	<T> Page<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
 	 * Executes the given {@link CriteriaQuery} against elasticsearch and return result as {@link CloseableIterator}.
@@ -430,15 +430,6 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	boolean deleteIndex(String indexName);
-
-	/**
-	 * Deletes a type in an index
-	 *
-	 * @param index
-	 * @param type
-	 */
-	//TODo: ako remove this
-	/*void deleteType(String index, String type);*/
 
 	/**
 	 * check if index is exists
