@@ -350,7 +350,6 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldExecuteExpression() {
 		// given
-		// todo
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
 		// first document
 		String documentId = randomNumeric(5);

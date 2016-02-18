@@ -34,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.entities.Car;
 
 /**
@@ -63,7 +64,7 @@ public class DefaultResultMapperTests {
 		when(response.getHits()).thenReturn(searchHits);
 
 		//When
-		FacetedPage<Car> page = resultMapper.mapResults(response, Car.class, null);
+		Page<Car> page = resultMapper.mapResults(response, Car.class, null);
 
 		//Then
 		assertThat(page.hasContent(), is(true));
@@ -81,7 +82,7 @@ public class DefaultResultMapperTests {
 		when(response.getHits()).thenReturn(searchHits);
 
 		//When
-		FacetedPage<Car> page = resultMapper.mapResults(response, Car.class, null);
+		Page<Car> page = resultMapper.mapResults(response, Car.class, null);
 
 		//Then
 		assertThat(page.hasContent(), is(true));

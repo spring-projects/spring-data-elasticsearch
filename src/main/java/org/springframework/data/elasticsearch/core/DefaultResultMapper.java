@@ -35,6 +35,8 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -72,7 +74,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	}
 
 	@Override
-	public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+	public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 		long totalHits = response.getHits().totalHits();
 		List<T> results = new ArrayList<T>();
 		for (SearchHit hit : response.getHits()) {
@@ -88,17 +90,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 				results.add(result);
 			}
 		}
-		//TODO: ako facets !!!
-/*		List<FacetResult> facets = new ArrayList<FacetResult>();
-		if (response.getFacets() != null) {
-			for (Facet facet : response.getFacets()) {
-				FacetResult facetResult = DefaultFacetMapper.parse(facet);
-				if (facetResult != null) {
-					facets.add(facetResult);
-				}
-			}
-		}*/
-		return new FacetedPageImpl<T>(results, pageable, totalHits, null );
+		return new PageImpl<T>(results, pageable, totalHits);
 	}
 
     private <T> void populateScriptFields(T result, SearchHit hit) {
