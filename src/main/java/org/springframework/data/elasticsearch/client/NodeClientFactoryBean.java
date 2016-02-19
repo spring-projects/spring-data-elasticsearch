@@ -76,9 +76,7 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 		nodeClient = (NodeClient) nodeBuilder().settings(Settings.builder().put(loadConfig())
 				.put("http.enabled", String.valueOf(this.enableHttp))
 				.put("path.home", this.pathHome)
-				.put("path.data", this.pathData)
-						.put("script.inline", "on")
-		)
+				.put("path.data", this.pathData))
 				.clusterName(this.clusterName).local(this.local).node()
 				.client();
 	}
