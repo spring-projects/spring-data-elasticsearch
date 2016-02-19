@@ -1,20 +1,3 @@
 #enabled scripts - this require groovy
 script.inline: true
 script.indexed: true
-#script.groovy.sandbox.enabled: true
-#script.groovy.sandbox.enabled: true
-#script.engine.groovy.file.aggs: true
-#script.engine.groovy.file.mapping: true
-#script.engine.groovy.file.search: true
-#script.engine.groovy.file.update: true
-#script.engine.groovy.file.plugin: true
-#script.engine.groovy.indexed.aggs: true
-#script.engine.groovy.indexed.mapping: true
-#script.engine.groovy.indexed.search: true
-#script.engine.groovy.indexed.update: true
-#script.engine.groovy.indexed.plugin: true
-#script.engine.groovy.inline.aggs: true
-#script.engine.groovy.inline.mapping: true
-#script.engine.groovy.inline.search: true
-#script.engine.groovy.inline.update: true
-#script.engine.groovy.inline.plugin: true
