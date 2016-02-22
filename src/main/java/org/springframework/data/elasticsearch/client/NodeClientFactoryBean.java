@@ -84,7 +84,7 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 	private Settings loadConfig() {
 		if (StringUtils.isNotBlank(pathConfiguration)) {
 			try {
-				return Settings.builder().loadFromPath(Paths.get(new ClassPathResource(pathConfiguration).getURI())).build();
+				return Settings.builder().loadFromStream(pathConfiguration, getClass().getClassLoader().getResourceAsStream(pathConfiguration)).build();
 			} catch (IOException e) {
 				logger.error(String.format("Unable to read node configuration from file [%s]", pathConfiguration), e);
 			}
