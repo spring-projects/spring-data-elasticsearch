@@ -45,8 +45,8 @@ public class ArticleEntity {
 	@MultiField(
 			mainField = @Field(type = String, index = analyzed),
 			otherFields = {
-					@NestedField(dotSuffix = "untouched", type = String, store = true, index = not_analyzed),
-					@NestedField(dotSuffix = "sort", type = String, store = true, indexAnalyzer = "keyword")
+					@NestedField(suffix = "untouched", type = String, store = true, index = not_analyzed),
+					@NestedField(suffix = "sort", type = String, store = true, indexAnalyzer = "keyword")
 			}
 	)
 	private List<String> authors = new ArrayList<String>();

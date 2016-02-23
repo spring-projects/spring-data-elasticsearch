@@ -267,7 +267,7 @@ class MappingBuilder {
 	 */
 	private static void addNestedFieldMapping(XContentBuilder builder, java.lang.reflect.Field field,
 											  NestedField annotation) throws IOException {
-		builder.startObject(field.getName() + "." + annotation.dotSuffix());
+		builder.startObject(annotation.suffix());
 		builder.field(FIELD_STORE, annotation.store());
 		if (FieldType.Auto != annotation.type()) {
 			builder.field(FIELD_TYPE, annotation.type().name().toLowerCase());
