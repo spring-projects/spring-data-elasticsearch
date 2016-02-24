@@ -27,11 +27,10 @@ import org.springframework.data.elasticsearch.entities.SampleDateMappingEntity;
  * @author Jakub Vavrik
  * @author Mohsin Husen
  */
-public class SimpleElasticsearchDateMappingTest {
+public class SimpleElasticsearchDateMappingTests {
 
 	private static final String EXPECTED_MAPPING = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true," +
-			"\"type\":\"string\",\"index\":\"not_analyzed\",\"search_analyzer\":\"standard\",\"index_analyzer\"" +
-			":\"standard\"},\"customFormatDate\":{\"store\":false,\"type\":\"date\",\"format\":\"dd.MM.yyyy hh:mm\"}," +
+			"\"type\":\"string\",\"index\":\"not_analyzed\",\"analyzer\":\"standard\"},\"customFormatDate\":{\"store\":false,\"type\":\"date\",\"format\":\"dd.MM.yyyy hh:mm\"}," +
 			"\"defaultFormatDate\":{\"store\":false,\"type\":\"date\"},\"basicFormatDate\":{\"store\":false,\"" +
 			"type\":\"date\",\"format\":\"basic_date\"}}}}";
 

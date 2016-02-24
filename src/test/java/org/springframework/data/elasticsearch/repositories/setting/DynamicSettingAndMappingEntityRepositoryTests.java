@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		elasticsearchTemplate.deleteIndex(DynamicSettingAndMappingEntity.class);
 		elasticsearchTemplate.createIndex(DynamicSettingAndMappingEntity.class);
 		elasticsearchTemplate.putMapping(DynamicSettingAndMappingEntity.class);
-		elasticsearchTemplate.refresh(DynamicSettingAndMappingEntity.class, true);
+		elasticsearchTemplate.refresh(DynamicSettingAndMappingEntity.class);
 	}
 
 	/*
@@ -129,7 +129,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		//given
 		elasticsearchTemplate.deleteIndex(DynamicSettingAndMappingEntity.class);
 		elasticsearchTemplate.createIndex(DynamicSettingAndMappingEntity.class);
-		elasticsearchTemplate.refresh(DynamicSettingAndMappingEntity.class, true);
+		elasticsearchTemplate.refresh(DynamicSettingAndMappingEntity.class);
 		//when
 		String mappings = "{\n" +
 				"    \"test-setting-type\" : {\n" +
@@ -139,7 +139,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 				"    }\n" +
 				"}";
 		elasticsearchTemplate.putMapping(DynamicSettingAndMappingEntity.class, mappings);
-		elasticsearchTemplate.refresh(DynamicSettingAndMappingEntity.class, true);
+		elasticsearchTemplate.refresh(DynamicSettingAndMappingEntity.class);
 		//then
 		Map mapping = elasticsearchTemplate.getMapping(DynamicSettingAndMappingEntity.class);
 		Map properties = (Map) mapping.get("properties");

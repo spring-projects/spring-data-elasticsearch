@@ -87,6 +87,6 @@ public class DefaultEntityMapperTests {
 	}
 
 	private String pointTemplate(String name, Point point) {
-		return String.format("\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getY(), point.getX());
+		return String.format("\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
 	}
 }

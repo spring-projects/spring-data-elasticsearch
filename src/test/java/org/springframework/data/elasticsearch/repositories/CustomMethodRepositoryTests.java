@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ public class CustomMethodRepositoryTests {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
 		elasticsearchTemplate.putMapping(SampleEntity.class);
-		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		elasticsearchTemplate.refresh(SampleEntity.class);
 	}
 
 	@Test
@@ -581,7 +581,7 @@ public class CustomMethodRepositoryTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByLocationWithin(new Point(3.0875d, 45.7806d), new Distance(2, Metrics.KILOMETERS), new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByLocationWithin(new Point(45.7806d, 3.0875d), new Distance(2, Metrics.KILOMETERS), new PageRequest(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -617,7 +617,7 @@ public class CustomMethodRepositoryTests {
 		assertThat(pageAll.getTotalElements(), is(equalTo(2L)));
 
 		// when
-		Page<SampleEntity> page = repository.findByLocationNear(new Box(new Point(3d, 46d), new Point(4d, 45d)), new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByLocationNear(new Box(new Point(46d, 3d), new Point(45d, 4d)), new PageRequest(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -637,7 +637,7 @@ public class CustomMethodRepositoryTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByLocationNear(new Point(3.0875d, 45.7806d), new Distance(2, Metrics.KILOMETERS), new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByLocationNear(new Point(45.7806d, 3.0875d), new Distance(2, Metrics.KILOMETERS), new PageRequest(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -1124,7 +1124,7 @@ public class CustomMethodRepositoryTests {
 		repository.save(sampleEntity2);
 
 		// when
-		long count = repository.countByLocationWithin(new Point(3.0875d, 45.7806d), new Distance(2, Metrics.KILOMETERS));
+		long count = repository.countByLocationWithin(new Point(45.7806d, 3.0875d), new Distance(2, Metrics.KILOMETERS));
 		// then
 		assertThat(count, is(equalTo(1L)));
 	}
@@ -1156,7 +1156,7 @@ public class CustomMethodRepositoryTests {
 		repository.save(sampleEntity2);
 
 		// when
-		long count = repository.countByLocationNear(new Box(new Point(3d, 46d), new Point(4d, 45d)));
+		long count = repository.countByLocationNear(new Box(new Point(46d, 3d), new Point(45d, 4d)));
 		// then
 		assertThat(count, is(equalTo(1L)));
 	}
@@ -1188,7 +1188,7 @@ public class CustomMethodRepositoryTests {
 		repository.save(sampleEntity2);
 
 		// when
-		long count = repository.countByLocationNear(new Point(3.0875d, 45.7806d), new Distance(2, Metrics.KILOMETERS));
+		long count = repository.countByLocationNear(new Point(45.7806d, 3.0875d), new Distance(2, Metrics.KILOMETERS));
 		// then
 		assertThat(count, is(equalTo(1L)));
 	}

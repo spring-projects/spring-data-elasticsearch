@@ -91,7 +91,7 @@ public class MappingBuilderTests {
 		double price = 2.34;
 		String id = "abc";
 		elasticsearchTemplate.index(buildIndex(StockPrice.builder().id(id).symbol(symbol).price(new BigDecimal(price)).build()));
-		elasticsearchTemplate.refresh(StockPrice.class, true);
+		elasticsearchTemplate.refresh(StockPrice.class);
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		List<StockPrice> result = elasticsearchTemplate.queryForList(searchQuery, StockPrice.class);
@@ -138,7 +138,7 @@ public class MappingBuilderTests {
 		String message = "msg";
 		String id = "abc";
 		elasticsearchTemplate.index(new SampleInheritedEntityBuilder(id).createdDate(createdDate).message(message).buildIndex());
-		elasticsearchTemplate.refresh(SampleInheritedEntity.class, true);
+		elasticsearchTemplate.refresh(SampleInheritedEntity.class);
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		List<SampleInheritedEntity> result = elasticsearchTemplate.queryForList(searchQuery, SampleInheritedEntity.class);

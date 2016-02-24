@@ -639,31 +639,24 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> void delete(DeleteQuery deleteQuery, Class<T> clazz) {
 
-		//TODO : clean up expose parameter for scan and scroll
-		String iName = deleteQuery.getIndex();
-		String tName = deleteQuery.getType();
-		if(clazz!=null){
-			ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
-			iName = persistentEntity.getIndexName();
-			tName =persistentEntity.getIndexType();
-		}
+		String indexName = isNotBlank(deleteQuery.getIndex()) ? deleteQuery.getIndex() : getPersistentEntityFor(clazz).getIndexName();
+		String typeName = isNotBlank(deleteQuery.getType()) ? deleteQuery.getType() : getPersistentEntityFor(clazz).getIndexType();
+		Integer pageSize = deleteQuery.getPageSize() != null ? deleteQuery.getPageSize() : 1000;
+		Long scrollTimeInMillis = deleteQuery.getScrollTimeInMillis() != null ? deleteQuery.getScrollTimeInMillis() : 10000l;
 
-		final String indexName = iName;
-		final String typeName = tName;
-
-				SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery())
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery())
 				.withIndices(indexName)
 				.withTypes(typeName)
-				.withPageable(new PageRequest(0, 1000))
+				.withPageable(new PageRequest(0, pageSize))
 				.build();
 
-		final String scrollId = scan(searchQuery, 10000, true);
+		String scrollId = scan(searchQuery, scrollTimeInMillis, true);
 
-		final BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
+		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
 		List<String> ids = new ArrayList<String>();
 		boolean hasRecords = true;
 		while (hasRecords) {
-			Page<String> page = scroll(scrollId, 5000, new SearchResultMapper() {
+			Page<String> page = scroll(scrollId, scrollTimeInMillis, new SearchResultMapper() {
 				@Override
 				public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 					List<String> result = new ArrayList<String>();
@@ -671,7 +664,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 						String id = searchHit.getId();
 						result.add(id);
 					}
-
 					if (result.size() > 0) {
 						return new PageImpl<T>((List<T>) result);
 					}
@@ -693,7 +685,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			bulkRequestBuilder.execute().actionGet();
 		}
 
-		refresh(indexName, false);
 	}
 
 	@Override
@@ -802,7 +793,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz) {
-		//todo : clean up
+
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
 		String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName() : persistentEntity.getIndexName();
 		String type = isNotBlank(query.getType()) ? query.getType() : persistentEntity.getIndexType();
@@ -811,8 +802,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		Assert.notNull(type, "No 'type' defined for MoreLikeThisQuery");
 		Assert.notNull(query.getId(), "No document id defined for MoreLikeThisQuery");
 
-		final MoreLikeThisQueryBuilder.Item item = new MoreLikeThisQueryBuilder.Item(indexName, type, query.getId());
-		MoreLikeThisQueryBuilder moreLikeThisQueryBuilder = moreLikeThisQuery().addLikeItem(item);
+		MoreLikeThisQueryBuilder moreLikeThisQueryBuilder = moreLikeThisQuery()
+				.addLikeItem(new MoreLikeThisQueryBuilder.Item(indexName, type, query.getId()));
 
 		if (query.getMinTermFreq() != null) {
 			moreLikeThisQueryBuilder.minTermFreq(query.getMinTermFreq());
@@ -839,8 +830,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			moreLikeThisQueryBuilder.boostTerms(query.getBoostTerms());
 		}
 
-		final NativeSearchQuery build = new NativeSearchQueryBuilder().withQuery(moreLikeThisQueryBuilder).build();
-		return queryForPage(build,clazz);
+		return queryForPage(new NativeSearchQueryBuilder().withQuery(moreLikeThisQueryBuilder).build(), clazz);
 	}
 
 	private SearchResponse doSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
@@ -866,7 +856,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				searchRequest.addHighlightedField(highlightField);
 			}
 		}
-		
+
 		if (CollectionUtils.isNotEmpty(searchQuery.getIndicesBoost())) {
 			for (IndexBoost indexBoost : searchQuery.getIndicesBoost()) {
 				searchRequest.addIndexBoost(indexBoost.getIndexName(), indexBoost.getBoost());
@@ -1022,18 +1012,15 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		}
 	}
 
-	//TODO : remove or waitForOperation
 	@Override
-	public void refresh(String indexName, boolean waitForOperation) {
+	public void refresh(String indexName) {
+		Assert.notNull(indexName, "No index defined for refresh()");
 		client.admin().indices().refresh(refreshRequest(indexName)).actionGet();
 	}
 
-	//TODO : remove or waitForOperation
 	@Override
-	public <T> void refresh(Class<T> clazz, boolean waitForOperation) {
-		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
-		client.admin().indices()
-				.refresh(refreshRequest(persistentEntity.getIndexName())).actionGet();
+	public <T> void refresh(Class<T> clazz) {
+		refresh(getPersistentEntityFor(clazz).getIndexName());
 	}
 
 	@Override

@@ -60,7 +60,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
-		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		elasticsearchTemplate.refresh(SampleEntity.class);
 	}
 
 	@Test
@@ -310,6 +310,8 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.save(sampleEntity);
 		// when
 		long result = repository.deleteById(documentId);
+		repository.refresh();
+
 		// then
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
 		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
@@ -343,6 +345,7 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.save(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 		// when
 		List<SampleEntity> result = repository.deleteByAvailable(true);
+		repository.refresh();
 		// then
 		assertThat(result.size(), equalTo(2));
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
@@ -373,6 +376,7 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.save(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 		// when
 		List<SampleEntity> result = repository.deleteByMessage("hello world 3");
+		repository.refresh();
 		// then
 		assertThat(result.size(), equalTo(1));
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
@@ -403,13 +407,12 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.save(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 		// when
 		repository.deleteByType("article");
+		repository.refresh();
 		// then
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements(), equalTo(2L));
 	}
-
-
 
 	@Test
 	public void shouldDeleteEntity() {
@@ -492,7 +495,6 @@ public class SimpleElasticsearchRepositoryTests {
 
 	@Test
 	public void shouldSortByGivenField() {
-		// todo
 		// given
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity = new SampleEntity();

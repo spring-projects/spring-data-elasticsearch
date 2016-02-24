@@ -30,7 +30,7 @@ import static org.mockito.Mockito.doReturn;
  * @author Florian Hopf
  */
 @RunWith(MockitoJUnitRunner.class)
-public class ElasticsearchEntityInformationCreatorImplTest {
+public class ElasticsearchEntityInformationCreatorImplTests {
 
 	@Mock
 	private MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;

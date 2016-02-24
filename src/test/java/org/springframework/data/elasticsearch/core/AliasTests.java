@@ -56,11 +56,11 @@ public class AliasTests {
 
 		elasticsearchTemplate.deleteIndex(INDEX_NAME_1);
 		elasticsearchTemplate.createIndex(INDEX_NAME_1, settings);
-		elasticsearchTemplate.refresh(INDEX_NAME_1, true);
+		elasticsearchTemplate.refresh(INDEX_NAME_1);
 
 		elasticsearchTemplate.deleteIndex(INDEX_NAME_2);
 		elasticsearchTemplate.createIndex(INDEX_NAME_2, settings);
-		elasticsearchTemplate.refresh(INDEX_NAME_2, true);
+		elasticsearchTemplate.refresh(INDEX_NAME_2);
 	}
 
 	@Test
@@ -127,7 +127,7 @@ public class AliasTests {
 				.build();
 
 		elasticsearchTemplate.index(indexQuery);
-		elasticsearchTemplate.refresh(INDEX_NAME_1, true);
+		elasticsearchTemplate.refresh(INDEX_NAME_1);
 
 		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withIndices(alias).withTypes(TYPE_NAME).build();
@@ -145,7 +145,7 @@ public class AliasTests {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
 		elasticsearchTemplate.putMapping(SampleEntity.class);
-		elasticsearchTemplate.refresh(SampleEntity.class, true);
+		elasticsearchTemplate.refresh(SampleEntity.class);
 	}
 
 	/*

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.data.elasticsearch.repository.support;
 
 import static org.hamcrest.core.Is.*;
@@ -20,7 +35,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/repository-query-support.xml")
-public class QueryKeywordsTest {
+public class QueryKeywordsTests {
 
 	@Autowired
 	private ProductRepository repository;
@@ -33,7 +48,7 @@ public class QueryKeywordsTest {
 		elasticsearchTemplate.deleteIndex(Product.class);
 		elasticsearchTemplate.createIndex(Product.class);
 		elasticsearchTemplate.putMapping(Product.class);
-		elasticsearchTemplate.refresh(Product.class, true);
+		elasticsearchTemplate.refresh(Product.class);
 
 		repository.save(Arrays.asList(
 				Product.builder().id("1").name("Sugar").text("Cane sugar").price(1.0f).available(false).build()
@@ -42,7 +57,7 @@ public class QueryKeywordsTest {
 				, Product.builder().id("4").name("Salt").text("Rock salt").price(1.9f).available(true).build()
 				, Product.builder().id("5").name("Salt").text("Sea salt").price(2.1f).available(false).build()));
 
-		elasticsearchTemplate.refresh(Product.class, true);
+		elasticsearchTemplate.refresh(Product.class);
 	}
 
 	@Test

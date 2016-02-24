@@ -52,7 +52,7 @@ public class ElasticsearchTemplateGeoTests {
 	private void loadClassBaseEntities() {
 		elasticsearchTemplate.deleteIndex(AuthorMarkerEntity.class);
 		elasticsearchTemplate.createIndex(AuthorMarkerEntity.class);
-		elasticsearchTemplate.refresh(AuthorMarkerEntity.class, true);
+		elasticsearchTemplate.refresh(AuthorMarkerEntity.class);
 		elasticsearchTemplate.putMapping(AuthorMarkerEntity.class);
 
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
@@ -60,13 +60,13 @@ public class ElasticsearchTemplateGeoTests {
 		indexQueries.add(new AuthorMarkerEntityBuilder("2").name("Mohsin Husen").location(51.5171d, 0.1062d).buildIndex());
 		indexQueries.add(new AuthorMarkerEntityBuilder("3").name("Rizwan Idrees").location(51.5171d, 0.1062d).buildIndex());
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(AuthorMarkerEntity.class, true);
+		elasticsearchTemplate.refresh(AuthorMarkerEntity.class);
 	}
 
 	private void loadAnnotationBaseEntities() {
 		elasticsearchTemplate.deleteIndex(LocationMarkerEntity.class);
 		elasticsearchTemplate.createIndex(LocationMarkerEntity.class);
-		elasticsearchTemplate.refresh(LocationMarkerEntity.class, true);
+		elasticsearchTemplate.refresh(LocationMarkerEntity.class);
 		elasticsearchTemplate.putMapping(LocationMarkerEntity.class);
 
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
@@ -96,7 +96,7 @@ public class ElasticsearchTemplateGeoTests {
 		indexQueries.add(buildIndex(location3));
 
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(AuthorMarkerEntity.class, true);
+		elasticsearchTemplate.refresh(AuthorMarkerEntity.class);
 	}
 
 	@Test
@@ -254,8 +254,8 @@ public class ElasticsearchTemplateGeoTests {
 		loadClassBaseEntities();
 		CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
 				new Criteria("location").boundedBy(
-						new Point(0, 53.5171d),
-						new Point(0.2062d, 49.5171d))
+						new Point(53.5171d, 0),
+						new Point(49.5171d, 0.2062d ))
 		);
 		//when
 		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3, AuthorMarkerEntity.class);

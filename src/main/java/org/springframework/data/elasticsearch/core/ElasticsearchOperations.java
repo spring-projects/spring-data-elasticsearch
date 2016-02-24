@@ -461,17 +461,17 @@ public interface ElasticsearchOperations {
 	 * refresh the index
 	 *
 	 * @param indexName
-	 * @param waitForOperation
+	 *
 	 */
-	void refresh(String indexName, boolean waitForOperation);
+	void refresh(String indexName);
 
 	/**
 	 * refresh the index
 	 *
 	 * @param clazz
-	 * @param waitForOperation
+	 *
 	 */
-	<T> void refresh(Class<T> clazz, boolean waitForOperation);
+	<T> void refresh(Class<T> clazz);
 
 	/**
 	 * Returns scroll id for criteria query

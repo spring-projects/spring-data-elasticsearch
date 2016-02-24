@@ -108,7 +108,6 @@ class CriteriaFilterProcessor {
 		}
 		QueryBuilder filter = null;
 
-		//todo : expose more option for GeoPoint i.e GeoDistance.PLANE or GeoDistance.ARC
 		switch (key) {
 			case WITHIN: {
 				GeoDistanceQueryBuilder geoDistanceQueryBuilder = QueryBuilders.geoDistanceQuery(fieldName);

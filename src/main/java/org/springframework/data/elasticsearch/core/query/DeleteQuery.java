@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,8 @@ public class DeleteQuery {
 	private QueryBuilder query;
 	private String index;
 	private String type;
+	private Integer pageSize;
+	private Long scrollTimeInMillis;
 
 	public QueryBuilder getQuery() {
 		return query;
@@ -51,5 +53,21 @@ public class DeleteQuery {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public Integer getPageSize() {
+		return pageSize;
+	}
+
+	public void setPageSize(Integer pageSize) {
+		this.pageSize = pageSize;
+	}
+
+	public Long getScrollTimeInMillis() {
+		return scrollTimeInMillis;
+	}
+
+	public void setScrollTimeInMillis(Long scrollTimeInMillis) {
+		this.scrollTimeInMillis = scrollTimeInMillis;
 	}
 }

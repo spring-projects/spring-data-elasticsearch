@@ -11,7 +11,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/existing-index-repository-test.xml")
-public class CreateIndexFalseRepositoryTest {
+public class CreateIndexFalseRepositoryTests {
 
 	@Autowired
 	private CreateIndexFalseRepository repository;

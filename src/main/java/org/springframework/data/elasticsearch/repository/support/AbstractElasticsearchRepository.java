@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -140,7 +140,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	public <S extends T> S save(S entity) {
 		Assert.notNull(entity, "Cannot save 'null' entity.");
 		elasticsearchOperations.index(createIndexQuery(entity));
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		elasticsearchOperations.refresh(entityInformation.getIndexName());
 		return entity;
 	}
 
@@ -152,7 +152,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 			queries.add(createIndexQuery(s));
 		}
 		elasticsearchOperations.bulkIndex(queries);
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		elasticsearchOperations.refresh(entityInformation.getIndexName());
 		return entities;
 	}
 
@@ -169,7 +169,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 			queries.add(createIndexQuery(s));
 		}
 		elasticsearchOperations.bulkIndex(queries);
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		elasticsearchOperations.refresh(entityInformation.getIndexName());
 		return entities;
 	}
 
@@ -218,14 +218,14 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		Assert.notNull(id, "Cannot delete entity with id 'null'.");
 		elasticsearchOperations.delete(entityInformation.getIndexName(), entityInformation.getType(),
 				stringIdRepresentation(id));
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		elasticsearchOperations.refresh(entityInformation.getIndexName());
 	}
 
 	@Override
 	public void delete(T entity) {
 		Assert.notNull(entity, "Cannot delete 'null' entity.");
 		delete(extractIdFromBean(entity));
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		elasticsearchOperations.refresh(entityInformation.getIndexName());
 	}
 
 	@Override
@@ -241,7 +241,12 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		DeleteQuery deleteQuery = new DeleteQuery();
 		deleteQuery.setQuery(matchAllQuery());
 		elasticsearchOperations.delete(deleteQuery, getEntityClass());
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		elasticsearchOperations.refresh(entityInformation.getIndexName());
+	}
+
+	@Override
+	public void refresh() {
+		elasticsearchOperations.refresh(getEntityClass());
 	}
 
 	private IndexQuery createIndexQuery(T entity) {

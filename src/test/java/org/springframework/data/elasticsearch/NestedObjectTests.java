@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,15 +70,15 @@ public class NestedObjectTests {
 		elasticsearchTemplate.deleteIndex(Book.class);
 		elasticsearchTemplate.createIndex(Book.class);
 		elasticsearchTemplate.putMapping(Book.class);
-		elasticsearchTemplate.refresh(Book.class, true);
+		elasticsearchTemplate.refresh(Book.class);
 		elasticsearchTemplate.deleteIndex(Person.class);
 		elasticsearchTemplate.createIndex(Person.class);
 		elasticsearchTemplate.putMapping(Person.class);
-		elasticsearchTemplate.refresh(Person.class, true);
+		elasticsearchTemplate.refresh(Person.class);
 		elasticsearchTemplate.deleteIndex(PersonMultipleLevelNested.class);
 		elasticsearchTemplate.createIndex(PersonMultipleLevelNested.class);
 		elasticsearchTemplate.putMapping(PersonMultipleLevelNested.class);
-		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class, true);
+		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class);
 	}
 
 	@Test
@@ -130,7 +130,7 @@ public class NestedObjectTests {
 
 		elasticsearchTemplate.putMapping(Person.class);
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(Person.class, true);
+		elasticsearchTemplate.refresh(Person.class);
 
 		final QueryBuilder builder = nestedQuery("car", boolQuery().must(termQuery("car.name", "saturn")).must(termQuery("car.model", "imprezza")));
 
@@ -148,7 +148,7 @@ public class NestedObjectTests {
 		//when
 		elasticsearchTemplate.putMapping(PersonMultipleLevelNested.class);
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class, true);
+		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class);
 
 		//then
 		final GetQuery getQuery = new GetQuery();
@@ -185,7 +185,7 @@ public class NestedObjectTests {
 		//when
 		elasticsearchTemplate.putMapping(PersonMultipleLevelNested.class);
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class, true);
+		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class);
 
 		//then
 		final BoolQueryBuilder builder = boolQuery();
@@ -326,7 +326,7 @@ public class NestedObjectTests {
 
 		elasticsearchTemplate.putMapping(Person.class);
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(Person.class, true);
+		elasticsearchTemplate.refresh(Person.class);
 
 		final QueryBuilder builder = nestedQuery("books", boolQuery().must(termQuery("books.name", "java")));
 
@@ -373,7 +373,7 @@ public class NestedObjectTests {
 		indexQueries.add(indexQuery2);
 		//when
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(Book.class, true);
+		elasticsearchTemplate.refresh(Book.class);
 		//then
 		final SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(nestedQuery("buckets", termQuery("buckets.1", "test3")))
