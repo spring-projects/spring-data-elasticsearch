@@ -53,9 +53,19 @@ the appropriate dependency version.
 ```
 
 ###Note:
-Spring data elaticsearch until 1.0.0.RELEASE version is on elasticsearch 1.1.x library, which uses java 1.6 or later version.
+1) Spring data elaticsearch until 1.0.0.RELEASE version is on elasticsearch 1.1.x library, which uses java 1.6 or later version.
 
-From spring data elastic search 1.1.0.RELEASE (current) on, the version of elasticsearch 1.3.x  is supporting java 1.7 or later.
+2) From spring data elasticsearch 1.1.0.RELEASE the version of elasticsearch is 1.3.x  which is supporting java 1.7 or later.
+
+|   spring data elasticsearch     | elasticsearch |
+|:-------------------------------:|:-------------:|
+|           1.4.0.M1              |      1.7.3    |
+|           1.3.0.RELEASE         |      1.5.2    |
+|           1.3.0.RELEASE         |      1.5.2    |
+|           1.2.0.RELEASE         |      1.4.4    |
+|           1.1.0.RELEASE         |      1.3.2    |
+|           1.0.0.RELEASE         |      1.1.1    |
+
 
 ### ElasticsearchRepository
 A default implementation of ElasticsearchRepository, aligning to the generic Repository Interfaces, is provided. Spring can do the Repository implementation for you depending on method names in the interface definition.
