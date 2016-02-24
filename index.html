@@ -1,0 +1,89 @@
+---
+# The name of your project
+title: Spring Data Elasticsearch
+
+badges:
+
+  # Specify your project's twitter handle, if any. Delete if none.
+  #twitter: SpringData
+
+  # Customize your project's badges. Delete any entries that do not apply.
+  custom:
+    - name: Source (GitHub)
+      url:  https://github.com/spring-projects/spring-data-elasticsearch
+      icon: github
+
+    - name: Issues (JIRA)
+      url:  http://jira.springsource.org/browse/DATAES
+      icon: tracking
+
+    - name: CI (Bamboo)
+      url:  https://build.springsource.org/browse/SPRINGDATAES-DATAES
+      icon: ci
+
+    - name: Forum
+      url:  http://forum.spring.io/forum/spring-projects/data
+      icon: forum
+
+    - name: StackOverflow
+      url:  http://stackoverflow.com/questions/tagged/spring-data-elasticsearch
+      icon: stackoverflow
+
+#    - name: Metrics (SonarQube)
+#      url:  https://sonar.springsource.org/dashboard/index/org.springframework.data:spring-data-jpa
+#      icon: metrics
+
+---
+<!DOCTYPE HTML>
+<html lang="en-US">
+
+<!-- Specify the parent of this project (or delete if none) to influence the rendering of the breadcrumb -->
+{% capture parent_link %}
+[Spring Parent]({{ site.projects_site_url }}/spring-parent)
+{% endcapture %}
+
+
+{% capture billboard_description %}
+
+Spring Data for [Elasticsearch](https://www.elastic.co/products/elasticsearch) is part of the umbrella Spring Data project which aims to provide a familiar and consistent Spring-based programming model for for new datastores while retaining store-specific features and capabilities.
+
+{% endcapture %}
+
+{% capture main_content %}
+
+## Introduction
+
+The Spring Data Elasticsearch project provides integration with the Elasticsearch search engine. Key functional areas of Spring Data Elasticsearch are a POJO centric model for interacting with a Elastichsearch Documents and easily writing a Repository style data access layer.
+
+## Features
+
+* Spring configuration support using Java based @Configuration classes or an XML namespace for a ES clients instances.
+* ElasticsearchTemplate helper class that increases productivity performing common ES operations. Includes integrated object mapping between documents and POJOs.
+* Feature Rich Object Mapping integrated with Spring's Conversion Service
+* Annotation based mapping metadata but extensible to support other metadata formats
+* Automatic implementation of Repository interfaces including support for custom finder methods.
+* CDI support for repositories
+
+
+<span id="quick-start"></span>
+## Quick Start
+
+{% include download_widget.md %}
+
+{% endcapture %}
+
+{% capture related_resources %}
+
+### Sample Projects
+
+* Soon
+
+### Getting Started Guides
+
+* Soon
+
+
+{% endcapture %}
+
+{% include project_page.html %}
+</html>

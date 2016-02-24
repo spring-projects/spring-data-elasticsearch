@@ -13,17 +13,17 @@ redcarpet:
 baseurl: /gh-pages
 
 # Name of the project for display in places like page titles
-name: Spring Framework
+name: Spring Data Elasticsearch
 
 # ID of the project in the metadata API at spring.io (if this is not a
 # valid project ID the javascript widgets in the home page will not work)
-project: spring-framework
+project: spring-data-elasticsearch
 
 # Project github URL
-github_repo_url: http://github.com/spring-projects/spring-framework
+github_repo_url: http://github.com/spring-projects/spring-data-elasticsearch
 
 # Project forum URL
-forum: http://forum.spring.io/forum/spring-projects/container
+forum: http://forum.spring.io/forum/spring-projects/data
 
 # If you want to include a custom pom.xml or gradle template set these value to true and add _include files
 custom_pom_template: false
