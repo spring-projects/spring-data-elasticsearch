@@ -179,6 +179,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz, Object mapping) {
+		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
+		if (persistentEntity.getPartitions().length > 0) {
+			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName()+". Index is partitioned. You need to specify indexName");
+		}
 		return putMapping(getPersistentEntityFor(clazz).getIndexName(), getPersistentEntityFor(clazz).getIndexType(), mapping);
 	}
 

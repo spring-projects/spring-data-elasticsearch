@@ -43,4 +43,8 @@ public @interface Document {
 	String refreshInterval() default "1s";
 
 	String indexStoreType() default "fs";
+
+	String[] partitions() default {};
+
+	PartitionStrategy[] partitionStrategies() default {};
 }

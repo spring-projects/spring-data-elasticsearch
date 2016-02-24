@@ -15,18 +15,17 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
-import static org.springframework.util.StringUtils.*;
-
-import java.util.Locale;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Parent;
+import org.springframework.data.elasticsearch.annotations.PartitionStrategy;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.core.mapping.partition.PartitionKeyFormatter;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
@@ -34,6 +33,12 @@ import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
+
+import java.lang.reflect.Field;
+import java.util.Locale;
+
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  * Elasticsearch specific {@link org.springframework.data.mapping.PersistentEntity} implementation holding
@@ -57,6 +62,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private String parentType;
 	private ElasticsearchPersistentProperty parentIdProperty;
 	private String settingPath;
+	private String[] partitions;
+	private PartitionStrategy[] partitionStrategies;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 		super(typeInformation);
@@ -74,6 +81,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.replicas = typeInformation.getType().getAnnotation(Document.class).replicas();
 			this.refreshInterval = typeInformation.getType().getAnnotation(Document.class).refreshInterval();
 			this.indexStoreType = typeInformation.getType().getAnnotation(Document.class).indexStoreType();
+			this.partitions = typeInformation.getType().getAnnotation(Document.class).partitions();
+			this.partitionStrategies = typeInformation.getType().getAnnotation(Document.class).partitionStrategies();
 		}
 		if (clazz.isAnnotationPresent(Setting.class)) {
 			this.settingPath = typeInformation.getType().getAnnotation(Setting.class).settingPath();
@@ -88,10 +97,50 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
+	public PartitionStrategy[] getPartitionStrategies() {
+		return partitionStrategies;
+	}
+
+	@Override
+	public String[] getPartitions() {
+		return partitions;
+	}
+
+	@Override
 	public String getIndexName() {
+		if (partitions.length > 0) {
+			throw new ElasticsearchException("index for type "+indexType+" is partitionned. You need to use getIndexName(Object)");
+		}
 		Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
 		return expression.getValue(context, String.class);
 	}
+
+	@Override
+	public String getIndexName(Object entity) {
+		Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
+		String indexName = expression.getValue(context, String.class);
+		if (partitions.length == 0) return indexName;
+
+		String[] keys = new String[partitions.length];
+		for (int i = 0; i < partitions.length ; i++) {
+			Field field = ReflectionUtils.findField(entity.getClass(), partitions[i]);
+			if (field == null) {
+				throw new ElasticsearchException("impossible to evaluate partition key for field " + partitions[i]);
+			}
+			Object fieldValue = ReflectionUtils.getField(field, entity);
+			if (field == null) {
+				throw new ElasticsearchException("impossible to evaluate partition key for field " + partitions[i]);
+			}
+			try {
+				PartitionKeyFormatter keyFormatter = (PartitionKeyFormatter) (partitionStrategies[i].getKeyFformatter().newInstance());
+				keys[i] = keyFormatter.getKey(fieldValue).toUpperCase();
+			} catch (Exception e) {
+				throw new ElasticsearchException("impossible to evaluate partition key for field " + partitions[i]);
+			}
+		}
+		return indexName+"_"+String.join("_", keys);
+	}
+
 
 	@Override
 	public String getIndexType() {
