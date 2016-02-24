@@ -555,15 +555,26 @@ public interface ElasticsearchOperations {
 	 */
 	<T> Page<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper);
 
-	/**
-	 * more like this query to search for documents that are "like" a specific document.
-	 *
-	 * @param query
-	 * @param clazz
-	 * @param <T>
-	 * @return
-	 */
-	<T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz);
+		/**
+		 * more like this query to search for documents that are "like" a specific document.
+		 *
+		 * @param query
+		 * @param clazz
+		 * @param <T>
+		 * @return
+		 */
+		<T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz);
+
+		/**
+		 * more like this query to search for documents that are "like" a specific document. using a custom mapper
+		 *
+		 * @param query
+		 * @param clazz
+		 * @param mapper Custom Mapper
+		 * @param <T>
+		 * @return
+		 */
+		<T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
 	 * adding new alias

@@ -756,7 +756,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, Class<T> clazz) {
 		SearchResponse response = getSearchResponse(client.prepareSearchScroll(scrollId)
-				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
+																										.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute()
+		);
 		return resultsMapper.mapResults(response, clazz, null);
 	}
 
@@ -769,65 +770,23 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz) {
-		int startRecord = 0;
-		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
-		String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName() : persistentEntity.getIndexName();
-		String type = isNotBlank(query.getType()) ? query.getType() : persistentEntity.getIndexType();
+			return moreLikeThis(query, clazz, resultsMapper);
+	}
 
-		Assert.notNull(indexName, "No 'indexName' defined for MoreLikeThisQuery");
-		Assert.notNull(type, "No 'type' defined for MoreLikeThisQuery");
-		Assert.notNull(query.getId(), "No document id defined for MoreLikeThisQuery");
+	@Override
+	public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz, SearchResultMapper mapper) {
+			ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
+			String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName() : persistentEntity.getIndexName();
+			String type = isNotBlank(query.getType()) ? query.getType() : persistentEntity.getIndexType();
 
-		MoreLikeThisRequestBuilder requestBuilder = client.prepareMoreLikeThis(indexName, type, query.getId());
+			Assert.notNull(indexName, "No 'indexName' defined for MoreLikeThisQuery");
+			Assert.notNull(type, "No 'type' defined for MoreLikeThisQuery");
+			Assert.notNull(query.getId(), "No document id defined for MoreLikeThisQuery");
 
-		if (query.getPageable() != null) {
-			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
-			requestBuilder.setSearchSize(query.getPageable().getPageSize());
-		}
-		requestBuilder.setSearchFrom(startRecord);
-
-		if (isNotEmpty(query.getSearchIndices())) {
-			requestBuilder.setSearchIndices(toArray(query.getSearchIndices()));
-		}
-		if (isNotEmpty(query.getSearchTypes())) {
-			requestBuilder.setSearchTypes(toArray(query.getSearchTypes()));
-		}
-		if (isNotEmpty(query.getFields())) {
-			requestBuilder.setField(toArray(query.getFields()));
-		}
-		if (isNotBlank(query.getRouting())) {
-			requestBuilder.setRouting(query.getRouting());
-		}
-		if (query.getPercentTermsToMatch() != null) {
-			requestBuilder.setPercentTermsToMatch(query.getPercentTermsToMatch());
-		}
-		if (query.getMinTermFreq() != null) {
-			requestBuilder.setMinTermFreq(query.getMinTermFreq());
-		}
-		if (query.getMaxQueryTerms() != null) {
-			requestBuilder.maxQueryTerms(query.getMaxQueryTerms());
-		}
-		if (isNotEmpty(query.getStopWords())) {
-			requestBuilder.setStopWords(toArray(query.getStopWords()));
-		}
-		if (query.getMinDocFreq() != null) {
-			requestBuilder.setMinDocFreq(query.getMinDocFreq());
-		}
-		if (query.getMaxDocFreq() != null) {
-			requestBuilder.setMaxDocFreq(query.getMaxDocFreq());
-		}
-		if (query.getMinWordLen() != null) {
-			requestBuilder.setMinWordLen(query.getMinWordLen());
-		}
-		if (query.getMaxWordLen() != null) {
-			requestBuilder.setMaxWordLen(query.getMaxWordLen());
-		}
-		if (query.getBoostTerms() != null) {
-			requestBuilder.setBoostTerms(query.getBoostTerms());
-		}
-
-		SearchResponse response = getSearchResponse(requestBuilder.execute());
-		return resultsMapper.mapResults(response, clazz, query.getPageable());
+			MoreLikeThisRequestBuilder builder = client.prepareMoreLikeThis(indexName, type, query.getId());
+			SearchResponse response = doMoreLikeThis(builder, query);
+			
+			return mapper.mapResults(response, clazz, query.getPageable());
 	}
 
 	private SearchResponse doSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
@@ -876,6 +835,58 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			}
 		}
 		return getSearchResponse(searchRequest.setQuery(searchQuery.getQuery()).execute());
+	}
+
+	private SearchResponse doMoreLikeThis(MoreLikeThisRequestBuilder builder, MoreLikeThisQuery query) {
+			int startRecord = 0;
+
+			if (query.getPageable() != null) {
+					startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
+					builder.setSearchSize(query.getPageable().getPageSize());
+			}
+			builder.setSearchFrom(startRecord);
+
+			if (isNotEmpty(query.getSearchIndices())) {
+					builder.setSearchIndices(toArray(query.getSearchIndices()));
+			}
+			if (isNotEmpty(query.getSearchTypes())) {
+					builder.setSearchTypes(toArray(query.getSearchTypes()));
+			}
+			if (isNotEmpty(query.getFields())) {
+					builder.setField(toArray(query.getFields()));
+			}
+			if (isNotBlank(query.getRouting())) {
+					builder.setRouting(query.getRouting());
+			}
+			if (query.getPercentTermsToMatch() != null) {
+					builder.setPercentTermsToMatch(query.getPercentTermsToMatch());
+			}
+			if (query.getMinTermFreq() != null) {
+					builder.setMinTermFreq(query.getMinTermFreq());
+			}
+			if (query.getMaxQueryTerms() != null) {
+					builder.maxQueryTerms(query.getMaxQueryTerms());
+			}
+			if (isNotEmpty(query.getStopWords())) {
+					builder.setStopWords(toArray(query.getStopWords()));
+			}
+			if (query.getMinDocFreq() != null) {
+					builder.setMinDocFreq(query.getMinDocFreq());
+			}
+			if (query.getMaxDocFreq() != null) {
+					builder.setMaxDocFreq(query.getMaxDocFreq());
+			}
+			if (query.getMinWordLen() != null) {
+					builder.setMinWordLen(query.getMinWordLen());
+			}
+			if (query.getMaxWordLen() != null) {
+					builder.setMaxWordLen(query.getMaxWordLen());
+			}
+			if (query.getBoostTerms() != null) {
+					builder.setBoostTerms(query.getBoostTerms());
+			}
+
+			return getSearchResponse(builder.execute());
 	}
 
 	private SearchResponse getSearchResponse(ListenableActionFuture<SearchResponse> response) {
