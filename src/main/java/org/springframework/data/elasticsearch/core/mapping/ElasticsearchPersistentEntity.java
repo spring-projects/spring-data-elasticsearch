@@ -51,5 +51,5 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 
 	PartitionStrategy[] getPartitionStrategies();
 
-	String getIndexName(Object entity);
+	String getIndexName(T entity);
 }

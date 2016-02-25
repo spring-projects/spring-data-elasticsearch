@@ -77,11 +77,14 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		Assert.notNull(metadata);
 		this.entityInformation = metadata;
 		setEntityClass(this.entityInformation.getJavaType());
-		try {
-			createIndex();
-			putMapping();
-		} catch (ElasticsearchException exception) {
-			LOGGER.error("failed to load elasticsearch nodes : " + exception.getDetailedMessage());
+		// We dont init index and mapping for partitioned indexes during repository init
+		if (entityInformation.getPartitions().length == 0) {
+			try {
+				createIndex();
+				putMapping();
+			} catch (ElasticsearchException exception) {
+				LOGGER.error("failed to load elasticsearch nodes : " + exception.getDetailedMessage());
+			}
 		}
 	}
 

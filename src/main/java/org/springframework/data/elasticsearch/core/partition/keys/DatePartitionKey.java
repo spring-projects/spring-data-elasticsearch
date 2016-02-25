@@ -1,11 +1,11 @@
-package org.springframework.data.elasticsearch.core.mapping.partition;
+package org.springframework.data.elasticsearch.core.partition.keys;
 
 import java.text.SimpleDateFormat;
 
 /**
  * Created by franck.lefebure on 24/02/2016.
  */
-public abstract class DateKeyFormatter implements PartitionKeyFormatter {
+public abstract class DatePartitionKey implements PartitionKey {
 
     protected abstract SimpleDateFormat getSimpleDateFormat();
 

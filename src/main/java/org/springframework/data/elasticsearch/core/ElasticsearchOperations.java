@@ -64,6 +64,14 @@ public interface ElasticsearchOperations {
 	boolean createIndex(String indexName, Object settings);
 
 	/**
+	 * Create an index for given class and indexName
+	 *
+	 * @param clazz
+	 * @param indexName
+	 */
+	<T> boolean createIndex(Class<T> clazz, String indexName);
+
+	/**
 	 * Create an index for given class and Settings
 	 *
 	 * @param clazz
@@ -96,6 +104,13 @@ public interface ElasticsearchOperations {
 	 */
 	<T> boolean putMapping(Class<T> clazz, Object mappings);
 
+	/**
+	 * Create mapping for a class a an index name
+	 *
+	 * @param clazz
+	 * @param indexName
+	 */
+	public <T> boolean putMapping(Class<T> clazz, String indexName);
 
 	/**
 	 * Get mapping for a class

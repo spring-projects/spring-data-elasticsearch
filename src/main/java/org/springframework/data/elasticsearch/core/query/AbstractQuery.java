@@ -24,6 +24,7 @@ import java.util.List;
 import org.elasticsearch.action.search.SearchType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.partition.boundaries.PartitionBoundary;
 import org.springframework.util.Assert;
 
 /**
@@ -44,6 +45,8 @@ abstract class AbstractQuery implements Query {
 	protected Collection<String> ids;
 	protected String route;
 	protected SearchType searchType = SearchType.DFS_QUERY_THEN_FETCH;
+	private List<PartitionBoundary> partitionBoundaries;
+
 
 	@Override
 	public Sort getSort() {
@@ -147,5 +150,13 @@ abstract class AbstractQuery implements Query {
 
 	public SearchType getSearchType() {
 		return searchType;
+	}
+
+	public void setPartitionBoundaries(List<PartitionBoundary> partitionBoundaries ) {
+		this.partitionBoundaries = partitionBoundaries;
+	}
+
+	public List<PartitionBoundary> getPartitionBoundaries() {
+		return partitionBoundaries;
 	}
 }

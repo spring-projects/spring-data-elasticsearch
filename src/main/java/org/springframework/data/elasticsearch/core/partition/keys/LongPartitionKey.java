@@ -1,9 +1,9 @@
-package org.springframework.data.elasticsearch.core.mapping.partition;
+package org.springframework.data.elasticsearch.core.partition.keys;
 
 /**
  * Created by franck.lefebure on 24/02/2016.
  */
-public class StringKeyFormatter implements PartitionKeyFormatter {
+public class LongPartitionKey implements PartitionKey {
     @Override
     public String getKey(Object field) {
         return field.toString();

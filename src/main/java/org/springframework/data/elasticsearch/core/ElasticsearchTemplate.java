@@ -91,6 +91,8 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.elasticsearch.core.partition.DefaultElasticsearchIndexPartitioner;
+import org.springframework.data.elasticsearch.core.partition.ElasticsearchIndexPartitioner;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.util.CloseableIterator;
@@ -110,11 +112,16 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchTemplate.class);
 	private Client client;
 	private ElasticsearchConverter elasticsearchConverter;
+	private ElasticsearchIndexPartitioner elasticsearchIndexPartitioner;
 	private ResultsMapper resultsMapper;
 	private String searchTimeout;
 
 	public ElasticsearchTemplate(Client client) {
 		this(client, null, null);
+	}
+
+	public ElasticsearchTemplate(Client client, ElasticsearchIndexPartitioner elasticsearchIndexPartitioner) {
+		this(client, null, null, elasticsearchIndexPartitioner);
 	}
 
 	public ElasticsearchTemplate(Client client, EntityMapper entityMapper) {
@@ -130,10 +137,15 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter, ResultsMapper resultsMapper) {
+		this(client, elasticsearchConverter, resultsMapper, null);
+	}
+
+	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter, ResultsMapper resultsMapper, ElasticsearchIndexPartitioner elasticsearchIndexPartitioner) {
 		this.client = client;
 		this.elasticsearchConverter = (elasticsearchConverter == null) ? new MappingElasticsearchConverter(
 				new SimpleElasticsearchMappingContext()) : elasticsearchConverter;
 		this.resultsMapper = (resultsMapper == null) ? new DefaultResultMapper(this.elasticsearchConverter.getMappingContext()) : resultsMapper;
+		this.elasticsearchIndexPartitioner = (elasticsearchIndexPartitioner == null) ? new DefaultElasticsearchIndexPartitioner() : elasticsearchIndexPartitioner;
 	}
 
 	public void setSearchTimeout(String searchTimeout) {
@@ -155,6 +167,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz) {
+		return putMapping(clazz, "");
+	}
+
+	@Override
+	public <T> boolean putMapping(Class<T> clazz, String indexName) {
 		if (clazz.isAnnotationPresent(Mapping.class)) {
 			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
 			if (isNotBlank(mappingPath)) {
@@ -174,7 +191,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		} catch (Exception e) {
 			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
 		}
-		return putMapping(clazz, xContentBuilder);
+		return putMapping(indexName, persistentEntity.getIndexType(), xContentBuilder);
 	}
 
 	@Override
@@ -183,7 +200,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		if (persistentEntity.getPartitions().length > 0) {
 			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName()+". Index is partitioned. You need to specify indexName");
 		}
-		return putMapping(getPersistentEntityFor(clazz).getIndexName(), getPersistentEntityFor(clazz).getIndexType(), mapping);
+		return putMapping(persistentEntity.getIndexName(), persistentEntity.getIndexType(), mapping);
 	}
 
 	@Override
@@ -218,7 +235,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> Map getMapping(Class<T> clazz) {
-		return getMapping(getPersistentEntityFor(clazz).getIndexName(), getPersistentEntityFor(clazz).getIndexType());
+		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
+		if (persistentEntity.getPartitions().length > 0) {
+			throw new ElasticsearchException("Failed to get mapping for " + clazz.getSimpleName()+". Index is partitioned. You need to specify indexName");
+		}
+		return getMapping(persistentEntity.getIndexName(), persistentEntity.getIndexType());
 	}
 
 	@Override
@@ -228,6 +249,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> T queryForObject(GetQuery query, Class<T> clazz) {
+		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
+		if (persistentEntity.getPartitions().length > 0) {
+			throw new ElasticsearchException("query for objects is not supported with partitioned entities");
+		}
 		return queryForObject(query, clazz, resultsMapper);
 	}
 
@@ -520,6 +545,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public String index(IndexQuery query) {
+
 		String documentId = prepareIndex(query).execute().actionGet().getId();
 		// We should call this because we are not going through a mapper.
 		if (query.getObject() != null) {
@@ -536,6 +562,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	private UpdateRequestBuilder prepareUpdate(UpdateQuery query) {
 		String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName() : getPersistentEntityFor(query.getClazz()).getIndexName();
 		String type = isNotBlank(query.getType()) ? query.getType() : getPersistentEntityFor(query.getClazz()).getIndexType();
+
+		// For partitioned index,document index must include partitioning key
+		if (elasticsearchIndexPartitioner.isIndexPartitioned(query.getClazz())) {
+			elasticsearchIndexPartitioner.processPartitioning(query, query.getClazz());
+		}
+
 		Assert.notNull(indexName, "No index defined for Query");
 		Assert.notNull(type, "No type define for Query");
 		Assert.notNull(query.getId(), "No Id define for Query");
@@ -882,6 +914,22 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		return createIndex(getPersistentEntityFor(clazz).getIndexName(), settings);
 	}
 
+	@Override
+	public <T> boolean createIndex(Class<T> clazz, String indexName) {
+		if (clazz.isAnnotationPresent(Setting.class)) {
+			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
+			if (isNotBlank(settingPath)) {
+				String settings = readFileFromClasspath(settingPath);
+				if (isNotBlank(settings)) {
+					return createIndex(indexName, settings);
+				}
+			} else {
+				logger.info("settingPath in @Setting has to be defined. Using default instead.");
+			}
+		}
+		return createIndex(indexName, getDefaultSettings(getPersistentEntityFor(clazz)));
+	}
+
 	private <T> Map getDefaultSettings(ElasticsearchPersistentEntity<T> persistentEntity) {
 		return new MapBuilder<String, String>().put("index.number_of_shards", String.valueOf(persistentEntity.getShards()))
 				.put("index.number_of_replicas", String.valueOf(persistentEntity.getReplicas()))
@@ -948,6 +996,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 					.getClass())[0] : query.getIndexName();
 			String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
 					: query.getType();
+
+			// For partitioned index,document index must include partitioning key
+			if (elasticsearchIndexPartitioner.isIndexPartitioned(query.getObject())) {
+				elasticsearchIndexPartitioner.processPartitioning(query, query.getObject().getClass());
+			}
 
 			IndexRequestBuilder indexRequestBuilder = null;
 
@@ -1072,6 +1125,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	private void setPersistentEntityIndexAndType(Query query, Class clazz) {
 		if (query.getIndices().isEmpty()) {
 			query.addIndices(retrieveIndexNameFromPersistentEntity(clazz));
+			if (elasticsearchIndexPartitioner != null && elasticsearchIndexPartitioner.isIndexPartitioned(clazz)) {
+				elasticsearchIndexPartitioner.processPartitioning(query, clazz);
+			}
 		}
 		if (query.getTypes().isEmpty()) {
 			query.addTypes(retrieveTypeFromPersistentEntity(clazz));

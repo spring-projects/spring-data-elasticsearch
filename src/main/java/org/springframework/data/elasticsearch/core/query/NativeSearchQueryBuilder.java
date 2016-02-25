@@ -28,6 +28,7 @@ import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
+import org.springframework.data.elasticsearch.core.partition.boundaries.PartitionBoundary;
 
 /**
  * NativeSearchQuery
@@ -54,6 +55,9 @@ public class NativeSearchQueryBuilder {
 	private Collection<String> ids;
 	private String route;
 	private SearchType searchType;
+	private List<PartitionBoundary> partitionBoundaries = new ArrayList<PartitionBoundary>();
+
+
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -130,6 +134,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	public NativeSearchQueryBuilder withPartitionBoundary(PartitionBoundary partitionBoundary) {
+		this.partitionBoundaries.add(partitionBoundary);
+		return this;
+	}
+
 	public NativeSearchQuery build() {
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightFields);
 		if (pageable != null) {
@@ -175,7 +184,9 @@ public class NativeSearchQueryBuilder {
 		if (searchType != null) {
 			nativeSearchQuery.setSearchType(searchType);
 		}
-
+		if (!partitionBoundaries.isEmpty()) {
+			nativeSearchQuery.setPartitionBoundaries(partitionBoundaries);
+		}
 		return nativeSearchQuery;
 	}
 }

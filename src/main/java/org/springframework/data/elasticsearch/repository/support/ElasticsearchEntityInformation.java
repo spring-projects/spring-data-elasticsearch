@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.repository.support;
 
 import java.io.Serializable;
 
+import org.springframework.data.elasticsearch.annotations.PartitionStrategy;
 import org.springframework.data.repository.core.EntityInformation;
 
 /**
@@ -36,4 +37,8 @@ public interface ElasticsearchEntityInformation<T, ID extends Serializable> exte
 	Long getVersion(T entity);
 
 	String getParentId(T entity);
+
+	String[] getPartitions();
+
+	PartitionStrategy[] getPartitionStrategies();
 }

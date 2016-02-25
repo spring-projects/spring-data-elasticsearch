@@ -21,6 +21,7 @@ import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
+import org.springframework.data.elasticsearch.core.partition.boundaries.PartitionBoundary;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	private List<FacetRequest> facets;
 	private List<AbstractAggregationBuilder> aggregations;
 	private HighlightBuilder.Field[] highlightFields;
+
 
 
 	public NativeSearchQuery(QueryBuilder query) {
@@ -109,6 +111,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 		}
 		aggregations.add(aggregationBuilder);
 	}
+
 
 	public void setAggregations(List<AbstractAggregationBuilder> aggregations) {
 		this.aggregations = aggregations;

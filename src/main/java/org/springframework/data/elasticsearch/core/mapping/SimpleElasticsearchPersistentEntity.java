@@ -25,7 +25,8 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.PartitionStrategy;
 import org.springframework.data.elasticsearch.annotations.Setting;
-import org.springframework.data.elasticsearch.core.mapping.partition.PartitionKeyFormatter;
+import org.springframework.data.elasticsearch.core.partition.DefaultElasticsearchIndexPartitioner;
+import org.springframework.data.elasticsearch.core.partition.ElasticsearchIndexPartitioner;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
@@ -33,9 +34,7 @@ import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
-import org.springframework.util.ReflectionUtils;
 
-import java.lang.reflect.Field;
 import java.util.Locale;
 
 import static org.springframework.util.StringUtils.hasText;
@@ -64,11 +63,13 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private String settingPath;
 	private String[] partitions;
 	private PartitionStrategy[] partitionStrategies;
+	private ElasticsearchIndexPartitioner indexPartitioner;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 		super(typeInformation);
 		this.context = new StandardEvaluationContext();
 		this.parser = new SpelExpressionParser();
+		this.indexPartitioner = new DefaultElasticsearchIndexPartitioner(this);
 
 		Class<T> clazz = typeInformation.getType();
 		if (clazz.isAnnotationPresent(Document.class)) {
@@ -116,29 +117,12 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
-	public String getIndexName(Object entity) {
+	public String getIndexName(T object) {
 		Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
 		String indexName = expression.getValue(context, String.class);
 		if (partitions.length == 0) return indexName;
-
-		String[] keys = new String[partitions.length];
-		for (int i = 0; i < partitions.length ; i++) {
-			Field field = ReflectionUtils.findField(entity.getClass(), partitions[i]);
-			if (field == null) {
-				throw new ElasticsearchException("impossible to evaluate partition key for field " + partitions[i]);
-			}
-			Object fieldValue = ReflectionUtils.getField(field, entity);
-			if (field == null) {
-				throw new ElasticsearchException("impossible to evaluate partition key for field " + partitions[i]);
-			}
-			try {
-				PartitionKeyFormatter keyFormatter = (PartitionKeyFormatter) (partitionStrategies[i].getKeyFformatter().newInstance());
-				keys[i] = keyFormatter.getKey(fieldValue).toUpperCase();
-			} catch (Exception e) {
-				throw new ElasticsearchException("impossible to evaluate partition key for field " + partitions[i]);
-			}
-		}
-		return indexName+"_"+String.join("_", keys);
+		String partitionPostfix = indexPartitioner.extractPartitionKeyFromObject(object);
+		return indexName+"_"+partitionPostfix;
 	}
 
 
