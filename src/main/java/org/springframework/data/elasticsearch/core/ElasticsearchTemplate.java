@@ -685,6 +685,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			bulkRequestBuilder.execute().actionGet();
 		}
 
+		clearScroll(scrollId);
 	}
 
 	@Override
@@ -789,6 +790,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		SearchResponse response = getSearchResponse(client.prepareSearchScroll(scrollId)
 				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
 		return mapper.mapResults(response, null, null);
+	}
+
+	@Override
+	public <T> void clearScroll(String scrollId) {
+		client.prepareClearScroll().addScrollId(scrollId).execute().actionGet();
 	}
 
 	@Override

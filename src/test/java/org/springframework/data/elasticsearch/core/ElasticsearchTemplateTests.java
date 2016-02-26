@@ -709,6 +709,7 @@ public class ElasticsearchTemplateTests {
 				hasRecords = false;
 			}
 		}
+		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
 
@@ -735,6 +736,7 @@ public class ElasticsearchTemplateTests {
 				hasRecords = false;
 			}
 		}
+		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
 
@@ -784,6 +786,7 @@ public class ElasticsearchTemplateTests {
 				hasRecords = false;
 			}
 		}
+		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
 
@@ -835,6 +838,7 @@ public class ElasticsearchTemplateTests {
 				hasRecords = false;
 			}
 		}
+		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
 
@@ -884,6 +888,7 @@ public class ElasticsearchTemplateTests {
 				hasRecords = false;
 			}
 		}
+		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
 
@@ -928,6 +933,7 @@ public class ElasticsearchTemplateTests {
 				hasRecords = false;
 			}
 		}
+		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
 
@@ -957,6 +963,7 @@ public class ElasticsearchTemplateTests {
 				hasRecords = false;
 			}
 		}
+		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
 
@@ -986,6 +993,7 @@ public class ElasticsearchTemplateTests {
 				hasRecords = false;
 			}
 		}
+		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
 

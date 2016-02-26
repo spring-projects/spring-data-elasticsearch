@@ -548,6 +548,14 @@ public interface ElasticsearchOperations {
 	<T> Page<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper);
 
 	/**
+	 * Clears the search contexts associated with specified scroll ids.
+	 *
+	 * @param scrollId
+	 *
+	 */
+	<T> void clearScroll(String scrollId);
+
+	/**
 	 * more like this query to search for documents that are "like" a specific document.
 	 *
 	 * @param query
