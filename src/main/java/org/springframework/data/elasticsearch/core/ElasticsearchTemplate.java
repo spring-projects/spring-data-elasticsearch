@@ -793,7 +793,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
-	public <T> void clearScroll(String scrollId) {
+	public void clearScroll(String scrollId) {
 		client.prepareClearScroll().addScrollId(scrollId).execute().actionGet();
 	}
 

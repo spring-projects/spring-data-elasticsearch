@@ -65,6 +65,7 @@ public class SpELEntityTests {
 		assertThat(count, is(2L));
 	}
 
+	@Ignore("DATAES-211")
 	@Test
 	public void shouldSupportSpelInType() {
 		// Given
