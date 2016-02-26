@@ -10,33 +10,18 @@ import java.text.SimpleDateFormat;
 public enum PartitionStrategy {
 
 
-    string_fixed (StringPartitionKey.class, null),
-    long_1E6(LongPartitionKey.class, 1e6),
-    long_1E7(LongPartitionKey.class, 1e7),
-    long_1E8(LongPartitionKey.class, 1e8),
-    long_1E9(LongPartitionKey.class, 1e9),
-    long_1E10(LongPartitionKey.class, 1e10),
-    long_1E11(LongPartitionKey.class, 1e12),
-    long_1E12(LongPartitionKey.class, 1e12),
-    date_YYYYMMDDHH(DatePartitionKey.class, "YYYYMMDDHH"),
-    date_YYYYMMDD(DatePartitionKey.class, "YYYYMMDD"),
-    date_YYYYMM(DatePartitionKey.class, "YYYYMM"),
-    date_YYYY(DatePartitionKey.class, "YYYY");
+    fixed_string(StringPartitionKey.class),
+    long_range(LongPartitionKey.class),
+    date_range(DatePartitionKey.class);
 
 
     Class keyFormatter;
-    Object slicer;
-
-    public Object getSlicer() {
-        return slicer;
-    }
 
     public Class getKeyFormatter() {
         return keyFormatter;
     }
 
-    PartitionStrategy(Class keyFormatter, Object slice) {
+    PartitionStrategy(Class keyFormatter) {
         this.keyFormatter = keyFormatter;
-        this.slicer = slice;
     }
 }

@@ -70,6 +70,11 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
 	}
 
 	@Override
+	public String[] partitionParameters() {
+		return entityMetadata.getPartitionParameters();
+	}
+
+	@Override
 	public String[] getPartitions() {
 		return entityMetadata.getPartitions();
 	}

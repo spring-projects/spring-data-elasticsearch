@@ -40,23 +40,22 @@ public class DatePartitionBoundary  extends PartitionBoundary {
         this.end = end;
     }
 
-    protected List<String> getSlices(List<String> slices, PartitionStrategy strategy) {
+    protected List<String> getSlices(List<String> slices, PartitionStrategy strategy, String pattern) {
         List<String> newSlices = new ArrayList<String>();
-        String sdf = (String)strategy.getSlicer();
         LocalDateTime startTime = LocalDateTime.ofInstant(start.toInstant(), ZoneId.systemDefault());
         LocalDateTime endTime = LocalDateTime.ofInstant(end.toInstant(), ZoneId.systemDefault());
-        DateTimeFormatter newSdf = DateTimeFormatter.ofPattern(sdf);
+        DateTimeFormatter newSdf = DateTimeFormatter.ofPattern(pattern);
         LocalDateTime slice = null;
         ChronoUnit unit = null;
-        if (sdf.equals("YYYYMMDDHH")) {
+        if (pattern.equals("YYYYMMDDHH")) {
             slice = LocalDateTime.of(startTime.getYear(), startTime.getMonth(), startTime.getDayOfMonth(), startTime.getHour(), 0);
             unit = ChronoUnit.HOURS;
         }
-        else if (sdf.equals("YYYYMMDD")) {
+        else if (pattern.equals("YYYYMMDD")) {
             slice = LocalDateTime.of(startTime.getYear(), startTime.getMonth(), startTime.getDayOfMonth(), 0, 0);
             unit = ChronoUnit.DAYS;
         }
-        else if (sdf.equals("YYYYMM")) {
+        else if (pattern.equals("YYYYMM")) {
             slice = LocalDateTime.of(startTime.getYear(), startTime.getMonth(), 1, 0, 0);
             unit = ChronoUnit.MONTHS;
         }
@@ -65,10 +64,11 @@ public class DatePartitionBoundary  extends PartitionBoundary {
             unit = ChronoUnit.MONTHS;
         }
         newSlices.add(newSdf.format(slice));
+        slice = slice.plus(1, unit);
 
-        while (startTime.isBefore(endTime)) {
-            slice = slice.plus(1, unit);
+        while (slice.isBefore(endTime)) {
             newSlices.add(newSdf.format(slice));
+            slice = slice.plus(1, unit);
         }
         return appendSlices(slices, newSlices);
     }

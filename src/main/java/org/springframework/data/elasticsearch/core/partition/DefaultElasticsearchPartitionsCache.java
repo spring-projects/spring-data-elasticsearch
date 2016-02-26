@@ -1,24 +1,25 @@
 package org.springframework.data.elasticsearch.core.partition;
 
-import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.indices.IndexAlreadyExistsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 
-import java.util.Map;
-import java.util.Set;
-
 /**
  * Created by flefebure on 25/02/2016.
  */
-public class DefaultElasticsearchIndexPartitionLister implements ElasticsearchIndexPartitionLister {
+public class DefaultElasticsearchPartitionsCache implements ElasticsearchPartitionsCache {
 
+    Logger logger = LoggerFactory.getLogger(DefaultElasticsearchPartitionsCache.class);
     ElasticsearchOperations elasticsearchOperations;
 
-    Client client;
+    public DefaultElasticsearchPartitionsCache() {
+    }
 
-    public DefaultElasticsearchIndexPartitionLister(ElasticsearchOperations elasticsearchOperations) {
+    public void setElasticsearchOperations(ElasticsearchOperations elasticsearchOperations) {
         this.elasticsearchOperations = elasticsearchOperations;
     }
 
@@ -37,7 +38,13 @@ public class DefaultElasticsearchIndexPartitionLister implements ElasticsearchIn
     @Override
     @CacheEvict(value = "esPartitions", allEntries = true)
     public void createIndexPartition(Class clazz, String indexName) {
-        elasticsearchOperations.createIndex(clazz, indexName);
+        try {
+            elasticsearchOperations.createIndex(clazz, indexName);
+        }
+        catch (IndexAlreadyExistsException exception) {
+            // ignore such exception
+            logger.info("tried to existing partition");
+        }
 
     }
 

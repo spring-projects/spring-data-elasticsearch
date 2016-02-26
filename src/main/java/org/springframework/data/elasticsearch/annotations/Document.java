@@ -47,4 +47,6 @@ public @interface Document {
 	String[] partitions() default {};
 
 	PartitionStrategy[] partitionStrategies() default {};
+
+	String[] partitionParameters() default {};
 }

@@ -41,4 +41,6 @@ public interface ElasticsearchEntityInformation<T, ID extends Serializable> exte
 	String[] getPartitions();
 
 	PartitionStrategy[] getPartitionStrategies();
+
+	String[] partitionParameters();
 }

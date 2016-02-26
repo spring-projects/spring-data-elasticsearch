@@ -5,5 +5,5 @@ package org.springframework.data.elasticsearch.core.partition.keys;
  */
 public interface PartitionKey {
 
-    public String getKey(Object field);
+    public String getKey(Object field, String parameter);
 }

@@ -36,14 +36,15 @@ public class LongPartitionBoundary extends PartitionBoundary {
         this.end = end;
     }
 
-    protected List<String> getSlices(List<String> slices, PartitionStrategy strategy) {
+    protected List<String> getSlices(List<String> slices, PartitionStrategy strategy, String param) {
         List<String> newSlices = new ArrayList<String>();
-        long slice = (Long)strategy.getSlicer();
+        long slice = Long.parseLong(param);
         long aSlice = start/slice*slice;
         newSlices.add(new Long(aSlice).toString());
+        aSlice = aSlice+slice;
         while (aSlice <= end) {
-            aSlice = aSlice+slice;
             newSlices.add(new Long(aSlice).toString());
+            aSlice = aSlice+slice;
         }
         return appendSlices(slices, newSlices);
     }

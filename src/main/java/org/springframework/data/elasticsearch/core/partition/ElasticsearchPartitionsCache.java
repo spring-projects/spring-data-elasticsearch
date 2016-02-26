@@ -8,7 +8,7 @@ import java.util.Set;
 /**
  * Created by flefebure on 25/02/2016.
  */
-public interface ElasticsearchIndexPartitionLister {
+public interface ElasticsearchPartitionsCache {
 
     public boolean indexExists(String indexName);
     public boolean mappingExists(String indexName, String type);

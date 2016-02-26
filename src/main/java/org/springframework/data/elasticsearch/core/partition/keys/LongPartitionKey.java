@@ -5,7 +5,10 @@ package org.springframework.data.elasticsearch.core.partition.keys;
  */
 public class LongPartitionKey implements PartitionKey {
     @Override
-    public String getKey(Object field) {
-        return field.toString();
+    public String getKey(Object field, String parameter) {
+        String s = field.toString();
+        long key = Long.parseLong(s);
+        long slice = Long.parseLong(parameter);
+        return new Long(key/slice*slice).toString();
     }
 }

@@ -25,8 +25,8 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.PartitionStrategy;
 import org.springframework.data.elasticsearch.annotations.Setting;
-import org.springframework.data.elasticsearch.core.partition.DefaultElasticsearchIndexPartitioner;
-import org.springframework.data.elasticsearch.core.partition.ElasticsearchIndexPartitioner;
+import org.springframework.data.elasticsearch.core.partition.DefaultElasticsearchPartitioner;
+import org.springframework.data.elasticsearch.core.partition.ElasticsearchPartitioner;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
@@ -63,13 +63,14 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private String settingPath;
 	private String[] partitions;
 	private PartitionStrategy[] partitionStrategies;
-	private ElasticsearchIndexPartitioner indexPartitioner;
+	private String[] partitionParameters;
+	private ElasticsearchPartitioner indexPartitioner;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 		super(typeInformation);
 		this.context = new StandardEvaluationContext();
 		this.parser = new SpelExpressionParser();
-		this.indexPartitioner = new DefaultElasticsearchIndexPartitioner(this);
+		this.indexPartitioner = new DefaultElasticsearchPartitioner();
 
 		Class<T> clazz = typeInformation.getType();
 		if (clazz.isAnnotationPresent(Document.class)) {
@@ -84,6 +85,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.indexStoreType = typeInformation.getType().getAnnotation(Document.class).indexStoreType();
 			this.partitions = typeInformation.getType().getAnnotation(Document.class).partitions();
 			this.partitionStrategies = typeInformation.getType().getAnnotation(Document.class).partitionStrategies();
+			this.partitionParameters = typeInformation.getType().getAnnotation(Document.class).partitionParameters();
 		}
 		if (clazz.isAnnotationPresent(Setting.class)) {
 			this.settingPath = typeInformation.getType().getAnnotation(Setting.class).settingPath();
@@ -103,15 +105,17 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
+	public String[] getPartitionParameters() {
+		return partitionParameters;
+	}
+
+	@Override
 	public String[] getPartitions() {
 		return partitions;
 	}
 
 	@Override
 	public String getIndexName() {
-		if (partitions.length > 0) {
-			throw new ElasticsearchException("index for type "+indexType+" is partitionned. You need to use getIndexName(Object)");
-		}
 		Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
 		return expression.getValue(context, String.class);
 	}
@@ -121,7 +125,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
 		String indexName = expression.getValue(context, String.class);
 		if (partitions.length == 0) return indexName;
-		String partitionPostfix = indexPartitioner.extractPartitionKeyFromObject(object);
+		String partitionPostfix = indexPartitioner.extractPartitionKeyFromObject(object, this);
 		return indexName+"_"+partitionPostfix;
 	}
 

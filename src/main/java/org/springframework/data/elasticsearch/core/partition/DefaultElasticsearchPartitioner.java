@@ -2,7 +2,10 @@ package org.springframework.data.elasticsearch.core.partition;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.PropertyAccessorUtils;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
@@ -14,38 +17,32 @@ import org.springframework.data.elasticsearch.core.partition.keys.PartitionKey;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.util.ReflectionUtils;
 
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
  * Created by flefebure on 24/02/2016.
  */
-public class DefaultElasticsearchIndexPartitioner implements ElasticsearchIndexPartitioner {
+public class DefaultElasticsearchPartitioner implements ElasticsearchPartitioner {
 
-    Logger logger = LoggerFactory.getLogger(DefaultElasticsearchIndexPartitioner.class);
+    Logger logger = LoggerFactory.getLogger(DefaultElasticsearchPartitioner.class);
 
     ElasticsearchConverter elasticsearchConverter;
 
-    ElasticsearchIndexPartitionLister elasticsearchIndexPartitionLister;
+    ElasticsearchPartitionsCache elasticsearchPartitionsCache;
 
-    SimpleElasticsearchPersistentEntity persistentEntity;
-     
     Map<String,Set<String>> existingIndexes = new HashMap<String, Set<String>>();
 
-    public DefaultElasticsearchIndexPartitioner(){}
-
-    public DefaultElasticsearchIndexPartitioner(SimpleElasticsearchPersistentEntity persistentEntity) {
-        this.persistentEntity = persistentEntity;
+    public DefaultElasticsearchPartitioner(){
+        elasticsearchConverter = new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext());
     }
 
-    public DefaultElasticsearchIndexPartitioner(ElasticsearchIndexPartitionLister elasticsearchIndexPartitionLister) {
-        this.elasticsearchConverter = new MappingElasticsearchConverter(
-                new SimpleElasticsearchMappingContext());
-        this.elasticsearchIndexPartitionLister = elasticsearchIndexPartitionLister;
-    }
-    public DefaultElasticsearchIndexPartitioner(ElasticsearchIndexPartitionLister elasticsearchIndexPartitionLister, SimpleElasticsearchPersistentEntity persistentEntity) {
-        this.persistentEntity = persistentEntity;
-        this.elasticsearchIndexPartitionLister = elasticsearchIndexPartitionLister;
+
+    public void setElasticsearchPartitionsCache(ElasticsearchPartitionsCache elasticsearchPartitionsCache) {
+        this.elasticsearchPartitionsCache = elasticsearchPartitionsCache;
+        elasticsearchConverter = new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext());
     }
 
     @Override
@@ -62,7 +59,7 @@ public class DefaultElasticsearchIndexPartitioner implements ElasticsearchIndexP
         if (partitionBoundaries == null)
             throw new ElasticsearchException("the Query doesn't contain partition boundaries for partitioned type "+type);
 
-        List<String> slices = PartitionBoundary.getSlices(partitionBoundaries, persistentEntity.getPartitions(), persistentEntity.getPartitionStrategies());
+        List<String> slices = PartitionBoundary.getSlices(partitionBoundaries, persistentEntity.getPartitions(), persistentEntity.getPartitionStrategies(), persistentEntity.getPartitionParameters());
         List<String> indices = new ArrayList<String>();
         for (String slice : slices) {
             String indexName = persistentEntity.getIndexName()+"_"+slice;
@@ -74,7 +71,7 @@ public class DefaultElasticsearchIndexPartitioner implements ElasticsearchIndexP
             if (partitions.contains(indexName)) {
                 indices.add(indexName);
             }
-            else if (elasticsearchIndexPartitionLister.indexExists(indexName)) {
+            else if (elasticsearchPartitionsCache.indexExists(indexName)) {
                 partitions.add(indexName);
                 indices.add(indexName);
             }
@@ -89,37 +86,55 @@ public class DefaultElasticsearchIndexPartitioner implements ElasticsearchIndexP
             throw new ElasticsearchException("Partitioned index is not supported for source queries");
         }
         ElasticsearchPersistentEntity persistentEntity = elasticsearchConverter.getMappingContext().getPersistentEntity(clazz);
-        String partitionKey = extractPartitionKeyFromObject(indexQuery.getObject(), persistentEntity);
-
-        if (indexQuery.getId() != null)
-            indexQuery.setId(partitionKey+"_"+indexQuery.getId());
-        else
-            indexQuery.setId(partitionKey+"_"+UUID.randomUUID());
-        indexQuery.setIndexName(persistentEntity.getIndexName()+"_"+partitionKey);
-        createPartitionIfNotExists(clazz, persistentEntity.getIndexType(), indexQuery.getIndexName());
+        String indexName;
+        // if id contains an _, it's an update..
+        if (indexQuery.getId() != null && indexQuery.getId().indexOf("_") >= 0) {
+            String partitionKey = extractKeyFromId(indexQuery.getId(), persistentEntity);
+            indexName = persistentEntity.getIndexName()+"_"+partitionKey;
+        }
+        else {
+            String partitionKey = extractPartitionKeyFromObject(indexQuery.getObject(), persistentEntity);
+            if (indexQuery.getId() == null)
+                indexQuery.setId(partitionKey+"_"+UUID.randomUUID());
+            else if (!indexQuery.getId().startsWith(partitionKey+"_"))
+                indexQuery.setId(partitionKey+"_"+indexQuery.getId());
+            indexName = persistentEntity.getIndexName()+"_"+partitionKey;
+            createPartitionIfNotExists(clazz, persistentEntity.getIndexType(), indexName);
+        }
+        indexQuery.setIndexName(indexName);
     }
 
-    public <T> String extractPartitionKeyFromObject(T object) {
-        return extractPartitionKeyFromObject(object, persistentEntity);
+    @Override
+    public <T> String processPartitioning(GetQuery getQuery, Class<T> clazz) {
+        ElasticsearchPersistentEntity persistentEntity = elasticsearchConverter.getMappingContext().getPersistentEntity(clazz);
+       return  persistentEntity.getIndexName()+"_"+extractKeyFromId(getQuery.getId(), persistentEntity);
+
     }
 
-    private <T> String extractPartitionKeyFromObject(T object, ElasticsearchPersistentEntity persistentEntity) {
+    private <T> String extractKeyFromId(String id, ElasticsearchPersistentEntity persistentEntity) {
+        int keyCount = persistentEntity.getPartitions().length;
+        String[] splittedId = id.split("_");
+        splittedId = Arrays.copyOfRange(splittedId, 0, keyCount);
+        String key = String.join("_", splittedId);
+        return key;
+    }
+
+
+    public <T> String extractPartitionKeyFromObject(T object, ElasticsearchPersistentEntity persistentEntity) {
 
         String[] keys = new String[persistentEntity.getPartitions().length];
         for (int i = 0; i < persistentEntity.getPartitions().length ; i++) {
-            Field field = ReflectionUtils.findField(object.getClass(), persistentEntity.getPartitions()[i]);
-            if (field == null) {
-                throw new ElasticsearchException("impossible to evaluate partition key for field " + persistentEntity.getPartitions()[i]);
-            }
-            Object fieldValue = ReflectionUtils.getField(field, object);
-            if (field == null) {
-                throw new ElasticsearchException("impossible to evaluate partition key for field " + persistentEntity.getPartitions()[i]);
-            }
+            Object fieldValue = null;
             try {
+                Method getter = new PropertyDescriptor(persistentEntity.getPartitions()[i], object.getClass()).getReadMethod();
+                fieldValue = getter.invoke(object);
+                if (fieldValue == null) {
+                    throw new ElasticsearchException("impossible to evaluate partition key for field " + persistentEntity.getPartitions()[i]);
+                }
                 PartitionKey keyFormatter = (PartitionKey) (persistentEntity.getPartitionStrategies()[i].getKeyFormatter().newInstance());
-                keys[i] = keyFormatter.getKey(fieldValue).toUpperCase();
+                keys[i] = keyFormatter.getKey(fieldValue, persistentEntity.getPartitionParameters()[i]).toUpperCase();
             } catch (Exception e) {
-                throw new ElasticsearchException("impossible to evaluate partition key for field " + persistentEntity.getPartitions()[i]);
+                throw new ElasticsearchException("impossible to evaluate partition key for field " + persistentEntity.getPartitions()[i], e);
             }
         }
         return String.join("_", keys);
@@ -156,12 +171,10 @@ public class DefaultElasticsearchIndexPartitioner implements ElasticsearchIndexP
             existingIndexes.put(type, partitions);
         }
         if (!partitions.contains(indexName)) {
-            if (!elasticsearchIndexPartitionLister.indexExists(indexName)) {
+            if (!elasticsearchPartitionsCache.indexExists(indexName)) {
                 logger.info("creating partitioned index "+indexName);
-                elasticsearchIndexPartitionLister.createIndexPartition(clazz, indexName);
-            }
-            if(!elasticsearchIndexPartitionLister.mappingExists(indexName, type)) {
-                elasticsearchIndexPartitionLister.putMapping(indexName, type);
+                elasticsearchPartitionsCache.createIndexPartition(clazz, indexName);
+                elasticsearchPartitionsCache.putMapping(indexName, type);
             }
             partitions.add(indexName);
         }

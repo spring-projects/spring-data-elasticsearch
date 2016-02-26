@@ -5,7 +5,7 @@ package org.springframework.data.elasticsearch.core.partition.keys;
  */
 public class StringPartitionKey implements PartitionKey {
     @Override
-    public String getKey(Object field) {
+    public String getKey(Object field, String parameter) {
         return field.toString();
     }
 }

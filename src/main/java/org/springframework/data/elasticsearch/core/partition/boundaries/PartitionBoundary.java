@@ -21,15 +21,13 @@ public abstract class PartitionBoundary {
         this.partitionKey = partitionKey;
     }
 
-    public static List<String> getSlices(List<PartitionBoundary> boundaries, String[] partitions, PartitionStrategy[] partitionStrategies) {
+    public static List<String> getSlices(List<PartitionBoundary> boundaries, String[] partitions, PartitionStrategy[] strategies, String[] params) {
         List<String> slices = new ArrayList();
         for (int i = 0; i < partitions.length ; i++) {
-            PartitionStrategy strategy = partitionStrategies[i];
-            String field = partitions[i];
-            PartitionBoundary boundary = getBoundaryForField(boundaries, field);
+            PartitionBoundary boundary = getBoundaryForField(boundaries, partitions[i]);
             if (boundary == null)
-                throw new ElasticsearchException("missing partition boundary for partition key "+field);
-            slices = boundary.getSlices(slices, strategy);
+                throw new ElasticsearchException("missing partition boundary for partition key "+partitions[i]);
+            slices = boundary.getSlices(slices, strategies[i], params[i]);
 
         }
         return slices;
@@ -59,5 +57,5 @@ public abstract class PartitionBoundary {
         }
     }
 
-    protected abstract List<String> getSlices(List<String> slices, PartitionStrategy strategy);
+    protected abstract List<String> getSlices(List<String> slices, PartitionStrategy strategy, String param);
 }

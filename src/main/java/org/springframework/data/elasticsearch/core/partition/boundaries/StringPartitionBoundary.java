@@ -26,7 +26,7 @@ public class StringPartitionBoundary extends PartitionBoundary {
         this.partitions = partitions;
     }
 
-    protected List<String> getSlices(List<String> slices, PartitionStrategy strategy) {
+    protected List<String> getSlices(List<String> slices, PartitionStrategy strategy, String param) {
         List<String> newSlices = Arrays.asList(partitions);
         return appendSlices(slices, newSlices);
     }
