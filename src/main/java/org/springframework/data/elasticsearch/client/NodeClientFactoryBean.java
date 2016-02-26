@@ -17,9 +17,7 @@ package org.springframework.data.elasticsearch.client;
 
 import static org.elasticsearch.node.NodeBuilder.*;
 
-import java.io.IOException;
-import java.nio.file.Paths;
-
+import java.io.InputStream;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
@@ -29,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.core.io.ClassPathResource;
 
 /**
  * NodeClientFactoryBean
@@ -83,11 +80,11 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
 	private Settings loadConfig() {
 		if (StringUtils.isNotBlank(pathConfiguration)) {
-			try {
-				return Settings.builder().loadFromPath(Paths.get(new ClassPathResource(pathConfiguration).getURI())).build();
-			} catch (IOException e) {
-				logger.error(String.format("Unable to read node configuration from file [%s]", pathConfiguration), e);
+			InputStream stream = getClass().getClassLoader().getResourceAsStream(pathConfiguration);
+			if (stream != null) {
+				return Settings.builder().loadFromStream(pathConfiguration, getClass().getClassLoader().getResourceAsStream(pathConfiguration)).build();
 			}
+			logger.error(String.format("Unable to read node configuration from file [%s]", pathConfiguration));
 		}
 		return Settings.builder().build();
 	}
