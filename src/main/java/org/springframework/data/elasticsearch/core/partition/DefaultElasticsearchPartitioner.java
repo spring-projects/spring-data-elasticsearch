@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Created by flefebure on 24/02/2016.
+ * Created by franck.lefebure on 24/02/2016.
  */
 public class DefaultElasticsearchPartitioner implements ElasticsearchPartitioner {
 

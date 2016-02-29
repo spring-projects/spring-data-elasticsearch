@@ -23,7 +23,7 @@ import java.util.List;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 /**
- * Created by flefebure on 25/02/2016.
+ * Created by franck.lefebure on 25/02/2016.
  */
 public class DefaultElasticsearchPartitionsCache implements ElasticsearchPartitionsCache {
 

@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by flefebure on 25/02/2016.
+ * Created by franck.lefebure on 25/02/2016.
  */
 public interface ElasticsearchPartitionsCache {
 

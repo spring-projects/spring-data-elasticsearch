@@ -7,7 +7,7 @@ import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 
 /**
- * Created by flefebure on 24/02/2016.
+ * Created by franck.lefebure on 24/02/2016.
  */
 public interface ElasticsearchPartitioner {
 
