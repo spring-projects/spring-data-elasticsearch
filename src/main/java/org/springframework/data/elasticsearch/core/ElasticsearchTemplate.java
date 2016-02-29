@@ -931,6 +931,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 					settings = getDefaultSettings(getPersistentEntityFor(clazz));
 				}
 			}
+			else {
+				logger.info("@Setting has to be defined. Using default instead.");
+				settings = getDefaultSettings(getPersistentEntityFor(clazz));
+			}
 		}
 		return createIndex(indexName, settings);
 	}
