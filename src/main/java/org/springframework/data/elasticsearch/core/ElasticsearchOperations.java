@@ -67,9 +67,10 @@ public interface ElasticsearchOperations {
 	 * Create an index for given class and indexName
 	 *
 	 * @param clazz
+	 * @param settings
 	 * @param indexName
 	 */
-	<T> boolean createIndex(Class<T> clazz, String indexName);
+	<T> boolean createIndex(Class<T> clazz, Object settings, String indexName);
 
 	/**
 	 * Create an index for given class and Settings
@@ -105,12 +106,13 @@ public interface ElasticsearchOperations {
 	<T> boolean putMapping(Class<T> clazz, Object mappings);
 
 	/**
-	 * Create mapping for a class a an index name
+	 * Create mapping for a entity
 	 *
 	 * @param clazz
+	 * @param mappings
 	 * @param indexName
 	 */
-	public <T> boolean putMapping(Class<T> clazz, String indexName);
+	public <T> boolean putMapping(Class<T> clazz, Object mappings, String indexName);
 
 	/**
 	 * Get mapping for a class

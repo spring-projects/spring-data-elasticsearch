@@ -54,7 +54,7 @@ public class DefaultElasticsearchPartitionsCache implements ElasticsearchPartiti
 
     @Override
     public <T> void putMapping(String partition, Class<T> clazz) {
-        elasticsearchOperations.putMapping(clazz, partition);
+        elasticsearchOperations.putMapping(clazz, null, partition);
     }
 
     @Override

@@ -162,39 +162,38 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> boolean putMapping(Class<T> clazz) {
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
-		return putMapping(clazz, persistentEntity.getIndexName());
+		return putMapping(clazz, null, persistentEntity.getIndexName());
 	}
 
 	@Override
-	public <T> boolean putMapping(Class<T> clazz, String indexName) {
-		if (clazz.isAnnotationPresent(Mapping.class)) {
-			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
-			if (isNotBlank(mappingPath)) {
-				String mappings = readFileFromClasspath(mappingPath);
-				if (isNotBlank(mappings)) {
-					return putMapping(clazz, mappings);
+	public <T> boolean putMapping(Class<T> clazz, Object mappings, String indexName) {
+
+		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
+		if (mappings == null) {
+			if (clazz.isAnnotationPresent(Mapping.class)) {
+				String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
+				if (isNotBlank(mappingPath)) {
+					mappings = readFileFromClasspath(mappingPath);
+				} else {
+					logger.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
 				}
-			} else {
-				logger.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
+			}
+			if (mappings == null) {
+				try {
+					mappings = buildMapping(clazz, persistentEntity.getIndexType(), persistentEntity
+							.getIdProperty().getFieldName(), persistentEntity.getParentType());
+				} catch (Exception e) {
+					throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
+				}
 			}
 		}
-		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
-		XContentBuilder xContentBuilder = null;
-		try {
-			xContentBuilder = buildMapping(clazz, persistentEntity.getIndexType(), persistentEntity
-					.getIdProperty().getFieldName(), persistentEntity.getParentType());
-		} catch (Exception e) {
-			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
-		}
-		return putMapping(indexName, persistentEntity.getIndexType(), xContentBuilder);
+
+		return putMapping(indexName, persistentEntity.getIndexType(), mappings);
 	}
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz, Object mapping) {
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
-		if (elasticsearchPartitioner != null && elasticsearchPartitioner.isIndexPartitioned(clazz)) {
-			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName()+". Index is partitioned. You need to specify indexName");
-		}
 		return putMapping(persistentEntity.getIndexName(), persistentEntity.getIndexType(), mapping);
 	}
 
@@ -899,18 +898,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private <T> boolean createIndexWithSettings(Class<T> clazz) {
-		if (clazz.isAnnotationPresent(Setting.class)) {
-			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
-			if (isNotBlank(settingPath)) {
-				String settings = readFileFromClasspath(settingPath);
-				if (isNotBlank(settings)) {
-					return createIndex(getPersistentEntityFor(clazz).getIndexName(), settings);
-				}
-			} else {
-				logger.info("settingPath in @Setting has to be defined. Using default instead.");
-			}
-		}
-		return createIndex(getPersistentEntityFor(clazz).getIndexName(), getDefaultSettings(getPersistentEntityFor(clazz)));
+		return createIndex(clazz, null);
 	}
 
 	@Override
@@ -932,19 +920,19 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
-	public <T> boolean createIndex(Class<T> clazz, String indexName) {
-		if (clazz.isAnnotationPresent(Setting.class)) {
-			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
-			if (isNotBlank(settingPath)) {
-				String settings = readFileFromClasspath(settingPath);
-				if (isNotBlank(settings)) {
-					return createIndex(indexName, settings);
+	public <T> boolean createIndex(Class<T> clazz, Object settings, String indexName) {
+		if (settings == null && clazz != null) {
+			if (clazz.isAnnotationPresent(Setting.class)) {
+				String settingPath = clazz.getAnnotation(Setting.class).settingPath();
+				if (isNotBlank(settingPath)) {
+					settings = readFileFromClasspath(settingPath);
+				} else {
+					logger.info("settingPath in @Setting has to be defined. Using default instead.");
+					settings = getDefaultSettings(getPersistentEntityFor(clazz));
 				}
-			} else {
-				logger.info("settingPath in @Setting has to be defined. Using default instead.");
 			}
 		}
-		return createIndex(indexName, getDefaultSettings(getPersistentEntityFor(clazz)));
+		return createIndex(indexName, settings);
 	}
 
 	private <T> Map getDefaultSettings(ElasticsearchPersistentEntity<T> persistentEntity) {
@@ -1143,13 +1131,16 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	private void setPersistentEntityIndexAndType(Query query, Class clazz) {
 		if (query.getIndices().isEmpty()) {
-			query.addIndices(retrieveIndexNameFromPersistentEntity(clazz));
-			if (elasticsearchPartitioner != null && elasticsearchPartitioner.isIndexPartitioned(clazz)) {
-				elasticsearchPartitioner.processPartitioning(query, clazz);
+			if (clazz != null) {
+				query.addIndices(retrieveIndexNameFromPersistentEntity(clazz));
+				if (elasticsearchPartitioner != null && elasticsearchPartitioner.isIndexPartitioned(clazz)) {
+					elasticsearchPartitioner.processPartitioning(query, clazz);
+				}
 			}
 		}
 		if (query.getTypes().isEmpty()) {
-			query.addTypes(retrieveTypeFromPersistentEntity(clazz));
+			if (clazz != null)
+				query.addTypes(retrieveTypeFromPersistentEntity(clazz));
 		}
 	}
 

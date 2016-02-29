@@ -187,7 +187,6 @@ public class TemplateTests {
         list = template.queryForList(query, LongPartitionedEntity.class);
         assertEquals("label updated", list.get(0).getLabel());
 
-
-
     }
+
 }
