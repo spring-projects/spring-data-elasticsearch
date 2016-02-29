@@ -916,7 +916,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> boolean createIndex(Class<T> clazz, Object settings) {
-		return createIndex(getPersistentEntityFor(clazz).getIndexName(), settings);
+		return createIndex(clazz, settings, getPersistentEntityFor(clazz).getIndexName());
 	}
 
 	@Override
