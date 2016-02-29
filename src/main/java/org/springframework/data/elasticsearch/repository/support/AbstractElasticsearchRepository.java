@@ -77,15 +77,13 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		Assert.notNull(metadata);
 		this.entityInformation = metadata;
 		setEntityClass(this.entityInformation.getJavaType());
-		// We dont init index and mapping for partitioned indexes during repository init
-		if (entityInformation.getPartitions().length == 0) {
-			try {
-				createIndex();
-				putMapping();
-			} catch (ElasticsearchException exception) {
-				LOGGER.error("failed to load elasticsearch nodes : " + exception.getDetailedMessage());
-			}
+		try {
+			createIndex();
+			putMapping();
+		} catch (ElasticsearchException exception) {
+			LOGGER.error("failed to load elasticsearch nodes : " + exception.getDetailedMessage(),exception);
 		}
+
 	}
 
 	private void createIndex() {
@@ -150,7 +148,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		IndexQuery query = createIndexQuery(entity);
 		elasticsearchOperations.index(query);
 		String indexName = entityInformation.getIndexName();
-		if (entityInformation.getPartitions().length > 0) {
+		if (entityInformation.getPartitionersFields().length > 0) {
 			indexName = query.getIndexName();
 		}
 		elasticsearchOperations.refresh(indexName, true);

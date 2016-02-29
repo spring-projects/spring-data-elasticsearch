@@ -2,6 +2,7 @@ package org.springframework.data.elasticsearch.core.partition;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,9 +11,8 @@ import java.util.Set;
  */
 public interface ElasticsearchPartitionsCache {
 
-    public boolean indexExists(String indexName);
-    public boolean mappingExists(String indexName, String type);
-    public <T> void createIndexPartition(Class<T> clazz, String indexName);
-    public boolean putMapping(String indexName, String type);
-
+    public List<String> listIndicesForPrefix(String prefix);
+    public List<String> listTypesForPartition(String partition);
+    public <T> void createPartition(String partition, Class<T> clazz);
+    public <T> void putMapping(String partition, Class<T> clazz);
 }

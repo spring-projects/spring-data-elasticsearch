@@ -9,6 +9,7 @@
 
     <bean name="elasticsearchPartitionsCache"
           class="org.springframework.data.elasticsearch.core.partition.DefaultElasticsearchPartitionsCache">
+        <constructor-arg name="client" ref="client"/>
         <property name="elasticsearchOperations" ref="elasticsearchTemplate"/>
     </bean>
             
@@ -16,6 +17,7 @@
     <bean name="elasticsearchPartitioner"
           class="org.springframework.data.elasticsearch.core.partition.DefaultElasticsearchPartitioner">
         <property name="elasticsearchPartitionsCache" ref="elasticsearchPartitionsCache"/>
+        <property name="elasticsearchOperations" ref="elasticsearchTemplate"/>
     </bean>
 
     <bean name="elasticsearchTemplate"
@@ -24,6 +26,9 @@
         <property name="elasticsearchPartitioner" ref="elasticsearchPartitioner"/>
     </bean>
 
+    <bean name="partitionSize" class="java.lang.String">
+        <constructor-arg value="1000000"/>
+    </bean>
 
     <elasticsearch:repositories
             base-package="org.springframework.data.elasticsearch.repositories.partition"/>

@@ -44,9 +44,11 @@ public @interface Document {
 
 	String indexStoreType() default "fs";
 
-	String[] partitions() default {};
+	String[] partitionersFields() default {};
 
-	PartitionStrategy[] partitionStrategies() default {};
+	Partitioner[] partitioners() default {};
 
-	String[] partitionParameters() default {};
+	String[] partitionersParameters() default {};
+
+	String partitionSeparator() default "_";
 }

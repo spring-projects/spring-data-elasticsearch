@@ -161,7 +161,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz) {
-		return putMapping(clazz, "");
+		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
+		return putMapping(clazz, persistentEntity.getIndexName());
 	}
 
 	@Override
@@ -191,7 +192,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> boolean putMapping(Class<T> clazz, Object mapping) {
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
-		if (persistentEntity.getPartitions().length > 0) {
+		if (elasticsearchPartitioner != null && elasticsearchPartitioner.isIndexPartitioned(clazz)) {
 			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName()+". Index is partitioned. You need to specify indexName");
 		}
 		return putMapping(persistentEntity.getIndexName(), persistentEntity.getIndexType(), mapping);
@@ -230,7 +231,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> Map getMapping(Class<T> clazz) {
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
-		if (persistentEntity.getPartitions().length > 0) {
+		if (elasticsearchPartitioner != null && elasticsearchPartitioner.isIndexPartitioned(clazz)) {
 			throw new ElasticsearchException("Failed to get mapping for " + clazz.getSimpleName()+". Index is partitioned. You need to specify indexName");
 		}
 		return getMapping(persistentEntity.getIndexName(), persistentEntity.getIndexType());
@@ -252,7 +253,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper) {
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
 		String indice = persistentEntity.getIndexName();
-		if (elasticsearchPartitioner != null && persistentEntity.getPartitions().length > 0) {
+		if (elasticsearchPartitioner != null && elasticsearchPartitioner.isIndexPartitioned(clazz)) {
 			indice = elasticsearchPartitioner.processPartitioning(query, clazz);
 		}
 		GetResponse response = client
@@ -284,14 +285,22 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> FacetedPage<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
-		SearchResponse response = doSearch(prepareSearch(query, clazz), query);
+		SearchRequestBuilder builder = prepareSearch(query, clazz);
+		SearchResponse response = doSearch(builder, query);
 		return mapper.mapResults(response, clazz, query.getPageable());
 	}
 
 	@Override
 	public <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor) {
-		SearchResponse response = doSearch(prepareSearch(query), query);
+		SearchRequestBuilder builder = prepareSearch(query);
+		SearchResponse response = doSearch(builder, query);
 		return resultsExtractor.extract(response);
+	}
+
+	@Override
+	public <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor, Class clazz) {
+		setPersistentEntityIndexAndType(query, clazz);
+		return query(query, resultsExtractor);
 	}
 
 	@Override
@@ -311,7 +320,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> List<String> queryForIds(SearchQuery query) {
-		SearchRequestBuilder request = prepareSearch(query).setQuery(query.getQuery()).setNoFields();
+		SearchRequestBuilder request = prepareSearch(query);
+		if (request == null) {
+			return new ArrayList<String>();
+		}
+		request.setQuery(query.getQuery()).setNoFields();
 		if (query.getFilter() != null) {
 			request.setPostFilter(query.getFilter());
 		}
@@ -438,7 +451,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		FilterBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
 
 		if (elasticsearchFilter == null) {
-			return doCount(prepareCount(criteriaQuery, clazz), elasticsearchQuery);
+			CountRequestBuilder builder = prepareCount(criteriaQuery, clazz);
+			if (builder == null)
+				return 0l;
+			return doCount(builder, elasticsearchQuery);
 		} else {
 			// filter could not be set into CountRequestBuilder, convert request into search request
 			return doCount(prepareSearch(criteriaQuery, clazz), elasticsearchQuery, elasticsearchFilter);
@@ -489,15 +505,19 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private <T> CountRequestBuilder prepareCount(Query query, Class<T> clazz) {
-		String indexName[] = isNotEmpty(query.getIndices()) ? query.getIndices().toArray(new String[query.getIndices().size()]) : retrieveIndexNameFromPersistentEntity(clazz);
-		String types[] = isNotEmpty(query.getTypes()) ? query.getTypes().toArray(new String[query.getTypes().size()]) : retrieveTypeFromPersistentEntity(clazz);
+		setPersistentEntityIndexAndType(query, clazz);
+		// for partitioned antities, an ampty liost is possible at this level. if no partition meet the target partitions of query
+		if (elasticsearchPartitioner != null && elasticsearchPartitioner.isIndexPartitioned(clazz)) {
+			if (query.getIndices().isEmpty())
+				return null;
+		}
+		else {
+			Assert.notEmpty(query.getIndices(), "No index defined for Query");
+		}
+		CountRequestBuilder countRequestBuilder = client.prepareCount(query.getIndices().toArray(new String[query.getIndices().size()]));
 
-		Assert.notNull(indexName, "No index defined for Query");
-
-		CountRequestBuilder countRequestBuilder = client.prepareCount(indexName);
-
-		if (types != null) {
-			countRequestBuilder.setTypes(types);
+		if (query.getTypes() != null) {
+			countRequestBuilder.setTypes(query.getTypes().toArray(new String[query.getTypes().size()]));
 		}
 		return countRequestBuilder;
 	}
@@ -558,7 +578,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	private UpdateRequestBuilder prepareUpdate(UpdateQuery query) {
 		String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName() : getPersistentEntityFor(query.getClazz()).getIndexName();
 		String type = isNotBlank(query.getType()) ? query.getType() : getPersistentEntityFor(query.getClazz()).getIndexType();
-
+		if (query.getIndexName() == null) query.setIndexName(indexName);
+		if (query.getType() == null) query.setType(type);
 		// For partitioned index,document index must include partitioning key
 		if (elasticsearchPartitioner != null && elasticsearchPartitioner.isIndexPartitioned(query.getClazz())) {
 			elasticsearchPartitioner.processPartitioning(query, query.getClazz());
@@ -568,7 +589,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		Assert.notNull(type, "No type define for Query");
 		Assert.notNull(query.getId(), "No Id define for Query");
 		Assert.notNull(query.getUpdateRequest(), "No IndexRequest define for Query");
-		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
+		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(query.getIndexName(), type, query.getId());
 
 		if (query.getUpdateRequest().script() == null) {
 			// doc
@@ -951,6 +972,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private SearchRequestBuilder prepareSearch(Query query) {
+
 		Assert.notNull(query.getIndices(), "No index defined for Query");
 		Assert.notNull(query.getTypes(), "No type defined for Query");
 

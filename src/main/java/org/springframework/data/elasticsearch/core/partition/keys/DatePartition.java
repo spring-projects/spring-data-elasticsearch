@@ -1,6 +1,6 @@
-package org.springframework.data.elasticsearch.core.partition.boundaries;
+package org.springframework.data.elasticsearch.core.partition.keys;
 
-import org.springframework.data.elasticsearch.annotations.PartitionStrategy;
+import org.springframework.data.elasticsearch.annotations.Partitioner;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -12,13 +12,23 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created by flefebure on 25/02/2016.
+ * Created by franck.lefebure on 24/02/2016.
  */
-public class DatePartitionBoundary  extends PartitionBoundary {
+public class DatePartition extends org.springframework.data.elasticsearch.core.partition.keys.Partition {
+
+    public DatePartition() {
+    }
+
+    @Override
+    public String getKeyValue(Object field, String parameter) {
+        Date date = (Date)field;
+        SimpleDateFormat sdf = new SimpleDateFormat(parameter);
+        return sdf.format(field);
+    }
     Date start;
     Date end;
 
-    public DatePartitionBoundary(String partitionKey, Date start, Date end) {
+    public DatePartition(String partitionKey, Date start, Date end) {
         this.start = start;
         this.end = end;
         setPartitionKey(partitionKey);
@@ -40,8 +50,9 @@ public class DatePartitionBoundary  extends PartitionBoundary {
         this.end = end;
     }
 
-    protected List<String> getSlices(List<String> slices, PartitionStrategy strategy, String pattern) {
-        List<String> newSlices = new ArrayList<String>();
+    @Override
+    protected List<String> getPartitions(List<String> partitions, Partitioner strategy, String pattern, String separator) {
+        List<String> newPartitions = new ArrayList<String>();
         LocalDateTime startTime = LocalDateTime.ofInstant(start.toInstant(), ZoneId.systemDefault());
         LocalDateTime endTime = LocalDateTime.ofInstant(end.toInstant(), ZoneId.systemDefault());
         DateTimeFormatter newSdf = DateTimeFormatter.ofPattern(pattern);
@@ -63,13 +74,13 @@ public class DatePartitionBoundary  extends PartitionBoundary {
             slice = LocalDateTime.of(startTime.getYear(), 1, 1, 0, 0);
             unit = ChronoUnit.MONTHS;
         }
-        newSlices.add(newSdf.format(slice));
+        newPartitions.add(newSdf.format(slice));
         slice = slice.plus(1, unit);
 
         while (slice.isBefore(endTime)) {
-            newSlices.add(newSdf.format(slice));
+            newPartitions.add(newSdf.format(slice));
             slice = slice.plus(1, unit);
         }
-        return appendSlices(slices, newSlices);
+        return appendPartitions(partitions, newPartitions, separator);
     }
 }

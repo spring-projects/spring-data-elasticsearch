@@ -573,4 +573,6 @@ public interface ElasticsearchOperations {
 
 
 	<T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor);
+
+	<T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor, Class clazz);
 }

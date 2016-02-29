@@ -15,16 +15,15 @@
  */
 package org.springframework.data.elasticsearch.repositories.partition;
 
-import org.springframework.data.elasticsearch.entities.PartitionedEntity;
-import org.springframework.data.elasticsearch.entities.SpELEntity;
+import org.springframework.data.elasticsearch.entities.partition.DatePartitionedEntity;
+import org.springframework.data.elasticsearch.entities.partition.LongPartitionedEntity;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 /**
- * SpELRepository
  *
- * @author Artur Konczak
+ * @author Franck Lefebure
  *
  */
-public interface PartitionedEntityRepository extends ElasticsearchRepository<PartitionedEntity, String> {
+public interface DatePartitionedEntityRepository extends ElasticsearchRepository<DatePartitionedEntity, String> {
 
 }

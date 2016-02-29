@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
-import org.springframework.data.elasticsearch.annotations.PartitionStrategy;
+import org.springframework.data.elasticsearch.annotations.Partitioner;
 import org.springframework.data.mapping.PersistentEntity;
 
 /**
@@ -47,11 +47,13 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 
 	String settingPath();
 
-	String[] getPartitions();
+	String[] getPartitionersFields();
 
-	PartitionStrategy[] getPartitionStrategies();
+	Partitioner[] getPartitioners();
 
-	String[] getPartitionParameters();
+	String[] getPartitionersParameters();
+
+	String getPartitionSeparator();
 
 	String getIndexName(T entity);
 }

@@ -13,27 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.entities;
+package org.springframework.data.elasticsearch.entities.partition;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.PartitionStrategy;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.Partitioner;
+
+import java.util.Date;
 
 /**
- * SpELEntity
  *
- * @author Artur Konczak
+ * @author FRanck Lefebure
  */
-@Document(indexName = "index", type = "type", indexStoreType = "memory", shards = 1,
-		replicas = 0, refreshInterval = "-1", partitions = "id", partitionStrategies = PartitionStrategy.long_range, partitionParameters = "1000")
-public class PartitionedEntity {
+@Document(indexName = "index", type = "dateparttype", indexStoreType = "memory", shards = 1,
+		replicas = 0, refreshInterval = "-1", partitionersFields = "creationDate", partitioners = Partitioner.date_range, partitionersParameters = "YYYYMM")
+public class DatePartitionedEntity {
 
 	@Id
 	private String id;
 
-	@Field
+	@Field(type = FieldType.String)
 	private String label;
+
+	@Field(type = FieldType.Date)
+	Date creationDate;
+
+	public Date getCreationDate() {
+		return creationDate;
+	}
+
+	public void setCreationDate(Date creationDate) {
+		this.creationDate = creationDate;
+	}
 
 	public String getLabel() {
 		return label;
