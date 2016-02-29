@@ -58,7 +58,7 @@ public class DefaultElasticsearchPartitionsCache implements ElasticsearchPartiti
     }
 
     @Override
-    @Cacheable(value = "esPartitions", key = "prefix")
+    @Cacheable(value = "esPartitions")
     public List<String> listTypesForPartition(String partition) {
         List<String> types = new ArrayList<String>();
         ClusterStateResponse clusterStateResponse = client.admin().cluster().prepareState().execute().actionGet();
@@ -71,7 +71,7 @@ public class DefaultElasticsearchPartitionsCache implements ElasticsearchPartiti
 
 
     @Override
-    @Cacheable(value = "esPartitions", key = "prefix")
+    @Cacheable(value = "esPartitions")
     public List<String> listIndicesForPrefix(String prefix) {
         List<String> indices = new ArrayList<String>();
         IndicesStatusResponse response = client.admin().indices().prepareStatus().execute().actionGet();
