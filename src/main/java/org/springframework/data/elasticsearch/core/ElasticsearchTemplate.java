@@ -79,7 +79,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.io.AbstractFileResolvingResource;
+import org.springframework.core.io.AbstractResource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
@@ -923,18 +926,16 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public <T> boolean createIndex(Class<T> clazz, Object settings, String indexName) {
 		if (settings == null && clazz != null) {
 			if (clazz.isAnnotationPresent(Setting.class)) {
-				String settingPath = clazz.getAnnotation(Setting.class).settingPath();
+				ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
+				String settingPath = persistentEntity.settingPath();
 				if (isNotBlank(settingPath)) {
 					settings = readFileFromClasspath(settingPath);
-				} else {
-					logger.info("settingPath in @Setting has to be defined. Using default instead.");
-					settings = getDefaultSettings(getPersistentEntityFor(clazz));
 				}
 			}
-			else {
-				logger.info("@Setting has to be defined. Using default instead.");
-				settings = getDefaultSettings(getPersistentEntityFor(clazz));
-			}
+		}
+		if (settings  == null) {
+			logger.info("@Setting has to be defined. Using default instead.");
+			settings = getDefaultSettings(getPersistentEntityFor(clazz));
 		}
 		return createIndex(indexName, settings);
 	}
@@ -1198,8 +1199,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		BufferedReader bufferedReader = null;
 
 		try {
-			ClassPathResource classPathResource = new ClassPathResource(url);
-			InputStreamReader inputStreamReader = new InputStreamReader(classPathResource.getInputStream());
+			AbstractResource resource;
+			if (url.startsWith("file:")) {
+				resource = new FileSystemResource(url.substring(5));
+			}
+			else {
+				resource = new ClassPathResource(url);
+			}
+			InputStreamReader inputStreamReader = new InputStreamReader(resource.getInputStream());
 			bufferedReader = new BufferedReader(inputStreamReader);
 			String line;
 
@@ -1220,6 +1227,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 		return stringBuilder.toString();
 	}
+
 
 	public SuggestResponse suggest(SuggestBuilder.SuggestionBuilder<?> suggestion, String... indices) {
 		SuggestRequestBuilder suggestRequestBuilder = client.prepareSuggest(indices);

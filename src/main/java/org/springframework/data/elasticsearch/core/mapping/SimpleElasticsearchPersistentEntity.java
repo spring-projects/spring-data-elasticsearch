@@ -137,7 +137,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		String indexName = expression.getValue(context, String.class);
 		if (partitioners.length == 0) return indexName;
 		String partitionPostfix = indexPartitioner.extractPartitionKeyFromObject(object, this);
-		return indexName+"_"+partitionPostfix;
+		return indexName+partitionSeparator+partitionPostfix;
 	}
 
 
@@ -179,7 +179,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 	@Override
 	public String settingPath() {
-		return settingPath;
+		Expression expression = parser.parseExpression(settingPath, ParserContext.TEMPLATE_EXPRESSION);
+		return expression.getValue(context, String.class);
 	}
 
 	@Override

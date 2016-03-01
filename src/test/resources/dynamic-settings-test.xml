@@ -12,6 +12,10 @@
         <constructor-arg name="client" ref="client"/>
     </bean>
 
+    <bean name="externalSettingPath" class="java.lang.String">
+        <constructor-arg value="#{systemProperties['java.io.tmpdir']+'settings.json'}"/>
+    </bean>
+
     <elasticsearch:repositories
             base-package="org.springframework.data.elasticsearch.repositories.setting"/>
 
