@@ -489,8 +489,8 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(matchAllQuery())
 				.withScriptField(new ScriptField("scriptedRate",
-						new Script("doc['rate'].value * factor", ScriptService.ScriptType.INLINE, null , params)))
-						.build();
+						new Script("doc['rate'].value * factor", ScriptService.ScriptType.INLINE, null, params)))
+				.build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		// then
 		assertThat(sampleEntities.getTotalElements(), equalTo(1L));
@@ -645,6 +645,33 @@ public class ElasticsearchTemplateTests {
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
 		assertThat(page.getContent().get(0), is(message));
 	}
+
+	@Test
+	public void shouldReturnFieldsBasedOnSourceFilter() {
+		// given
+		String documentId = randomNumeric(5);
+		String message = "some test message";
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message(message)
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		FetchSourceFilterBuilder sourceFilter = new FetchSourceFilterBuilder();
+		sourceFilter.withIncludes("message");
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME).withSourceFilter(sourceFilter.build()).build();
+		// when
+		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+		// then
+		assertThat(page, is(notNullValue()));
+		assertThat(page.getTotalElements(), is(equalTo(1L)));
+		assertThat(page.getContent().get(0).getMessage(), is(message));
+	}
+
 
 	@Test
 	public void shouldReturnSimilarResultsGivenMoreLikeThisQuery() {
