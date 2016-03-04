@@ -15,12 +15,17 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.elasticsearch.action.RoutingMissingException;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.After;
@@ -30,6 +35,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.entities.ParentEntity;
 import org.springframework.data.elasticsearch.entities.ParentEntity.ChildEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -81,6 +87,55 @@ public class ElasticsearchTemplateParentChildTests {
 		assertThat("parents", parents, contains(hasProperty("id", is(parent1.getId()))));
 	}
 
+	@Test
+	public void shouldUpdateChild() throws Exception {
+		// index parent and child
+		ParentEntity parent = index("parent", "Parent");
+		ChildEntity child = index("child", parent.getId(), "Child");
+		String newChildName = "New Child Name";
+
+		// update the child, not forgetting to set the parent id as routing parameter
+		UpdateRequest updateRequest = new UpdateRequest(ParentEntity.INDEX, ParentEntity.CHILD_TYPE, child.getId());
+		updateRequest.routing(parent.getId());
+		XContentBuilder builder;
+			builder = jsonBuilder().startObject().field("name", newChildName).endObject();
+		updateRequest.doc(builder);
+		final UpdateResponse response = update(updateRequest);
+
+		assertThat(response.getShardInfo().getSuccessful(), is(1));
+	}
+
+	@Test(expected = RoutingMissingException.class)
+	public void shouldFailWithRoutingMissingExceptionOnUpdateChildIfNotRoutingSetOnUpdateRequest() throws Exception {
+		// index parent and child
+		ParentEntity parent = index("parent", "Parent");
+		ChildEntity child = index("child", parent.getId(), "Child");
+		String newChildName = "New Child Name";
+
+		// update the child, forget routing parameter
+		UpdateRequest updateRequest = new UpdateRequest(ParentEntity.INDEX, ParentEntity.CHILD_TYPE, child.getId());
+		XContentBuilder builder;
+		builder = jsonBuilder().startObject().field("name", newChildName).endObject();
+		updateRequest.doc(builder);
+		update(updateRequest);
+	}
+
+	@Test(expected = RoutingMissingException.class)
+	public void shouldFailWithRoutingMissingExceptionOnUpdateChildIfRoutingOnlySetOnRequestDoc() throws Exception {
+		// index parent and child
+		ParentEntity parent = index("parent", "Parent");
+		ChildEntity child = index("child", parent.getId(), "Child");
+		String newChildName = "New Child Name";
+
+		// update the child
+		UpdateRequest updateRequest = new UpdateRequest(ParentEntity.INDEX, ParentEntity.CHILD_TYPE, child.getId());
+		XContentBuilder builder;
+		builder = jsonBuilder().startObject().field("name", newChildName).endObject();
+		updateRequest.doc(builder);
+		updateRequest.doc().routing(parent.getId());
+		update(updateRequest);
+	}
+
 	private ParentEntity index(String parentId, String name) {
 		ParentEntity parent = new ParentEntity(parentId, name);
 		IndexQuery index = new IndexQuery();
@@ -100,5 +155,14 @@ public class ElasticsearchTemplateParentChildTests {
 		elasticsearchTemplate.index(index);
 
 		return child;
+	}
+
+	private UpdateResponse update(UpdateRequest updateRequest) {
+		final UpdateQuery update = new UpdateQuery();
+		update.setId(updateRequest.id());
+		update.setType(updateRequest.type());
+		update.setIndexName(updateRequest.index());
+		update.setUpdateRequest(updateRequest);
+		return elasticsearchTemplate.update(update);
 	}
 }

@@ -538,6 +538,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		Assert.notNull(query.getId(), "No Id define for Query");
 		Assert.notNull(query.getUpdateRequest(), "No IndexRequest define for Query");
 		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
+		updateRequestBuilder.setRouting(query.getUpdateRequest().routing());
 
 		if (query.getUpdateRequest().script() == null) {
 			// doc

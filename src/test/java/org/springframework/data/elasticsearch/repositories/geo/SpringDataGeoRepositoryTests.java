@@ -29,6 +29,8 @@ import org.springframework.data.geo.Point;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.Locale;
+
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/repository-spring-data-geo-support.xml")
@@ -72,7 +74,7 @@ public class SpringDataGeoRepositoryTests {
 	}
 
 	private String toGeoString(Point point) {
-		return String.format("%.1f,%.1f", point.getX(), point.getY());
+		return String.format(Locale.ENGLISH, "%.1f,%.1f", point.getX(), point.getY());
 	}
 
 	private double[] toGeoArray(Point point) {
