@@ -148,7 +148,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		IndexQuery query = createIndexQuery(entity);
 		elasticsearchOperations.index(query);
 		String indexName = entityInformation.getIndexName();
-		if (entityInformation.getPartitionersFields().length > 0) {
+		if (entityInformation.getPartitionersFields().length > 0 && query.getIndexName() != null) {
 			indexName = query.getIndexName();
 		}
 		elasticsearchOperations.refresh(indexName, true);
