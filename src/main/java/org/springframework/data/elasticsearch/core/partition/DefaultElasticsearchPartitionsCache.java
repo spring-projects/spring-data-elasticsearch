@@ -41,14 +41,14 @@ public class DefaultElasticsearchPartitionsCache implements ElasticsearchPartiti
     }
 
     @Override
-    @CacheEvict(value = "esPartitions")
+    @CacheEvict(value = "esPartitions", allEntries = true)
     public <T> void createPartition(String partition, Class<T> clazz) {
         try {
             elasticsearchOperations.createIndex(clazz, null, partition);
         }
         catch (IndexAlreadyExistsException exception) {
             // ignore such exception
-            logger.info("tried to existing partition");
+            logger.info("tried to create existing partition");
         }
     }
 
