@@ -21,7 +21,7 @@
 
         <dist.key>DATAES</dist.key>
 
-        <commonscollections>3.2.1</commonscollections>
+        <commonscollections>3.2.2</commonscollections>
         <commonslang>2.6</commonslang>
         <elasticsearch>2.2.0</elasticsearch>
         <springdata.commons>1.12.0.BUILD-SNAPSHOT</springdata.commons>
