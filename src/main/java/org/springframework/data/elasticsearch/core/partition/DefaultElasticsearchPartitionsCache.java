@@ -54,6 +54,7 @@ public class DefaultElasticsearchPartitionsCache implements ElasticsearchPartiti
     }
 
     @Override
+    @CacheEvict(value = "esPartitions", allEntries = true)
     public <T> void putMapping(String partition, Class<T> clazz) {
         logger.info("creating mapping for class "+clazz.getCanonicalName()+" in index "+partition);
         elasticsearchOperations.putMapping(clazz, null, partition);
