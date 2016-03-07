@@ -44,6 +44,7 @@ public class DefaultElasticsearchPartitionsCache implements ElasticsearchPartiti
     @CacheEvict(value = "esPartitions", allEntries = true)
     public <T> void createPartition(String partition, Class<T> clazz) {
         try {
+            logger.info("creating index "+partition);
             elasticsearchOperations.createIndex(clazz, null, partition);
         }
         catch (IndexAlreadyExistsException exception) {
@@ -54,6 +55,7 @@ public class DefaultElasticsearchPartitionsCache implements ElasticsearchPartiti
 
     @Override
     public <T> void putMapping(String partition, Class<T> clazz) {
+        logger.info("creating mapping for class "+clazz.getCanonicalName()+" in index "+partition);
         elasticsearchOperations.putMapping(clazz, null, partition);
     }
 
