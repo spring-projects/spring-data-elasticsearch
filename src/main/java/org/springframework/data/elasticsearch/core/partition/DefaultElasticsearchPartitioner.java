@@ -103,8 +103,8 @@ public class DefaultElasticsearchPartitioner implements ElasticsearchPartitioner
 
             setPersistentEntityId(indexQuery.getObject(), indexQuery.getId(), persistentEntity);
             partitionName = persistentEntity.getIndexName()+sep+partitionKey;
-            createPartitionIfNotExists(clazz, persistentEntity.getIndexType(), indexName, partitionName);
         }
+        createPartitionIfNotExists(clazz, persistentEntity.getIndexType(), indexName, partitionName);
         indexQuery.setIndexName(partitionName);
     }
 
