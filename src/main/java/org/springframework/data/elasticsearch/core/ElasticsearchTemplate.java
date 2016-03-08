@@ -15,14 +15,15 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang.StringUtils.*;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.elasticsearch.action.search.SearchType.*;
 import static org.elasticsearch.client.Requests.*;
 import static org.elasticsearch.cluster.metadata.AliasAction.Type.*;
 import static org.elasticsearch.index.VersionType.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,7 +31,6 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -465,8 +465,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private <T> CountRequestBuilder prepareCount(Query query, Class<T> clazz) {
-		String indexName[] = isNotEmpty(query.getIndices()) ? query.getIndices().toArray(new String[query.getIndices().size()]) : retrieveIndexNameFromPersistentEntity(clazz);
-		String types[] = isNotEmpty(query.getTypes()) ? query.getTypes().toArray(new String[query.getTypes().size()]) : retrieveTypeFromPersistentEntity(clazz);
+		String indexName[] = !isEmpty(query.getIndices()) ? query.getIndices().toArray(new String[query.getIndices().size()]) : retrieveIndexNameFromPersistentEntity(clazz);
+		String types[] = !isEmpty(query.getTypes()) ? query.getTypes().toArray(new String[query.getTypes().size()]) : retrieveTypeFromPersistentEntity(clazz);
 
 		Assert.notNull(indexName, "No index defined for Query");
 
@@ -485,8 +485,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	private <T> MultiGetResponse getMultiResponse(Query searchQuery, Class<T> clazz) {
 
-		String indexName = isNotEmpty(searchQuery.getIndices()) ? searchQuery.getIndices().get(0) : getPersistentEntityFor(clazz).getIndexName();
-		String type = isNotEmpty(searchQuery.getTypes()) ? searchQuery.getTypes().get(0) : getPersistentEntityFor(clazz).getIndexType();
+		String indexName = !isEmpty(searchQuery.getIndices()) ? searchQuery.getIndices().get(0) : getPersistentEntityFor(clazz).getIndexName();
+		String type = !isEmpty(searchQuery.getTypes()) ? searchQuery.getTypes().get(0) : getPersistentEntityFor(clazz).getIndexType();
 
 		Assert.notNull(indexName, "No index defined for Query");
 		Assert.notNull(type, "No type define for Query");
@@ -735,7 +735,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).setFrom(0)
 				.setSize(query.getPageable().getPageSize());
 
-		if (isNotEmpty(query.getFields())) {
+		if (!isEmpty(query.getFields())) {
 			requestBuilder.addFields(toArray(query.getFields()));
 		}
 
@@ -817,7 +817,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		if (query.getMaxQueryTerms() != null) {
 			moreLikeThisQueryBuilder.maxQueryTerms(query.getMaxQueryTerms());
 		}
-		if (isNotEmpty(query.getStopWords())) {
+		if (!isEmpty(query.getStopWords())) {
 			moreLikeThisQueryBuilder.stopWords(toArray(query.getStopWords()));
 		}
 		if (query.getMinDocFreq() != null) {
@@ -844,7 +844,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			searchRequest.setPostFilter(searchQuery.getFilter());
 		}
 
-		if (CollectionUtils.isNotEmpty(searchQuery.getElasticsearchSorts())) {
+		if (!isEmpty(searchQuery.getElasticsearchSorts())) {
 			for (SortBuilder sort : searchQuery.getElasticsearchSorts()) {
 				searchRequest.addSort(sort);
 			}
@@ -863,13 +863,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			}
 		}
 
-		if (CollectionUtils.isNotEmpty(searchQuery.getIndicesBoost())) {
+		if (!isEmpty(searchQuery.getIndicesBoost())) {
 			for (IndexBoost indexBoost : searchQuery.getIndicesBoost()) {
 				searchRequest.addIndexBoost(indexBoost.getIndexName(), indexBoost.getBoost());
 			}
 		}
 
-		if (CollectionUtils.isNotEmpty(searchQuery.getAggregations())) {
+		if (!isEmpty(searchQuery.getAggregations())) {
 			for (AbstractAggregationBuilder aggregationBuilder : searchQuery.getAggregations()) {
 				searchRequest.addAggregation(aggregationBuilder);
 			}

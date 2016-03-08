@@ -60,11 +60,6 @@
             <artifactId>commons-lang</artifactId>
             <version>${commonslang}</version>
         </dependency>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>${commonscollections}</version>
-        </dependency>
 
         <!-- JODA Time -->
         <dependency>

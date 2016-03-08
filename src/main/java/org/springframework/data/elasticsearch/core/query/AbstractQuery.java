@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import static org.apache.commons.collections.CollectionUtils.*;
-
+import static java.util.Collections.addAll;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import org.elasticsearch.action.search.SearchType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;

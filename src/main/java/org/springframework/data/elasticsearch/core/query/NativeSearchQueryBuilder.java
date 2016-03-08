@@ -15,11 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import static org.springframework.util.CollectionUtils.isEmpty;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
@@ -165,11 +164,11 @@ public class NativeSearchQueryBuilder {
 		    nativeSearchQuery.setIndicesBoost(indicesBoost);
 		}
 		
-        if (CollectionUtils.isNotEmpty(scriptFields)) {
+        if (!isEmpty(scriptFields)) {
             nativeSearchQuery.setScriptFields(scriptFields);
         }
 
-		if (CollectionUtils.isNotEmpty(aggregationBuilders)) {
+		if (!isEmpty(aggregationBuilders)) {
 			nativeSearchQuery.setAggregations(aggregationBuilders);
 		}
 
