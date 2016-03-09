@@ -78,6 +78,8 @@ public class DefaultElasticsearchPartitioner implements ElasticsearchPartitioner
         // if no partitions match query, add the empty base index, so no errors are triggered
         if (query.getIndices().isEmpty())
             query.getIndices().add(indexName);
+
+        logger.trace("ES query for partitions "+query.getIndices());
     }
 
     @Override
