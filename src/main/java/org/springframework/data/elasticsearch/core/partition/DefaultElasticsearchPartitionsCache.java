@@ -69,6 +69,7 @@ public class DefaultElasticsearchPartitionsCache implements ElasticsearchPartiti
         for (ObjectCursor<String> stringObjectCursor : indexMappings.keys()) {
             types.add(stringObjectCursor.value);
         }
+        logger.trace("listing types for partition "+partition+" "+types);
         return types;
     }
 
@@ -84,6 +85,7 @@ public class DefaultElasticsearchPartitionsCache implements ElasticsearchPartiti
                 indices.add(index);
             }
         }
+        logger.trace("listing indexes for prefix "+prefix+" "+indices);
         return indices;
     }
 }
