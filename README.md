@@ -11,12 +11,12 @@ Guide
 ------------
 
 * [Reference Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/)
-* [PDF Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/current/reference/pdf/spring-data-elasticsearch-reference.pdf)
 * [API Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/current/api/)
 * [Spring Data Project](http://projects.spring.io/spring-data)
 * [Sample Test Application](https://github.com/BioMedCentralLtd/spring-data-elasticsearch-sample-application)
+* [Issues](https://jira.springsource.org/browse/DATAES)
 * [Spring Data Elasticsearch Google Group](https://groups.google.com/d/forum/spring-data-elasticsearch-devs)
-* For more detailed questions, use the [forum](http://forum.springsource.org/forumdisplay.php?f=80).
+* [Questions](http://stackoverflow.com/questions/tagged/spring-data-elasticsearch)
 
 
 Quick Start
@@ -60,7 +60,7 @@ the appropriate dependency version.
 
 |   spring data elasticsearch         | elasticsearch |
 |:-----------------------------------:|:-------------:|
-|           1.4.0.BUILD-SNAPSHOT      |      2.2.0    |
+|           2.0.0.BUILD-SNAPSHOT      |      2.2.0    |
 |           1.4.0.M1                  |      1.7.3    |
 |           1.3.0.RELEASE             |      1.5.2    |
 |           1.2.0.RELEASE             |      1.4.4    |
