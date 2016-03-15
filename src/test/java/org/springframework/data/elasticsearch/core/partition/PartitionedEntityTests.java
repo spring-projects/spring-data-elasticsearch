@@ -105,6 +105,11 @@ public class PartitionedEntityTests {
 		e = longPartitionedEntityRepository.findOne("2000_2023");
 		Assert.assertNotNull(e);
 		Assert.assertEquals("test", e.getLabel());
+
+		longPartitionedEntityRepository.delete(e);
+		e = longPartitionedEntityRepository.findOne("2000_2023");
+		Assert.assertNull(e);
+
 	}
 
 	@Test

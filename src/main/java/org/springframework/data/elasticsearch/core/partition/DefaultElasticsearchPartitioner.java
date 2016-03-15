@@ -47,6 +47,17 @@ public class DefaultElasticsearchPartitioner implements ElasticsearchPartitioner
     }
 
     @Override
+    public <T> String processPartitioning(String id, Class<T> clazz) {
+        ElasticsearchPersistentEntity persistentEntity = elasticsearchOperations.getElasticsearchConverter().getMappingContext().getPersistentEntity(clazz);
+        String indexName= persistentEntity.getIndexName();
+        String sep = persistentEntity.getPartitionSeparator();
+
+        String partitionKey = extractKeyFromId(id, persistentEntity);
+        String partitionName = indexName+sep+partitionKey;
+        return partitionName;
+    }
+
+    @Override
     public <T> void processPartitioning(Query query, Class<T> clazz) {
         query.getIndices().clear();
         ElasticsearchPersistentEntity persistentEntity = elasticsearchOperations.getElasticsearchConverter().getMappingContext().getPersistentEntity(clazz);

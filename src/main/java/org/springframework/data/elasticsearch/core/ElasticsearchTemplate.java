@@ -699,7 +699,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> String delete(Class<T> clazz, String id) {
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
-		return delete(persistentEntity.getIndexName(), persistentEntity.getIndexType(), id);
+		String indexName = persistentEntity.getIndexName();
+		if (elasticsearchPartitioner != null && elasticsearchPartitioner.isIndexPartitioned(clazz)) {
+			indexName = elasticsearchPartitioner.processPartitioning(id, clazz);
+		}
+		return delete(indexName, persistentEntity.getIndexType(), id);
 	}
 
 	@Override

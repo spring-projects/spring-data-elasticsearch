@@ -33,9 +33,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.terms;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 /**
  * Created by franck.lefebure on 28/02/2016.
@@ -186,6 +184,16 @@ public class TemplateTests {
         query = new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchAllQuery()).withPartition(new LongPartition("id", 1000, 2000)).build();
         list = template.queryForList(query, LongPartitionedEntity.class);
         assertEquals("label updated", list.get(0).getLabel());
+
+        GetQuery getQuery = new GetQuery();
+        getQuery.setId("1000_1500");
+        LongPartitionedEntity got = template.queryForObject(getQuery, LongPartitionedEntity.class);
+        assertNotNull(got);
+        assertEquals("1000_1500", got.getId());
+
+        template.delete(LongPartitionedEntity.class, "1000_1500");
+        got = template.queryForObject(getQuery, LongPartitionedEntity.class);
+        assertNull(got);
 
     }
 

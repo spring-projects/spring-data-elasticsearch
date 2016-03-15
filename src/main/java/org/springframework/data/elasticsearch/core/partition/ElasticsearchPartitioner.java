@@ -19,6 +19,8 @@ public interface ElasticsearchPartitioner {
 
     public <T> String processPartitioning(GetQuery indexQuery, Class<T> clazz);
 
+    public <T> String processPartitioning(String id, Class<T> clazz);
+
     public <T> String extractPartitionKeyFromObject(T object, ElasticsearchPersistentEntity persistentEntity);
 
     public <T> boolean isIndexPartitioned(T object);
