@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import org.springframework.data.repository.cdi.CdiRepositoryBean;
 import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
 
 /**
- * ElasticsearchRepositoryExtension
+ * CDI extension to export Elasticsearch repositories.
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -42,14 +42,14 @@ import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
  */
 public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupport {
 
-	private final Map<String, Bean<ElasticsearchOperations>> elasticsearchOperationsMap = new HashMap<String, Bean<ElasticsearchOperations>>();
+	private final Map<Set<Annotation>, Bean<ElasticsearchOperations>> elasticsearchOperationsMap = new HashMap<Set<Annotation>, Bean<ElasticsearchOperations>>();
 
 	@SuppressWarnings("unchecked")
 	<T> void processBean(@Observes ProcessBean<T> processBean) {
 		Bean<T> bean = processBean.getBean();
 		for (Type type : bean.getTypes()) {
 			if (type instanceof Class<?> && ElasticsearchOperations.class.isAssignableFrom((Class<?>) type)) {
-				elasticsearchOperationsMap.put(bean.getQualifiers().toString(), ((Bean<ElasticsearchOperations>) bean));
+				elasticsearchOperationsMap.put(bean.getQualifiers(), ((Bean<ElasticsearchOperations>) bean));
 			}
 		}
 	}
@@ -69,8 +69,7 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 	private <T> CdiRepositoryBean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers,
 														  BeanManager beanManager) {
 
-		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers
-				.toString());
+		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers);
 
 		if (elasticsearchOperationsBean == null) {
 			throw new UnsatisfiedResolutionException(String.format("Unable to resolve a bean for '%s' with qualifiers %s.",
