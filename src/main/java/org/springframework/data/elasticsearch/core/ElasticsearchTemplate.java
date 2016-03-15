@@ -139,6 +139,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		this.resultsMapper = resultsMapper;
 	}
 
+	@Override
+	public Client getClient() {
+		return client;
+	}
+
 	public void setSearchTimeout(String searchTimeout) {
 		this.searchTimeout = searchTimeout;
 	}
