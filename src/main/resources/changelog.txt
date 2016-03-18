@@ -1,6 +1,19 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.0.0.RC1 (2016-03-18)
+-----------------------------------------
+* DATAES-241 - remove commons-collections dependency and use CollectionUtils from Spring Utils.
+* DATAES-240 - Release 2.0 RC1 (Hopper).
+* DATAES-238 - ElasticsearchTemplate.prepareUpdate() does not preserve routing parameter which is required for updating child documents.
+* DATAES-237 - path-configuration fails to load configs from inside jars.
+* DATAES-236 - Clear the search contexts associated with specified scroll id.
+* DATAES-234 - CDI support can fail due to Set.toString() used as Map key.
+* DATAES-211 - Upgrade to Elasticsearch 2.0.
+* DATAES-188 - Source filtering feature Implementation.
+* DATAES-124 - ElasticSearchTemplate should expose client.
+
+
 Changes in version 1.3.4.RELEASE (2016-02-23)
 ---------------------------------------------
 * DATAES-235 - Release 1.3.4 (Gosling SR4).
