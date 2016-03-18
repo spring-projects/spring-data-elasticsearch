@@ -60,7 +60,7 @@ the appropriate dependency version.
 
 |   spring data elasticsearch         | elasticsearch |
 |:-----------------------------------:|:-------------:|
-|           2.0.0.BUILD-SNAPSHOT      |      2.2.0    |
+|           2.0.0.RC1                 |      2.2.0    |
 |           1.4.0.M1                  |      1.7.3    |
 |           1.3.0.RELEASE             |      1.5.2    |
 |           1.2.0.RELEASE             |      1.4.4    |
@@ -255,4 +255,4 @@ Before we accept a non-trivial patch or pull request we will need you to sign th
 
 Code formatting for [Eclipse and Intellij](https://github.com/spring-projects/spring-data-build/tree/master/etc/ide)
 
-[More information about contributing to Spring Data](https://github.com/spring-projects/spring-data-build/blob/master/CONTRIBUTING.md)
+[More information about contributing to Spring Data](https://github.com/spring-projects/spring-data-build/blob/master/CONTRIBUTING.adoc)
