@@ -709,7 +709,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> void delete(DeleteQuery deleteQuery, Class<T> clazz) {
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
-		client.prepareDeleteByQuery(persistentEntity.getIndexName()).setTypes(persistentEntity.getIndexType())
+		String indexName = persistentEntity.getIndexName();
+		if (elasticsearchPartitioner != null && elasticsearchPartitioner.isIndexPartitioned(clazz)) {
+			indexName = indexName+"*";
+		}
+		client.prepareDeleteByQuery(indexName).setTypes(persistentEntity.getIndexType())
 				.setQuery(deleteQuery.getQuery()).execute().actionGet();
 	}
 
