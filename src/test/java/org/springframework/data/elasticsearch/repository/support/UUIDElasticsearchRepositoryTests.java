@@ -15,23 +15,12 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
-import org.elasticsearch.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -68,8 +57,8 @@ public class UUIDElasticsearchRepositoryTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(SampleEntityUUIDKeyed.class);
 		elasticsearchTemplate.createIndex(SampleEntityUUIDKeyed.class);
-        elasticsearchTemplate.putMapping(SampleEntityUUIDKeyed.class);
-		elasticsearchTemplate.refresh(SampleEntityUUIDKeyed.class, true);
+		elasticsearchTemplate.putMapping(SampleEntityUUIDKeyed.class);
+		elasticsearchTemplate.refresh(SampleEntityUUIDKeyed.class);
 	}
 
 	@Test
@@ -222,12 +211,13 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.save(sampleEntityUUIDKeyed2);
 
 		// when
-		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.findAll(Arrays.asList(documentId, documentId2));
+		LinkedList<SampleEntityUUIDKeyed> sampleEntities = (LinkedList<SampleEntityUUIDKeyed>) repository.findAll(Arrays.asList(documentId, documentId2));
 
 		// then
 		assertNotNull("sample entities cant be null..", sampleEntities);
-		List<SampleEntityUUIDKeyed> entities = Lists.newArrayList(sampleEntities);
-		assertThat(entities.size(), is(2));
+		assertThat(sampleEntities.size(), is(2));
+		assertThat(sampleEntities.get(0).getId(), isIn(Arrays.asList(documentId, documentId2)));
+		assertThat(sampleEntities.get(1).getId(), isIn(Arrays.asList(documentId, documentId2)));
 	}
 
 	@Test
@@ -324,6 +314,7 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.save(Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2, sampleEntityUUIDKeyed3));
 		// when
 		List<SampleEntityUUIDKeyed> result = repository.deleteByAvailable(true);
+		repository.refresh();
 		// then
 		assertThat(result.size(), equalTo(2));
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
@@ -354,6 +345,7 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.save(Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2, sampleEntityUUIDKeyed3));
 		// when
 		List<SampleEntityUUIDKeyed> result = repository.deleteByMessage("hello world 3");
+		repository.refresh();
 		// then
 		assertThat(result.size(), equalTo(1));
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
@@ -384,12 +376,12 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.save(Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2, sampleEntityUUIDKeyed3));
 		// when
 		repository.deleteByType("article");
+		repository.refresh();
 		// then
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements(), equalTo(2L));
 	}
-
 
 
 	@Test
@@ -403,6 +395,7 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.save(sampleEntityUUIDKeyed);
 		// when
 		repository.delete(sampleEntityUUIDKeyed);
+		repository.refresh();
 		// then
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
 		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);

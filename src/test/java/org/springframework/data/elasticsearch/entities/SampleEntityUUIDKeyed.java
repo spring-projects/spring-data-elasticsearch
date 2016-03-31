@@ -15,10 +15,9 @@
  */
 package org.springframework.data.elasticsearch.entities;
 
-import lombok.*;
-
 import java.util.UUID;
 
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -36,7 +35,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(indexName = "test-index-uuid-keyed", type = "test-type-uuid-keyed", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-uuid-keyed", type = "test-type-uuid-keyed", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleEntityUUIDKeyed {
 
 	@Id
