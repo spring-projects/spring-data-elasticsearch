@@ -89,8 +89,8 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 		client = TransportClient.builder().settings(settings()).build();
 		Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
 		for (String clusterNode : split(clusterNodes, COMMA)) {
-			String hostName = substringBefore(clusterNode, COLON);
-			String port = substringAfter(clusterNode, COLON);
+			String hostName = substringBeforeLast(clusterNode, COLON);
+			String port = substringAfterLast(clusterNode, COLON);
 			Assert.hasText(hostName, "[Assertion failed] missing host name in 'clusterNodes'");
 			Assert.hasText(port, "[Assertion failed] missing port in 'clusterNodes'");
 			logger.info("adding transport node : " + clusterNode);
