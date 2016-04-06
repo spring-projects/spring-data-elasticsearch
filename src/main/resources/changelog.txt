@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.0.0.RELEASE (2016-04-06)
+---------------------------------------------
+* DATAES-245 - Release 2.0 GA (Hopper).
+
+
 Changes in version 2.0.0.RC1 (2016-03-18)
 -----------------------------------------
 * DATAES-241 - remove commons-collections dependency and use CollectionUtils from Spring Utils.
