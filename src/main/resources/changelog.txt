@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.0.1.RELEASE (2016-04-06)
+---------------------------------------------
+* DATAES-249 - Release 2.0.1 (Hopper SR1).
+
+
 Changes in version 2.0.0.RELEASE (2016-04-06)
 ---------------------------------------------
 * DATAES-245 - Release 2.0 GA (Hopper).
