@@ -1,10 +1,11 @@
 ### Global gh-pages pre-amble
 safe: true
 lsi: false
-pygments: true
-markdown: redcarpet
-redcarpet:
-  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "with_toc_data"]
+markdown: kramdown
+kramdown:
+  input: GFM
+  auto_ids: true
+  syntax_highlighter: rouge
 
 
 ### The following properties will change on a project-by-project basis
