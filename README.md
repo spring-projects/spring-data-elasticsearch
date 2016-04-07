@@ -31,7 +31,7 @@ Add the Maven dependency:
 <dependency>
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-elasticsearch</artifactId>
-    <version>1.3.4.RELEASE</version>
+    <version>2.0.0.RELEASE</version>
 </dependency>
 ```
 
@@ -42,7 +42,7 @@ the appropriate dependency version.
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-elasticsearch</artifactId>
-  <version>2.0.0.BUILD-SNAPSHOT</version>
+  <version>2.1.0.BUILD-SNAPSHOT</version>
 </dependency>
 
 <repository>
@@ -52,15 +52,9 @@ the appropriate dependency version.
 </repository>
 ```
 
-### Note:
-
-1) Spring data elaticsearch until 1.0.0.RELEASE version is on elasticsearch 1.1.x library, which uses java 1.6 or later version.
-
-2) From spring data elasticsearch 1.1.0.RELEASE the version of elasticsearch is 1.3.x  which is supporting java 1.7 or later.
-
 |   spring data elasticsearch         | elasticsearch |
 |:-----------------------------------:|:-------------:|
-|           2.0.0.RC1                 |      2.2.0    |
+|           2.0.0.RELEASE             |      2.2.0    |
 |           1.4.0.M1                  |      1.7.3    |
 |           1.3.0.RELEASE             |      1.5.2    |
 |           1.2.0.RELEASE             |      1.4.4    |
