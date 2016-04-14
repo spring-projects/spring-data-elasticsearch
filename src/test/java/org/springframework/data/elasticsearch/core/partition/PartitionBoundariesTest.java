@@ -92,7 +92,7 @@ public class PartitionBoundariesTest {
         boundaries.add(dateBoundary);
         String[] partitions = new String[]{"creationDate"};
         Partitioner[] strategies = new Partitioner[]{Partitioner.date_range};
-        String[] parameters = new String[]{"YYYYMMDD"};
+        String[] parameters = new String[]{"YYYYMMdd"};
         List<String> slices = Partition.getPartitions(boundaries,partitions,strategies,parameters,"_");
         Assert.assertEquals(3, slices.size());
         Assert.assertTrue(slices.contains("20150805"));

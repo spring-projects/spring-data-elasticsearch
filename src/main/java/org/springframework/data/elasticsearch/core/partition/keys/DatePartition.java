@@ -55,28 +55,24 @@ public class DatePartition extends org.springframework.data.elasticsearch.core.p
         List<String> newPartitions = new ArrayList<String>();
         LocalDateTime startTime = LocalDateTime.ofInstant(start.toInstant(), ZoneId.systemDefault());
         LocalDateTime endTime = LocalDateTime.ofInstant(end.toInstant(), ZoneId.systemDefault());
-        DateTimeFormatter newSdf = null;
+        DateTimeFormatter newSdf = DateTimeFormatter.ofPattern(pattern);
         LocalDateTime slice = null;
         ChronoUnit unit = null;
-        if (pattern.equals("YYYYMMDDHH")) {
+        if (pattern.equals("YYYYMMddHH")) {
             slice = LocalDateTime.of(startTime.getYear(), startTime.getMonth(), startTime.getDayOfMonth(), startTime.getHour(), 0);
             unit = ChronoUnit.HOURS;
-            newSdf = DateTimeFormatter.ofPattern("YYYYMMddHH");
         }
-        else if (pattern.equals("YYYYMMDD")) {
+        else if (pattern.equals("YYYYMMdd")) {
             slice = LocalDateTime.of(startTime.getYear(), startTime.getMonth(), startTime.getDayOfMonth(), 0, 0);
             unit = ChronoUnit.DAYS;
-            newSdf = DateTimeFormatter.ofPattern("YYYYMMdd");
         }
         else if (pattern.equals("YYYYMM")) {
             slice = LocalDateTime.of(startTime.getYear(), startTime.getMonth(), 1, 0, 0);
             unit = ChronoUnit.MONTHS;
-            newSdf = DateTimeFormatter.ofPattern("YYYYMM");
         }
         else {
             slice = LocalDateTime.of(startTime.getYear(), 1, 1, 0, 0);
-            unit = ChronoUnit.YEARS;
-            newSdf = DateTimeFormatter.ofPattern("YYYY");
+            unit = ChronoUnit.MONTHS;
         }
         newPartitions.add(newSdf.format(slice));
         slice = slice.plus(1, unit);
