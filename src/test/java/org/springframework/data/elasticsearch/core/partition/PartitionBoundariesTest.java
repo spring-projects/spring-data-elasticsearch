@@ -83,6 +83,25 @@ public class PartitionBoundariesTest {
     }
 
     @Test
+    public void testDailyDateBoundaries() throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd:HH:mm");
+        Date start = sdf.parse("2015/08/05:13:24");
+        Date end = sdf.parse("2015/08/07:17:36");
+        DatePartition dateBoundary = new DatePartition("creationDate", start, end);
+        List<Partition> boundaries = new ArrayList<Partition>();
+        boundaries.add(dateBoundary);
+        String[] partitions = new String[]{"creationDate"};
+        Partitioner[] strategies = new Partitioner[]{Partitioner.date_range};
+        String[] parameters = new String[]{"YYYYMMDD"};
+        List<String> slices = Partition.getPartitions(boundaries,partitions,strategies,parameters,"_");
+        Assert.assertEquals(3, slices.size());
+        Assert.assertTrue(slices.contains("20150805"));
+        Assert.assertTrue(slices.contains("20150806"));
+        Assert.assertTrue(slices.contains("20150807"));
+    }
+
+
+    @Test
     public void testComplexBoundaries() throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd:HH:mm");
         StringPartition stringBoundary = new StringPartition("customer", new String[]{"johndoe", "homersimpson"});
