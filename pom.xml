@@ -24,6 +24,8 @@
         <commonscollections>3.2.1</commonscollections>
         <commonslang>2.6</commonslang>
         <elasticsearch>2.2.0</elasticsearch>
+        <jest>2.0.3-SNAPSHOT</jest>
+        <gson>2.4</gson>
         <springdata.commons>1.13.0.BUILD-SNAPSHOT</springdata.commons>
 
     </properties>
@@ -93,6 +95,26 @@
             <artifactId>cdi-api</artifactId>
             <version>${cdi}</version>
             <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- JEST -->
+        <dependency>
+            <groupId>io.searchbox</groupId>
+            <artifactId>jest</artifactId>
+            <version>${jest}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${gson}</version>
             <optional>true</optional>
         </dependency>
 
