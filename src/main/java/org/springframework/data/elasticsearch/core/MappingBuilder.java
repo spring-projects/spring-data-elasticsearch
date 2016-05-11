@@ -97,9 +97,8 @@ class MappingBuilder {
 
 		final List<AccessibleObject> members = new ArrayList<AccessibleObject>();
 
-		final java.lang.reflect.Field[] fields = clazz.getDeclaredFields();
-		members.addAll(Arrays.asList(fields));
-		members.addAll(Arrays.asList(clazz.getDeclaredMethods()));
+		members.addAll(Arrays.asList(retrieveFields(clazz)));
+		members.addAll(Arrays.asList(retrieveMethods(clazz)));
 
 		if (!isRootObject && (isAnyPropertyAnnotatedAsField(members) || nestedOrObjectField)) {
 			String type = FieldType.Object.toString().toLowerCase();
@@ -184,6 +183,21 @@ class MappingBuilder {
 		while (targetClass != null && targetClass != Object.class);
 
 		return fields.toArray(new java.lang.reflect.Field[fields.size()]);
+	}
+
+	private static java.lang.reflect.Method[] retrieveMethods(Class clazz) {
+		// Create list of methods.
+		List<java.lang.reflect.Method> methods = new ArrayList<java.lang.reflect.Method>();
+
+		// Keep backing up the inheritance hierarchy.
+		Class targetClass = clazz;
+		do {
+			methods.addAll(Arrays.asList(targetClass.getDeclaredMethods()));
+			targetClass = targetClass.getSuperclass();
+		}
+		while (targetClass != null && targetClass != Object.class);
+
+		return methods.toArray(new java.lang.reflect.Method[methods.size()]);
 	}
 
 	private static boolean isAnnotated(java.lang.reflect.AccessibleObject member) {
@@ -314,9 +328,12 @@ class MappingBuilder {
 	}
 
 	protected static boolean isEntity(java.lang.reflect.AccessibleObject member) {
-		TypeInformation typeInformation = ClassTypeInformation.from(getMemberType(member));
-		Class<?> clazz = getMemberType(member);
-		boolean isComplexType = !SIMPLE_TYPE_HOLDER.isSimpleType(clazz);
+		final Class<?> memberType = getMemberType(member);
+		if (memberType == null) {
+			return false;
+		}
+		TypeInformation typeInformation = ClassTypeInformation.from(memberType);
+		boolean isComplexType = !SIMPLE_TYPE_HOLDER.isSimpleType(memberType);
 		return isComplexType && !Map.class.isAssignableFrom(typeInformation.getType());
 	}
 
