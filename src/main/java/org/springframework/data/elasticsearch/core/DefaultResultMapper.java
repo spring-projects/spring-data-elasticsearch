@@ -25,22 +25,22 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchResponse;
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.core.domain.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.PersistentProperty;
@@ -48,6 +48,7 @@ import org.springframework.data.mapping.context.MappingContext;
 
 /**
  * @author Artur Konczak
+ * @author Petar Tahchiev
  */
 public class DefaultResultMapper extends AbstractResultMapper {
 
@@ -86,38 +87,39 @@ public class DefaultResultMapper extends AbstractResultMapper {
 					result = mapEntity(hit.getFields().values(), clazz);
 				}
 				setPersistentEntityId(result, hit.getId(), clazz);
-                populateScriptFields(result, hit);
+				populateScriptFields(result, hit);
 				results.add(result);
 			}
 		}
-		return new PageImpl<T>(results, pageable, totalHits);
+
+		return new AggregatedPageImpl<T>(results, pageable, totalHits, response.getAggregations());
 	}
 
-    private <T> void populateScriptFields(T result, SearchHit hit) {
-        if (hit.getFields() != null && !hit.getFields().isEmpty() && result != null) {
-            for (java.lang.reflect.Field field : result.getClass().getDeclaredFields()) {
-                ScriptedField scriptedField = field.getAnnotation(ScriptedField.class);
-                if (scriptedField != null) {
-                    String name = scriptedField.name().isEmpty() ? field.getName() : scriptedField.name();
-                    SearchHitField searchHitField = hit.getFields().get(name);
-                    if (searchHitField != null) {
-                        field.setAccessible(true);
-                        try {
-                            field.set(result, searchHitField.getValue());
-                        } catch (IllegalArgumentException e) {
-                            throw new ElasticsearchException("failed to set scripted field: " + name + " with value: "
-                                    + searchHitField.getValue(), e);
-                        } catch (IllegalAccessException e) {
-                            throw new ElasticsearchException("failed to access scripted field: " + name, e);
-                        }
-                    }
-                }
-            }
-        }
-    }
+	private <T> void populateScriptFields(T result, SearchHit hit) {
+		if (hit.getFields() != null && !hit.getFields().isEmpty() && result != null) {
+			for (java.lang.reflect.Field field : result.getClass().getDeclaredFields()) {
+				ScriptedField scriptedField = field.getAnnotation(ScriptedField.class);
+				if (scriptedField != null) {
+					String name = scriptedField.name().isEmpty() ? field.getName() : scriptedField.name();
+					SearchHitField searchHitField = hit.getFields().get(name);
+					if (searchHitField != null) {
+						field.setAccessible(true);
+						try {
+							field.set(result, searchHitField.getValue());
+						} catch (IllegalArgumentException e) {
+							throw new ElasticsearchException("failed to set scripted field: " + name + " with value: "
+									+ searchHitField.getValue(), e);
+						} catch (IllegalAccessException e) {
+							throw new ElasticsearchException("failed to access scripted field: " + name, e);
+						}
+					}
+				}
+			}
+		}
+	}
 
 
-    private <T> T mapEntity(Collection<SearchHitField> values, Class<T> clazz) {
+	private <T> T mapEntity(Collection<SearchHitField> values, Class<T> clazz) {
 		return mapEntity(buildJSONFromFields(values), clazz);
 	}
 
