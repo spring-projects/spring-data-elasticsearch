@@ -34,7 +34,6 @@ import org.springframework.data.elasticsearch.builder.SampleInheritedEntityBuild
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.entities.*;
-import org.springframework.data.elasticsearch.entities.GeoEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -106,6 +105,20 @@ public class MappingBuilderTests {
 	public void shouldCreateMappingForSpecifiedParentType() throws IOException {
 		final String expected = "{\"mapping\":{\"_parent\":{\"type\":\"parentType\"},\"properties\":{}}}";
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(MinimalEntity.class, "mapping", "id", "parentType");
+		assertThat(xContentBuilder.string(), is(expected));
+	}
+
+	/**
+	 * DATAES-20
+	 */
+	@Test
+	public void shouldWorkWithAnntationsOnSetterMethods() throws IOException {
+		final String expected = "{\"mapping\":{\"properties\":{\"name\":{\"store\":true,\"" +
+				"type\":\"string\"}" +
+				",\"founded\":{\"store\":false}" +
+				",\"coorinates\":{\"type\":\"geo_point\"}}}}";
+
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(Country.class, "mapping", "id", null);
 		assertThat(xContentBuilder.string(), is(expected));
 	}
 

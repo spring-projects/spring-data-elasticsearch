@@ -21,9 +21,10 @@ import java.lang.annotation.*;
  * Based on the reference doc - http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-suggesters-completion.html
  *
  * @author Mewes Kochheim
+ * @author Petar Tahchiev
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target(value = {ElementType.FIELD, ElementType.METHOD})
 @Documented
 @Inherited
 public @interface CompletionField {

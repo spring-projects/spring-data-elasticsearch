@@ -19,14 +19,14 @@ import java.lang.annotation.*;
 
 /**
  * @author Artur Konczak
+ * @author Petar Tahchiev
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target(value = {ElementType.FIELD, ElementType.METHOD})
 @Documented
 public @interface GeoPointField {
 
-        boolean geoHashPrefix() default false;
+	boolean geoHashPrefix() default false;
 
-        String geoHashPrecision() default "0";
-
+	String geoHashPrecision() default "0";
 }

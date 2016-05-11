@@ -23,10 +23,7 @@ import java.beans.Introspector;
 import java.io.IOException;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -113,18 +110,23 @@ class MappingBuilder {
 			t.startObject(FIELD_PROPERTIES);
 		}
 
+		final Map<String, AccessibleObject> geoPointMembers = new HashMap<String, AccessibleObject>();
+		final Map<String, AccessibleObject> completionMembers = new HashMap<String, AccessibleObject>();
+
 		for (java.lang.reflect.AccessibleObject member : members) {
 
 			if (member.isAnnotationPresent(Transient.class) || isInIgnoreFields(member)) {
 				continue;
 			}
 
+			final String memberName = getMemberName(member);
+
 			if (member.isAnnotationPresent(Mapping.class)) {
 				String mappingPath = member.getAnnotation(Mapping.class).mappingPath();
 				if (isNotBlank(mappingPath)) {
 					ClassPathResource mappings = new ClassPathResource(mappingPath);
 					if (mappings.exists()) {
-						xContentBuilder.rawField(getMemberName(member), mappings.getInputStream());
+						xContentBuilder.rawField(memberName, mappings.getInputStream());
 						continue;
 					}
 				}
@@ -139,7 +141,7 @@ class MappingBuilder {
 					continue;
 				}
 				boolean nestedOrObject = isNestedOrObjectField(member);
-				mapEntity(xContentBuilder, getFieldType(member), false, EMPTY, getMemberName(member), nestedOrObject, singleField.type(), member.getAnnotation(Field.class));
+				mapEntity(xContentBuilder, getFieldType(member), false, EMPTY, memberName, nestedOrObject, singleField.type(), member.getAnnotation(Field.class));
 				if (nestedOrObject) {
 					continue;
 				}
@@ -147,13 +149,12 @@ class MappingBuilder {
 
 			MultiField multiField = member.getAnnotation(MultiField.class);
 
-			if (isGeoPointField) {
-				applyGeoPointFieldMapping(xContentBuilder, member);
+			if (isGeoPointField && (!geoPointMembers.containsKey(memberName) || (geoPointMembers.containsKey(memberName) && isAnnotated(member)))) {
+				geoPointMembers.put(memberName, member);
 			}
 
-			if (isCompletionField) {
-				CompletionField completionField = member.getAnnotation(CompletionField.class);
-				applyCompletionFieldMapping(xContentBuilder, member, completionField);
+			if (isCompletionField && (!completionMembers.containsKey(memberName) || (completionMembers.containsKey(memberName) && isAnnotated(member)))) {
+				completionMembers.put(memberName, member);
 			}
 
 			if (isRootObject && singleField != null && isIdField(member, idFieldName)) {
@@ -163,6 +164,15 @@ class MappingBuilder {
 			} else if (singleField != null) {
 				addSingleFieldMapping(xContentBuilder, member, singleField, isNestedOrObjectField(member));
 			}
+		}
+
+		for (Map.Entry<String, AccessibleObject> entry : geoPointMembers.entrySet()) {
+			applyGeoPointFieldMapping(xContentBuilder, entry.getValue());
+		}
+
+		for (Map.Entry<String, AccessibleObject> entry : completionMembers.entrySet()) {
+			CompletionField completionField = entry.getValue().getAnnotation(CompletionField.class);
+			applyCompletionFieldMapping(xContentBuilder, entry.getValue(), completionField);
 		}
 
 		if (!isRootObject && isAnyPropertyAnnotatedAsField(members) || nestedOrObjectField) {
@@ -262,7 +272,7 @@ class MappingBuilder {
 	private static void addSingleFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.AccessibleObject member,
 											  Field fieldAnnotation, boolean nestedOrObjectField) throws IOException {
 		xContentBuilder.startObject(getMemberName(member));
-		if(!nestedOrObjectField) {
+		if (!nestedOrObjectField) {
 			xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
 		}
 		if (FieldType.Auto != fieldAnnotation.type()) {
@@ -319,7 +329,7 @@ class MappingBuilder {
 		builder.field(FIELD_TYPE, "multi_field");
 		builder.startObject("fields");
 		//add standard field
-		addSingleFieldMapping(builder, member, annotation.mainField(),nestedOrObjectField);
+		addSingleFieldMapping(builder, member, annotation.mainField(), nestedOrObjectField);
 		for (InnerField innerField : annotation.otherFields()) {
 			addNestedFieldMapping(builder, member, innerField);
 		}
@@ -339,12 +349,14 @@ class MappingBuilder {
 
 	protected static Class<?> getFieldType(java.lang.reflect.AccessibleObject member) {
 		Class<?> clazz = getMemberType(member);
-		TypeInformation typeInformation = ClassTypeInformation.from(clazz);
-		if (typeInformation.isCollectionLike()) {
-			if (member instanceof java.lang.reflect.Field) {
-				clazz = GenericCollectionTypeResolver.getCollectionFieldType((java.lang.reflect.Field) member) != null
-								? GenericCollectionTypeResolver.getCollectionFieldType((java.lang.reflect.Field) member)
-								: typeInformation.getComponentType().getType();
+		if (clazz != null) {
+			TypeInformation typeInformation = ClassTypeInformation.from(clazz);
+			if (typeInformation.isCollectionLike()) {
+				if (member instanceof java.lang.reflect.Field) {
+					clazz = GenericCollectionTypeResolver.getCollectionFieldType((java.lang.reflect.Field) member) != null
+							? GenericCollectionTypeResolver.getCollectionFieldType((java.lang.reflect.Field) member)
+							: typeInformation.getComponentType().getType();
+				}
 			}
 		}
 		return clazz;
