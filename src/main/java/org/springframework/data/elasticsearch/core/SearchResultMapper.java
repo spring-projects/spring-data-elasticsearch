@@ -18,9 +18,11 @@ package org.springframework.data.elasticsearch.core;
 import org.elasticsearch.action.search.SearchResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.domain.AggregatedPage;
 
 /**
  * @author Artur Konczak
+ * @author Petar Tahchiev
  */
 public interface SearchResultMapper {
 

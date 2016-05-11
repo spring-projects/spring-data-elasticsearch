@@ -19,9 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import com.fasterxml.jackson.databind.util.ArrayIterator;
 import org.elasticsearch.action.get.GetResponse;
@@ -29,12 +27,15 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.internal.InternalSearchHitField;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
+import org.springframework.data.elasticsearch.core.domain.AggregatedPage;
 import org.springframework.data.elasticsearch.entities.Car;
 
 /**
@@ -52,6 +53,31 @@ public class DefaultResultMapperTests {
 	public void init() {
 		MockitoAnnotations.initMocks(this);
 		resultMapper = new DefaultResultMapper();
+	}
+
+	@Test
+	public void shouldMapAggregationsToPage() {
+		//Given
+		SearchHit[] hits = {createCarHit("Ford", "Grat"), createCarHit("BMW", "Arrow")};
+		SearchHits searchHits = mock(SearchHits.class);
+		when(searchHits.totalHits()).thenReturn(2L);
+		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
+		when(response.getHits()).thenReturn(searchHits);
+
+		Aggregation aggregationToReturn = createCarAggregation();
+		Aggregations aggregations = mock(Aggregations.class);
+		Iterator<Aggregation> iter = Collections.singletonList(aggregationToReturn).iterator();
+
+		when(aggregations.iterator()).thenReturn(iter);
+		when(aggregations.get("engine")).thenReturn(aggregationToReturn);
+		when(response.getAggregations()).thenReturn(aggregations);
+
+		//When
+		AggregatedPage<Car> page = (AggregatedPage<Car>) resultMapper.mapResults(response, Car.class, null);
+
+		//Then
+		assertThat(page.hasAggregations(), is(true));
+		assertThat(page.getAggregation("engine").getName(), is("Diesel"));
 	}
 
 	@Test
@@ -103,6 +129,12 @@ public class DefaultResultMapperTests {
 		assertThat(result, notNullValue());
 		assertThat(result.getModel(), is("Grat"));
 		assertThat(result.getName(), is("Ford"));
+	}
+
+	private Aggregation createCarAggregation() {
+		Aggregation aggregation = mock(Aggregation.class);
+		when(aggregation.getName()).thenReturn("Diesel");
+		return aggregation;
 	}
 
 	private SearchHit createCarHit(String name, String model) {
