@@ -48,6 +48,7 @@ import org.springframework.data.util.TypeInformation;
  * @author Kevin Leturc
  * @author Alexander Volz
  * @author Dennis Maaß
+ * @author Petar Tahchiev
  */
 
 class MappingBuilder {
