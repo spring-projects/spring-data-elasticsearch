@@ -18,13 +18,11 @@ package org.springframework.data.elasticsearch.repositories.cdi;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
 
+import org.elasticsearch.client.node.NodeClient;
 import org.springframework.data.elasticsearch.Utils;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.xml.sax.SAXException;
 
 /**
  * @author Mohsin Husen
@@ -33,8 +31,20 @@ import org.xml.sax.SAXException;
 class ElasticsearchTemplateProducer {
 
 	@Produces
-	public ElasticsearchOperations createElasticsearchTemplate() throws IOException, ParserConfigurationException, SAXException {
-		return new ElasticsearchTemplate(Utils.getNodeClient());
+	public NodeClient createNodeClient() {
+		return Utils.getNodeClient();
+	}
+
+	@Produces
+	public ElasticsearchOperations createElasticsearchTemplate(NodeClient nodeClient) {
+		return new ElasticsearchTemplate(nodeClient);
+	}
+
+	@Produces
+	@OtherQualifier
+	@PersonDB
+	public ElasticsearchOperations createQualifiedElasticsearchTemplate(NodeClient nodeClient) {
+		return new ElasticsearchTemplate(nodeClient);
 	}
 
 	@PreDestroy

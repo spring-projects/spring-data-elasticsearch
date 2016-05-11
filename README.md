@@ -11,12 +11,12 @@ Guide
 ------------
 
 * [Reference Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/)
-* [PDF Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/current/reference/pdf/spring-data-elasticsearch-reference.pdf)
 * [API Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/current/api/)
 * [Spring Data Project](http://projects.spring.io/spring-data)
 * [Sample Test Application](https://github.com/BioMedCentralLtd/spring-data-elasticsearch-sample-application)
+* [Issues](https://jira.springsource.org/browse/DATAES)
 * [Spring Data Elasticsearch Google Group](https://groups.google.com/d/forum/spring-data-elasticsearch-devs)
-* For more detailed questions, use the [forum](http://forum.springsource.org/forumdisplay.php?f=80).
+* [Questions](http://stackoverflow.com/questions/tagged/spring-data-elasticsearch)
 
 
 Quick Start
@@ -31,7 +31,7 @@ Add the Maven dependency:
 <dependency>
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-elasticsearch</artifactId>
-    <version>1.3.0.RELEASE</version>
+    <version>2.0.0.RELEASE</version>
 </dependency>
 ```
 
@@ -42,7 +42,7 @@ the appropriate dependency version.
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-elasticsearch</artifactId>
-  <version>1.4.0.BUILD-SNAPSHOT</version>
+  <version>2.1.0.BUILD-SNAPSHOT</version>
 </dependency>
 
 <repository>
@@ -52,10 +52,15 @@ the appropriate dependency version.
 </repository>
 ```
 
-###Note:
-Spring data elaticsearch until 1.0.0.RELEASE version is on elasticsearch 1.1.x library, which uses java 1.6 or later version.
+|   spring data elasticsearch         | elasticsearch |
+|:-----------------------------------:|:-------------:|
+|           2.0.0.RELEASE             |      2.2.0    |
+|           1.4.0.M1                  |      1.7.3    |
+|           1.3.0.RELEASE             |      1.5.2    |
+|           1.2.0.RELEASE             |      1.4.4    |
+|           1.1.0.RELEASE             |      1.3.2    |
+|           1.0.0.RELEASE             |      1.1.1    |
 
-From spring data elastic search 1.1.0.RELEASE (current) on, the version of elasticsearch 1.3.x  is supporting java 1.7 or later.
 
 ### ElasticsearchRepository
 A default implementation of ElasticsearchRepository, aligning to the generic Repository Interfaces, is provided. Spring can do the Repository implementation for you depending on method names in the interface definition.
@@ -244,4 +249,4 @@ Before we accept a non-trivial patch or pull request we will need you to sign th
 
 Code formatting for [Eclipse and Intellij](https://github.com/spring-projects/spring-data-build/tree/master/etc/ide)
 
-[More information about contributing to Spring Data](https://github.com/spring-projects/spring-data-build/blob/master/CONTRIBUTING.md)
+[More information about contributing to Spring Data](https://github.com/spring-projects/spring-data-build/blob/master/CONTRIBUTING.adoc)

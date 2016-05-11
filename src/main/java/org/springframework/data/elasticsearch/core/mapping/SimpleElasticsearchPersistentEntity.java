@@ -50,6 +50,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 	private String indexName;
 	private String indexType;
+	private boolean useServerConfiguration;
 	private short shards;
 	private short replicas;
 	private String refreshInterval;
@@ -57,6 +58,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private String parentType;
 	private ElasticsearchPersistentProperty parentIdProperty;
 	private String settingPath;
+	private boolean createIndexAndMapping;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 		super(typeInformation);
@@ -68,12 +70,14 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			Document document = clazz.getAnnotation(Document.class);
 			Assert.hasText(document.indexName(),
 					" Unknown indexName. Make sure the indexName is defined. e.g @Document(indexName=\"foo\")");
-			this.indexName = typeInformation.getType().getAnnotation(Document.class).indexName();
+			this.indexName = document.indexName();
 			this.indexType = hasText(document.type()) ? document.type() : clazz.getSimpleName().toLowerCase(Locale.ENGLISH);
-			this.shards = typeInformation.getType().getAnnotation(Document.class).shards();
-			this.replicas = typeInformation.getType().getAnnotation(Document.class).replicas();
-			this.refreshInterval = typeInformation.getType().getAnnotation(Document.class).refreshInterval();
-			this.indexStoreType = typeInformation.getType().getAnnotation(Document.class).indexStoreType();
+			this.useServerConfiguration = document.useServerConfiguration();
+			this.shards = document.shards();
+			this.replicas = document.replicas();
+			this.refreshInterval = document.refreshInterval();
+			this.indexStoreType = document.indexStoreType();
+			this.createIndexAndMapping = document.createIndex();
 		}
 		if (clazz.isAnnotationPresent(Setting.class)) {
 			this.settingPath = typeInformation.getType().getAnnotation(Setting.class).settingPath();
@@ -115,6 +119,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
+	public boolean isUseServerConfiguration() {
+		return useServerConfiguration;
+	}
+
+	@Override
 	public String getRefreshInterval() {
 		return refreshInterval;
 	}
@@ -132,6 +141,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public String settingPath() {
 		return settingPath;
+	}
+
+	@Override
+	public boolean isCreateIndexAndMapping() {
+		return createIndexAndMapping;
 	}
 
 	@Override

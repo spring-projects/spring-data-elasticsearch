@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,8 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.elasticsearch.common.geo.GeoHashUtils;
-import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
+import com.spatial4j.core.io.GeohashUtils;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +32,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.geo.Point;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -52,7 +52,7 @@ public class ElasticsearchTemplateGeoTests {
 	private void loadClassBaseEntities() {
 		elasticsearchTemplate.deleteIndex(AuthorMarkerEntity.class);
 		elasticsearchTemplate.createIndex(AuthorMarkerEntity.class);
-		elasticsearchTemplate.refresh(AuthorMarkerEntity.class, true);
+		elasticsearchTemplate.refresh(AuthorMarkerEntity.class);
 		elasticsearchTemplate.putMapping(AuthorMarkerEntity.class);
 
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
@@ -60,13 +60,13 @@ public class ElasticsearchTemplateGeoTests {
 		indexQueries.add(new AuthorMarkerEntityBuilder("2").name("Mohsin Husen").location(51.5171d, 0.1062d).buildIndex());
 		indexQueries.add(new AuthorMarkerEntityBuilder("3").name("Rizwan Idrees").location(51.5171d, 0.1062d).buildIndex());
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(AuthorMarkerEntity.class, true);
+		elasticsearchTemplate.refresh(AuthorMarkerEntity.class);
 	}
 
 	private void loadAnnotationBaseEntities() {
 		elasticsearchTemplate.deleteIndex(LocationMarkerEntity.class);
 		elasticsearchTemplate.createIndex(LocationMarkerEntity.class);
-		elasticsearchTemplate.refresh(LocationMarkerEntity.class, true);
+		elasticsearchTemplate.refresh(LocationMarkerEntity.class);
 		elasticsearchTemplate.putMapping(LocationMarkerEntity.class);
 
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
@@ -96,7 +96,7 @@ public class ElasticsearchTemplateGeoTests {
 		indexQueries.add(buildIndex(location3));
 
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(AuthorMarkerEntity.class, true);
+		elasticsearchTemplate.refresh(AuthorMarkerEntity.class);
 	}
 
 	@Test
@@ -146,7 +146,7 @@ public class ElasticsearchTemplateGeoTests {
 		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery, LocationMarkerEntity.class);
 
 		//then
-		assertThat(geoAuthorsForGeoCriteria.size(), is(3));
+		assertThat(geoAuthorsForGeoCriteria.size(), is(2));
 	}
 
 	@Test
@@ -180,7 +180,7 @@ public class ElasticsearchTemplateGeoTests {
 		//given
 		loadAnnotationBaseEntities();
 		CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(
-				new Criteria("locationAsArray").within("u1044", "1km"));
+				new Criteria("locationAsArray").within("u1044", "3km"));
 		//when
 		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery, LocationMarkerEntity.class);
 
@@ -192,7 +192,7 @@ public class ElasticsearchTemplateGeoTests {
 	public void shouldFindAllMarkersForNativeSearchQuery() {
 		//Given
 		loadAnnotationBaseEntities();
-		NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder().withFilter(FilterBuilders.geoBoundingBoxFilter("locationAsArray").topLeft(52, -1).bottomRight(50, 1));
+		NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsArray").topLeft(52, -1).bottomRight(50, 1));
 		//When
 		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(queryBuilder.build(), LocationMarkerEntity.class);
 		//Then
@@ -222,7 +222,7 @@ public class ElasticsearchTemplateGeoTests {
 		//given
 		loadClassBaseEntities();
 		CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
-				new Criteria("location").boundedBy(GeoHashUtils.encode(53.5171d, 0), GeoHashUtils.encode(49.5171d, 0.2062d)));
+				new Criteria("location").boundedBy(GeohashUtils.encodeLatLon(53.5171d, 0), GeohashUtils.encodeLatLon(49.5171d, 0.2062d)));
 		//when
 		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3, AuthorMarkerEntity.class);
 
@@ -249,6 +249,23 @@ public class ElasticsearchTemplateGeoTests {
 	}
 
 	@Test
+	public void shouldFindAuthorMarkersInBoxForGivenCriteriaQueryUsingPoints() {
+		//given
+		loadClassBaseEntities();
+		CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
+				new Criteria("location").boundedBy(
+						new Point(53.5171d, 0),
+						new Point(49.5171d, 0.2062d ))
+		);
+		//when
+		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3, AuthorMarkerEntity.class);
+
+		//then
+		assertThat(geoAuthorsForGeoCriteria3.size(), is(2));
+		assertThat(geoAuthorsForGeoCriteria3, containsInAnyOrder(hasProperty("name", equalTo("Mohsin Husen")), hasProperty("name", equalTo("Rizwan Idrees"))));
+	}
+
+	@Test
 	public void shouldFindLocationWithGeoHashPrefix() {
 
 		//given
@@ -256,13 +273,13 @@ public class ElasticsearchTemplateGeoTests {
 		//u1044k2bd6u - with precision = 5 -> u, u1, u10, u104, u1044
 
 		loadAnnotationBaseEntities();
-		NativeSearchQueryBuilder locationWithPrefixAsDistancePrecision3 = new NativeSearchQueryBuilder().withFilter(FilterBuilders.geoHashCellFilter("box-one").field("locationWithPrefixAsDistance").geohash("u1044k2bd6u").precision(3));
-		NativeSearchQueryBuilder locationWithPrefixAsDistancePrecision4 = new NativeSearchQueryBuilder().withFilter(FilterBuilders.geoHashCellFilter("box-one").field("locationWithPrefixAsDistance").geohash("u1044k2bd6u").precision(4));
-		NativeSearchQueryBuilder locationWithPrefixAsDistancePrecision5 = new NativeSearchQueryBuilder().withFilter(FilterBuilders.geoHashCellFilter("box-one").field("locationWithPrefixAsDistance").geohash("u1044k2bd6u").precision(5));
+		NativeSearchQueryBuilder locationWithPrefixAsDistancePrecision3 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one").field("locationWithPrefixAsDistance").geohash("u1044k2bd6u").precision(3));
+		NativeSearchQueryBuilder locationWithPrefixAsDistancePrecision4 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one").field("locationWithPrefixAsDistance").geohash("u1044k2bd6u").precision(4));
+		NativeSearchQueryBuilder locationWithPrefixAsDistancePrecision5 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one").field("locationWithPrefixAsDistance").geohash("u1044k2bd6u").precision(5));
 
-		NativeSearchQueryBuilder locationWithPrefixAsLengthOfGeoHashPrecision4 = new NativeSearchQueryBuilder().withFilter(FilterBuilders.geoHashCellFilter("box-one").field("locationWithPrefixAsLengthOfGeoHash").geohash("u1044k2bd6u").precision(4));
-		NativeSearchQueryBuilder locationWithPrefixAsLengthOfGeoHashPrecision5 = new NativeSearchQueryBuilder().withFilter(FilterBuilders.geoHashCellFilter("box-one").field("locationWithPrefixAsLengthOfGeoHash").geohash("u1044k2bd6u").precision(5));
-		NativeSearchQueryBuilder locationWithPrefixAsLengthOfGeoHashPrecision6 = new NativeSearchQueryBuilder().withFilter(FilterBuilders.geoHashCellFilter("box-one").field("locationWithPrefixAsLengthOfGeoHash").geohash("u1044k2bd6u").precision(6));
+		NativeSearchQueryBuilder locationWithPrefixAsLengthOfGeoHashPrecision4 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one").field("locationWithPrefixAsLengthOfGeoHash").geohash("u1044k2bd6u").precision(4));
+		NativeSearchQueryBuilder locationWithPrefixAsLengthOfGeoHashPrecision5 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one").field("locationWithPrefixAsLengthOfGeoHash").geohash("u1044k2bd6u").precision(5));
+		NativeSearchQueryBuilder locationWithPrefixAsLengthOfGeoHashPrecision6 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one").field("locationWithPrefixAsLengthOfGeoHash").geohash("u1044k2bd6u").precision(6));
 		//when
 		List<LocationMarkerEntity> resultDistancePrecision3 = elasticsearchTemplate.queryForList(locationWithPrefixAsDistancePrecision3.build(), LocationMarkerEntity.class);
 		List<LocationMarkerEntity> resultDistancePrecision4 = elasticsearchTemplate.queryForList(locationWithPrefixAsDistancePrecision4.build(), LocationMarkerEntity.class);

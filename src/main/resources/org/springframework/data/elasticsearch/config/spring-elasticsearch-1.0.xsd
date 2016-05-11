@@ -74,6 +74,20 @@
                             </xsd:documentation>
                         </xsd:annotation>
                     </xsd:attribute>
+                    <xsd:attribute name="path-home" type="xsd:string" default="">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[ path to the home folder for node client ]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="path-configuration" type="xsd:string" default="">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[ path to configuration file for node client ]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
                 </xsd:extension>
             </xsd:complexContent>
         </xsd:complexType>

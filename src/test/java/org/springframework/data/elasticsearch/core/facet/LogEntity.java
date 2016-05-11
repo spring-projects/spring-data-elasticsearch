@@ -32,10 +32,10 @@ import org.springframework.data.elasticsearch.annotations.Field;
  * @author Mohsin Husen
  */
 
-@Document(indexName = "test-log-index", type = "test-log-type", shards = 1, replicas = 0, refreshInterval = "-1", indexStoreType = "memory")
+@Document(indexName = "test-log-index", type = "test-log-type", shards = 1, replicas = 0, refreshInterval = "-1")
 public class LogEntity {
 
-	private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+	private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
 	@Id
 	private String id;
@@ -47,7 +47,7 @@ public class LogEntity {
 	@Field(type = Ip)
 	private String ip;
 
-	@Field(type = Date, format = DateFormat.basic_date_time)
+	@Field(type = Date)
 	private Date date;
 
 	private LogEntity() {

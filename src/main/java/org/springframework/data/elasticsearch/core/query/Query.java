@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -110,6 +110,21 @@ public interface Query {
 	 * @return
 	 */
 	List<String> getFields();
+
+	/**
+	 * Add source filter to be added as part of search request
+	 *
+	 * @param sourceFilter
+	 */
+	void addSourceFilter(SourceFilter sourceFilter);
+
+	/**
+	 * Get SourceFilter to be returned to get include and exclude source
+	 * fields as part of search request.
+	 *
+	 * @return SourceFilter
+	 */
+	SourceFilter getSourceFilter();
 
 	/**
 	 * Get minimum score

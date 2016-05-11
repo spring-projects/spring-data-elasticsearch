@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repositories.cdi;
 
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import org.apache.webbeans.cditest.CdiTestContainer;
@@ -28,13 +28,14 @@ import org.springframework.data.elasticsearch.entities.Product;
 
 /**
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
-
 public class CdiRepositoryTests {
 
 	private static CdiTestContainer cdiContainer;
 	private CdiProductRepository repository;
 	private SamplePersonRepository personRepository;
+	private QualifiedProductRepository qualifiedProductRepository;
 
 	@BeforeClass
 	public static void init() throws Exception {
@@ -54,6 +55,7 @@ public class CdiRepositoryTests {
 		CdiRepositoryClient client = cdiContainer.getInstance(CdiRepositoryClient.class);
 		repository = client.getRepository();
 		personRepository = client.getSamplePersonRepository();
+		qualifiedProductRepository = client.getQualifiedProductRepository();
 	}
 
 	@Test
@@ -81,6 +83,37 @@ public class CdiRepositoryTests {
 
 		assertEquals(0, repository.count());
 		retrieved = repository.findOne(bean.getId());
+		assertNull(retrieved);
+	}
+
+	/**
+	 * @see DATAES-234
+	 */
+	@Test
+	public void testQualifiedCdiRepository() {
+		assertNotNull(qualifiedProductRepository);
+
+		Product bean = new Product();
+		bean.setId("id-1");
+		bean.setName("cidContainerTest-1");
+
+		qualifiedProductRepository.save(bean);
+
+		assertTrue(qualifiedProductRepository.exists(bean.getId()));
+
+		Product retrieved = qualifiedProductRepository.findOne(bean.getId());
+		assertNotNull(retrieved);
+		assertEquals(bean.getId(), retrieved.getId());
+		assertEquals(bean.getName(), retrieved.getName());
+
+		assertEquals(1, qualifiedProductRepository.count());
+
+		assertTrue(qualifiedProductRepository.exists(bean.getId()));
+
+		qualifiedProductRepository.delete(bean);
+
+		assertEquals(0, qualifiedProductRepository.count());
+		retrieved = qualifiedProductRepository.findOne(bean.getId());
 		assertNull(retrieved);
 	}
 

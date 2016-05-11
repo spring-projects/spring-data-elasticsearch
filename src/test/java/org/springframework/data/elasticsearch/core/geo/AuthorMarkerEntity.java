@@ -22,7 +22,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
  * @author Franck Marchand
  * @author Mohsin Husen
  */
-@Document(indexName = "test-geo-index", type = "geo-class-point-type", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-geo-index", type = "geo-class-point-type", shards = 1, replicas = 0, refreshInterval = "-1")
 public class AuthorMarkerEntity {
 
 	@Id

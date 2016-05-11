@@ -29,7 +29,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
  * @author Artur Konczak
  */
 
-@Document(indexName = "person-multiple-level-nested", type = "user", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "person-multiple-level-nested", type = "user", shards = 1, replicas = 0, refreshInterval = "-1")
 public class PersonMultipleLevelNested {
 
 	@Id

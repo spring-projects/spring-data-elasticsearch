@@ -148,19 +148,19 @@ class CriteriaQueryProcessor {
 
 		switch (key) {
 			case EQUALS:
-				query = queryString(searchText).field(fieldName).defaultOperator(QueryStringQueryBuilder.Operator.AND);
+				query = queryStringQuery(searchText).field(fieldName).defaultOperator(QueryStringQueryBuilder.Operator.AND);
 				break;
 			case CONTAINS:
-				query = queryString("*" + searchText + "*").field(fieldName).analyzeWildcard(true);
+				query = queryStringQuery("*" + searchText + "*").field(fieldName).analyzeWildcard(true);
 				break;
 			case STARTS_WITH:
-				query = queryString(searchText + "*").field(fieldName).analyzeWildcard(true);
+				query = queryStringQuery(searchText + "*").field(fieldName).analyzeWildcard(true);
 				break;
 			case ENDS_WITH:
-				query = queryString("*" + searchText).field(fieldName).analyzeWildcard(true);
+				query = queryStringQuery("*" + searchText).field(fieldName).analyzeWildcard(true);
 				break;
 			case EXPRESSION:
-				query = queryString(searchText).field(fieldName);
+				query = queryStringQuery(searchText).field(fieldName);
 				break;
 			case LESS_EQUAL:
 				query = rangeQuery(fieldName).lte(value);
@@ -185,14 +185,14 @@ class CriteriaQueryProcessor {
 				query = boolQuery();
 				collection = (Iterable<Object>) value;
 				for (Object item : collection) {
-					((BoolQueryBuilder) query).should(queryString(item.toString()).field(fieldName));
+					((BoolQueryBuilder) query).should(queryStringQuery(item.toString()).field(fieldName));
 				}
 				break;
 			case NOT_IN:
 				query = boolQuery();
 				collection = (Iterable<Object>) value;
 				for (Object item : collection) {
-					((BoolQueryBuilder) query).mustNot(queryString(item.toString()).field(fieldName));
+					((BoolQueryBuilder) query).mustNot(queryStringQuery(item.toString()).field(fieldName));
 				}
 				break;
 		}

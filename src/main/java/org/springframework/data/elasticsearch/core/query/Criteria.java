@@ -21,6 +21,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.util.Assert;
@@ -453,6 +454,17 @@ public class Criteria {
 		return this;
 	}
 
+	/**
+	 * Creates new CriteriaEntry for {@code location Box bounding box}
+	 *
+	 * @param boundingBox {@link org.springframework.data.elasticsearch.core.geo.GeoBox} bounding box(left top corner + right bottom corner)
+	 * @return Criteria the chaind criteria with the new 'boundingBox' criteria included.
+	 */
+	public Criteria boundedBy(Box boundingBox) {
+		Assert.notNull(boundingBox, "boundingBox value for boundedBy criteria must not be null");
+		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{boundingBox.getFirst(), boundingBox.getSecond()}));
+		return this;
+	}
 
 	/**
 	 * Creates new CriteriaEntry for bounding box created from points
@@ -482,10 +494,17 @@ public class Criteria {
 		return this;
 	}
 
+	public Criteria boundedBy(Point topLeftPoint, Point bottomRightPoint) {
+		Assert.notNull(topLeftPoint, "topLeftPoint must not be null");
+		Assert.notNull(bottomRightPoint, "bottomRightPoint must not be null");
+		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{GeoPoint.fromPoint(topLeftPoint), GeoPoint.fromPoint(bottomRightPoint)}));
+		return this;
+	}
+
 	private void assertNoBlankInWildcardedQuery(String searchString, boolean leadingWildcard, boolean trailingWildcard) {
 		if (StringUtils.contains(searchString, CRITERIA_VALUE_SEPERATOR)) {
 			throw new InvalidDataAccessApiUsageException("Cannot constructQuery '" + (leadingWildcard ? "*" : "") + "\""
-					+ searchString + "\"" + (trailingWildcard ? "*" : "") + "'. Use epxression or mulitple clauses instead.");
+					+ searchString + "\"" + (trailingWildcard ? "*" : "") + "'. Use expression or multiple clauses instead.");
 		}
 	}
 

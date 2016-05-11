@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -28,7 +29,12 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-@Document(indexName = "book", type = "book", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Document(indexName = "book", type = "book", shards = 1, replicas = 0, refreshInterval = "-1")
 public class Book {
 
 	@Id
@@ -38,36 +44,4 @@ public class Book {
 	private Author author;
 	@Field(type = FieldType.Nested)
 	private Map<Integer, Collection<String>> buckets = new HashMap<Integer, Collection<String>>();
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public Author getAuthor() {
-		return author;
-	}
-
-	public void setAuthor(Author author) {
-		this.author = author;
-	}
-
-	public Map<Integer, Collection<String>> getBuckets() {
-		return buckets;
-	}
-
-	public void setBuckets(Map<Integer, Collection<String>> buckets) {
-		this.buckets = buckets;
-	}
 }

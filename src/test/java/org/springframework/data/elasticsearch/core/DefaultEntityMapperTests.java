@@ -19,11 +19,14 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.data.elasticsearch.builder.CarBuilder;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.entities.Car;
+import org.springframework.data.elasticsearch.entities.GeoEntity;
+import org.springframework.data.geo.Point;
 
 /**
  * @author Artur Konczak
@@ -46,7 +49,7 @@ public class DefaultEntityMapperTests {
 		//Given
 
 		//When
-		String jsonResult = entityMapper.mapToString(new CarBuilder().model(CAR_MODEL).name(CAR_NAME).build());
+		String jsonResult = entityMapper.mapToString(Car.builder().model(CAR_MODEL).name(CAR_NAME).build());
 
 		//Then
 		assertThat(jsonResult, is(JSON_STRING));
@@ -62,5 +65,29 @@ public class DefaultEntityMapperTests {
 		//Then
 		assertThat(result.getName(), is(CAR_NAME));
 		assertThat(result.getModel(), is(CAR_MODEL));
+	}
+
+	@Test
+	public void shouldMapGeoPointElasticsearchNames() throws IOException {
+		//given
+		final Point point = new Point(10, 20);
+		final int radius = 10;
+		final String pointAsString = point.getX() + "," + point.getY();
+		final double[] pointAsArray = {point.getX(), point.getY()};
+		final GeoEntity geoEntity = GeoEntity.builder()
+				.pointA(point).pointB(GeoPoint.fromPoint(point)).pointC(pointAsString).pointD(pointAsArray)
+				.build();
+		//when
+		String jsonResult = entityMapper.mapToString(geoEntity);
+
+		//then
+		assertThat(jsonResult, containsString(pointTemplate("pointA", point)));
+		assertThat(jsonResult, containsString(pointTemplate("pointB", point)));
+		assertThat(jsonResult, containsString(String.format(Locale.ENGLISH, "\"%s\":\"%s\"", "pointC", pointAsString)));
+		assertThat(jsonResult, containsString(String.format(Locale.ENGLISH, "\"%s\":[%.1f,%.1f]", "pointD", pointAsArray[0], pointAsArray[1])));
+	}
+
+	private String pointTemplate(String name, Point point) {
+		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
 	}
 }

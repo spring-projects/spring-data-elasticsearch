@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,10 @@ package org.springframework.data.elasticsearch.core.query;
 
 import java.util.List;
 
-import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
-import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
 /**
  * NativeSearchQuery
@@ -35,13 +33,18 @@ public interface SearchQuery extends Query {
 
 	QueryBuilder getQuery();
 
-	FilterBuilder getFilter();
+	QueryBuilder getFilter();
 
 	List<SortBuilder> getElasticsearchSorts();
 
-	List<FacetRequest> getFacets();
+	/*List<FacetRequest> getFacets();*/
 
 	List<AbstractAggregationBuilder> getAggregations();
 
 	HighlightBuilder.Field[] getHighlightFields();
+
+	List<IndexBoost> getIndicesBoost();
+
+    List<ScriptField> getScriptFields();
+
 }

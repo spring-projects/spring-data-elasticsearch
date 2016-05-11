@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import static org.springframework.util.CollectionUtils.isEmpty;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
 /**
  * NativeSearchQuery
@@ -40,15 +37,17 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 public class NativeSearchQueryBuilder {
 
 	private QueryBuilder queryBuilder;
-	private FilterBuilder filterBuilder;
+	private QueryBuilder filterBuilder;
+    private List<ScriptField> scriptFields = new ArrayList<ScriptField>();
 	private List<SortBuilder> sortBuilders = new ArrayList<SortBuilder>();
-	private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
 	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<AbstractAggregationBuilder>();
 	private HighlightBuilder.Field[] highlightFields;
 	private Pageable pageable;
 	private String[] indices;
 	private String[] types;
 	private String[] fields;
+	private SourceFilter sourceFilter;
+	private List<IndexBoost> indicesBoost;
 	private float minScore;
 	private Collection<String> ids;
 	private String route;
@@ -59,7 +58,7 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withFilter(FilterBuilder filterBuilder) {
+	public NativeSearchQueryBuilder withFilter(QueryBuilder filterBuilder) {
 		this.filterBuilder = filterBuilder;
 		return this;
 	}
@@ -69,18 +68,28 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+    public NativeSearchQueryBuilder withScriptField(ScriptField scriptField) {
+        this.scriptFields.add(scriptField);
+        return this;
+    }
+
 	public NativeSearchQueryBuilder addAggregation(AbstractAggregationBuilder aggregationBuilder) {
 		this.aggregationBuilders.add(aggregationBuilder);
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withFacet(FacetRequest facetRequest) {
+/*	public NativeSearchQueryBuilder withFacet(FacetRequest facetRequest) {
 		facetRequests.add(facetRequest);
 		return this;
-	}
+	}*/
 
 	public NativeSearchQueryBuilder withHighlightFields(HighlightBuilder.Field... highlightFields) {
 		this.highlightFields = highlightFields;
+		return this;
+	}
+
+	public NativeSearchQueryBuilder withIndicesBoost(List<IndexBoost> indicesBoost) {
+		this.indicesBoost = indicesBoost;
 		return this;
 	}
 
@@ -102,6 +111,11 @@ public class NativeSearchQueryBuilder {
 	public NativeSearchQueryBuilder withFields(String... fields) {
 		this.fields = fields;
 		return this;
+	}
+
+	public NativeSearchQueryBuilder withSourceFilter(SourceFilter sourceFilter) {
+				this.sourceFilter = sourceFilter;
+				return this;
 	}
 
 	public NativeSearchQueryBuilder withMinScore(float minScore) {
@@ -142,11 +156,19 @@ public class NativeSearchQueryBuilder {
 			nativeSearchQuery.addFields(fields);
 		}
 
-		if (CollectionUtils.isNotEmpty(facetRequests)) {
-			nativeSearchQuery.setFacets(facetRequests);
+		if (sourceFilter != null) {
+			nativeSearchQuery.addSourceFilter(sourceFilter);
 		}
+		
+		if(indicesBoost != null) {
+		    nativeSearchQuery.setIndicesBoost(indicesBoost);
+		}
+		
+        if (!isEmpty(scriptFields)) {
+            nativeSearchQuery.setScriptFields(scriptFields);
+        }
 
-		if (CollectionUtils.isNotEmpty(aggregationBuilders)) {
+		if (!isEmpty(aggregationBuilders)) {
 			nativeSearchQuery.setAggregations(aggregationBuilders);
 		}
 

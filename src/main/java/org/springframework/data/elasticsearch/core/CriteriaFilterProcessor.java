@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.elasticsearch.index.query.FilterBuilders.*;
 import static org.springframework.data.elasticsearch.core.query.Criteria.*;
 
 import java.util.Iterator;
@@ -23,9 +22,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.GeoBoundingBoxFilterBuilder;
-import org.elasticsearch.index.query.GeoDistanceFilterBuilder;
+import org.elasticsearch.common.geo.GeoDistance;
+import org.elasticsearch.index.query.*;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.Criteria;
@@ -39,24 +37,30 @@ import org.springframework.util.Assert;
  * CriteriaFilterProcessor
  *
  * @author Franck Marchand
+ * @author Mohsin Husen
+ * @author Artur Konczak
+ *
  */
 class CriteriaFilterProcessor {
 
 
-	FilterBuilder createFilterFromCriteria(Criteria criteria) {
-		List<FilterBuilder> fbList = new LinkedList<FilterBuilder>();
-		FilterBuilder filter = null;
+	QueryBuilder createFilterFromCriteria(Criteria criteria) {
+		List<QueryBuilder> fbList = new LinkedList<QueryBuilder>();
+		QueryBuilder filter = null;
 
 		ListIterator<Criteria> chainIterator = criteria.getCriteriaChain().listIterator();
 
 		while (chainIterator.hasNext()) {
-			FilterBuilder fb = null;
+			QueryBuilder fb = null;
 			Criteria chainedCriteria = chainIterator.next();
 			if (chainedCriteria.isOr()) {
-				fb = orFilter(createFilterFragmentForCriteria(chainedCriteria).toArray(new FilterBuilder[]{}));
+				fb = QueryBuilders.boolQuery();
+				for(QueryBuilder f: createFilterFragmentForCriteria(chainedCriteria)){
+					((BoolQueryBuilder)fb).should(f);
+				}
 				fbList.add(fb);
 			} else if (chainedCriteria.isNegating()) {
-				List<FilterBuilder> negationFilters = buildNegationFilter(criteria.getField().getName(), criteria.getFilterCriteriaEntries().iterator());
+				List<QueryBuilder> negationFilters = buildNegationFilter(criteria.getField().getName(), criteria.getFilterCriteriaEntries().iterator());
 
 				if (!negationFilters.isEmpty()) {
 					fbList.addAll(negationFilters);
@@ -70,21 +74,23 @@ class CriteriaFilterProcessor {
 			if (fbList.size() == 1) {
 				filter = fbList.get(0);
 			} else {
-				filter = andFilter(fbList.toArray(new FilterBuilder[]{}));
+				filter = QueryBuilders.boolQuery();
+				for(QueryBuilder f: fbList) {
+					((BoolQueryBuilder)filter).must(f);
+				}
 			}
 		}
-
 		return filter;
 	}
 
 
-	private List<FilterBuilder> createFilterFragmentForCriteria(Criteria chainedCriteria) {
+	private List<QueryBuilder> createFilterFragmentForCriteria(Criteria chainedCriteria) {
 		Iterator<Criteria.CriteriaEntry> it = chainedCriteria.getFilterCriteriaEntries().iterator();
-		List<FilterBuilder> filterList = new LinkedList<FilterBuilder>();
+		List<QueryBuilder> filterList = new LinkedList<QueryBuilder>();
 
 		String fieldName = chainedCriteria.getField().getName();
 		Assert.notNull(fieldName, "Unknown field");
-		FilterBuilder filter = null;
+		QueryBuilder filter = null;
 
 		while (it.hasNext()) {
 			Criteria.CriteriaEntry entry = it.next();
@@ -96,15 +102,15 @@ class CriteriaFilterProcessor {
 	}
 
 
-	private FilterBuilder processCriteriaEntry(OperationKey key, Object value, String fieldName) {
+	private QueryBuilder processCriteriaEntry(OperationKey key, Object value, String fieldName) {
 		if (value == null) {
 			return null;
 		}
-		FilterBuilder filter = null;
+		QueryBuilder filter = null;
 
 		switch (key) {
 			case WITHIN: {
-				filter = geoDistanceFilter(fieldName);
+				GeoDistanceQueryBuilder geoDistanceQueryBuilder = QueryBuilders.geoDistanceQuery(fieldName);
 
 				Assert.isTrue(value instanceof Object[], "Value of a geo distance filter should be an array of two values.");
 				Object[] valArray = (Object[]) value;
@@ -123,25 +129,26 @@ class CriteriaFilterProcessor {
 
 				if (valArray[0] instanceof GeoPoint) {
 					GeoPoint loc = (GeoPoint) valArray[0];
-					((GeoDistanceFilterBuilder) filter).lat(loc.getLat()).lon(loc.getLon()).distance(dist.toString());
+					geoDistanceQueryBuilder.lat(loc.getLat()).lon(loc.getLon()).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 				} else if (valArray[0] instanceof Point) {
 					GeoPoint loc = GeoPoint.fromPoint((Point) valArray[0]);
-					((GeoDistanceFilterBuilder) filter).lat(loc.getLat()).lon(loc.getLon()).distance(dist.toString());
+					geoDistanceQueryBuilder.lat(loc.getLat()).lon(loc.getLon()).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 				} else {
 					String loc = (String) valArray[0];
 					if (loc.contains(",")) {
 						String c[] = loc.split(",");
-						((GeoDistanceFilterBuilder) filter).lat(Double.parseDouble(c[0])).lon(Double.parseDouble(c[1])).distance(dist.toString());
+						geoDistanceQueryBuilder.lat(Double.parseDouble(c[0])).lon(Double.parseDouble(c[1])).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 					} else {
-						((GeoDistanceFilterBuilder) filter).geohash(loc).distance(dist.toString());
+						geoDistanceQueryBuilder.geohash(loc).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 					}
 				}
+				filter = geoDistanceQueryBuilder;
 
 				break;
 			}
 
 			case BBOX: {
-				filter = geoBoundingBoxFilter(fieldName);
+				filter = QueryBuilders.geoBoundingBoxQuery(fieldName);
 
 				Assert.isTrue(value instanceof Object[], "Value of a boundedBy filter should be an array of one or two values.");
 				Object[] valArray = (Object[]) value;
@@ -149,11 +156,11 @@ class CriteriaFilterProcessor {
 
 				if (valArray.length == 1) {
 					//GeoEnvelop
-					oneParameterBBox((GeoBoundingBoxFilterBuilder) filter, valArray[0]);
+					oneParameterBBox((GeoBoundingBoxQueryBuilder) filter, valArray[0]);
 				} else if (valArray.length == 2) {
 					//2x GeoPoint
 					//2x String
-					twoParameterBBox((GeoBoundingBoxFilterBuilder) filter, valArray);
+					twoParameterBBox((GeoBoundingBoxQueryBuilder) filter, valArray);
 				} else {
 					//error
 					Assert.isTrue(false, "Geo distance filter takes a 1-elements array(GeoBox) or 2-elements array(GeoPoints or Strings(format lat,lon or geohash)).");
@@ -188,7 +195,7 @@ class CriteriaFilterProcessor {
 		}
 	}
 
-	private void oneParameterBBox(GeoBoundingBoxFilterBuilder filter, Object value) {
+	private void oneParameterBBox(GeoBoundingBoxQueryBuilder filter, Object value) {
 		Assert.isTrue(value instanceof GeoBox || value instanceof Box, "single-element of boundedBy filter must be type of GeoBox or Box");
 
 		GeoBox geoBBox;
@@ -212,7 +219,7 @@ class CriteriaFilterProcessor {
 		return true;
 	}
 
-	private void twoParameterBBox(GeoBoundingBoxFilterBuilder filter, Object[] values) {
+	private void twoParameterBBox(GeoBoundingBoxQueryBuilder filter, Object[] values) {
 		Assert.isTrue(isType(values, GeoPoint.class) || isType(values, String.class), " both elements of boundedBy filter must be type of GeoPoint or String(format lat,lon or geohash)");
 		if (values[0] instanceof GeoPoint) {
 			GeoPoint topLeft = (GeoPoint) values[0];
@@ -227,12 +234,12 @@ class CriteriaFilterProcessor {
 		}
 	}
 
-	private List<FilterBuilder> buildNegationFilter(String fieldName, Iterator<Criteria.CriteriaEntry> it) {
-		List<FilterBuilder> notFilterList = new LinkedList<FilterBuilder>();
+	private List<QueryBuilder> buildNegationFilter(String fieldName, Iterator<Criteria.CriteriaEntry> it) {
+		List<QueryBuilder> notFilterList = new LinkedList<QueryBuilder>();
 
 		while (it.hasNext()) {
 			Criteria.CriteriaEntry criteriaEntry = it.next();
-			FilterBuilder notFilter = notFilter(processCriteriaEntry(criteriaEntry.getKey(), criteriaEntry.getValue(), fieldName));
+			QueryBuilder notFilter = QueryBuilders.boolQuery().mustNot(processCriteriaEntry(criteriaEntry.getKey(), criteriaEntry.getValue(), fieldName));
 			notFilterList.add(notFilter);
 		}
 

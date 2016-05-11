@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.springframework.data.geo.Point;
  * geo-location used for #{@link org.springframework.data.elasticsearch.core.query.Criteria}.
  *
  * @author Franck Marchand
+ * @author Mohsin Husen
  */
 public class GeoPoint {
 
@@ -51,7 +52,11 @@ public class GeoPoint {
 	 * @return a {@link org.springframework.data.elasticsearch.core.geo.GeoPoint}
 	 */
 	public static GeoPoint fromPoint(Point point) {
-		return new GeoPoint(point.getY(), point.getX());
+		return new GeoPoint(point.getX(), point.getY());
+	}
+
+	public static Point toPoint(GeoPoint point) {
+		return new Point(point.getLat(), point.getLon());
 	}
 }
 

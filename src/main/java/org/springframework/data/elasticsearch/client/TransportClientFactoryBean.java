@@ -16,8 +16,8 @@
 package org.springframework.data.elasticsearch.client;
 
 import static org.apache.commons.lang.StringUtils.*;
-import static org.elasticsearch.common.settings.ImmutableSettings.*;
 
+import java.net.InetAddress;
 import java.util.Properties;
 
 import org.elasticsearch.client.transport.TransportClient;
@@ -86,24 +86,24 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	}
 
 	protected void buildClient() throws Exception {
-		client = new TransportClient(settings());
+		client = TransportClient.builder().settings(settings()).build();
 		Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
 		for (String clusterNode : split(clusterNodes, COMMA)) {
-			String hostName = substringBefore(clusterNode, COLON);
-			String port = substringAfter(clusterNode, COLON);
+			String hostName = substringBeforeLast(clusterNode, COLON);
+			String port = substringAfterLast(clusterNode, COLON);
 			Assert.hasText(hostName, "[Assertion failed] missing host name in 'clusterNodes'");
 			Assert.hasText(port, "[Assertion failed] missing port in 'clusterNodes'");
 			logger.info("adding transport node : " + clusterNode);
-			client.addTransportAddress(new InetSocketTransportAddress(hostName, Integer.valueOf(port)));
+			client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)));
 		}
 		client.connectedNodes();
 	}
 
 	private Settings settings() {
 		if (properties != null) {
-			return settingsBuilder().put(properties).build();
+			return Settings.builder().put(properties).build();
 		}
-		return settingsBuilder()
+		return Settings.builder()
 				.put("cluster.name", clusterName)
 				.put("client.transport.sniff", clientTransportSniff)
 				.put("client.transport.ignore_cluster_name", clientIgnoreClusterName)

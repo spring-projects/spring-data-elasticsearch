@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
  * @author Kevin Leturc
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(value = { ElementType.FIELD, ElementType.METHOD })
+@Target(ElementType.FIELD)
 @Documented
 @Inherited
 public @interface Field {
@@ -48,9 +48,9 @@ public @interface Field {
 
     String searchAnalyzer() default "";
 
-    String indexAnalyzer() default "";
+    String analyzer() default "";
 
-    String[] ignoreFields() default { };
+    String[] ignoreFields() default {};
 
     boolean includeInParent() default false;
 }

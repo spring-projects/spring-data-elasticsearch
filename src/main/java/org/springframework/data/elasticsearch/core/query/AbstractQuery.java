@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import static org.apache.commons.collections.CollectionUtils.*;
-
+import static java.util.Collections.addAll;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import org.elasticsearch.action.search.SearchType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -39,6 +37,7 @@ abstract class AbstractQuery implements Query {
 	protected List<String> indices = new ArrayList<String>();
 	protected List<String> types = new ArrayList<String>();
 	protected List<String> fields = new ArrayList<String>();
+	protected SourceFilter sourceFilter;
 	protected float minScore;
 	protected Collection<String> ids;
 	protected String route;
@@ -89,6 +88,16 @@ abstract class AbstractQuery implements Query {
 	@Override
 	public List<String> getTypes() {
 		return types;
+	}
+
+	@Override
+	public void addSourceFilter(SourceFilter sourceFilter) {
+		this.sourceFilter = sourceFilter;
+	}
+
+	@Override
+	public SourceFilter getSourceFilter() {
+		return sourceFilter;
 	}
 
 	@SuppressWarnings("unchecked")
