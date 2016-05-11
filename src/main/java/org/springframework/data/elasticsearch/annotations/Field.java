@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
  * @author Kevin Leturc
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target(value = {ElementType.FIELD, ElementType.METHOD})
 @Documented
 @Inherited
 public @interface Field {
