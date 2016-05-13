@@ -4,7 +4,7 @@
 
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-elasticsearch</artifactId>
-    <version>2.0.1.RELEASE</version>
+    <version>2.0.1.1.BUILD-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.data.build</groupId>
@@ -72,6 +72,12 @@
         <dependency>
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
+            <version>${elasticsearch}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.elasticsearch.plugin</groupId>
+            <artifactId>shield</artifactId>
             <version>${elasticsearch}</version>
         </dependency>
 
@@ -179,6 +185,16 @@
         <repository>
             <id>spring-libs-release</id>
             <url>https://repo.spring.io/libs-release</url>
+        </repository>
+        <repository>
+            <id>elasticsearch-releases</id>
+            <url>https://maven.elasticsearch.org/releases</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
 
