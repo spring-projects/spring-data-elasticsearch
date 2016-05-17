@@ -32,6 +32,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Gioele Ashman
  */
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -59,4 +60,13 @@ public class ElasticsearchNamespaceHandlerTests {
 		assertThat(context.getBean(SampleElasticsearchRepository.class),
 				is(instanceOf(SampleElasticsearchRepository.class)));
 	}
+
+    @Test
+    public void shouldContainShieldUser() {
+        TransportClientFactoryBean transportClientFactoryBean = context.getBean(TransportClientFactoryBean.class);
+        String shieldUser = transportClientFactoryBean.getShieldUser();
+        assertThat(shieldUser, is(notNullValue()));
+        assertThat(shieldUser.substring(0, shieldUser.indexOf(":") ), is("shieldUserTest"));
+        assertThat(shieldUser.substring(shieldUser.indexOf(":") + 1), is("shieldUserPassword"));
+    }
 }

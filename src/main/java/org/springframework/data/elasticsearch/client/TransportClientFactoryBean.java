@@ -30,7 +30,6 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * TransportClientFactoryBean
@@ -39,6 +38,7 @@ import org.springframework.util.StringUtils;
  * @author Mohsin Husen
  * @author Jakub Vavrik
  * @author Piotr Betkier
+ * @author Gioele Ashman
  */
 
 public class TransportClientFactoryBean implements FactoryBean<TransportClient>, InitializingBean, DisposableBean {
@@ -90,8 +90,7 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
     protected void buildClient() throws Exception {
         TransportClient.Builder transportClientBuilder = TransportClient.builder().settings(settings());
-        if( StringUtils.hasLength(shieldUser) )
-            transportClientBuilder = transportClientBuilder.addPlugin(ShieldPlugin.class);
+        transportClientBuilder = transportClientBuilder.addPlugin(ShieldPlugin.class);
         client = transportClientBuilder.build();
         Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
         for (String clusterNode : split(clusterNodes, COMMA)) {
