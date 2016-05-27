@@ -27,9 +27,9 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 /**
+ * @see DATAES-259
  * @author Gioele Ashman
  */
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("shield-namespace.xml")
 public class ShieldElasticsearchNamespaceHandlerTests {
