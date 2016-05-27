@@ -14,7 +14,7 @@
         <constructor-arg name="client" ref="client"/>
     </bean>
 
-    <elasticsearch:transport-client id="transportClient" shield-user="shieldUserTest:shieldUserPassword" />
+    <elasticsearch:transport-client id="transportClient"/>
 
     <elasticsearch:repositories
             base-package="org.springframework.data.elasticsearch.repositories.sample"/>

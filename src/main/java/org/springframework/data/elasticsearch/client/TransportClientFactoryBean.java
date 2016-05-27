@@ -75,7 +75,7 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
     }
 
     @Override
-    public TransportClient getObject() {
+	public TransportClient getObject() throws Exception {
         return client;
     }
 
@@ -179,6 +179,10 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
     public void setClientIgnoreClusterName(Boolean clientIgnoreClusterName) {
         this.clientIgnoreClusterName = clientIgnoreClusterName;
+    }
+
+    public void setProperties(Properties properties) {
+        this.properties = properties;
     }
 
     public String getShieldUser() {
