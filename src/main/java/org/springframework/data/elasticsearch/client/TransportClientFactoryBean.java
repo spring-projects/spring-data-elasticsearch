@@ -137,7 +137,6 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
                 else if ( !shieldTransportSsl.equalsIgnoreCase("false") ){
                     throw new IllegalArgumentException("[Assertion failed] 'shieldTransportSsl' must be either value 'true' or 'false'");
                 }
-
             }
 
         logger.debug("Elasticsearch transport client created with properties: " + builder.internalMap());
