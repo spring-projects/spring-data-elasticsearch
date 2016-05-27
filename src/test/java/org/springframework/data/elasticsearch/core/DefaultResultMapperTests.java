@@ -29,13 +29,14 @@ import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.internal.InternalSearchHitField;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
-import org.springframework.data.elasticsearch.core.domain.AggregatedPage;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.entities.Car;
 
 /**
@@ -68,7 +69,7 @@ public class DefaultResultMapperTests {
 		Aggregations aggregations = mock(Aggregations.class);
 		Iterator<Aggregation> iter = Collections.singletonList(aggregationToReturn).iterator();
 
-		when(aggregations.iterator()).thenReturn(iter);
+		when(aggregations.iterator()).thenReturn(iter).thenReturn(iter);
 		when(aggregations.get("engine")).thenReturn(aggregationToReturn);
 		when(response.getAggregations()).thenReturn(aggregations);
 
@@ -76,6 +77,7 @@ public class DefaultResultMapperTests {
 		AggregatedPage<Car> page = (AggregatedPage<Car>) resultMapper.mapResults(response, Car.class, null);
 
 		//Then
+		page.hasFacets();
 		assertThat(page.hasAggregations(), is(true));
 		assertThat(page.getAggregation("engine").getName(), is("Diesel"));
 	}
@@ -132,7 +134,7 @@ public class DefaultResultMapperTests {
 	}
 
 	private Aggregation createCarAggregation() {
-		Aggregation aggregation = mock(Aggregation.class);
+		Aggregation aggregation = mock(Terms.class);
 		when(aggregation.getName()).thenReturn("Diesel");
 		return aggregation;
 	}

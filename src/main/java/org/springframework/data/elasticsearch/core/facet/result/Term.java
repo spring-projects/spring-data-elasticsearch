@@ -13,17 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
-
-import org.elasticsearch.action.search.SearchResponse;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+package org.springframework.data.elasticsearch.core.facet.result;
 
 /**
+ * Single term
+ *
+ * @author Rizwan Idrees
+ * @author Mohsin Husen
  * @author Artur Konczak
- * @author Petar Tahchiev
+ * @author Jonathan Yan
  */
-public interface SearchResultMapper {
+@Deprecated
+public class Term {
 
-	<T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
+	private String term;
+	private long count;
+
+	public Term(String term, long count) {
+		this.term = term;
+		this.count = count;
+	}
+
+	public String getTerm() {
+		return term;
+	}
+
+	public long getCount() {
+		return count;
+	}
 }

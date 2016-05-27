@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
-
-import org.elasticsearch.action.search.SearchResponse;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+package org.springframework.data.elasticsearch.core.facet;
 
 /**
+ * Generic interface for all facets
+ *
+ * @author Rizwan Idrees
+ * @author Mohsin Husen
  * @author Artur Konczak
- * @author Petar Tahchiev
+ * @author Jonathan Yan
  */
-public interface SearchResultMapper {
+@Deprecated
+public interface FacetResult {
 
-	<T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
+	String getName();
+
+	FacetType getType();
 }

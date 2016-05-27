@@ -81,8 +81,11 @@ import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -261,12 +264,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
-	public <T> Page<T> queryForPage(SearchQuery query, Class<T> clazz) {
+	public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz) {
 		return queryForPage(query, clazz, resultsMapper);
 	}
 
 	@Override
-	public <T> Page<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
+	public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
 		SearchResponse response = doSearch(prepareSearch(query, clazz), query);
 		return mapper.mapResults(response, clazz, query.getPageable());
 	}
@@ -409,6 +412,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 					return currentHits.next();
 				}
 				throw new NoSuchElementException();
+			}
+
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException("remove");
 			}
 		};
 	}
@@ -664,14 +672,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		while (hasRecords) {
 			Page<String> page = scroll(scrollId, scrollTimeInMillis, new SearchResultMapper() {
 				@Override
-				public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 					List<String> result = new ArrayList<String>();
 					for (SearchHit searchHit : response.getHits()) {
 						String id = searchHit.getId();
 						result.add(id);
 					}
 					if (result.size() > 0) {
-						return new PageImpl<T>((List<T>) result);
+						return new AggregatedPageImpl<T>((List<T>) result);
 					}
 					return null;
 				}
@@ -878,6 +886,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		if (!isEmpty(searchQuery.getAggregations())) {
 			for (AbstractAggregationBuilder aggregationBuilder : searchQuery.getAggregations()) {
 				searchRequest.addAggregation(aggregationBuilder);
+			}
+		}
+
+		if (!isEmpty(searchQuery.getFacets())) {
+			for (FacetRequest aggregatedFacet : searchQuery.getFacets()) {
+				searchRequest.addAggregation(aggregatedFacet.getFacet());
 			}
 		}
 		return getSearchResponse(searchRequest.setQuery(searchQuery.getQuery()).execute());

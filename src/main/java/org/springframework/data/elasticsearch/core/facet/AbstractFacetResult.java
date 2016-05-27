@@ -13,17 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
+package org.springframework.data.elasticsearch.core.facet;
 
-import org.elasticsearch.action.search.SearchResponse;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.util.Assert;
 
 /**
+ * @author Rizwan Idrees
+ * @author Mohsin Husen
  * @author Artur Konczak
- * @author Petar Tahchiev
+ * @author Jonathan Yan
  */
-public interface SearchResultMapper {
+@Deprecated
+public class AbstractFacetResult implements FacetResult {
 
-	<T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
+	private final String name;
+	private final FacetType type;
+
+	protected AbstractFacetResult(String name, FacetType type) {
+		Assert.hasText(name, "Facet name can't be null and should have a value");
+		this.name = name;
+		this.type = type;
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public FacetType getType() {
+		return type;
+	}
 }

@@ -13,17 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
 
-import org.elasticsearch.action.search.SearchResponse;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+package org.springframework.data.elasticsearch.core.facet;
+
+import org.springframework.util.Assert;
+
 
 /**
  * @author Artur Konczak
- * @author Petar Tahchiev
  */
-public interface SearchResultMapper {
+@Deprecated
+public abstract class AbstractFacetRequest implements FacetRequest {
 
-	<T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
+	private String name;
+	private boolean applyQueryFilter;
+
+	public AbstractFacetRequest(String name) {
+		Assert.hasText(name, "Facet can't be null or empty !!!");
+		this.name = name;
+	}
+
+	protected String getName() {
+		return name;
+	}
+
+	public void setApplyQueryFilter(boolean applyQueryFilter) {
+		this.applyQueryFilter = applyQueryFilter;
+	}
+
+	@Override
+	public boolean applyQueryFilter() {
+		return applyQueryFilter;
+	}
 }

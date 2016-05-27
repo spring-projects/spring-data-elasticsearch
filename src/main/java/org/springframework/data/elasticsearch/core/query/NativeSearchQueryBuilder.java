@@ -25,6 +25,7 @@ import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
 /**
  * NativeSearchQuery
@@ -40,6 +41,7 @@ public class NativeSearchQueryBuilder {
 	private QueryBuilder filterBuilder;
     private List<ScriptField> scriptFields = new ArrayList<ScriptField>();
 	private List<SortBuilder> sortBuilders = new ArrayList<SortBuilder>();
+	private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
 	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<AbstractAggregationBuilder>();
 	private HighlightBuilder.Field[] highlightFields;
 	private Pageable pageable;
@@ -78,10 +80,10 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-/*	public NativeSearchQueryBuilder withFacet(FacetRequest facetRequest) {
+	public NativeSearchQueryBuilder withFacet(FacetRequest facetRequest) {
 		facetRequests.add(facetRequest);
 		return this;
-	}*/
+	}
 
 	public NativeSearchQueryBuilder withHighlightFields(HighlightBuilder.Field... highlightFields) {
 		this.highlightFields = highlightFields;
@@ -167,6 +169,10 @@ public class NativeSearchQueryBuilder {
         if (!isEmpty(scriptFields)) {
             nativeSearchQuery.setScriptFields(scriptFields);
         }
+
+		if (!isEmpty(facetRequests)) {
+			nativeSearchQuery.setFacets(facetRequests);
+		}
 
 		if (!isEmpty(aggregationBuilders)) {
 			nativeSearchQuery.setAggregations(aggregationBuilders);

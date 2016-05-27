@@ -22,6 +22,7 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 
 /**
  * @author Artur Konczak
@@ -47,7 +48,7 @@ public class CustomResultMapper implements ResultsMapper {
 	}
 
 	@Override
-	public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+	public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 

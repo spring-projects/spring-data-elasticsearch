@@ -13,17 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
 
-import org.elasticsearch.action.search.SearchResponse;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+package org.springframework.data.elasticsearch.core.facet.request;
+
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.springframework.data.elasticsearch.core.facet.FacetRequest;
+
 
 /**
  * @author Artur Konczak
- * @author Petar Tahchiev
+ * @author Mohsin Husen
  */
-public interface SearchResultMapper {
+@Deprecated
+public class NativeFacetRequest implements FacetRequest {
 
-	<T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
+	public NativeFacetRequest() {
+		throw new UnsupportedOperationException("Native Facet are not supported in Elasticsearch 2.x - use Aggregation");
+	}
+
+	@Override
+	public AbstractAggregationBuilder getFacet() {
+		return null;
+	}
+
+	@Override
+	public boolean applyQueryFilter() {
+		return false;
+	}
 }

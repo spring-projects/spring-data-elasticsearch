@@ -13,17 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
+package org.springframework.data.elasticsearch.core.facet.result;
 
-import org.elasticsearch.action.search.SearchResponse;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import java.util.List;
+
+import org.springframework.data.elasticsearch.core.facet.AbstractFacetResult;
+import org.springframework.data.elasticsearch.core.facet.FacetType;
 
 /**
  * @author Artur Konczak
- * @author Petar Tahchiev
  */
-public interface SearchResultMapper {
+@Deprecated
+public class HistogramResult extends AbstractFacetResult {
 
-	<T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
+	private List<IntervalUnit> terms;
+
+	public HistogramResult(String name, List<IntervalUnit> terms) {
+		super(name, FacetType.term);
+		this.terms = terms;
+	}
+
+	public List<IntervalUnit> getIntervalUnit() {
+		return terms;
+	}
 }

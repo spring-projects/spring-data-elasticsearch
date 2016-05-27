@@ -15,15 +15,23 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.elasticsearch.action.search.SearchResponse;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.elasticsearch.core.facet.FacetResult;
 
 /**
+ * @author Rizwan Idrees
+ * @author Mohsin Husen
  * @author Artur Konczak
- * @author Petar Tahchiev
+ * @author Jonathan Yan
  */
-public interface SearchResultMapper {
+@Deprecated
+public interface FacetedPage<T> extends Page<T> {
 
-	<T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
+	boolean hasFacets();
+
+	List<FacetResult> getFacets();
+
+	FacetResult getFacet(String name);
 }

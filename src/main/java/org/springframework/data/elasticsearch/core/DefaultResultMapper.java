@@ -35,12 +35,15 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
-import org.springframework.data.elasticsearch.core.domain.impl.AggregatedPageImpl;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.PersistentProperty;
@@ -51,6 +54,8 @@ import org.springframework.data.mapping.context.MappingContext;
  * @author Petar Tahchiev
  */
 public class DefaultResultMapper extends AbstractResultMapper {
+
+	private static final Logger LOG = LoggerFactory.getLogger(DefaultResultMapper.class);
 
 	private MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 
@@ -75,7 +80,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	}
 
 	@Override
-	public <T> Page<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+	public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 		long totalHits = response.getHits().totalHits();
 		List<T> results = new ArrayList<T>();
 		for (SearchHit hit : response.getHits()) {
@@ -180,7 +185,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 					try {
 						setter.invoke(result, id);
 					} catch (Throwable t) {
-						t.printStackTrace();
+						LOG.error("Unable to set entity Id", t);
 					}
 				}
 			}
