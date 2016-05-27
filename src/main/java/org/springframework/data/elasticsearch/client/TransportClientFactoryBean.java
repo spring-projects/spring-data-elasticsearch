@@ -30,6 +30,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * TransportClientFactoryBean
@@ -50,7 +51,12 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
     private Boolean clientIgnoreClusterName = Boolean.FALSE;
     private String clientPingTimeout = "5s";
     private String clientNodesSamplerInterval = "5s";
+
     private String shieldUser;
+    private String shieldTransportSsl = "false";
+    private String shieldSslKeystorePath;
+    private String shieldSslKeystorePassword;
+
     private TransportClient client;
     private Properties properties;
     static final String COLON = ":";
@@ -90,7 +96,8 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
     protected void buildClient() throws Exception {
         TransportClient.Builder transportClientBuilder = TransportClient.builder().settings(settings());
-        transportClientBuilder = transportClientBuilder.addPlugin(ShieldPlugin.class);
+        if(StringUtils.hasText(shieldUser) || "true".equalsIgnoreCase(shieldTransportSsl) )
+            transportClientBuilder = transportClientBuilder.addPlugin(ShieldPlugin.class);
         client = transportClientBuilder.build();
         Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
         for (String clusterNode : split(clusterNodes, COMMA)) {
@@ -108,15 +115,35 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
         if (properties != null) {
             return Settings.builder().put(properties).build();
         }
-        return Settings.builder()
-                .put("cluster.name", clusterName)
-                .put("client.transport.sniff", clientTransportSniff)
-                .put("client.transport.ignore_cluster_name", clientIgnoreClusterName)
-                .put("client.transport.ping_timeout", clientPingTimeout)
-                .put("client.transport.nodes_sampler_interval", clientNodesSamplerInterval)
-                .put("shield.user", shieldUser)
-                .build();
+        Settings.Builder builder = Settings.builder()
+            .put("cluster.name", clusterName)
+            .put("client.transport.sniff", clientTransportSniff)
+            .put("client.transport.ignore_cluster_name", clientIgnoreClusterName)
+            .put("client.transport.ping_timeout", clientPingTimeout)
+            .put("client.transport.nodes_sampler_interval", clientNodesSamplerInterval);
+
+            if(StringUtils.hasText(shieldUser))
+                builder.put("shield.user", shieldUser);
+
+            if( StringUtils.hasText(shieldTransportSsl)){
+
+                if( "true".equalsIgnoreCase(shieldTransportSsl) ) {
+                    builder.put("shield.transport.ssl", shieldTransportSsl);
+                    if( StringUtils.hasText(shieldSslKeystorePath)) {
+                        builder.put("shield.ssl.keystore.path", shieldSslKeystorePath);
+                        builder.put("shield.ssl.keystore.password", shieldSslKeystorePassword);
+                    }
+                }
+                else if ( !shieldTransportSsl.equalsIgnoreCase("false") ){
+                    throw new IllegalArgumentException("[Assertion failed] 'shieldTransportSsl' must be either value 'true' or 'false'");
+                }
+
+            }
+
+        logger.debug("Elasticsearch transport client created with properties: " + builder.internalMap());
+        return builder.build();
     }
+
 
     public void setClusterNodes(String clusterNodes) {
         this.clusterNodes = clusterNodes;
@@ -160,6 +187,30 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
     public void setShieldUser(String shieldUser) {
         this.shieldUser = shieldUser;
+    }
+
+    public String getShieldSslKeystorePassword() {
+        return shieldSslKeystorePassword;
+    }
+
+    public void setShieldSslKeystorePassword(String shieldSslKeystorePassword) {
+        this.shieldSslKeystorePassword = shieldSslKeystorePassword;
+    }
+
+    public String getShieldSslKeystorePath() {
+        return shieldSslKeystorePath;
+    }
+
+    public void setShieldSslKeystorePath(String shieldSslKeystorePath) {
+        this.shieldSslKeystorePath = shieldSslKeystorePath;
+    }
+
+    public String getShieldTransportSsl() {
+        return shieldTransportSsl;
+    }
+
+    public void setShieldTransportSsl(String shieldTransportSsl) {
+        this.shieldTransportSsl = shieldTransportSsl;
     }
 }
 

@@ -39,6 +39,9 @@ public class TransportClientBeanDefinitionParser extends AbstractBeanDefinitionP
     }
 
     private void setConfigurations(Element element, BeanDefinitionBuilder builder) {
+        builder.addPropertyValue("shieldTransportSsl", element.getAttribute("shield-transport-ssl"));
+        builder.addPropertyValue("shieldSslKeystorePath", element.getAttribute("shield-ssl-keystore-path"));
+        builder.addPropertyValue("shieldSslKeystorePassword", element.getAttribute("shield-ssl-keystore-password"));
         builder.addPropertyValue("shieldUser", element.getAttribute("shield-user"));
         builder.addPropertyValue("clusterNodes", element.getAttribute("cluster-nodes"));
         builder.addPropertyValue("clusterName", element.getAttribute("cluster-name"));

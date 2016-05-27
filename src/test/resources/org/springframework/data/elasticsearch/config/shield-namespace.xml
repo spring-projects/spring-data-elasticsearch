@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+       xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch
+        http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <context:property-placeholder location="classpath:shield-namespace-handler-test.properties"  />
+
+    <elasticsearch:transport-client id="transportClientWithoutShield" />
+    <elasticsearch:transport-client id="transportClientWithShieldUserOnlyNoSslNoKeystore" shield-user="${shieldUser}" />
+    <elasticsearch:transport-client id="transportClientWithShieldUserAndSslNoKeystore" shield-user="${shieldUser}" shield-transport-ssl="true"/>
+
+    <elasticsearch:transport-client id="transportClientWithAllShieldProperties"
+        shield-user="${shieldUser}"
+        shield-transport-ssl="${shieldTransportSsl}"
+        shield-ssl-keystore-path="/dev/null/keystorePath"
+        shield-ssl-keystore-password="keystorePassword" />
+
+    <elasticsearch:transport-client id="transportClientWithEmptyShieldProperties"
+        shield-user="" shield-transport-ssl="" shield-ssl-keystore-path="" shield-ssl-keystore-password="" />
+
+</beans>
