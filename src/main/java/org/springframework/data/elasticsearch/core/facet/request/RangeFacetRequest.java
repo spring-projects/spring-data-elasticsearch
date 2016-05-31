@@ -19,6 +19,7 @@ package org.springframework.data.elasticsearch.core.facet.request;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.range.RangeBuilder;
@@ -35,6 +36,7 @@ import org.springframework.util.Assert;
 @Deprecated
 public class RangeFacetRequest extends AbstractFacetRequest {
 
+	public static final String RANGE_INTERNAL_SUM = "range-internal-sum";
 	private String field;
 	private String keyField;
 	private String valueField;
@@ -50,7 +52,8 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 	}
 
 	public void setFields(String keyField, String valueField) {
-		throw new UnsupportedOperationException("Native Facet are not supported in Elasticsearch 2.x - use Aggregation");
+		this.keyField = keyField;
+		this.valueField = valueField;
 	}
 
 	public void range(Double from, Double to) {
@@ -74,11 +77,16 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 		Assert.notNull(getName(), "Facet name can't be a null !!!");
 
 		RangeBuilder rangeBuilder = AggregationBuilders.range(getName());
-		rangeBuilder.field(field);
+		rangeBuilder.field(StringUtils.isNotBlank(keyField) ? keyField : field );
 
 		for (Entry entry : entries) {
 			DoubleEntry doubleEntry = (DoubleEntry) entry;
 			rangeBuilder.addRange(validateValue(doubleEntry.getFrom(), Double.NEGATIVE_INFINITY), validateValue(doubleEntry.getTo(), Double.POSITIVE_INFINITY));
+		}
+
+		rangeBuilder.subAggregation(AggregationBuilders.extendedStats(INTERNAL_STATS));
+		if(StringUtils.isNotBlank(valueField)){
+			rangeBuilder.subAggregation(AggregationBuilders.sum(RANGE_INTERNAL_SUM).field(valueField));
 		}
 
 		return rangeBuilder;

@@ -25,6 +25,8 @@ import org.springframework.util.Assert;
 @Deprecated
 public abstract class AbstractFacetRequest implements FacetRequest {
 
+	public static final String INTERNAL_STATS = "internal-stats";
+
 	private String name;
 	private boolean applyQueryFilter;
 

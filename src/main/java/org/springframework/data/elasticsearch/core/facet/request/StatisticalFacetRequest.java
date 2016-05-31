@@ -48,6 +48,6 @@ public class StatisticalFacetRequest extends AbstractFacetRequest {
 	public AbstractAggregationBuilder getFacet() {
 		Assert.notNull(getName(), "Facet name can't be a null !!!");
 		Assert.isTrue(StringUtils.isNotBlank(field) && fields == null, "Please select field or fields on which to build the facets !!!");
-		return AggregationBuilders.stats(getName()).field(field);
+		return AggregationBuilders.extendedStats(getName()).field(field);
 	}
 }

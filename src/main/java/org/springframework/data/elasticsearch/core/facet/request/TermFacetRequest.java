@@ -46,8 +46,8 @@ public class TermFacetRequest extends AbstractFacetRequest {
 	}
 
 	public void setFields(String... fields) {
-		Assert.isTrue(ArrayUtils.isNotEmpty(fields), "Term agg need one field");
-		Assert.isTrue(ArrayUtils.getLength(fields) == 1, "Term agg need one field");
+		Assert.isTrue(ArrayUtils.isNotEmpty(fields), "Term agg need one field only");
+		Assert.isTrue(ArrayUtils.getLength(fields) == 1, "Term agg need one field only");
 		this.fields = fields;
 	}
 
@@ -84,11 +84,11 @@ public class TermFacetRequest extends AbstractFacetRequest {
 			case ascTerm:
 				termsBuilder.order(Terms.Order.term(true));
 				break;
-			case ascCount:
-				termsBuilder.order(Terms.Order.count(true));
+			case descCount:
+				termsBuilder.order(Terms.Order.count(false));
 				break;
 			default:
-				termsBuilder.order(Terms.Order.count(false));
+				termsBuilder.order(Terms.Order.count(true));
 		}
 		if (ArrayUtils.isNotEmpty(excludeTerms)) {
 			termsBuilder.exclude(excludeTerms);
