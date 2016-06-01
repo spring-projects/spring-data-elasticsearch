@@ -8,19 +8,25 @@
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <context:property-placeholder location="classpath:shield-namespace-handler-test.properties"  />
+    <context:property-placeholder location="classpath:shield-namespace-test.properties"  />
 
-    <elasticsearch:transport-client id="transportClientWithoutShield" />
-    <elasticsearch:transport-client id="transportClientWithShieldUserOnlyNoSslNoKeystore" shield-user="${shieldUser}" />
-    <elasticsearch:transport-client id="transportClientWithShieldUserAndSslNoKeystore" shield-user="${shieldUser}" shield-transport-ssl="true"/>
+    <elasticsearch:transport-client id="clientWithoutShield" />
+    <elasticsearch:transport-client id="clientWithShieldUserOnlyNoSslNoKeystore" shield-user="${shieldUser}" />
+    <elasticsearch:transport-client id="clientWithShieldUserAndSslNoKeystore" shield-user="${shieldUser}" shield-transport-ssl="true"/>
 
-    <elasticsearch:transport-client id="transportClientWithAllShieldProperties"
-        shield-user="${shieldUser}"
-        shield-transport-ssl="${shieldTransportSsl}"
-        shield-ssl-keystore-path="/dev/null/keystorePath"
-        shield-ssl-keystore-password="keystorePassword" />
+    <elasticsearch:transport-client id="clientWithAllShieldPropertiesExceptTruststore"
+                                    shield-user="${shieldUser}"
+                                    shield-transport-ssl="${shieldTransportSsl}"
+                                    shield-ssl-keystore-path="/dev/null/keystorePath"
+                                    shield-ssl-keystore-password="keystorePassword" />
 
-    <elasticsearch:transport-client id="transportClientWithEmptyShieldProperties"
-        shield-user="" shield-transport-ssl="" shield-ssl-keystore-path="" shield-ssl-keystore-password="" />
+    <elasticsearch:transport-client id="clientWithEmptyShieldProperties"
+                                    shield-user="" shield-transport-ssl="" shield-ssl-keystore-path="" shield-ssl-keystore-password="" />
+
+    <elasticsearch:transport-client id="clientWithAllShieldPropertiesExceptKeystore"
+                                    shield-user="${shieldUser}"
+                                    shield-transport-ssl="${shieldTransportSsl}"
+                                    shield-ssl-truststore-path="/truststore/Path"
+                                    shield-ssl-truststore-password="truststorePassword" />
 
 </beans>

@@ -147,28 +147,45 @@
                     <xsd:attribute name="shield-user" type="xsd:string" default="">
                         <xsd:annotation>
                             <xsd:documentation>
-                                <![CDATA[Shield credentials in format username:password]]>
+                                <![CDATA[Shield credentials in format username:password, if using shield this property
+                                must be specified.]]>
                             </xsd:documentation>
                         </xsd:annotation>
                     </xsd:attribute>
                     <xsd:attribute name="shield-transport-ssl" type="xsd:string" default="false" >
                         <xsd:annotation>
                             <xsd:documentation>
-                                <![CDATA[Set to true to enable shield ssl. value must be true or false.]]>
+                                <![CDATA[Set to true to enable shield tls/ssl. value must be true or false.]]>
                             </xsd:documentation>
                         </xsd:annotation>
                     </xsd:attribute>
                     <xsd:attribute name="shield-ssl-keystore-path" type="xsd:string" default="">
                         <xsd:annotation>
                             <xsd:documentation>
-                                <![CDATA[Path to keystore containing for shield ssl client certificate]]>
+                                <![CDATA[Path to keystore containing for shield client certificate for use with
+                                TSL/SSL and client certificate authentication.]]>
                             </xsd:documentation>
                         </xsd:annotation>
                     </xsd:attribute>
                     <xsd:attribute name="shield-ssl-keystore-password" type="xsd:string" default="">
                         <xsd:annotation>
                             <xsd:documentation>
-                                <![CDATA[Password for shield ssl client certificate]]>
+                                <![CDATA[Password for shield client certificate keystore.]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="shield-ssl-truststore-path" type="xsd:string" default="">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[Path to truststore containing for shield client certificate for use with TLS/SSL
+                                without client certificate authentication.]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="shield-ssl-truststore-password" type="xsd:string" default="">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[Password for shield client certificate truststore.]]>
                             </xsd:documentation>
                         </xsd:annotation>
                     </xsd:attribute>

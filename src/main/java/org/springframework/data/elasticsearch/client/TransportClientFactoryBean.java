@@ -54,6 +54,8 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
     private String shieldUser;
     private String shieldTransportSsl = "false";
+    private String shieldSslTruststorePath;
+    private String shieldSslTruststorePassword;
     private String shieldSslKeystorePath;
     private String shieldSslKeystorePassword;
 
@@ -75,7 +77,7 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
     }
 
     @Override
-	public TransportClient getObject() throws Exception {
+    public TransportClient getObject() throws Exception  {
         return client;
     }
 
@@ -96,8 +98,9 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
     protected void buildClient() throws Exception {
         TransportClient.Builder transportClientBuilder = TransportClient.builder().settings(settings());
-        if(StringUtils.hasText(shieldUser) || "true".equalsIgnoreCase(shieldTransportSsl) )
+        if(StringUtils.hasText(shieldUser)) {
             transportClientBuilder = transportClientBuilder.addPlugin(ShieldPlugin.class);
+        }
         client = transportClientBuilder.build();
         Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
         for (String clusterNode : split(clusterNodes, COMMA)) {
@@ -111,36 +114,51 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
         client.connectedNodes();
     }
 
+
     private Settings settings() {
         if (properties != null) {
             return Settings.builder().put(properties).build();
         }
         Settings.Builder builder = Settings.builder()
-            .put("cluster.name", clusterName)
-            .put("client.transport.sniff", clientTransportSniff)
-            .put("client.transport.ignore_cluster_name", clientIgnoreClusterName)
-            .put("client.transport.ping_timeout", clientPingTimeout)
-            .put("client.transport.nodes_sampler_interval", clientNodesSamplerInterval);
+                .put("cluster.name", clusterName)
+                .put("client.transport.sniff", clientTransportSniff)
+                .put("client.transport.ignore_cluster_name", clientIgnoreClusterName)
+                .put("client.transport.ping_timeout", clientPingTimeout)
+                .put("client.transport.nodes_sampler_interval", clientNodesSamplerInterval);
 
-            if(StringUtils.hasText(shieldUser))
-                builder.put("shield.user", shieldUser);
-
-            if( StringUtils.hasText(shieldTransportSsl)){
-
-                if( "true".equalsIgnoreCase(shieldTransportSsl) ) {
-                    builder.put("shield.transport.ssl", shieldTransportSsl);
-                    if( StringUtils.hasText(shieldSslKeystorePath)) {
-                        builder.put("shield.ssl.keystore.path", shieldSslKeystorePath);
-                        builder.put("shield.ssl.keystore.password", shieldSslKeystorePassword);
-                    }
-                }
-                else if ( !shieldTransportSsl.equalsIgnoreCase("false") ){
-                    throw new IllegalArgumentException("[Assertion failed] 'shieldTransportSsl' must be either value 'true' or 'false'");
-                }
-            }
+        putShieldPropertiesIfRequired(builder);
 
         logger.debug("Elasticsearch transport client created with properties: " + builder.internalMap());
         return builder.build();
+    }
+
+    /**
+     * @see https://www.elastic.co/guide/en/shield/current/_using_elasticsearch_java_clients_with_shield.html
+     */
+    private void putShieldPropertiesIfRequired(Settings.Builder builder) {
+        //ES says: At a minimum, you must configure shield.user to include the name and password of your transport client user in your requests
+        if(StringUtils.hasText(shieldUser)) {
+            builder.put("shield.user", shieldUser);
+
+            if( StringUtils.hasText(shieldTransportSsl)){
+                if( "true".equalsIgnoreCase(shieldTransportSsl) ) {
+                    builder.put("shield.transport.ssl", shieldTransportSsl);
+                    //client cert authentication
+                    if( StringUtils.hasText(shieldSslKeystorePath) ){
+                        builder.put("shield.ssl.keystore.path", shieldSslKeystorePath);
+                        builder.put("shield.ssl.keystore.password", shieldSslKeystorePassword);
+                    }
+                    //no client cert auth, only TLS/SSL using certs signed by your own CA
+                    if( StringUtils.hasText(shieldSslTruststorePath) ){
+                        builder.put("shield.ssl.truststore.path", shieldSslTruststorePath);
+                        builder.put("shield.ssl.truststore.password", shieldSslTruststorePassword);
+                    }
+                }
+            }
+            else if ( !shieldTransportSsl.equalsIgnoreCase("false") ){
+                throw new IllegalArgumentException("[Assertion failed] 'shieldTransportSsl' must be either value 'true' or 'false'");
+            }
+        }
     }
 
 
@@ -198,6 +216,22 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
     public void setShieldSslKeystorePassword(String shieldSslKeystorePassword) {
         this.shieldSslKeystorePassword = shieldSslKeystorePassword;
+    }
+
+    public String getShieldSslTruststorePassword() {
+        return shieldSslTruststorePassword;
+    }
+
+    public void setShieldSslTruststorePassword(String shieldSslTruststorePassword) {
+        this.shieldSslTruststorePassword = shieldSslTruststorePassword;
+    }
+
+    public String getShieldSslTruststorePath() {
+        return shieldSslTruststorePath;
+    }
+
+    public void setShieldSslTruststorePath(String shieldSslTruststorePath) {
+        this.shieldSslTruststorePath = shieldSslTruststorePath;
     }
 
     public String getShieldSslKeystorePath() {

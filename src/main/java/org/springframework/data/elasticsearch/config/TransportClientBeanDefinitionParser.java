@@ -49,6 +49,8 @@ public class TransportClientBeanDefinitionParser extends AbstractBeanDefinitionP
         builder.addPropertyValue("shieldTransportSsl", element.getAttribute("shield-transport-ssl"));
         builder.addPropertyValue("shieldSslKeystorePath", element.getAttribute("shield-ssl-keystore-path"));
         builder.addPropertyValue("shieldSslKeystorePassword", element.getAttribute("shield-ssl-keystore-password"));
+        builder.addPropertyValue("shieldSslTruststorePath", element.getAttribute("shield-ssl-truststore-path"));
+        builder.addPropertyValue("shieldSslTruststorePassword", element.getAttribute("shield-ssl-truststore-password"));
         builder.addPropertyValue("shieldUser", element.getAttribute("shield-user"));
     }
 
