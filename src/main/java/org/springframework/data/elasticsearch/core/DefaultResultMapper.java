@@ -16,15 +16,15 @@
 package org.springframework.data.elasticsearch.core;
 
 
+import java.beans.PropertyDescriptor;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
+import com.fasterxml.jackson.databind.util.BeanUtil;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
@@ -35,7 +35,10 @@ import org.elasticsearch.common.jackson.core.JsonFactory;
 import org.elasticsearch.common.jackson.core.JsonGenerator;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.facet.Facet;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.PropertyAccessorUtils;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.facet.DefaultFacetMapper;
@@ -84,6 +87,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 				} else {
 					result = mapEntity(hit.getFields().values(), clazz);
 				}
+				mapInnerHits(result, hit.getInnerHits(), clazz);
 				setPersistentEntityId(result, hit.getId(), clazz);
 				results.add(result);
 			}
@@ -99,6 +103,54 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		}
 
 		return new FacetedPageImpl<T>(results, pageable, totalHits, facets);
+	}
+
+	private <T> void mapInnerHits(T result, Map<String, SearchHits> innerHits, Class clazz) {
+		ElasticsearchPersistentEntity persistentEntity = mappingContext.getPersistentEntity(clazz);
+		if (persistentEntity.innerHitsProperties() == null) return;
+		for (String path : innerHits.keySet()) {
+			if (persistentEntity.innerHitsProperties().containsKey(path)) {
+				ElasticsearchPersistentProperty innerHitProperty = (ElasticsearchPersistentProperty)persistentEntity.innerHitsProperties().get(path);
+				Collection innerCollection = null;
+				Class innerClass = null;
+				Object innerObject = null;
+				if (List.class.isAssignableFrom(innerHitProperty.getRawType())) {
+					innerCollection = new ArrayList();
+					innerClass = innerHitProperty.getTypeInformation().getComponentType().getType();
+				}
+				else if (Set.class.isAssignableFrom(innerHitProperty.getRawType())) {
+					innerCollection = new HashSet();
+					innerClass = innerHitProperty.getTypeInformation().getComponentType().getType();
+				}
+				else {
+					innerClass = innerHitProperty.getRawType();
+				}
+
+				SearchHits innerSearchHits = innerHits.get(path);
+				for (SearchHit searchHit : innerSearchHits.getHits()) {
+					innerObject = mapEntity(searchHit.getSourceAsString(), innerClass);
+					if (innerCollection != null) {
+						innerCollection.add(innerObject);
+					}
+					else
+						break;
+				}
+				Method setter = innerHitProperty.getSetter();
+				try {
+					if (innerCollection != null && !innerCollection.isEmpty()) {
+                        setter.invoke(result, innerCollection);
+                    }
+                    else if (innerObject != null){
+                        setter.invoke(result, innerObject);
+                    }
+				} catch (IllegalAccessException e) {
+					e.printStackTrace();
+				} catch (InvocationTargetException e) {
+					e.printStackTrace();
+				}
+
+			}
+		}
 	}
 
 	private <T> T mapEntity(Collection<SearchHitField> values, Class<T> clazz) {

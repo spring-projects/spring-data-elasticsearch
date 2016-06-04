@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.support.QueryInnerHitBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -124,4 +125,49 @@ public class ElasticsearchTemplateParentChildTests {
 
 		return child;
 	}
+
+	@Test
+	public void shouldHaveInnerHitsChildren() {
+		// index two parents
+		ParentEntity parent1 = index("parent1", "First Parent");
+		ParentEntity parent2 = index("parent2", "Second Parent");
+
+		// index a child for each parent
+		String child1name = "First";
+		index("child1", parent1.getId(), child1name);
+		index("child2", parent2.getId(), "Second");
+
+		elasticsearchTemplate.refresh(ParentEntity.class, true);
+		elasticsearchTemplate.refresh(ChildEntity.class, true);
+
+		// find all parents that have the first child
+		QueryBuilder query = hasChildQuery(ParentEntity.CHILD_TYPE, QueryBuilders.termQuery("name", child1name.toLowerCase())).innerHit(new QueryInnerHitBuilder());
+		List<ParentEntity> parents = elasticsearchTemplate.queryForList(new NativeSearchQuery(query), ParentEntity.class);
+
+		assertThat("children", parents, hasSize(1));
+
+	}
+
+	@Test
+	public void shouldHaveInnerHitsParent() {
+		// index two parents
+		ParentEntity parent1 = index("parent1", "firstparent");
+		ParentEntity parent2 = index("parent2", "secondparent");
+
+		// index a child for each parent
+		String child1name = "First";
+		index("child1", parent1.getId(), child1name);
+		index("child2", parent2.getId(), "Second");
+
+		elasticsearchTemplate.refresh(ParentEntity.class, true);
+		elasticsearchTemplate.refresh(ChildEntity.class, true);
+
+		// find all parents that have the first child
+		QueryBuilder query = hasParentQuery(ParentEntity.PARENT_TYPE, QueryBuilders.termQuery("name", "firstparent")).innerHit(new QueryInnerHitBuilder());
+		List<ChildEntity> children = elasticsearchTemplate.queryForList(new NativeSearchQuery(query), ChildEntity.class);
+
+		assertThat("children", children, hasSize(1));
+
+	}
+
 }

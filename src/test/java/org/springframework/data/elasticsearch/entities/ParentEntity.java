@@ -15,9 +15,12 @@
  */
 package org.springframework.data.elasticsearch.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.core.style.ToStringCreator;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
+
+import java.util.List;
 
 /**
  * ParentEntity
@@ -36,6 +39,20 @@ public class ParentEntity {
 	private String id;
 	@Field(type = FieldType.String, index = FieldIndex.analyzed, store = true)
 	private String name;
+
+	@JsonIgnore
+	@InnerHits(path = "child-entity")
+	private List<ChildEntity> children;
+
+	@JsonIgnore
+	public List<ChildEntity> getChildren() {
+		return children;
+	}
+
+	@JsonIgnore
+	public void setChildren(List<ChildEntity> children) {
+		this.children = children;
+	}
 
 	public ParentEntity() {
 	}
@@ -68,6 +85,18 @@ public class ParentEntity {
 		private String parentId;
 		@Field(type = FieldType.String, index = FieldIndex.analyzed, store = true)
 		private String name;
+
+		@JsonIgnore
+		@InnerHits(path = "parent-entity")
+		private ParentEntity parent;
+		@JsonIgnore
+		public ParentEntity getParent() {
+			return parent;
+		}
+		@JsonIgnore
+		public void setParent(ParentEntity parent) {
+			this.parent = parent;
+		}
 
 		public ChildEntity() {
 		}

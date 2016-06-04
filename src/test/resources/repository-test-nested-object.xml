@@ -12,6 +12,4 @@
         <constructor-arg name="client" ref="client"/>
     </bean>
 
-    <elasticsearch:repositories base-package="org.springframework.data.elasticsearch"/>
-
 </beans>

@@ -18,6 +18,8 @@ package org.springframework.data.elasticsearch.core.mapping;
 import org.springframework.data.elasticsearch.annotations.Partitioner;
 import org.springframework.data.mapping.PersistentEntity;
 
+import java.util.Map;
+
 /**
  * ElasticsearchPersistentEntity
  *
@@ -52,6 +54,8 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	Partitioner[] getPartitioners();
 
 	String[] getPartitionersParameters();
+
+	Map<String, ElasticsearchPersistentProperty> innerHitsProperties();
 
 	String getPartitionSeparator();
 

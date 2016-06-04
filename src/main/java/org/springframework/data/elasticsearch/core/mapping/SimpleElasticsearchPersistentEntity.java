@@ -20,10 +20,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Parent;
-import org.springframework.data.elasticsearch.annotations.Partitioner;
-import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.partition.DefaultElasticsearchPartitioner;
 import org.springframework.data.elasticsearch.core.partition.ElasticsearchPartitioner;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
@@ -34,7 +31,9 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -65,6 +64,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private String[] partitionersParameters;
 	private String partitionSeparator;
 	private ElasticsearchPartitioner indexPartitioner;
+	Map<String, ElasticsearchPersistentProperty> innerHitsProperties;
 
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
@@ -184,6 +184,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
+	public Map<String, ElasticsearchPersistentProperty> innerHitsProperties() {
+		return innerHitsProperties;
+	}
+
+	@Override
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
 		super.addPersistentProperty(property);
 
@@ -200,6 +205,13 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		if (property.isVersionProperty()) {
 			Assert.isTrue(property.getType() == Long.class, "Version property should be Long");
+		}
+
+		InnerHits innerHits = property.getField().getAnnotation(InnerHits.class);
+		if (innerHits != null) {
+			if (innerHitsProperties == null) innerHitsProperties = new HashMap<String, ElasticsearchPersistentProperty>();
+			Assert.isTrue(!innerHitsProperties.containsKey(innerHits.path()), "Only one filed can be mapped with the same innerHi path");
+			innerHitsProperties.put(innerHits.path(), property);
 		}
 	}
 }
