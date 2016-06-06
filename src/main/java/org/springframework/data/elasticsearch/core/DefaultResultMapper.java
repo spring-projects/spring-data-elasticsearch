@@ -106,8 +106,9 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	}
 
 	private <T> void mapInnerHits(T result, Map<String, SearchHits> innerHits, Class clazz) {
+		if (innerHits == null || mappingContext == null) return;
 		ElasticsearchPersistentEntity persistentEntity = mappingContext.getPersistentEntity(clazz);
-		if (persistentEntity.innerHitsProperties() == null) return;
+		if (persistentEntity == null || persistentEntity.innerHitsProperties() == null) return;
 		for (String path : innerHits.keySet()) {
 			if (persistentEntity.innerHitsProperties().containsKey(path)) {
 				ElasticsearchPersistentProperty innerHitProperty = (ElasticsearchPersistentProperty)persistentEntity.innerHitsProperties().get(path);
