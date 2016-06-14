@@ -17,6 +17,8 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import org.springframework.data.mapping.PersistentEntity;
 
+import java.util.Map;
+
 /**
  * ElasticsearchPersistentEntity
  *
@@ -45,6 +47,8 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	String getParentType();
 
 	ElasticsearchPersistentProperty getParentIdProperty();
+
+	Map<String, ElasticsearchPersistentProperty> getInnerHitsProperties();
 
 	String settingPath();
 

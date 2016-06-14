@@ -18,10 +18,12 @@ package org.springframework.data.elasticsearch.entities;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerHits;
 
 /**
  * @author Rizwan Idrees
@@ -42,6 +44,18 @@ public class Person {
 
 	@Field(type = FieldType.Nested, includeInParent = true)
 	private List<Book> books;
+
+	@JsonIgnore
+	@InnerHits(path = "books")
+	private List<Book> targetedBooks;
+	@JsonIgnore
+	public List<Book> getTargetedBooks() {
+		return targetedBooks;
+	}
+	@JsonIgnore
+	public void setTargetedBooks(List<Book> targetedBooks) {
+		this.targetedBooks = targetedBooks;
+	}
 
 	public String getId() {
 		return id;

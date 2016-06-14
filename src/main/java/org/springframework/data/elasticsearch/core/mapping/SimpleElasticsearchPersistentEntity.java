@@ -17,7 +17,9 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import static org.springframework.util.StringUtils.*;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -25,6 +27,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.InnerHits;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
@@ -59,6 +62,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private ElasticsearchPersistentProperty parentIdProperty;
 	private String settingPath;
 	private boolean createIndexAndMapping;
+	Map<String, ElasticsearchPersistentProperty> innerHitsProperties;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 		super(typeInformation);
@@ -149,6 +153,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
+	public Map<String, ElasticsearchPersistentProperty> getInnerHitsProperties() {
+		return innerHitsProperties;
+	}
+
+	@Override
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
 		super.addPersistentProperty(property);
 
@@ -165,6 +174,13 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		if (property.isVersionProperty()) {
 			Assert.isTrue(property.getType() == Long.class, "Version property should be Long");
+		}
+
+		InnerHits innerHits = property.getField().getAnnotation(InnerHits.class);
+		if (innerHits != null) {
+			if (innerHitsProperties == null) innerHitsProperties = new HashMap<String, ElasticsearchPersistentProperty>();
+			Assert.isTrue(!innerHitsProperties.containsKey(innerHits.path()), "Only one filed can be mapped with the same innerHi path");
+			innerHitsProperties.put(innerHits.path(), property);
 		}
 	}
 }
