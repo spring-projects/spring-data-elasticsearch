@@ -276,6 +276,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		return resolveReturnedClassFromGenericType(clazz.getSuperclass());
 	}
 
+	@Override
 	public Class<T> getEntityClass() {
 		if (!isEntityClassSet()) {
 			try {
