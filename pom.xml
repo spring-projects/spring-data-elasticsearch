@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.springframework.data</groupId>
@@ -150,9 +151,30 @@
                 <artifactId>asciidoctor-maven-plugin</artifactId>
             </plugin>
         </plugins>
+
+        <testResources>
+            <testResource>
+                <directory>${basedir}/src/test/resources</directory>
+            </testResource>
+            <testResource>
+                <targetPath>${basedir}/target/test-home-dir</targetPath>
+                <directory>${basedir}/src/test/es-modules/${elasticsearch}</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </testResource>
+        </testResources>
     </build>
 
     <profiles>
+
+        <profile>
+            <id>es2.3.3</id>
+            <properties>
+                <elasticsearch>2.3.3</elasticsearch>
+            </properties>
+        </profile>
+
         <profile>
             <id>release</id>
             <build>
