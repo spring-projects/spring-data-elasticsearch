@@ -43,4 +43,6 @@ public interface ElasticsearchRepository<T, ID extends Serializable> extends Ela
 	Page<T> searchSimilar(T entity, String[] fields, Pageable pageable);
 
 	void refresh();
+
+	Class<T> getEntityClass();
 }
