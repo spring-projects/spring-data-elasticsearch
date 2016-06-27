@@ -20,8 +20,10 @@ import java.io.Serializable;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.repository.NoRepositoryBean;
+import org.springframework.data.util.CloseableIterator;
 
 /**
  * @param <T>
@@ -41,6 +43,10 @@ public interface ElasticsearchRepository<T, ID extends Serializable> extends Ela
 	Page<T> search(SearchQuery searchQuery);
 
 	Page<T> searchSimilar(T entity, String[] fields, Pageable pageable);
+
+	CloseableIterator<T> stream(SearchQuery searchQuery);
+
+	CloseableIterator<T> stream(CriteriaQuery searchQuery);
 
 	void refresh();
 

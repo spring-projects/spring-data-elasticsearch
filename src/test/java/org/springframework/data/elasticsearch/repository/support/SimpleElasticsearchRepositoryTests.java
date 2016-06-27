@@ -37,6 +37,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repositories.sample.SampleElasticsearchRepository;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -152,6 +153,34 @@ public class SimpleElasticsearchRepositoryTests {
 		Iterable<SampleEntity> results = repository.findAll();
 		// then
 		assertThat(results, is(notNullValue()));
+	}
+
+	@Test
+	public void shouldStreamAllDocuments() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setMessage("some message");
+		sampleEntity.setVersion(System.currentTimeMillis());
+		repository.save(sampleEntity);
+		// when
+		SearchQuery query = new NativeSearchQueryBuilder().withQuery(termQuery("message", "some")).build();
+
+		CloseableIterator<SampleEntity> iterator = null;
+		try {
+			iterator = repository.stream(query);
+			assertNotNull(iterator);
+			assertThat(iterator.hasNext(), is(true));
+			SampleEntity entityFromElasticSearch = iterator.next();
+			assertThat(entityFromElasticSearch, is(notNullValue()));
+			assertThat(entityFromElasticSearch.getId(), is(documentId));
+			assertThat(iterator.hasNext(), is(false));
+		} finally {
+			if (iterator != null) {
+				iterator.close();
+			}
+		}
 	}
 
 	@Test

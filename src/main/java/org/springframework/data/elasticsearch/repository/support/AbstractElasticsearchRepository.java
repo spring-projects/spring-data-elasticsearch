@@ -33,6 +33,7 @@ import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 
 /**
@@ -286,6 +287,16 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 			}
 		}
 		return entityClass;
+	}
+
+	@Override
+	public CloseableIterator<T> stream(CriteriaQuery searchQuery) {
+		return elasticsearchOperations.stream(searchQuery, getEntityClass());
+	}
+
+	@Override
+	public CloseableIterator<T> stream(SearchQuery searchQuery) {
+		return elasticsearchOperations.stream(searchQuery, getEntityClass());
 	}
 
 	private boolean isEntityClassSet() {
