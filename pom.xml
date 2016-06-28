@@ -16,7 +16,6 @@
     <name>Spring Data Elasticsearch</name>
     <description>Spring Data Implementation for Elasticsearch</description>
     <url>https://github.com/spring-projects/spring-data-elasticsearch</url>
-
     <properties>
 
         <dist.key>DATAES</dist.key>
@@ -24,6 +23,7 @@
         <commonscollections>3.2.1</commonscollections>
         <commonslang>2.6</commonslang>
         <elasticsearch>2.3.3</elasticsearch>
+        <elasticsearch.shield>2.3.3</elasticsearch.shield>
         <springdata.commons>1.13.0.BUILD-SNAPSHOT</springdata.commons>
 
     </properties>
@@ -73,6 +73,12 @@
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
             <version>${elasticsearch}</version>
+        </dependency>
+        <!-- Elasticsearch - Shield plugin -->
+        <dependency>
+            <groupId>org.elasticsearch.plugin</groupId>
+            <artifactId>shield</artifactId>
+            <version>${elasticsearch.shield}</version>
         </dependency>
 
         <!-- Jackson JSON Mapper -->
@@ -179,6 +185,16 @@
         <repository>
             <id>spring-libs-snapshot</id>
             <url>https://repo.spring.io/libs-snapshot</url>
+        </repository>
+        <repository>
+            <id>elasticsearch-releases</id>
+            <url>http://maven.elasticsearch.org/releases</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
 

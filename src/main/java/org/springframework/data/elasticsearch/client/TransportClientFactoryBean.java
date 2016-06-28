@@ -17,12 +17,14 @@ package org.springframework.data.elasticsearch.client;
 
 import static org.apache.commons.lang.StringUtils.*;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.Properties;
 
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.shield.ShieldPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -86,7 +88,7 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	}
 
 	protected void buildClient() throws Exception {
-		client = TransportClient.builder().settings(settings()).build();
+		client = TransportClient.builder().addPlugin(ShieldPlugin.class).settings(settings()).build();
 		Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
 		for (String clusterNode : split(clusterNodes, COMMA)) {
 			String hostName = substringBeforeLast(clusterNode, COLON);
@@ -94,7 +96,12 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 			Assert.hasText(hostName, "[Assertion failed] missing host name in 'clusterNodes'");
 			Assert.hasText(port, "[Assertion failed] missing port in 'clusterNodes'");
 			logger.info("adding transport node : " + clusterNode);
-			client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)));
+
+			for (InetAddress address : InetAddress.getAllByName(hostName)) {
+				if (address instanceof Inet4Address) {
+					client.addTransportAddress(new InetSocketTransportAddress(address, Integer.valueOf(port)));
+				}
+			}
 		}
 		client.connectedNodes();
 	}
