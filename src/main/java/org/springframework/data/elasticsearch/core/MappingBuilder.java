@@ -32,6 +32,7 @@ import org.springframework.core.GenericCollectionTypeResolver;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -45,6 +46,7 @@ import org.springframework.data.util.TypeInformation;
  * @author Kevin Leturc
  * @author Alexander Volz
  * @author Dennis Maaß
+ * @author Pavel Luhin
  */
 
 class MappingBuilder {
@@ -108,7 +110,7 @@ class MappingBuilder {
 
 		for (java.lang.reflect.Field field : fields) {
 
-			if (field.isAnnotationPresent(Transient.class) || isInIgnoreFields(field)) {
+			if (field.isAnnotationPresent(Transient.class) || isInIgnoreFields(field, fieldAnnotation)) {
 				continue;
 			}
 
@@ -336,10 +338,9 @@ class MappingBuilder {
 		return idFieldName.equals(field.getName());
 	}
 
-	private static boolean isInIgnoreFields(java.lang.reflect.Field field) {
-		Field fieldAnnotation = field.getAnnotation(Field.class);
-		if (null != fieldAnnotation) {
-			String[] ignoreFields = fieldAnnotation.ignoreFields();
+	private static boolean isInIgnoreFields(java.lang.reflect.Field field, Field parentFieldAnnotation) {
+		if (null != parentFieldAnnotation) {
+			String[] ignoreFields = parentFieldAnnotation.ignoreFields();
 			return Arrays.asList(ignoreFields).contains(field.getName());
 		}
 		return false;
