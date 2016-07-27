@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.1.0.M1 (2016-07-27)
+----------------------------------------
+* DATAES-262 - Upgrade Elasticsearch to 2.3.3.
+* DATAES-250 - Release 2.1 M1 (Ingalls).
+
+
 Changes in version 2.0.2.RELEASE (2016-06-15)
 ---------------------------------------------
 * DATAES-251 - Release 2.0.2 (Hopper SR2).
