@@ -28,6 +28,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.util.*;
 
 import org.elasticsearch.action.ListenableActionFuture;
@@ -102,6 +103,7 @@ import org.springframework.util.Assert;
  * @author Mason Chan
  * @author Young Gu
  * @author Oliver Gierke
+ * @author Mark Janssen
  */
 
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
@@ -1013,13 +1015,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			IndexRequestBuilder indexRequestBuilder = null;
 
 			if (query.getObject() != null) {
-				String entityId = null;
-				if (isDocument(query.getObject().getClass())) {
-					entityId = getPersistentEntityId(query.getObject());
-				}
+				String id = isBlank(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();
 				// If we have a query id and a document id, do not ask ES to generate one.
-				if (query.getId() != null && entityId != null) {
-					indexRequestBuilder = client.prepareIndex(indexName, type, query.getId());
+				if (id != null) {
+					indexRequestBuilder = client.prepareIndex(indexName, type, id);
 				} else {
 					indexRequestBuilder = client.prepareIndex(indexName, type);
 				}
@@ -1096,18 +1095,18 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private String getPersistentEntityId(Object entity) {
-		
+
 		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntityFor(entity.getClass());
 		Object identifier = persistentEntity.getIdentifierAccessor(entity).getIdentifier();
-		
+
 		return identifier == null ? null : String.valueOf(identifier);
 	}
 
 	private void setPersistentEntityId(Object entity, String id) {
-		
+
 		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntityFor(entity.getClass());
 		PersistentProperty<?> idProperty = persistentEntity.getIdProperty();
-		
+
 		// Only deal with String because ES generated Ids are strings !
 		if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
 			persistentEntity.getPropertyAccessor(entity).setProperty(idProperty,id);
