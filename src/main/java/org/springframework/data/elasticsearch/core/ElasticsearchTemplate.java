@@ -101,6 +101,7 @@ import org.springframework.util.Assert;
  * @author Artur Konczak
  * @author Kevin Leturc
  * @author Mason Chan
+ * @author Mark Janssen
  */
 
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
@@ -1012,13 +1013,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			IndexRequestBuilder indexRequestBuilder = null;
 
 			if (query.getObject() != null) {
-				String entityId = null;
-				if (isDocument(query.getObject().getClass())) {
-					entityId = getPersistentEntityId(query.getObject());
-				}
+				String id = isBlank(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();
 				// If we have a query id and a document id, do not ask ES to generate one.
-				if (query.getId() != null && entityId != null) {
-					indexRequestBuilder = client.prepareIndex(indexName, type, query.getId());
+				if (id != null) {
+					indexRequestBuilder = client.prepareIndex(indexName, type, id);
 				} else {
 					indexRequestBuilder = client.prepareIndex(indexName, type);
 				}
