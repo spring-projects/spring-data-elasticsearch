@@ -1099,17 +1099,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private void setPersistentEntityId(Object entity, String id) {
-		PersistentProperty idProperty = getPersistentEntityFor(entity.getClass()).getIdProperty();
+		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(entity.getClass());
+		PersistentProperty idProperty = persistentEntity.getIdProperty();
 		// Only deal with String because ES generated Ids are strings !
 		if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
-			Method setter = idProperty.getSetter();
-			if (setter != null) {
-				try {
-					setter.invoke(entity, id);
-				} catch (Throwable t) {
-					t.printStackTrace();
-				}
-			}
+			persistentEntity.getPropertyAccessor(entity).setProperty(idProperty,id);
 		}
 	}
 
