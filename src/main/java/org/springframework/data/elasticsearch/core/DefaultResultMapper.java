@@ -170,17 +170,11 @@ public class DefaultResultMapper extends AbstractResultMapper {
 
 	private <T> void setPersistentEntityId(T result, String id, Class<T> clazz) {
 		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
-			PersistentProperty<ElasticsearchPersistentProperty> idProperty = mappingContext.getPersistentEntity(clazz).getIdProperty();
+			ElasticsearchPersistentEntity persistentEntity = mappingContext.getPersistentEntity(clazz);
+			PersistentProperty idProperty = persistentEntity.getIdProperty();
 			// Only deal with String because ES generated Ids are strings !
 			if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
-				Method setter = idProperty.getSetter();
-				if (setter != null) {
-					try {
-						setter.invoke(result, id);
-					} catch (Throwable t) {
-						t.printStackTrace();
-					}
-				}
+				persistentEntity.getPropertyAccessor(result).setProperty(idProperty,id);
 			}
 		}
 	}
