@@ -19,6 +19,7 @@ import static org.springframework.data.querydsl.QueryDslUtils.*;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -41,6 +42,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Ryan Henszey
+ * @author Gad Akuka
  */
 public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
@@ -76,8 +78,10 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 			return NumberKeyedRepository.class;
 		} else if (metadata.getIdType() == String.class) {
 			return SimpleElasticsearchRepository.class;
+		} else if (metadata.getIdType() == UUID.class) {
+			return UUIDElasticsearchRepository.class;
 		} else {
-			throw new IllegalArgumentException("Unsuppored ID type " + metadata.getIdType());
+			throw new IllegalArgumentException("Unsupported ID type " + metadata.getIdType());
 		}
 	}
 
