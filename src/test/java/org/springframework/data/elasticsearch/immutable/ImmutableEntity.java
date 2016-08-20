@@ -15,41 +15,24 @@
  */
 package org.springframework.data.elasticsearch.immutable;
 
-import lombok.*;
-import org.springframework.data.annotation.AccessType;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.ScriptedField;
-import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
 /**
- * @author Rizwan Idrees
- * @author Mohsin Husen
+ * @author Young Gu
+ * @author Oliver Gierke
  */
-@AccessType(AccessType.Type.FIELD)
-@Document(indexName = "test-index", type = "immutable-entity", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index")
+@NoArgsConstructor(force = true)
+@Getter
 public class ImmutableEntity {
-
-	@Id
-	private String id;
-	private String name;
-
-	private ImmutableEntity() {
-	}
-
+	private final String id, name;
+	
 	public ImmutableEntity(String name) {
+		
+		this.id = null;
 		this.name = name;
 	}
-
-	public String getId() {
-		return id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.core;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,9 +34,6 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -52,10 +48,10 @@ import org.springframework.data.mapping.context.MappingContext;
 /**
  * @author Artur Konczak
  * @author Petar Tahchiev
+ * @author Young Gu
+ * @author Oliver Gierke
  */
 public class DefaultResultMapper extends AbstractResultMapper {
-
-	private static final Logger LOG = LoggerFactory.getLogger(DefaultResultMapper.class);
 
 	private MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 
@@ -176,12 +172,15 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	}
 
 	private <T> void setPersistentEntityId(T result, String id, Class<T> clazz) {
+
 		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
-			ElasticsearchPersistentEntity persistentEntity = mappingContext.getPersistentEntity(clazz);
-			PersistentProperty idProperty = persistentEntity.getIdProperty();
+
+			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(clazz);
+			PersistentProperty<?> idProperty = persistentEntity.getIdProperty();
+			
 			// Only deal with String because ES generated Ids are strings !
 			if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
-				persistentEntity.getPropertyAccessor(result).setProperty(idProperty,id);
+				persistentEntity.getPropertyAccessor(result).setProperty(idProperty, id);
 			}
 		}
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,65 +15,51 @@
  */
 package org.springframework.data.elasticsearch.immutable;
 
-import com.google.common.collect.Lists;
-import org.hamcrest.core.IsEqual;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.entities.SampleEntity;
-import org.springframework.data.elasticsearch.repositories.sample.SampleElasticsearchRepository;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
 /**
- * @author Rizwan Idrees
- * @author Mohsin Husen
+ * @author Young Gu
+ * @author Oliver Gierke
  */
-
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:/immutable-repository-test.xml")
+@ContextConfiguration("classpath:immutable-repository-test.xml")
 public class ImmutableElasticsearchRepositoryTests {
 
-	@Autowired
-	private ImmutableElasticsearchRepository repository;
-
-	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired ImmutableElasticsearchRepository repository;
+	@Autowired ElasticsearchOperations operations;
 
 
 	@Before
 	public void before() {
-		elasticsearchTemplate.deleteIndex(ImmutableEntity.class);
-		elasticsearchTemplate.createIndex(ImmutableEntity.class);
-		elasticsearchTemplate.refresh(ImmutableEntity.class);
+		
+		operations.deleteIndex(ImmutableEntity.class);
+		operations.createIndex(ImmutableEntity.class);
+		operations.refresh(ImmutableEntity.class);
 	}
+	
+	/**
+	 * @see DATAES-281
+	 */
 	@Test
 	public void shouldSaveAndFindImmutableDocument() {
+		
 		// when
 		ImmutableEntity entity = repository.save(new ImmutableEntity("test name"));
 		assertThat(entity.getId(), is(notNullValue()));
+		
 		// then
 		ImmutableEntity entityFromElasticSearch = repository.findOne(entity.getId());
-		assertThat(entityFromElasticSearch.getName(), new IsEqual("test name"));
-		assertThat(entityFromElasticSearch.getId(), new IsEqual(entity.getId()));
-
+		
+		assertThat(entityFromElasticSearch.getName(), is("test name"));
+		assertThat(entityFromElasticSearch.getId(), is(entity.getId()));
 	}
-
 }

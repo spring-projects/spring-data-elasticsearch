@@ -28,7 +28,6 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Method;
 import java.util.*;
 
 import org.elasticsearch.action.ListenableActionFuture;
@@ -101,6 +100,8 @@ import org.springframework.util.Assert;
  * @author Artur Konczak
  * @author Kevin Leturc
  * @author Mason Chan
+ * @author Young Gu
+ * @author Oliver Gierke
  */
 
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
@@ -1095,26 +1096,18 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private String getPersistentEntityId(Object entity) {
-		PersistentProperty idProperty = getPersistentEntityFor(entity.getClass()).getIdProperty();
-		if (idProperty != null) {
-			Method getter = idProperty.getGetter();
-			if (getter != null) {
-				try {
-					Object id = getter.invoke(entity);
-					if (id != null) {
-						return String.valueOf(id);
-					}
-				} catch (Throwable t) {
-					t.printStackTrace();
-				}
-			}
-		}
-		return null;
+		
+		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntityFor(entity.getClass());
+		Object identifier = persistentEntity.getIdentifierAccessor(entity).getIdentifier();
+		
+		return identifier == null ? null : String.valueOf(identifier);
 	}
 
 	private void setPersistentEntityId(Object entity, String id) {
-		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(entity.getClass());
-		PersistentProperty idProperty = persistentEntity.getIdProperty();
+		
+		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntityFor(entity.getClass());
+		PersistentProperty<?> idProperty = persistentEntity.getIdProperty();
+		
 		// Only deal with String because ES generated Ids are strings !
 		if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
 			persistentEntity.getPropertyAccessor(entity).setProperty(idProperty,id);

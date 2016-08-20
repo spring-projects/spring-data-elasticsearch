@@ -19,8 +19,14 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Value;
+
 import java.util.*;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.util.ArrayIterator;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -35,8 +41,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.annotation.AccessType;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.core.DefaultResultMapperTests.ImmutableEntity;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.entities.Car;
 
 /**
@@ -53,7 +64,7 @@ public class DefaultResultMapperTests {
 	@Before
 	public void init() {
 		MockitoAnnotations.initMocks(this);
-		resultMapper = new DefaultResultMapper();
+		resultMapper = new DefaultResultMapper(new SimpleElasticsearchMappingContext());
 	}
 
 	@Test
@@ -132,6 +143,22 @@ public class DefaultResultMapperTests {
 		assertThat(result.getModel(), is("Grat"));
 		assertThat(result.getName(), is("Ford"));
 	}
+	
+	/**
+	 * @see DATAES-281.
+	 */
+	@Test
+	public void setsIdentifierOnImmutableType() {
+		
+		GetResponse response = mock(GetResponse.class);
+		when(response.getSourceAsString()).thenReturn("{}");
+		when(response.getId()).thenReturn("identifier");
+		
+		ImmutableEntity result = resultMapper.mapResult(response, ImmutableEntity.class);
+		
+		assertThat(result, is(notNullValue()));
+		assertThat(result.getId(), is("identifier"));
+	}
 
 	private Aggregation createCarAggregation() {
 		Aggregation aggregation = mock(Terms.class);
@@ -165,5 +192,13 @@ public class DefaultResultMapperTests {
 		result.put("name", new InternalSearchHitField("name", Arrays.<Object>asList(name)));
 		result.put("model", new InternalSearchHitField("model", Arrays.<Object>asList(model)));
 		return result;
+	}
+	
+	@Document(indexName = "someIndex")
+	@NoArgsConstructor(force = true)
+	@Getter
+	static class ImmutableEntity {
+
+		private final String id, name;
 	}
 }
