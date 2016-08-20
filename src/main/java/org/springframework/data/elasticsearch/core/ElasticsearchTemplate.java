@@ -1162,10 +1162,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		return resultsMapper;
 	}
 
-	private boolean isDocument(Class clazz) {
-		return clazz.isAnnotationPresent(Document.class);
-	}
-
 	public static String readFileFromClasspath(String url) {
 		StringBuilder stringBuilder = new StringBuilder();
 
