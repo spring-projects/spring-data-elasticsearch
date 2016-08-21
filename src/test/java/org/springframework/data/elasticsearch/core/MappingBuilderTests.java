@@ -164,4 +164,20 @@ public class MappingBuilderTests {
 		assertThat(result, containsString("\"pointC\":{\"type\":\"geo_point\""));
 		assertThat(result, containsString("\"pointD\":{\"type\":\"geo_point\""));
 	}
+
+	/**
+	 * DATAES-260 - StacOverflow when two reverse relationship.
+	 */
+	@Test
+	public void shouldHandleReverseRelationship() {
+		//given
+		elasticsearchTemplate.createIndex(User.class);
+		elasticsearchTemplate.putMapping(User.class);
+		elasticsearchTemplate.createIndex(Group.class);
+		elasticsearchTemplate.putMapping(Group.class);
+		//when
+
+		//then
+
+	}
 }
