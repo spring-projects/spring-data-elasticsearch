@@ -24,6 +24,7 @@
         <commonscollections>3.2.1</commonscollections>
         <commonslang>2.6</commonslang>
         <elasticsearch>2.3.3</elasticsearch>
+        <jackson>2.7.5</jackson>
         <springdata.commons>1.13.0.BUILD-SNAPSHOT</springdata.commons>
 
     </properties>
@@ -100,7 +101,6 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
-            <version>${spring}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -129,7 +129,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.16.4</version>
+            <version>${lombok}</version>
             <scope>test</scope>
         </dependency>
 
