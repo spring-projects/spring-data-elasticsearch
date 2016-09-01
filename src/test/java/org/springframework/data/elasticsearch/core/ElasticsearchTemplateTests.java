@@ -472,6 +472,7 @@ public class ElasticsearchTemplateTests {
 	}
 
 	@Test
+	@Ignore
 	public void shouldUseScriptedFields() {
 		// given
 		String documentId = randomNumeric(5);
