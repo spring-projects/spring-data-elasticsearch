@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.0.3.RELEASE (2016-09-20)
+---------------------------------------------
+* DATAES-281 - Can't save entity without id setter.
+* DATAES-268 - Release 2.0.3 (Hopper SR3).
+
+
 Changes in version 2.1.0.M1 (2016-07-27)
 ----------------------------------------
 * DATAES-262 - Upgrade Elasticsearch to 2.3.3.
