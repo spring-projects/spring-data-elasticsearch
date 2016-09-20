@@ -9,7 +9,7 @@
     <parent>
         <groupId>org.springframework.data.build</groupId>
         <artifactId>spring-data-parent</artifactId>
-        <version>1.7.5.BUILD-SNAPSHOT</version>
+        <version>1.7.5.RELEASE</version>
     </parent>
 
     <name>Spring Data Elasticsearch</name>
@@ -23,7 +23,7 @@
         <commonscollections>3.2.1</commonscollections>
         <commonslang>2.6</commonslang>
         <elasticsearch>1.5.2</elasticsearch>
-        <springdata.commons>1.11.5.BUILD-SNAPSHOT</springdata.commons>
+        <springdata.commons>1.11.5.RELEASE</springdata.commons>
 
     </properties>
 
@@ -169,8 +169,8 @@
 
     <repositories>
         <repository>
-            <id>spring-libs-snapshot</id>
-            <url>https://repo.spring.io/libs-snapshot</url>
+            <id>spring-libs-release</id>
+            <url>https://repo.spring.io/libs-release</url>
         </repository>
     </repositories>
 
