@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
@@ -48,7 +49,10 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 			query.setPageable(accessor.getPageable());
 			return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
 		} else if (queryMethod.isCollectionQuery()) {
-			if (accessor.getPageable() != null) {
+			if (accessor.getPageable() == null) {
+				int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
+				query.setPageable(new PageRequest(0, Math.max(1, itemCount)));
+			} else {
 				query.setPageable(accessor.getPageable());
 			}
 			return elasticsearchOperations.queryForList(query, queryMethod.getEntityInformation().getJavaType());
