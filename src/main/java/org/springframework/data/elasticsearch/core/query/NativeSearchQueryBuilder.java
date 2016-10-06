@@ -56,6 +56,8 @@ public class NativeSearchQueryBuilder {
 	private String route;
 	private SearchType searchType;
 	private List<Partition> partitions = new ArrayList<Partition>();
+	private int from;
+	private int size;
 
 
 
@@ -187,6 +189,9 @@ public class NativeSearchQueryBuilder {
 		if (!partitions.isEmpty()) {
 			nativeSearchQuery.setPartitions(partitions);
 		}
+		nativeSearchQuery.setFrom(from);
+		nativeSearchQuery.setSize(size);
+
 		return nativeSearchQuery;
 	}
 }

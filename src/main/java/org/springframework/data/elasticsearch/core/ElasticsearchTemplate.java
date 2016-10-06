@@ -990,6 +990,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
 			searchRequestBuilder.setSize(query.getPageable().getPageSize());
 		}
+		else if (query instanceof SearchQuery) {
+			if (((SearchQuery)query).getFrom() > 0) {
+				startRecord = ((SearchQuery)query).getFrom();
+			}
+			if (((SearchQuery)query).getSize() > 0) {
+				searchRequestBuilder.setSize(((SearchQuery)query).getSize());
+			}
+		}
 		searchRequestBuilder.setFrom(startRecord);
 
 		if (!query.getFields().isEmpty()) {

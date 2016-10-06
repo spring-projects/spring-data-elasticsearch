@@ -40,6 +40,8 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	private List<FacetRequest> facets;
 	private List<AbstractAggregationBuilder> aggregations;
 	private HighlightBuilder.Field[] highlightFields;
+	private int from;
+	private int size;
 
 
 
@@ -114,5 +116,23 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
 	public void setAggregations(List<AbstractAggregationBuilder> aggregations) {
 		this.aggregations = aggregations;
+	}
+
+	@Override
+	public int getFrom() {
+		return from;
+	}
+
+	public void setFrom(int from) {
+		this.from = from;
+	}
+
+	@Override
+	public int getSize() {
+		return size;
+	}
+
+	public void setSize(int size) {
+		this.size = size;
 	}
 }
