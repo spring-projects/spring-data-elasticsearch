@@ -141,6 +141,16 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	public NativeSearchQueryBuilder withFrom(int from) {
+		this.from = from;
+		return this;
+	}
+
+	public NativeSearchQueryBuilder withSize(int size) {
+		this.size = size;
+		return this;
+	}
+
 	public NativeSearchQuery build() {
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightFields);
 		if (pageable != null) {
