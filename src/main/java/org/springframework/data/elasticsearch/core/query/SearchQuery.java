@@ -48,4 +48,6 @@ public interface SearchQuery extends Query {
 	int getFrom();
 
 	int getSize();
+
+	String getPreference();
 }

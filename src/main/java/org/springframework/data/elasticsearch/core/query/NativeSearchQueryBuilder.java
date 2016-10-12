@@ -58,8 +58,12 @@ public class NativeSearchQueryBuilder {
 	private List<Partition> partitions = new ArrayList<Partition>();
 	private int from;
 	private int size;
+	private String preference;
 
-
+	public NativeSearchQueryBuilder withPreference(String preference) {
+		this.preference = preference;
+		return this;
+	}
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -201,6 +205,7 @@ public class NativeSearchQueryBuilder {
 		}
 		nativeSearchQuery.setFrom(from);
 		nativeSearchQuery.setSize(size);
+		nativeSearchQuery.setPreference(preference);
 
 		return nativeSearchQuery;
 	}

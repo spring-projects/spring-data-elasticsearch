@@ -991,6 +991,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			searchRequestBuilder.setSize(query.getPageable().getPageSize());
 		}
 		if (query instanceof SearchQuery) {
+
+			searchRequestBuilder.setPreference(((SearchQuery)query).getPreference());
+
 			if (((SearchQuery)query).getFrom() > 0) {
 				startRecord = ((SearchQuery)query).getFrom();
 			}
@@ -998,7 +1001,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				searchRequestBuilder.setSize(((SearchQuery)query).getSize());
 			}
 		}
+
 		searchRequestBuilder.setFrom(startRecord);
+
+
 
 		if (!query.getFields().isEmpty()) {
 			searchRequestBuilder.addFields(toArray(query.getFields()));
