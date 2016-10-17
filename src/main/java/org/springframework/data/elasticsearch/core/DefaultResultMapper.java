@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,28 +18,28 @@ package org.springframework.data.elasticsearch.core;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.common.base.Strings;
-import org.elasticsearch.common.jackson.core.JsonEncoding;
-import org.elasticsearch.common.jackson.core.JsonFactory;
-import org.elasticsearch.common.jackson.core.JsonGenerator;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
-import org.elasticsearch.search.facet.Facet;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.facet.DefaultFacetMapper;
-import org.springframework.data.elasticsearch.core.facet.FacetResult;
+import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.PersistentProperty;
@@ -47,6 +47,9 @@ import org.springframework.data.mapping.context.MappingContext;
 
 /**
  * @author Artur Konczak
+ * @author Petar Tahchiev
+ * @author Young Gu
+ * @author Oliver Gierke
  */
 public class DefaultResultMapper extends AbstractResultMapper {
 
@@ -73,33 +76,49 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	}
 
 	@Override
-	public <T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+	public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 		long totalHits = response.getHits().totalHits();
 		List<T> results = new ArrayList<T>();
 		for (SearchHit hit : response.getHits()) {
 			if (hit != null) {
 				T result = null;
-				if (!Strings.isNullOrEmpty(hit.sourceAsString())) {
+				if (StringUtils.isNotBlank(hit.sourceAsString())) {
 					result = mapEntity(hit.sourceAsString(), clazz);
 				} else {
 					result = mapEntity(hit.getFields().values(), clazz);
 				}
 				setPersistentEntityId(result, hit.getId(), clazz);
+				populateScriptFields(result, hit);
 				results.add(result);
 			}
 		}
-		List<FacetResult> facets = new ArrayList<FacetResult>();
-		if (response.getFacets() != null) {
-			for (Facet facet : response.getFacets()) {
-				FacetResult facetResult = DefaultFacetMapper.parse(facet);
-				if (facetResult != null) {
-					facets.add(facetResult);
+
+		return new AggregatedPageImpl<T>(results, pageable, totalHits, response.getAggregations());
+	}
+
+	private <T> void populateScriptFields(T result, SearchHit hit) {
+		if (hit.getFields() != null && !hit.getFields().isEmpty() && result != null) {
+			for (java.lang.reflect.Field field : result.getClass().getDeclaredFields()) {
+				ScriptedField scriptedField = field.getAnnotation(ScriptedField.class);
+				if (scriptedField != null) {
+					String name = scriptedField.name().isEmpty() ? field.getName() : scriptedField.name();
+					SearchHitField searchHitField = hit.getFields().get(name);
+					if (searchHitField != null) {
+						field.setAccessible(true);
+						try {
+							field.set(result, searchHitField.getValue());
+						} catch (IllegalArgumentException e) {
+							throw new ElasticsearchException("failed to set scripted field: " + name + " with value: "
+									+ searchHitField.getValue(), e);
+						} catch (IllegalAccessException e) {
+							throw new ElasticsearchException("failed to access scripted field: " + name, e);
+						}
+					}
 				}
 			}
 		}
-
-		return new FacetedPageImpl<T>(results, pageable, totalHits, facets);
 	}
+
 
 	private <T> T mapEntity(Collection<SearchHitField> values, Class<T> clazz) {
 		return mapEntity(buildJSONFromFields(values), clazz);
@@ -153,18 +172,15 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	}
 
 	private <T> void setPersistentEntityId(T result, String id, Class<T> clazz) {
+
 		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
-			PersistentProperty<ElasticsearchPersistentProperty> idProperty = mappingContext.getPersistentEntity(clazz).getIdProperty();
+
+			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(clazz);
+			PersistentProperty<?> idProperty = persistentEntity.getIdProperty();
+			
 			// Only deal with String because ES generated Ids are strings !
 			if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
-				Method setter = idProperty.getSetter();
-				if (setter != null) {
-					try {
-						setter.invoke(result, id);
-					} catch (Throwable t) {
-						t.printStackTrace();
-					}
-				}
+				persistentEntity.getPropertyAccessor(result).setProperty(idProperty, id);
 			}
 		}
 	}

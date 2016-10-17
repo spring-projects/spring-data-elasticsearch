@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.core.query;
 
 import java.util.Map;
 
-import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 
 /**
  * AliasQuery is useful for creating new alias or deleting existing ones
@@ -28,7 +28,7 @@ public class AliasQuery {
 
 	private String indexName;
 	private String aliasName;
-	private FilterBuilder filterBuilder;
+	private QueryBuilder filterBuilder;
 	private Map<String, Object> filter;
 	private String searchRouting;
 	private String indexRouting;
@@ -50,11 +50,11 @@ public class AliasQuery {
 		this.aliasName = aliasName;
 	}
 
-	public FilterBuilder getFilterBuilder() {
+	public QueryBuilder getFilterBuilder() {
 		return filterBuilder;
 	}
 
-	public void setFilterBuilder(FilterBuilder filterBuilder) {
+	public void setFilterBuilder(QueryBuilder filterBuilder) {
 		this.filterBuilder = filterBuilder;
 	}
 

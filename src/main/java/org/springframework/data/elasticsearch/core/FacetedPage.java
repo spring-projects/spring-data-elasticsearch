@@ -26,6 +26,7 @@ import org.springframework.data.elasticsearch.core.facet.FacetResult;
  * @author Artur Konczak
  * @author Jonathan Yan
  */
+@Deprecated
 public interface FacetedPage<T> extends Page<T> {
 
 	boolean hasFacets();

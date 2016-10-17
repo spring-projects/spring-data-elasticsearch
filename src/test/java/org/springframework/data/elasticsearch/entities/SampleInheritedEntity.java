@@ -24,10 +24,10 @@ import org.springframework.data.elasticsearch.annotations.Field;
 /**
  * @author Kevin Leturc
  */
-@Document(indexName = "test-inherited-mapping", type = "mapping", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-inherited-mapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleInheritedEntity extends AbstractInheritedEntity {
 
-	@Field(type = String, index = not_analyzed, store = true, searchAnalyzer = "standard", indexAnalyzer = "standard")
+	@Field(type = String, index = not_analyzed, store = true, analyzer = "standard")
 	private String message;
 
 	public String getMessage() {

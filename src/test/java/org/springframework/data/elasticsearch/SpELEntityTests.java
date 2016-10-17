@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,7 @@ public class SpELEntityTests {
 		repository.deleteAll();
 	}
 
+	@Ignore("DATAES-211")
 	@Test
 	public void shouldDo() {
 		// Given
@@ -63,6 +65,7 @@ public class SpELEntityTests {
 		assertThat(count, is(2L));
 	}
 
+	@Ignore("DATAES-211")
 	@Test
 	public void shouldSupportSpelInType() {
 		// Given

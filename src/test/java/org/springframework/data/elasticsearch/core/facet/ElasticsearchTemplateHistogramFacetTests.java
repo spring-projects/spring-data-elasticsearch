@@ -12,7 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ *//*
+
 package org.springframework.data.elasticsearch.core.facet;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -38,12 +39,14 @@ import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+*/
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Jonathan Yan
  * @author Artur Konczak
- */
+ *//*
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class ElasticsearchTemplateHistogramFacetTests {
@@ -137,3 +140,4 @@ public class ElasticsearchTemplateHistogramFacetTests {
 		assertThat(unit.getCount(), is(1L));
 	}
 }
+*/

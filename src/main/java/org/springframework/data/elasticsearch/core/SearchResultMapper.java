@@ -17,11 +17,13 @@ package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 
 /**
  * @author Artur Konczak
+ * @author Petar Tahchiev
  */
 public interface SearchResultMapper {
 
-	<T> FacetedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
+	<T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
 }

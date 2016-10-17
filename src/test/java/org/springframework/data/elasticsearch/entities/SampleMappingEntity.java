@@ -26,13 +26,13 @@ import org.springframework.data.elasticsearch.annotations.Field;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-@Document(indexName = "test-mapping", type = "mapping", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-mapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleMappingEntity {
 
 	@Id
 	private String id;
 
-	@Field(type = String, index = not_analyzed, store = true, searchAnalyzer = "standard", indexAnalyzer = "standard")
+	@Field(type = String, index = not_analyzed, store = true, analyzer = "standard")
 	private String message;
 
 	private NestedEntity nested;

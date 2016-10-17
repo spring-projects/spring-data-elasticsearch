@@ -23,7 +23,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
  *
  * @author Artur Konczak
  */
-@Document(indexName = "#{'abz'+'-'+'entity'}", type = "#{'my'+'Type'}", indexStoreType = "memory", shards = 1,
+@Document(indexName = "#{'abz'+'-'+'entity'}", type = "#{'my'+'Type'}", shards = 1,
 		replicas = 0, refreshInterval = "-1")
 public class SpELEntity {
 

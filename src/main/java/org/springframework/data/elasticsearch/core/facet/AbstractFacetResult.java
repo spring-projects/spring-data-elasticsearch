@@ -23,6 +23,7 @@ import org.springframework.util.Assert;
  * @author Artur Konczak
  * @author Jonathan Yan
  */
+@Deprecated
 public class AbstractFacetResult implements FacetResult {
 
 	private final String name;

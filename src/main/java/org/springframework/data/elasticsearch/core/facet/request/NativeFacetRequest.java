@@ -13,36 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.data.elasticsearch.core.facet.request;
 
-import org.elasticsearch.search.facet.FacetBuilder;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
+
 
 /**
  * @author Artur Konczak
  * @author Mohsin Husen
  */
+@Deprecated
 public class NativeFacetRequest implements FacetRequest {
 
-	private FacetBuilder facet;
-	private boolean applyQueryFilter;
-
-	public NativeFacetRequest(FacetBuilder facet) {
-		this(facet, false);
-	}
-
-	public NativeFacetRequest(FacetBuilder facet, boolean applyQueryFilter) {
-		this.facet = facet;
-		this.applyQueryFilter = applyQueryFilter;
+	public NativeFacetRequest() {
+		throw new UnsupportedOperationException("Native Facet are not supported in Elasticsearch 2.x - use Aggregation");
 	}
 
 	@Override
-	public FacetBuilder getFacet() {
-		return facet;
+	public AbstractAggregationBuilder getFacet() {
+		return null;
 	}
 
 	@Override
 	public boolean applyQueryFilter() {
-		return applyQueryFilter;
+		return false;
 	}
 }

@@ -13,17 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.data.elasticsearch.core.facet.request;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.elasticsearch.search.facet.FacetBuilder;
-import org.elasticsearch.search.facet.FacetBuilders;
-import org.elasticsearch.search.facet.range.RangeFacetBuilder;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.range.RangeBuilder;
 import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.util.Assert;
+
 
 /**
  * Range facet for numeric fields
@@ -31,8 +33,10 @@ import org.springframework.util.Assert;
  * @author Artur Konczak
  * @author Akos Bordas
  */
+@Deprecated
 public class RangeFacetRequest extends AbstractFacetRequest {
 
+	public static final String RANGE_INTERNAL_SUM = "range-internal-sum";
 	private String field;
 	private String keyField;
 	private String valueField;
@@ -57,7 +61,7 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 	}
 
 	public void range(String from, String to) {
-		entries.add(new StringEntry(from, to));
+		throw new UnsupportedOperationException("Native Facet are not supported in Elasticsearch 2.x - use Aggregation");
 	}
 
 	public void addRange(Double from, Double to) {
@@ -65,32 +69,27 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 	}
 
 	public void addRange(String from, String to) {
-		entries.add(new StringEntry(from, to));
+		throw new UnsupportedOperationException("Native Facet are not supported in Elasticsearch 2.x - use Aggregation");
 	}
 
 	@Override
-	public FacetBuilder getFacet() {
+	public AbstractAggregationBuilder getFacet() {
 		Assert.notNull(getName(), "Facet name can't be a null !!!");
-		Assert.isTrue(StringUtils.isNotBlank(field) || StringUtils.isNotBlank(keyField) && StringUtils.isNotBlank(valueField), "Please select field or key field and value field !!!");
 
-		RangeFacetBuilder builder = FacetBuilders.rangeFacet(getName());
-		if (StringUtils.isNotBlank(keyField)) {
-			builder.keyField(keyField).valueField(valueField);
-		} else {
-			builder.field(field);
-		}
+		RangeBuilder rangeBuilder = AggregationBuilders.range(getName());
+		rangeBuilder.field(StringUtils.isNotBlank(keyField) ? keyField : field );
 
 		for (Entry entry : entries) {
-			if (entry instanceof DoubleEntry) {
-				DoubleEntry doubleEntry = (DoubleEntry) entry;
-				builder.addRange(validateValue(doubleEntry.getFrom(), Double.NEGATIVE_INFINITY), validateValue(doubleEntry.getTo(), Double.POSITIVE_INFINITY));
-			} else {
-				StringEntry stringEntry = (StringEntry) entry;
-				builder.addRange(stringEntry.getFrom(), stringEntry.getTo());
-			}
+			DoubleEntry doubleEntry = (DoubleEntry) entry;
+			rangeBuilder.addRange(validateValue(doubleEntry.getFrom(), Double.NEGATIVE_INFINITY), validateValue(doubleEntry.getTo(), Double.POSITIVE_INFINITY));
 		}
 
-		return builder;
+		rangeBuilder.subAggregation(AggregationBuilders.extendedStats(INTERNAL_STATS));
+		if(StringUtils.isNotBlank(valueField)){
+			rangeBuilder.subAggregation(AggregationBuilders.sum(RANGE_INTERNAL_SUM).field(valueField));
+		}
+
+		return rangeBuilder;
 	}
 
 	private double validateValue(Double value, double defaultValue) {
@@ -130,3 +129,4 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 		}
 	}
 }
+

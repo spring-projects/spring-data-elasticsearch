@@ -15,14 +15,25 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
+import org.elasticsearch.search.aggregations.bucket.range.Range;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStats;
+import org.elasticsearch.search.aggregations.metrics.sum.Sum;
+import org.joda.time.DateTime;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.data.elasticsearch.core.facet.FacetResult;
+import org.springframework.data.elasticsearch.core.facet.request.RangeFacetRequest;
+import org.springframework.data.elasticsearch.core.facet.result.*;
 
 /**
  * Container for query result and facet results
@@ -32,7 +43,8 @@ import org.springframework.data.elasticsearch.core.facet.FacetResult;
  * @author Artur Konczak
  * @author Jonathan Yan
  */
-public class FacetedPageImpl<T> extends PageImpl<T> implements FacetedPage<T> {
+@Deprecated
+public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedPage<T>, AggregatedPage<T> {
 
 	private List<FacetResult> facets;
 	private Map<String, FacetResult> mapOfFacets = new HashMap<String, FacetResult>();
@@ -45,26 +57,74 @@ public class FacetedPageImpl<T> extends PageImpl<T> implements FacetedPage<T> {
 		super(content, pageable, total);
 	}
 
-	public FacetedPageImpl(List<T> content, Pageable pageable, long total, List<FacetResult> facets) {
-		super(content, pageable, total);
-		this.facets = facets;
-		for (FacetResult facet : facets) {
-			mapOfFacets.put(facet.getName(), facet);
-		}
-	}
-
 	@Override
 	public boolean hasFacets() {
-		return CollectionUtils.isNotEmpty(facets);
+		processAggregations();
+		return facets != null && facets.size() > 0;
 	}
 
 	@Override
 	public List<FacetResult> getFacets() {
+		processAggregations();
 		return facets;
 	}
 
 	@Override
 	public FacetResult getFacet(String name) {
+		processAggregations();
 		return mapOfFacets.get(name);
+	}
+
+	private void addFacet(FacetResult facetResult) {
+		facets.add(facetResult);
+		mapOfFacets.put(facetResult.getName(), facetResult);
+	}
+
+	/**
+	 * Lazy conversion from aggregation to old facets
+	 */
+	private void processAggregations() {
+		if (facets == null) {
+			facets = new ArrayList<FacetResult>();
+			for (Aggregation agg : getAggregations()) {
+				if (agg instanceof Terms) {
+					List<Term> terms = new ArrayList<Term>();
+					for (Terms.Bucket t : ((Terms) agg).getBuckets()) {
+						terms.add(new Term(t.getKeyAsString(), t.getDocCount()));
+					}
+					addFacet(new TermResult(agg.getName(), terms, terms.size(), ((Terms) agg).getSumOfOtherDocCounts(), 0));
+				}
+				if (agg instanceof Range) {
+					List<? extends Range.Bucket> buckets = ((Range) agg).getBuckets();
+					List<org.springframework.data.elasticsearch.core.facet.result.Range> ranges = new ArrayList<org.springframework.data.elasticsearch.core.facet.result.Range>();
+					for (Range.Bucket b : buckets) {
+						ExtendedStats rStats = (ExtendedStats) b.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
+						if (rStats != null) {
+							Sum sum = (Sum) b.getAggregations().get(RangeFacetRequest.RANGE_INTERNAL_SUM);
+							ranges.add(new org.springframework.data.elasticsearch.core.facet.result.Range((Double) b.getFrom(), (Double) b.getTo(), b.getDocCount(), sum != null ? sum.getValue() : rStats.getSum(), rStats.getCount(), rStats.getMin(), rStats.getMax()));
+						} else {
+							ranges.add(new org.springframework.data.elasticsearch.core.facet.result.Range((Double) b.getFrom(), (Double) b.getTo(), b.getDocCount(), 0, 0, 0, 0));
+						}
+					}
+					addFacet(new RangeResult(agg.getName(), ranges));
+				}
+				if (agg instanceof ExtendedStats) {
+					ExtendedStats stats = (ExtendedStats) agg;
+					addFacet(new StatisticalResult(agg.getName(), stats.getCount(), stats.getMax(), stats.getMin(), stats.getAvg(), stats.getStdDeviation(), stats.getSumOfSquares(), stats.getSum(), stats.getVariance()));
+				}
+				if (agg instanceof Histogram) {
+					List<IntervalUnit> intervals = new ArrayList<IntervalUnit>();
+					for (Histogram.Bucket h : ((Histogram) agg).getBuckets()) {
+						ExtendedStats hStats = (ExtendedStats) h.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
+						if (hStats != null) {
+							intervals.add(new IntervalUnit(((DateTime) h.getKey()).getMillis(), h.getDocCount(), h.getDocCount(), hStats.getSum(), hStats.getAvg(), hStats.getMin(), hStats.getMax()));
+						} else {
+							intervals.add(new IntervalUnit(((DateTime) h.getKey()).getMillis(), h.getDocCount(), h.getDocCount(), 0, 0, 0, 0));
+						}
+					}
+					addFacet(new HistogramResult(agg.getName(), intervals));
+				}
+			}
+		}
 	}
 }

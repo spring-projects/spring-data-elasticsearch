@@ -1,18 +1,20 @@
 package org.springframework.data.elasticsearch.core.completion;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 /**
  * @author Mewes Kochheim
  */
-@Document(indexName = "test-completion-index", type = "completion-type", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-completion-index", type = "completion-type", shards = 1, replicas = 0, refreshInterval = "-1")
 public class CompletionEntity {
 
 	@Id
 	private String id;
 	private String name;
 
+	@CompletionField(maxInputLength = 100)
 	private Completion suggest;
 
 	private CompletionEntity() {

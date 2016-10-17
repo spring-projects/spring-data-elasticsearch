@@ -28,6 +28,7 @@ import org.springframework.data.elasticsearch.core.facet.FacetType;
  * @author Artur Konczak
  * @author Jonathan Yan
  */
+@Deprecated
 public class RangeResult extends AbstractFacetResult {
 
 	private List<Range> ranges;

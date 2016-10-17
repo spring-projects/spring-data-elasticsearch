@@ -18,6 +18,8 @@ package org.springframework.data.elasticsearch.config;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.BeansException;
@@ -41,6 +43,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Kevin Leturc
+ * @author Gad Akuka
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -85,8 +88,9 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 		String[] beanNamesForType = context.getBeanNamesForType(ElasticsearchRepository.class);
 
 		//then
-		assertThat(beanNamesForType.length, is(1));
-		assertThat(beanNamesForType[0], is("sampleElasticsearchRepository"));
+		assertThat(beanNamesForType.length, is(2));
+		assertTrue(Arrays.asList(beanNamesForType).contains("sampleElasticsearchRepository"));
+		assertTrue(Arrays.asList(beanNamesForType).contains("sampleUUIDKeyedElasticsearchRepository"));
 	}
 
 	@Test

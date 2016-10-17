@@ -23,6 +23,7 @@ package org.springframework.data.elasticsearch.core.facet.result;
  * @author Artur Konczak
  * @author Jonathan Yan
  */
+@Deprecated
 public class Range {
 
 	private Double from;

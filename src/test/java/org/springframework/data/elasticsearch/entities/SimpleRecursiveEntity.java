@@ -24,7 +24,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
  * @author Stuart Stevenson
  * @author Mohsin Husen
  */
-@Document(indexName = "circular-objects", type = "circular-object", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "circular-objects", type = "circular-object", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SimpleRecursiveEntity {
 
 	@Id

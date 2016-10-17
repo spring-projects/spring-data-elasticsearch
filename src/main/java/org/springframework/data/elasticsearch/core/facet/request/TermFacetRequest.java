@@ -13,37 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.data.elasticsearch.core.facet.request;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.elasticsearch.search.facet.FacetBuilder;
-import org.elasticsearch.search.facet.FacetBuilders;
-import org.elasticsearch.search.facet.terms.TermsFacet;
-import org.elasticsearch.search.facet.terms.TermsFacetBuilder;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
 import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.util.Assert;
+
 
 /**
  * Term facet
  *
  * @author Artur Konczak
  */
+@Deprecated
 public class TermFacetRequest extends AbstractFacetRequest {
 
 	private String[] fields;
-	private Object[] excludeTerms;
+	private String[] excludeTerms;
 	private int size = 10;
 	private TermFacetOrder order = TermFacetOrder.descCount;
 	private boolean allTerms = false;
 	private String regex = null;
-	private int regexFlag = 0;
 
 	public TermFacetRequest(String name) {
 		super(name);
 	}
 
 	public void setFields(String... fields) {
+		Assert.isTrue(ArrayUtils.isNotEmpty(fields), "Term agg need one field only");
+		Assert.isTrue(ArrayUtils.getLength(fields) == 1, "Term agg need one field only");
 		this.fields = fields;
 	}
 
@@ -56,7 +60,7 @@ public class TermFacetRequest extends AbstractFacetRequest {
 		this.order = order;
 	}
 
-	public void setExcludeTerms(Object... excludeTerms) {
+	public void setExcludeTerms(String... excludeTerms) {
 		this.excludeTerms = excludeTerms;
 	}
 
@@ -68,41 +72,36 @@ public class TermFacetRequest extends AbstractFacetRequest {
 		this.regex = regex;
 	}
 
-	public void setRegex(String regex, int regexFlag) {
-		this.regex = regex;
-		this.regexFlag = regexFlag;
-	}
-
 	@Override
-	public FacetBuilder getFacet() {
+	public AbstractAggregationBuilder getFacet() {
 		Assert.notEmpty(fields, "Please select at last one field !!!");
-		TermsFacetBuilder builder = FacetBuilders.termsFacet(getName()).fields(fields).size(size);
-		switch (order) {
+		TermsBuilder termsBuilder = AggregationBuilders.terms(getName()).field(fields[0]).size(this.size);
 
+		switch (order) {
 			case descTerm:
-				builder.order(TermsFacet.ComparatorType.REVERSE_TERM);
+				termsBuilder.order(Terms.Order.term(false));
 				break;
 			case ascTerm:
-				builder.order(TermsFacet.ComparatorType.TERM);
+				termsBuilder.order(Terms.Order.term(true));
 				break;
-			case ascCount:
-				builder.order(TermsFacet.ComparatorType.REVERSE_COUNT);
+			case descCount:
+				termsBuilder.order(Terms.Order.count(false));
 				break;
 			default:
-				builder.order(TermsFacet.ComparatorType.COUNT);
+				termsBuilder.order(Terms.Order.count(true));
 		}
 		if (ArrayUtils.isNotEmpty(excludeTerms)) {
-			builder.exclude(excludeTerms);
+			termsBuilder.exclude(excludeTerms);
 		}
 
 		if (allTerms) {
-			builder.allTerms(allTerms);
+			termsBuilder.size(Integer.MAX_VALUE);
 		}
 
 		if (StringUtils.isNotBlank(regex)) {
-			builder.regex(regex, regexFlag);
+			termsBuilder.include(regex);
 		}
 
-		return builder;
+		return termsBuilder;
 	}
 }

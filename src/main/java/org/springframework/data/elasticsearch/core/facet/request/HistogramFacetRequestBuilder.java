@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.data.elasticsearch.core.facet.request;
 
-import java.util.concurrent.TimeUnit;
-
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
+
 
 /**
  * @author Artur Konczak
  */
+@Deprecated
 public class HistogramFacetRequestBuilder {
 
 	HistogramFacetRequest result;
@@ -40,7 +42,7 @@ public class HistogramFacetRequestBuilder {
 		return this;
 	}
 
-	public HistogramFacetRequestBuilder timeUnit(TimeUnit timeUnit) {
+	public HistogramFacetRequestBuilder timeUnit(DateHistogramInterval timeUnit) {
 		result.setTimeUnit(timeUnit);
 		return this;
 	}

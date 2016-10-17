@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.data.elasticsearch.core.facet;
 
 import org.springframework.util.Assert;
 
+
 /**
  * @author Artur Konczak
  */
+@Deprecated
 public abstract class AbstractFacetRequest implements FacetRequest {
+
+	public static final String INTERNAL_STATS = "internal-stats";
 
 	private String name;
 	private boolean applyQueryFilter;

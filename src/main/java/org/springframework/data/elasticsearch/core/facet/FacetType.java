@@ -19,6 +19,7 @@ package org.springframework.data.elasticsearch.core.facet;
  * @author Artur Konczak
  * @author Petar Tahchiev
  */
+@Deprecated
 public enum FacetType {
 
 	term, range, histogram, statistical

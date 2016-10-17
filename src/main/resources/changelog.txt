@@ -1,6 +1,76 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.0.4.RELEASE (2016-09-29)
+---------------------------------------------
+* DATAES-297 - Release 2.0.4 (Hopper SR4).
+
+
+Changes in version 1.3.6.RELEASE (2016-09-29)
+---------------------------------------------
+* DATAES-299 - Release 1.3.6 (Gosling SR6).
+
+
+Changes in version 1.3.5.RELEASE (2016-09-20)
+---------------------------------------------
+* DATAES-296 - Release 1.3.5 (Gosling SR5).
+
+
+Changes in version 2.0.3.RELEASE (2016-09-20)
+---------------------------------------------
+* DATAES-281 - Can't save entity without id setter.
+* DATAES-268 - Release 2.0.3 (Hopper SR3).
+
+
+Changes in version 2.1.0.M1 (2016-07-27)
+----------------------------------------
+* DATAES-262 - Upgrade Elasticsearch to 2.3.3.
+* DATAES-250 - Release 2.1 M1 (Ingalls).
+
+
+Changes in version 2.0.2.RELEASE (2016-06-15)
+---------------------------------------------
+* DATAES-251 - Release 2.0.2 (Hopper SR2).
+
+
+Changes in version 2.0.1.RELEASE (2016-04-06)
+---------------------------------------------
+* DATAES-249 - Release 2.0.1 (Hopper SR1).
+
+
+Changes in version 2.0.0.RELEASE (2016-04-06)
+---------------------------------------------
+* DATAES-245 - Release 2.0 GA (Hopper).
+
+
+Changes in version 2.0.0.RC1 (2016-03-18)
+-----------------------------------------
+* DATAES-241 - remove commons-collections dependency and use CollectionUtils from Spring Utils.
+* DATAES-240 - Release 2.0 RC1 (Hopper).
+* DATAES-238 - ElasticsearchTemplate.prepareUpdate() does not preserve routing parameter which is required for updating child documents.
+* DATAES-237 - path-configuration fails to load configs from inside jars.
+* DATAES-236 - Clear the search contexts associated with specified scroll id.
+* DATAES-234 - CDI support can fail due to Set.toString() used as Map key.
+* DATAES-211 - Upgrade to Elasticsearch 2.0.
+* DATAES-188 - Source filtering feature Implementation.
+* DATAES-124 - ElasticSearchTemplate should expose client.
+
+
+Changes in version 1.4.0.M1 (2016-02-12)
+----------------------------------------
+* DATAES-232 - Add code of conduct.
+* DATAES-231 - Release 1.4 M1 (Hopper).
+* DATAES-230 - Remove unnecessary type check in AbstractElasticsearchRepository.
+* DATAES-224 - ElasticsearchTemplate discards newlines in mappings and settings files.
+* DATAES-221 - Adapt to changes in Spring Data Commons.
+* DATAES-216 - Add support to Indices Boost.
+* DATAES-210 - Typo in error message.
+* DATAES-209 - Handle dynamic mapping annotation at field level.
+* DATAES-194 - Tests should clean up "data" directory.
+* DATAES-171 - findByIdNotIn not work.
+* DATAES-94 - Bump to support ES 1.2.0.
+
+
 Changes in version 1.3.2.RELEASE (2015-12-18)
 ---------------------------------------------
 * DATAES-223 - Release 1.3.2 (Gosling).

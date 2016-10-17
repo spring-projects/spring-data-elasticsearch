@@ -28,7 +28,7 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(indexName = "test-geo-index", type = "geo-annotation-point-type", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-geo-index", type = "geo-annotation-point-type", shards = 1, replicas = 0, refreshInterval = "-1")
 public class LocationMarkerEntity {
 
 	@Id

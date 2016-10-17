@@ -19,6 +19,7 @@ package org.springframework.data.elasticsearch.core.facet.request;
  * @author Artur Konczak
  * @author Mohsin Husen
  */
+@Deprecated
 public enum TermFacetOrder {
 
 	ascTerm, descTerm, ascCount, descCount;

@@ -4,12 +4,12 @@
 
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-elasticsearch</artifactId>
-    <version>1.4.0.BUILD-SNAPSHOT</version>
+    <version>2.1.0.BUILD-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.data.build</groupId>
         <artifactId>spring-data-parent</artifactId>
-        <version>1.8.0.BUILD-SNAPSHOT</version>
+        <version>1.9.0.BUILD-SNAPSHOT</version>
         <relativePath>../spring-data-build/parent/pom.xml</relativePath>
     </parent>
 
@@ -23,8 +23,8 @@
 
         <commonscollections>3.2.1</commonscollections>
         <commonslang>2.6</commonslang>
-        <elasticsearch>1.7.3</elasticsearch>
-        <springdata.commons>1.12.0.BUILD-SNAPSHOT</springdata.commons>
+        <elasticsearch>2.4.0</elasticsearch>
+        <springdata.commons>1.13.0.BUILD-SNAPSHOT</springdata.commons>
 
     </properties>
 
@@ -60,11 +60,6 @@
             <artifactId>commons-lang</artifactId>
             <version>${commonslang}</version>
         </dependency>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>${commonscollections}</version>
-        </dependency>
 
         <!-- JODA Time -->
         <dependency>
@@ -91,7 +86,7 @@
             <artifactId>jackson-databind</artifactId>
             <version>${jackson}</version>
         </dependency>
-
+        
         <!-- CDI -->
         <dependency>
             <groupId>javax.enterprise</groupId>
@@ -105,7 +100,6 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
-            <version>${spring}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -113,6 +107,16 @@
             <artifactId>cditest-owb</artifactId>
             <version>${webbeans}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.geronimo.specs</groupId>
+                    <artifactId>geronimo-jcdi_1.0_spec</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.geronimo.specs</groupId>
+                    <artifactId>geronimo-atinject_1.0_spec</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -124,7 +128,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.16.4</version>
+            <version>${lombok}</version>
             <scope>test</scope>
         </dependency>
 
@@ -146,6 +150,21 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jfrog.buildinfo</groupId>
+                        <artifactId>artifactory-maven-plugin</artifactId>
+                        <inherited>false</inherited>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <developers>
         <developer>

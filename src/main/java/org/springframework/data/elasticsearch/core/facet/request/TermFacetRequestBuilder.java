@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.data.elasticsearch.core.facet.request;
 
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
@@ -22,6 +23,7 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
  *
  * @author Artur Konczak
  */
+@Deprecated
 public class TermFacetRequestBuilder {
 
 	private TermFacetRequest result;
@@ -40,7 +42,7 @@ public class TermFacetRequestBuilder {
 		return this;
 	}
 
-	public TermFacetRequestBuilder excludeTerms(Object... terms) {
+	public TermFacetRequestBuilder excludeTerms(String... terms) {
 		result.setExcludeTerms(terms);
 		return this;
 	}
@@ -52,11 +54,6 @@ public class TermFacetRequestBuilder {
 
 	public TermFacetRequestBuilder regex(String regex) {
 		result.setRegex(regex);
-		return this;
-	}
-
-	public TermFacetRequestBuilder regex(String regex, int regexFlag) {
-		result.setRegex(regex, regexFlag);
 		return this;
 	}
 

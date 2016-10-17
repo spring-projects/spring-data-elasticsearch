@@ -29,6 +29,7 @@ import org.springframework.data.elasticsearch.core.facet.FacetType;
  * @author Jonathan Yan
  * @author Matija Obreza
  */
+@Deprecated
 public class TermResult extends AbstractFacetResult {
 
 	private List<Term> terms;

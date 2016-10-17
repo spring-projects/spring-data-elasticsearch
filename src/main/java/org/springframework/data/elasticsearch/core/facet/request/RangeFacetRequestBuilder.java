@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.data.elasticsearch.core.facet.request;
 
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
+
 
 /**
  * Basic range facet
  *
  * @author Artur Konczak
  */
+@Deprecated
 public class RangeFacetRequestBuilder {
 
 	RangeFacetRequest result;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.elasticsearch.index.query.FilterBuilder;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 /**
  * NativeSearchQuery
@@ -35,29 +36,31 @@ import java.util.List;
 public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
 	private QueryBuilder query;
-	private FilterBuilder filter;
+	private QueryBuilder filter;
 	private List<SortBuilder> sorts;
+    private final List<ScriptField> scriptFields = new ArrayList<ScriptField>();
 	private List<FacetRequest> facets;
 	private List<AbstractAggregationBuilder> aggregations;
 	private HighlightBuilder.Field[] highlightFields;
+	private List<IndexBoost> indicesBoost;
 
 
 	public NativeSearchQuery(QueryBuilder query) {
 		this.query = query;
 	}
 
-	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter) {
+	public NativeSearchQuery(QueryBuilder query, QueryBuilder filter) {
 		this.query = query;
 		this.filter = filter;
 	}
 
-	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, List<SortBuilder> sorts) {
+	public NativeSearchQuery(QueryBuilder query, QueryBuilder filter, List<SortBuilder> sorts) {
 		this.query = query;
 		this.filter = filter;
 		this.sorts = sorts;
 	}
 
-	public NativeSearchQuery(QueryBuilder query, FilterBuilder filter, List<SortBuilder> sorts, HighlightBuilder.Field[] highlightFields) {
+	public NativeSearchQuery(QueryBuilder query, QueryBuilder filter, List<SortBuilder> sorts, HighlightBuilder.Field[] highlightFields) {
 		this.query = query;
 		this.filter = filter;
 		this.sorts = sorts;
@@ -68,7 +71,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 		return query;
 	}
 
-	public FilterBuilder getFilter() {
+	public QueryBuilder getFilter() {
 		return filter;
 	}
 
@@ -80,6 +83,17 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	public HighlightBuilder.Field[] getHighlightFields() {
 		return highlightFields;
 	}
+
+    @Override
+    public List<ScriptField> getScriptFields() { return scriptFields; }
+
+    public void setScriptFields(List<ScriptField> scriptFields) {
+        this.scriptFields.addAll(scriptFields);
+    }
+
+    public void addScriptField(ScriptField... scriptField) {
+        scriptFields.addAll(Arrays.asList(scriptField));
+    }
 
 	public void addFacet(FacetRequest facetRequest) {
 		if (facets == null) {
@@ -113,4 +127,14 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	public void setAggregations(List<AbstractAggregationBuilder> aggregations) {
 		this.aggregations = aggregations;
 	}
+
+	@Override
+	public List<IndexBoost> getIndicesBoost() {
+		return indicesBoost;
+	}
+
+	public void setIndicesBoost(List<IndexBoost> indicesBoost) {
+		this.indicesBoost = indicesBoost;
+	}
+
 }

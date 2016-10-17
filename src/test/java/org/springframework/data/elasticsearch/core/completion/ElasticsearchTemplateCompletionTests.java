@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ public class ElasticsearchTemplateCompletionTests {
 	private void loadCompletionObjectEntities() {
 		elasticsearchTemplate.deleteIndex(CompletionEntity.class);
 		elasticsearchTemplate.createIndex(CompletionEntity.class);
-		elasticsearchTemplate.refresh(CompletionEntity.class, true);
+		elasticsearchTemplate.refresh(CompletionEntity.class);
 		elasticsearchTemplate.putMapping(CompletionEntity.class);
 
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
@@ -68,13 +68,13 @@ public class ElasticsearchTemplateCompletionTests {
 		indexQueries.add(new CompletionEntityBuilder("4").name("Artur Konczak").suggest(new String[]{"Artur", "Konczak"}, "Artur Konczak").buildIndex());
 
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(CompletionEntity.class, true);
+		elasticsearchTemplate.refresh(CompletionEntity.class);
 	}
 
 	private void loadAnnotatedCompletionObjectEntities() {
 		elasticsearchTemplate.deleteIndex(AnnotatedCompletionEntity.class);
 		elasticsearchTemplate.createIndex(AnnotatedCompletionEntity.class);
-		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class, true);
+		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
 		elasticsearchTemplate.putMapping(AnnotatedCompletionEntity.class);
 
 		NonDocumentEntity nonDocumentEntity = new NonDocumentEntity();
@@ -88,13 +88,13 @@ public class ElasticsearchTemplateCompletionTests {
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Artur Konczak").suggest(new String[]{"Artur", "Konczak"}, "Artur Konczak").buildIndex());
 
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class, true);
+		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
 	}
 
 	private void loadAnnotatedCompletionObjectEntitiesWithPayloads() {
 		elasticsearchTemplate.deleteIndex(AnnotatedCompletionEntity.class);
 		elasticsearchTemplate.createIndex(AnnotatedCompletionEntity.class);
-		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class, true);
+		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
 		elasticsearchTemplate.putMapping(AnnotatedCompletionEntity.class);
 
 		NonDocumentEntity nonDocumentEntity = new NonDocumentEntity();
@@ -108,13 +108,13 @@ public class ElasticsearchTemplateCompletionTests {
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Mewes Kochheim4").suggest(new String[]{"Mewes Kochheim4"}, null, nonDocumentEntity).buildIndex());
 
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class, true);
+		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
 	}
 
 	private void loadAnnotatedCompletionObjectEntitiesWithWeights() {
 		elasticsearchTemplate.deleteIndex(AnnotatedCompletionEntity.class);
 		elasticsearchTemplate.createIndex(AnnotatedCompletionEntity.class);
-		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class, true);
+		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
 		elasticsearchTemplate.putMapping(AnnotatedCompletionEntity.class);
 
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
@@ -124,7 +124,7 @@ public class ElasticsearchTemplateCompletionTests {
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Mewes Kochheim4").suggest(new String[]{"Mewes Kochheim4"}, null, null, Integer.MAX_VALUE).buildIndex());
 
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class, true);
+		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
 	}
 
 	@Test

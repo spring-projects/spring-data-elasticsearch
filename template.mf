@@ -8,11 +8,10 @@ Export-Template:
  org.springframework.data.elasticsearch.*;version="${project.version}"
 Import-Template:
  javax.enterprise.*;version="${cdi:[=.=.=,+1.0.0)}";resolution:=optional,
- org.apache.commons.collections.*;version="${commonscollections:[=.=.=,+1.0.0)}";resolution:=optional,
  org.apache.commons.lang.*;version="${commonslang:[=.=.=,+1.0.0)}",
  com.fasterxml.jackson.*;version="${jackson:[=.=.=,+1.0.0)}";resolution:=optional,
- org.elasticsearch.*;version="${elasticsearch:[=.=.=,+1.4.4)}",
- org.apache.lucene.*;version="4.10.4",
+ org.elasticsearch.*;version="${elasticsearch:[=.=.=,+1.0.0)}",
+ org.apache.lucene.*;version="5.5.0",
  org.joda.time.*;version="${jodatime:[=.=.=,+1.0.0)}",
  org.slf4j.*;version="${slf4j:[=.=.=,+1.0.0)}",
  org.springframework.*;version="${spring:[=.=.=.=,+1.0.0)}",

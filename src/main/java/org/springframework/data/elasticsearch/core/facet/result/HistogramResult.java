@@ -23,6 +23,7 @@ import org.springframework.data.elasticsearch.core.facet.FacetType;
 /**
  * @author Artur Konczak
  */
+@Deprecated
 public class HistogramResult extends AbstractFacetResult {
 
 	private List<IntervalUnit> terms;

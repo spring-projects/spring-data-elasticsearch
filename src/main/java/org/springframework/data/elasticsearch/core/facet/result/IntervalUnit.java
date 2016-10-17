@@ -26,6 +26,7 @@ import java.util.Date;
  * @author Artur Konczak
  * @author Jonathan Yan
  */
+@Deprecated
 public class IntervalUnit {
 
 	private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");

@@ -12,7 +12,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(indexName = "test-index-server-configuration", type = "test-type", useServerConfiguration = true, indexStoreType = "memory", shards = 10, replicas = 10, refreshInterval = "-1")
+@Document(indexName = "test-index-server-configuration", type = "test-type", useServerConfiguration = true, shards = 10, replicas = 10, refreshInterval = "-1")
 public class UseServerConfigurationEntity {
 
 	@Id

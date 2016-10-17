@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.data.elasticsearch.core.facet.request;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.elasticsearch.search.facet.FacetBuilder;
-import org.elasticsearch.search.facet.FacetBuilders;
-import org.elasticsearch.search.facet.statistical.StatisticalFacetBuilder;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.util.Assert;
+
 
 /**
  * @author Petar Tahchiev
  */
+@Deprecated
 public class StatisticalFacetRequest extends AbstractFacetRequest {
 
 	private String field;
@@ -41,20 +42,12 @@ public class StatisticalFacetRequest extends AbstractFacetRequest {
 	}
 
 	public void setFields(String... fields) {
-		this.fields = fields;
+		throw new UnsupportedOperationException("Native Facet are not supported in Elasticsearch 2.x - use Aggregation");
 	}
 
-	public FacetBuilder getFacet() {
+	public AbstractAggregationBuilder getFacet() {
 		Assert.notNull(getName(), "Facet name can't be a null !!!");
 		Assert.isTrue(StringUtils.isNotBlank(field) && fields == null, "Please select field or fields on which to build the facets !!!");
-
-		StatisticalFacetBuilder builder = FacetBuilders.statisticalFacet(getName());
-		if (ArrayUtils.isNotEmpty(fields)) {
-			builder.fields(fields);
-		} else {
-			builder.field(field);
-		}
-
-		return builder;
+		return AggregationBuilders.extendedStats(getName()).field(field);
 	}
 }

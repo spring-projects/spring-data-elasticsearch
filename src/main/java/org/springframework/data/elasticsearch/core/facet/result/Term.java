@@ -23,12 +23,13 @@ package org.springframework.data.elasticsearch.core.facet.result;
  * @author Artur Konczak
  * @author Jonathan Yan
  */
+@Deprecated
 public class Term {
 
 	private String term;
-	private int count;
+	private long count;
 
-	public Term(String term, int count) {
+	public Term(String term, long count) {
 		this.term = term;
 		this.count = count;
 	}
@@ -37,7 +38,7 @@ public class Term {
 		return term;
 	}
 
-	public int getCount() {
+	public long getCount() {
 		return count;
 	}
 }

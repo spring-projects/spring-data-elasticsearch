@@ -15,12 +15,12 @@
  */
 package org.springframework.data.elasticsearch;
 
-import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
+import static org.elasticsearch.node.NodeBuilder.*;
 
 import java.util.UUID;
 
 import org.elasticsearch.client.node.NodeClient;
-import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 
 /**
  * @author Mohsin Husen
@@ -28,13 +28,11 @@ import org.elasticsearch.common.settings.ImmutableSettings;
 public class Utils {
 
 	public static NodeClient getNodeClient() {
-		ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder()
+		return (NodeClient) nodeBuilder().settings(Settings.builder()
 				.put("http.enabled", "false")
-				.put("path.data", "target/elasticsearchTestData");
-		return (NodeClient) nodeBuilder().settings(settings).clusterName(UUID.randomUUID().toString()).local(true).node()
+				.put("path.data", "target/elasticsearchTestData")
+				.put("path.home", "src/test/resources/test-home-dir"))
+				.clusterName(UUID.randomUUID().toString()).local(true).node()
 				.client();
 	}
-
-
-
 }

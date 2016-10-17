@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -82,11 +83,11 @@ public class DefaultEntityMapperTests {
 		//then
 		assertThat(jsonResult, containsString(pointTemplate("pointA", point)));
 		assertThat(jsonResult, containsString(pointTemplate("pointB", point)));
-		assertThat(jsonResult, containsString(String.format("\"%s\":\"%s\"", "pointC", pointAsString)));
-		assertThat(jsonResult, containsString(String.format("\"%s\":[%.1f,%.1f]", "pointD", pointAsArray[0], pointAsArray[1])));
+		assertThat(jsonResult, containsString(String.format(Locale.ENGLISH, "\"%s\":\"%s\"", "pointC", pointAsString)));
+		assertThat(jsonResult, containsString(String.format(Locale.ENGLISH, "\"%s\":[%.1f,%.1f]", "pointD", pointAsArray[0], pointAsArray[1])));
 	}
 
 	private String pointTemplate(String name, Point point) {
-		return String.format("\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getY(), point.getX());
+		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
 	}
 }

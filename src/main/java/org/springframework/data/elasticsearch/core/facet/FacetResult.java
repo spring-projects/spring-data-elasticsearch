@@ -23,6 +23,7 @@ package org.springframework.data.elasticsearch.core.facet;
  * @author Artur Konczak
  * @author Jonathan Yan
  */
+@Deprecated
 public interface FacetResult {
 
 	String getName();

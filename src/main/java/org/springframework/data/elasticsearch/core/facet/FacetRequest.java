@@ -13,19 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.data.elasticsearch.core.facet;
 
-import org.elasticsearch.search.facet.FacetBuilder;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 
 /**
  * @author Artur Koczak
  */
+@Deprecated
 public interface FacetRequest {
 
 	public static final String FIELD_UNTOUCHED = "untouched";
 	public static final String FIELD_SORT = "sort";
 
-	FacetBuilder getFacet();
+	AbstractAggregationBuilder getFacet();
 
 	boolean applyQueryFilter();
 }

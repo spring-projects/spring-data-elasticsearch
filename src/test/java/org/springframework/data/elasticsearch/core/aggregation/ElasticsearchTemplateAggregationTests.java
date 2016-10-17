@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ public class ElasticsearchTemplateAggregationTests {
 		elasticsearchTemplate.deleteIndex(ArticleEntity.class);
 		elasticsearchTemplate.createIndex(ArticleEntity.class);
 		elasticsearchTemplate.putMapping(ArticleEntity.class);
-		elasticsearchTemplate.refresh(ArticleEntity.class, true);
+		elasticsearchTemplate.refresh(ArticleEntity.class);
 
 		IndexQuery article1 = new ArticleEntityBuilder("1").title("article four").subject("computing").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addAuthor(JONATHAN_YAN).score(10).buildIndex();
 		IndexQuery article2 = new ArticleEntityBuilder("2").title("article three").subject("computing").addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addPublishedYear(YEAR_2000).score(20).buildIndex();
@@ -73,7 +73,7 @@ public class ElasticsearchTemplateAggregationTests {
 		elasticsearchTemplate.index(article2);
 		elasticsearchTemplate.index(article3);
 		elasticsearchTemplate.index(article4);
-		elasticsearchTemplate.refresh(ArticleEntity.class, true);
+		elasticsearchTemplate.refresh(ArticleEntity.class);
 	}
 
 	@Test

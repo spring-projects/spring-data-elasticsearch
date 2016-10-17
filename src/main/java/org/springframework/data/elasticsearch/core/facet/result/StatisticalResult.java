@@ -21,6 +21,7 @@ import org.springframework.data.elasticsearch.core.facet.FacetType;
 /**
  * @author Petar Tahchiev
  */
+@Deprecated
 public class StatisticalResult extends AbstractFacetResult {
 
 	private long count;
