@@ -22,6 +22,7 @@ import static org.springframework.util.StringUtils.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -29,12 +30,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
+import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.core.GenericCollectionTypeResolver;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.annotations.CompletionField;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldIndex;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -330,8 +340,14 @@ class MappingBuilder {
      */
     private static void addDynamicTemplatesMapping(XContentBuilder builder, String jsonString) throws IOException {
 		JsonNode jsonNode = new ObjectMapper().readTree(jsonString).get("dynamic_templates");
-        if (jsonNode != null && isNotBlank(jsonNode.toString())){
-		    builder.rawField(FIELD_DYNAMIC_TEMPLATES, jsonNode.toString().getBytes());
+        if (jsonNode != null && isNotBlank(jsonNode.toString()) && jsonNode.isArray()){
+			builder.field(FIELD_DYNAMIC_TEMPLATES);
+			builder.startArray();
+			Iterator<JsonNode> iterator = jsonNode.elements();
+			while (iterator.hasNext()){
+				builder.rawValue(new BytesArray(iterator.next().toString().getBytes()));
+			}
+			builder.endArray();
         }
     }
 

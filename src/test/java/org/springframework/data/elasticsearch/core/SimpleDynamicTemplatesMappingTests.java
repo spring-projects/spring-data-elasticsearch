@@ -19,9 +19,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class SimpleDynamicTemplatesMappingTests {
     private final String EXPECTED_MAPPING = "{\"test-dynamictemplatestype\":{\"dynamic_templates\":" +
-            "[{\"with_custom_analyzer\":{\"mapping\":{\"type\":\"string\",\"indexAnalyzer\":" +
-            "\"standard_lowercase_asciifolding\",\"searchAnalyzer\":\"standard_lowercase_asciifolding\"}," +
-            "\"path_match\":\"names.*\"}}],\"properties\":{\"names\":{\"store\":false,\"type\":\"object\"}}}}";
+            "[{\"with_custom_analyzer\":{\"mapping\":{\"type\":\"string\",\"analyzer\":" +
+            "\"standard_lowercase_asciifolding\"}," +
+            "\"path_match\":\"names.*\"}}],\"properties\":{\"names\":{\"type\":\"object\"}}}}";
 
     @Test
     public void testCorrectDynamicTemplatesMappings() throws IOException {

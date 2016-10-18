@@ -12,7 +12,8 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 /**
  * @author Petr Kukral
  */
-@Document(indexName = "test-dynamictemplates", type = "test-dynamictemplatestype", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-dynamictemplates", type = "test-dynamictemplatestype", indexStoreType = "memory", shards = 1,
+        replicas = 0, refreshInterval = "-1")
 @DynamicTemplates(mappingPath = "/mappings/test-dynamic_templates_mappings.json")
 public class SampleDynamicTemplatesEntity {
 
