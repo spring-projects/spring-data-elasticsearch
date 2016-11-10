@@ -9,7 +9,7 @@ This chapter includes details of the Elasticsearch repository implementation.
 [[elasticsearch.namespace]]
 === Spring Namespace
 
-The Spring Data Elasticsearch module contains a custom namespace allowing definition of repository beans as well as elements for instantiating a `ElasticsearchServer` .
+The Spring Data Elasticsearch module contains a custom namespace allowing definition of repository beans as well as elements for instantiating an `ElasticsearchClient`.
 
 Using the `repositories` element looks up Spring Data repositories as described in <<repositories.create-instances>> .
 
@@ -32,7 +32,7 @@ http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.
 ----
 ====
 
-Using the `Transport Client` or `Node Client` element registers an instance of `Elasticsearch Server` in the context. 
+Using the `transport-client` or `node-client` element registers an instance of `ElasticsearchClient` in the context. 
 
 .Transport Client using Namespace
 ====
