@@ -18,11 +18,13 @@ package org.springframework.data.elasticsearch.client;
 import static org.apache.commons.lang.StringUtils.*;
 
 import java.net.InetAddress;
+import java.util.List;
 import java.util.Properties;
 
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.plugins.Plugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -37,6 +39,7 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Jakub Vavrik
  * @author Piotr Betkier
+ * @author Loïc Schillewaert
  */
 
 public class TransportClientFactoryBean implements FactoryBean<TransportClient>, InitializingBean, DisposableBean {
@@ -50,6 +53,7 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	private String clientNodesSamplerInterval = "5s";
 	private TransportClient client;
 	private Properties properties;
+	private List<Class<? extends Plugin>> plugins;
 	static final String COLON = ":";
 	static final String COMMA = ",";
 
@@ -86,7 +90,11 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	}
 
 	protected void buildClient() throws Exception {
-		client = TransportClient.builder().settings(settings()).build();
+		TransportClient.Builder clientBuilder = TransportClient.builder();
+		for (Object plugin: plugins) {
+			clientBuilder.addPlugin((Class<? extends Plugin>) plugin);
+		}
+		client = clientBuilder.settings(settings()).build();
 		Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
 		for (String clusterNode : split(clusterNodes, COMMA)) {
 			String hostName = substringBeforeLast(clusterNode, COLON);
@@ -150,5 +158,9 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
 	public void setProperties(Properties properties) {
 		this.properties = properties;
+	}
+
+	public void setPlugins(List<Class<? extends Plugin>> plugins) {
+		this.plugins = plugins;
 	}
 }
