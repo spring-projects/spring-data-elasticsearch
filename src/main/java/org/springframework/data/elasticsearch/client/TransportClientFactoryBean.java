@@ -91,8 +91,10 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
 	protected void buildClient() throws Exception {
 		TransportClient.Builder clientBuilder = TransportClient.builder();
-		for (Object plugin: plugins) {
-			clientBuilder.addPlugin((Class<? extends Plugin>) plugin);
+		if (null != plugins) {
+			for (Object plugin: plugins) {
+				clientBuilder.addPlugin((Class<? extends Plugin>) plugin);
+			}
 		}
 		client = clientBuilder.settings(settings()).build();
 		Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
