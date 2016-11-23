@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.0.M1 (2016-11-23)
+----------------------------------------
+* DATAES-307 - Set up 3.0 development.
+* DATAES-306 - Release 3.0 M1 (Kay).
+
+
 Changes in version 2.0.5.RELEASE (2016-11-03)
 ---------------------------------------------
 * DATAES-300 - Release 2.0.5 (Hopper SR5).
