@@ -843,7 +843,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			moreLikeThisQueryBuilder.boostTerms(query.getBoostTerms());
 		}
 
-		return queryForPage(new NativeSearchQueryBuilder().withQuery(moreLikeThisQueryBuilder).build(), clazz);
+		return queryForPage(new NativeSearchQueryBuilder()
+                .withPageable(query.getPageable())
+                .withQuery(moreLikeThisQueryBuilder).build(), clazz);
 	}
 
 	private SearchResponse doSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
