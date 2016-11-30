@@ -27,17 +27,36 @@ import org.springframework.data.elasticsearch.core.facet.FacetType;
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Jonathan Yan
+ * @author Matija Obreza
  */
 public class TermResult extends AbstractFacetResult {
 
 	private List<Term> terms;
+	private long total;
+	private long other;
+	private long missing;
 
-	public TermResult(String name, List<Term> terms) {
+	public TermResult(String name, List<Term> terms, long total, long other, long missing) {
 		super(name, FacetType.term);
 		this.terms = terms;
+		this.total = total;
+		this.other = other;
+		this.missing = missing;
 	}
 
 	public List<Term> getTerms() {
 		return terms;
+	}
+	
+	public long getTotal() {
+		return total;
+	}
+	
+	public long getOther() {
+		return other;
+	}
+	
+	public long getMissing() {
+		return missing;
 	}
 }

@@ -102,6 +102,10 @@ public class ElasticsearchTemplateFacetTests {
 		term = facet.getTerms().get(3);
 		assertThat(term.getTerm(), is(JONATHAN_YAN));
 		assertThat(term.getCount(), is(1));
+		
+		assertThat(facet.getTotal(), is(10l));
+		assertThat(facet.getOther(), is(0l));
+		assertThat(facet.getMissing(), is(0l));
 	}
 
 	@Test
@@ -129,6 +133,10 @@ public class ElasticsearchTemplateFacetTests {
 		term = facet.getTerms().get(2);
 		assertThat(term.getTerm(), is(MOHSIN_HUSEN));
 		assertThat(term.getCount(), is(1));
+		
+		assertThat(facet.getTotal(), is(6l));
+		assertThat(facet.getOther(), is(0l));
+		assertThat(facet.getMissing(), is(0l));
 	}
 
 	@Test
@@ -150,6 +158,10 @@ public class ElasticsearchTemplateFacetTests {
 		Term term = facet.getTerms().get(0);
 		assertThat(term.getTerm(), is(MOHSIN_HUSEN));
 		assertThat(term.getCount(), is(1));
+		
+		assertThat(facet.getTotal(), is(6l));
+		assertThat(facet.getOther(), is(5l));
+		assertThat(facet.getMissing(), is(0l));
 	}
 
 	@Test
@@ -180,6 +192,10 @@ public class ElasticsearchTemplateFacetTests {
 		term = facet.getTerms().get(3);
 		assertThat(term.getTerm(), is(RIZWAN_IDREES));
 		assertThat(term.getCount(), is(4));
+
+		assertThat(facet.getTotal(), is(10l));
+		assertThat(facet.getOther(), is(0l));
+		assertThat(facet.getMissing(), is(0l));
 	}
 
 	@Test
@@ -210,6 +226,10 @@ public class ElasticsearchTemplateFacetTests {
 		term = facet.getTerms().get(3);
 		assertThat(term.getTerm(), is(RIZWAN_IDREES));
 		assertThat(term.getCount(), is(4));
+		
+		assertThat(facet.getTotal(), is(10l));
+		assertThat(facet.getOther(), is(0l));
+		assertThat(facet.getMissing(), is(0l));
 	}
 
 	@Test
@@ -238,6 +258,43 @@ public class ElasticsearchTemplateFacetTests {
 		term = facet.getTerms().get(2);
 		assertThat(term.getTerm(), is(Integer.toString(YEAR_2002)));
 		assertThat(term.getCount(), is(1));
+		
+		assertThat(facet.getTotal(), is(6l));
+		assertThat(facet.getOther(), is(0l));
+		assertThat(facet.getMissing(), is(1l));
+	}
+
+	@Test
+	public void shouldReturnExistingFacetedYearsForGivenQuery() {
+
+		// given
+		String facetName = "fyears";
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withFilter(FilterBuilders.notFilter(FilterBuilders.missingFilter("publishedYears")))
+				.withFacet(new TermFacetRequestBuilder(facetName).applyQueryFilter().fields("publishedYears").descCount().build()).build();
+		// when
+		FacetedPage<ArticleEntity> result = elasticsearchTemplate.queryForPage(searchQuery, ArticleEntity.class);
+		// then
+		assertThat(result.getNumberOfElements(), is(equalTo(3)));
+
+		TermResult facet = (TermResult) result.getFacet(facetName);
+		assertThat(facet.getTerms().size(), is(equalTo(3)));
+
+		Term term = facet.getTerms().get(0);
+		assertThat(term.getTerm(), is(Integer.toString(YEAR_2000)));
+		assertThat(term.getCount(), is(3));
+
+		term = facet.getTerms().get(1);
+		assertThat(term.getTerm(), is(Integer.toString(YEAR_2001)));
+		assertThat(term.getCount(), is(2));
+
+		term = facet.getTerms().get(2);
+		assertThat(term.getTerm(), is(Integer.toString(YEAR_2002)));
+		assertThat(term.getCount(), is(1));
+		
+		assertThat(facet.getTotal(), is(6l));
+		assertThat(facet.getOther(), is(0l));
+		assertThat(facet.getMissing(), is(0l));
 	}
 
 
@@ -283,6 +340,10 @@ public class ElasticsearchTemplateFacetTests {
 		term = facet.getTerms().get(6);
 		assertThat(term.getTerm(), is(RIZWAN_IDREES));
 		assertThat(term.getCount(), is(4));
+		
+		assertThat(facet.getTotal(), is(16l));
+		assertThat(facet.getOther(), is(0l));
+		assertThat(facet.getMissing(), is(1l));
 	}
 
 	@Test
@@ -331,6 +392,10 @@ public class ElasticsearchTemplateFacetTests {
 		stringTerm = stringFacet.getTerms().get(3);
 		assertThat(stringTerm.getTerm(), is(RIZWAN_IDREES));
 		assertThat(stringTerm.getCount(), is(4));
+		
+		assertThat(stringFacet.getTotal(), is(10l));
+		assertThat(stringFacet.getOther(), is(0l));
+		assertThat(stringFacet.getMissing(), is(0l));
 	}
 
 
@@ -360,6 +425,10 @@ public class ElasticsearchTemplateFacetTests {
 		term = facet.getTerms().get(2);
 		assertThat(term.getTerm(), is(Integer.toString(YEAR_2002)));
 		assertThat(term.getCount(), is(1));
+		
+		assertThat(facet.getTotal(), is(6l));
+		assertThat(facet.getOther(), is(0l));
+		assertThat(facet.getMissing(), is(1l));
 	}
 
 	@Test
@@ -381,6 +450,10 @@ public class ElasticsearchTemplateFacetTests {
 		Term term = facet.getTerms().get(0);
 		assertThat(term.getTerm(), is(ARTUR_KONCZAK));
 		assertThat(term.getCount(), is(2));
+
+		assertThat(facet.getTotal(), is(6l));
+		assertThat(facet.getOther(), is(4l));
+		assertThat(facet.getMissing(), is(0l));
 	}
 
 	@Test
@@ -398,6 +471,10 @@ public class ElasticsearchTemplateFacetTests {
 		TermResult facet = (TermResult) result.getFacet(facetName);
 
 		assertThat(facet.getTerms().size(), is(4));
+		
+		assertThat(facet.getTotal(), is(6l));
+		assertThat(facet.getOther(), is(0l));
+		assertThat(facet.getMissing(), is(0l));
 	}
 
 
