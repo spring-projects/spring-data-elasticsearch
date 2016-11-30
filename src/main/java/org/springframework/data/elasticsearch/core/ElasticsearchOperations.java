@@ -15,15 +15,23 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.elasticsearch.action.update.UpdateResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.elasticsearch.action.update.UpdateResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.query.*;
 
 /**
  * ElasticsearchOperations
@@ -465,6 +473,16 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	<T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz);
+
+	/**
+	 * more like this query to search for documents that are "like" a specific document.
+	 *
+	 * @param query
+	 * @param clazz
+	 * @param <T>
+ 	 * @return
+ 	*/
+	<T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
 	 * adding new alias
