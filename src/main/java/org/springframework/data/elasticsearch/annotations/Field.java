@@ -54,7 +54,7 @@ public @interface Field {
 	String[] ignoreFields() default {};
 
 	boolean includeInParent() default false;
-	
+
 	/*
 	 * type field is required
 	 */
