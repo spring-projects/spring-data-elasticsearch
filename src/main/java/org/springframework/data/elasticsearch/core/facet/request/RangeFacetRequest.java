@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.range.RangeBuilder;
+import org.elasticsearch.search.aggregations.bucket.range.RangeAggregationBuilder;
 import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.util.Assert;
 
@@ -76,7 +76,7 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 	public AbstractAggregationBuilder getFacet() {
 		Assert.notNull(getName(), "Facet name can't be a null !!!");
 
-		RangeBuilder rangeBuilder = AggregationBuilders.range(getName());
+		RangeAggregationBuilder rangeBuilder = AggregationBuilders.range(getName());
 		rangeBuilder.field(StringUtils.isNotBlank(keyField) ? keyField : field );
 
 		for (Entry entry : entries) {

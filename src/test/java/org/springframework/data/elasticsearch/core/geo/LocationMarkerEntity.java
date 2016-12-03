@@ -41,9 +41,9 @@ public class LocationMarkerEntity {
 	@GeoPointField
 	private double[] locationAsArray;
 
-	@GeoPointField(geoHashPrefix = true, geoHashPrecision = "100km")
+	@GeoPointField
 	private String locationWithPrefixAsDistance;
 
-	@GeoPointField(geoHashPrefix = true, geoHashPrecision = "5")
+	@GeoPointField
 	private String locationWithPrefixAsLengthOfGeoHash;
 }

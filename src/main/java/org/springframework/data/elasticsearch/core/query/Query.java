@@ -28,6 +28,7 @@ import org.springframework.data.domain.Sort;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author withccm
  */
 public interface Query {
 
@@ -98,11 +99,20 @@ public interface Query {
 	List<String> getTypes();
 
 	/**
-	 * Add fields to be added as part of search request
+	 * @deprecated Use {@link Query#addStoredFields()} instead
 	 *
 	 * @param fields
 	 */
+	@Deprecated
 	void addFields(String... fields);
+
+	/**
+	 * Add fields to be added as part of search request
+	 * SoredFields is not working in Elasticsearch 5.x, I guess it's an Elasticsearch bug.
+	 *
+	 * @param fields
+	 */
+	void addStoredFields(String... fields);
 
 	/**
 	 * Get fields to be returned as part of search request

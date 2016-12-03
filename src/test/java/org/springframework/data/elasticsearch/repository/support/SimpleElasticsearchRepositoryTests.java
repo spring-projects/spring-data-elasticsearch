@@ -60,6 +60,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
+		elasticsearchTemplate.putMapping(SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 	}
 
@@ -106,7 +107,9 @@ public class SimpleElasticsearchRepositoryTests {
 	@Test
 	public void shouldSaveDocumentWithoutId() {
 		// given
+		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("some message");
 		sampleEntity.setVersion(System.currentTimeMillis());
 		// when

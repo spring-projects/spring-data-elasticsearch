@@ -21,7 +21,8 @@ import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.terms.support.IncludeExclude;
 import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.util.Assert;
 
@@ -75,7 +76,7 @@ public class TermFacetRequest extends AbstractFacetRequest {
 	@Override
 	public AbstractAggregationBuilder getFacet() {
 		Assert.notEmpty(fields, "Please select at last one field !!!");
-		TermsBuilder termsBuilder = AggregationBuilders.terms(getName()).field(fields[0]).size(this.size);
+		TermsAggregationBuilder termsBuilder = AggregationBuilders.terms(getName()).field(fields[0]).size(this.size);
 
 		switch (order) {
 			case descTerm:
@@ -90,16 +91,12 @@ public class TermFacetRequest extends AbstractFacetRequest {
 			default:
 				termsBuilder.order(Terms.Order.count(true));
 		}
-		if (ArrayUtils.isNotEmpty(excludeTerms)) {
-			termsBuilder.exclude(excludeTerms);
-		}
+
+		String[] includeValues = StringUtils.isNotBlank(regex) ? new String[]{regex} : null;
+		termsBuilder.includeExclude(new IncludeExclude(includeValues, excludeTerms));
 
 		if (allTerms) {
 			termsBuilder.size(Integer.MAX_VALUE);
-		}
-
-		if (StringUtils.isNotBlank(regex)) {
-			termsBuilder.include(regex);
 		}
 
 		return termsBuilder;

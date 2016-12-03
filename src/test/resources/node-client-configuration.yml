@@ -1,3 +1,6 @@
 #enabled scripts - this require groovy
-script.inline: true
-script.indexed: true
+#script.inline: true
+#script.indexed: true
+
+#enabled scripts - this require painless
+#script.painless.regex.enabled: true

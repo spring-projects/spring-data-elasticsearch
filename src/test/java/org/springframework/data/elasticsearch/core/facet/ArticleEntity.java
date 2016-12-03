@@ -15,9 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.facet;
 
-import static org.springframework.data.elasticsearch.annotations.FieldIndex.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
-import static org.springframework.data.elasticsearch.annotations.FieldType.String;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +24,8 @@ import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 
 /**
  * Simple type to test facets
@@ -40,13 +39,14 @@ public class ArticleEntity {
 	@Id
 	private String id;
 	private String title;
+	@Field(type = Text, fielddata = true)
 	private String subject;
 
 	@MultiField(
-			mainField = @Field(type = String, index = analyzed),
+			mainField = @Field(type = Text, index = true),
 			otherFields = {
-					@InnerField(suffix = "untouched", type = String, store = true, index = not_analyzed),
-					@InnerField(suffix = "sort", type = String, store = true, indexAnalyzer = "keyword")
+					@InnerField(suffix = "untouched", type = Text, store = true, fielddata = true),
+					@InnerField(suffix = "sort", type = Text, store = true, indexAnalyzer = "keyword")
 			}
 	)
 	private List<String> authors = new ArrayList<String>();

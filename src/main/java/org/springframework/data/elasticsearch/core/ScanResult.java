@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.annotations;
+package org.springframework.data.elasticsearch.core;
+
+import org.springframework.data.domain.Page;
 
 /**
- * @author Rizwan Idrees
- * @author Mohsin Husen
- * @author Artur Konczak
+ * @author withccm
  */
-public enum FieldType {
-	Text, Integer, Long, Date, Float, Double, Boolean, Object, Auto, Nested, Ip, Attachment
+public class ScanResult <T> {
+	private String scrollId;
+	private Page<T> entities;
+	
+	public ScanResult(String scrollId, Page<T> entities) {
+		this.scrollId = scrollId;
+		this.entities = entities;
+	}
+	public String getScrollId() {
+		return scrollId;
+	}
+	public Page<T> getEntities() {
+		return entities;
+	}
 }

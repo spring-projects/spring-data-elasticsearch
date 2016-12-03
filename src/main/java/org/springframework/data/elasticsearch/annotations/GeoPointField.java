@@ -25,8 +25,9 @@ import java.lang.annotation.*;
 @Documented
 public @interface GeoPointField {
 
+		@Deprecated
         boolean geoHashPrefix() default false;
-
+		@Deprecated
         String geoHashPrecision() default "0";
 
 }

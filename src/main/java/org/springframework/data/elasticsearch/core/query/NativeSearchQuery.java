@@ -20,7 +20,7 @@ import java.util.List;
 
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
-import org.elasticsearch.search.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
@@ -41,7 +41,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
     private final List<ScriptField> scriptFields = new ArrayList<ScriptField>();
 	private List<FacetRequest> facets;
 	private List<AbstractAggregationBuilder> aggregations;
-	private HighlightBuilder.Field[] highlightFields;
+	private HighlightBuilder[] highlightFields;
 	private List<IndexBoost> indicesBoost;
 
 
@@ -60,7 +60,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 		this.sorts = sorts;
 	}
 
-	public NativeSearchQuery(QueryBuilder query, QueryBuilder filter, List<SortBuilder> sorts, HighlightBuilder.Field[] highlightFields) {
+	public NativeSearchQuery(QueryBuilder query, QueryBuilder filter, List<SortBuilder> sorts, HighlightBuilder[] highlightFields) {
 		this.query = query;
 		this.filter = filter;
 		this.sorts = sorts;
@@ -80,7 +80,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	}
 
 	@Override
-	public HighlightBuilder.Field[] getHighlightFields() {
+	public HighlightBuilder[] getHighlightBuilders() {
 		return highlightFields;
 	}
 
