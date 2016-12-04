@@ -70,6 +70,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
  * @author Abdul Mohammed
  * @author Kevin Leturc
  * @author Mason Chan
+ * @author Ted Liang
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
