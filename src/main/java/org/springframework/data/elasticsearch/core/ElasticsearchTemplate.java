@@ -59,7 +59,9 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
@@ -106,6 +108,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
  * @author Oliver Gierke
  * @author Mark Janssen
  * @author Mark Paluch
+ * @author Ted Liang
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -994,8 +997,15 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 		if (query.getSort() != null) {
 			for (Sort.Order order : query.getSort()) {
-				searchRequestBuilder.addSort(order.getProperty(),
-						order.getDirection() == Sort.Direction.DESC ? SortOrder.DESC : SortOrder.ASC);
+				FieldSortBuilder sort = SortBuilders.fieldSort(order.getProperty())
+						.order(order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC);
+				if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
+					sort.missing("_first");
+				}
+				else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
+					sort.missing("_last");
+				}
+				searchRequestBuilder.addSort(sort);
 			}
 		}
 
