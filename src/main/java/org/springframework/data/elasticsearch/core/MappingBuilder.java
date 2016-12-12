@@ -332,7 +332,11 @@ class MappingBuilder {
 			builder.startArray();
 			Iterator<JsonNode> iterator = jsonNode.elements();
 			while (iterator.hasNext()){
-				builder.rawValue(new BytesArray(iterator.next().toString().getBytes()));
+				String next = iterator.next().toString();
+				if (iterator.hasNext()){
+					next = next.concat(",");
+				}
+				builder.rawValue(new BytesArray(next.getBytes()));
 			}
 			builder.endArray();
         }
