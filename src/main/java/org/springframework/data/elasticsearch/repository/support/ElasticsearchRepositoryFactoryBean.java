@@ -36,6 +36,15 @@ public class ElasticsearchRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	private ElasticsearchOperations operations;
 
 	/**
+	 * Creates a new {@link ElasticsearchRepositoryFactoryBean} for the given repository interface.
+	 * 
+	 * @param repositoryInterface must not be {@literal null}.
+	 */
+	public ElasticsearchRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
+		super(repositoryInterface);
+	}
+
+	/**
 	 * Configures the {@link ElasticsearchOperations} to be used to create Elasticsearch repositories.
 	 *
 	 * @param operations the operations to set
