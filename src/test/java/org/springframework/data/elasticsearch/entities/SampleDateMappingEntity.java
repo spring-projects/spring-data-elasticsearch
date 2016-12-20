@@ -6,6 +6,7 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.Strin
 
 import java.util.Date;
 
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -13,7 +14,14 @@ import org.springframework.data.elasticsearch.annotations.Field;
 
 /**
  * @author Jakub Vavrik
+ *
+ * @See DATAES-287 - updated test entity that worked in ES < 2.0 with post 2.0 date formats
  */
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Document(indexName = "test-datemapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleDateMappingEntity {
 
@@ -32,43 +40,6 @@ public class SampleDateMappingEntity {
 	@Field(type = Date, format = DateFormat.basic_date)
 	private Date basicFormatDate;
 
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public String getMessage() {
-		return message;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	public Date getCustomFormatDate() {
-		return customFormatDate;
-	}
-
-	public void setCustomFormatDate(Date customFormatDate) {
-		this.customFormatDate = customFormatDate;
-	}
-
-	public Date getDefaultFormatDate() {
-		return defaultFormatDate;
-	}
-
-	public void setDefaultFormatDate(Date defaultFormatDate) {
-		this.defaultFormatDate = defaultFormatDate;
-	}
-
-	public Date getBasicFormatDate() {
-		return basicFormatDate;
-	}
-
-	public void setBasicFormatDate(Date basicFormatDate) {
-		this.basicFormatDate = basicFormatDate;
-	}
+	@Field(type = Date, format = DateFormat.epoch_millis)
+	private Date epochMillisDate;
 }

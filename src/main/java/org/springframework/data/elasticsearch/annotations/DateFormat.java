@@ -27,5 +27,14 @@ public enum DateFormat {
 	date_time, date_time_no_millis, hour, hour_minute, hour_minute_second, hour_minute_second_fraction,
 	hour_minute_second_millis, ordinal_date, ordinal_date_time, ordinal_date_time_no_millis, time, time_no_millis,
 	t_time, t_time_no_millis, week_date, week_date_time, weekDateTimeNoMillis, week_year, weekyearWeek,
-	weekyearWeekDay, year, year_month, year_month_day
+	weekyearWeekDay, year, year_month, year_month_day,
+	//Added new formats from Elastic v2.4 due to DATAES-287
+	strict_year_month_day, strict_year_month, strict_weekyear_week_day, strict_weekyear_week, strict_weekyear,
+	strict_week_date_time_no_millis, strict_week_date_time, strict_week_date, strict_t_time_no_millis, strict_t_time,
+	strict_time_no_millis, strict_time, strict_ordinal_date_time_no_millis, strict_ordinal_date_time,
+	strict_hour_minute_second_millis, strict_hour_minute_second_fraction, strict_hour_minute_second,
+	strict_hour_minute, strict_hour, strict_date_time_no_millis, strict_date_time,
+	strict_date_hour_minute_second_millis, strict_date_hour_minute_second_fraction, strict_date_hour_minute_second,
+	strict_date_hour_minute, strict_date_hour, strict_date, strict_basic_week_date_time_no_millis,
+	strict_basic_week_date_time, strict_basic_week_date, strict_date_optional_time, epoch_millis, epoch_seconds
 }

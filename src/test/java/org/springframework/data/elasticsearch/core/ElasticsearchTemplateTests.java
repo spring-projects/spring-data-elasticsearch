@@ -2034,16 +2034,17 @@ public class ElasticsearchTemplateTests {
 
 		// when
 		String content = ElasticsearchTemplate.readFileFromClasspath(settingsFile);
-
 		// then
-		assertThat(content, is("index:\n" +
-				"  number_of_shards: 1\n" +
-				"  number_of_replicas: 0\n" +
-				"  analysis:\n" +
-				"    analyzer:\n" +
-				"      emailAnalyzer:\n" +
-				"        type: custom\n" +
-				"        tokenizer: uax_url_email\n"));
+		//fixes Test issue with Windows Carriage return chars in file
+		String lineSeparator = System.getProperty("line.separator");
+		assertThat(content, is("index:" + lineSeparator +
+				"  number_of_shards: 1" + lineSeparator +
+				"  number_of_replicas: 0" + lineSeparator +
+				"  analysis:" + lineSeparator +
+				"    analyzer:" + lineSeparator +
+				"      emailAnalyzer:" + lineSeparator +
+				"        type: custom" + lineSeparator +
+				"        tokenizer: uax_url_email" + lineSeparator));
 	}
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {

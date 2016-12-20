@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Locale;
 
 import org.junit.Before;
@@ -26,6 +27,7 @@ import org.junit.Test;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.entities.Car;
 import org.springframework.data.elasticsearch.entities.GeoEntity;
+import org.springframework.data.elasticsearch.entities.SampleDateMappingEntity;
 import org.springframework.data.geo.Point;
 
 /**
@@ -89,5 +91,25 @@ public class DefaultEntityMapperTests {
 
 	private String pointTemplate(String name, Point point) {
 		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
+	}
+
+	/**
+	 * DATAES-287 - test demonstrates issue with ignored dateFormat - default ObjectMapper always serializes to
+	 * long ignoring defined mapping causing issues for ES >= v2.0
+	 */
+	@Test
+	public void shouldMapDateFieldsObjectToJson() throws IOException {
+		//given
+		SampleDateMappingEntity entity = SampleDateMappingEntity.builder().id("0").message("this is a test")
+				.basicFormatDate(new Date(479692800))
+				.customFormatDate(new Date(479692800))
+				.defaultFormatDate(new Date(479692800))
+				.epochMillisDate(new Date(479692800)).build();
+
+		//when
+		String jsonResult = entityMapper.mapToString(entity);
+
+		//then
+		assertEquals(jsonResult, "{\"id\":\"0\",\"message\":\"this is a test\",\"customFormatDate\":479692800,\"defaultFormatDate\":479692800,\"basicFormatDate\":479692800,\"epochMillisDate\":479692800}");
 	}
 }
