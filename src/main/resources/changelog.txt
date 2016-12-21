@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.0.6.RELEASE (2016-12-21)
+---------------------------------------------
+* DATAES-304 - Release 2.0.6 (Hopper SR6).
+
+
 Changes in version 2.1.0.RC1 (2016-12-21)
 -----------------------------------------
 * DATAES-315 - Adapt API in RepositoryFactoryBeanSupport implementation.
