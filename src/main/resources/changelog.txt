@@ -1,6 +1,16 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.1.0.RC1 (2016-12-21)
+-----------------------------------------
+* DATAES-315 - Adapt API in RepositoryFactoryBeanSupport implementation.
+* DATAES-313 - Register repository factory in spring.factories for multi-store support.
+* DATAES-289 - Upgrade to Elasticsearch 2.4.
+* DATAES-284 - Downgrade to Jackson 2.7.5 until Elasticsearch is compatible with 2.8.
+* DATAES-281 - Can't save entity without id setter.
+* DATAES-275 - Release 2.1 RC1 (Ingalls).
+
+
 Changes in version 3.0.0.M1 (2016-11-23)
 ----------------------------------------
 * DATAES-307 - Set up 3.0 development.
