@@ -16,14 +16,15 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import com.fasterxml.jackson.databind.util.ArrayIterator;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
@@ -41,6 +42,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.entities.Car;
+import org.springframework.data.elasticsearch.entities.SampleEntity;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.*;
@@ -50,6 +52,7 @@ import static org.mockito.Mockito.*;
 /**
  * @author Artur Konczak
  * @author Mohsin Husen
+ * @author Chris White
  * @author Mark Paluch
  */
 public class DefaultResultMapperTests {
@@ -151,6 +154,69 @@ public class DefaultResultMapperTests {
 
 		assertThat(result, is(notNullValue()));
 		assertThat(result.getId(), is("identifier"));
+	}
+
+	@Test // DATAES-198
+	public void setsVersionFromGetResponse() {
+		GetResponse response = mock(GetResponse.class);
+		when(response.getSourceAsString()).thenReturn("{}");
+		when(response.getVersion()).thenReturn(1234L);
+
+		SampleEntity result = resultMapper.mapResult(response, SampleEntity.class);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.getVersion(), is(1234L));
+	}
+
+	@Test // DATAES-198
+	public void setsVersionFromMultiGetResponse() {
+		GetResponse response1 = mock(GetResponse.class);
+		when(response1.getSourceAsString()).thenReturn("{}");
+		when(response1.isExists()).thenReturn(true);
+		when(response1.getVersion()).thenReturn(1234L);
+
+		GetResponse response2 = mock(GetResponse.class);
+		when(response2.getSourceAsString()).thenReturn("{}");
+		when(response2.isExists()).thenReturn(true);
+		when(response2.getVersion()).thenReturn(5678L);
+
+		MultiGetResponse multiResponse = mock(MultiGetResponse.class);
+		when(multiResponse.getResponses()).thenReturn(new MultiGetItemResponse[] {
+				new MultiGetItemResponse(response1, null), new MultiGetItemResponse(response2, null) });
+
+		LinkedList<SampleEntity> results = resultMapper.mapResults(multiResponse, SampleEntity.class);
+
+		assertThat(results, is(notNullValue()));
+		assertThat(results, hasSize(2));
+
+		assertThat(results.get(0).getVersion(), is(1234L));
+		assertThat(results.get(1).getVersion(), is(5678L));
+	}
+
+	@Test // DATAES-198
+	public void setsVersionFromSearchResponse() {
+		SearchHit hit1 = mock(SearchHit.class);
+		when(hit1.getSourceAsString()).thenReturn("{}");
+		when(hit1.getVersion()).thenReturn(1234L);
+
+		SearchHit hit2 = mock(SearchHit.class);
+		when(hit2.getSourceAsString()).thenReturn("{}");
+		when(hit2.getVersion()).thenReturn(5678L);
+
+		SearchHits searchHits = mock(SearchHits.class);
+		when(searchHits.getTotalHits()).thenReturn(2L);
+		when(searchHits.iterator()).thenReturn(Arrays.asList(hit1, hit2).iterator());
+
+		SearchResponse searchResponse = mock(SearchResponse.class);
+		when(searchResponse.getHits()).thenReturn(searchHits);
+
+		AggregatedPage<SampleEntity> results = resultMapper.mapResults(searchResponse, SampleEntity.class,
+				mock(Pageable.class));
+
+		assertThat(results, is(notNullValue()));
+
+		assertThat(results.getContent().get(0).getVersion(), is(1234L));
+		assertThat(results.getContent().get(1).getVersion(), is(5678L));
 	}
 
 	private Aggregation createCarAggregation() {

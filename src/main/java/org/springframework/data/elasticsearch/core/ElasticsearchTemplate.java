@@ -105,6 +105,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
  * @author Young Gu
  * @author Oliver Gierke
  * @author Mark Janssen
+ * @author Chris White
  * @author Mark Paluch
  * @author Sascha Woo
  */
@@ -731,7 +732,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	private SearchRequestBuilder prepareScroll(Query query, long scrollTimeInMillis) {
 		SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(query.getIndices()))
-				.setTypes(toArray(query.getTypes())).setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).setFrom(0);
+				.setTypes(toArray(query.getTypes()))
+				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis))
+				.setFrom(0)
+				.setVersion(true);
 
 		if(query.getPageable().isPaged()){
 			requestBuilder.setSize(query.getPageable().getPageSize());
@@ -978,7 +982,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 		int startRecord = 0;
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(toArray(query.getIndices()))
-				.setSearchType(query.getSearchType()).setTypes(toArray(query.getTypes()));
+				.setSearchType(query.getSearchType())
+				.setTypes(toArray(query.getTypes()))
+				.setVersion(true);
 
 		if (query.getSourceFilter() != null) {
 			SourceFilter sourceFilter = query.getSourceFilter();

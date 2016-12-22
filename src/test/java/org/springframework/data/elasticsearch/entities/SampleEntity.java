@@ -23,6 +23,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -34,12 +35,14 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Chris White
  */
 
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 @Builder
 @Document(indexName = "test-index-sample", type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleEntity {

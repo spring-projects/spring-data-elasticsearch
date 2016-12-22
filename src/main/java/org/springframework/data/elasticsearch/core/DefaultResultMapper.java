@@ -39,6 +39,7 @@ import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPa
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -49,6 +50,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * @author Petar Tahchiev
  * @author Young Gu
  * @author Oliver Gierke
+ * @author Chris White
  * @author Mark Paluch
  */
 public class DefaultResultMapper extends AbstractResultMapper {
@@ -88,6 +90,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 					result = mapEntity(hit.getFields().values(), clazz);
 				}
 				setPersistentEntityId(result, hit.getId(), clazz);
+				setPersistentEntityVersion(result, hit.getVersion(), clazz);
 				populateScriptFields(result, hit);
 				results.add(result);
 			}
@@ -153,6 +156,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		T result = mapEntity(response.getSourceAsString(), clazz);
 		if (result != null) {
 			setPersistentEntityId(result, response.getId(), clazz);
+			setPersistentEntityVersion(result, response.getVersion(), clazz);
 		}
 		return result;
 	}
@@ -164,6 +168,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 			if (!response.isFailed() && response.getResponse().isExists()) {
 				T result = mapEntity(response.getResponse().getSourceAsString(), clazz);
 				setPersistentEntityId(result, response.getResponse().getId(), clazz);
+				setPersistentEntityVersion(result, response.getResponse().getVersion(), clazz);
 				list.add(result);
 			}
 		}
@@ -182,6 +187,22 @@ public class DefaultResultMapper extends AbstractResultMapper {
 				persistentEntity.getPropertyAccessor(result).setProperty(idProperty, id);
 			}
 
+		}
+	}
+
+	private <T> void setPersistentEntityVersion(T result, long version, Class<T> clazz) {
+		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
+
+			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(clazz);
+			ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
+
+			// Only deal with Long because ES versions are longs !
+			if (versionProperty != null && versionProperty.getType().isAssignableFrom(Long.class)) {
+				// check that a version was actually returned in the response, -1 would indicate that
+				// a search didn't request the version ids in the response, which would be an issue
+				Assert.isTrue(version != -1, "Version in response is -1");
+				persistentEntity.getPropertyAccessor(result).setProperty(versionProperty, version);
+			}
 		}
 	}
 }
