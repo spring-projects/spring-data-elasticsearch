@@ -71,6 +71,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
  * @author Abdul Mohammed
  * @author Kevin Leturc
  * @author Mason Chan
+ * @author Chris White
  * @author Ilkang Na
  * @author Alen Turkovic
  */
@@ -2017,13 +2018,17 @@ public class ElasticsearchTemplateTests {
 	}
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
-		return new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity).build();
+		return new IndexQueryBuilder()
+				.withId(sampleEntity.getId())
+				.withObject(sampleEntity)
+				.withVersion(sampleEntity.getVersion())
+				.build();
 	}
 
 	private List<IndexQuery> getIndexQueries(List<SampleEntity> sampleEntities) {
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		for (SampleEntity sampleEntity : sampleEntities) {
-			indexQueries.add(new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity).build());
+			indexQueries.add(getIndexQuery(sampleEntity));
 		}
 		return indexQueries;
 	}
