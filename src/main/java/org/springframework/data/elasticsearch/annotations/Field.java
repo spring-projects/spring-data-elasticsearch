@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import java.lang.annotation.Target;
  * @author Jonathan Yan
  * @author Jakub Vavrik
  * @author Kevin Leturc
+ * @author Aleksandr Olisov
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -53,4 +54,6 @@ public @interface Field {
 	String[] ignoreFields() default {};
 
 	boolean includeInParent() default false;
+
+	boolean includeInAll() default true;
 }

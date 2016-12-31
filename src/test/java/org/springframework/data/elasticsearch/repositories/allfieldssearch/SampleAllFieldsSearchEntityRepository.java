@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,31 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.annotations;
+package org.springframework.data.elasticsearch.repositories.allfieldssearch;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.springframework.data.elasticsearch.entities.SampleAllFieldsSearchEntity;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
 /**
  * @author Aleksandr Olisov
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface InnerField {
+@Repository
+public interface SampleAllFieldsSearchEntityRepository
+		extends CrudRepository<SampleAllFieldsSearchEntity, String> {
 
-	String suffix();
-
-	FieldType type();
-
-	FieldIndex index() default FieldIndex.analyzed;
-
-	boolean store() default false;
-
-	String searchAnalyzer() default "";
-
-	String indexAnalyzer() default "";
-
-	boolean includeInAll() default true;
+	SampleAllFieldsSearchEntity findByAttributeOnlySearchField(String value);
 }
