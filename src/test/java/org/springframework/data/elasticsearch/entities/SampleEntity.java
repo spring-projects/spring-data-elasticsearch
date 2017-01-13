@@ -39,8 +39,9 @@ public class SampleEntity {
 
 	@Id
 	private String id;
+	@Field(type = FieldType.Text, fielddata = true)
 	private String type;
-	@Field(type = FieldType.String)
+	@Field(type = FieldType.Text, fielddata = true)
 	private String message;
 	private int rate;
 	@ScriptedField

@@ -2,7 +2,7 @@
     "type": "string",
     "fields": {
         "content": {
-            "type": "string",
+            "type": "text",
             "term_vector":"with_positions_offsets",
             "store": true
         }

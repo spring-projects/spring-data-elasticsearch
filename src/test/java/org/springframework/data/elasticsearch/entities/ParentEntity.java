@@ -17,7 +17,10 @@ package org.springframework.data.elasticsearch.entities;
 
 import org.springframework.core.style.ToStringCreator;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.Parent;
 
 /**
  * ParentEntity
@@ -34,7 +37,7 @@ public class ParentEntity {
 
 	@Id
 	private String id;
-	@Field(type = FieldType.String, index = FieldIndex.analyzed, store = true)
+	@Field(type = FieldType.Text, index = true, store = true)
 	private String name;
 
 	public ParentEntity() {
@@ -63,10 +66,10 @@ public class ParentEntity {
 
 		@Id
 		private String id;
-		@Field(type = FieldType.String, store = true)
+		@Field(type = FieldType.Text, store = true)
 		@Parent(type = PARENT_TYPE)
 		private String parentId;
-		@Field(type = FieldType.String, index = FieldIndex.analyzed, store = true)
+		@Field(type = FieldType.Text, index = true, store = true)
 		private String name;
 
 		public ChildEntity() {

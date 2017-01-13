@@ -15,13 +15,16 @@
  */
 package org.springframework.data.elasticsearch.client;
 
-import static org.elasticsearch.node.NodeBuilder.*;
-
+import java.io.IOException;
 import java.io.InputStream;
+
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.node.Node;
+import org.elasticsearch.threadpool.ThreadPool;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -33,6 +36,7 @@ import org.springframework.beans.factory.InitializingBean;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author withccm
  */
 
 public class NodeClientFactoryBean implements FactoryBean<NodeClient>, InitializingBean, DisposableBean {
@@ -70,15 +74,20 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		nodeClient = (NodeClient) nodeBuilder().settings(Settings.builder().put(loadConfig())
-				.put("http.enabled", String.valueOf(this.enableHttp))
-				.put("path.home", this.pathHome)
-				.put("path.data", this.pathData))
-				.clusterName(this.clusterName).local(this.local).node()
-				.client();
+		Settings settings = Settings.builder().put(loadConfig())
+			.put("http.enabled", String.valueOf(this.enableHttp))
+			.put("path.home", this.pathHome)
+			.put("path.data", this.pathData)
+			.put("cluster.name", this.clusterName)
+			.put("node.name", this.clusterName)
+			.put("node.local_storage", this.local)
+			.put("transport.type", "local")
+			.put("node.max_local_storage_nodes", "20")
+			.build();
+		nodeClient = (NodeClient) new Node(settings).start().client();
 	}
 
-	private Settings loadConfig() {
+	private Settings loadConfig() throws IOException {
 		if (StringUtils.isNotBlank(pathConfiguration)) {
 			InputStream stream = getClass().getClassLoader().getResourceAsStream(pathConfiguration);
 			if (stream != null) {

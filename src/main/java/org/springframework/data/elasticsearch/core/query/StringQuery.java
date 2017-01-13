@@ -15,16 +15,23 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.ElasticsearchException;
 
 /**
  * StringQuery
+ * Elasticsearch 5.x does not allow you to use your created queries.
+ * Recommend using builders.
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author withccm
  */
 public class StringQuery extends AbstractQuery {
+	private static final String MATCH_ALL_STRING = matchAllQuery().toString();
 
 	private String source;
 
@@ -44,6 +51,9 @@ public class StringQuery extends AbstractQuery {
 	}
 
 	public String getSource() {
-		return source;
+		if (MATCH_ALL_STRING.equals(source)) {
+			throw new ElasticsearchException("Use Builder instead of StringQuery, if source is [" + source + "]");			
+		}
+		return source.replaceAll("\\{", "\\\\{").replaceAll(":", "\\\\:").replaceAll("}", "\\\\}");
 	}
 }
