@@ -56,8 +56,14 @@ public class NativeSearchQueryBuilder {
 	private String route;
 	private SearchType searchType;
 	private List<Partition> partitions = new ArrayList<Partition>();
+	private int from;
+	private int size;
+	private String preference;
 
-
+	public NativeSearchQueryBuilder withPreference(String preference) {
+		this.preference = preference;
+		return this;
+	}
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -139,6 +145,16 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	public NativeSearchQueryBuilder withFrom(int from) {
+		this.from = from;
+		return this;
+	}
+
+	public NativeSearchQueryBuilder withSize(int size) {
+		this.size = size;
+		return this;
+	}
+
 	public NativeSearchQuery build() {
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightFields);
 		if (pageable != null) {
@@ -187,6 +203,10 @@ public class NativeSearchQueryBuilder {
 		if (!partitions.isEmpty()) {
 			nativeSearchQuery.setPartitions(partitions);
 		}
+		nativeSearchQuery.setFrom(from);
+		nativeSearchQuery.setSize(size);
+		nativeSearchQuery.setPreference(preference);
+
 		return nativeSearchQuery;
 	}
 }
