@@ -29,6 +29,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 /**
  * TransportClientFactoryBean
@@ -37,6 +38,7 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Jakub Vavrik
  * @author Piotr Betkier
+ * @author withccm
  */
 
 public class TransportClientFactoryBean implements FactoryBean<TransportClient>, InitializingBean, DisposableBean {
@@ -86,7 +88,7 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	}
 
 	protected void buildClient() throws Exception {
-		client = TransportClient.builder().settings(settings()).build();
+		client = new PreBuiltTransportClient(settings());
 		Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
 		for (String clusterNode : split(clusterNodes, COMMA)) {
 			String hostName = substringBeforeLast(clusterNode, COLON);

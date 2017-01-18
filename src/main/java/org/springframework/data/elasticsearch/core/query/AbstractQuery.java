@@ -61,7 +61,13 @@ abstract class AbstractQuery implements Query {
 	}
 
 	@Override
+	@Deprecated
 	public void addFields(String... fields) {
+		addStoredFields(fields);
+	}
+
+	@Override
+	public void addStoredFields(String... fields) {
 		addAll(this.fields, fields);
 	}
 

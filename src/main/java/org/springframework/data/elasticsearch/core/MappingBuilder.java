@@ -47,6 +47,7 @@ import org.springframework.data.util.TypeInformation;
  * @author Alexander Volz
  * @author Dennis Maaß
  * @author Pavel Luhin
+ * @author withccm
  */
 
 class MappingBuilder {
@@ -59,13 +60,14 @@ class MappingBuilder {
 	public static final String FIELD_INDEX_ANALYZER = "analyzer";
 	public static final String FIELD_PROPERTIES = "properties";
 	public static final String FIELD_PARENT = "_parent";
+	public static final String FIELD_FIELDDATA = "fielddata";
 
 	public static final String COMPLETION_PAYLOADS = "payloads";
 	public static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
 	public static final String COMPLETION_PRESERVE_POSITION_INCREMENTS = "preserve_position_increments";
 	public static final String COMPLETION_MAX_INPUT_LENGTH = "max_input_length";
 
-	public static final String INDEX_VALUE_NOT_ANALYZED = "not_analyzed";
+	public static final boolean INDEX_VALUE_NOT = false;
 	public static final String TYPE_VALUE_STRING = "string";
 	public static final String TYPE_VALUE_GEO_POINT = "geo_point";
 	public static final String TYPE_VALUE_COMPLETION = "completion";
@@ -230,7 +232,7 @@ class MappingBuilder {
 			throws IOException {
 		xContentBuilder.startObject(field.getName())
 				.field(FIELD_TYPE, TYPE_VALUE_STRING)
-				.field(FIELD_INDEX, INDEX_VALUE_NOT_ANALYZED);
+				.field(FIELD_INDEX, INDEX_VALUE_NOT);
 		xContentBuilder.endObject();
 	}
 
@@ -242,9 +244,9 @@ class MappingBuilder {
 	private static void addSingleFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field,
 											  Field fieldAnnotation, boolean nestedOrObjectField) throws IOException {
 		xContentBuilder.startObject(field.getName());
-		if(!nestedOrObjectField) {
-			xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
-		}
+//		if(!nestedOrObjectField) {
+//			xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
+//		}
 		if (FieldType.Auto != fieldAnnotation.type()) {
 			xContentBuilder.field(FIELD_TYPE, fieldAnnotation.type().name().toLowerCase());
 			if (FieldType.Date == fieldAnnotation.type() && DateFormat.none != fieldAnnotation.format()) {
@@ -252,8 +254,8 @@ class MappingBuilder {
 						? fieldAnnotation.pattern() : fieldAnnotation.format());
 			}
 		}
-		if (FieldIndex.not_analyzed == fieldAnnotation.index() || FieldIndex.no == fieldAnnotation.index()) {
-			xContentBuilder.field(FIELD_INDEX, fieldAnnotation.index().name().toLowerCase());
+		if (!fieldAnnotation.index()) {
+			xContentBuilder.field(FIELD_INDEX, fieldAnnotation.index());
 		}
 		if (isNotBlank(fieldAnnotation.searchAnalyzer())) {
 			xContentBuilder.field(FIELD_SEARCH_ANALYZER, fieldAnnotation.searchAnalyzer());
@@ -261,6 +263,10 @@ class MappingBuilder {
 		if (isNotBlank(fieldAnnotation.analyzer())) {
 			xContentBuilder.field(FIELD_INDEX_ANALYZER, fieldAnnotation.analyzer());
 		}
+		if (fieldAnnotation.fielddata()) {
+			xContentBuilder.field(FIELD_FIELDDATA, fieldAnnotation.fielddata());
+		}
+
 		xContentBuilder.endObject();
 	}
 
@@ -276,14 +282,17 @@ class MappingBuilder {
 		if (FieldType.Auto != annotation.type()) {
 			builder.field(FIELD_TYPE, annotation.type().name().toLowerCase());
 		}
-		if (FieldIndex.not_analyzed == annotation.index()) {
-			builder.field(FIELD_INDEX, annotation.index().name().toLowerCase());
+		if (!annotation.index()) {
+			builder.field(FIELD_INDEX, annotation.index());
 		}
 		if (isNotBlank(annotation.searchAnalyzer())) {
 			builder.field(FIELD_SEARCH_ANALYZER, annotation.searchAnalyzer());
 		}
 		if (isNotBlank(annotation.indexAnalyzer())) {
 			builder.field(FIELD_INDEX_ANALYZER, annotation.indexAnalyzer());
+		}
+		if (annotation.fielddata()) {
+			builder.field(FIELD_FIELDDATA, annotation.fielddata());
 		}
 		builder.endObject();
 	}
@@ -296,7 +305,7 @@ class MappingBuilder {
 	private static void addMultiFieldMapping(XContentBuilder builder, java.lang.reflect.Field field,
 											 MultiField annotation, boolean nestedOrObjectField) throws IOException {
 		builder.startObject(field.getName());
-		builder.field(FIELD_TYPE, "multi_field");
+		builder.field(FIELD_TYPE, "text");
 		builder.startObject("fields");
 		//add standard field
 		addSingleFieldMapping(builder, field, annotation.mainField(),nestedOrObjectField);

@@ -19,7 +19,7 @@ package org.springframework.data.elasticsearch.core.facet.request;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramBuilder;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.util.Assert;
@@ -57,11 +57,11 @@ public class HistogramFacetRequest extends AbstractFacetRequest {
 		Assert.isTrue(StringUtils.isNotBlank(field), "Please select field on which to build the facet !!!");
 		Assert.isTrue(interval > 0, "Please provide interval as positive value greater them zero !!!");
 
-		DateHistogramBuilder dateHistogramBuilder = AggregationBuilders.dateHistogram(getName());
+		DateHistogramAggregationBuilder dateHistogramBuilder = AggregationBuilders.dateHistogram(getName());
 		dateHistogramBuilder.field(field);
 
 		if (timeUnit != null) {
-			dateHistogramBuilder.interval(timeUnit);
+			dateHistogramBuilder.dateHistogramInterval(timeUnit);
 		} else {
 			dateHistogramBuilder.interval(interval);
 		}
