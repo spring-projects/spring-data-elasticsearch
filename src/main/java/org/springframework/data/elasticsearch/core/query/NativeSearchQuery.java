@@ -26,6 +26,9 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 
 import java.util.Arrays;
 
+import static org.springframework.util.ObjectUtils.nullSafeEquals;
+import static org.springframework.util.ObjectUtils.nullSafeHashCode;
+
 /**
  * NativeSearchQuery
  *
@@ -136,5 +139,52 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	public void setIndicesBoost(List<IndexBoost> indicesBoost) {
 		this.indicesBoost = indicesBoost;
 	}
+
+	public boolean equals(Object obj) {
+
+		if (this == obj) {
+			return true;
+		}
+
+		if (obj == null || !getClass().equals(obj.getClass())) {
+			return false;
+		}
+
+		return querySettingsEquals((NativeSearchQuery) obj);
+	}
+
+	protected boolean querySettingsEquals(NativeSearchQuery that) {
+		boolean queryEqual = nullSafeEquals(this.query, that.query);
+		boolean filterEqual = nullSafeEquals(this.filter, that.filter);
+		boolean sortsEqual = nullSafeEquals(this.sorts, that.sorts);
+		boolean scriptFieldsEqual = nullSafeEquals(this.scriptFields, that.scriptFields);
+		boolean facetsEqual = nullSafeEquals(this.facets, that.facets);
+		boolean aggregationsEqual = nullSafeEquals(this.aggregations, that.aggregations);
+		boolean highlightFieldsEqual = nullSafeEquals(this.highlightFields, that.highlightFields);
+		boolean indicesBoostEqual = nullSafeEquals(this.indicesBoost, that.indicesBoost);
+		return queryEqual && filterEqual && sortsEqual && scriptFieldsEqual && facetsEqual && aggregationsEqual && highlightFieldsEqual && indicesBoostEqual;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+
+		int result = 17;
+
+		result += 31 * nullSafeHashCode(query);
+		result += 31 * nullSafeHashCode(filter);
+		result += 31 * nullSafeHashCode(sorts);
+		result += 31 * nullSafeHashCode(scriptFields);
+		result += 31 * nullSafeHashCode(facets);
+		result += 31 * nullSafeHashCode(aggregations);
+		result += 31 * nullSafeHashCode(highlightFields);
+		result += 31 * nullSafeHashCode(indicesBoost);
+
+		return result;
+	}
+
 
 }
