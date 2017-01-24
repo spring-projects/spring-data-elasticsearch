@@ -15,9 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.data.elasticsearch.core.query.Criteria.*;
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,11 +22,17 @@ import java.util.ListIterator;
 
 import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.BoostableQueryBuilder;
+import org.elasticsearch.index.query.BoostingQueryBuilder;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.util.Assert;
+
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+import static org.springframework.data.elasticsearch.core.query.Criteria.OperationKey;
 
 /**
  * CriteriaQueryProcessor
@@ -148,7 +151,7 @@ class CriteriaQueryProcessor {
 
 		switch (key) {
 			case EQUALS:
-				query = queryStringQuery(searchText).field(fieldName).defaultOperator(QueryStringQueryBuilder.Operator.AND);
+				query = queryStringQuery(searchText).field(fieldName).defaultOperator(Operator.AND);
 				break;
 			case CONTAINS:
 				query = queryStringQuery("*" + searchText + "*").field(fieldName).analyzeWildcard(true);
@@ -203,8 +206,8 @@ class CriteriaQueryProcessor {
 		if (Float.isNaN(boost)) {
 			return;
 		}
-		if (query instanceof BoostableQueryBuilder) {
-			((BoostableQueryBuilder) query).boost(boost);
+		if (query instanceof BoostingQueryBuilder) {
+			((BoostingQueryBuilder) query).boost(boost);
 		}
 	}
 }

@@ -487,9 +487,11 @@ public interface ElasticsearchOperations {
 	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
 	 * @param noFields The no fields support
 	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setNoFields()}.
-	 * @return The scan id for input query.
+	 * @param clazz The class of entity to retrieve.
+	 * @param <T> The type of entity to retrieve.
+	 * @return The scrolls and scan id for input query.
 	 */
-	String scan(CriteriaQuery query, long scrollTimeInMillis, boolean noFields);
+	<T> ScanResult<T> scan(CriteriaQuery query, long scrollTimeInMillis, boolean noFields, Class<T> clazz);
 
 	/**
 	 * Returns scroll id for criteria query
@@ -499,11 +501,11 @@ public interface ElasticsearchOperations {
 	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
 	 * @param noFields The no fields support
 	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setNoFields()}.
-	 * @param clazz The class of entity to retrieve.
+	 * @param mapper
 	 * @param <T> The type of entity to retrieve.
-	 * @return The scan id for input query.
+	 * @return The scrolls and scan id for input query.
 	 */
-	<T> String scan(CriteriaQuery query, long scrollTimeInMillis, boolean noFields, Class<T> clazz);
+	<T> ScanResult<T> scan(CriteriaQuery query, long scrollTimeInMillis, boolean noFields, SearchResultMapper mapper);
 
 	/**
 	 * Returns scroll id for scan query
@@ -513,9 +515,11 @@ public interface ElasticsearchOperations {
 	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
 	 * @param noFields The no fields support
 	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setNoFields()}.
-	 * @return The scan id for input query.
+	 * @param mapper
+	 * @param <T> The type of entity to retrieve.
+	 * @return The scrolls and scan id for input query.
 	 */
-	String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields);
+	<T> ScanResult<T> scan(SearchQuery query, long scrollTimeInMillis, boolean noFields, Class<T> clazz);
 
 	/**
 	 * Returns scroll id for scan query
@@ -527,9 +531,10 @@ public interface ElasticsearchOperations {
 	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setNoFields()}.
 	 * @param clazz The class of entity to retrieve.
 	 * @param <T> The type of entity to retrieve.
-	 * @return The scan id for input query.
+	 * @return The scrolls and scan id for input query.
 	 */
-	<T> String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields, Class<T> clazz);
+	<T> ScanResult<T> scan(SearchQuery query, long scrollTimeInMillis, boolean noFields, SearchResultMapper mapper);
+
 
 	/**
 	 * Scrolls the results for give scroll id

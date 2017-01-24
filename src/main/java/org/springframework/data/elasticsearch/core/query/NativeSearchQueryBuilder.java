@@ -16,13 +16,16 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import static org.springframework.util.CollectionUtils.isEmpty;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
-import org.elasticsearch.search.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
@@ -33,6 +36,7 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
+ * @author withccm
  */
 
 public class NativeSearchQueryBuilder {
@@ -43,7 +47,7 @@ public class NativeSearchQueryBuilder {
 	private List<SortBuilder> sortBuilders = new ArrayList<SortBuilder>();
 	private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
 	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<AbstractAggregationBuilder>();
-	private HighlightBuilder.Field[] highlightFields;
+	private HighlightBuilder[] highlightBuilders;
 	private Pageable pageable;
 	private String[] indices;
 	private String[] types;
@@ -85,8 +89,8 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withHighlightFields(HighlightBuilder.Field... highlightFields) {
-		this.highlightFields = highlightFields;
+	public NativeSearchQueryBuilder withHighlightBuilders(HighlightBuilder... highlightBuilders) {
+		this.highlightBuilders = highlightBuilders;
 		return this;
 	}
 
@@ -110,10 +114,22 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+    /**
+     * @deprecated Use {@link NativeSearchQueryBuilder#withStoredFields()} instead
+     */
+	@Deprecated
 	public NativeSearchQueryBuilder withFields(String... fields) {
+		return withStoredFields(fields);
+	}
+
+	/*
+	 * SoredFields is not working in Elasticsearch 5.x, I guess it's an Elasticsearch bug.
+	 */
+	public NativeSearchQueryBuilder withStoredFields(String... fields) {
 		this.fields = fields;
 		return this;
 	}
+
 
 	public NativeSearchQueryBuilder withSourceFilter(SourceFilter sourceFilter) {
 				this.sourceFilter = sourceFilter;
@@ -141,7 +157,7 @@ public class NativeSearchQueryBuilder {
 	}
 
 	public NativeSearchQuery build() {
-		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightFields);
+		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightBuilders);
 		if (pageable != null) {
 			nativeSearchQuery.setPageable(pageable);
 		}
@@ -155,7 +171,7 @@ public class NativeSearchQueryBuilder {
 		}
 
 		if (fields != null) {
-			nativeSearchQuery.addFields(fields);
+			nativeSearchQuery.addStoredFields(fields);
 		}
 
 		if (sourceFilter != null) {

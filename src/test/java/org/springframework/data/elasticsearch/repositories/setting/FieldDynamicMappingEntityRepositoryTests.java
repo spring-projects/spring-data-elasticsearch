@@ -70,7 +70,7 @@ public class FieldDynamicMappingEntityRepositoryTests {
 		assertThat(properties.containsKey("file"), is(true));
 		Map file = (Map) properties.get("file");
 		assertThat(file, is(notNullValue()));
-		assertThat(((String) file.get("type")), is("string"));
+		assertThat(((String) file.get("type")), is("text"));
 
 		assertThat(file.containsKey("fields"), is(true));
 		Map fields = (Map) file.get("fields");
@@ -80,7 +80,7 @@ public class FieldDynamicMappingEntityRepositoryTests {
 		Map content = (Map) fields.get("content");
 		assertThat(content, is(notNullValue()));
 
-		assertThat((String)content.get("type"), is("string"));
+		assertThat((String)content.get("type"), is("text"));
 		assertThat((String)content.get("term_vector"), is("with_positions_offsets"));
 		assertThat((Boolean)content.get("store"), is(Boolean.TRUE));
 	}

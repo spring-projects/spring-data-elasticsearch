@@ -15,24 +15,30 @@
  */
 package org.springframework.data.elasticsearch;
 
-import static org.elasticsearch.node.NodeBuilder.*;
-
 import java.util.UUID;
 
 import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.node.Node;
+import org.elasticsearch.node.NodeValidationException;
 
 /**
  * @author Mohsin Husen
  */
 public class Utils {
 
-	public static NodeClient getNodeClient() {
-		return (NodeClient) nodeBuilder().settings(Settings.builder()
-				.put("http.enabled", "false")
-				.put("path.data", "target/elasticsearchTestData")
-				.put("path.home", "src/test/resources/test-home-dir"))
-				.clusterName(UUID.randomUUID().toString()).local(true).node()
-				.client();
+	public static NodeClient getNodeClient() throws NodeValidationException {
+		String name = UUID.randomUUID().toString();
+		Settings settings = Settings.builder()
+			.put("http.enabled", "false")
+			.put("path.data", "target/elasticsearchTestData")
+			.put("path.home", "src/test/resources/test-home-dir-tmp")
+			.put("cluster.name", name)
+			.put("node.name", name)
+			.put("node.local_storage", true)
+			.put("transport.type", "local")
+			.put("node.max_local_storage_nodes", "20")
+			.build();
+		return (NodeClient) new Node(settings).start().client();
 	}
 }

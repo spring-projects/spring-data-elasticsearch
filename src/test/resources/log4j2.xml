@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="debug">
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="debug" additivity="false">
+            <AppenderRef ref="STDOUT" />
+        </Root>
+        <Logger name="org.springframework" level="debug" additivity="false">
+            <AppenderRef ref="STDOUT" />
+        </Logger>
+        <Logger name="org.springframework.data.elasticsearch" level="debug"
+                additivity="false">
+            <AppenderRef ref="STDOUT" />
+        </Logger>
+    </Loggers>
+</Configuration>

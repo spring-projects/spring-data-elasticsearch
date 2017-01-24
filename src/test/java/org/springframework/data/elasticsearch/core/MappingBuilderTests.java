@@ -43,6 +43,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Jakub Vavrik
  * @author Mohsin Husen
  * @author Keivn Leturc
+ * @author withccm
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -59,9 +60,8 @@ public class MappingBuilderTests {
 
 	@Test
 	public void testInfiniteLoopAvoidance() throws IOException {
-		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\"" +
-				"type\":\"string\",\"index\":\"not_analyzed\"," +
-				"\"analyzer\":\"standard\"}}}}";
+		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"" + "type\":\"keyword\",\"index\":false,"
+				+ "\"analyzer\":\"standard\"}}}}";
 
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class, "mapping", "id", null);
 		assertThat(xContentBuilder.string(), is(expected));
@@ -70,7 +70,7 @@ public class MappingBuilderTests {
 	@Test
 	public void shouldUseValueFromAnnotationType() throws IOException {
 		//Given
-		final String expected = "{\"mapping\":{\"properties\":{\"price\":{\"store\":false,\"type\":\"double\"}}}}";
+		final String expected = "{\"mapping\":{\"properties\":{\"price\":{\"type\":\"double\"}}}}";
 
 		//When
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(StockPrice.class, "mapping", "id", null);
@@ -114,10 +114,8 @@ public class MappingBuilderTests {
 	 */
 	@Test
 	public void shouldBuildMappingWithSuperclass() throws IOException {
-		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\"" +
-				"type\":\"string\",\"index\":\"not_analyzed\",\"analyzer\":\"standard\"}" +
-				",\"createdDate\":{\"store\":false," +
-				"\"type\":\"date\",\"index\":\"not_analyzed\"}}}}";
+		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"" + "type\":\"keyword\"}"
+				+ ",\"createdDate\":{" + "\"type\":\"date\",\"index\":false}}}}";
 
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleInheritedEntity.class, "mapping", "id", null);
 		assertThat(xContentBuilder.string(), is(expected));

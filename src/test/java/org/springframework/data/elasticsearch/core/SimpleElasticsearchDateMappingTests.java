@@ -29,10 +29,10 @@ import org.springframework.data.elasticsearch.entities.SampleDateMappingEntity;
  */
 public class SimpleElasticsearchDateMappingTests {
 
-	private static final String EXPECTED_MAPPING = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true," +
-			"\"type\":\"string\",\"index\":\"not_analyzed\",\"analyzer\":\"standard\"},\"customFormatDate\":{\"store\":false,\"type\":\"date\",\"format\":\"dd.MM.yyyy hh:mm\"}," +
-			"\"defaultFormatDate\":{\"store\":false,\"type\":\"date\"},\"basicFormatDate\":{\"store\":false,\"" +
-			"type\":\"date\",\"format\":\"basic_date\"}}}}";
+	private static final String EXPECTED_MAPPING = "{\"mapping\":{\"properties\":{\"message\":{"
+			+ "\"type\":\"keyword\",\"analyzer\":\"standard\"},\"customFormatDate\":{\"type\":\"date\",\"format\":\"dd.MM.yyyy hh:mm\"},"
+			+ "\"defaultFormatDate\":{\"type\":\"date\"},\"basicFormatDate\":{\""
+			+ "type\":\"date\",\"format\":\"basic_date\"}}}}";
 
 	@Test
 	public void testCorrectDateMappings() throws NoSuchFieldException, IntrospectionException, IOException {

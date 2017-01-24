@@ -715,7 +715,7 @@ public class CriteriaQueryTests {
 
 		// when
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("a").or(new Criteria("message").contains("b")));
-		criteriaQuery.setMinScore(0.5F);
+		criteriaQuery.setMinScore(2F);
 		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(criteriaQuery, SampleEntity.class);
 		// then
 		assertThat(page.getTotalElements(), is(1L));
