@@ -1314,9 +1314,10 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 
+		HighlightBuilder[] highlightBuilders = new HighlightBuilder[] { new HighlightBuilder().field("message") };
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(termQuery("message", "test"))
-				.withHighlightFields(new HighlightBuilder.Field("message"))
+				.withHighlightBuilders(highlightBuilders)
 				.build();
 
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapper() {
