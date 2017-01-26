@@ -32,7 +32,6 @@ import org.springframework.core.GenericCollectionTypeResolver;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
-import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -47,6 +46,7 @@ import org.springframework.data.util.TypeInformation;
  * @author Alexander Volz
  * @author Dennis Maaß
  * @author Pavel Luhin
+ * @author Aleksandr Olisov
  */
 
 class MappingBuilder {
@@ -55,6 +55,7 @@ class MappingBuilder {
 	public static final String FIELD_TYPE = "type";
 	public static final String FIELD_INDEX = "index";
 	public static final String FIELD_FORMAT = "format";
+	public static final String FIELD_INCLUDE_IN_ALL = "include_in_all";
 	public static final String FIELD_SEARCH_ANALYZER = "search_analyzer";
 	public static final String FIELD_INDEX_ANALYZER = "analyzer";
 	public static final String FIELD_PROPERTIES = "properties";
@@ -261,6 +262,9 @@ class MappingBuilder {
 		if (isNotBlank(fieldAnnotation.analyzer())) {
 			xContentBuilder.field(FIELD_INDEX_ANALYZER, fieldAnnotation.analyzer());
 		}
+		if (!fieldAnnotation.includeInAll()) {
+			xContentBuilder.field(FIELD_INCLUDE_IN_ALL, fieldAnnotation.includeInAll());
+		}
 		xContentBuilder.endObject();
 	}
 
@@ -284,6 +288,9 @@ class MappingBuilder {
 		}
 		if (isNotBlank(annotation.indexAnalyzer())) {
 			builder.field(FIELD_INDEX_ANALYZER, annotation.indexAnalyzer());
+		}
+		if (!annotation.includeInAll()) {
+			builder.field(FIELD_INCLUDE_IN_ALL, annotation.includeInAll());
 		}
 		builder.endObject();
 	}
