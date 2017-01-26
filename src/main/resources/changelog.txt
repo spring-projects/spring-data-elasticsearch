@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.1.0.RELEASE (2017-01-26)
+---------------------------------------------
+* DATAES-322 - Update project documentation with the CLA tool integration.
+* DATAES-320 - Release 2.1 GA (Ingalls).
+
+
 Changes in version 2.0.6.RELEASE (2016-12-21)
 ---------------------------------------------
 * DATAES-304 - Release 2.0.6 (Hopper SR6).
