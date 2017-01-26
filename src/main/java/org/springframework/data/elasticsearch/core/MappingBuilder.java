@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.springframework.core.GenericCollectionTypeResolver;
+import org.springframework.core.ResolvableType;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
@@ -45,8 +45,8 @@ import org.springframework.data.util.TypeInformation;
  * @author Kevin Leturc
  * @author Alexander Volz
  * @author Dennis Maaß
+ * @author Mark Paluch
  */
-
 class MappingBuilder {
 
 	public static final String FIELD_STORE = "store";
@@ -313,12 +313,20 @@ class MappingBuilder {
 	}
 
 	protected static Class<?> getFieldType(java.lang.reflect.Field field) {
-		Class<?> clazz = field.getType();
-		TypeInformation typeInformation = ClassTypeInformation.from(clazz);
-		if (typeInformation.isCollectionLike()) {
-			clazz = GenericCollectionTypeResolver.getCollectionFieldType(field) != null ? GenericCollectionTypeResolver.getCollectionFieldType(field) : typeInformation.getComponentType().getType();
+
+		ResolvableType resolvableType = ResolvableType.forField(field);
+
+		if (resolvableType.isArray()) {
+			return resolvableType.getComponentType().getRawClass();
 		}
-		return clazz;
+
+		ResolvableType componentType = resolvableType.getGeneric(0);
+		if (Iterable.class.isAssignableFrom(field.getType())
+				&& componentType != ResolvableType.NONE) {
+			return componentType.getRawClass();
+		}
+
+		return resolvableType.getRawClass();
 	}
 
 	private static boolean isAnyPropertyAnnotatedAsField(java.lang.reflect.Field[] fields) {
