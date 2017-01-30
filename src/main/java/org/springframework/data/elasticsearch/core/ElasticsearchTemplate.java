@@ -689,7 +689,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				: 10000l;
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery()).withIndices(indexName)
-				.withTypes(typeName).withPageable(new PageRequest(0, pageSize)).build();
+				.withTypes(typeName).withPageable(PageRequest.of(0, pageSize)).build();
 
 		String scrollId = scan(searchQuery, scrollTimeInMillis, true);
 

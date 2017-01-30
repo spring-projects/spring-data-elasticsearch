@@ -33,6 +33,7 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
+ * @author Mark Paluch
  */
 public class NativeSearchQueryBuilder {
 
@@ -43,7 +44,7 @@ public class NativeSearchQueryBuilder {
 	private List<FacetRequest> facetRequests = new ArrayList<>();
 	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<>();
 	private HighlightBuilder.Field[] highlightFields;
-	private Pageable pageable;
+	private Pageable pageable = Pageable.NONE;
 	private String[] indices;
 	private String[] types;
 	private String[] fields;
@@ -141,9 +142,7 @@ public class NativeSearchQueryBuilder {
 
 	public NativeSearchQuery build() {
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightFields);
-		if (pageable != null) {
-			nativeSearchQuery.setPageable(pageable);
-		}
+		nativeSearchQuery.setPageable(pageable);
 
 		if (indices != null) {
 			nativeSearchQuery.addIndices(indices);

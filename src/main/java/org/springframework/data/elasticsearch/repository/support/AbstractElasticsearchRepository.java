@@ -106,7 +106,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		if (itemCount == 0) {
 			return new PageImpl<>(Collections.<T>emptyList());
 		}
-		return this.findAll(new PageRequest(0, Math.max(1, itemCount)));
+		return this.findAll(PageRequest.of(0, Math.max(1, itemCount)));
 	}
 
 	@Override
@@ -122,7 +122,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 			return new PageImpl<>(Collections.<T>emptyList());
 		}
 		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withPageable(new PageRequest(0, itemCount, sort)).build();
+				.withPageable(PageRequest.of(0, itemCount, sort)).build();
 		return elasticsearchOperations.queryForPage(query, getEntityClass());
 	}
 
@@ -188,7 +188,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		if (count == 0) {
 			return new PageImpl<>(Collections.<T>emptyList());
 		}
-		searchQuery.setPageable(new PageRequest(0, count));
+		searchQuery.setPageable(PageRequest.of(0, count));
 		return elasticsearchOperations.queryForPage(searchQuery, getEntityClass());
 	}
 

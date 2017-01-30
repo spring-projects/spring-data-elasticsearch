@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
@@ -30,6 +31,7 @@ import org.springframework.util.Assert;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
 public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQuery {
 
@@ -50,8 +52,8 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		}
 	}
 
-	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod,
-									ElasticsearchOperations elasticsearchOperations, String query) {
+	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
+			String query) {
 		super(queryMethod, elasticsearchOperations);
 		Assert.notNull(query, "Query cannot be empty");
 		this.query = query;
@@ -65,7 +67,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 			stringQuery.setPageable(accessor.getPageable());
 			return elasticsearchOperations.queryForPage(stringQuery, queryMethod.getEntityInformation().getJavaType());
 		} else if (queryMethod.isCollectionQuery()) {
-			if (accessor.getPageable() != null) {
+			if (accessor.getPageable() != Pageable.NONE) {
 				stringQuery.setPageable(accessor.getPageable());
 			}
 			return elasticsearchOperations.queryForList(stringQuery, queryMethod.getEntityInformation().getJavaType());

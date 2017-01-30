@@ -71,12 +71,12 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 	private <T> CdiRepositoryBean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers,
 			BeanManager beanManager) {
 
-		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers);
-
-		if (elasticsearchOperationsBean == null) {
+		if (!this.elasticsearchOperationsMap.containsKey(qualifiers)) {
 			throw new UnsatisfiedResolutionException(String.format("Unable to resolve a bean for '%s' with qualifiers %s.",
 					ElasticsearchOperations.class.getName(), qualifiers));
 		}
+
+		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers);
 
 		return new ElasticsearchRepositoryBean<>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager,
 				Optional.ofNullable(getCustomImplementationDetector()));

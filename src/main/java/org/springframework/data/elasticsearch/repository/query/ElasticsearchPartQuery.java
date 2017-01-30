@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
@@ -33,6 +34,7 @@ import org.springframework.data.util.StreamUtils;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Kevin Leturc
+ * @author Mark Paluch
  */
 public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery {
 
@@ -58,8 +60,8 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 			return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
 		} else if (queryMethod.isStreamQuery()) {
 			Class<?> entityType = queryMethod.getEntityInformation().getJavaType();
-			if (query.getPageable() == null) {
-				query.setPageable(new PageRequest(0, 20));
+			if (query.getPageable() == Pageable.NONE) {
+				query.setPageable(PageRequest.of(0, 20));
 			}
 
 			return StreamUtils.createStreamFromIterator((CloseableIterator<Object>) elasticsearchOperations.stream(query, entityType));
@@ -67,7 +69,7 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		} else if (queryMethod.isCollectionQuery()) {
 			if (accessor.getPageable() == null) {
 				int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
-				query.setPageable(new PageRequest(0, Math.max(1, itemCount)));
+				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 			} else {
 			    query.setPageable(accessor.getPageable());
 		    }
@@ -83,9 +85,9 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		Object result = null;
 
 		if (queryMethod.isCollectionQuery()) {
-			if (accessor.getPageable() == null) {
+			if (accessor.getPageable() == Pageable.NONE) {
 				int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
-				query.setPageable(new PageRequest(0, Math.max(1, itemCount)));
+				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 			} else {
 				query.setPageable(accessor.getPageable());
 			}
