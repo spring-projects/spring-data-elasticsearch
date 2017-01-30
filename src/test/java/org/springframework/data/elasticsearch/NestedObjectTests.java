@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ public class NestedObjectTests {
 	@Test
 	public void shouldIndexInitialLevelNestedObject() {
 
-		final List<Car> cars = new ArrayList<Car>();
+		final List<Car> cars = new ArrayList<>();
 
 		final Car saturn = new Car();
 		saturn.setName("Saturn");
@@ -116,7 +116,7 @@ public class NestedObjectTests {
 		bar.setName("Bar");
 		bar.setCar(Arrays.asList(car));
 
-		final List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		final List<IndexQuery> indexQueries = new ArrayList<>();
 		final IndexQuery indexQuery1 = new IndexQuery();
 		indexQuery1.setId(foo.getId());
 		indexQuery1.setObject(foo);
@@ -165,7 +165,7 @@ public class NestedObjectTests {
 		//when
 		elasticsearchTemplate.putMapping(PersonMultipleLevelNested.class);
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		// then 
+		// then
 
 		final Map mapping = elasticsearchTemplate.getMapping(PersonMultipleLevelNested.class);
 
@@ -253,7 +253,7 @@ public class NestedObjectTests {
 		indexQuery2.setId(person2.getId());
 		indexQuery2.setObject(person2);
 
-		final List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		final List<IndexQuery> indexQueries = new ArrayList<>();
 		indexQueries.add(indexQuery1);
 		indexQueries.add(indexQuery2);
 
@@ -263,7 +263,7 @@ public class NestedObjectTests {
 	@Test
 	public void shouldSearchBooksForPersonInitialLevelNestedType() {
 
-		final List<Car> cars = new ArrayList<Car>();
+		final List<Car> cars = new ArrayList<>();
 
 		final Car saturn = new Car();
 		saturn.setName("Saturn");
@@ -312,7 +312,7 @@ public class NestedObjectTests {
 		bar.setName("Bar");
 		bar.setCar(Arrays.asList(car));
 
-		final List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		final List<IndexQuery> indexQueries = new ArrayList<>();
 		final IndexQuery indexQuery1 = new IndexQuery();
 		indexQuery1.setId(foo.getId());
 		indexQuery1.setObject(foo);
@@ -351,16 +351,16 @@ public class NestedObjectTests {
 		book2.setId(randomNumeric(5));
 		book2.setName("testBook2");
 
-		final Map<Integer, Collection<String>> map1 = new HashMap<Integer, Collection<String>>();
+		final Map<Integer, Collection<String>> map1 = new HashMap<>();
 		map1.put(1, Arrays.asList("test1", "test2"));
 
-		final Map<Integer, Collection<String>> map2 = new HashMap<Integer, Collection<String>>();
+		final Map<Integer, Collection<String>> map2 = new HashMap<>();
 		map2.put(1, Arrays.asList("test3", "test4"));
 
 		book1.setBuckets(map1);
 		book2.setBuckets(map2);
 
-		final List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		final List<IndexQuery> indexQueries = new ArrayList<>();
 		final IndexQuery indexQuery1 = new IndexQuery();
 		indexQuery1.setId(book1.getId());
 		indexQuery1.setObject(book1);

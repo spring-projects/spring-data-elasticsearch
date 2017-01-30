@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,5 +43,5 @@ public class Book {
 	@Field(type = FieldType.Object)
 	private Author author;
 	@Field(type = FieldType.Nested)
-	private Map<Integer, Collection<String>> buckets = new HashMap<Integer, Collection<String>>();
+	private Map<Integer, Collection<String>> buckets = new HashMap<>();
 }

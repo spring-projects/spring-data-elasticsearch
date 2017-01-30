@@ -534,7 +534,7 @@ public class SimpleElasticsearchRepositoryTests {
 	}
 
 	private static List<SampleEntity> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
-		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		List<SampleEntity> sampleEntities = new ArrayList<>();
 		for (int i = 0; i < numberOfEntities; i++) {
 			String documentId = randomNumeric(5);
 			SampleEntity sampleEntity = new SampleEntity();

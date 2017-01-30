@@ -187,7 +187,7 @@ public class DefaultResultMapperTests {
 	}
 
 	private Map<String, SearchHitField> createCarFields(String name, String model) {
-		Map<String, SearchHitField> result = new HashMap<String, SearchHitField>();
+		Map<String, SearchHitField> result = new HashMap<>();
 		result.put("name", new InternalSearchHitField("name", Arrays.<Object>asList(name)));
 		result.put("model", new InternalSearchHitField("model", Arrays.<Object>asList(model)));
 		return result;

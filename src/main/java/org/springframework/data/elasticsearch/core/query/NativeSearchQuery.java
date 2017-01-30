@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	private QueryBuilder query;
 	private QueryBuilder filter;
 	private List<SortBuilder> sorts;
-    private final List<ScriptField> scriptFields = new ArrayList<ScriptField>();
+    private final List<ScriptField> scriptFields = new ArrayList<>();
 	private List<FacetRequest> facets;
 	private List<AbstractAggregationBuilder> aggregations;
 	private HighlightBuilder.Field[] highlightFields;
@@ -97,7 +97,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
 	public void addFacet(FacetRequest facetRequest) {
 		if (facets == null) {
-			facets = new ArrayList<FacetRequest>();
+			facets = new ArrayList<>();
 		}
 		facets.add(facetRequest);
 	}
@@ -119,7 +119,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
 	public void addAggregation(AbstractAggregationBuilder aggregationBuilder) {
 		if (aggregations == null) {
-			aggregations = new ArrayList<AbstractAggregationBuilder>();
+			aggregations = new ArrayList<>();
 		}
 		aggregations.add(aggregationBuilder);
 	}

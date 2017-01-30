@@ -104,7 +104,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	public Iterable<T> findAll() {
 		int itemCount = (int) this.count();
 		if (itemCount == 0) {
-			return new PageImpl<T>(Collections.<T> emptyList());
+			return new PageImpl<>(Collections.<T>emptyList());
 		}
 		return this.findAll(new PageRequest(0, Math.max(1, itemCount)));
 	}
@@ -119,7 +119,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	public Iterable<T> findAll(Sort sort) {
 		int itemCount = (int) this.count();
 		if (itemCount == 0) {
-			return new PageImpl<T>(Collections.<T> emptyList());
+			return new PageImpl<>(Collections.<T>emptyList());
 		}
 		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(new PageRequest(0, itemCount, sort)).build();
@@ -150,7 +150,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	public <S extends T> List<S> save(List<S> entities) {
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
 		Assert.notEmpty(entities, "Cannot insert empty List.");
-		List<IndexQuery> queries = new ArrayList<IndexQuery>();
+		List<IndexQuery> queries = new ArrayList<>();
 		for (S s : entities) {
 			queries.add(createIndexQuery(s));
 		}
@@ -167,7 +167,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	@Override
 	public <S extends T> Iterable<S> save(Iterable<S> entities) {
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
-		List<IndexQuery> queries = new ArrayList<IndexQuery>();
+		List<IndexQuery> queries = new ArrayList<>();
 		for (S s : entities) {
 			queries.add(createIndexQuery(s));
 		}
@@ -186,7 +186,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(query).build();
 		int count = (int) elasticsearchOperations.count(searchQuery, getEntityClass());
 		if (count == 0) {
-			return new PageImpl<T>(Collections.<T> emptyList());
+			return new PageImpl<>(Collections.<T>emptyList());
 		}
 		searchQuery.setPageable(new PageRequest(0, count));
 		return elasticsearchOperations.queryForPage(searchQuery, getEntityClass());
@@ -311,7 +311,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 
 	private List<String> stringIdsRepresentation(Iterable<ID> ids) {
 		Assert.notNull(ids, "ids can't be null.");
-		List<String> stringIds = new ArrayList<String>();
+		List<String> stringIds = new ArrayList<>();
 		for (ID id : ids) {
 			stringIds.add(stringIdRepresentation(id));
 		}

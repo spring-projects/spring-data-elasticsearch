@@ -490,7 +490,7 @@ public class UUIDElasticsearchRepositoryTests {
 	}
 
 	private static List<SampleEntityUUIDKeyed> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
-		List<SampleEntityUUIDKeyed> sampleEntities = new ArrayList<SampleEntityUUIDKeyed>();
+		List<SampleEntityUUIDKeyed> sampleEntities = new ArrayList<>();
 		for (int i = 0; i < numberOfEntities; i++) {
 			UUID documentId = UUID.randomUUID();
 			SampleEntityUUIDKeyed sampleEntityUUIDKeyed = new SampleEntityUUIDKeyed();

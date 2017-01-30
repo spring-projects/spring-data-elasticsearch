@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,10 +49,10 @@ public class ArticleEntity {
 					@InnerField(suffix = "sort", type = String, store = true, indexAnalyzer = "keyword")
 			}
 	)
-	private List<String> authors = new ArrayList<String>();
+	private List<String> authors = new ArrayList<>();
 
 	@Field(type = Integer, store = true)
-	private List<Integer> publishedYears = new ArrayList<Integer>();
+	private List<Integer> publishedYears = new ArrayList<>();
 
 	private int score;
 

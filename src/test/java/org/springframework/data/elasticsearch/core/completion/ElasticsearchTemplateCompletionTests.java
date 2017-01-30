@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ public class ElasticsearchTemplateCompletionTests {
 		elasticsearchTemplate.refresh(CompletionEntity.class);
 		elasticsearchTemplate.putMapping(CompletionEntity.class);
 
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		indexQueries.add(new CompletionEntityBuilder("1").name("Rizwan Idrees").suggest(new String[]{"Rizwan Idrees"}).buildIndex());
 		indexQueries.add(new CompletionEntityBuilder("2").name("Franck Marchand").suggest(new String[]{"Franck", "Marchand"}).buildIndex());
 		indexQueries.add(new CompletionEntityBuilder("3").name("Mohsin Husen").suggest(new String[]{"Mohsin", "Husen"}, "Mohsin Husen").buildIndex());
@@ -81,7 +81,7 @@ public class ElasticsearchTemplateCompletionTests {
 		nonDocumentEntity.setSomeField1("foo");
 		nonDocumentEntity.setSomeField2("bar");
 
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("1").name("Franck Marchand").suggest(new String[]{"Franck", "Marchand"}).buildIndex());
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("2").name("Mohsin Husen").suggest(new String[]{"Mohsin", "Husen"}, "Mohsin Husen").buildIndex());
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("3").name("Rizwan Idrees").suggest(new String[]{"Rizwan", "Idrees"}, "Rizwan Idrees").buildIndex());
@@ -101,7 +101,7 @@ public class ElasticsearchTemplateCompletionTests {
 		nonDocumentEntity.setSomeField1("Payload");
 		nonDocumentEntity.setSomeField2("test");
 
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("1").name("Mewes Kochheim1").suggest(new String[]{"Mewes Kochheim1"}, null, Double.MAX_VALUE).buildIndex());
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("2").name("Mewes Kochheim2").suggest(new String[]{"Mewes Kochheim2"}, null, Long.MAX_VALUE).buildIndex());
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("3").name("Mewes Kochheim3").suggest(new String[]{"Mewes Kochheim3"}, null, "Payload test").buildIndex());
@@ -117,7 +117,7 @@ public class ElasticsearchTemplateCompletionTests {
 		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
 		elasticsearchTemplate.putMapping(AnnotatedCompletionEntity.class);
 
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("1").name("Mewes Kochheim1").suggest(new String[]{"Mewes Kochheim1"}).buildIndex());
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("2").name("Mewes Kochheim2").suggest(new String[]{"Mewes Kochheim2"}, null, null, 0).buildIndex());
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("3").name("Mewes Kochheim3").suggest(new String[]{"Mewes Kochheim3"}, null, null, 1).buildIndex());

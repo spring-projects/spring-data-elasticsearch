@@ -79,7 +79,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	@Override
 	public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 		long totalHits = response.getHits().totalHits();
-		List<T> results = new ArrayList<T>();
+		List<T> results = new ArrayList<>();
 		for (SearchHit hit : response.getHits()) {
 			if (hit != null) {
 				T result = null;
@@ -94,7 +94,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 			}
 		}
 
-		return new AggregatedPageImpl<T>(results, pageable, totalHits, response.getAggregations());
+		return new AggregatedPageImpl<>(results, pageable, totalHits, response.getAggregations());
 	}
 
 	private <T> void populateScriptFields(T result, SearchHit hit) {
@@ -160,7 +160,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 
 	@Override
 	public <T> LinkedList<T> mapResults(MultiGetResponse responses, Class<T> clazz) {
-		LinkedList<T> list = new LinkedList<T>();
+		LinkedList<T> list = new LinkedList<>();
 		for (MultiGetItemResponse response : responses.getResponses()) {
 			if (!response.isFailed() && response.getResponse().isExists()) {
 				T result = mapEntity(response.getResponse().getSourceAsString(), clazz);

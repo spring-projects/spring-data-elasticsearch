@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ public class ElasticsearchTemplateGeoTests {
 		elasticsearchTemplate.refresh(AuthorMarkerEntity.class);
 		elasticsearchTemplate.putMapping(AuthorMarkerEntity.class);
 
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		indexQueries.add(new AuthorMarkerEntityBuilder("1").name("Franck Marchand").location(45.7806d, 3.0875d).buildIndex());
 		indexQueries.add(new AuthorMarkerEntityBuilder("2").name("Mohsin Husen").location(51.5171d, 0.1062d).buildIndex());
 		indexQueries.add(new AuthorMarkerEntityBuilder("3").name("Rizwan Idrees").location(51.5171d, 0.1062d).buildIndex());
@@ -69,7 +69,7 @@ public class ElasticsearchTemplateGeoTests {
 		elasticsearchTemplate.refresh(LocationMarkerEntity.class);
 		elasticsearchTemplate.putMapping(LocationMarkerEntity.class);
 
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		double[] latLonArray = {0.100000, 51.000000};
 		String lonLatString = "51.000000, 0.100000";
 		String geohash = "u1044k2bd6u";

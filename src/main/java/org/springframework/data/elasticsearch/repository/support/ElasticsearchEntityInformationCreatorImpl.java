@@ -52,6 +52,6 @@ public class ElasticsearchEntityInformationCreatorImpl implements ElasticsearchE
 		Assert.notNull(persistentEntity, String.format("Unable to obtain mapping metadata for %s!", domainClass));
 		Assert.notNull(persistentEntity.getIdProperty(), String.format("No id property found for %s!", domainClass));
 
-		return new MappingElasticsearchEntityInformation<T, ID>(persistentEntity);
+		return new MappingElasticsearchEntityInformation<>(persistentEntity);
 	}
 }

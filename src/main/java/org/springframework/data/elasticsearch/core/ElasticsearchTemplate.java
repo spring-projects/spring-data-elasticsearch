@@ -604,7 +604,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		}
 		BulkResponse bulkResponse = bulkRequest.execute().actionGet();
 		if (bulkResponse.hasFailures()) {
-			Map<String, String> failedDocuments = new HashMap<String, String>();
+			Map<String, String> failedDocuments = new HashMap<>();
 			for (BulkItemResponse item : bulkResponse.getItems()) {
 				if (item.isFailed())
 					failedDocuments.put(item.getId(), item.getFailureMessage());
@@ -624,7 +624,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		}
 		BulkResponse bulkResponse = bulkRequest.execute().actionGet();
 		if (bulkResponse.hasFailures()) {
-			Map<String, String> failedDocuments = new HashMap<String, String>();
+			Map<String, String> failedDocuments = new HashMap<>();
 			for (BulkItemResponse item : bulkResponse.getItems()) {
 				if (item.isFailed())
 					failedDocuments.put(item.getId(), item.getFailureMessage());
@@ -694,19 +694,19 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		String scrollId = scan(searchQuery, scrollTimeInMillis, true);
 
 		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-		List<String> ids = new ArrayList<String>();
+		List<String> ids = new ArrayList<>();
 		boolean hasRecords = true;
 		while (hasRecords) {
 			Page<String> page = scroll(scrollId, scrollTimeInMillis, new SearchResultMapper() {
 				@Override
 				public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-					List<String> result = new ArrayList<String>();
+					List<String> result = new ArrayList<>();
 					for (SearchHit searchHit : response.getHits()) {
 						String id = searchHit.getId();
 						result.add(id);
 					}
 					if (result.size() > 0) {
-						return new AggregatedPageImpl<T>((List<T>) result);
+						return new AggregatedPageImpl<>((List<T>) result);
 					}
 					return null;
 				}
@@ -1169,7 +1169,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private List<String> extractIds(SearchResponse response) {
-		List<String> ids = new ArrayList<String>();
+		List<String> ids = new ArrayList<>();
 		for (SearchHit hit : response.getHits()) {
 			if (hit != null) {
 				ids.add(hit.getId());

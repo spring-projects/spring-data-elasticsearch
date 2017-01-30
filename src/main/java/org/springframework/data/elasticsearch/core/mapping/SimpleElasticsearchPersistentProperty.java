@@ -34,8 +34,8 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 public class SimpleElasticsearchPersistentProperty extends
 		AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements ElasticsearchPersistentProperty {
 
-	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
-	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
+	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<>();
+	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<>();
 
 	static {
 		SUPPORTED_ID_TYPES.add(String.class);

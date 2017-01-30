@@ -1,5 +1,5 @@
 /*
-* Copyright 2014-2016 the original author or authors.
+* Copyright 2014-2017 the original author or authors.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ public class AliasTests {
 
 	@Before
 	public void before() {
-		Map<String, Object> settings = new HashMap<String, Object>();
+		Map<String, Object> settings = new HashMap<>();
 		settings.put("index.refresh_interval", "-1");
 		settings.put("index.number_of_replicas", "0");
 		settings.put("index.number_of_shards", "2");

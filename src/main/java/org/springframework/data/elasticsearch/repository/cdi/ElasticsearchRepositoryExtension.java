@@ -44,7 +44,7 @@ import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
  */
 public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupport {
 
-	private final Map<Set<Annotation>, Bean<ElasticsearchOperations>> elasticsearchOperationsMap = new HashMap<Set<Annotation>, Bean<ElasticsearchOperations>>();
+	private final Map<Set<Annotation>, Bean<ElasticsearchOperations>> elasticsearchOperationsMap = new HashMap<>();
 
 	@SuppressWarnings("unchecked")
 	<T> void processBean(@Observes ProcessBean<T> processBean) {
@@ -78,7 +78,7 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 					ElasticsearchOperations.class.getName(), qualifiers));
 		}
 
-		return new ElasticsearchRepositoryBean<T>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager,
+		return new ElasticsearchRepositoryBean<>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager,
 				Optional.ofNullable(getCustomImplementationDetector()));
 	}
 }

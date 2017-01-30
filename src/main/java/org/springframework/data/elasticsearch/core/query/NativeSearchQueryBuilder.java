@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,15 +34,14 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
  * @author Mohsin Husen
  * @author Artur Konczak
  */
-
 public class NativeSearchQueryBuilder {
 
 	private QueryBuilder queryBuilder;
 	private QueryBuilder filterBuilder;
-    private List<ScriptField> scriptFields = new ArrayList<ScriptField>();
-	private List<SortBuilder> sortBuilders = new ArrayList<SortBuilder>();
-	private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
-	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<AbstractAggregationBuilder>();
+    private List<ScriptField> scriptFields = new ArrayList<>();
+	private List<SortBuilder> sortBuilders = new ArrayList<>();
+	private List<FacetRequest> facetRequests = new ArrayList<>();
+	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<>();
 	private HighlightBuilder.Field[] highlightFields;
 	private Pageable pageable;
 	private String[] indices;
@@ -161,11 +160,11 @@ public class NativeSearchQueryBuilder {
 		if (sourceFilter != null) {
 			nativeSearchQuery.addSourceFilter(sourceFilter);
 		}
-		
+
 		if(indicesBoost != null) {
 		    nativeSearchQuery.setIndicesBoost(indicesBoost);
 		}
-		
+
         if (!isEmpty(scriptFields)) {
             nativeSearchQuery.setScriptFields(scriptFields);
         }

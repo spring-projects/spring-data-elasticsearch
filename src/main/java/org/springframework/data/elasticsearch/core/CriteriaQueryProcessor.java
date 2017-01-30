@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,9 +46,9 @@ class CriteriaQueryProcessor {
 		if (criteria == null)
 			return null;
 
-		List<QueryBuilder> shouldQueryBuilderList = new LinkedList<QueryBuilder>();
-		List<QueryBuilder> mustNotQueryBuilderList = new LinkedList<QueryBuilder>();
-		List<QueryBuilder> mustQueryBuilderList = new LinkedList<QueryBuilder>();
+		List<QueryBuilder> shouldQueryBuilderList = new LinkedList<>();
+		List<QueryBuilder> mustNotQueryBuilderList = new LinkedList<>();
+		List<QueryBuilder> mustQueryBuilderList = new LinkedList<>();
 
 		ListIterator<Criteria> chainIterator = criteria.getCriteriaChain().listIterator();
 
