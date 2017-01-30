@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,11 +41,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.annotation.AccessType;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.DefaultResultMapperTests.ImmutableEntity;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.entities.Car;
@@ -53,6 +51,7 @@ import org.springframework.data.elasticsearch.entities.Car;
 /**
  * @author Artur Konczak
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
 public class DefaultResultMapperTests {
 
@@ -85,7 +84,7 @@ public class DefaultResultMapperTests {
 		when(response.getAggregations()).thenReturn(aggregations);
 
 		//When
-		AggregatedPage<Car> page = (AggregatedPage<Car>) resultMapper.mapResults(response, Car.class, null);
+		AggregatedPage<Car> page = (AggregatedPage<Car>) resultMapper.mapResults(response, Car.class, Pageable.NONE);
 
 		//Then
 		page.hasFacets();
@@ -103,7 +102,7 @@ public class DefaultResultMapperTests {
 		when(response.getHits()).thenReturn(searchHits);
 
 		//When
-		Page<Car> page = resultMapper.mapResults(response, Car.class, null);
+		Page<Car> page = resultMapper.mapResults(response, Car.class, Pageable.NONE);
 
 		//Then
 		assertThat(page.hasContent(), is(true));
@@ -121,7 +120,7 @@ public class DefaultResultMapperTests {
 		when(response.getHits()).thenReturn(searchHits);
 
 		//When
-		Page<Car> page = resultMapper.mapResults(response, Car.class, null);
+		Page<Car> page = resultMapper.mapResults(response, Car.class, Pageable.NONE);
 
 		//Then
 		assertThat(page.hasContent(), is(true));
@@ -143,19 +142,19 @@ public class DefaultResultMapperTests {
 		assertThat(result.getModel(), is("Grat"));
 		assertThat(result.getName(), is("Ford"));
 	}
-	
+
 	/**
 	 * @see DATAES-281.
 	 */
 	@Test
 	public void setsIdentifierOnImmutableType() {
-		
+
 		GetResponse response = mock(GetResponse.class);
 		when(response.getSourceAsString()).thenReturn("{}");
 		when(response.getId()).thenReturn("identifier");
-		
+
 		ImmutableEntity result = resultMapper.mapResult(response, ImmutableEntity.class);
-		
+
 		assertThat(result, is(notNullValue()));
 		assertThat(result.getId(), is("identifier"));
 	}
@@ -193,7 +192,7 @@ public class DefaultResultMapperTests {
 		result.put("model", new InternalSearchHitField("model", Arrays.<Object>asList(model)));
 		return result;
 	}
-	
+
 	@Document(indexName = "someIndex")
 	@NoArgsConstructor(force = true)
 	@Getter

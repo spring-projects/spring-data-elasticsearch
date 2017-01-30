@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,10 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import static org.mockito.Mockito.*;
+
+import java.util.Optional;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,19 +28,17 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
 
-import static org.mockito.Mockito.doReturn;
-
 /**
  * @author Florian Hopf
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ElasticsearchEntityInformationCreatorImplTests {
 
-	@Mock
-	private MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
-	@Mock
-	private ElasticsearchPersistentEntity<String> persistentEntity;
-	private ElasticsearchEntityInformationCreatorImpl entityInfoCreator;
+	@Mock MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
+	@Mock ElasticsearchPersistentEntity<String> persistentEntity;
+
+	ElasticsearchEntityInformationCreatorImpl entityInfoCreator;
 
 	@Before
 	public void before() {
@@ -50,9 +52,9 @@ public class ElasticsearchEntityInformationCreatorImplTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldThrowIllegalArgumentExceptionOnMissingIdAnnotation() {
-		doReturn(persistentEntity).when(mappingContext).getPersistentEntity(String.class);
+		doReturn(Optional.of(persistentEntity)).when(mappingContext).getPersistentEntity(String.class);
 		doReturn(String.class).when(persistentEntity).getType();
-		doReturn(null).when(persistentEntity).getIdProperty();
+		doReturn(Optional.empty()).when(persistentEntity).getIdProperty();
 		entityInfoCreator.getEntityInformation(String.class);
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,13 @@
  */
 package org.springframework.data.elasticsearch.repository.cdi;
 
+import java.lang.annotation.Annotation;
+import java.util.Optional;
+import java.util.Set;
+
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
-import java.lang.annotation.Annotation;
-import java.util.Set;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.support.ElasticsearchRepositoryFactory;
@@ -28,7 +30,8 @@ import org.springframework.data.repository.config.CustomRepositoryImplementation
 import org.springframework.util.Assert;
 
 /**
- * Uses CdiRepositoryBean to create ElasticsearchRepository instances.
+ * Uses {@link CdiRepositoryBean} to create
+ * {@link org.springframework.data.elasticsearch.repository.ElasticsearchRepository} instances.
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -46,24 +49,36 @@ public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 	 * @param repositoryType must not be {@literal null}.
 	 * @param beanManager must not be {@literal null}.
 	 * @param detector detector for the custom {@link org.springframework.data.repository.Repository} implementations
-	 * {@link CustomRepositoryImplementationDetector}, can be {@literal null}.
+	 *          {@link CustomRepositoryImplementationDetector}, can be {@literal null}.
 	 */
 	public ElasticsearchRepositoryBean(Bean<ElasticsearchOperations> operations, Set<Annotation> qualifiers,
-									   Class<T> repositoryType, BeanManager beanManager, CustomRepositoryImplementationDetector detector) {
+			Class<T> repositoryType, BeanManager beanManager, Optional<CustomRepositoryImplementationDetector> detector) {
 		super(qualifiers, repositoryType, beanManager, detector);
 
 		Assert.notNull(operations, "Cannot create repository with 'null' for ElasticsearchOperations.");
 		this.elasticsearchOperationsBean = operations;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.cdi.CdiRepositoryBean#create(javax.enterprise.context.spi.CreationalContext, java.lang.Class, java.util.Optional)
+	 */
 	@Override
-	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType, Object customImplementation) {
+	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType,
+			Optional<Object> customImplementation) {
+
 		ElasticsearchOperations elasticsearchOperations = getDependencyInstance(elasticsearchOperationsBean,
 				ElasticsearchOperations.class);
-		return new ElasticsearchRepositoryFactory(elasticsearchOperations).getRepository(repositoryType,
-				customImplementation);
+
+		ElasticsearchRepositoryFactory factory = new ElasticsearchRepositoryFactory(elasticsearchOperations);
+
+		return customImplementation //
+				.map(o -> factory.getRepository(repositoryType, o)) //
+				.orElseGet(() -> factory.getRepository(repositoryType));
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.cdi.CdiRepositoryBean#getScope()
+	 */
 	@Override
 	public Class<? extends Annotation> getScope() {
 		return elasticsearchOperationsBean.getScope();

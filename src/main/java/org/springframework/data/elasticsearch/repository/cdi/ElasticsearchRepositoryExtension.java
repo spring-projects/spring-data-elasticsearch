@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,20 @@
  */
 package org.springframework.data.elasticsearch.repository.cdi;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.UnsatisfiedResolutionException;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.ProcessBean;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.repository.cdi.CdiRepositoryBean;
@@ -67,7 +69,7 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 	}
 
 	private <T> CdiRepositoryBean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers,
-														  BeanManager beanManager) {
+			BeanManager beanManager) {
 
 		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers);
 
@@ -77,6 +79,6 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 		}
 
 		return new ElasticsearchRepositoryBean<T>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager,
-				getCustomImplementationDetector());
+				Optional.ofNullable(getCustomImplementationDetector()));
 	}
 }

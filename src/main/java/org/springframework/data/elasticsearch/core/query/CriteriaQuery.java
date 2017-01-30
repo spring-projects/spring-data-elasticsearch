@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,24 +23,26 @@ import org.springframework.util.Assert;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
 public class CriteriaQuery extends AbstractQuery {
 
 	private Criteria criteria;
 
-	private CriteriaQuery() {
-	}
+	private CriteriaQuery() {}
 
 	public CriteriaQuery(Criteria criteria) {
-		this(criteria, null);
+		this(criteria, Pageable.NONE);
 	}
 
 	public CriteriaQuery(Criteria criteria, Pageable pageable) {
+
+		Assert.notNull(criteria, "Criteria must not be null!");
+		Assert.notNull(pageable, "Pageable must not be null!");
+
 		this.criteria = criteria;
 		this.pageable = pageable;
-		if (pageable != null) {
-			this.addSort(pageable.getSort());
-		}
+		this.addSort(pageable.getSort());
 	}
 
 	public static final Query fromQuery(CriteriaQuery source) {

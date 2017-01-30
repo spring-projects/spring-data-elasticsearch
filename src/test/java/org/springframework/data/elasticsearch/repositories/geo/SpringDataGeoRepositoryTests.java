@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,9 @@ package org.springframework.data.elasticsearch.repositories.geo;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.util.Locale;
+import java.util.Optional;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,18 +32,16 @@ import org.springframework.data.geo.Point;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.Locale;
-
-
+/**
+ * @author Mark Paluch
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/repository-spring-data-geo-support.xml")
 public class SpringDataGeoRepositoryTests {
 
-	@Autowired
-	private ElasticsearchTemplate template;
+	@Autowired ElasticsearchTemplate template;
 
-	@Autowired
-	private SpringDataGeoRepository repository;
+	@Autowired SpringDataGeoRepository repository;
 
 	@Before
 	public void init() {
@@ -52,25 +53,25 @@ public class SpringDataGeoRepositoryTests {
 
 	@Test
 	public void shouldSaveAndLoadGeoPoints() {
-		//given
+		// given
 		final Point point = new Point(15, 25);
-		GeoEntity entity = GeoEntity.builder()
-				.pointA(point)
-				.pointB(new GeoPoint(point.getX(), point.getY()))
-				.pointC(toGeoString(point))
-				.pointD(toGeoArray(point))
-				.build();
-		//when
-		entity = repository.save(entity);
-		GeoEntity result = repository.findOne(entity.getId());
-		//then
+		GeoEntity entity = GeoEntity.builder().pointA(point).pointB(new GeoPoint(point.getX(), point.getY()))
+				.pointC(toGeoString(point)).pointD(toGeoArray(point)).build();
+		// when
+		GeoEntity saved = repository.save(entity);
+		Optional<GeoEntity> result = repository.findOne(entity.getId());
+		// then
 
-		assertThat(entity.getPointA().getX(), is(result.getPointA().getX()));
-		assertThat(entity.getPointA().getY(), is(result.getPointA().getY()));
-		assertThat(entity.getPointB().getLat(), is(result.getPointB().getLat()));
-		assertThat(entity.getPointB().getLon(), is(result.getPointB().getLon()));
-		assertThat(entity.getPointC(), is(result.getPointC()));
-		assertThat(entity.getPointD(), is(result.getPointD()));
+		assertThat(result.isPresent(), is(true));
+		result.ifPresent(geoEntity -> {
+
+			assertThat(saved.getPointA().getX(), is(geoEntity.getPointA().getX()));
+			assertThat(saved.getPointA().getY(), is(geoEntity.getPointA().getY()));
+			assertThat(saved.getPointB().getLat(), is(geoEntity.getPointB().getLat()));
+			assertThat(saved.getPointB().getLon(), is(geoEntity.getPointB().getLon()));
+			assertThat(saved.getPointC(), is(geoEntity.getPointC()));
+			assertThat(saved.getPointD(), is(geoEntity.getPointD()));
+		});
 	}
 
 	private String toGeoString(Point point) {
@@ -78,8 +79,6 @@ public class SpringDataGeoRepositoryTests {
 	}
 
 	private double[] toGeoArray(Point point) {
-		return new double[]{
-				point.getX(), point.getY()
-		};
+		return new double[] { point.getX(), point.getY() };
 	}
 }

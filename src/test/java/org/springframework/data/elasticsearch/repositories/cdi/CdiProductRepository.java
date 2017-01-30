@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,17 @@
  */
 package org.springframework.data.elasticsearch.repositories.cdi;
 
+import java.util.Optional;
+
 import org.springframework.data.elasticsearch.entities.Product;
 import org.springframework.data.repository.CrudRepository;
 
 /**
  * @author Mohsin Husen
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public interface CdiProductRepository extends CrudRepository<Product, String> {
 
-	Product findOne(String id);
+	Optional<Product> findOne(String id);
 }

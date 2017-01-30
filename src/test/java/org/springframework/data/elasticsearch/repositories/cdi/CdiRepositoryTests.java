@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package org.springframework.data.elasticsearch.repositories.cdi;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+
+import java.util.Optional;
 
 import org.apache.webbeans.cditest.CdiTestContainer;
 import org.apache.webbeans.cditest.CdiTestContainerLoader;
@@ -70,10 +72,13 @@ public class CdiRepositoryTests {
 
 		assertTrue(repository.exists(bean.getId()));
 
-		Product retrieved = repository.findOne(bean.getId());
-		assertNotNull(retrieved);
-		assertEquals(bean.getId(), retrieved.getId());
-		assertEquals(bean.getName(), retrieved.getName());
+		Optional<Product> retrieved = repository.findOne(bean.getId());
+
+		assertTrue(retrieved.isPresent());
+		retrieved.ifPresent(product -> {
+			assertEquals(bean.getId(), product.getId());
+			assertEquals(bean.getName(), product.getName());
+		});
 
 		assertEquals(1, repository.count());
 
@@ -83,7 +88,7 @@ public class CdiRepositoryTests {
 
 		assertEquals(0, repository.count());
 		retrieved = repository.findOne(bean.getId());
-		assertNull(retrieved);
+		assertFalse(retrieved.isPresent());
 	}
 
 	/**
@@ -101,10 +106,13 @@ public class CdiRepositoryTests {
 
 		assertTrue(qualifiedProductRepository.exists(bean.getId()));
 
-		Product retrieved = qualifiedProductRepository.findOne(bean.getId());
-		assertNotNull(retrieved);
-		assertEquals(bean.getId(), retrieved.getId());
-		assertEquals(bean.getName(), retrieved.getName());
+		Optional<Product> retrieved = qualifiedProductRepository.findOne(bean.getId());
+
+		assertTrue(retrieved.isPresent());
+		retrieved.ifPresent(product -> {
+			assertEquals(bean.getId(), product.getId());
+			assertEquals(bean.getName(), product.getName());
+		});
 
 		assertEquals(1, qualifiedProductRepository.count());
 
@@ -114,7 +122,7 @@ public class CdiRepositoryTests {
 
 		assertEquals(0, qualifiedProductRepository.count());
 		retrieved = qualifiedProductRepository.findOne(bean.getId());
-		assertNull(retrieved);
+		assertFalse(retrieved.isPresent());
 	}
 
 	/**

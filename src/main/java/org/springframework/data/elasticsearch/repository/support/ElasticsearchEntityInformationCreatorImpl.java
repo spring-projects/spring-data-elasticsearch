@@ -47,7 +47,7 @@ public class ElasticsearchEntityInformationCreatorImpl implements ElasticsearchE
 	public <T, ID extends Serializable> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
 
 		ElasticsearchPersistentEntity<T> persistentEntity = (ElasticsearchPersistentEntity<T>) mappingContext
-				.getPersistentEntity(domainClass);
+				.getRequiredPersistentEntity(domainClass);
 
 		Assert.notNull(persistentEntity, String.format("Unable to obtain mapping metadata for %s!", domainClass));
 		Assert.notNull(persistentEntity.getIdProperty(), String.format("No id property found for %s!", domainClass));

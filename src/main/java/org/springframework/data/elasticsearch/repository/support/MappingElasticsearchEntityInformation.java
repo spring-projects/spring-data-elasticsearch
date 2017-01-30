@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 package org.springframework.data.elasticsearch.repository.support;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
-import org.springframework.util.Assert;
 
 /**
  * Elasticsearch specific implementation of
@@ -34,9 +34,10 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Ryan Henszey
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
-public class MappingElasticsearchEntityInformation<T, ID extends Serializable> extends PersistentEntityInformation<T, ID>
-		implements ElasticsearchEntityInformation<T, ID> {
+public class MappingElasticsearchEntityInformation<T, ID extends Serializable>
+		extends PersistentEntityInformation<T, ID> implements ElasticsearchEntityInformation<T, ID> {
 
 	private static final Logger logger = LoggerFactory.getLogger(MappingElasticsearchEntityInformation.class);
 	private final ElasticsearchPersistentEntity<T> entityMetadata;
@@ -54,13 +55,15 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
 		this.type = type;
 	}
 
-
 	@Override
 	public String getIdAttribute() {
-		Assert.notNull(entityMetadata.getIdProperty(), "Unable to identify 'id' property in class "
-				+ entityMetadata.getType().getSimpleName()
-				+ ". Make sure the 'id' property is annotated with @Id or named as 'id' or 'documentId' ");
-		return entityMetadata.getIdProperty().getFieldName();
+
+		ElasticsearchPersistentProperty property = entityMetadata.getIdProperty()
+				.orElseThrow(() -> new IllegalArgumentException(String.format(
+						"Unable to identify 'id' property in class %s. Make sure the 'id' property is annotated with @Id or named as 'id' or 'documentId'",
+						entityMetadata.getType().getSimpleName())));
+
+		return property.getFieldName();
 	}
 
 	@Override
@@ -75,27 +78,30 @@ public class MappingElasticsearchEntityInformation<T, ID extends Serializable> e
 
 	@Override
 	public Long getVersion(T entity) {
-		ElasticsearchPersistentProperty versionProperty = entityMetadata.getVersionProperty();
+
+		Optional<ElasticsearchPersistentProperty> versionProperty = entityMetadata.getVersionProperty();
 		try {
-			if (versionProperty != null) {
-				return (Long) entityMetadata.getPropertyAccessor(entity).getProperty(versionProperty);
-			}
+
+			return (Long) versionProperty //
+					.flatMap(property -> entityMetadata.getPropertyAccessor(entity).getProperty(property)) //
+					.orElse(null);
+
 		} catch (Exception e) {
 			throw new IllegalStateException("failed to load version field", e);
 		}
-		return null;
 	}
 
 	@Override
 	public String getParentId(T entity) {
-		ElasticsearchPersistentProperty parentProperty = entityMetadata.getParentIdProperty();
+
+		Optional<ElasticsearchPersistentProperty> parentProperty = entityMetadata.getParentIdProperty();
 		try {
-			if (parentProperty != null) {
-				return (String) entityMetadata.getPropertyAccessor(entity).getProperty(parentProperty);
-			}
+
+			return (String) parentProperty //
+					.flatMap(property -> entityMetadata.getPropertyAccessor(entity).getProperty(property)) //
+					.orElse(null);
 		} catch (Exception e) {
 			throw new IllegalStateException("failed to load parent ID: " + e, e);
 		}
-		return null;
 	}
 }
