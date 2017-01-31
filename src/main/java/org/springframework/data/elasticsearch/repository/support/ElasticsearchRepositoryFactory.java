@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Ryan Henszey
  * @author Gad Akuka
+ * @author Mark Paluch
  */
 public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
@@ -50,7 +51,9 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 	private final ElasticsearchEntityInformationCreator entityInformationCreator;
 
 	public ElasticsearchRepositoryFactory(ElasticsearchOperations elasticsearchOperations) {
-		Assert.notNull(elasticsearchOperations);
+		
+		Assert.notNull(elasticsearchOperations, "ElasticsearchOperations must not be null!");
+		
 		this.elasticsearchOperations = elasticsearchOperations;
 		this.entityInformationCreator = new ElasticsearchEntityInformationCreatorImpl(elasticsearchOperations
 				.getElasticsearchConverter().getMappingContext());
