@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.util.Assert;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
 abstract class AbstractQuery implements Query {
 
@@ -55,7 +56,9 @@ abstract class AbstractQuery implements Query {
 
 	@Override
 	public final <T extends Query> T setPageable(Pageable pageable) {
-		Assert.notNull(pageable);
+		
+		Assert.notNull(pageable, "Pageable must not be null!");
+		
 		this.pageable = pageable;
 		return (T) this.addSort(pageable.getSort());
 	}
