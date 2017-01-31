@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Ryan Henszey
  * @author Kevin Leturc
+ * @author Mark Paluch
  */
 public abstract class AbstractElasticsearchRepository<T, ID extends Serializable> implements
 		ElasticsearchRepository<T, ID> {
@@ -56,14 +57,18 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	}
 
 	public AbstractElasticsearchRepository(ElasticsearchOperations elasticsearchOperations) {
-		Assert.notNull(elasticsearchOperations);
+		
+		Assert.notNull(elasticsearchOperations, "ElasticsearchOperations must not be null!");
+		
 		this.setElasticsearchOperations(elasticsearchOperations);
 	}
 
 	public AbstractElasticsearchRepository(ElasticsearchEntityInformation<T, ID> metadata,
 										   ElasticsearchOperations elasticsearchOperations) {
 		this(elasticsearchOperations);
-		Assert.notNull(metadata);
+		
+		Assert.notNull(metadata, "ElasticsearchEntityInformation must not be null!");
+		
 		this.entityInformation = metadata;
 		setEntityClass(this.entityInformation.getJavaType());
 		try {
