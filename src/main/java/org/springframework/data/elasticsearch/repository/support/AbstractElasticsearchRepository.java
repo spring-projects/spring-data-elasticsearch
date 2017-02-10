@@ -174,6 +174,10 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 
 	@Override
 	public <S extends T> Iterable<S> save(Iterable<S> entities) {
+		return save(entities, true);
+	}
+
+	public <S extends T> Iterable<S> save(Iterable<S> entities, boolean refresh) {
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
 		if (!(entities instanceof Collection<?>)) {
 			throw new InvalidDataAccessApiUsageException("Entities have to be inside a collection");
@@ -183,7 +187,8 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 			queries.add(createIndexQuery(s));
 		}
 		elasticsearchOperations.bulkIndex(queries);
-		elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
+		if (refresh)
+			elasticsearchOperations.refresh(entityInformation.getIndexName(), true);
 		return entities;
 	}
 

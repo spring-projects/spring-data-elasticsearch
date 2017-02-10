@@ -706,6 +706,31 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		return delete(indexName, persistentEntity.getIndexType(), id);
 	}
 
+	public void bulkDelete(Map<String, Class> entities) {
+		BulkRequestBuilder bulkRequest = client.prepareBulk();
+		for (String id : entities.keySet()) {
+			Class clazz = entities.get(id);
+			ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
+			String indexName = persistentEntity.getIndexName();
+			if (elasticsearchPartitioner != null && elasticsearchPartitioner.isIndexPartitioned(clazz)) {
+				indexName = elasticsearchPartitioner.processPartitioning(id, clazz);
+			}
+			bulkRequest.add(client.prepareDelete(indexName, persistentEntity.getIndexType(), id));
+		}
+		BulkResponse bulkResponse = bulkRequest.execute().actionGet();
+		if (bulkResponse.hasFailures()) {
+			Map<String, String> failedDocuments = new HashMap<String, String>();
+			for (BulkItemResponse item : bulkResponse.getItems()) {
+				if (item.isFailed())
+					failedDocuments.put(item.getId(), item.getFailureMessage());
+			}
+			throw new ElasticsearchException(
+					"Bulk deleting has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
+							+ failedDocuments + "]", failedDocuments
+			);
+		}
+	}
+
 	@Override
 	public <T> void delete(DeleteQuery deleteQuery, Class<T> clazz) {
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
