@@ -177,6 +177,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		return save(entities, true);
 	}
 
+	@Override
 	public <S extends T> Iterable<S> save(Iterable<S> entities, boolean refresh) {
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
 		if (!(entities instanceof Collection<?>)) {
