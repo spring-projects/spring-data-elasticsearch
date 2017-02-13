@@ -44,4 +44,6 @@ public interface ElasticsearchRepository<T, ID extends Serializable> extends Ela
 	Page<T> searchSimilar(T entity, String[] fields, Pageable pageable);
 
 	<S extends T> Iterable<S> save(Iterable<S> entities, boolean refresh);
+
+	<S extends T> Iterable<S> save(Iterable<S> entities, boolean refresh, int timeoutMs);
 }

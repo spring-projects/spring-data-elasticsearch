@@ -382,11 +382,30 @@ public interface ElasticsearchOperations {
 	void bulkIndex(List<IndexQuery> queries);
 
 	/**
+	 * Bulk index with timeout
+	 *
+	 * @param queries
+	 */
+	void bulkIndex(List<IndexQuery> queries, int timeoutMs);
+
+	/**
 	 * Bulk update all objects. Will do update
 	 *
 	 * @param queries
 	 */
 	void bulkUpdate(List<UpdateQuery> queries);
+
+	/**
+	 * Bulk update with timeout
+	 *
+	 * @param queries
+	 */
+	void bulkUpdate(List<UpdateQuery> queries, int timeoutMs);
+
+
+	public void bulkDelete(Map<String, Class> entities);
+
+	public void bulkDelete(Map<String, Class> entities, int timeoutMs);
 
 	/**
 	 * Delete the one object with provided id
