@@ -614,11 +614,46 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public void bulkIndex(List<IndexQuery> queries) {
+		bulkIndex(queries, 0);
+	}
+
+	@Override
+	public void bulkIndex(List<IndexQuery> queries, int timeoutMs) {
 		BulkRequestBuilder bulkRequest = client.prepareBulk();
 		for (IndexQuery query : queries) {
 			bulkRequest.add(prepareIndex(query));
 		}
-		BulkResponse bulkResponse = bulkRequest.execute().actionGet();
+		BulkResponse bulkResponse = null;
+		if (timeoutMs > 0)
+			bulkResponse = bulkRequest.execute().actionGet(timeoutMs);
+		else
+			bulkResponse = bulkRequest.execute().actionGet();
+
+		if (bulkResponse.hasFailures()) {
+			Map<String, String> failedDocuments = new HashMap<String, String>();
+			for (BulkItemResponse item : bulkResponse.getItems()) {
+				if (item.isFailed())
+					failedDocuments.put(item.getId(), item.getFailureMessage());
+			}
+			throw new ElasticsearchException(
+					"Bulk indexing has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
+							+ failedDocuments + "]", failedDocuments
+			);
+		}
+	}
+
+	@Override
+	public void bulkUpdate(List<UpdateQuery> queries, int timeoutMs) {
+		BulkRequestBuilder bulkRequest = client.prepareBulk();
+		for (UpdateQuery query : queries) {
+			bulkRequest.add(prepareUpdate(query));
+		}
+		BulkResponse bulkResponse = null;
+		if (timeoutMs > 0)
+			bulkResponse = bulkRequest.execute().actionGet(timeoutMs);
+		else
+			bulkResponse = bulkRequest.execute().actionGet();
+
 		if (bulkResponse.hasFailures()) {
 			Map<String, String> failedDocuments = new HashMap<String, String>();
 			for (BulkItemResponse item : bulkResponse.getItems()) {
@@ -634,22 +669,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public void bulkUpdate(List<UpdateQuery> queries) {
-		BulkRequestBuilder bulkRequest = client.prepareBulk();
-		for (UpdateQuery query : queries) {
-			bulkRequest.add(prepareUpdate(query));
-		}
-		BulkResponse bulkResponse = bulkRequest.execute().actionGet();
-		if (bulkResponse.hasFailures()) {
-			Map<String, String> failedDocuments = new HashMap<String, String>();
-			for (BulkItemResponse item : bulkResponse.getItems()) {
-				if (item.isFailed())
-					failedDocuments.put(item.getId(), item.getFailureMessage());
-			}
-			throw new ElasticsearchException(
-					"Bulk indexing has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
-							+ failedDocuments + "]", failedDocuments
-			);
-		}
+		bulkUpdate(queries, 0);
 	}
 
 	@Override
@@ -706,7 +726,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		return delete(indexName, persistentEntity.getIndexType(), id);
 	}
 
+	@Override
 	public void bulkDelete(Map<String, Class> entities) {
+		bulkDelete(entities, 0);
+	}
+
+	@Override
+	public void bulkDelete(Map<String, Class> entities, int timeoutMs) {
 		BulkRequestBuilder bulkRequest = client.prepareBulk();
 		for (String id : entities.keySet()) {
 			Class clazz = entities.get(id);
@@ -717,7 +743,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			}
 			bulkRequest.add(client.prepareDelete(indexName, persistentEntity.getIndexType(), id));
 		}
-		BulkResponse bulkResponse = bulkRequest.execute().actionGet();
+
+		BulkResponse bulkResponse = null;
+		if (timeoutMs > 0)
+			bulkResponse = bulkRequest.execute().actionGet(timeoutMs);
+		else
+			bulkResponse = bulkRequest.execute().actionGet();
 		if (bulkResponse.hasFailures()) {
 			Map<String, String> failedDocuments = new HashMap<String, String>();
 			for (BulkItemResponse item : bulkResponse.getItems()) {
@@ -730,6 +761,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			);
 		}
 	}
+
 
 	@Override
 	public <T> void delete(DeleteQuery deleteQuery, Class<T> clazz) {
