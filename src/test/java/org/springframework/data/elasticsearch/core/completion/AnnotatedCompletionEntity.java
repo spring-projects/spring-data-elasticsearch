@@ -7,14 +7,14 @@ import org.springframework.data.elasticsearch.annotations.Document;
 /**
  * @author Mewes Kochheim
  */
-@Document(indexName = "test-completion-index", type = "annotated-completion-type", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-annotated-completion", type = "annotated-completion-type", shards = 1, replicas = 0, refreshInterval = "-1")
 public class AnnotatedCompletionEntity {
 
 	@Id
 	private String id;
 	private String name;
 
-	@CompletionField(payloads = true, maxInputLength = 100)
+	@CompletionField(maxInputLength = 100)
 	private Completion suggest;
 
 	private AnnotatedCompletionEntity() {

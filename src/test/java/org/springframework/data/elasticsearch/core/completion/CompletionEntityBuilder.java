@@ -34,21 +34,11 @@ public class CompletionEntityBuilder {
 	}
 
 	public CompletionEntityBuilder suggest(String[] input) {
-		return suggest(input, null, null, null);
+		return suggest(input, null);
 	}
 
-	public CompletionEntityBuilder suggest(String[] input, String output) {
-		return suggest(input, output, null, null);
-	}
-
-	public CompletionEntityBuilder suggest(String[] input, String output, Object payload) {
-		return suggest(input, output, payload, null);
-	}
-
-	public CompletionEntityBuilder suggest(String[] input, String output, Object payload, Integer weight) {
+	public CompletionEntityBuilder suggest(String[] input, Integer weight) {
 		Completion suggest = new Completion(input);
-		suggest.setOutput(output);
-		suggest.setPayload(payload);
 		suggest.setWeight(weight);
 
 		result.setSuggest(suggest);

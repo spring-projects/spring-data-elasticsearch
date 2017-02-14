@@ -31,9 +31,11 @@ public @interface InnerField {
 
 	FieldType type();
 
-	FieldIndex index() default FieldIndex.analyzed;
+	boolean index() default true;
 
 	boolean store() default false;
+
+	boolean fielddata() default false;
 
 	String searchAnalyzer() default "";
 

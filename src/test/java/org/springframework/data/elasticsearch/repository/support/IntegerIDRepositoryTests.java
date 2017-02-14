@@ -51,6 +51,7 @@ public class IntegerIDRepositoryTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(IntegerIDEntity.class);
 		elasticsearchTemplate.createIndex(IntegerIDEntity.class);
+		elasticsearchTemplate.putMapping(IntegerIDEntity.class);
 		elasticsearchTemplate.refresh(IntegerIDEntity.class);
 	}
 

@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.common.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -480,79 +481,52 @@ public interface ElasticsearchOperations {
 	<T> void refresh(Class<T> clazz);
 
 	/**
-	 * Returns scroll id for criteria query
-	 *
-	 * @param query The criteria query.
-	 * @param scrollTimeInMillis The time in millisecond for scroll feature
-	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
-	 * @param noFields The no fields support
-	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setNoFields()}.
-	 * @return The scan id for input query.
-	 */
-	String scan(CriteriaQuery query, long scrollTimeInMillis, boolean noFields);
-
-	/**
-	 * Returns scroll id for criteria query
-	 *
-	 * @param query The criteria query.
-	 * @param scrollTimeInMillis The time in millisecond for scroll feature
-	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
-	 * @param noFields The no fields support
-	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setNoFields()}.
-	 * @param clazz The class of entity to retrieve.
-	 * @param <T> The type of entity to retrieve.
-	 * @return The scan id for input query.
-	 */
-	<T> String scan(CriteriaQuery query, long scrollTimeInMillis, boolean noFields, Class<T> clazz);
-
-	/**
-	 * Returns scroll id for scan query
+	 * Returns scrolled page for given query
 	 *
 	 * @param query The search query.
 	 * @param scrollTimeInMillis The time in millisecond for scroll feature
 	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
-	 * @param noFields The no fields support
-	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setNoFields()}.
+	 * @param clazz The class of entity to retrieve.
 	 * @return The scan id for input query.
 	 */
-	String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields);
+	<T> Page<T> startScroll(long scrollTimeInMillis, SearchQuery query, Class<T> clazz);
 
 	/**
-	 * Returns scroll id for scan query
+	 * Returns scrolled page for given query
 	 *
 	 * @param query The search query.
 	 * @param scrollTimeInMillis The time in millisecond for scroll feature
 	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
-	 * @param noFields The no fields support
-	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setNoFields()}.
-	 * @param clazz The class of entity to retrieve.
-	 * @param <T> The type of entity to retrieve.
+	 * @param mapper Custom impl to map result to entities
 	 * @return The scan id for input query.
 	 */
-	<T> String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields, Class<T> clazz);
+	<T> Page<T> startScroll(long scrollTimeInMillis, SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
-	 * Scrolls the results for give scroll id
+	 * Returns scrolled page for given query
 	 *
-	 * @param scrollId
-	 * @param scrollTimeInMillis
-	 * @param clazz
-	 * @param <T>
-	 * @return
+	 * @param criteriaQuery The search query.
+	 * @param scrollTimeInMillis The time in millisecond for scroll feature
+	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
+	 * @param clazz The class of entity to retrieve.
+	 * @return The scan id for input query.
 	 */
-	<T> Page<T> scroll(String scrollId, long scrollTimeInMillis, Class<T> clazz);
+	<T> Page<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz);
 
 	/**
-	 * Scrolls the results for give scroll id using custom result mapper
+	 * Returns scrolled page for given query
 	 *
-	 * @param scrollId
-	 * @param scrollTimeInMillis
-	 * @param mapper
-	 * @param <T>
-	 * @return
+	 * @param criteriaQuery The search query.
+	 * @param scrollTimeInMillis The time in millisecond for scroll feature
+	 * {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
+	 * @param mapper Custom impl to map result to entities
+	 * @return The scan id for input query.
 	 */
-	<T> Page<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper);
+	<T> Page<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz, SearchResultMapper mapper);
 
+
+	<T> Page<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz);
+	<T> Page<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz, SearchResultMapper mapper);
 	/**
 	 * Clears the search contexts associated with specified scroll ids.
 	 *

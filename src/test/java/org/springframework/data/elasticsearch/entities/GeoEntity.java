@@ -19,7 +19,7 @@ import org.springframework.data.geo.Polygon;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(indexName = "geo-test-index", type = "geo-test-index", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-geo", type = "geo-test-index", shards = 1, replicas = 0, refreshInterval = "-1")
 public class GeoEntity {
 
 	@Id

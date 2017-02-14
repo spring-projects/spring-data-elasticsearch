@@ -29,13 +29,13 @@ public class CustomEntityMapper implements EntityMapper {
 
 	@Override
 	public String mapToString(Object object) throws IOException {
-		//mapping Object to String
+		//mapping Object to text
 		return null;
 	}
 
 	@Override
 	public <T> T mapToObject(String source, Class<T> clazz) throws IOException {
-		//mapping String to Object
+		//mapping text to Object
 		return null;
 	}
 }

@@ -32,8 +32,6 @@ public @interface CompletionField {
 
 	String analyzer() default "simple";
 
-	boolean payloads() default false;
-
 	boolean preserveSeparators() default true;
 
 	boolean preservePositionIncrements() default true;

@@ -9,7 +9,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
  * @author Mason Chan
  */
 
-@Document(indexName = "test-index", type = "test-type", createIndex = false)
+@Document(indexName = "test-index-not-create", type = "test-type", createIndex = false)
 public class CreateIndexFalseEntity {
     @Id
     private String id;

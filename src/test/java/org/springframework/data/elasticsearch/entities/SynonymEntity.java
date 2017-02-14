@@ -25,7 +25,7 @@ import org.springframework.data.elasticsearch.annotations.Setting;
  *
  * @author Mohsin Husen
  */
-@Document(indexName = "synonym-index", type = "synonym-type")
+@Document(indexName = "test-index-synonym", type = "synonym-type")
 @Setting(settingPath = "/synonyms/settings.json")
 @Mapping(mappingPath = "/synonyms/mappings.json")
 public class SynonymEntity {

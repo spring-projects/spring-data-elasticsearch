@@ -15,8 +15,7 @@
  */
 package org.springframework.data.elasticsearch.entities;
 
-import static org.springframework.data.elasticsearch.annotations.FieldIndex.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.String;
+import static org.springframework.data.elasticsearch.annotations.FieldType.text;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -26,13 +25,13 @@ import org.springframework.data.elasticsearch.annotations.Field;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-@Document(indexName = "test-mapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-sample-mapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleMappingEntity {
 
 	@Id
 	private String id;
 
-	@Field(type = String, index = not_analyzed, store = true, analyzer = "standard")
+	@Field(type = text, index = false, store = true, analyzer = "standard")
 	private String message;
 
 	private NestedEntity nested;
@@ -55,7 +54,7 @@ public class SampleMappingEntity {
 
 	static class NestedEntity {
 
-		@Field(type = String)
+		@Field(type = text)
 		private String someField;
 
 		public String getSomeField() {

@@ -32,7 +32,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(indexName = "stock", type = "price", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-stock", type = "price", shards = 1, replicas = 0, refreshInterval = "-1")
 public class StockPrice {
 
 	@Id

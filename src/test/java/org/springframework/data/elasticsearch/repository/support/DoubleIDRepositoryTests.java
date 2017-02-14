@@ -51,6 +51,7 @@ public class DoubleIDRepositoryTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(DoubleIDEntity.class);
 		elasticsearchTemplate.createIndex(DoubleIDEntity.class);
+		elasticsearchTemplate.putMapping(DoubleIDEntity.class);
 		elasticsearchTemplate.refresh(DoubleIDEntity.class);
 	}
 
