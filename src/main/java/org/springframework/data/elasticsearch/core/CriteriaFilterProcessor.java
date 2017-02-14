@@ -129,15 +129,15 @@ class CriteriaFilterProcessor {
 
 				if (valArray[0] instanceof GeoPoint) {
 					GeoPoint loc = (GeoPoint) valArray[0];
-					geoDistanceQueryBuilder.lat(loc.getLat()).lon(loc.getLon()).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
+					geoDistanceQueryBuilder.point(loc.getLat(),loc.getLon()).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 				} else if (valArray[0] instanceof Point) {
 					GeoPoint loc = GeoPoint.fromPoint((Point) valArray[0]);
-					geoDistanceQueryBuilder.lat(loc.getLat()).lon(loc.getLon()).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
+					geoDistanceQueryBuilder.point(loc.getLat(), loc.getLon()).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 				} else {
 					String loc = (String) valArray[0];
 					if (loc.contains(",")) {
 						String c[] = loc.split(",");
-						geoDistanceQueryBuilder.lat(Double.parseDouble(c[0])).lon(Double.parseDouble(c[1])).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
+						geoDistanceQueryBuilder.point(Double.parseDouble(c[0]), Double.parseDouble(c[1])).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 					} else {
 						geoDistanceQueryBuilder.geohash(loc).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 					}
@@ -206,8 +206,7 @@ class CriteriaFilterProcessor {
 			geoBBox = (GeoBox) value;
 		}
 
-		filter.topLeft(geoBBox.getTopLeft().getLat(), geoBBox.getTopLeft().getLon());
-		filter.bottomRight(geoBBox.getBottomRight().getLat(), geoBBox.getBottomRight().getLon());
+		filter.setCorners(geoBBox.getTopLeft().getLat(), geoBBox.getTopLeft().getLon(), geoBBox.getBottomRight().getLat(), geoBBox.getBottomRight().getLon());
 	}
 
 	private static boolean isType(Object[] array, Class clazz) {
@@ -224,13 +223,11 @@ class CriteriaFilterProcessor {
 		if (values[0] instanceof GeoPoint) {
 			GeoPoint topLeft = (GeoPoint) values[0];
 			GeoPoint bottomRight = (GeoPoint) values[1];
-			filter.topLeft(topLeft.getLat(), topLeft.getLon());
-			filter.bottomRight(bottomRight.getLat(), bottomRight.getLon());
+			filter.setCorners(topLeft.getLat(), topLeft.getLon(), bottomRight.getLat(), bottomRight.getLon());
 		} else {
 			String topLeft = (String) values[0];
 			String bottomRight = (String) values[1];
-			filter.topLeft(topLeft);
-			filter.bottomRight(bottomRight);
+			filter.setCorners(topLeft, bottomRight);
 		}
 	}
 

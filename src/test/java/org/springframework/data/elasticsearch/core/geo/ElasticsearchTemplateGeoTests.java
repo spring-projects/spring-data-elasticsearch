@@ -22,7 +22,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.spatial4j.core.io.GeohashUtils;
+import org.elasticsearch.common.geo.GeoHashUtils;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -192,7 +192,7 @@ public class ElasticsearchTemplateGeoTests {
 	public void shouldFindAllMarkersForNativeSearchQuery() {
 		//Given
 		loadAnnotationBaseEntities();
-		NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsArray").topLeft(52, -1).bottomRight(50, 1));
+		NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsArray").setCorners(52, -1, 50, 1));
 		//When
 		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(queryBuilder.build(), LocationMarkerEntity.class);
 		//Then
@@ -222,7 +222,7 @@ public class ElasticsearchTemplateGeoTests {
 		//given
 		loadClassBaseEntities();
 		CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
-				new Criteria("location").boundedBy(GeohashUtils.encodeLatLon(53.5171d, 0), GeohashUtils.encodeLatLon(49.5171d, 0.2062d)));
+				new Criteria("location").boundedBy(GeoHashUtils.stringEncode(53.5171d, 0), GeoHashUtils.stringEncode(49.5171d, 0.2062d)));
 		//when
 		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3, AuthorMarkerEntity.class);
 
@@ -273,13 +273,13 @@ public class ElasticsearchTemplateGeoTests {
 		//u1044k2bd6u - with precision = 5 -> u, u1, u10, u104, u1044
 
 		loadAnnotationBaseEntities();
-		NativeSearchQueryBuilder locationWithPrefixAsDistancePrecision3 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one").field("locationWithPrefixAsDistance").geohash("u1044k2bd6u").precision(3));
-		NativeSearchQueryBuilder locationWithPrefixAsDistancePrecision4 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one").field("locationWithPrefixAsDistance").geohash("u1044k2bd6u").precision(4));
-		NativeSearchQueryBuilder locationWithPrefixAsDistancePrecision5 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one").field("locationWithPrefixAsDistance").geohash("u1044k2bd6u").precision(5));
+		NativeSearchQueryBuilder locationWithPrefixAsDistancePrecision3 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one","u1044k2bd6u").fieldName("locationWithPrefixAsDistance").precision(3));
+		NativeSearchQueryBuilder locationWithPrefixAsDistancePrecision4 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one","u1044k2bd6u").fieldName("locationWithPrefixAsDistance").precision(4));
+		NativeSearchQueryBuilder locationWithPrefixAsDistancePrecision5 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one","u1044k2bd6u").fieldName("locationWithPrefixAsDistance").precision(5));
 
-		NativeSearchQueryBuilder locationWithPrefixAsLengthOfGeoHashPrecision4 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one").field("locationWithPrefixAsLengthOfGeoHash").geohash("u1044k2bd6u").precision(4));
-		NativeSearchQueryBuilder locationWithPrefixAsLengthOfGeoHashPrecision5 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one").field("locationWithPrefixAsLengthOfGeoHash").geohash("u1044k2bd6u").precision(5));
-		NativeSearchQueryBuilder locationWithPrefixAsLengthOfGeoHashPrecision6 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one").field("locationWithPrefixAsLengthOfGeoHash").geohash("u1044k2bd6u").precision(6));
+		NativeSearchQueryBuilder locationWithPrefixAsLengthOfGeoHashPrecision4 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one","u1044k2bd6u").fieldName("locationWithPrefixAsLengthOfGeoHash").precision(4));
+		NativeSearchQueryBuilder locationWithPrefixAsLengthOfGeoHashPrecision5 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one","u1044k2bd6u").fieldName("locationWithPrefixAsLengthOfGeoHash").precision(5));
+		NativeSearchQueryBuilder locationWithPrefixAsLengthOfGeoHashPrecision6 = new NativeSearchQueryBuilder().withFilter(QueryBuilders.geoHashCellQuery("box-one","u1044k2bd6u").fieldName("locationWithPrefixAsLengthOfGeoHash").precision(6));
 		//when
 		List<LocationMarkerEntity> resultDistancePrecision3 = elasticsearchTemplate.queryForList(locationWithPrefixAsDistancePrecision3.build(), LocationMarkerEntity.class);
 		List<LocationMarkerEntity> resultDistancePrecision4 = elasticsearchTemplate.queryForList(locationWithPrefixAsDistancePrecision4.build(), LocationMarkerEntity.class);

@@ -15,14 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.apache.commons.lang.RandomStringUtils.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
-
-import java.util.*;
-
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
@@ -30,9 +22,8 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.script.Script;
-import org.elasticsearch.script.ScriptService;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.hamcrest.Matchers;
@@ -54,6 +45,14 @@ import org.springframework.data.elasticsearch.entities.*;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.*;
+
+import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.buildIndex;
 
 /**
  * @author Rizwan Idrees
@@ -403,7 +402,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class);
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withSort(new FieldSortBuilder("rate").ignoreUnmapped(true).order(SortOrder.ASC)).build();
+				.withSort(new FieldSortBuilder("rate").order(SortOrder.ASC)).build();
 		// when
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		// then
@@ -442,8 +441,8 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class);
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withSort(new FieldSortBuilder("rate").ignoreUnmapped(true).order(SortOrder.ASC))
-				.withSort(new FieldSortBuilder("message").ignoreUnmapped(true).order(SortOrder.ASC)).build();
+				.withSort(new FieldSortBuilder("rate").order(SortOrder.ASC))
+				.withSort(new FieldSortBuilder("message").order(SortOrder.ASC)).build();
 		// when
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		// then
@@ -494,7 +493,7 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(matchAllQuery())
 				.withScriptField(new ScriptField("scriptedRate",
-						new Script("doc['rate'].value * factor", ScriptService.ScriptType.INLINE, null, params)))
+						new Script(ScriptType.INLINE, null, "doc['rate'].value * factor", params)))
 				.build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		// then

@@ -23,7 +23,7 @@
 
         <commonscollections>3.2.1</commonscollections>
         <commonslang>2.6</commonslang>
-        <elasticsearch>2.4.0</elasticsearch>
+        <elasticsearch>5.2.0</elasticsearch>
         <springdata.commons>1.14.0.BUILD-SNAPSHOT</springdata.commons>
 
     </properties>
@@ -72,6 +72,12 @@
         <dependency>
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
+            <version>${elasticsearch}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>transport</artifactId>
             <version>${elasticsearch}</version>
         </dependency>
 
