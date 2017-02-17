@@ -60,7 +60,7 @@ public class MappingBuilderTests {
 	@Test
 	public void testInfiniteLoopAvoidance() throws IOException {
 		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\"" +
-				"type\":\"string\",\"index\":\"not_analyzed\"," +
+				"type\":\"text\",\"index\":\"not_analyzed\"," +
 				"\"analyzer\":\"standard\"}}}}";
 
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class, "mapping", "id", null);
@@ -115,7 +115,7 @@ public class MappingBuilderTests {
 	@Test
 	public void shouldBuildMappingWithSuperclass() throws IOException {
 		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\"" +
-				"type\":\"string\",\"index\":\"not_analyzed\",\"analyzer\":\"standard\"}" +
+				"type\":\"text\",\"index\":\"not_analyzed\",\"analyzer\":\"standard\"}" +
 				",\"createdDate\":{\"store\":false," +
 				"\"type\":\"date\",\"index\":\"not_analyzed\"}}}}";
 

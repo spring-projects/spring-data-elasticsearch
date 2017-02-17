@@ -40,7 +40,7 @@ public class SampleEntity {
 	@Id
 	private String id;
 	private String type;
-	@Field(type = FieldType.String)
+	@Field(type = FieldType.text)
 	private String message;
 	private int rate;
 	@ScriptedField

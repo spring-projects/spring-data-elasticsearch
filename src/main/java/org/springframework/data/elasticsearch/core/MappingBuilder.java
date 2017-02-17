@@ -66,7 +66,7 @@ class MappingBuilder {
 	public static final String COMPLETION_MAX_INPUT_LENGTH = "max_input_length";
 
 	public static final String INDEX_VALUE_NOT_ANALYZED = "not_analyzed";
-	public static final String TYPE_VALUE_STRING = "string";
+	public static final String TYPE_VALUE_STRING = "text";
 	public static final String TYPE_VALUE_GEO_POINT = "geo_point";
 	public static final String TYPE_VALUE_COMPLETION = "completion";
 	public static final String TYPE_VALUE_GEO_HASH_PREFIX = "geohash_prefix";

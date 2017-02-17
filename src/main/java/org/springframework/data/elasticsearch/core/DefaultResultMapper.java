@@ -178,7 +178,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(clazz);
 			PersistentProperty<?> idProperty = persistentEntity.getIdProperty();
 			
-			// Only deal with String because ES generated Ids are strings !
+			// Only deal with text because ES generated Ids are strings !
 			if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
 				persistentEntity.getPropertyAccessor(result).setProperty(idProperty, id);
 			}

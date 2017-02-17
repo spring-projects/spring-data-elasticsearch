@@ -55,9 +55,9 @@ public class ElasticsearchTemplateHistogramFacetTests {
 	public static final long SEQUECE_CODE_UPDATE = 2;
 	public static final long SEQUECE_CODE_DELETE = 3;
 	public static final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-	public static final String DATE_18 = "2013-10-18 18:01";
-	public static final String DATE_17 = "2013-10-18 17:01";
-	public static final String DATE_16 = "2013-10-18 16:01";
+	public static final text DATE_18 = "2013-10-18 18:01";
+	public static final text DATE_17 = "2013-10-18 17:01";
+	public static final text DATE_16 = "2013-10-18 16:01";
 
 
 	@Autowired
@@ -87,7 +87,7 @@ public class ElasticsearchTemplateHistogramFacetTests {
 	@Test
 	public void shouldReturnSimpleHistogramFacetForGivenQuery() {
 		// given
-		String facetName = "sequenceCodeFacet";
+		text facetName = "sequenceCodeFacet";
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new HistogramFacetRequestBuilder(facetName).field("sequenceCode").interval(1).build()
 				).build();
@@ -115,7 +115,7 @@ public class ElasticsearchTemplateHistogramFacetTests {
 	@Test
 	public void shouldReturnDateHistogramFacetForGivenQuery() throws ParseException {
 		// given
-		String facetName = "sequenceCodeFacet";
+		text facetName = "sequenceCodeFacet";
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new HistogramFacetRequestBuilder(facetName).field("date").interval(1).timeUnit(TimeUnit.HOURS).build()
 				).build();

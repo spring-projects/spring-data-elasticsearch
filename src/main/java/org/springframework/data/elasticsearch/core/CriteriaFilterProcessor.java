@@ -116,8 +116,8 @@ class CriteriaFilterProcessor {
 				Object[] valArray = (Object[]) value;
 				Assert.noNullElements(valArray, "Geo distance filter takes 2 not null elements array as parameter.");
 				Assert.isTrue(valArray.length == 2, "Geo distance filter takes a 2-elements array as parameter.");
-				Assert.isTrue(valArray[0] instanceof GeoPoint || valArray[0] instanceof String || valArray[0] instanceof Point, "First element of a geo distance filter must be a GeoPoint, a Point or a String");
-				Assert.isTrue(valArray[1] instanceof String || valArray[1] instanceof Distance, "Second element of a geo distance filter must be a String or a Distance");
+				Assert.isTrue(valArray[0] instanceof GeoPoint || valArray[0] instanceof String || valArray[0] instanceof Point, "First element of a geo distance filter must be a GeoPoint, a Point or a text");
+				Assert.isTrue(valArray[1] instanceof String || valArray[1] instanceof Distance, "Second element of a geo distance filter must be a text or a Distance");
 
 				StringBuilder dist = new StringBuilder();
 
@@ -159,7 +159,7 @@ class CriteriaFilterProcessor {
 					oneParameterBBox((GeoBoundingBoxQueryBuilder) filter, valArray[0]);
 				} else if (valArray.length == 2) {
 					//2x GeoPoint
-					//2x String
+					//2x text
 					twoParameterBBox((GeoBoundingBoxQueryBuilder) filter, valArray);
 				} else {
 					//error
@@ -219,7 +219,7 @@ class CriteriaFilterProcessor {
 	}
 
 	private void twoParameterBBox(GeoBoundingBoxQueryBuilder filter, Object[] values) {
-		Assert.isTrue(isType(values, GeoPoint.class) || isType(values, String.class), " both elements of boundedBy filter must be type of GeoPoint or String(format lat,lon or geohash)");
+		Assert.isTrue(isType(values, GeoPoint.class) || isType(values, String.class), " both elements of boundedBy filter must be type of GeoPoint or text(format lat,lon or geohash)");
 		if (values[0] instanceof GeoPoint) {
 			GeoPoint topLeft = (GeoPoint) values[0];
 			GeoPoint bottomRight = (GeoPoint) values[1];

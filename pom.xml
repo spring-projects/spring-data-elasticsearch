@@ -81,6 +81,18 @@
             <version>${elasticsearch}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+            <version>1.7.22</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.6.2</version>
+        </dependency>
+
         <!-- Jackson JSON Mapper -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -107,6 +119,12 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.openwebbeans.test</groupId>
