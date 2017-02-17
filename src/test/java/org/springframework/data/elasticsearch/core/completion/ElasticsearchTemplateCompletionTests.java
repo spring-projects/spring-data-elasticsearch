@@ -22,7 +22,13 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.unit.Fuzziness;
+import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.elasticsearch.search.suggest.SuggestBuilders;
+import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
+import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -139,12 +145,11 @@ public class ElasticsearchTemplateCompletionTests {
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingCompletionEntity() {
 		//given
 		loadCompletionObjectEntities();
-		CompletionSuggestionFuzzyBuilder completionSuggestionFuzzyBuilder = new CompletionSuggestionFuzzyBuilder("test-suggest")
-				.text("m")
-				.field("suggest");
+
+		SuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO);
 
 		//when
-		SuggestResponse suggestResponse = elasticsearchTemplate.suggest(completionSuggestionFuzzyBuilder, CompletionEntity.class);
+		final SearchResponse suggestResponse  = elasticsearchTemplate.suggest(new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder), CompletionEntity.class);
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
 
@@ -158,12 +163,10 @@ public class ElasticsearchTemplateCompletionTests {
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingAnnotatedCompletionEntity() {
 		//given
 		loadAnnotatedCompletionObjectEntities();
-		CompletionSuggestionFuzzyBuilder completionSuggestionFuzzyBuilder = new CompletionSuggestionFuzzyBuilder("test-suggest")
-				.text("m")
-				.field("suggest");
+		SuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO);
 
 		//when
-		SuggestResponse suggestResponse = elasticsearchTemplate.suggest(completionSuggestionFuzzyBuilder, CompletionEntity.class);
+		final SearchResponse  suggestResponse = elasticsearchTemplate.suggest(new SuggestBuilder().addSuggestion("test-suggest",completionSuggestionFuzzyBuilder), CompletionEntity.class);
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
 
@@ -177,12 +180,10 @@ public class ElasticsearchTemplateCompletionTests {
 	public void shouldFindSuggestionsWithPayloadsForGivenCriteriaQueryUsingAnnotatedCompletionEntity() {
 		//given
 		loadAnnotatedCompletionObjectEntitiesWithPayloads();
-		CompletionSuggestionFuzzyBuilder completionSuggestionFuzzyBuilder = new CompletionSuggestionFuzzyBuilder("test-suggest")
-				.text("m")
-				.field("suggest");
+		SuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO);
 
 		//when
-		SuggestResponse suggestResponse = elasticsearchTemplate.suggest(completionSuggestionFuzzyBuilder, CompletionEntity.class);
+		final SearchResponse  suggestResponse = elasticsearchTemplate.suggest(new SuggestBuilder().addSuggestion("test-suggest",completionSuggestionFuzzyBuilder), CompletionEntity.class);
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
 
@@ -190,14 +191,14 @@ public class ElasticsearchTemplateCompletionTests {
 		assertThat(options.size(), is(4));
 		for (CompletionSuggestion.Entry.Option option : options) {
 			if (option.getText().string().equals("Mewes Kochheim1")) {
-				assertEquals(Double.MAX_VALUE, option.getPayloadAsDouble(), 0);
+				assertEquals(Double.toString(Double.MAX_VALUE), option.getText().string());
 			} else if (option.getText().string().equals("Mewes Kochheim2")) {
-				assertEquals(Long.MAX_VALUE, option.getPayloadAsLong());
+				assertEquals(Double.toString(Long.MAX_VALUE), option.getText().string());
 			} else if (option.getText().string().equals("Mewes Kochheim3")) {
-				assertEquals("Payload test", option.getPayloadAsString());
+				assertEquals("Payload test", option.getText().string());
 			} else if (option.getText().string().equals("Mewes Kochheim4")) {
-				assertEquals("Payload", option.getPayloadAsMap().get("someField1"));
-				assertEquals("test", option.getPayloadAsMap().get("someField2"));
+				assertEquals("Payload", option.getContexts().get("someField1"));
+				assertEquals("test", option.getContexts().get("someField2"));
 			} else {
 				fail("Unexpected option");
 			}
@@ -208,12 +209,10 @@ public class ElasticsearchTemplateCompletionTests {
 	public void shouldFindSuggestionsWithWeightsForGivenCriteriaQueryUsingAnnotatedCompletionEntity() {
 		//given
 		loadAnnotatedCompletionObjectEntitiesWithWeights();
-		CompletionSuggestionFuzzyBuilder completionSuggestionFuzzyBuilder = new CompletionSuggestionFuzzyBuilder("test-suggest")
-				.text("m")
-				.field("suggest");
+		SuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO);
 
 		//when
-		SuggestResponse suggestResponse = elasticsearchTemplate.suggest(completionSuggestionFuzzyBuilder, CompletionEntity.class);
+		final SearchResponse  suggestResponse = elasticsearchTemplate.suggest(new SuggestBuilder().addSuggestion("test-suggest",completionSuggestionFuzzyBuilder), CompletionEntity.class);
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
 
