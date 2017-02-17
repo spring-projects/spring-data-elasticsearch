@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.elasticsearch.common.util.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -228,7 +229,7 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// then
 		assertNotNull("sample entities cant be null..", sampleEntities);
-		List<SampleEntity> entities = Lists.newArrayList(sampleEntities);
+		List<SampleEntity> entities = CollectionUtils.iterableAsArrayList(sampleEntities);
 		assertThat(entities.size(), is(2));
 	}
 
