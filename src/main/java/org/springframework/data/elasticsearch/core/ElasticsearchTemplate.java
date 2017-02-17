@@ -62,6 +62,9 @@ import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountAggregationBuilder;
+import org.elasticsearch.search.aggregations.support.ValueType;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
@@ -457,11 +460,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private long doCount(SearchRequestBuilder countRequestBuilder, QueryBuilder elasticsearchQuery) {
-		countRequestBuilder.addAggregation(AggregationBuilders.count("count_query"));
+
 		if (elasticsearchQuery != null) {
 			countRequestBuilder.setQuery(elasticsearchQuery);
 		}
-		return countRequestBuilder.execute().actionGet().getAggregations().get("count_query");
+		return countRequestBuilder.execute().actionGet().getHits().getTotalHits();
 	}
 
 	private long doCount(SearchRequestBuilder searchRequestBuilder, QueryBuilder elasticsearchQuery, QueryBuilder elasticsearchFilter) {
@@ -473,7 +476,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		if (elasticsearchFilter != null) {
 			searchRequestBuilder.setPostFilter(elasticsearchFilter);
 		}
-		searchRequestBuilder.setSearchType(SearchType.DEFAULT);
 		return searchRequestBuilder.execute().actionGet().getHits().getTotalHits();
 	}
 
@@ -488,6 +490,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		if (types != null) {
 			countRequestBuilder.setTypes(types);
 		}
+		countRequestBuilder.setSize(0);
 		return countRequestBuilder;
 	}
 
@@ -675,7 +678,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				@Override
 				public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 					List<String> result = new ArrayList<String>();
-					for (SearchHit searchHit : response.getHits()) {
+					for (SearchHit searchHit : response.getHits().getHits()) {
 						String id = searchHit.getId();
 						result.add(id);
 					}

@@ -508,7 +508,8 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity2.setMessage("hello");
 		repository.save(sampleEntity2);
 		// when
-		Iterable<SampleEntity> sampleEntities = repository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC, "message")));
+		//TODO AKO : for sort use all the time keyword suffix
+		Iterable<SampleEntity> sampleEntities = repository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC, "message.keyword")));
 		// then
 		assertThat(sampleEntities, is(notNullValue()));
 	}
