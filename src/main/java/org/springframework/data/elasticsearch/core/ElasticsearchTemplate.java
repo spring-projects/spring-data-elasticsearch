@@ -155,12 +155,17 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz) {
+		Object mappings = findMappingSpecification(clazz);
+		return putMapping(clazz, mappings);
+	}
+	
+	private <T> Object findMappingSpecification(Class<T> clazz) {
 		if (clazz.isAnnotationPresent(Mapping.class)) {
 			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
 			if (isNotBlank(mappingPath)) {
 				String mappings = readFileFromClasspath(mappingPath);
 				if (isNotBlank(mappings)) {
-					return putMapping(clazz, mappings);
+					return mappings;
 				}
 			} else {
 				logger.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
@@ -174,7 +179,19 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		} catch (Exception e) {
 			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
 		}
-		return putMapping(clazz, xContentBuilder);
+		return xContentBuilder;	
+	}
+		
+	@Override
+	public <T> boolean putMapping(String indexName, Class<T> clazz) {
+		Object mappings = findMappingSpecification(clazz);
+		return putMapping(indexName, getPersistentEntityFor(clazz).getIndexType(), mappings);
+	}
+
+	@Override
+	public <T> boolean putMapping(String indexName, String type, Class<T> clazz) {
+		Object mappings = findMappingSpecification(clazz);
+		return putMapping(indexName, type, mappings);
 	}
 
 	@Override
@@ -1151,4 +1168,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public SuggestResponse suggest(SuggestBuilder.SuggestionBuilder<?> suggestion, Class clazz) {
 		return suggest(suggestion, retrieveIndexNameFromPersistentEntity(clazz));
 	}
+
+
 }
