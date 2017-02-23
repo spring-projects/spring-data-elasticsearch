@@ -14,7 +14,7 @@ Guide
 * [API Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/current/api/)
 * [Spring Data Project](http://projects.spring.io/spring-data)
 * [Sample Test Application](https://github.com/BioMedCentralLtd/spring-data-elasticsearch-sample-application)
-* [Issues](https://jira.springsource.org/browse/DATAES)
+* [Issues](https://jira.spring.io/browse/DATAES)
 * [Spring Data Elasticsearch Google Group](https://groups.google.com/d/forum/spring-data-elasticsearch-devs)
 * [Questions](http://stackoverflow.com/questions/tagged/spring-data-elasticsearch)
 
