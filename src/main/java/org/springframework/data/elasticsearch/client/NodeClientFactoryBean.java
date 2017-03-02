@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.node.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -33,8 +34,8 @@ import org.springframework.beans.factory.InitializingBean;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Christophe Friederich
  */
-
 public class NodeClientFactoryBean implements FactoryBean<NodeClient>, InitializingBean, DisposableBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(NodeClientFactoryBean.class);
@@ -42,6 +43,7 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 	private boolean enableHttp;
 	private String clusterName;
 	private NodeClient nodeClient;
+	private Node node;
 	private String pathData;
 	private String pathHome;
 	private String pathConfiguration;
@@ -51,6 +53,13 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
 	public NodeClientFactoryBean(boolean local) {
 		this.local = local;
+	}
+
+	/**
+	 * Visible for test only
+	 */
+	Node getNode() {
+		return node;
 	}
 
 	@Override
@@ -70,12 +79,12 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		nodeClient = (NodeClient) nodeBuilder().settings(Settings.builder().put(loadConfig())
-				.put("http.enabled", String.valueOf(this.enableHttp))
-				.put("path.home", this.pathHome)
-				.put("path.data", this.pathData))
-				.clusterName(this.clusterName).local(this.local).node()
-				.client();
+		node = nodeBuilder().settings(Settings.builder().put(loadConfig())
+						.put("http.enabled", String.valueOf(this.enableHttp))
+						.put("path.home", this.pathHome)
+						.put("path.data", this.pathData))
+				.clusterName(this.clusterName).local(this.local).node();
+		nodeClient = (NodeClient) node.client();
 	}
 
 	private Settings loadConfig() {
@@ -119,6 +128,9 @@ public class NodeClientFactoryBean implements FactoryBean<NodeClient>, Initializ
 			logger.info("Closing elasticSearch  client");
 			if (nodeClient != null) {
 				nodeClient.close();
+			}
+			if (node != null) {
+				node.close();
 			}
 		} catch (final Exception e) {
 			logger.error("Error closing ElasticSearch client: ", e);
