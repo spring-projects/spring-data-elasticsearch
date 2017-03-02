@@ -13,6 +13,12 @@ Changes in version 3.0.0.M2 (2017-04-04)
 * DATAES-311 - Release 3.0 M2 (Kay).
 
 
+Changes in version 2.0.8.RELEASE (2017-03-02)
+---------------------------------------------
+* DATAES-329 - Remove references to single-argument assertion methods of Spring.
+* DATAES-326 - Release 2.0.8 (Hopper SR8).
+
+
 Changes in version 2.1.1.RELEASE (2017-03-02)
 ---------------------------------------------
 * DATAES-329 - Remove references to single-argument assertion methods of Spring.
