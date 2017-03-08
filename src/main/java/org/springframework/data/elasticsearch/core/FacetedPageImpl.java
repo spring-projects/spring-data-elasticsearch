@@ -101,34 +101,34 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 	private void processAggregation(Aggregation agg)
 	{
 		if (agg instanceof Terms) {
-			processTermAggregation(agg);
+			processTermAggregation((Terms) agg);
 		}
 		if (agg instanceof Range) {
-			processRangeAggregation(agg);
+			processRangeAggregation((Range) agg);
 		}
 		if (agg instanceof ExtendedStats) {
-			processExtendedStatsAggregation(agg);
+			processExtendedStatsAggregation((ExtendedStats) agg);
 		}
 		if (agg instanceof Histogram) {
-			processHistogramAggregation(agg);
+			processHistogramAggregation((Histogram) agg);
 		}
 	}
 
-	private void processTermAggregation(Aggregation agg)
+	private void processTermAggregation(Terms agg)
 	{
 		List<Term> terms = new ArrayList<Term>();
-		for (Terms.Bucket t : ((Terms) agg).getBuckets()) {
+		for (Terms.Bucket t : agg.getBuckets()) {
 			terms.add(new Term(t.getKeyAsString(), t.getDocCount()));
 		}
-		addFacet(new TermResult(agg.getName(), terms, terms.size(), ((Terms) agg).getSumOfOtherDocCounts(), 0));
+		addFacet(new TermResult(agg.getName(), terms, terms.size(), agg.getSumOfOtherDocCounts(), 0));
 	}
 
-	private void processRangeAggregation(Aggregation agg)
+	private void processRangeAggregation(Range agg)
 	{
 		List<? extends Range.Bucket> buckets = ((Range) agg).getBuckets();
 		List<org.springframework.data.elasticsearch.core.facet.result.Range> ranges = new ArrayList<org.springframework.data.elasticsearch.core.facet.result.Range>();
 		for (Range.Bucket b : buckets) {
-			ExtendedStats rStats = (ExtendedStats) b.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
+			ExtendedStats rStats = b.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
 			if (rStats != null) {
 				Sum sum = (Sum) b.getAggregations().get(RangeFacetRequest.RANGE_INTERNAL_SUM);
 				ranges.add(new org.springframework.data.elasticsearch.core.facet.result.Range((Double) b.getFrom(), (Double) b.getTo(), b.getDocCount(), sum != null ? sum.getValue() : rStats.getSum(), rStats.getCount(), rStats.getMin(), rStats.getMax()));
@@ -139,16 +139,15 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 		addFacet(new RangeResult(agg.getName(), ranges));
 	}
 
-	private void processExtendedStatsAggregation(Aggregation agg)
+	private void processExtendedStatsAggregation(ExtendedStats agg)
 	{
-		ExtendedStats stats = (ExtendedStats) agg;
-		addFacet(new StatisticalResult(agg.getName(), stats.getCount(), stats.getMax(), stats.getMin(), stats.getAvg(), stats.getStdDeviation(), stats.getSumOfSquares(), stats.getSum(), stats.getVariance()));
+		addFacet(new StatisticalResult(agg.getName(), agg.getCount(), agg.getMax(), agg.getMin(), agg.getAvg(), agg.getStdDeviation(), agg.getSumOfSquares(), agg.getSum(), agg.getVariance()));
 	}
 
-	private void processHistogramAggregation(Aggregation agg)
+	private void processHistogramAggregation(Histogram agg)
 	{
 		List<IntervalUnit> intervals = new ArrayList<IntervalUnit>();
-		for (Histogram.Bucket h : ((Histogram) agg).getBuckets()) {
+		for (Histogram.Bucket h : agg.getBuckets()) {
 			ExtendedStats hStats = (ExtendedStats) h.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
 			if (hStats != null) {
 				intervals.add(new IntervalUnit(((DateTime) h.getKey()).getMillis(), h.getDocCount(), h.getDocCount(), hStats.getSum(), hStats.getAvg(), hStats.getMin(), hStats.getMax()));
