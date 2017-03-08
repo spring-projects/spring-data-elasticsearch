@@ -81,6 +81,7 @@ public class ElasticsearchTemplateTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
+		elasticsearchTemplate.putMapping(SampleEntity.class);
 		elasticsearchTemplate.deleteIndex(INDEX_1_NAME);
 		elasticsearchTemplate.deleteIndex(INDEX_2_NAME);
 		elasticsearchTemplate.deleteIndex(UseServerConfigurationEntity.class);
@@ -204,8 +205,8 @@ public class ElasticsearchTemplateTests {
 				for (MultiGetItemResponse response : responses.getResponses()) {
 					SampleEntity entity = new SampleEntity();
 					entity.setId(response.getResponse().getId());
-					entity.setMessage((String) response.getResponse().getField("message").getValue());
-					entity.setType((String) response.getResponse().getField("type").getValue());
+					entity.setMessage((String) response.getResponse().getSource().get("message"));
+					entity.setType((String) response.getResponse().getSource().get("type"));
 					list.add((T) entity);
 				}
 				return list;
@@ -496,12 +497,12 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(matchAllQuery())
 				.withScriptField(new ScriptField("scriptedRate",
-						new Script(ScriptType.INLINE, null, "doc['rate'].value * factor", params)))
+						new Script(ScriptType.INLINE, "expression", "doc['rate'] * factor", params)))
 				.build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		// then
 		assertThat(sampleEntities.getTotalElements(), equalTo(1L));
-		assertThat(sampleEntities.getContent().get(0).getScriptedRate(), equalTo(4L));
+		assertThat(sampleEntities.getContent().get(0).getScriptedRate(), equalTo(4.0));
 	}
 
 	@Test
@@ -642,7 +643,7 @@ public class ElasticsearchTemplateTests {
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<String> values = new ArrayList<String>();
 				for (SearchHit searchHit : response.getHits()) {
-					values.add((String) searchHit.field("message").value());
+					values.add((String) searchHit.getSource().get("message"));
 				}
 				return new AggregatedPageImpl<T>((List<T>) values);
 			}
@@ -732,18 +733,13 @@ public class ElasticsearchTemplateTests {
 		criteriaQuery.addTypes(TYPE_NAME);
 		criteriaQuery.setPageable(new PageRequest(0, 10));
 
-		String scrollId = elasticsearchTemplate.scan(criteriaQuery, 1000, false);
+		ScrolledPage<SampleEntity> scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.startScroll( 1000, criteriaQuery, SampleEntity.class);
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
-		boolean hasRecords = true;
-		while (hasRecords) {
-			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, SampleEntity.class);
-			if (page.hasContent()) {
-				sampleEntities.addAll(page.getContent());
-			} else {
-				hasRecords = false;
-			}
+		while (scroll.hasContent()) {
+			sampleEntities.addAll(scroll.getContent());
+			scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.continueScroll(scroll.getScrollId() , 1000, SampleEntity.class);
 		}
-		elasticsearchTemplate.clearScroll(scrollId);
+		elasticsearchTemplate.clearScroll(scroll.getScrollId());
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
 
@@ -759,26 +755,44 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
 				.withTypes(TYPE_NAME).withPageable(new PageRequest(0, 10)).build();
 
-		String scrollId = elasticsearchTemplate.scan(searchQuery, 1000, false);
+		ScrolledPage<SampleEntity> scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class);
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
-		boolean hasRecords = true;
-		while (hasRecords) {
-			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, SampleEntity.class);
-			if (page.hasContent()) {
-				sampleEntities.addAll(page.getContent());
-			} else {
-				hasRecords = false;
-			}
+		while (scroll.hasContent()) {
+			sampleEntities.addAll(scroll.getContent());
+			scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.continueScroll(scroll.getScrollId() , 1000, SampleEntity.class);
 		}
-		elasticsearchTemplate.clearScroll(scrollId);
+		elasticsearchTemplate.clearScroll(scroll.getScrollId());
 		assertThat(sampleEntities.size(), is(equalTo(30)));
 	}
+
+
+	final SearchResultMapper searchResultMapper = new SearchResultMapper() {
+		@Override
+		public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+			List<SampleEntity> result = new ArrayList<SampleEntity>();
+			for (SearchHit searchHit : response.getHits()) {
+				if (response.getHits().getHits().length <= 0) {
+					return new AggregatedPageImpl<T>(Collections.EMPTY_LIST, response.getScrollId());
+				}
+				String message = (String) searchHit.getSource().get("message");
+				SampleEntity sampleEntity = new SampleEntity();
+				sampleEntity.setId(searchHit.getId());
+				sampleEntity.setMessage(message);
+				result.add(sampleEntity);
+			}
+
+			if (result.size() > 0) {
+				return new AggregatedPageImpl<T>((List<T>) result, response.getScrollId());
+			}
+			return new AggregatedPageImpl<T>(Collections.EMPTY_LIST, response.getScrollId());
+		}
+	};
 
 	/*
 	DATAES-167
 	*/
 	@Test
-	public void shouldReturnResultsWithScanAndScrollForSpecifiedFieldsForCriteriaCriteria() {
+	public void shouldReturnResultsWithScanAndScrollForSpecifiedFieldsForCriteriaQuery() {
 		//given
 		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
 		// when
@@ -792,33 +806,13 @@ public class ElasticsearchTemplateTests {
 		criteriaQuery.addFields("message");
 		criteriaQuery.setPageable(new PageRequest(0, 10));
 
-		String scrollId = elasticsearchTemplate.scan(criteriaQuery, 5000, false);
+		Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, criteriaQuery, SampleEntity.class, searchResultMapper);
+		String scrollId = ((ScrolledPage<?>)scroll).getScrollId();
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
-		boolean hasRecords = true;
-		while (hasRecords) {
-			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new SearchResultMapper() {
-				@Override
-				public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-					List<SampleEntity> result = new ArrayList<SampleEntity>();
-					for (SearchHit searchHit : response.getHits()) {
-						String message = searchHit.getFields().get("message").getValue();
-						SampleEntity sampleEntity = new SampleEntity();
-						sampleEntity.setId(searchHit.getId());
-						sampleEntity.setMessage(message);
-						result.add(sampleEntity);
-					}
-
-					if (result.size() > 0) {
-						return new AggregatedPageImpl<T>((List<T>) result);
-					}
-					return null;
-				}
-			});
-			if (page != null) {
-				sampleEntities.addAll(page.getContent());
-			} else {
-				hasRecords = false;
-			}
+		while (scroll.hasContent()) {
+			sampleEntities.addAll(scroll.getContent());
+			scrollId = ((ScrolledPage<?>)scroll).getScrollId();
+			scroll =  elasticsearchTemplate.continueScroll(scrollId , 1000, SampleEntity.class, searchResultMapper);
 		}
 		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
@@ -844,33 +838,13 @@ public class ElasticsearchTemplateTests {
 				.withPageable(new PageRequest(0, 10))
 				.build();
 
-		String scrollId = elasticsearchTemplate.scan(searchQuery, 10000, false);
+		Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class, searchResultMapper);
+		String scrollId = ((ScrolledPage) scroll).getScrollId();
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
-		boolean hasRecords = true;
-		while (hasRecords) {
-			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 10000L, new SearchResultMapper() {
-				@Override
-				public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-					List<SampleEntity> result = new ArrayList<SampleEntity>();
-					for (SearchHit searchHit : response.getHits()) {
-						String message = searchHit.getFields().get("message").getValue();
-						SampleEntity sampleEntity = new SampleEntity();
-						sampleEntity.setId(searchHit.getId());
-						sampleEntity.setMessage(message);
-						result.add(sampleEntity);
-					}
-
-					if (result.size() > 0) {
-						return new AggregatedPageImpl<T>((List<T>) result);
-					}
-					return null;
-				}
-			});
-			if (page != null) {
-				sampleEntities.addAll(page.getContent());
-			} else {
-				hasRecords = false;
-			}
+		while (scroll.hasContent()) {
+			sampleEntities.addAll(scroll.getContent());
+			scrollId = ((ScrolledPage) scroll).getScrollId();
+			scroll = elasticsearchTemplate.continueScroll(scrollId, 1000, SampleEntity.class, searchResultMapper);
 		}
 		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
@@ -893,34 +867,13 @@ public class ElasticsearchTemplateTests {
 		criteriaQuery.addTypes(TYPE_NAME);
 		criteriaQuery.setPageable(new PageRequest(0, 10));
 
-		String scrollId = elasticsearchTemplate.scan(criteriaQuery, 5000, false);
+		Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, criteriaQuery, SampleEntity.class, searchResultMapper);
+		String scrollId = ((ScrolledPage) scroll).getScrollId();
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
-		boolean hasRecords = true;
-		while (hasRecords) {
-			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new SearchResultMapper() {
-				@Override
-				public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-					List<SampleEntity> chunk = new ArrayList<SampleEntity>();
-					for (SearchHit searchHit : response.getHits()) {
-						if (response.getHits().getHits().length <= 0) {
-							return null;
-						}
-						SampleEntity user = new SampleEntity();
-						user.setId(searchHit.getId());
-						user.setMessage((String) searchHit.getSource().get("message"));
-						chunk.add(user);
-					}
-					if (chunk.size() > 0) {
-						return new AggregatedPageImpl<T>((List<T>) chunk);
-					}
-					return null;
-				}
-			});
-			if (page != null) {
-				sampleEntities.addAll(page.getContent());
-			} else {
-				hasRecords = false;
-			}
+		while (scroll.hasContent()) {
+			sampleEntities.addAll(scroll.getContent());
+			scrollId = ((ScrolledPage) scroll).getScrollId();
+			scroll = elasticsearchTemplate.continueScroll(scrollId, 1000, SampleEntity.class, searchResultMapper);
 		}
 		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
@@ -938,34 +891,13 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
 				.withTypes(TYPE_NAME).withPageable(new PageRequest(0, 10)).build();
 
-		String scrollId = elasticsearchTemplate.scan(searchQuery, 1000, false);
+		Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class,searchResultMapper);
+		String scrollId = ((ScrolledPage) scroll).getScrollId();
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
-		boolean hasRecords = true;
-		while (hasRecords) {
-			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, new SearchResultMapper() {
-				@Override
-				public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-					List<SampleEntity> chunk = new ArrayList<SampleEntity>();
-					for (SearchHit searchHit : response.getHits()) {
-						if (response.getHits().getHits().length <= 0) {
-							return null;
-						}
-						SampleEntity user = new SampleEntity();
-						user.setId(searchHit.getId());
-						user.setMessage((String) searchHit.getSource().get("message"));
-						chunk.add(user);
-					}
-					if (chunk.size() > 0) {
-						return new AggregatedPageImpl<T>((List<T>) chunk);
-					}
-					return null;
-				}
-			});
-			if (page != null) {
-				sampleEntities.addAll(page.getContent());
-			} else {
-				hasRecords = false;
-			}
+		while (scroll.hasContent()) {
+			sampleEntities.addAll(scroll.getContent());
+			scrollId = ((ScrolledPage) scroll).getScrollId();
+			scroll = elasticsearchTemplate.continueScroll(scrollId, 1000, SampleEntity.class, searchResultMapper);
 		}
 		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
@@ -986,16 +918,13 @@ public class ElasticsearchTemplateTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 		criteriaQuery.setPageable(new PageRequest(0, 10));
 
-		String scrollId = elasticsearchTemplate.scan(criteriaQuery, 1000, false, SampleEntity.class);
+		Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, criteriaQuery, SampleEntity.class);
+		String scrollId = ((ScrolledPage) scroll).getScrollId();
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
-		boolean hasRecords = true;
-		while (hasRecords) {
-			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, SampleEntity.class);
-			if (page.hasContent()) {
-				sampleEntities.addAll(page.getContent());
-			} else {
-				hasRecords = false;
-			}
+		while (scroll.hasContent()) {
+			sampleEntities.addAll(scroll.getContent());
+			scrollId = ((ScrolledPage) scroll).getScrollId();
+			scroll = elasticsearchTemplate.continueScroll(scrollId, 1000, SampleEntity.class);
 		}
 		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
@@ -1016,16 +945,13 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(new PageRequest(0, 10)).build();
 
-		String scrollId = elasticsearchTemplate.scan(searchQuery, 1000, false, SampleEntity.class);
+		Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class);
+		String scrollId = ((ScrolledPage) scroll).getScrollId();
 		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
-		boolean hasRecords = true;
-		while (hasRecords) {
-			Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L, SampleEntity.class);
-			if (page.hasContent()) {
-				sampleEntities.addAll(page.getContent());
-			} else {
-				hasRecords = false;
-			}
+		while (scroll.hasContent()) {
+			sampleEntities.addAll(scroll.getContent());
+			scrollId = ((ScrolledPage) scroll).getScrollId();
+			scroll = elasticsearchTemplate.continueScroll(scrollId, 1000, SampleEntity.class);
 		}
 		elasticsearchTemplate.clearScroll(scrollId);
 		assertThat(sampleEntities.size(), is(equalTo(30)));
@@ -1387,8 +1313,9 @@ public class ElasticsearchTemplateTests {
 
 		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		// then
-		assertThat(page.getTotalElements(), is(1L));
+		assertThat(page.getTotalElements(), is(2L));
 		assertThat(page.getContent().get(0).getMessage(), is("ab"));
+		assertThat(page.getContent().get(1).getMessage(), is("ac"));
 	}
 
 

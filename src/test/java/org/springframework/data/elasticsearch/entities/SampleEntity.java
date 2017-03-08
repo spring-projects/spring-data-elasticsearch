@@ -40,11 +40,11 @@ public class SampleEntity {
 	@Id
 	private String id;
 	private String type;
-	@Field(type = FieldType.text)
+	@Field(type = FieldType.text, store = true, fielddata = true)
 	private String message;
 	private int rate;
 	@ScriptedField
-	private Long scriptedRate;
+	private Double scriptedRate;
 	private boolean available;
 	private String highlightedMessage;
 

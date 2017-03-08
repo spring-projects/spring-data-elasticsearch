@@ -46,6 +46,8 @@ public @interface Field {
 
 	boolean store() default false;
 
+	boolean fielddata() default false;
+
 	String searchAnalyzer() default "";
 
 	String analyzer() default "";

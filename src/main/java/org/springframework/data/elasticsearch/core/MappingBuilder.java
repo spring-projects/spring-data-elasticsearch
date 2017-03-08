@@ -51,6 +51,7 @@ import org.springframework.data.util.TypeInformation;
  */
 class MappingBuilder {
 
+	public static final String FIELD_DATA = "fielddata";
 	public static final String FIELD_STORE = "store";
 	public static final String FIELD_TYPE = "type";
 	public static final String FIELD_INDEX = "index";
@@ -245,6 +246,9 @@ class MappingBuilder {
 		if(!nestedOrObjectField) {
 			xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
 		}
+
+		xContentBuilder.field(FIELD_DATA, fieldAnnotation.fielddata());
+
 		if (FieldType.Auto != fieldAnnotation.type()) {
 			xContentBuilder.field(FIELD_TYPE, fieldAnnotation.type().name().toLowerCase());
 			if (FieldType.Date == fieldAnnotation.type() && DateFormat.none != fieldAnnotation.format()) {

@@ -93,7 +93,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 			}
 		}
 
-		return new AggregatedPageImpl<T>(results, pageable, totalHits, response.getAggregations());
+		return new AggregatedPageImpl<T>(results, pageable, totalHits, response.getAggregations(), response.getScrollId());
 	}
 
 	private <T> void populateScriptFields(T result, SearchHit hit) {

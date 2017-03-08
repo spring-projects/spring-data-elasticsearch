@@ -180,4 +180,15 @@ public class MappingBuilderTests {
 		//then
 
 	}
+
+	@Test
+	public void shouldMapBooks() {
+		//given
+		elasticsearchTemplate.createIndex(Book.class);
+		elasticsearchTemplate.putMapping(Book.class);
+		//when
+
+		//then
+
+	}
 }

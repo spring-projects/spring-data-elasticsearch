@@ -19,18 +19,40 @@ public class AggregatedPageImpl<T> extends FacetedPageImpl<T> implements Aggrega
 
 	private Aggregations aggregations;
 	private Map<String, Aggregation> mapOfAggregations = new HashMap<String, Aggregation>();
+	private String scrollId;
 
 	public AggregatedPageImpl(List<T> content) {
 		super(content);
+	}
+
+	public AggregatedPageImpl(List<T> content, String scrollId) {
+		super(content);
+		this.scrollId = scrollId;
 	}
 
 	public AggregatedPageImpl(List<T> content, Pageable pageable, long total) {
 		super(content, pageable, total);
 	}
 
+	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, String scrollId) {
+		super(content, pageable, total);
+		this.scrollId = scrollId;
+	}
+
 	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, Aggregations aggregations) {
 		super(content, pageable, total);
 		this.aggregations = aggregations;
+		if (aggregations != null) {
+			for (Aggregation aggregation : aggregations) {
+				mapOfAggregations.put(aggregation.getName(), aggregation);
+			}
+		}
+	}
+
+	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, Aggregations aggregations, String scrollId) {
+		super(content, pageable, total);
+		this.aggregations = aggregations;
+		this.scrollId = scrollId;
 		if (aggregations != null) {
 			for (Aggregation aggregation : aggregations) {
 				mapOfAggregations.put(aggregation.getName(), aggregation);
@@ -51,5 +73,10 @@ public class AggregatedPageImpl<T> extends FacetedPageImpl<T> implements Aggrega
 	@Override
 	public Aggregation getAggregation(String name) {
 		return aggregations == null ? null : aggregations.get(name);
+	}
+
+	@Override
+	public String getScrollId() {
+		return scrollId;
 	}
 }
