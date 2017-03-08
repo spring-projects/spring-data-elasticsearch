@@ -15,11 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
@@ -35,6 +30,11 @@ import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.data.elasticsearch.core.facet.FacetResult;
 import org.springframework.data.elasticsearch.core.facet.request.RangeFacetRequest;
 import org.springframework.data.elasticsearch.core.facet.result.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Container for query result and facet results
@@ -85,50 +85,77 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 	 * Lazy conversion from aggregation to old facets
 	 */
 	private void processAggregations() {
-		if (facets == null) {
-			facets = new ArrayList<FacetResult>();
-			Aggregations aggregations = getAggregations();
-			if (aggregations != null) {
-				for (Aggregation agg : aggregations) {
-					if (agg instanceof Terms) {
-						List<Term> terms = new ArrayList<Term>();
-						for (Terms.Bucket t : ((Terms) agg).getBuckets()) {
-							terms.add(new Term(t.getKeyAsString(), t.getDocCount()));
-						}
-						addFacet(new TermResult(agg.getName(), terms, terms.size(), ((Terms) agg).getSumOfOtherDocCounts(), 0));
-					}
-					if (agg instanceof Range) {
-						List<? extends Range.Bucket> buckets = ((Range) agg).getBuckets();
-						List<org.springframework.data.elasticsearch.core.facet.result.Range> ranges = new ArrayList<org.springframework.data.elasticsearch.core.facet.result.Range>();
-						for (Range.Bucket b : buckets) {
-							ExtendedStats rStats = (ExtendedStats) b.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
-							if (rStats != null) {
-								Sum sum = (Sum) b.getAggregations().get(RangeFacetRequest.RANGE_INTERNAL_SUM);
-								ranges.add(new org.springframework.data.elasticsearch.core.facet.result.Range((Double) b.getFrom(), (Double) b.getTo(), b.getDocCount(), sum != null ? sum.getValue() : rStats.getSum(), rStats.getCount(), rStats.getMin(), rStats.getMax()));
-							} else {
-								ranges.add(new org.springframework.data.elasticsearch.core.facet.result.Range((Double) b.getFrom(), (Double) b.getTo(), b.getDocCount(), 0, 0, 0, 0));
-							}
-						}
-						addFacet(new RangeResult(agg.getName(), ranges));
-					}
-					if (agg instanceof ExtendedStats) {
-						ExtendedStats stats = (ExtendedStats) agg;
-						addFacet(new StatisticalResult(agg.getName(), stats.getCount(), stats.getMax(), stats.getMin(), stats.getAvg(), stats.getStdDeviation(), stats.getSumOfSquares(), stats.getSum(), stats.getVariance()));
-					}
-					if (agg instanceof Histogram) {
-						List<IntervalUnit> intervals = new ArrayList<IntervalUnit>();
-						for (Histogram.Bucket h : ((Histogram) agg).getBuckets()) {
-							ExtendedStats hStats = (ExtendedStats) h.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
-							if (hStats != null) {
-								intervals.add(new IntervalUnit(((DateTime) h.getKey()).getMillis(), h.getDocCount(), h.getDocCount(), hStats.getSum(), hStats.getAvg(), hStats.getMin(), hStats.getMax()));
-							} else {
-								intervals.add(new IntervalUnit(((DateTime) h.getKey()).getMillis(), h.getDocCount(), h.getDocCount(), 0, 0, 0, 0));
-							}
-						}
-						addFacet(new HistogramResult(agg.getName(), intervals));
-					}
-				}
+		if (facets != null) {
+			return;
+		}
+		facets = new ArrayList<FacetResult>();
+		Aggregations aggregations = getAggregations();
+		if (aggregations == null) {
+			return;
+		}
+		for (Aggregation agg : aggregations) {
+			processAggregation(agg);
+		}
+	}
+
+	private void processAggregation(Aggregation agg)
+	{
+		if (agg instanceof Terms) {
+			processTermAggregation(agg);
+        }
+		if (agg instanceof Range) {
+			processRangeAggregation(agg);
+        }
+		if (agg instanceof ExtendedStats) {
+			processExtendedStatsAggregation(agg);
+        }
+		if (agg instanceof Histogram) {
+			processHistogramAggregation(agg);
+        }
+	}
+
+	private void processTermAggregation(Aggregation agg)
+	{
+		List<Term> terms = new ArrayList<Term>();
+		for (Terms.Bucket t : ((Terms) agg).getBuckets()) {
+			terms.add(new Term(t.getKeyAsString(), t.getDocCount()));
+		}
+		addFacet(new TermResult(agg.getName(), terms, terms.size(), ((Terms) agg).getSumOfOtherDocCounts(), 0));
+	}
+
+	private void processRangeAggregation(Aggregation agg)
+	{
+		List<? extends Range.Bucket> buckets = ((Range) agg).getBuckets();
+		List<org.springframework.data.elasticsearch.core.facet.result.Range> ranges = new ArrayList<org.springframework.data.elasticsearch.core.facet.result.Range>();
+		for (Range.Bucket b : buckets) {
+			ExtendedStats rStats = (ExtendedStats) b.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
+			if (rStats != null) {
+				Sum sum = (Sum) b.getAggregations().get(RangeFacetRequest.RANGE_INTERNAL_SUM);
+				ranges.add(new org.springframework.data.elasticsearch.core.facet.result.Range((Double) b.getFrom(), (Double) b.getTo(), b.getDocCount(), sum != null ? sum.getValue() : rStats.getSum(), rStats.getCount(), rStats.getMin(), rStats.getMax()));
+			} else {
+				ranges.add(new org.springframework.data.elasticsearch.core.facet.result.Range((Double) b.getFrom(), (Double) b.getTo(), b.getDocCount(), 0, 0, 0, 0));
 			}
 		}
+		addFacet(new RangeResult(agg.getName(), ranges));
+	}
+
+	private void processExtendedStatsAggregation(Aggregation agg)
+	{
+		ExtendedStats stats = (ExtendedStats) agg;
+		addFacet(new StatisticalResult(agg.getName(), stats.getCount(), stats.getMax(), stats.getMin(), stats.getAvg(), stats.getStdDeviation(), stats.getSumOfSquares(), stats.getSum(), stats.getVariance()));
+	}
+
+	private void processHistogramAggregation(Aggregation agg)
+	{
+		List<IntervalUnit> intervals = new ArrayList<IntervalUnit>();
+		for (Histogram.Bucket h : ((Histogram) agg).getBuckets()) {
+			ExtendedStats hStats = (ExtendedStats) h.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
+			if (hStats != null) {
+				intervals.add(new IntervalUnit(((DateTime) h.getKey()).getMillis(), h.getDocCount(), h.getDocCount(), hStats.getSum(), hStats.getAvg(), hStats.getMin(), hStats.getMax()));
+			} else {
+				intervals.add(new IntervalUnit(((DateTime) h.getKey()).getMillis(), h.getDocCount(), h.getDocCount(), 0, 0, 0, 0));
+			}
+		}
+		addFacet(new HistogramResult(agg.getName(), intervals));
 	}
 }
