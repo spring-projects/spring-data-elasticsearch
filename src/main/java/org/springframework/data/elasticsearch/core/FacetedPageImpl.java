@@ -15,6 +15,11 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
@@ -30,11 +35,6 @@ import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.data.elasticsearch.core.facet.FacetResult;
 import org.springframework.data.elasticsearch.core.facet.request.RangeFacetRequest;
 import org.springframework.data.elasticsearch.core.facet.result.*;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Container for query result and facet results
@@ -102,16 +102,16 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 	{
 		if (agg instanceof Terms) {
 			processTermAggregation(agg);
-        }
+		}
 		if (agg instanceof Range) {
 			processRangeAggregation(agg);
-        }
+		}
 		if (agg instanceof ExtendedStats) {
 			processExtendedStatsAggregation(agg);
-        }
+		}
 		if (agg instanceof Histogram) {
 			processHistogramAggregation(agg);
-        }
+		}
 	}
 
 	private void processTermAggregation(Aggregation agg)
