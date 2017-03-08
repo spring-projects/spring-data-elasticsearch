@@ -246,8 +246,9 @@ class MappingBuilder {
 		if(!nestedOrObjectField) {
 			xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
 		}
-
-		xContentBuilder.field(FIELD_DATA, fieldAnnotation.fielddata());
+		if(fieldAnnotation.fielddata()) {
+			xContentBuilder.field(FIELD_DATA, fieldAnnotation.fielddata());
+		}
 
 		if (FieldType.Auto != fieldAnnotation.type()) {
 			xContentBuilder.field(FIELD_TYPE, fieldAnnotation.type().name().toLowerCase());

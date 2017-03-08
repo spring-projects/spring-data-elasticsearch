@@ -53,8 +53,10 @@ public class MappingBuilderTests {
 
 	@Test
 	public void shouldNotFailOnCircularReference() {
+		elasticsearchTemplate.deleteIndex(SimpleRecursiveEntity.class);
 		elasticsearchTemplate.createIndex(SimpleRecursiveEntity.class);
 		elasticsearchTemplate.putMapping(SimpleRecursiveEntity.class);
+		elasticsearchTemplate.refresh(SimpleRecursiveEntity.class);
 	}
 
 	@Test
