@@ -68,8 +68,8 @@ public class ElasticsearchTemplateCompletionTests {
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
 		indexQueries.add(new CompletionEntityBuilder("1").name("Rizwan Idrees").suggest(new String[]{"Rizwan Idrees"}).buildIndex());
 		indexQueries.add(new CompletionEntityBuilder("2").name("Franck Marchand").suggest(new String[]{"Franck", "Marchand"}).buildIndex());
-		indexQueries.add(new CompletionEntityBuilder("3").name("Mohsin Husen").suggest(new String[]{"Mohsin", "Husen"}, "Mohsin Husen").buildIndex());
-		indexQueries.add(new CompletionEntityBuilder("4").name("Artur Konczak").suggest(new String[]{"Artur", "Konczak"}, "Artur Konczak").buildIndex());
+		indexQueries.add(new CompletionEntityBuilder("3").name("Mohsin Husen").suggest(new String[]{"Mohsin", "Husen"}).buildIndex());
+		indexQueries.add(new CompletionEntityBuilder("4").name("Artur Konczak").suggest(new String[]{"Artur", "Konczak"}).buildIndex());
 
 		elasticsearchTemplate.bulkIndex(indexQueries);
 		elasticsearchTemplate.refresh(CompletionEntity.class);
@@ -87,29 +87,9 @@ public class ElasticsearchTemplateCompletionTests {
 
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("1").name("Franck Marchand").suggest(new String[]{"Franck", "Marchand"}).buildIndex());
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("2").name("Mohsin Husen").suggest(new String[]{"Mohsin", "Husen"}, "Mohsin Husen").buildIndex());
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("3").name("Rizwan Idrees").suggest(new String[]{"Rizwan", "Idrees"}, "Rizwan Idrees").buildIndex());
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Artur Konczak").suggest(new String[]{"Artur", "Konczak"}, "Artur Konczak").buildIndex());
-
-		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
-	}
-
-	private void loadAnnotatedCompletionObjectEntitiesWithPayloads() {
-		elasticsearchTemplate.deleteIndex(AnnotatedCompletionEntity.class);
-		elasticsearchTemplate.createIndex(AnnotatedCompletionEntity.class);
-		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
-		elasticsearchTemplate.putMapping(AnnotatedCompletionEntity.class);
-
-		NonDocumentEntity nonDocumentEntity = new NonDocumentEntity();
-		nonDocumentEntity.setSomeField1("Payload");
-		nonDocumentEntity.setSomeField2("test");
-
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("1").name("Mewes Kochheim1").suggest(new String[]{"Mewes Kochheim1"}, null, Double.MAX_VALUE).buildIndex());
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("2").name("Mewes Kochheim2").suggest(new String[]{"Mewes Kochheim2"}, null, Long.MAX_VALUE).buildIndex());
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("3").name("Mewes Kochheim3").suggest(new String[]{"Mewes Kochheim3"}, null, "Payload test").buildIndex());
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Mewes Kochheim4").suggest(new String[]{"Mewes Kochheim4"}, null, nonDocumentEntity).buildIndex());
+		indexQueries.add(new AnnotatedCompletionEntityBuilder("2").name("Mohsin Husen").suggest(new String[]{"Mohsin", "Husen"}).buildIndex());
+		indexQueries.add(new AnnotatedCompletionEntityBuilder("3").name("Rizwan Idrees").suggest(new String[]{"Rizwan", "Idrees"}).buildIndex());
+		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Artur Konczak").suggest(new String[]{"Artur", "Konczak"}).buildIndex());
 
 		elasticsearchTemplate.bulkIndex(indexQueries);
 		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
@@ -118,14 +98,14 @@ public class ElasticsearchTemplateCompletionTests {
 	private void loadAnnotatedCompletionObjectEntitiesWithWeights() {
 		elasticsearchTemplate.deleteIndex(AnnotatedCompletionEntity.class);
 		elasticsearchTemplate.createIndex(AnnotatedCompletionEntity.class);
-		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
 		elasticsearchTemplate.putMapping(AnnotatedCompletionEntity.class);
+		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
 
 		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("1").name("Mewes Kochheim1").suggest(new String[]{"Mewes Kochheim1"}).buildIndex());
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("2").name("Mewes Kochheim2").suggest(new String[]{"Mewes Kochheim2"}, null, null, 0).buildIndex());
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("3").name("Mewes Kochheim3").suggest(new String[]{"Mewes Kochheim3"}, null, null, 1).buildIndex());
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Mewes Kochheim4").suggest(new String[]{"Mewes Kochheim4"}, null, null, Integer.MAX_VALUE).buildIndex());
+		indexQueries.add(new AnnotatedCompletionEntityBuilder("1").name("Mewes Kochheim1").suggest(new String[]{"Mewes Kochheim1"},4).buildIndex());
+		indexQueries.add(new AnnotatedCompletionEntityBuilder("2").name("Mewes Kochheim2").suggest(new String[]{"Mewes Kochheim2"}, 1).buildIndex());
+		indexQueries.add(new AnnotatedCompletionEntityBuilder("3").name("Mewes Kochheim3").suggest(new String[]{"Mewes Kochheim3"}, 2).buildIndex());
+		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Mewes Kochheim4").suggest(new String[]{"Mewes Kochheim4"}, Integer.MAX_VALUE).buildIndex());
 
 		elasticsearchTemplate.bulkIndex(indexQueries);
 		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
@@ -155,8 +135,8 @@ public class ElasticsearchTemplateCompletionTests {
 
 		//then
 		assertThat(options.size(), is(2));
-		assertThat(options.get(0).getText().string(), isOneOf("Marchand", "Mohsin Husen"));
-		assertThat(options.get(1).getText().string(), isOneOf("Marchand", "Mohsin Husen"));
+		assertThat(options.get(0).getText().string(), isOneOf("Marchand", "Mohsin"));
+		assertThat(options.get(1).getText().string(), isOneOf("Marchand", "Mohsin"));
 	}
 
 	@Test
@@ -172,37 +152,8 @@ public class ElasticsearchTemplateCompletionTests {
 
 		//then
 		assertThat(options.size(), is(2));
-		assertThat(options.get(0).getText().string(), isOneOf("Marchand", "Mohsin Husen"));
-		assertThat(options.get(1).getText().string(), isOneOf("Marchand", "Mohsin Husen"));
-	}
-
-	@Test
-	public void shouldFindSuggestionsWithPayloadsForGivenCriteriaQueryUsingAnnotatedCompletionEntity() {
-		//given
-		loadAnnotatedCompletionObjectEntitiesWithPayloads();
-		SuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO);
-
-		//when
-		final SearchResponse  suggestResponse = elasticsearchTemplate.suggest(new SuggestBuilder().addSuggestion("test-suggest",completionSuggestionFuzzyBuilder), CompletionEntity.class);
-		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
-		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
-
-		//then
-		assertThat(options.size(), is(4));
-		for (CompletionSuggestion.Entry.Option option : options) {
-			if (option.getText().string().equals("Mewes Kochheim1")) {
-				assertEquals(Double.toString(Double.MAX_VALUE), option.getText().string());
-			} else if (option.getText().string().equals("Mewes Kochheim2")) {
-				assertEquals(Double.toString(Long.MAX_VALUE), option.getText().string());
-			} else if (option.getText().string().equals("Mewes Kochheim3")) {
-				assertEquals("Payload test", option.getText().string());
-			} else if (option.getText().string().equals("Mewes Kochheim4")) {
-				assertEquals("Payload", option.getContexts().get("someField1"));
-				assertEquals("test", option.getContexts().get("someField2"));
-			} else {
-				fail("Unexpected option");
-			}
-		}
+		assertThat(options.get(0).getText().string(), isOneOf("Marchand", "Mohsin"));
+		assertThat(options.get(1).getText().string(), isOneOf("Marchand", "Mohsin"));
 	}
 
 	@Test
@@ -212,7 +163,7 @@ public class ElasticsearchTemplateCompletionTests {
 		SuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO);
 
 		//when
-		final SearchResponse  suggestResponse = elasticsearchTemplate.suggest(new SuggestBuilder().addSuggestion("test-suggest",completionSuggestionFuzzyBuilder), CompletionEntity.class);
+		final SearchResponse  suggestResponse = elasticsearchTemplate.suggest(new SuggestBuilder().addSuggestion("test-suggest",completionSuggestionFuzzyBuilder), AnnotatedCompletionEntity.class);
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
 
@@ -222,9 +173,9 @@ public class ElasticsearchTemplateCompletionTests {
 			if (option.getText().string().equals("Mewes Kochheim1")) {
 				assertEquals(4, option.getScore(), 0);
 			} else if (option.getText().string().equals("Mewes Kochheim2")) {
-				assertEquals(0, option.getScore(), 0);
-			} else if (option.getText().string().equals("Mewes Kochheim3")) {
 				assertEquals(1, option.getScore(), 0);
+			} else if (option.getText().string().equals("Mewes Kochheim3")) {
+				assertEquals(2, option.getScore(), 0);
 			} else if (option.getText().string().equals("Mewes Kochheim4")) {
 				assertEquals(Integer.MAX_VALUE, option.getScore(), 0);
 			} else {

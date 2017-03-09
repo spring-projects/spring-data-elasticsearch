@@ -69,7 +69,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.buildInd
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class ElasticsearchTemplateTests {
 
-	private static final String INDEX_NAME = "test-index";
+	private static final String INDEX_NAME = "test-index-sample";
 	private static final String INDEX_1_NAME = "test-index-1";
 	private static final String INDEX_2_NAME = "test-index-2";
 	private static final String TYPE_NAME = "test-type";
@@ -574,6 +574,7 @@ public class ElasticsearchTemplateTests {
 	public void shouldCreateIndexGivenEntityClass() {
 		// when
 		boolean created = elasticsearchTemplate.createIndex(SampleEntity.class);
+		elasticsearchTemplate.putMapping(SampleEntity.class);
 		final Map setting = elasticsearchTemplate.getSetting(SampleEntity.class);
 		// then
 		assertThat(created, is(true));
@@ -1313,9 +1314,8 @@ public class ElasticsearchTemplateTests {
 
 		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		// then
-		assertThat(page.getTotalElements(), is(2L));
+		assertThat(page.getTotalElements(), is(1L));
 		assertThat(page.getContent().get(0).getMessage(), is("ab"));
-		assertThat(page.getContent().get(1).getMessage(), is("ac"));
 	}
 
 
@@ -1478,7 +1478,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
-		criteriaQuery.addIndices("test-index");
+		criteriaQuery.addIndices(INDEX_NAME);
 		// when
 		long count = elasticsearchTemplate.count(criteriaQuery);
 		// then
@@ -1500,7 +1500,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class);
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(matchAllQuery())
-				.withIndices("test-index")
+				.withIndices(INDEX_NAME)
 				.build();
 		// when
 		long count = elasticsearchTemplate.count(searchQuery);
@@ -1522,7 +1522,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
-		criteriaQuery.addIndices("test-index");
+		criteriaQuery.addIndices(INDEX_NAME);
 		criteriaQuery.addTypes("test-type");
 		// when
 		long count = elasticsearchTemplate.count(criteriaQuery);
@@ -1545,7 +1545,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class);
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(matchAllQuery())
-				.withIndices("test-index")
+				.withIndices(INDEX_NAME)
 				.withTypes("test-type")
 				.build();
 		// when
@@ -1859,11 +1859,12 @@ public class ElasticsearchTemplateTests {
 
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class, settings);
+		elasticsearchTemplate.putMapping(SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 
 		// then
 		Map map = elasticsearchTemplate.getSetting(SampleEntity.class);
-		assertThat(elasticsearchTemplate.indexExists("test-index"), is(true));
+		assertThat(elasticsearchTemplate.indexExists(INDEX_NAME), is(true));
 		assertThat(map.containsKey("index.number_of_replicas"), is(true));
 		assertThat(map.containsKey("index.number_of_shards"), is(true));
 		assertThat((String) map.get("index.number_of_replicas"), is("0"));

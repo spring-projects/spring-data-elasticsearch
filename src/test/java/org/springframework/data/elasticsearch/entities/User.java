@@ -12,7 +12,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
  * Created by akonczak on 21/08/2016.
  */
 
-@Document(indexName = "users", type = "user")
+@Document(indexName = "test-index-user", type = "user")
 public class User {
 	@Id
 	private String id;

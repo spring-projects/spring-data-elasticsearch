@@ -14,7 +14,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 /**
  * @author Jakub Vavrik
  */
-@Document(indexName = "test-datemapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-date-mapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleDateMappingEntity {
 
 	@Id

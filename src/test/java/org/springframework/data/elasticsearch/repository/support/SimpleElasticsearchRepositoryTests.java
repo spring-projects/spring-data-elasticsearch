@@ -60,6 +60,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
+		elasticsearchTemplate.putMapping(SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 	}
 
@@ -509,7 +510,7 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.save(sampleEntity2);
 		// when
 		//TODO AKO : for sort use all the time keyword suffix
-		Iterable<SampleEntity> sampleEntities = repository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC, "message.keyword")));
+		Iterable<SampleEntity> sampleEntities = repository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC, "message")));
 		// then
 		assertThat(sampleEntities, is(notNullValue()));
 	}

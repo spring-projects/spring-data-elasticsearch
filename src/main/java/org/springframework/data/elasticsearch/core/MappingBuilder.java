@@ -61,7 +61,6 @@ class MappingBuilder {
 	public static final String FIELD_PROPERTIES = "properties";
 	public static final String FIELD_PARENT = "_parent";
 
-	public static final String COMPLETION_PAYLOADS = "payloads";
 	public static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
 	public static final String COMPLETION_PRESERVE_POSITION_INCREMENTS = "preserve_position_increments";
 	public static final String COMPLETION_MAX_INPUT_LENGTH = "max_input_length";
@@ -214,7 +213,6 @@ class MappingBuilder {
 		xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_COMPLETION);
 		if (annotation != null) {
 			xContentBuilder.field(COMPLETION_MAX_INPUT_LENGTH, annotation.maxInputLength());
-			xContentBuilder.field(COMPLETION_PAYLOADS, annotation.payloads());
 			xContentBuilder.field(COMPLETION_PRESERVE_POSITION_INCREMENTS, annotation.preservePositionIncrements());
 			xContentBuilder.field(COMPLETION_PRESERVE_SEPARATORS, annotation.preserveSeparators());
 			if (isNotBlank(annotation.searchAnalyzer())) {
@@ -301,10 +299,10 @@ class MappingBuilder {
 	private static void addMultiFieldMapping(XContentBuilder builder, java.lang.reflect.Field field,
 											 MultiField annotation, boolean nestedOrObjectField) throws IOException {
 		builder.startObject(field.getName());
-		builder.field(FIELD_TYPE, "multi_field");
+		builder.field(FIELD_TYPE, annotation.mainField().type());
 		builder.startObject("fields");
 		//add standard field
-		addSingleFieldMapping(builder, field, annotation.mainField(),nestedOrObjectField);
+		//addSingleFieldMapping(builder, field, annotation.mainField(), nestedOrObjectField);
 		for (InnerField innerField : annotation.otherFields()) {
 			addNestedFieldMapping(builder, field, innerField);
 		}

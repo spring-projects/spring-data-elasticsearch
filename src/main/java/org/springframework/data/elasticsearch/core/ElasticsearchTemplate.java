@@ -672,7 +672,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				if (result.size() > 0) {
 					return new AggregatedPageImpl<T>((List<T>) result, response.getScrollId());
 				}
-				return null;
+				return new AggregatedPageImpl<T>(Collections.EMPTY_LIST, response.getScrollId());
 			}
 		};
 

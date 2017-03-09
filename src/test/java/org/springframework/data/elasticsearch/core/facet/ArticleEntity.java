@@ -34,12 +34,13 @@ import org.springframework.data.elasticsearch.annotations.InnerField;
  * @author Artur Konczak
  * @author Mohsin Husen
  */
-@Document(indexName = "articles", type = "article", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-articles", type = "article", shards = 1, replicas = 0, refreshInterval = "-1")
 public class ArticleEntity {
 
 	@Id
 	private String id;
 	private String title;
+	@Field(type = text, fielddata = true)
 	private String subject;
 
 	@MultiField(

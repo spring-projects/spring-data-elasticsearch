@@ -82,7 +82,7 @@ public class ElasticsearchTemplateAggregationTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(matchAllQuery())
 				.withSearchType(SearchType.DEFAULT)
-				.withIndices("articles").withTypes("article")
+				.withIndices("test-index-articles").withTypes("article")
 				.addAggregation(terms("subjects").field("subject"))
 				.build();
 		// when

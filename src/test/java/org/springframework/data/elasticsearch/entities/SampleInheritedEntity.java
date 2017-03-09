@@ -24,7 +24,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 /**
  * @author Kevin Leturc
  */
-@Document(indexName = "test-inherited-mapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-sample-inherited", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleInheritedEntity extends AbstractInheritedEntity {
 
 	@Field(type = text, index = not_analyzed, store = true, analyzer = "standard")
