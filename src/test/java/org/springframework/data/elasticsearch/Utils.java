@@ -15,26 +15,30 @@
  */
 package org.springframework.data.elasticsearch;
 
+import java.util.UUID;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import org.elasticsearch.node.Node;
+import org.elasticsearch.node.NodeValidationException;
 
 /**
  * @author Mohsin Husen
  */
 public class Utils {
-    final static String port = "9300";
 
-    public static Client getNodeClient() {
-        try {
-            return new PreBuiltTransportClient(Settings.builder()
-                    .build()).addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), Integer.valueOf(port)));
-        } catch (UnknownHostException e) {
-            throw new RuntimeException("Unable to connect to localhost cluster ar port " + port);
-        }
+    public static Client getNodeClient() throws NodeValidationException {
+            String name = UUID.randomUUID().toString();
+            		Settings settings = Settings.builder()
+                    			.put("http.enabled", "false")
+                    			.put("path.data", "target/elasticsearchTestData")
+                    			.put("path.home", "src/test/resources/test-home-dir-tmp")
+                    			.put("cluster.name", name)
+                    			.put("node.name", name)
+                    			.put("node.local_storage", true)
+                    			.put("transport.type", "local")
+                    			.put("node.max_local_storage_nodes", "20")
+                    			.build();
+            	return (NodeClient) new Node(settings).start().client();
     }
 }
