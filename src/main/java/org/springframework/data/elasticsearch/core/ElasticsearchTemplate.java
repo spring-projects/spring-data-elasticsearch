@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,6 +104,7 @@ import org.springframework.util.Assert;
  * @author Young Gu
  * @author Oliver Gierke
  * @author Mark Janssen
+ * @author Mateusz Pulka
  */
 
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
@@ -244,8 +245,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper) {
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
+		String indexType = query.getIndexType() != null ? query.getIndexType() : persistentEntity.getIndexType();
 		GetResponse response = client
-				.prepareGet(persistentEntity.getIndexName(), persistentEntity.getIndexType(), query.getId()).execute()
+				.prepareGet(persistentEntity.getIndexName(), indexType, query.getId()).execute()
 				.actionGet();
 
 		T entity = mapper.mapResult(response, clazz);
