@@ -20,6 +20,8 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,6 +30,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.FacetedPage;
 import org.springframework.data.elasticsearch.core.facet.request.*;
 import org.springframework.data.elasticsearch.core.facet.result.*;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
@@ -459,6 +462,13 @@ public class ElasticsearchTemplateFacetTests {
 	@Test
 	public void shouldReturnAllTermsForGivenQuery() {
 		// given
+		final DeleteQuery deleteQuery = new DeleteQuery();
+		deleteQuery.setQuery(matchAllQuery());
+		deleteQuery.setIndex("test-index-articles");
+		deleteQuery.setType("article");
+		elasticsearchTemplate.delete(deleteQuery);
+
+
 		String facetName = "all_authors";
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new TermFacetRequestBuilder(facetName).applyQueryFilter().fields("authors.untouched").allTerms().build()).build();

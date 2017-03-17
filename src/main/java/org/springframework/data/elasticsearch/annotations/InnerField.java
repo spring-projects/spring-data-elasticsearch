@@ -35,6 +35,8 @@ public @interface InnerField {
 
 	boolean store() default false;
 
+	boolean fielddata() default false;
+
 	String searchAnalyzer() default "";
 
 	String indexAnalyzer() default "";

@@ -288,6 +288,9 @@ class MappingBuilder {
 		if (isNotBlank(annotation.indexAnalyzer())) {
 			builder.field(FIELD_INDEX_ANALYZER, annotation.indexAnalyzer());
 		}
+		if (annotation.fielddata()) {
+			builder.field(FIELD_DATA, annotation.fielddata());
+		}
 		builder.endObject();
 	}
 

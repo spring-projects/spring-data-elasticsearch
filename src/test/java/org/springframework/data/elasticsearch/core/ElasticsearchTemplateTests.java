@@ -1306,13 +1306,17 @@ public class ElasticsearchTemplateTests {
 
 		// when
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
-				.withQuery(boolQuery().must(wildcardQuery("message", "*a*")).should(wildcardQuery("message", "*b*")))
+				.withQuery(boolQuery()
+						.must(wildcardQuery("message", "*a*"))
+						.should(wildcardQuery("message", "*b*"))
+				)
 				.withIndices(INDEX_NAME)
 				.withTypes(TYPE_NAME)
 				.withMinScore(0.5F)
 				.build();
 
 		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+		final List<SampleEntity> content = page.getContent();
 		// then
 		assertThat(page.getTotalElements(), is(1L));
 		assertThat(page.getContent().get(0).getMessage(), is("ab"));

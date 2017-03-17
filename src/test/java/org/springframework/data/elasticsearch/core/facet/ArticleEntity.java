@@ -46,7 +46,7 @@ public class ArticleEntity {
 	@MultiField(
 			mainField = @Field(type = text, index = analyzed),
 			otherFields = {
-					@InnerField(suffix = "untouched", type = text, store = true, index = not_analyzed),
+					@InnerField(suffix = "untouched", type = text, store = true, fielddata = true, index = not_analyzed),
 					@InnerField(suffix = "sort", type = text, store = true, indexAnalyzer = "keyword")
 			}
 	)
