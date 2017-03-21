@@ -192,18 +192,18 @@ class MappingBuilder {
 		xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_GEO_POINT);
 
 		GeoPointField annotation = field.getAnnotation(GeoPointField.class);
-		if (annotation != null) {
-			if (annotation.geoHashPrefix()) {
-				xContentBuilder.field(TYPE_VALUE_GEO_HASH_PREFIX, true);
-				if (StringUtils.isNotEmpty(annotation.geoHashPrecision())) {
-					if (NumberUtils.isNumber(annotation.geoHashPrecision())) {
-						xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, Integer.parseInt(annotation.geoHashPrecision()));
-					} else {
-						xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, annotation.geoHashPrecision());
-					}
-				}
-			}
-		}
+//		if (annotation != null) {
+//			if (annotation.geoHashPrefix()) {
+//				xContentBuilder.field(TYPE_VALUE_GEO_HASH_PREFIX, true);
+//				if (StringUtils.isNotEmpty(annotation.geoHashPrecision())) {
+//					if (NumberUtils.isNumber(annotation.geoHashPrecision())) {
+//						xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, Integer.parseInt(annotation.geoHashPrecision()));
+//					} else {
+//						xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, annotation.geoHashPrecision());
+//					}
+//				}
+//			}
+//		}
 
 		xContentBuilder.endObject();
 	}

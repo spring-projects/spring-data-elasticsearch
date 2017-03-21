@@ -39,6 +39,7 @@ public class SampleEntity {
 
 	@Id
 	private String id;
+	@Field(type = FieldType.text, store = true, fielddata = true)
 	private String type;
 	@Field(type = FieldType.text, store = true, fielddata = true)
 	private String message;
