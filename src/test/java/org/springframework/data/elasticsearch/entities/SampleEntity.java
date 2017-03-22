@@ -34,17 +34,18 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(indexName = "test-index", type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-sample", type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleEntity {
 
 	@Id
 	private String id;
+	@Field(type = FieldType.text, store = true, fielddata = true)
 	private String type;
-	@Field(type = FieldType.String)
+	@Field(type = FieldType.text, store = true, fielddata = true)
 	private String message;
 	private int rate;
 	@ScriptedField
-	private Long scriptedRate;
+	private Double scriptedRate;
 	private boolean available;
 	private String highlightedMessage;
 

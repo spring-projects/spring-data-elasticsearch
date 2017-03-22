@@ -28,22 +28,19 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(indexName = "test-geo-index", type = "geo-annotation-point-type", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-location-marker", type = "geo-annotation-point-type", shards = 1, replicas = 0, refreshInterval = "-1")
 public class LocationMarkerEntity {
 
-	@Id
-	private String id;
-	private String name;
+    @Id
+    private String id;
+    private String name;
 
-	@GeoPointField
-	private String locationAsString;
+    @GeoPointField
+    private String locationAsString;
 
-	@GeoPointField
-	private double[] locationAsArray;
+    @GeoPointField
+    private double[] locationAsArray;
 
-	@GeoPointField(geoHashPrefix = true, geoHashPrecision = "100km")
-	private String locationWithPrefixAsDistance;
-
-	@GeoPointField(geoHashPrefix = true, geoHashPrecision = "5")
-	private String locationWithPrefixAsLengthOfGeoHash;
+    @GeoPointField
+    private String locationAsGeoHash;
 }

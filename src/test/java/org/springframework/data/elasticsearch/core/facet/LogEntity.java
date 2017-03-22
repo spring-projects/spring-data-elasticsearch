@@ -32,7 +32,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
  * @author Mohsin Husen
  */
 
-@Document(indexName = "test-log-index", type = "test-log-type", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-log", type = "test-log-type", shards = 1, replicas = 0, refreshInterval = "-1")
 public class LogEntity {
 
 	private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");

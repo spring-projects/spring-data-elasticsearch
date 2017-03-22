@@ -24,7 +24,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
  * @author Young Gu
  * @author Oliver Gierke
  */
-@Document(indexName = "test-index")
+@Document(indexName = "test-index-immutable")
 @NoArgsConstructor(force = true)
 @Getter
 public class ImmutableEntity {

@@ -29,7 +29,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
  * @author Artur Konczak
  */
 
-@Document(indexName = "person", type = "user", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-person", type = "user", shards = 1, replicas = 0, refreshInterval = "-1")
 public class Person {
 
 	@Id

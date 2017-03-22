@@ -15,18 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core.facet;
 
-import static org.springframework.data.elasticsearch.annotations.FieldIndex.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
-import static org.springframework.data.elasticsearch.annotations.FieldType.String;
+import static org.springframework.data.elasticsearch.annotations.FieldType.text;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.*;
 
 /**
  * Simple type to test facets
@@ -34,19 +30,20 @@ import org.springframework.data.elasticsearch.annotations.InnerField;
  * @author Artur Konczak
  * @author Mohsin Husen
  */
-@Document(indexName = "articles", type = "article", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-articles", type = "article", shards = 1, replicas = 0, refreshInterval = "-1")
 public class ArticleEntity {
 
 	@Id
 	private String id;
 	private String title;
+	@Field(type = text, fielddata = true)
 	private String subject;
 
 	@MultiField(
-			mainField = @Field(type = String, index = analyzed),
+			mainField = @Field(type = text),
 			otherFields = {
-					@InnerField(suffix = "untouched", type = String, store = true, index = not_analyzed),
-					@InnerField(suffix = "sort", type = String, store = true, indexAnalyzer = "keyword")
+					@InnerField(suffix = "untouched", type = text, store = true, fielddata = true, indexAnalyzer = "keyword"),
+					@InnerField(suffix = "sort", type = text, store = true, indexAnalyzer = "keyword")
 			}
 	)
 	private List<String> authors = new ArrayList<String>();

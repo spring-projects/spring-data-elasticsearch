@@ -157,7 +157,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			if (parent != null) {
 				Assert.isNull(this.parentIdProperty, "Only one field can hold a @Parent annotation");
 				Assert.isNull(this.parentType, "Only one field can hold a @Parent annotation");
-				Assert.isTrue(property.getType() == String.class, "Parent ID property should be String");
+				Assert.isTrue(property.getType() == String.class, "Parent ID property should be text");
 				this.parentIdProperty = property;
 				this.parentType = parent.type();
 			}

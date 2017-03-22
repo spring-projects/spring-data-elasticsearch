@@ -1,8 +1,7 @@
 package org.springframework.data.elasticsearch.entities;
 
-import static org.springframework.data.elasticsearch.annotations.FieldIndex.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.String;
+import static org.springframework.data.elasticsearch.annotations.FieldType.text;
 
 import java.util.Date;
 
@@ -14,13 +13,13 @@ import org.springframework.data.elasticsearch.annotations.Field;
 /**
  * @author Jakub Vavrik
  */
-@Document(indexName = "test-datemapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-date-mapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleDateMappingEntity {
 
 	@Id
 	private String id;
 
-	@Field(type = String, index = not_analyzed, store = true, analyzer = "standard")
+	@Field(type = text, index = false, store = true, analyzer = "standard")
 	private String message;
 
 	@Field(type = Date, format = DateFormat.custom, pattern = "dd.MM.yyyy hh:mm")

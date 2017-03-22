@@ -15,8 +15,7 @@
  */
 package org.springframework.data.elasticsearch.entities;
 
-import static org.springframework.data.elasticsearch.annotations.FieldIndex.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.String;
+import static org.springframework.data.elasticsearch.annotations.FieldType.text;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -26,13 +25,13 @@ import org.springframework.data.elasticsearch.annotations.Field;
 /**
  * @author Jakub Vavrik
  */
-@Document(indexName = "test-recursive-mapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-recursive-mapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleTransientEntity {
 
 	@Id
 	private String id;
 
-	@Field(type = String, index = not_analyzed, store = true, analyzer = "standard")
+	@Field(type = text, index = false, store = true, analyzer = "standard")
 	private String message;
 
 	@Transient

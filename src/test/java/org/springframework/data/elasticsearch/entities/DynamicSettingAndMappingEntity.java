@@ -25,7 +25,7 @@ import org.springframework.data.elasticsearch.annotations.Setting;
  *
  * @author Mohsin Husen
  */
-@Document(indexName = "test-setting-index", type = "test-setting-type")
+@Document(indexName = "test-index-dynamic-setting-and-mapping", type = "test-setting-type")
 @Setting(settingPath = "/settings/test-settings.json")
 @Mapping(mappingPath = "/mappings/test-mappings.json")
 public class DynamicSettingAndMappingEntity {
