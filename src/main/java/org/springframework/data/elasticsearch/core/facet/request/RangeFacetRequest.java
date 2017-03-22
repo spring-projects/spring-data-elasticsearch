@@ -77,14 +77,15 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 		Assert.notNull(getName(), "Facet name can't be a null !!!");
 
 		RangeAggregationBuilder rangeBuilder = AggregationBuilders.range(getName());
-		rangeBuilder.field(StringUtils.isNotBlank(keyField) ? keyField : field );
+		final String field = StringUtils.isNotBlank(keyField) ? keyField : this.field;
+		rangeBuilder.field(field);
 
 		for (Entry entry : entries) {
 			DoubleEntry doubleEntry = (DoubleEntry) entry;
 			rangeBuilder.addRange(validateValue(doubleEntry.getFrom(), Double.NEGATIVE_INFINITY), validateValue(doubleEntry.getTo(), Double.POSITIVE_INFINITY));
 		}
 
-		rangeBuilder.subAggregation(AggregationBuilders.extendedStats(INTERNAL_STATS));
+		rangeBuilder.subAggregation(AggregationBuilders.extendedStats(INTERNAL_STATS).field(field));
 		if(StringUtils.isNotBlank(valueField)){
 			rangeBuilder.subAggregation(AggregationBuilders.sum(RANGE_INTERNAL_SUM).field(valueField));
 		}

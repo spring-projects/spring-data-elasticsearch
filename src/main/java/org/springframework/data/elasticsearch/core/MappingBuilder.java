@@ -255,8 +255,8 @@ class MappingBuilder {
 						? fieldAnnotation.pattern() : fieldAnnotation.format());
 			}
 		}
-		if (FieldIndex.not_analyzed == fieldAnnotation.index() || FieldIndex.no == fieldAnnotation.index()) {
-			xContentBuilder.field(FIELD_INDEX, fieldAnnotation.index().name().toLowerCase());
+		if(!fieldAnnotation.index()) {
+			xContentBuilder.field(FIELD_INDEX, fieldAnnotation.index());
 		}
 		if (isNotBlank(fieldAnnotation.searchAnalyzer())) {
 			xContentBuilder.field(FIELD_SEARCH_ANALYZER, fieldAnnotation.searchAnalyzer());
@@ -279,8 +279,8 @@ class MappingBuilder {
 		if (FieldType.Auto != annotation.type()) {
 			builder.field(FIELD_TYPE, annotation.type().name().toLowerCase());
 		}
-		if (FieldIndex.not_analyzed == annotation.index()) {
-			builder.field(FIELD_INDEX, annotation.index().name().toLowerCase());
+		if(!annotation.index()) {
+			builder.field(FIELD_INDEX, annotation.index());
 		}
 		if (isNotBlank(annotation.searchAnalyzer())) {
 			builder.field(FIELD_SEARCH_ANALYZER, annotation.searchAnalyzer());

@@ -1081,6 +1081,7 @@ public class ElasticsearchTemplateTests {
 	public void shouldPutMappingForGivenEntity() throws Exception {
 		// given
 		Class entity = SampleMappingEntity.class;
+		elasticsearchTemplate.deleteIndex(entity);
 		elasticsearchTemplate.createIndex(entity);
 		// when
 		assertThat(elasticsearchTemplate.putMapping(entity), is(true));
@@ -1312,11 +1313,10 @@ public class ElasticsearchTemplateTests {
 				)
 				.withIndices(INDEX_NAME)
 				.withTypes(TYPE_NAME)
-				.withMinScore(0.5F)
+				.withMinScore(2.0F)
 				.build();
 
 		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
-		final List<SampleEntity> content = page.getContent();
 		// then
 		assertThat(page.getTotalElements(), is(1L));
 		assertThat(page.getContent().get(0).getMessage(), is("ab"));

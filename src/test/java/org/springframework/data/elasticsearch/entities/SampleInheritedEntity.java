@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.entities;
 
-import static org.springframework.data.elasticsearch.annotations.FieldIndex.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.text;
 
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -27,7 +26,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 @Document(indexName = "test-index-sample-inherited", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleInheritedEntity extends AbstractInheritedEntity {
 
-	@Field(type = text, index = not_analyzed, store = true, analyzer = "standard")
+	@Field(type = text, index = false, store = true, analyzer = "standard")
 	private String message;
 
 	public String getMessage() {

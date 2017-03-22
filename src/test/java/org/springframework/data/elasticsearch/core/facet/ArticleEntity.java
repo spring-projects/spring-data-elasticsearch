@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.facet;
 
-import static org.springframework.data.elasticsearch.annotations.FieldIndex.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
 import static org.springframework.data.elasticsearch.annotations.FieldType.text;
 
@@ -23,10 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.*;
 
 /**
  * Simple type to test facets
@@ -44,9 +40,9 @@ public class ArticleEntity {
 	private String subject;
 
 	@MultiField(
-			mainField = @Field(type = text, index = analyzed),
+			mainField = @Field(type = text),
 			otherFields = {
-					@InnerField(suffix = "untouched", type = text, store = true, fielddata = true, index = not_analyzed),
+					@InnerField(suffix = "untouched", type = text, store = true, fielddata = true, indexAnalyzer = "keyword"),
 					@InnerField(suffix = "sort", type = text, store = true, indexAnalyzer = "keyword")
 			}
 	)

@@ -62,7 +62,7 @@ public class MappingBuilderTests {
 	@Test
 	public void testInfiniteLoopAvoidance() throws IOException {
 		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\"" +
-				"type\":\"text\",\"index\":\"not_analyzed\"," +
+				"type\":\"text\",\"index\":false," +
 				"\"analyzer\":\"standard\"}}}}";
 
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class, "mapping", "id", null);
@@ -117,9 +117,9 @@ public class MappingBuilderTests {
 	@Test
 	public void shouldBuildMappingWithSuperclass() throws IOException {
 		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\"" +
-				"type\":\"text\",\"index\":\"not_analyzed\",\"analyzer\":\"standard\"}" +
+				"type\":\"text\",\"index\":false,\"analyzer\":\"standard\"}" +
 				",\"createdDate\":{\"store\":false," +
-				"\"type\":\"date\",\"index\":\"not_analyzed\"}}}}";
+				"\"type\":\"date\",\"index\":false}}}}";
 
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleInheritedEntity.class, "mapping", "id", null);
 		assertThat(xContentBuilder.string(), is(expected));

@@ -38,7 +38,7 @@ public @interface Field {
 
 	FieldType type() default FieldType.Auto;
 
-	FieldIndex index() default FieldIndex.analyzed;
+	boolean index() default true;
 
 	DateFormat format() default DateFormat.none;
 

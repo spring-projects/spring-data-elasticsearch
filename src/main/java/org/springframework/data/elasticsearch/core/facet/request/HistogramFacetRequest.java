@@ -66,7 +66,7 @@ public class HistogramFacetRequest extends AbstractFacetRequest {
 			dateHistogramBuilder.interval(interval);
 		}
 
-		dateHistogramBuilder.subAggregation(AggregationBuilders.extendedStats(INTERNAL_STATS));
+		dateHistogramBuilder.subAggregation(AggregationBuilders.extendedStats(INTERNAL_STATS).field(field));
 
 		return dateHistogramBuilder;
 	}
