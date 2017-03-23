@@ -21,6 +21,7 @@ import javax.enterprise.inject.Produces;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
+import org.elasticsearch.node.NodeValidationException;
 import org.springframework.data.elasticsearch.Utils;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
@@ -32,7 +33,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 class ElasticsearchTemplateProducer {
 
 	@Produces
-	public Client createNodeClient() {
+	public Client createNodeClient() throws NodeValidationException {
 		return Utils.getNodeClient();
 	}
 
