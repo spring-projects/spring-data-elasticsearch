@@ -15,15 +15,11 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.mockito.Mockito.*;
-
-import java.util.Optional;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
@@ -52,9 +48,6 @@ public class ElasticsearchEntityInformationCreatorImplTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldThrowIllegalArgumentExceptionOnMissingIdAnnotation() {
-		doReturn(Optional.of(persistentEntity)).when(mappingContext).getPersistentEntity(String.class);
-		doReturn(String.class).when(persistentEntity).getType();
-		doReturn(Optional.empty()).when(persistentEntity).getIdProperty();
 		entityInfoCreator.getEntityInformation(String.class);
 	}
 }

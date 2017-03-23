@@ -2,7 +2,6 @@ package org.springframework.data.elasticsearch.entities;
 
 import static org.springframework.data.elasticsearch.annotations.FieldIndex.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.String;
 
 import java.util.Date;
 

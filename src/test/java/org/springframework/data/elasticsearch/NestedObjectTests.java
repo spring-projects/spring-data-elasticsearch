@@ -15,13 +15,11 @@
  */
 package org.springframework.data.elasticsearch;
 
-import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.apache.commons.lang.RandomStringUtils.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,7 +46,6 @@ import org.springframework.data.elasticsearch.entities.Car;
 import org.springframework.data.elasticsearch.entities.GirlFriend;
 import org.springframework.data.elasticsearch.entities.Person;
 import org.springframework.data.elasticsearch.entities.PersonMultipleLevelNested;
-import org.springframework.data.geo.Point;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 

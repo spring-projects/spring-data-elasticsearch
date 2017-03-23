@@ -34,13 +34,6 @@ import org.springframework.data.elasticsearch.entities.NonDocumentEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
