@@ -44,7 +44,7 @@ public class NativeSearchQueryBuilder {
 	private List<FacetRequest> facetRequests = new ArrayList<>();
 	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<>();
 	private HighlightBuilder.Field[] highlightFields;
-	private Pageable pageable = Pageable.NONE;
+	private Pageable pageable = Pageable.unpaged();
 	private String[] indices;
 	private String[] types;
 	private String[] fields;

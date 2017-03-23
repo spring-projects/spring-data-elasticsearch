@@ -20,7 +20,6 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.enterprise.event.Observes;
@@ -79,6 +78,6 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers);
 
 		return new ElasticsearchRepositoryBean<>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager,
-				Optional.ofNullable(getCustomImplementationDetector()));
+				getCustomImplementationDetector());
 	}
 }

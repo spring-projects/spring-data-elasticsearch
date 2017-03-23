@@ -418,7 +418,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 					SearchResponse response = getSearchResponse(
 							client.prepareSearchScroll(scrollId).setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
 					// Save hits and scroll id
-					currentHits = mapper.mapResults(response, clazz, Pageable.NONE).iterator();
+					currentHits = mapper.mapResults(response, clazz, Pageable.unpaged()).iterator();
 					finished = !currentHits.hasNext();
 					scrollId = response.getScrollId();
 				}
@@ -774,7 +774,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(query.getIndices())).setSearchType(SCAN)
 				.setTypes(toArray(query.getTypes())).setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).setFrom(0);
 
-		if(query.getPageable() != Pageable.NONE){
+		if(query.getPageable().isPaged()){
 			requestBuilder.setSize(query.getPageable().getPageSize());
 		}
 
@@ -826,14 +826,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, Class<T> clazz) {
 		SearchResponse response = getSearchResponse(
 				client.prepareSearchScroll(scrollId).setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
-		return resultsMapper.mapResults(response, clazz, Pageable.NONE);
+		return resultsMapper.mapResults(response, clazz, Pageable.unpaged());
 	}
 
 	@Override
 	public <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper) {
 		SearchResponse response = getSearchResponse(
 				client.prepareSearchScroll(scrollId).setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
-		return mapper.mapResults(response, null, Pageable.NONE);
+		return mapper.mapResults(response, null, Pageable.unpaged());
 	}
 
 	@Override
@@ -1009,7 +1009,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			searchRequestBuilder.setFetchSource(sourceFilter.getIncludes(), sourceFilter.getExcludes());
 		}
 
-		if (query.getPageable() != null && query.getPageable() != Pageable.NONE) {
+		if (query.getPageable().isPaged()) {
 			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
 			searchRequestBuilder.setSize(query.getPageable().getPageSize());
 		}

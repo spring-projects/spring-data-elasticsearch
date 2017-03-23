@@ -60,7 +60,7 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 			return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
 		} else if (queryMethod.isStreamQuery()) {
 			Class<?> entityType = queryMethod.getEntityInformation().getJavaType();
-			if (query.getPageable() == Pageable.NONE) {
+			if (query.getPageable().isUnpaged()) {
 				query.setPageable(PageRequest.of(0, 20));
 			}
 
@@ -85,7 +85,7 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		Object result = null;
 
 		if (queryMethod.isCollectionQuery()) {
-			if (accessor.getPageable() == Pageable.NONE) {
+			if (accessor.getPageable().isUnpaged()) {
 				int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
 				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 			} else {

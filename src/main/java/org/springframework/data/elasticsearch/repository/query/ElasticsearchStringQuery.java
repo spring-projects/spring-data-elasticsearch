@@ -67,7 +67,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 			stringQuery.setPageable(accessor.getPageable());
 			return elasticsearchOperations.queryForPage(stringQuery, queryMethod.getEntityInformation().getJavaType());
 		} else if (queryMethod.isCollectionQuery()) {
-			if (accessor.getPageable() != Pageable.NONE) {
+			if (accessor.getPageable().isPaged()) {
 				stringQuery.setPageable(accessor.getPageable());
 			}
 			return elasticsearchOperations.queryForList(stringQuery, queryMethod.getEntityInformation().getJavaType());

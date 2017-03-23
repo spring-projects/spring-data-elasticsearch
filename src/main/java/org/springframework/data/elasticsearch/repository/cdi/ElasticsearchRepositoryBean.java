@@ -52,8 +52,9 @@ public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 	 *          {@link CustomRepositoryImplementationDetector}, can be {@literal null}.
 	 */
 	public ElasticsearchRepositoryBean(Bean<ElasticsearchOperations> operations, Set<Annotation> qualifiers,
-			Class<T> repositoryType, BeanManager beanManager, Optional<CustomRepositoryImplementationDetector> detector) {
-		super(qualifiers, repositoryType, beanManager, detector);
+			Class<T> repositoryType, BeanManager beanManager, CustomRepositoryImplementationDetector detector) {
+
+		super(qualifiers, repositoryType, beanManager, Optional.of(detector));
 
 		Assert.notNull(operations, "Cannot create repository with 'null' for ElasticsearchOperations.");
 		this.elasticsearchOperationsBean = operations;

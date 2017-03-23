@@ -84,7 +84,7 @@ public class DefaultResultMapperTests {
 		when(response.getAggregations()).thenReturn(aggregations);
 
 		//When
-		AggregatedPage<Car> page = (AggregatedPage<Car>) resultMapper.mapResults(response, Car.class, Pageable.NONE);
+		AggregatedPage<Car> page = (AggregatedPage<Car>) resultMapper.mapResults(response, Car.class, Pageable.unpaged());
 
 		//Then
 		page.hasFacets();
@@ -102,7 +102,7 @@ public class DefaultResultMapperTests {
 		when(response.getHits()).thenReturn(searchHits);
 
 		//When
-		Page<Car> page = resultMapper.mapResults(response, Car.class, Pageable.NONE);
+		Page<Car> page = resultMapper.mapResults(response, Car.class, Pageable.unpaged());
 
 		//Then
 		assertThat(page.hasContent(), is(true));
@@ -120,7 +120,7 @@ public class DefaultResultMapperTests {
 		when(response.getHits()).thenReturn(searchHits);
 
 		//When
-		Page<Car> page = resultMapper.mapResults(response, Car.class, Pageable.NONE);
+		Page<Car> page = resultMapper.mapResults(response, Car.class, Pageable.unpaged());
 
 		//Then
 		assertThat(page.hasContent(), is(true));

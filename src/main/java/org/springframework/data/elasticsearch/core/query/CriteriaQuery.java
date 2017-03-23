@@ -32,7 +32,7 @@ public class CriteriaQuery extends AbstractQuery {
 	private CriteriaQuery() {}
 
 	public CriteriaQuery(Criteria criteria) {
-		this(criteria, Pageable.NONE);
+		this(criteria, Pageable.unpaged());
 	}
 
 	public CriteriaQuery(Criteria criteria, Pageable pageable) {
