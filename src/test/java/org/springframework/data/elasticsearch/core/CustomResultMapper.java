@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 /**
  * @author Artur Konczak
  * @author Mohsin Husen
+ * @author Sascha Woo
  */
 public class CustomResultMapper implements ResultsMapper {
 
@@ -48,7 +49,7 @@ public class CustomResultMapper implements ResultsMapper {
 	}
 
 	@Override
-	public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+	public <T> ScrollPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
@@ -56,4 +57,5 @@ public class CustomResultMapper implements ResultsMapper {
 	public <T> LinkedList<T> mapResults(MultiGetResponse responses, Class<T> clazz) {
 		return null;
 	}
+
 }

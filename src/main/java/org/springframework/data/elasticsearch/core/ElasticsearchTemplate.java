@@ -82,7 +82,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
-import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
@@ -104,6 +103,7 @@ import org.springframework.util.Assert;
  * @author Young Gu
  * @author Oliver Gierke
  * @author Mark Janssen
+ * @author Sascha Woo
  */
 
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
@@ -675,14 +675,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		while (hasRecords) {
 			Page<String> page = scroll(scrollId, scrollTimeInMillis, new SearchResultMapper() {
 				@Override
-				public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				public <T> ScrollPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 					List<String> result = new ArrayList<String>();
 					for (SearchHit searchHit : response.getHits()) {
 						String id = searchHit.getId();
 						result.add(id);
 					}
 					if (result.size() > 0) {
-						return new AggregatedPageImpl<T>((List<T>) result);
+						return new ScrollPageImpl<T>((List<T>) result, response.getScrollId());
 					}
 					return null;
 				}
@@ -723,34 +723,38 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public String scan(CriteriaQuery criteriaQuery, long scrollTimeInMillis, boolean noFields) {
-		return doScan(prepareScan(criteriaQuery, scrollTimeInMillis, noFields), criteriaQuery);
+		return doScan(prepareScroll(criteriaQuery, scrollTimeInMillis, noFields, true), criteriaQuery);
 	}
 
 	@Override
 	public <T> String scan(CriteriaQuery criteriaQuery, long scrollTimeInMillis, boolean noFields, Class<T> clazz) {
-		return doScan(prepareScan(criteriaQuery, scrollTimeInMillis, noFields, clazz), criteriaQuery);
+		return doScan(prepareScroll(criteriaQuery, scrollTimeInMillis, noFields, clazz, true), criteriaQuery);
 	}
 
 	@Override
 	public String scan(SearchQuery searchQuery, long scrollTimeInMillis, boolean noFields) {
-		return doScan(prepareScan(searchQuery, scrollTimeInMillis, noFields), searchQuery);
+		return doScan(prepareScroll(searchQuery, scrollTimeInMillis, noFields, true), searchQuery);
 	}
 
 	@Override
 	public <T> String scan(SearchQuery searchQuery, long scrollTimeInMillis, boolean noFields, Class<T> clazz) {
-		return doScan(prepareScan(searchQuery, scrollTimeInMillis, noFields, clazz), searchQuery);
+		return doScan(prepareScroll(searchQuery, scrollTimeInMillis, noFields, clazz, true), searchQuery);
 	}
 
-	private <T> SearchRequestBuilder prepareScan(Query query, long scrollTimeInMillis, boolean noFields, Class<T> clazz) {
+	private <T> SearchRequestBuilder prepareScroll(Query query, long scrollTimeInMillis, boolean noFields, Class<T> clazz, boolean scan) {
 		setPersistentEntityIndexAndType(query, clazz);
-		return prepareScan(query, scrollTimeInMillis, noFields);
+		return prepareScroll(query, scrollTimeInMillis, noFields, scan);
 	}
 
-	private SearchRequestBuilder prepareScan(Query query, long scrollTimeInMillis, boolean noFields) {
-		SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(query.getIndices())).setSearchType(SCAN)
-				.setTypes(toArray(query.getTypes()))
-				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).setFrom(0)
-				.setSize(query.getPageable().getPageSize());
+	private SearchRequestBuilder prepareScroll(Query query, long scrollTimeInMillis, boolean noFields, boolean scan) {
+		SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(query.getIndices()))
+			.setTypes(toArray(query.getTypes()))
+			.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).setFrom(0)
+			.setSize(query.getPageable().getPageSize());
+
+		if (scan) {
+			requestBuilder.setSearchType(SCAN);
+		}
 
 		if (!isEmpty(query.getFields())) {
 			requestBuilder.addFields(toArray(query.getFields()));
@@ -795,15 +799,74 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		return getSearchResponse(requestBuilder.setQuery(searchQuery.getQuery()).execute()).getScrollId();
 	}
 
+	private <T> ScrollPage<T> doScroll(SearchRequestBuilder requestBuilder, CriteriaQuery criteriaQuery, Class<T> clazz, SearchResultMapper mapper) {
+		Assert.notNull(criteriaQuery.getIndices(), "No index defined for Query");
+		Assert.notNull(criteriaQuery.getTypes(), "No type define for Query");
+		Assert.notNull(criteriaQuery.getPageable(), "Query.pageable is required for scan & scroll");
+
+		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
+		QueryBuilder elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
+
+		if (elasticsearchQuery != null) {
+			requestBuilder.setQuery(elasticsearchQuery);
+		} else {
+			requestBuilder.setQuery(QueryBuilders.matchAllQuery());
+		}
+
+		if (elasticsearchFilter != null) {
+			requestBuilder.setPostFilter(elasticsearchFilter);
+		}
+
+		if (mapper == null)
+			mapper = resultsMapper;
+
+		return mapper.mapResults(getSearchResponse(requestBuilder.execute()), clazz, null);
+	}
+
+	private <T> ScrollPage<T> doScroll(SearchRequestBuilder requestBuilder, SearchQuery searchQuery, Class<T> clazz, SearchResultMapper mapper) {
+		Assert.notNull(searchQuery.getIndices(), "No index defined for Query");
+		Assert.notNull(searchQuery.getTypes(), "No type define for Query");
+		Assert.notNull(searchQuery.getPageable(), "Query.pageable is required for scan & scroll");
+
+		if (searchQuery.getFilter() != null) {
+			requestBuilder.setPostFilter(searchQuery.getFilter());
+		}
+
+		if (mapper == null)
+			mapper = resultsMapper;
+
+		return mapper.mapResults(getSearchResponse(requestBuilder.execute()), clazz, null);
+	}
+
 	@Override
-	public <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, Class<T> clazz) {
+	public <T> ScrollPage<T> scroll(CriteriaQuery criteriaQuery, long scrollTimeInMillis, boolean noFields, Class<T> clazz) {
+		return doScroll(prepareScroll(criteriaQuery, scrollTimeInMillis, noFields, false), criteriaQuery, clazz, null);
+	}
+
+	@Override
+	public <T> ScrollPage<T> scroll(CriteriaQuery criteriaQuery, long scrollTimeInMillis, boolean noFields, SearchResultMapper mapper) {
+		return doScroll(prepareScroll(criteriaQuery, scrollTimeInMillis, noFields, false), criteriaQuery, null, mapper);
+	}
+
+	@Override
+	public <T> ScrollPage<T> scroll(SearchQuery searchQuery, long scrollTimeInMillis, boolean noFields, Class<T> clazz) {
+		return doScroll(prepareScroll(searchQuery, scrollTimeInMillis, noFields, false), searchQuery, clazz, null);
+	}
+
+	@Override
+	public <T> ScrollPage<T> scroll(SearchQuery searchQuery, long scrollTimeInMillis, boolean noFields, SearchResultMapper mapper) {
+		return doScroll(prepareScroll(searchQuery, scrollTimeInMillis, noFields, false), searchQuery, null, mapper);
+	}
+
+	@Override
+	public <T> ScrollPage<T> scroll(String scrollId, long scrollTimeInMillis, Class<T> clazz) {
 		SearchResponse response = getSearchResponse(client.prepareSearchScroll(scrollId)
 				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
 		return resultsMapper.mapResults(response, clazz, null);
 	}
 
 	@Override
-	public <T> Page<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper) {
+	public <T> ScrollPage<T> scroll(String scrollId, long scrollTimeInMillis, SearchResultMapper mapper) {
 		SearchResponse response = getSearchResponse(client.prepareSearchScroll(scrollId)
 				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
 		return mapper.mapResults(response, null, null);
