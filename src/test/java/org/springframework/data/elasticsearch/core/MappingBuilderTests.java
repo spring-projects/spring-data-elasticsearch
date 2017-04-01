@@ -33,8 +33,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.builder.SampleInheritedEntityBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.entities.*;
 import org.springframework.data.elasticsearch.entities.GeoEntity;
+import org.springframework.data.elasticsearch.entities.Group;
+import org.springframework.data.elasticsearch.entities.MinimalEntity;
+import org.springframework.data.elasticsearch.entities.SampleInheritedEntity;
+import org.springframework.data.elasticsearch.entities.SampleTransientEntity;
+import org.springframework.data.elasticsearch.entities.SimpleRecursiveEntity;
+import org.springframework.data.elasticsearch.entities.StockPrice;
+import org.springframework.data.elasticsearch.entities.User;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 

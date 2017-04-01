@@ -15,9 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repositories.setting;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 import java.util.Map;
 

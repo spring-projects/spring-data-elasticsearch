@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
-import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,11 +40,13 @@ import org.springframework.data.elasticsearch.repositories.sample.SampleElastics
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.google.common.collect.Lists;
+
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/simple-repository-test.xml")
 public class SimpleElasticsearchRepositoryTests {
@@ -81,11 +83,11 @@ public class SimpleElasticsearchRepositoryTests {
 		// when
 		repository.save(Arrays.asList(sampleEntity1, sampleEntity2));
 		// then
-		SampleEntity entity1FromElasticSearch = repository.findOne(documentId1);
-		assertThat(entity1FromElasticSearch, is(notNullValue()));
+		Optional<SampleEntity> entity1FromElasticSearch = repository.findOne(documentId1);
+		assertThat(entity1FromElasticSearch.isPresent(), is(true));
 
-		SampleEntity entity2FromElasticSearch = repository.findOne(documentId2);
-		assertThat(entity2FromElasticSearch, is(notNullValue()));
+		Optional<SampleEntity> entity2FromElasticSearch = repository.findOne(documentId2);
+		assertThat(entity2FromElasticSearch.isPresent(), is(true));
 	}
 
 	@Test
@@ -99,8 +101,8 @@ public class SimpleElasticsearchRepositoryTests {
 		// when
 		repository.save(sampleEntity);
 		// then
-		SampleEntity entityFromElasticSearch = repository.findOne(documentId);
-		assertThat(entityFromElasticSearch, is(notNullValue()));
+		Optional<SampleEntity> entityFromElasticSearch = repository.findOne(documentId);
+		assertThat(entityFromElasticSearch.isPresent(), is(true));
 	}
 
 	@Test
@@ -125,9 +127,9 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntity);
 		// when
-		SampleEntity entityFromElasticSearch = repository.findOne(documentId);
+		Optional<SampleEntity> entityFromElasticSearch = repository.findOne(documentId);
 		// then
-		assertThat(entityFromElasticSearch, is(notNullValue()));
+		assertThat(entityFromElasticSearch.isPresent(), is(true));
 		assertThat(sampleEntity, is((equalTo(sampleEntity))));
 	}
 
@@ -166,8 +168,8 @@ public class SimpleElasticsearchRepositoryTests {
 		// when
 		repository.delete(documentId);
 		// then
-		SampleEntity entityFromElasticSearch = repository.findOne(documentId);
-		assertThat(entityFromElasticSearch, is(nullValue()));
+		Optional<SampleEntity> entityFromElasticSearch = repository.findOne(documentId);
+		assertThat(entityFromElasticSearch.isPresent(), is(false));
 	}
 
 	@Test
@@ -474,8 +476,8 @@ public class SimpleElasticsearchRepositoryTests {
 		// when
 		repository.delete(sampleEntities);
 		// then
-		assertThat(repository.findOne(documentId1), is(nullValue()));
-		assertThat(repository.findOne(documentId2), is(nullValue()));
+		assertThat(repository.findOne(documentId1).isPresent(), is(false));
+		assertThat(repository.findOne(documentId2).isPresent(), is(false));
 	}
 
 	@Test
@@ -533,7 +535,7 @@ public class SimpleElasticsearchRepositoryTests {
 	}
 
 	private static List<SampleEntity> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
-		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		List<SampleEntity> sampleEntities = new ArrayList<>();
 		for (int i = 0; i < numberOfEntities; i++) {
 			String documentId = randomNumeric(5);
 			SampleEntity sampleEntity = new SampleEntity();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,15 +38,16 @@ import org.w3c.dom.Element;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
 public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurationExtensionSupport {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtension#getRepositoryFactoryClassName()
+	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtension#getRepositoryFactoryBeanClassName()
 	 */
 	@Override
-	public String getRepositoryFactoryClassName() {
+	public String getRepositoryFactoryBeanClassName() {
 		return ElasticsearchRepositoryFactoryBean.class.getName();
 	}
 
@@ -59,7 +60,7 @@ public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurat
 		return "elasticsearch";
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#postProcess(org.springframework.beans.factory.support.BeanDefinitionBuilder, org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource)
 	 */
@@ -70,7 +71,7 @@ public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurat
 		builder.addPropertyReference("elasticsearchOperations", attributes.getString("elasticsearchTemplateRef"));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#postProcess(org.springframework.beans.factory.support.BeanDefinitionBuilder, org.springframework.data.repository.config.XmlRepositoryConfigurationSource)
 	 */
@@ -87,7 +88,7 @@ public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurat
 	 */
 	@Override
 	protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
-		return Collections.<Class<? extends Annotation>>singleton(Document.class);
+		return Collections.<Class<? extends Annotation>> singleton(Document.class);
 	}
 
 	/*
@@ -96,6 +97,6 @@ public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurat
 	*/
 	@Override
 	protected Collection<Class<?>> getIdentifyingTypes() {
-		return Arrays.<Class<?>>asList(ElasticsearchRepository.class, ElasticsearchCrudRepository.class);
+		return Arrays.<Class<?>> asList(ElasticsearchRepository.class, ElasticsearchCrudRepository.class);
 	}
 }

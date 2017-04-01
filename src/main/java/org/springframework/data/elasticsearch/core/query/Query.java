@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,12 @@ import org.springframework.data.domain.Sort;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
 public interface Query {
 
-	public static final int DEFAULT_PAGE_SIZE = 10;
-	public static final Pageable DEFAULT_PAGE = new PageRequest(0, DEFAULT_PAGE_SIZE);
+	int DEFAULT_PAGE_SIZE = 10;
+	Pageable DEFAULT_PAGE = PageRequest.of(0, DEFAULT_PAGE_SIZE);
 
 	/**
 	 * restrict result to entries on given page. Corresponds to the 'start' and 'rows' parameter in elasticsearch

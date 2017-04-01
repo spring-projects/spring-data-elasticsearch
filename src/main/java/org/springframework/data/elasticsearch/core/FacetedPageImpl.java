@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ import org.springframework.data.elasticsearch.core.facet.result.*;
 public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedPage<T>, AggregatedPage<T> {
 
 	private List<FacetResult> facets;
-	private Map<String, FacetResult> mapOfFacets = new HashMap<String, FacetResult>();
+	private Map<String, FacetResult> mapOfFacets = new HashMap<>();
 
 	public FacetedPageImpl(List<T> content) {
 		super(content);
@@ -85,10 +85,10 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 	 */
 	private void processAggregations() {
 		if (facets == null) {
-			facets = new ArrayList<FacetResult>();
+			facets = new ArrayList<>();
 			for (Aggregation agg : getAggregations()) {
 				if (agg instanceof Terms) {
-					List<Term> terms = new ArrayList<Term>();
+					List<Term> terms = new ArrayList<>();
 					for (Terms.Bucket t : ((Terms) agg).getBuckets()) {
 						terms.add(new Term(t.getKeyAsString(), t.getDocCount()));
 					}
@@ -96,7 +96,7 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 				}
 				if (agg instanceof Range) {
 					List<? extends Range.Bucket> buckets = ((Range) agg).getBuckets();
-					List<org.springframework.data.elasticsearch.core.facet.result.Range> ranges = new ArrayList<org.springframework.data.elasticsearch.core.facet.result.Range>();
+					List<org.springframework.data.elasticsearch.core.facet.result.Range> ranges = new ArrayList<>();
 					for (Range.Bucket b : buckets) {
 						ExtendedStats rStats = (ExtendedStats) b.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
 						if (rStats != null) {
@@ -113,7 +113,7 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 					addFacet(new StatisticalResult(agg.getName(), stats.getCount(), stats.getMax(), stats.getMin(), stats.getAvg(), stats.getStdDeviation(), stats.getSumOfSquares(), stats.getSum(), stats.getVariance()));
 				}
 				if (agg instanceof Histogram) {
-					List<IntervalUnit> intervals = new ArrayList<IntervalUnit>();
+					List<IntervalUnit> intervals = new ArrayList<>();
 					for (Histogram.Bucket h : ((Histogram) agg).getBuckets()) {
 						ExtendedStats hStats = (ExtendedStats) h.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
 						if (hStats != null) {

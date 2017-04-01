@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1194,7 +1194,7 @@ public class CustomMethodRepositoryTests {
 	}
 
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
-		List<SampleEntity> entities = new ArrayList<SampleEntity>();
+		List<SampleEntity> entities = new ArrayList<>();
 		for (int i = 0; i < numberOfEntities; i++) {
 			SampleEntity entity = new SampleEntity();
 			entity.setId(randomNumeric(numberOfEntities));

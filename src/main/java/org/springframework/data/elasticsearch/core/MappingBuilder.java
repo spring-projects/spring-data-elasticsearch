@@ -167,7 +167,7 @@ class MappingBuilder {
 
 	private static java.lang.reflect.Field[] retrieveFields(Class clazz) {
 		// Create list of fields.
-		List<java.lang.reflect.Field> fields = new ArrayList<java.lang.reflect.Field>();
+		List<java.lang.reflect.Field> fields = new ArrayList<>();
 
 		// Keep backing up the inheritance hierarchy.
 		Class targetClass = clazz;

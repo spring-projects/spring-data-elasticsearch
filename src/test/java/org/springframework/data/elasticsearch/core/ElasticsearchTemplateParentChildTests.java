@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import static org.elasticsearch.common.xcontent.XContentFactory.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;

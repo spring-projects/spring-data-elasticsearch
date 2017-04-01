@@ -15,6 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core.aggregation;
 
+import static org.elasticsearch.action.search.SearchType.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.junit.Before;
@@ -30,12 +36,6 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import static org.elasticsearch.action.search.SearchType.COUNT;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.elasticsearch.search.aggregations.AggregationBuilders.terms;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Rizwan Idrees

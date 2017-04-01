@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,11 +57,11 @@ public class Criteria {
 	private float boost = Float.NaN;
 	private boolean negating = false;
 
-	private List<Criteria> criteriaChain = new ArrayList<Criteria>(1);
+	private List<Criteria> criteriaChain = new ArrayList<>(1);
 
-	private Set<CriteriaEntry> queryCriteria = new LinkedHashSet<CriteriaEntry>();
+	private Set<CriteriaEntry> queryCriteria = new LinkedHashSet<>();
 
-	private Set<CriteriaEntry> filterCriteria = new LinkedHashSet<CriteriaEntry>();
+	private Set<CriteriaEntry> filterCriteria = new LinkedHashSet<>();
 
 	public Criteria() {
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.util.StringUtils;
 
 /**
  * ElasticsearchQueryMethod
@@ -30,6 +29,7 @@ import org.springframework.util.StringUtils;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
@@ -45,7 +45,6 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	}
 
 	public String getAnnotatedQuery() {
-		String query = (String) AnnotationUtils.getValue(queryAnnotation, "value");
-		return StringUtils.hasText(query) ? query : null;
+		return (String) AnnotationUtils.getValue(queryAnnotation, "value");
 	}
 }

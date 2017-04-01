@@ -1,6 +1,18 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.1.1.RELEASE (2017-03-02)
+---------------------------------------------
+* DATAES-329 - Remove references to single-argument assertion methods of Spring.
+* DATAES-327 - Release 2.1.1 (Ingalls SR1).
+* DATAES-325 - Remove references to GenericCollectionTypeResolver in favor of ResolvableType.
+
+
+Changes in version 2.0.7.RELEASE (2017-01-26)
+---------------------------------------------
+* DATAES-319 - Release 2.0.7 (Hopper SR7).
+
+
 Changes in version 2.1.0.RELEASE (2017-01-26)
 ---------------------------------------------
 * DATAES-322 - Update project documentation with the CLA tool integration.

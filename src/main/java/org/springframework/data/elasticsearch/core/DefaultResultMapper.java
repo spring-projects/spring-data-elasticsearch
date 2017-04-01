@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -23,10 +22,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
@@ -42,14 +39,18 @@ import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
-import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
+
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
  * @author Artur Konczak
  * @author Petar Tahchiev
  * @author Young Gu
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public class DefaultResultMapper extends AbstractResultMapper {
 
@@ -78,7 +79,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	@Override
 	public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 		long totalHits = response.getHits().totalHits();
-		List<T> results = new ArrayList<T>();
+		List<T> results = new ArrayList<>();
 		for (SearchHit hit : response.getHits()) {
 			if (hit != null) {
 				T result = null;
@@ -93,7 +94,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 			}
 		}
 
-		return new AggregatedPageImpl<T>(results, pageable, totalHits, response.getAggregations());
+		return new AggregatedPageImpl<>(results, pageable, totalHits, response.getAggregations());
 	}
 
 	private <T> void populateScriptFields(T result, SearchHit hit) {
@@ -118,7 +119,6 @@ public class DefaultResultMapper extends AbstractResultMapper {
 			}
 		}
 	}
-
 
 	private <T> T mapEntity(Collection<SearchHitField> values, Class<T> clazz) {
 		return mapEntity(buildJSONFromFields(values), clazz);
@@ -160,7 +160,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 
 	@Override
 	public <T> LinkedList<T> mapResults(MultiGetResponse responses, Class<T> clazz) {
-		LinkedList<T> list = new LinkedList<T>();
+		LinkedList<T> list = new LinkedList<>();
 		for (MultiGetItemResponse response : responses.getResponses()) {
 			if (!response.isFailed() && response.getResponse().isExists()) {
 				T result = mapEntity(response.getResponse().getSourceAsString(), clazz);
@@ -175,13 +175,17 @@ public class DefaultResultMapper extends AbstractResultMapper {
 
 		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
 
-			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(clazz);
-			PersistentProperty<?> idProperty = persistentEntity.getIdProperty();
-			
+			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(clazz);
+			Optional<ElasticsearchPersistentProperty> idProperty = persistentEntity.getIdProperty();
+
 			// Only deal with String because ES generated Ids are strings !
-			if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
-				persistentEntity.getPropertyAccessor(result).setProperty(idProperty, id);
-			}
+
+			idProperty.ifPresent(property -> {
+				if (property.getType().isAssignableFrom(String.class)) {
+					persistentEntity.getPropertyAccessor(result).setProperty(property, Optional.ofNullable(id));
+				}
+			});
+
 		}
 	}
 }

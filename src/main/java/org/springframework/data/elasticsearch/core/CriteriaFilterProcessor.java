@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ class CriteriaFilterProcessor {
 
 
 	QueryBuilder createFilterFromCriteria(Criteria criteria) {
-		List<QueryBuilder> fbList = new LinkedList<QueryBuilder>();
+		List<QueryBuilder> fbList = new LinkedList<>();
 		QueryBuilder filter = null;
 
 		ListIterator<Criteria> chainIterator = criteria.getCriteriaChain().listIterator();
@@ -86,7 +86,7 @@ class CriteriaFilterProcessor {
 
 	private List<QueryBuilder> createFilterFragmentForCriteria(Criteria chainedCriteria) {
 		Iterator<Criteria.CriteriaEntry> it = chainedCriteria.getFilterCriteriaEntries().iterator();
-		List<QueryBuilder> filterList = new LinkedList<QueryBuilder>();
+		List<QueryBuilder> filterList = new LinkedList<>();
 
 		String fieldName = chainedCriteria.getField().getName();
 		Assert.notNull(fieldName, "Unknown field");
@@ -235,7 +235,7 @@ class CriteriaFilterProcessor {
 	}
 
 	private List<QueryBuilder> buildNegationFilter(String fieldName, Iterator<Criteria.CriteriaEntry> it) {
-		List<QueryBuilder> notFilterList = new LinkedList<QueryBuilder>();
+		List<QueryBuilder> notFilterList = new LinkedList<>();
 
 		while (it.hasNext()) {
 			Criteria.CriteriaEntry criteriaEntry = it.next();

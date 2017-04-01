@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import java.util.Optional;
+
 import org.springframework.data.mapping.PersistentEntity;
 
 /**
@@ -22,8 +24,8 @@ import org.springframework.data.mapping.PersistentEntity;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
-
 public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, ElasticsearchPersistentProperty> {
 
 	String getIndexName();
@@ -40,11 +42,11 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 
 	String getIndexStoreType();
 
-	ElasticsearchPersistentProperty getVersionProperty();
+	Optional<ElasticsearchPersistentProperty> getVersionProperty();
 
-	String getParentType();
+	Optional<String> getParentType();
 
-	ElasticsearchPersistentProperty getParentIdProperty();
+	Optional<ElasticsearchPersistentProperty> getParentIdProperty();
 
 	String settingPath();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,12 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,8 +45,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Gad Akuka
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/simple-repository-test.xml")
 public class UUIDElasticsearchRepositoryTests {
@@ -79,11 +84,11 @@ public class UUIDElasticsearchRepositoryTests {
 		// when
 		repository.save(Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2));
 		// then
-		SampleEntityUUIDKeyed entity1FromElasticSearch = repository.findOne(documentId1);
-		assertThat(entity1FromElasticSearch, is(notNullValue()));
+		Optional<SampleEntityUUIDKeyed> entity1FromElasticSearch = repository.findOne(documentId1);
+		assertThat(entity1FromElasticSearch.isPresent(), is(true));
 
-		SampleEntityUUIDKeyed entity2FromElasticSearch = repository.findOne(documentId2);
-		assertThat(entity2FromElasticSearch, is(notNullValue()));
+		Optional<SampleEntityUUIDKeyed> entity2FromElasticSearch = repository.findOne(documentId2);
+		assertThat(entity2FromElasticSearch.isPresent(), is(true));
 	}
 
 	@Test
@@ -97,8 +102,8 @@ public class UUIDElasticsearchRepositoryTests {
 		// when
 		repository.save(sampleEntityUUIDKeyed);
 		// then
-		SampleEntityUUIDKeyed entityFromElasticSearch = repository.findOne(documentId);
-		assertThat(entityFromElasticSearch, is(notNullValue()));
+		Optional<SampleEntityUUIDKeyed> entityFromElasticSearch = repository.findOne(documentId);
+		assertThat(entityFromElasticSearch.isPresent(), is(true));
 	}
 
 	@Test
@@ -111,9 +116,9 @@ public class UUIDElasticsearchRepositoryTests {
 		sampleEntityUUIDKeyed.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntityUUIDKeyed);
 		// when
-		SampleEntityUUIDKeyed entityFromElasticSearch = repository.findOne(documentId);
+		Optional<SampleEntityUUIDKeyed> entityFromElasticSearch = repository.findOne(documentId);
 		// then
-		assertThat(entityFromElasticSearch, is(notNullValue()));
+		assertThat(entityFromElasticSearch.isPresent(), is(true));
 		assertThat(sampleEntityUUIDKeyed, is((equalTo(sampleEntityUUIDKeyed))));
 	}
 
@@ -152,8 +157,8 @@ public class UUIDElasticsearchRepositoryTests {
 		// when
 		repository.delete(documentId);
 		// then
-		SampleEntityUUIDKeyed entityFromElasticSearch = repository.findOne(documentId);
-		assertThat(entityFromElasticSearch, is(nullValue()));
+		Optional<SampleEntityUUIDKeyed> entityFromElasticSearch = repository.findOne(documentId);
+		assertThat(entityFromElasticSearch.isPresent(), is(false));
 	}
 
 	@Test
@@ -445,8 +450,8 @@ public class UUIDElasticsearchRepositoryTests {
 		// when
 		repository.delete(sampleEntities);
 		// then
-		assertThat(repository.findOne(documentId1), is(nullValue()));
-		assertThat(repository.findOne(documentId2), is(nullValue()));
+		assertThat(repository.findOne(documentId1).isPresent(), is(false));
+		assertThat(repository.findOne(documentId2).isPresent(), is(false));
 	}
 
 	@Test
@@ -490,7 +495,7 @@ public class UUIDElasticsearchRepositoryTests {
 	}
 
 	private static List<SampleEntityUUIDKeyed> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
-		List<SampleEntityUUIDKeyed> sampleEntities = new ArrayList<SampleEntityUUIDKeyed>();
+		List<SampleEntityUUIDKeyed> sampleEntities = new ArrayList<>();
 		for (int i = 0; i < numberOfEntities; i++) {
 			UUID documentId = UUID.randomUUID();
 			SampleEntityUUIDKeyed sampleEntityUUIDKeyed = new SampleEntityUUIDKeyed();
