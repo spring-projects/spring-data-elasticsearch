@@ -1,6 +1,18 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.0.M2 (2017-04-04)
+----------------------------------------
+* DATAES-342 - Adapt to API changes in RepositoryConfigurationExtensionSupport.
+* DATAES-329 - Remove references to single-argument assertion methods of Spring.
+* DATAES-328 - Integrate Data Commons Java 8 upgrade branch.
+* DATAES-325 - Remove references to GenericCollectionTypeResolver in favor of ResolvableType.
+* DATAES-322 - Update project documentation with the CLA tool integration.
+* DATAES-315 - Adapt API in RepositoryFactoryBeanSupport implementation.
+* DATAES-313 - Register repository factory in spring.factories for multi-store support.
+* DATAES-311 - Release 3.0 M2 (Kay).
+
+
 Changes in version 2.0.8.RELEASE (2017-03-02)
 ---------------------------------------------
 * DATAES-329 - Remove references to single-argument assertion methods of Spring.
