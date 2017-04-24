@@ -72,7 +72,7 @@ class MappingBuilder {
 	public static final String TYPE_VALUE_GEO_HASH_PREFIX = "geohash_prefix";
 	public static final String TYPE_VALUE_GEO_HASH_PRECISION = "geohash_precision";
 
-	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = new SimpleTypeHolder();
+	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = SimpleTypeHolder.DEFAULT;
 
 	static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName, String parentType) throws IOException {
 
