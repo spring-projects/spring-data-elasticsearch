@@ -23,7 +23,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.elasticsearch.client.NodeClientFactoryBean;
 import org.springframework.data.elasticsearch.client.TransportClientFactoryBean;
 import org.springframework.data.elasticsearch.repositories.sample.SampleElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -40,12 +39,6 @@ public class ElasticsearchNamespaceHandlerTests {
 
 	@Autowired
 	private ApplicationContext context;
-
-	@Test
-	public void shouldCreatesNodeClient() {
-		assertThat(context.getBean(NodeClientFactoryBean.class), is(notNullValue()));
-		assertThat(context.getBean(NodeClientFactoryBean.class), is(instanceOf(NodeClientFactoryBean.class)));
-	}
 
 	@Test
 	public void shouldCreateTransportClient() {

@@ -33,14 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.builder.SampleInheritedEntityBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.entities.*;
 import org.springframework.data.elasticsearch.entities.GeoEntity;
-import org.springframework.data.elasticsearch.entities.Group;
-import org.springframework.data.elasticsearch.entities.MinimalEntity;
-import org.springframework.data.elasticsearch.entities.SampleInheritedEntity;
-import org.springframework.data.elasticsearch.entities.SampleTransientEntity;
-import org.springframework.data.elasticsearch.entities.SimpleRecursiveEntity;
-import org.springframework.data.elasticsearch.entities.StockPrice;
-import org.springframework.data.elasticsearch.entities.User;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -59,14 +53,16 @@ public class MappingBuilderTests {
 
 	@Test
 	public void shouldNotFailOnCircularReference() {
+		elasticsearchTemplate.deleteIndex(SimpleRecursiveEntity.class);
 		elasticsearchTemplate.createIndex(SimpleRecursiveEntity.class);
 		elasticsearchTemplate.putMapping(SimpleRecursiveEntity.class);
+		elasticsearchTemplate.refresh(SimpleRecursiveEntity.class);
 	}
 
 	@Test
 	public void testInfiniteLoopAvoidance() throws IOException {
 		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\"" +
-				"type\":\"string\",\"index\":\"not_analyzed\"," +
+				"type\":\"text\",\"index\":false," +
 				"\"analyzer\":\"standard\"}}}}";
 
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class, "mapping", "id", null);
@@ -121,9 +117,9 @@ public class MappingBuilderTests {
 	@Test
 	public void shouldBuildMappingWithSuperclass() throws IOException {
 		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\"" +
-				"type\":\"string\",\"index\":\"not_analyzed\",\"analyzer\":\"standard\"}" +
+				"type\":\"text\",\"index\":false,\"analyzer\":\"standard\"}" +
 				",\"createdDate\":{\"store\":false," +
-				"\"type\":\"date\",\"index\":\"not_analyzed\"}}}}";
+				"\"type\":\"date\",\"index\":false}}}}";
 
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleInheritedEntity.class, "mapping", "id", null);
 		assertThat(xContentBuilder.string(), is(expected));
@@ -181,6 +177,17 @@ public class MappingBuilderTests {
 		elasticsearchTemplate.putMapping(User.class);
 		elasticsearchTemplate.createIndex(Group.class);
 		elasticsearchTemplate.putMapping(Group.class);
+		//when
+
+		//then
+
+	}
+
+	@Test
+	public void shouldMapBooks() {
+		//given
+		elasticsearchTemplate.createIndex(Book.class);
+		elasticsearchTemplate.putMapping(Book.class);
 		//when
 
 		//then

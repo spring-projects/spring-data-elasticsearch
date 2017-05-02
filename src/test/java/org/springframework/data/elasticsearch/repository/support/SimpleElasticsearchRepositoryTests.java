@@ -15,16 +15,12 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.apache.commons.lang.RandomStringUtils.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-
+import org.elasticsearch.action.ActionRequestValidationException;
+import org.elasticsearch.common.util.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
@@ -39,8 +36,11 @@ import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repositories.sample.SampleElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.google.common.collect.Lists;
+import static org.apache.commons.lang.RandomStringUtils.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.springframework.data.domain.Sort.Direction.*;
 
 /**
  * @author Rizwan Idrees
@@ -60,6 +60,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
+		elasticsearchTemplate.putMapping(SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 	}
 
@@ -103,8 +104,8 @@ public class SimpleElasticsearchRepositoryTests {
 		assertThat(entityFromElasticSearch.isPresent(), is(true));
 	}
 
-	@Test
-	public void shouldSaveDocumentWithoutId() {
+	@Test(expected = ActionRequestValidationException.class)
+	public void throwExceptionWhenTryingToInsertWithVersionButWithoutId() {
 		// given
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setMessage("some message");
@@ -229,7 +230,7 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// then
 		assertNotNull("sample entities cant be null..", sampleEntities);
-		List<SampleEntity> entities = Lists.newArrayList(sampleEntities);
+		List<SampleEntity> entities = CollectionUtils.iterableAsArrayList(sampleEntities);
 		assertThat(entities.size(), is(2));
 	}
 
@@ -508,7 +509,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity2.setMessage("hello");
 		repository.save(sampleEntity2);
 		// when
-		Iterable<SampleEntity> sampleEntities = repository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC, "message")));
+		Iterable<SampleEntity> sampleEntities = repository.findAll(new Sort(new Order(ASC, "message")));
 		// then
 		assertThat(sampleEntities, is(notNullValue()));
 	}

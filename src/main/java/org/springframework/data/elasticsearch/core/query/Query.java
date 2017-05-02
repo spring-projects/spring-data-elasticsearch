@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.core.query;
 
 import java.util.Collection;
 import java.util.List;
-
 import org.elasticsearch.action.search.SearchType;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -42,13 +41,6 @@ public interface Query {
 	 * @return
 	 */
 	<T extends Query> T setPageable(Pageable pageable);
-
-	/**
-	 * Get filter queries if defined
-	 *
-	 * @return
-	 */
-	// List<FilterQuery> getFilterQueries();
 
 	/**
 	 * Get page settings if defined

@@ -11,9 +11,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class Completion {
 
 	private String[] input;
-	private String output;
 	private Integer weight;
-	private Object payload;
 
 	private Completion() {
 		//required by mapper to instantiate object
@@ -29,22 +27,6 @@ public class Completion {
 
 	public void setInput(String[] input) {
 		this.input = input;
-	}
-
-	public String getOutput() {
-		return output;
-	}
-
-	public void setOutput(String output) {
-		this.output = output;
-	}
-
-	public Object getPayload() {
-		return payload;
-	}
-
-	public void setPayload(Object payload) {
-		this.payload = payload;
 	}
 
 	public Integer getWeight() {

@@ -1,10 +1,8 @@
 package org.springframework.data.elasticsearch.core.geo;
 
 import java.io.IOException;
-
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -32,39 +30,15 @@ public class CustomGeoModule extends SimpleModule {
 }
 
 class PointSerializer extends JsonSerializer<Point> {
-
 	@Override
-	public void serialize(Point value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
+	public void serialize(Point value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
 		gen.writeObject(GeoPoint.fromPoint(value));
-//		gen.writeStartObject();
-//		gen.writeNumberField("lat", value.getY());
-//		gen.writeNumberField("lon", value.getX());
-//		gen.writeEndObject();
 	}
 }
 
 class PointDeserializer extends JsonDeserializer<Point> {
-
 	@Override
-	public Point deserialize(JsonParser p, DeserializationContext context) throws IOException, JsonProcessingException {
-
-		GeoPoint point = p.readValueAs(GeoPoint.class);
-//		Double lat = null;
-//		Double lon = null;
-//		//skipp field name
-//		p.nextFieldName();
-//		if ("lat".equals(p.getCurrentName())) {
-//			//get value
-//			p.nextFieldName();
-//			lat = p.getDoubleValue();
-//			p.nextFieldName();
-//		}
-//		if ("lon".equals(p.getCurrentName())) {
-//			//get value
-//			p.nextFieldName();
-//			lon = p.getDoubleValue();
-//		}
-//		return new Point(lon, lat);
-		return GeoPoint.toPoint(point);
+	public Point deserialize(JsonParser p, DeserializationContext context) throws IOException {
+		return GeoPoint.toPoint(p.readValueAs(GeoPoint.class));
 	}
 }

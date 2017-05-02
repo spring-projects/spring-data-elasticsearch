@@ -20,24 +20,17 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.FacetedPage;
-import org.springframework.data.elasticsearch.core.facet.request.HistogramFacetRequestBuilder;
-import org.springframework.data.elasticsearch.core.facet.request.NativeFacetRequest;
-import org.springframework.data.elasticsearch.core.facet.request.RangeFacetRequestBuilder;
-import org.springframework.data.elasticsearch.core.facet.request.StatisticalFacetRequestBuilder;
-import org.springframework.data.elasticsearch.core.facet.request.TermFacetRequestBuilder;
-import org.springframework.data.elasticsearch.core.facet.result.HistogramResult;
-import org.springframework.data.elasticsearch.core.facet.result.IntervalUnit;
-import org.springframework.data.elasticsearch.core.facet.result.Range;
-import org.springframework.data.elasticsearch.core.facet.result.RangeResult;
-import org.springframework.data.elasticsearch.core.facet.result.StatisticalResult;
-import org.springframework.data.elasticsearch.core.facet.result.Term;
-import org.springframework.data.elasticsearch.core.facet.result.TermResult;
+import org.springframework.data.elasticsearch.core.facet.request.*;
+import org.springframework.data.elasticsearch.core.facet.result.*;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
@@ -260,15 +253,15 @@ public class ElasticsearchTemplateFacetTests {
 		assertThat(facet.getTerms().size(), is(equalTo(3)));
 
 		Term term = facet.getTerms().get(0);
-		assertThat(term.getTerm(), is(Integer.toString(YEAR_2000)));
+		assertThat(term.getTerm(), is(Long.toString(YEAR_2000)));
 		assertThat(term.getCount(), is(3l));
 
 		term = facet.getTerms().get(1);
-		assertThat(term.getTerm(), is(Integer.toString(YEAR_2001)));
+		assertThat(term.getTerm(), is(Long.toString(YEAR_2001)));
 		assertThat(term.getCount(), is(2l));
 
 		term = facet.getTerms().get(2);
-		assertThat(term.getTerm(), is(Integer.toString(YEAR_2002)));
+		assertThat(term.getTerm(), is(Long.toString(YEAR_2002)));
 		assertThat(term.getCount(), is(1l));
 		
 		assertThat(facet.getTotal(), is(3l));
@@ -292,15 +285,15 @@ public class ElasticsearchTemplateFacetTests {
 		assertThat(facet.getTerms().size(), is(equalTo(3)));
 
 		Term term = facet.getTerms().get(0);
-		assertThat(term.getTerm(), is(Integer.toString(YEAR_2000)));
+		assertThat(term.getTerm(), is(Long.toString(YEAR_2000)));
 		assertThat(term.getCount(), is(3l));
 
 		term = facet.getTerms().get(1);
-		assertThat(term.getTerm(), is(Integer.toString(YEAR_2001)));
+		assertThat(term.getTerm(), is(Long.toString(YEAR_2001)));
 		assertThat(term.getCount(), is(2l));
 
 		term = facet.getTerms().get(2);
-		assertThat(term.getTerm(), is(Integer.toString(YEAR_2002)));
+		assertThat(term.getTerm(), is(Long.toString(YEAR_2002)));
 		assertThat(term.getCount(), is(1l));
 		
 		assertThat(facet.getTotal(), is(3l));
@@ -325,15 +318,15 @@ public class ElasticsearchTemplateFacetTests {
 		assertThat(facet.getTerms().size(), is(equalTo(7)));
 
 		Term term = facet.getTerms().get(0);
-		assertThat(term.getTerm(), is(Integer.toString(YEAR_2000)));
+		assertThat(term.getTerm(), is(Long.toString(YEAR_2000)));
 		assertThat(term.getCount(), is(3l));
 
 		term = facet.getTerms().get(1);
-		assertThat(term.getTerm(), is(Integer.toString(YEAR_2001)));
+		assertThat(term.getTerm(), is(Long.toString(YEAR_2001)));
 		assertThat(term.getCount(), is(2l));
 
 		term = facet.getTerms().get(2);
-		assertThat(term.getTerm(), is(Integer.toString(YEAR_2002)));
+		assertThat(term.getTerm(), is(Long.toString(YEAR_2002)));
 		assertThat(term.getCount(), is(1l));
 
 		term = facet.getTerms().get(3);
@@ -376,15 +369,15 @@ public class ElasticsearchTemplateFacetTests {
 		assertThat(numberFacet.getTerms().size(), is(equalTo(3)));
 
 		Term numberTerm = numberFacet.getTerms().get(0);
-		assertThat(numberTerm.getTerm(), is(Integer.toString(YEAR_2000)));
+		assertThat(numberTerm.getTerm(), is(Long.toString(YEAR_2000)));
 		assertThat(numberTerm.getCount(), is(3l));
 
 		numberTerm = numberFacet.getTerms().get(1);
-		assertThat(numberTerm.getTerm(), is(Integer.toString(YEAR_2001)));
+		assertThat(numberTerm.getTerm(), is(Long.toString(YEAR_2001)));
 		assertThat(numberTerm.getCount(), is(2l));
 
 		numberTerm = numberFacet.getTerms().get(2);
-		assertThat(numberTerm.getTerm(), is(Integer.toString(YEAR_2002)));
+		assertThat(numberTerm.getTerm(), is(Long.toString(YEAR_2002)));
 		assertThat(numberTerm.getCount(), is(1l));
 
 		TermResult stringFacet = (TermResult) result.getFacet(stringFacetName);
@@ -426,15 +419,15 @@ public class ElasticsearchTemplateFacetTests {
 		assertThat(facet.getTerms().size(), is(equalTo(3)));
 
 		Term term = facet.getTerms().get(0);
-		assertThat(term.getTerm(), is(Integer.toString(YEAR_2000)));
+		assertThat(term.getTerm(), is(Long.toString(YEAR_2000)));
 		assertThat(term.getCount(), is(3l));
 
 		term = facet.getTerms().get(1);
-		assertThat(term.getTerm(), is(Integer.toString(YEAR_2001)));
+		assertThat(term.getTerm(), is(Long.toString(YEAR_2001)));
 		assertThat(term.getCount(), is(2l));
 
 		term = facet.getTerms().get(2);
-		assertThat(term.getTerm(), is(Integer.toString(YEAR_2002)));
+		assertThat(term.getTerm(), is(Long.toString(YEAR_2002)));
 		assertThat(term.getCount(), is(1l));
 		
 		assertThat(facet.getTotal(), is(6l));
@@ -469,6 +462,7 @@ public class ElasticsearchTemplateFacetTests {
 	@Test
 	public void shouldReturnAllTermsForGivenQuery() {
 		// given
+
 		String facetName = "all_authors";
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new TermFacetRequestBuilder(facetName).applyQueryFilter().fields("authors.untouched").allTerms().build()).build();

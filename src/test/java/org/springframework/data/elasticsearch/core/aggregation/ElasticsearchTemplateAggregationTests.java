@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +37,11 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.search.aggregations.AggregationBuilders.terms;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Rizwan Idrees
@@ -81,8 +87,8 @@ public class ElasticsearchTemplateAggregationTests {
 		// given
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(matchAllQuery())
-				.withSearchType(COUNT)
-				.withIndices("articles").withTypes("article")
+				.withSearchType(SearchType.DEFAULT)
+				.withIndices("test-index-articles").withTypes("article")
 				.addAggregation(terms("subjects").field("subject"))
 				.build();
 		// when

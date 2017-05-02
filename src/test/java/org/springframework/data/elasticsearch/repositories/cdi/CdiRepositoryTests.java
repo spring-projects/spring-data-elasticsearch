@@ -58,6 +58,7 @@ public class CdiRepositoryTests {
 		CdiRepositoryClient client = cdiContainer.getInstance(CdiRepositoryClient.class);
 		repository = client.getRepository();
 		personRepository = client.getSamplePersonRepository();
+		repository.deleteAll();
 		qualifiedProductRepository = client.getQualifiedProductRepository();
 	}
 

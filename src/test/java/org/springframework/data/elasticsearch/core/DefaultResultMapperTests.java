@@ -195,7 +195,7 @@ public class DefaultResultMapperTests {
 		return result;
 	}
 
-	@Document(indexName = "someIndex")
+	@Document(indexName = "test-index-immutable-internal")
 	@NoArgsConstructor(force = true)
 	@Getter
 	static class ImmutableEntity {

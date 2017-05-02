@@ -18,13 +18,15 @@ package org.springframework.data.elasticsearch.entities;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
 
-@Document(indexName = "double-keyed-entity", type = "double-keyed-entity", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-double-keyed-entity", type = "double-keyed-entity", shards = 1, replicas = 0, refreshInterval = "-1")
 public class DoubleIDEntity {
 
 	@Id

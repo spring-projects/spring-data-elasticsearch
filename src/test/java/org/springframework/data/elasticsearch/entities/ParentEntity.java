@@ -38,7 +38,7 @@ public class ParentEntity {
 
 	@Id
 	private String id;
-	@Field(type = FieldType.String, index = FieldIndex.analyzed, store = true)
+	@Field(type = FieldType.text, store = true)
 	private String name;
 
 	public ParentEntity() {
@@ -67,10 +67,10 @@ public class ParentEntity {
 
 		@Id
 		private String id;
-		@Field(type = FieldType.String, store = true)
+		@Field(type = FieldType.text, store = true)
 		@Parent(type = PARENT_TYPE)
 		private String parentId;
-		@Field(type = FieldType.String, index = FieldIndex.analyzed, store = true)
+		@Field(type = FieldType.text, store = true)
 		private String name;
 
 		public ChildEntity() {

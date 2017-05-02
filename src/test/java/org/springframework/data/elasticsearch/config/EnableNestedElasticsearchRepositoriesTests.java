@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.config;
 
 import static org.junit.Assert.*;
 
+import org.elasticsearch.node.NodeValidationException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +45,7 @@ public class EnableNestedElasticsearchRepositoriesTests {
 	static class Config {
 
 		@Bean
-		public ElasticsearchOperations elasticsearchTemplate() {
+		public ElasticsearchOperations elasticsearchTemplate() throws NodeValidationException {
 			return new ElasticsearchTemplate(Utils.getNodeClient());
 		}
 	}

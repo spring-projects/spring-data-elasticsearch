@@ -19,7 +19,6 @@ import java.util.Date;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldIndex;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 /**
@@ -30,7 +29,7 @@ public class AbstractInheritedEntity {
 	@Id
 	private String id;
 
-	@Field(type = FieldType.Date, index = FieldIndex.not_analyzed)
+	@Field(type = FieldType.Date, index = false)
 	private Date createdDate;
 
 	public String getId() {
