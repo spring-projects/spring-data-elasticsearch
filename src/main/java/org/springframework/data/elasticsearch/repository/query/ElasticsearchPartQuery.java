@@ -61,7 +61,8 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		} else if (queryMethod.isStreamQuery()) {
 			Class<?> entityType = queryMethod.getEntityInformation().getJavaType();
 			if (query.getPageable().isUnpaged()) {
-				query.setPageable(PageRequest.of(0, 20));
+				int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
+				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 			}
 
 			return StreamUtils.createStreamFromIterator((CloseableIterator<Object>) elasticsearchOperations.stream(query, entityType));

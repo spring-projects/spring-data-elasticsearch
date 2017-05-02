@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.RoutingMissingException;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
@@ -80,7 +81,7 @@ public class ElasticsearchTemplateParentChildTests {
 		elasticsearchTemplate.refresh(ChildEntity.class);
 
 		// find all parents that have the first child
-		QueryBuilder query = hasChildQuery(ParentEntity.CHILD_TYPE, QueryBuilders.termQuery("name", child1name.toLowerCase()));
+		QueryBuilder query = hasChildQuery(ParentEntity.CHILD_TYPE, QueryBuilders.termQuery("name", child1name.toLowerCase()), ScoreMode.None);
 		List<ParentEntity> parents = elasticsearchTemplate.queryForList(new NativeSearchQuery(query), ParentEntity.class);
 
 		// we're expecting only the first parent as result

@@ -26,6 +26,8 @@ import java.util.UUID;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
@@ -46,6 +48,7 @@ public class SampleEntityUUIDKeyed {
 	@Id
 	private UUID id;
 	private String type;
+	@Field(type = FieldType.text, fielddata = true)
 	private String message;
 	private int rate;
 	@ScriptedField

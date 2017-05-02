@@ -19,6 +19,7 @@ import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 
+import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
 import org.springframework.data.elasticsearch.Utils;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -31,20 +32,20 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 class ElasticsearchTemplateProducer {
 
 	@Produces
-	public NodeClient createNodeClient() {
+	public Client createNodeClient() {
 		return Utils.getNodeClient();
 	}
 
 	@Produces
-	public ElasticsearchOperations createElasticsearchTemplate(NodeClient nodeClient) {
-		return new ElasticsearchTemplate(nodeClient);
+	public ElasticsearchOperations createElasticsearchTemplate(Client client) {
+		return new ElasticsearchTemplate(client);
 	}
 
 	@Produces
 	@OtherQualifier
 	@PersonDB
-	public ElasticsearchOperations createQualifiedElasticsearchTemplate(NodeClient nodeClient) {
-		return new ElasticsearchTemplate(nodeClient);
+	public ElasticsearchOperations createQualifiedElasticsearchTemplate(Client client) {
+		return new ElasticsearchTemplate(client);
 	}
 
 	@PreDestroy

@@ -40,7 +40,8 @@ import org.springframework.data.elasticsearch.repositories.sample.SampleElastics
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.google.common.collect.Lists;
+import org.elasticsearch.action.ActionRequestValidationException;
+import org.elasticsearch.common.util.CollectionUtils;
 
 /**
  * @author Rizwan Idrees
@@ -62,6 +63,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
+		elasticsearchTemplate.putMapping(SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 	}
 
@@ -105,8 +107,8 @@ public class SimpleElasticsearchRepositoryTests {
 		assertThat(entityFromElasticSearch.isPresent(), is(true));
 	}
 
-	@Test
-	public void shouldSaveDocumentWithoutId() {
+	@Test(expected = ActionRequestValidationException.class)
+	public void throwExceptionWhenTryingToInsertWithVersionButWithoutId() {
 		// given
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setMessage("some message");
@@ -231,7 +233,7 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// then
 		assertNotNull("sample entities cant be null..", sampleEntities);
-		List<SampleEntity> entities = Lists.newArrayList(sampleEntities);
+		List<SampleEntity> entities = CollectionUtils.iterableAsArrayList(sampleEntities);
 		assertThat(entities.size(), is(2));
 	}
 
@@ -510,6 +512,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity2.setMessage("hello");
 		repository.save(sampleEntity2);
 		// when
+		//TODO AKO : for sort use all the time keyword suffix
 		Iterable<SampleEntity> sampleEntities = repository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC, "message")));
 		// then
 		assertThat(sampleEntities, is(notNullValue()));
