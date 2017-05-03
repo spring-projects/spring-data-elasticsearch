@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,14 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import java.io.Serializable;
-
 /**
  * ElasticsearchEntityInformationCreator
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Christoph Strobl
  */
 public interface ElasticsearchEntityInformationCreator {
 
-	<T, ID extends Serializable> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass);
+	<T, ID> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass);
 }

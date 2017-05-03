@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repository.support;
 
 import static org.springframework.data.querydsl.QuerydslUtils.*;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,6 +46,7 @@ import org.springframework.util.Assert;
  * @author Ryan Henszey
  * @author Gad Akuka
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
@@ -54,16 +54,16 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 	private final ElasticsearchEntityInformationCreator entityInformationCreator;
 
 	public ElasticsearchRepositoryFactory(ElasticsearchOperations elasticsearchOperations) {
-		
+
 		Assert.notNull(elasticsearchOperations, "ElasticsearchOperations must not be null!");
-		
+
 		this.elasticsearchOperations = elasticsearchOperations;
 		this.entityInformationCreator = new ElasticsearchEntityInformationCreatorImpl(
 				elasticsearchOperations.getElasticsearchConverter().getMappingContext());
 	}
 
 	@Override
-	public <T, ID extends Serializable> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+	public <T, ID> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
 		return entityInformationCreator.getEntityInformation(domainClass);
 	}
 

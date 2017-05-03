@@ -31,6 +31,7 @@ import org.springframework.data.elasticsearch.entities.Product;
 /**
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public class CdiRepositoryTests {
 
@@ -70,9 +71,9 @@ public class CdiRepositoryTests {
 
 		repository.save(bean);
 
-		assertTrue(repository.exists(bean.getId()));
+		assertTrue(repository.existsById(bean.getId()));
 
-		Optional<Product> retrieved = repository.findOne(bean.getId());
+		Optional<Product> retrieved = repository.findById(bean.getId());
 
 		assertTrue(retrieved.isPresent());
 		retrieved.ifPresent(product -> {
@@ -82,12 +83,12 @@ public class CdiRepositoryTests {
 
 		assertEquals(1, repository.count());
 
-		assertTrue(repository.exists(bean.getId()));
+		assertTrue(repository.existsById(bean.getId()));
 
 		repository.delete(bean);
 
 		assertEquals(0, repository.count());
-		retrieved = repository.findOne(bean.getId());
+		retrieved = repository.findById(bean.getId());
 		assertFalse(retrieved.isPresent());
 	}
 
@@ -104,9 +105,9 @@ public class CdiRepositoryTests {
 
 		qualifiedProductRepository.save(bean);
 
-		assertTrue(qualifiedProductRepository.exists(bean.getId()));
+		assertTrue(qualifiedProductRepository.existsById(bean.getId()));
 
-		Optional<Product> retrieved = qualifiedProductRepository.findOne(bean.getId());
+		Optional<Product> retrieved = qualifiedProductRepository.findById(bean.getId());
 
 		assertTrue(retrieved.isPresent());
 		retrieved.ifPresent(product -> {
@@ -116,12 +117,12 @@ public class CdiRepositoryTests {
 
 		assertEquals(1, qualifiedProductRepository.count());
 
-		assertTrue(qualifiedProductRepository.exists(bean.getId()));
+		assertTrue(qualifiedProductRepository.existsById(bean.getId()));
 
 		qualifiedProductRepository.delete(bean);
 
 		assertEquals(0, qualifiedProductRepository.count());
-		retrieved = qualifiedProductRepository.findOne(bean.getId());
+		retrieved = qualifiedProductRepository.findById(bean.getId());
 		assertFalse(retrieved.isPresent());
 	}
 

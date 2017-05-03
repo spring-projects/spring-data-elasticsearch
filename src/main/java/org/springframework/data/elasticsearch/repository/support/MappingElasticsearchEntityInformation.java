@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import java.io.Serializable;
 import java.util.Optional;
 
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -34,9 +33,10 @@ import org.springframework.util.Assert;
  * @author Ryan Henszey
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
-public class MappingElasticsearchEntityInformation<T, ID extends Serializable>
-		extends PersistentEntityInformation<T, ID> implements ElasticsearchEntityInformation<T, ID> {
+public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEntityInformation<T, ID>
+		implements ElasticsearchEntityInformation<T, ID> {
 
 	private final ElasticsearchPersistentEntity<T> entityMetadata;
 	private final String indexName;

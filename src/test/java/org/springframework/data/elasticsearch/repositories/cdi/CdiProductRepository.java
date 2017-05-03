@@ -24,8 +24,9 @@ import org.springframework.data.repository.CrudRepository;
  * @author Mohsin Husen
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public interface CdiProductRepository extends CrudRepository<Product, String> {
 
-	Optional<Product> findOne(String id);
+	Optional<Product> findById(String id);
 }

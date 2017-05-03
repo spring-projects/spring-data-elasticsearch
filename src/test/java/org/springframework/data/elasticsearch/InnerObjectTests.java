@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,17 +33,16 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * @author Mohsin Husen
+ * @author Christoph Strobl
  */
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/repository-test-nested-object.xml")
 public class InnerObjectTests {
 
-	@Autowired
-	private SampleElasticSearchBookRepository bookRepository;
+	@Autowired private SampleElasticSearchBookRepository bookRepository;
 
-	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
 	@Before
 	public void before() {
@@ -67,6 +66,6 @@ public class InnerObjectTests {
 		// when
 		bookRepository.save(book);
 		// then
-		assertThat(bookRepository.findOne(id), is(notNullValue()));
+		assertThat(bookRepository.findById(id), is(notNullValue()));
 	}
 }

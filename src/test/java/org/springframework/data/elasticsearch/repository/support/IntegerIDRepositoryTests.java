@@ -36,17 +36,15 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/integer-id-repository-test.xml")
 public class IntegerIDRepositoryTests {
 
-	@Autowired
-	private IntegerIDRepository repository;
+	@Autowired private IntegerIDRepository repository;
 
-	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
-
+	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
 	@Before
 	public void before() {
@@ -71,12 +69,12 @@ public class IntegerIDRepositoryTests {
 		sampleEntity2.setVersion(System.currentTimeMillis());
 
 		// when
-		repository.save(Arrays.asList(sampleEntity1, sampleEntity2));
+		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2));
 		// then
-		Optional<IntegerIDEntity> entity1FromElasticSearch = repository.findOne(documentId1);
+		Optional<IntegerIDEntity> entity1FromElasticSearch = repository.findById(documentId1);
 		assertThat(entity1FromElasticSearch.isPresent(), is(true));
 
-		Optional<IntegerIDEntity> entity2FromElasticSearch = repository.findOne(documentId2);
+		Optional<IntegerIDEntity> entity2FromElasticSearch = repository.findById(documentId2);
 		assertThat(entity2FromElasticSearch.isPresent(), is(true));
 	}
 
@@ -91,7 +89,7 @@ public class IntegerIDRepositoryTests {
 		// when
 		repository.save(sampleEntity);
 		// then
-		Optional<IntegerIDEntity> entityFromElasticSearch = repository.findOne(documentId);
+		Optional<IntegerIDEntity> entityFromElasticSearch = repository.findById(documentId);
 		assertThat(entityFromElasticSearch.isPresent(), is(true));
 	}
 }

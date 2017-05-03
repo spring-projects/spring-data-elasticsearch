@@ -32,6 +32,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Young Gu
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:immutable-repository-test.xml")
@@ -59,7 +60,7 @@ public class ImmutableElasticsearchRepositoryTests {
 		assertThat(entity.getId(), is(notNullValue()));
 
 		// then
-		Optional<ImmutableEntity> entityFromElasticSearch = repository.findOne(entity.getId());
+		Optional<ImmutableEntity> entityFromElasticSearch = repository.findById(entity.getId());
 
 		assertThat(entityFromElasticSearch.isPresent(), is(true));
 
