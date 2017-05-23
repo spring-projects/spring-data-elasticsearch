@@ -4,7 +4,7 @@
 
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-elasticsearch</artifactId>
-    <version>3.0.0.BUILD-SNAPSHOT</version>
+    <version>5.2.0.BUILD-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.data.build</groupId>
@@ -74,6 +74,12 @@
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>transport</artifactId>
             <version>${elasticsearch}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -144,12 +150,21 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency><!-- required by elasticsearch -->
+            <groupId>org.elasticsearch.plugin</groupId>
+            <artifactId>transport-netty4-client</artifactId>
+            <version>${elasticsearch}</version>
+            <!--<scope>test</scope>-->
+        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok}</version>
             <scope>test</scope>
         </dependency>
+
+
 
     </dependencies>
 
