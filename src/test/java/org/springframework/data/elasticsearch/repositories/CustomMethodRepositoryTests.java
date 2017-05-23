@@ -47,16 +47,15 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Mohsin Husen
  * @author Franck Marchand
  * @author Kevin Leturc
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:custom-method-repository-test.xml")
 public class CustomMethodRepositoryTests {
 
-	@Autowired
-	private SampleCustomMethodRepository repository;
+	@Autowired private SampleCustomMethodRepository repository;
 
-	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
 	@Before
 	public void before() {
@@ -460,8 +459,8 @@ public class CustomMethodRepositoryTests {
 		sampleEntity.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntity3);
 		// when
-		Page<SampleEntity> pageResult = repository.findByMessageContaining("a", new PageRequest(0, 23, new Sort(
-				new Sort.Order(Sort.Direction.DESC, "message"))));
+		Page<SampleEntity> pageResult = repository.findByMessageContaining("a",
+				new PageRequest(0, 23, new Sort(new Sort.Order(Sort.Direction.DESC, "message"))));
 		// then
 		assertThat(pageResult.getContent().isEmpty(), is(false));
 		assertThat(pageResult.getContent().get(0).getMessage(), is(sampleEntity3.getMessage()));
@@ -541,7 +540,8 @@ public class CustomMethodRepositoryTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByLocationAndMessage(new GeoPoint(45.7806d, 3.0875d), "foo", new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByLocationAndMessage(new GeoPoint(45.7806d, 3.0875d), "foo",
+				new PageRequest(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -561,7 +561,8 @@ public class CustomMethodRepositoryTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByLocationWithin(new GeoPoint(45.7806d, 3.0875d), "2km", new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByLocationWithin(new GeoPoint(45.7806d, 3.0875d), "2km",
+				new PageRequest(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -581,7 +582,8 @@ public class CustomMethodRepositoryTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByLocationWithin(new Point(45.7806d, 3.0875d), new Distance(2, Metrics.KILOMETERS), new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByLocationWithin(new Point(45.7806d, 3.0875d),
+				new Distance(2, Metrics.KILOMETERS), new PageRequest(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -617,7 +619,8 @@ public class CustomMethodRepositoryTests {
 		assertThat(pageAll.getTotalElements(), is(equalTo(2L)));
 
 		// when
-		Page<SampleEntity> page = repository.findByLocationNear(new Box(new Point(46d, 3d), new Point(45d, 4d)), new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByLocationNear(new Box(new Point(46d, 3d), new Point(45d, 4d)),
+				new PageRequest(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -637,7 +640,8 @@ public class CustomMethodRepositoryTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByLocationNear(new Point(45.7806d, 3.0875d), new Distance(2, Metrics.KILOMETERS), new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByLocationNear(new Point(45.7806d, 3.0875d),
+				new Distance(2, Metrics.KILOMETERS), new PageRequest(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -650,7 +654,7 @@ public class CustomMethodRepositoryTests {
 	public void shouldAllowReturningJava8StreamInCustomQuery() {
 		// given
 		List<SampleEntity> entities = createSampleEntities("abc", 30);
-		repository.save(entities);
+		repository.saveAll(entities);
 
 		// when
 		Stream<SampleEntity> stream = repository.findByType("abc");
@@ -1206,4 +1210,3 @@ public class CustomMethodRepositoryTests {
 		return entities;
 	}
 }
-
