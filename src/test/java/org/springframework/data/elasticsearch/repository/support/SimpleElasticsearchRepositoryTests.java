@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.repository.support;
 
 import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
@@ -25,6 +26,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +36,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
@@ -48,6 +52,7 @@ import org.elasticsearch.common.util.CollectionUtils;
  * @author Mohsin Husen
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Cong Wang
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/simple-repository-test.xml")
@@ -549,4 +554,46 @@ public class SimpleElasticsearchRepositoryTests {
 		}
 		return sampleEntities;
 	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testSearchWithAggregationsWithNoneAggregationBuilder(){
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("message", "aggregation")).build();
+		repository.searchWithAggregations(searchQuery);
+	}
+
+	@Test
+	public void testSearchWithAggregations(){
+		String aggregationMessage =  "test for aggregation";
+		repository.deleteByMessage(aggregationMessage);
+		repository.refresh();
+		List<SampleEntity> sampleEntityList = new ArrayList<>(10);
+		long currentNum = 1;
+		for( int i=0;i<5;i++ ){
+			sampleEntityList.add(createSampleEntitiesWithMessage(randomNumeric(5),aggregationMessage,String.valueOf(currentNum)));
+		}
+		currentNum+=1;
+		for( int i=0;i<5;i++ ){
+			sampleEntityList.add(createSampleEntitiesWithMessage(randomNumeric(5),aggregationMessage,String.valueOf(currentNum)));
+		}
+		repository.saveAll(sampleEntityList);
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("message", "aggregation")).addAggregation(terms("types").field("type")).build();
+		AggregatedPage<SampleEntity> aggregatedPage = repository.searchWithAggregations(searchQuery);
+		assertNotNull(aggregatedPage.getAggregations());
+
+		Aggregation aggregation = aggregatedPage.getAggregations().get("types");
+		assertTrue(aggregation instanceof StringTerms);
+		StringTerms stringTerms = (StringTerms)aggregation;
+		assertTrue(stringTerms.getBuckets().size()==2);
+		assertTrue(stringTerms.getBuckets().get(0).getDocCount()==5);
+		assertTrue(stringTerms.getBuckets().get(1).getDocCount()==5);
+	}
+
+	private static SampleEntity createSampleEntitiesWithMessage(String id,String message, String type) {
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(id);
+		sampleEntity.setMessage(message);
+		sampleEntity.setType(type);
+		return sampleEntity;
+	}
+
 }

@@ -104,6 +104,7 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  * @author Mark Janssen
  * @author Mark Paluch
+ * @author Cong Wang
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -274,6 +275,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz) {
+		return queryForPage(query, clazz, resultsMapper);
+	}
+
+	@Override
+	public <T> AggregatedPage<T> queryForAggregatedPage(SearchQuery query, Class<T> clazz){
 		return queryForPage(query, clazz, resultsMapper);
 	}
 

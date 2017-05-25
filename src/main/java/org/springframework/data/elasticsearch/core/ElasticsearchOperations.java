@@ -20,6 +20,7 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.Nullable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -35,6 +36,7 @@ import java.util.Map;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Kevin Leturc
+ * @author Cong Wang
  */
 public interface ElasticsearchOperations {
 
@@ -181,6 +183,15 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	<T> Page<T> queryForPage(SearchQuery query, Class<T> clazz);
+
+	/**
+	 * Execute the query against elasticsearch and return result as {@link AggregatedPage}
+	 *
+	 * @param query
+	 * @param clazz
+	 * @return
+	 */
+	<T> AggregatedPage<T> queryForAggregatedPage(SearchQuery query, Class<T> clazz);
 
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page} using custom mapper

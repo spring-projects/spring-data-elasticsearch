@@ -36,6 +36,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -55,6 +56,7 @@ import org.springframework.util.Assert;
  * @author Kevin Leturc
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Cong Wang
  */
 public abstract class AbstractElasticsearchRepository<T, ID extends Serializable>
 		implements ElasticsearchRepository<T, ID> {
@@ -225,6 +227,13 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		}
 		return elasticsearchOperations.moreLikeThis(query, getEntityClass());
 	}
+
+	@Override
+	public AggregatedPage<T> searchWithAggregations(SearchQuery searchQuery){
+		Assert.notEmpty(searchQuery.getAggregations(), "aggregations can not be empty");
+		return elasticsearchOperations.queryForAggregatedPage(searchQuery,getEntityClass());
+	}
+
 
 	@Override
 	public void deleteById(ID id) {

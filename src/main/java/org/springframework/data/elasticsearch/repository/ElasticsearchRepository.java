@@ -20,6 +20,7 @@ import java.io.Serializable;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.repository.NoRepositoryBean;
 
@@ -28,6 +29,7 @@ import org.springframework.data.repository.NoRepositoryBean;
  * @param <ID>
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Cong Wang
  */
 @NoRepositoryBean
 public interface ElasticsearchRepository<T, ID extends Serializable> extends ElasticsearchCrudRepository<T, ID> {
@@ -41,6 +43,8 @@ public interface ElasticsearchRepository<T, ID extends Serializable> extends Ela
 	Page<T> search(SearchQuery searchQuery);
 
 	Page<T> searchSimilar(T entity, String[] fields, Pageable pageable);
+
+	AggregatedPage<T> searchWithAggregations(SearchQuery searchQuery);
 
 	void refresh();
 
