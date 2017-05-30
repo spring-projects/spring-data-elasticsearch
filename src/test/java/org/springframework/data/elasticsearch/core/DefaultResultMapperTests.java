@@ -15,19 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
+import com.fasterxml.jackson.databind.util.ArrayIterator;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
@@ -36,7 +31,6 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.internal.InternalSearchHitField;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -47,8 +41,9 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.entities.Car;
-
-import com.fasterxml.jackson.databind.util.ArrayIterator;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Artur Konczak
@@ -190,8 +185,8 @@ public class DefaultResultMapperTests {
 
 	private Map<String, SearchHitField> createCarFields(String name, String model) {
 		Map<String, SearchHitField> result = new HashMap<>();
-		result.put("name", new InternalSearchHitField("name", Arrays.<Object>asList(name)));
-		result.put("model", new InternalSearchHitField("model", Arrays.<Object>asList(model)));
+		result.put("name", new SearchHitField("name", Arrays.asList(name)));
+		result.put("model", new SearchHitField("model", Arrays.asList(model)));
 		return result;
 	}
 
