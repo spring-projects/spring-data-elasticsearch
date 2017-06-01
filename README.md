@@ -31,7 +31,7 @@ Add the Maven dependency:
 <dependency>
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-elasticsearch</artifactId>
-    <version>2.0.4.RELEASE</version>
+    <version>x.y.z.RELEASE</version>
 </dependency>
 ```
 
@@ -42,7 +42,7 @@ the appropriate dependency version.
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-elasticsearch</artifactId>
-  <version>2.1.0.BUILD-SNAPSHOT</version>
+  <version>x.y.z.BUILD-SNAPSHOT</version>
 </dependency>
 
 <repository>
@@ -54,6 +54,7 @@ the appropriate dependency version.
 
 |   spring data elasticsearch         | elasticsearch |
 |:-----------------------------------:|:-------------:|
+|           3.0.0.BUILD-SNAPSHOT      |      5.4.0    |
 |           2.0.4.RELEASE             |      2.4.0    |
 |           2.0.0.RELEASE             |      2.2.0    |
 |           1.4.0.M1                  |      1.7.3    |
@@ -240,12 +241,12 @@ Using Transport Client
 
 Here are some ways for you to get involved in the community:
 
-* Get involved with the Spring community on the Spring Community Forums.  Please help out on the [forum](http://forum.springsource.org/forumdisplay.php?f=80) by responding to questions and joining the debate.
-* Create [JIRA](https://jira.springframework.org/browse/DATAES) tickets for bugs and new features and comment and vote on the ones that you are interested in.  
+* Get involved with the Spring community on Stack OverFlow.  Please help out on the [forum](https://stackoverflow.com/questions/tagged/spring-data-elasticsearch) by responding to questions and joining the debate.
+* Create [JIRA](https://jira.spring.io/browse/DATAES/) tickets for bugs and new features and comment and vote on the ones that you are interested in.  
 * Github is for social coding: if you want to write code, we encourage contributions through pull requests from [forks of this repository](http://help.github.com/forking/). If you want to contribute code this way, please reference a JIRA ticket as well covering the specific issue you are addressing.
 * Watch for upcoming articles on Spring by [subscribing](http://www.springsource.org/node/feed) to springframework.org
 
-Before we accept a non-trivial patch or pull request we will need you to sign the [contributor's agreement](https://support.springsource.com/spring_committer_signup).  Signing the contributor's agreement does not grant anyone commit rights to the main repository, but it does mean that we can accept your contributions, and you will get an author credit if we do.  Active contributors might be asked to join the core team, and given the ability to merge pull requests.
+Before we accept a non-trivial patch or pull request we will need you to [sign the Contributor License Agreement](https://cla.pivotal.io/sign/spring). Signing the contributor’s agreement does not grant anyone commit rights to the main repository, but it does mean that we can accept your contributions, and you will get an author credit if we do. If you forget to do so, you'll be reminded when you submit a pull request. Active contributors might be asked to join the core team, and given the ability to merge pull requests.
 
 
 Code formatting for [Eclipse and Intellij](https://github.com/spring-projects/spring-data-build/tree/master/etc/ide)

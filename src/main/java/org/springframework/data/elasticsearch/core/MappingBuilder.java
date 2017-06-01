@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.springframework.core.GenericCollectionTypeResolver;
+import org.springframework.core.ResolvableType;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
@@ -47,10 +47,11 @@ import org.springframework.data.util.TypeInformation;
  * @author Alexander Volz
  * @author Dennis Maaß
  * @author Pavel Luhin
+ * @author Mark Paluch
  */
-
 class MappingBuilder {
 
+	public static final String FIELD_DATA = "fielddata";
 	public static final String FIELD_STORE = "store";
 	public static final String FIELD_TYPE = "type";
 	public static final String FIELD_INDEX = "index";
@@ -60,19 +61,18 @@ class MappingBuilder {
 	public static final String FIELD_PROPERTIES = "properties";
 	public static final String FIELD_PARENT = "_parent";
 
-	public static final String COMPLETION_PAYLOADS = "payloads";
 	public static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
 	public static final String COMPLETION_PRESERVE_POSITION_INCREMENTS = "preserve_position_increments";
 	public static final String COMPLETION_MAX_INPUT_LENGTH = "max_input_length";
 
 	public static final String INDEX_VALUE_NOT_ANALYZED = "not_analyzed";
-	public static final String TYPE_VALUE_STRING = "string";
+	public static final String TYPE_VALUE_STRING = "text";
 	public static final String TYPE_VALUE_GEO_POINT = "geo_point";
 	public static final String TYPE_VALUE_COMPLETION = "completion";
 	public static final String TYPE_VALUE_GEO_HASH_PREFIX = "geohash_prefix";
 	public static final String TYPE_VALUE_GEO_HASH_PRECISION = "geohash_precision";
 
-	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = new SimpleTypeHolder();
+	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = SimpleTypeHolder.DEFAULT;
 
 	static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName, String parentType) throws IOException {
 
@@ -167,7 +167,7 @@ class MappingBuilder {
 
 	private static java.lang.reflect.Field[] retrieveFields(Class clazz) {
 		// Create list of fields.
-		List<java.lang.reflect.Field> fields = new ArrayList<java.lang.reflect.Field>();
+		List<java.lang.reflect.Field> fields = new ArrayList<>();
 
 		// Keep backing up the inheritance hierarchy.
 		Class targetClass = clazz;
@@ -192,18 +192,18 @@ class MappingBuilder {
 		xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_GEO_POINT);
 
 		GeoPointField annotation = field.getAnnotation(GeoPointField.class);
-		if (annotation != null) {
-			if (annotation.geoHashPrefix()) {
-				xContentBuilder.field(TYPE_VALUE_GEO_HASH_PREFIX, true);
-				if (StringUtils.isNotEmpty(annotation.geoHashPrecision())) {
-					if (NumberUtils.isNumber(annotation.geoHashPrecision())) {
-						xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, Integer.parseInt(annotation.geoHashPrecision()));
-					} else {
-						xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, annotation.geoHashPrecision());
-					}
-				}
-			}
-		}
+//		if (annotation != null) {
+//			if (annotation.geoHashPrefix()) {
+//				xContentBuilder.field(TYPE_VALUE_GEO_HASH_PREFIX, true);
+//				if (StringUtils.isNotEmpty(annotation.geoHashPrecision())) {
+//					if (NumberUtils.isNumber(annotation.geoHashPrecision())) {
+//						xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, Integer.parseInt(annotation.geoHashPrecision()));
+//					} else {
+//						xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, annotation.geoHashPrecision());
+//					}
+//				}
+//			}
+//		}
 
 		xContentBuilder.endObject();
 	}
@@ -213,7 +213,6 @@ class MappingBuilder {
 		xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_COMPLETION);
 		if (annotation != null) {
 			xContentBuilder.field(COMPLETION_MAX_INPUT_LENGTH, annotation.maxInputLength());
-			xContentBuilder.field(COMPLETION_PAYLOADS, annotation.payloads());
 			xContentBuilder.field(COMPLETION_PRESERVE_POSITION_INCREMENTS, annotation.preservePositionIncrements());
 			xContentBuilder.field(COMPLETION_PRESERVE_SEPARATORS, annotation.preserveSeparators());
 			if (isNotBlank(annotation.searchAnalyzer())) {
@@ -245,6 +244,10 @@ class MappingBuilder {
 		if(!nestedOrObjectField) {
 			xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
 		}
+		if(fieldAnnotation.fielddata()) {
+			xContentBuilder.field(FIELD_DATA, fieldAnnotation.fielddata());
+		}
+
 		if (FieldType.Auto != fieldAnnotation.type()) {
 			xContentBuilder.field(FIELD_TYPE, fieldAnnotation.type().name().toLowerCase());
 			if (FieldType.Date == fieldAnnotation.type() && DateFormat.none != fieldAnnotation.format()) {
@@ -252,8 +255,8 @@ class MappingBuilder {
 						? fieldAnnotation.pattern() : fieldAnnotation.format());
 			}
 		}
-		if (FieldIndex.not_analyzed == fieldAnnotation.index() || FieldIndex.no == fieldAnnotation.index()) {
-			xContentBuilder.field(FIELD_INDEX, fieldAnnotation.index().name().toLowerCase());
+		if(!fieldAnnotation.index()) {
+			xContentBuilder.field(FIELD_INDEX, fieldAnnotation.index());
 		}
 		if (isNotBlank(fieldAnnotation.searchAnalyzer())) {
 			xContentBuilder.field(FIELD_SEARCH_ANALYZER, fieldAnnotation.searchAnalyzer());
@@ -276,14 +279,17 @@ class MappingBuilder {
 		if (FieldType.Auto != annotation.type()) {
 			builder.field(FIELD_TYPE, annotation.type().name().toLowerCase());
 		}
-		if (FieldIndex.not_analyzed == annotation.index()) {
-			builder.field(FIELD_INDEX, annotation.index().name().toLowerCase());
+		if(!annotation.index()) {
+			builder.field(FIELD_INDEX, annotation.index());
 		}
 		if (isNotBlank(annotation.searchAnalyzer())) {
 			builder.field(FIELD_SEARCH_ANALYZER, annotation.searchAnalyzer());
 		}
 		if (isNotBlank(annotation.indexAnalyzer())) {
 			builder.field(FIELD_INDEX_ANALYZER, annotation.indexAnalyzer());
+		}
+		if (annotation.fielddata()) {
+			builder.field(FIELD_DATA, annotation.fielddata());
 		}
 		builder.endObject();
 	}
@@ -296,10 +302,10 @@ class MappingBuilder {
 	private static void addMultiFieldMapping(XContentBuilder builder, java.lang.reflect.Field field,
 											 MultiField annotation, boolean nestedOrObjectField) throws IOException {
 		builder.startObject(field.getName());
-		builder.field(FIELD_TYPE, "multi_field");
+		builder.field(FIELD_TYPE, annotation.mainField().type());
 		builder.startObject("fields");
 		//add standard field
-		addSingleFieldMapping(builder, field, annotation.mainField(),nestedOrObjectField);
+		//addSingleFieldMapping(builder, field, annotation.mainField(), nestedOrObjectField);
 		for (InnerField innerField : annotation.otherFields()) {
 			addNestedFieldMapping(builder, field, innerField);
 		}
@@ -315,12 +321,20 @@ class MappingBuilder {
 	}
 
 	protected static Class<?> getFieldType(java.lang.reflect.Field field) {
-		Class<?> clazz = field.getType();
-		TypeInformation typeInformation = ClassTypeInformation.from(clazz);
-		if (typeInformation.isCollectionLike()) {
-			clazz = GenericCollectionTypeResolver.getCollectionFieldType(field) != null ? GenericCollectionTypeResolver.getCollectionFieldType(field) : typeInformation.getComponentType().getType();
+
+		ResolvableType resolvableType = ResolvableType.forField(field);
+
+		if (resolvableType.isArray()) {
+			return resolvableType.getComponentType().getRawClass();
 		}
-		return clazz;
+
+		ResolvableType componentType = resolvableType.getGeneric(0);
+		if (Iterable.class.isAssignableFrom(field.getType())
+				&& componentType != ResolvableType.NONE) {
+			return componentType.getRawClass();
+		}
+
+		return resolvableType.getRawClass();
 	}
 
 	private static boolean isAnyPropertyAnnotatedAsField(java.lang.reflect.Field[] fields) {

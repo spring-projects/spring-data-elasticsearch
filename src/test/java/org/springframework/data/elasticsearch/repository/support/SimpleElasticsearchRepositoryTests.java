@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,12 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.apache.commons.lang.RandomStringUtils.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import com.google.common.collect.Lists;
+import java.util.Optional;
+import org.elasticsearch.action.ActionRequestValidationException;
+import org.elasticsearch.common.util.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
@@ -39,27 +36,31 @@ import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repositories.sample.SampleElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import static org.apache.commons.lang.RandomStringUtils.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.springframework.data.domain.Sort.Direction.*;
 
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
+ * @author Christoph Strobl
  */
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/simple-repository-test.xml")
 public class SimpleElasticsearchRepositoryTests {
 
-	@Autowired
-	private SampleElasticsearchRepository repository;
+	@Autowired private SampleElasticsearchRepository repository;
 
-	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
-
+	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
 	@Before
 	public void before() {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
+		elasticsearchTemplate.putMapping(SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 	}
 
@@ -79,13 +80,13 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity2.setVersion(System.currentTimeMillis());
 
 		// when
-		repository.save(Arrays.asList(sampleEntity1, sampleEntity2));
+		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2));
 		// then
-		SampleEntity entity1FromElasticSearch = repository.findOne(documentId1);
-		assertThat(entity1FromElasticSearch, is(notNullValue()));
+		Optional<SampleEntity> entity1FromElasticSearch = repository.findById(documentId1);
+		assertThat(entity1FromElasticSearch.isPresent(), is(true));
 
-		SampleEntity entity2FromElasticSearch = repository.findOne(documentId2);
-		assertThat(entity2FromElasticSearch, is(notNullValue()));
+		Optional<SampleEntity> entity2FromElasticSearch = repository.findById(documentId2);
+		assertThat(entity2FromElasticSearch.isPresent(), is(true));
 	}
 
 	@Test
@@ -99,12 +100,12 @@ public class SimpleElasticsearchRepositoryTests {
 		// when
 		repository.save(sampleEntity);
 		// then
-		SampleEntity entityFromElasticSearch = repository.findOne(documentId);
-		assertThat(entityFromElasticSearch, is(notNullValue()));
+		Optional<SampleEntity> entityFromElasticSearch = repository.findById(documentId);
+		assertThat(entityFromElasticSearch.isPresent(), is(true));
 	}
 
-	@Test
-	public void shouldSaveDocumentWithoutId() {
+	@Test(expected = ActionRequestValidationException.class)
+	public void throwExceptionWhenTryingToInsertWithVersionButWithoutId() {
 		// given
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setMessage("some message");
@@ -125,9 +126,9 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntity);
 		// when
-		SampleEntity entityFromElasticSearch = repository.findOne(documentId);
+		Optional<SampleEntity> entityFromElasticSearch = repository.findById(documentId);
 		// then
-		assertThat(entityFromElasticSearch, is(notNullValue()));
+		assertThat(entityFromElasticSearch.isPresent(), is(true));
 		assertThat(sampleEntity, is((equalTo(sampleEntity))));
 	}
 
@@ -164,10 +165,10 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntity);
 		// when
-		repository.delete(documentId);
+		repository.deleteById(documentId);
 		// then
-		SampleEntity entityFromElasticSearch = repository.findOne(documentId);
-		assertThat(entityFromElasticSearch, is(nullValue()));
+		Optional<SampleEntity> entityFromElasticSearch = repository.findById(documentId);
+		assertThat(entityFromElasticSearch.isPresent(), is(false));
 	}
 
 	@Test
@@ -225,11 +226,11 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.save(sampleEntity2);
 
 		// when
-		Iterable<SampleEntity> sampleEntities = repository.findAll(Arrays.asList(documentId, documentId2));
+		Iterable<SampleEntity> sampleEntities = repository.findAllById(Arrays.asList(documentId, documentId2));
 
 		// then
 		assertNotNull("sample entities cant be null..", sampleEntities);
-		List<SampleEntity> entities = Lists.newArrayList(sampleEntities);
+		List<SampleEntity> entities = CollectionUtils.iterableAsArrayList(sampleEntities);
 		assertThat(entities.size(), is(2));
 	}
 
@@ -250,7 +251,7 @@ public class SimpleElasticsearchRepositoryTests {
 
 		Iterable<SampleEntity> sampleEntities = Arrays.asList(sampleEntity1, sampleEntity2);
 		// when
-		repository.save(sampleEntities);
+		repository.saveAll(sampleEntities);
 		// then
 		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), new PageRequest(0, 50));
 		assertNotNull(entities);
@@ -267,7 +268,7 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.save(sampleEntity);
 
 		// when
-		boolean exist = repository.exists(documentId);
+		boolean exist = repository.existsById(documentId);
 
 		// then
 		assertEquals(exist, true);
@@ -309,7 +310,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntity);
 		// when
-		long result = repository.deleteById(documentId);
+		long result = repository.deleteSampleEntityById(documentId);
 		repository.refresh();
 
 		// then
@@ -342,7 +343,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity3.setMessage("hello world 3");
 		sampleEntity3.setAvailable(false);
 		sampleEntity3.setVersion(System.currentTimeMillis());
-		repository.save(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 		// when
 		List<SampleEntity> result = repository.deleteByAvailable(true);
 		repository.refresh();
@@ -373,7 +374,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity3.setId(documentId);
 		sampleEntity3.setMessage("hello world 3");
 		sampleEntity3.setVersion(System.currentTimeMillis());
-		repository.save(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 		// when
 		List<SampleEntity> result = repository.deleteByMessage("hello world 3");
 		repository.refresh();
@@ -404,7 +405,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity3.setId(documentId);
 		sampleEntity3.setType("image");
 		sampleEntity3.setVersion(System.currentTimeMillis());
-		repository.save(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 		// when
 		repository.deleteByType("article");
 		repository.refresh();
@@ -472,10 +473,10 @@ public class SimpleElasticsearchRepositoryTests {
 
 		Iterable<SampleEntity> sampleEntities = Arrays.asList(sampleEntity2, sampleEntity2);
 		// when
-		repository.delete(sampleEntities);
+		repository.deleteAll(sampleEntities);
 		// then
-		assertThat(repository.findOne(documentId1), is(nullValue()));
-		assertThat(repository.findOne(documentId2), is(nullValue()));
+		assertThat(repository.findById(documentId1).isPresent(), is(false));
+		assertThat(repository.findById(documentId2).isPresent(), is(false));
 	}
 
 	@Test
@@ -508,7 +509,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity2.setMessage("hello");
 		repository.save(sampleEntity2);
 		// when
-		Iterable<SampleEntity> sampleEntities = repository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC, "message")));
+		Iterable<SampleEntity> sampleEntities = repository.findAll(new Sort(new Order(ASC, "message")));
 		// then
 		assertThat(sampleEntities, is(notNullValue()));
 	}
@@ -523,17 +524,18 @@ public class SimpleElasticsearchRepositoryTests {
 				+ "we want real-time search, we want simple multi-tenancy, and we want a solution that is built for the cloud.";
 
 		List<SampleEntity> sampleEntities = createSampleEntitiesWithMessage(sampleMessage, 30);
-		repository.save(sampleEntities);
+		repository.saveAll(sampleEntities);
 
 		// when
-		Page<SampleEntity> results = repository.searchSimilar(sampleEntities.get(0), new String[]{"message"}, new PageRequest(0, 5));
+		Page<SampleEntity> results = repository.searchSimilar(sampleEntities.get(0), new String[] { "message" },
+				new PageRequest(0, 5));
 
 		// then
 		assertThat(results.getTotalElements(), is(greaterThanOrEqualTo(1L)));
 	}
 
 	private static List<SampleEntity> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
-		List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
+		List<SampleEntity> sampleEntities = new ArrayList<>();
 		for (int i = 0; i < numberOfEntities; i++) {
 			String documentId = randomNumeric(5);
 			SampleEntity sampleEntity = new SampleEntity();

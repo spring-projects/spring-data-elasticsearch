@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import java.io.Serializable;
-
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
@@ -28,6 +26,8 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Oliver Gierke
+ * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public class ElasticsearchEntityInformationCreatorImpl implements ElasticsearchEntityInformationCreator {
 
@@ -35,20 +35,22 @@ public class ElasticsearchEntityInformationCreatorImpl implements ElasticsearchE
 
 	public ElasticsearchEntityInformationCreatorImpl(
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
-		Assert.notNull(mappingContext);
+
+		Assert.notNull(mappingContext, "MappingContext must not be null!");
+
 		this.mappingContext = mappingContext;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T, ID extends Serializable> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+	public <T, ID> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
 
 		ElasticsearchPersistentEntity<T> persistentEntity = (ElasticsearchPersistentEntity<T>) mappingContext
-				.getPersistentEntity(domainClass);
+				.getRequiredPersistentEntity(domainClass);
 
 		Assert.notNull(persistentEntity, String.format("Unable to obtain mapping metadata for %s!", domainClass));
 		Assert.notNull(persistentEntity.getIdProperty(), String.format("No id property found for %s!", domainClass));
 
-		return new MappingElasticsearchEntityInformation<T, ID>(persistentEntity);
+		return new MappingElasticsearchEntityInformation<>(persistentEntity);
 	}
 }

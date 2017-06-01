@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,23 +35,24 @@ import org.springframework.data.elasticsearch.entities.SampleEntityUUIDKeyed;
 import org.springframework.data.elasticsearch.repositories.sample.SampleUUIDKeyedElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 /**
  * @author Gad Akuka
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
+ * @author Christoph Strobl
  */
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/simple-repository-test.xml")
 public class UUIDElasticsearchRepositoryTests {
 
-	@Autowired
-	private SampleUUIDKeyedElasticsearchRepository repository;
+	@Autowired private SampleUUIDKeyedElasticsearchRepository repository;
 
-	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
-
+	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
 	@Before
 	public void before() {
@@ -77,13 +78,13 @@ public class UUIDElasticsearchRepositoryTests {
 		sampleEntityUUIDKeyed2.setVersion(System.currentTimeMillis());
 
 		// when
-		repository.save(Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2));
+		repository.saveAll(Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2));
 		// then
-		SampleEntityUUIDKeyed entity1FromElasticSearch = repository.findOne(documentId1);
-		assertThat(entity1FromElasticSearch, is(notNullValue()));
+		Optional<SampleEntityUUIDKeyed> entity1FromElasticSearch = repository.findById(documentId1);
+		assertThat(entity1FromElasticSearch.isPresent(), is(true));
 
-		SampleEntityUUIDKeyed entity2FromElasticSearch = repository.findOne(documentId2);
-		assertThat(entity2FromElasticSearch, is(notNullValue()));
+		Optional<SampleEntityUUIDKeyed> entity2FromElasticSearch = repository.findById(documentId2);
+		assertThat(entity2FromElasticSearch.isPresent(), is(true));
 	}
 
 	@Test
@@ -97,8 +98,8 @@ public class UUIDElasticsearchRepositoryTests {
 		// when
 		repository.save(sampleEntityUUIDKeyed);
 		// then
-		SampleEntityUUIDKeyed entityFromElasticSearch = repository.findOne(documentId);
-		assertThat(entityFromElasticSearch, is(notNullValue()));
+		Optional<SampleEntityUUIDKeyed> entityFromElasticSearch = repository.findById(documentId);
+		assertThat(entityFromElasticSearch.isPresent(), is(true));
 	}
 
 	@Test
@@ -111,9 +112,9 @@ public class UUIDElasticsearchRepositoryTests {
 		sampleEntityUUIDKeyed.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntityUUIDKeyed);
 		// when
-		SampleEntityUUIDKeyed entityFromElasticSearch = repository.findOne(documentId);
+		Optional<SampleEntityUUIDKeyed> entityFromElasticSearch = repository.findById(documentId);
 		// then
-		assertThat(entityFromElasticSearch, is(notNullValue()));
+		assertThat(entityFromElasticSearch.isPresent(), is(true));
 		assertThat(sampleEntityUUIDKeyed, is((equalTo(sampleEntityUUIDKeyed))));
 	}
 
@@ -150,10 +151,10 @@ public class UUIDElasticsearchRepositoryTests {
 		sampleEntityUUIDKeyed.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntityUUIDKeyed);
 		// when
-		repository.delete(documentId);
+		repository.deleteById(documentId);
 		// then
-		SampleEntityUUIDKeyed entityFromElasticSearch = repository.findOne(documentId);
-		assertThat(entityFromElasticSearch, is(nullValue()));
+		Optional<SampleEntityUUIDKeyed> entityFromElasticSearch = repository.findById(documentId);
+		assertThat(entityFromElasticSearch.isPresent(), is(false));
 	}
 
 	@Test
@@ -211,7 +212,8 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.save(sampleEntityUUIDKeyed2);
 
 		// when
-		LinkedList<SampleEntityUUIDKeyed> sampleEntities = (LinkedList<SampleEntityUUIDKeyed>) repository.findAll(Arrays.asList(documentId, documentId2));
+		LinkedList<SampleEntityUUIDKeyed> sampleEntities = (LinkedList<SampleEntityUUIDKeyed>) repository
+				.findAllById(Arrays.asList(documentId, documentId2));
 
 		// then
 		assertNotNull("sample entities cant be null..", sampleEntities);
@@ -237,9 +239,9 @@ public class UUIDElasticsearchRepositoryTests {
 
 		Iterable<SampleEntityUUIDKeyed> sampleEntities = Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2);
 		// when
-		repository.save(sampleEntities);
+		repository.saveAll(sampleEntities);
 		// then
-		Page<SampleEntityUUIDKeyed> entities = repository.search(termQuery("id", documentId), new PageRequest(0, 50));
+		Page<SampleEntityUUIDKeyed> entities = repository.search(termQuery("id", documentId.toString()), new PageRequest(0, 50));
 		assertNotNull(entities);
 	}
 
@@ -254,7 +256,7 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.save(sampleEntityUUIDKeyed);
 
 		// when
-		boolean exist = repository.exists(documentId);
+		boolean exist = repository.existsById(documentId);
 
 		// then
 		assertEquals(exist, true);
@@ -280,9 +282,9 @@ public class UUIDElasticsearchRepositoryTests {
 		sampleEntityUUIDKeyed.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntityUUIDKeyed);
 		// when
-		long result = repository.deleteById(documentId);
+		long result = repository.deleteSampleEntityUUIDKeyedById(documentId);
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId.toString())).build();
 		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements(), equalTo(0L));
 		assertThat(result, equalTo(1L));
@@ -311,7 +313,7 @@ public class UUIDElasticsearchRepositoryTests {
 		sampleEntityUUIDKeyed3.setMessage("hello world 3");
 		sampleEntityUUIDKeyed3.setAvailable(false);
 		sampleEntityUUIDKeyed3.setVersion(System.currentTimeMillis());
-		repository.save(Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2, sampleEntityUUIDKeyed3));
+		repository.saveAll(Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2, sampleEntityUUIDKeyed3));
 		// when
 		List<SampleEntityUUIDKeyed> result = repository.deleteByAvailable(true);
 		repository.refresh();
@@ -342,7 +344,7 @@ public class UUIDElasticsearchRepositoryTests {
 		sampleEntityUUIDKeyed3.setId(documentId);
 		sampleEntityUUIDKeyed3.setMessage("hello world 3");
 		sampleEntityUUIDKeyed3.setVersion(System.currentTimeMillis());
-		repository.save(Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2, sampleEntityUUIDKeyed3));
+		repository.saveAll(Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2, sampleEntityUUIDKeyed3));
 		// when
 		List<SampleEntityUUIDKeyed> result = repository.deleteByMessage("hello world 3");
 		repository.refresh();
@@ -373,7 +375,7 @@ public class UUIDElasticsearchRepositoryTests {
 		sampleEntityUUIDKeyed3.setId(documentId);
 		sampleEntityUUIDKeyed3.setType("image");
 		sampleEntityUUIDKeyed3.setVersion(System.currentTimeMillis());
-		repository.save(Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2, sampleEntityUUIDKeyed3));
+		repository.saveAll(Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2, sampleEntityUUIDKeyed3));
 		// when
 		repository.deleteByType("article");
 		repository.refresh();
@@ -382,7 +384,6 @@ public class UUIDElasticsearchRepositoryTests {
 		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements(), equalTo(2L));
 	}
-
 
 	@Test
 	public void shouldDeleteEntity() {
@@ -397,7 +398,7 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.delete(sampleEntityUUIDKeyed);
 		repository.refresh();
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId.toString())).build();
 		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements(), equalTo(0L));
 	}
@@ -420,7 +421,7 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.save(sampleEntityUUIDKeyed2);
 
 		// when
-		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.search(termQuery("id", documentId1));
+		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.search(termQuery("id", documentId1.toString()));
 		// then
 		assertNotNull("sample entities cant be null..", sampleEntities);
 	}
@@ -443,15 +444,14 @@ public class UUIDElasticsearchRepositoryTests {
 
 		Iterable<SampleEntityUUIDKeyed> sampleEntities = Arrays.asList(sampleEntityUUIDKeyed2, sampleEntityUUIDKeyed2);
 		// when
-		repository.delete(sampleEntities);
+		repository.deleteAll(sampleEntities);
 		// then
-		assertThat(repository.findOne(documentId1), is(nullValue()));
-		assertThat(repository.findOne(documentId2), is(nullValue()));
+		assertThat(repository.findById(documentId1).isPresent(), is(false));
+		assertThat(repository.findById(documentId2).isPresent(), is(false));
 	}
 
 	@Test
 	public void shouldSortByGivenField() {
-		// todo
 		// given
 		UUID documentId = UUID.randomUUID();
 		SampleEntityUUIDKeyed sampleEntityUUIDKeyed = new SampleEntityUUIDKeyed();
@@ -465,7 +465,8 @@ public class UUIDElasticsearchRepositoryTests {
 		sampleEntityUUIDKeyed2.setMessage("hello");
 		repository.save(sampleEntityUUIDKeyed2);
 		// when
-		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC, "message")));
+		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository
+				.findAll(new Sort(new Sort.Order(Sort.Direction.ASC, "message")));
 		// then
 		assertThat(sampleEntities, is(notNullValue()));
 	}
@@ -480,17 +481,18 @@ public class UUIDElasticsearchRepositoryTests {
 				+ "we want real-time search, we want simple multi-tenancy, and we want a solution that is built for the cloud.";
 
 		List<SampleEntityUUIDKeyed> sampleEntities = createSampleEntitiesWithMessage(sampleMessage, 30);
-		repository.save(sampleEntities);
+		repository.saveAll(sampleEntities);
 
 		// when
-		Page<SampleEntityUUIDKeyed> results = repository.searchSimilar(sampleEntities.get(0), new String[]{"message"}, new PageRequest(0, 5));
+		Page<SampleEntityUUIDKeyed> results = repository.searchSimilar(sampleEntities.get(0), new String[] { "message" },
+				new PageRequest(0, 5));
 
 		// then
 		assertThat(results.getTotalElements(), is(greaterThanOrEqualTo(1L)));
 	}
 
 	private static List<SampleEntityUUIDKeyed> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
-		List<SampleEntityUUIDKeyed> sampleEntities = new ArrayList<SampleEntityUUIDKeyed>();
+		List<SampleEntityUUIDKeyed> sampleEntities = new ArrayList<>();
 		for (int i = 0; i < numberOfEntities; i++) {
 			UUID documentId = UUID.randomUUID();
 			SampleEntityUUIDKeyed sampleEntityUUIDKeyed = new SampleEntityUUIDKeyed();

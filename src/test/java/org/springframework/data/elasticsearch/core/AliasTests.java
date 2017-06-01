@@ -1,5 +1,5 @@
 /*
-* Copyright 2014-2016 the original author or authors.
+* Copyright 2014-2017 the original author or authors.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -19,15 +19,22 @@ import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.AliasBuilder;
+import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -48,7 +55,7 @@ public class AliasTests {
 
 	@Before
 	public void before() {
-		Map<String, Object> settings = new HashMap<String, Object>();
+		Map<String, Object> settings = new HashMap<>();
 		settings.put("index.refresh_interval", "-1");
 		settings.put("index.number_of_replicas", "0");
 		settings.put("index.number_of_shards", "2");

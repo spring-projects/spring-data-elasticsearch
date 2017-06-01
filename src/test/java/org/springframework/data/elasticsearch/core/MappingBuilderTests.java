@@ -53,14 +53,16 @@ public class MappingBuilderTests {
 
 	@Test
 	public void shouldNotFailOnCircularReference() {
+		elasticsearchTemplate.deleteIndex(SimpleRecursiveEntity.class);
 		elasticsearchTemplate.createIndex(SimpleRecursiveEntity.class);
 		elasticsearchTemplate.putMapping(SimpleRecursiveEntity.class);
+		elasticsearchTemplate.refresh(SimpleRecursiveEntity.class);
 	}
 
 	@Test
 	public void testInfiniteLoopAvoidance() throws IOException {
 		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\"" +
-				"type\":\"string\",\"index\":\"not_analyzed\"," +
+				"type\":\"text\",\"index\":false," +
 				"\"analyzer\":\"standard\"}}}}";
 
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class, "mapping", "id", null);
@@ -115,9 +117,9 @@ public class MappingBuilderTests {
 	@Test
 	public void shouldBuildMappingWithSuperclass() throws IOException {
 		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\"" +
-				"type\":\"string\",\"index\":\"not_analyzed\",\"analyzer\":\"standard\"}" +
+				"type\":\"text\",\"index\":false,\"analyzer\":\"standard\"}" +
 				",\"createdDate\":{\"store\":false," +
-				"\"type\":\"date\",\"index\":\"not_analyzed\"}}}}";
+				"\"type\":\"date\",\"index\":false}}}}";
 
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleInheritedEntity.class, "mapping", "id", null);
 		assertThat(xContentBuilder.string(), is(expected));
@@ -175,6 +177,17 @@ public class MappingBuilderTests {
 		elasticsearchTemplate.putMapping(User.class);
 		elasticsearchTemplate.createIndex(Group.class);
 		elasticsearchTemplate.putMapping(Group.class);
+		//when
+
+		//then
+
+	}
+
+	@Test
+	public void shouldMapBooks() {
+		//given
+		elasticsearchTemplate.createIndex(Book.class);
+		elasticsearchTemplate.putMapping(Book.class);
 		//when
 
 		//then

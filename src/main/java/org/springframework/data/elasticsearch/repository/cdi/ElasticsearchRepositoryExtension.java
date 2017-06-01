@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,19 @@
  */
 package org.springframework.data.elasticsearch.repository.cdi;
 
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.UnsatisfiedResolutionException;
-import javax.enterprise.inject.spi.AfterBeanDiscovery;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.ProcessBean;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.enterprise.event.Observes;
+import javax.enterprise.inject.UnsatisfiedResolutionException;
+import javax.enterprise.inject.spi.AfterBeanDiscovery;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.ProcessBean;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.repository.cdi.CdiRepositoryBean;
@@ -42,7 +43,7 @@ import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
  */
 public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupport {
 
-	private final Map<Set<Annotation>, Bean<ElasticsearchOperations>> elasticsearchOperationsMap = new HashMap<Set<Annotation>, Bean<ElasticsearchOperations>>();
+	private final Map<Set<Annotation>, Bean<ElasticsearchOperations>> elasticsearchOperationsMap = new HashMap<>();
 
 	@SuppressWarnings("unchecked")
 	<T> void processBean(@Observes ProcessBean<T> processBean) {
@@ -67,16 +68,16 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 	}
 
 	private <T> CdiRepositoryBean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers,
-														  BeanManager beanManager) {
+			BeanManager beanManager) {
 
-		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers);
-
-		if (elasticsearchOperationsBean == null) {
+		if (!this.elasticsearchOperationsMap.containsKey(qualifiers)) {
 			throw new UnsatisfiedResolutionException(String.format("Unable to resolve a bean for '%s' with qualifiers %s.",
 					ElasticsearchOperations.class.getName(), qualifiers));
 		}
 
-		return new ElasticsearchRepositoryBean<T>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager,
+		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers);
+
+		return new ElasticsearchRepositoryBean<>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager,
 				getCustomImplementationDetector());
 	}
 }

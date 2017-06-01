@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ public class CriteriaQueryTests {
 	public void before() {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
+		elasticsearchTemplate.putMapping(SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 	}
 
@@ -78,7 +79,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformOrOperation() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -117,7 +118,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformAndOperationWithinCriteria() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity = new SampleEntity();
@@ -144,7 +145,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformOrOperationWithinCriteria() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity = new SampleEntity();
@@ -170,7 +171,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformIsOperation() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity = new SampleEntity();
@@ -196,7 +197,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformMultipleIsOperations() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -234,7 +235,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformEndsWithOperation() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -273,7 +274,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformStartsWithOperation() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -312,7 +313,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformContainsOperation() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -350,7 +351,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldExecuteExpression() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -388,7 +389,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldExecuteCriteriaChain() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -427,7 +428,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformIsNotOperation() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -466,7 +467,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformBetweenOperation() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -505,7 +506,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformBetweenOperationWithoutUpperBound() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -545,7 +546,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformBetweenOperationWithoutLowerBound() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -585,7 +586,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformLessThanEqualOperation() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -625,7 +626,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformGreaterThanEquals() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -665,7 +666,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldPerformBoostOperation() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = new SampleEntity();
@@ -704,7 +705,7 @@ public class CriteriaQueryTests {
 	@Test
 	public void shouldReturnDocumentAboveMinimalScoreGivenCriteria() {
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+		List<IndexQuery> indexQueries = new ArrayList<>();
 
 		indexQueries.add(buildIndex(SampleEntity.builder().id("1").message("ab").build()));
 		indexQueries.add(buildIndex(SampleEntity.builder().id("2").message("bc").build()));
@@ -715,7 +716,7 @@ public class CriteriaQueryTests {
 
 		// when
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("a").or(new Criteria("message").contains("b")));
-		criteriaQuery.setMinScore(0.5F);
+		criteriaQuery.setMinScore(2.0F);
 		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(criteriaQuery, SampleEntity.class);
 		// then
 		assertThat(page.getTotalElements(), is(1L));

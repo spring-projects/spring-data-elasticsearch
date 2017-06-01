@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.range.RangeBuilder;
+import org.elasticsearch.search.aggregations.bucket.range.RangeAggregationBuilder;
 import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.util.Assert;
 
@@ -41,7 +41,7 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 	private String keyField;
 	private String valueField;
 
-	private List<Entry> entries = new ArrayList<Entry>();
+	private List<Entry> entries = new ArrayList<>();
 
 	public RangeFacetRequest(String name) {
 		super(name);
@@ -76,15 +76,16 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 	public AbstractAggregationBuilder getFacet() {
 		Assert.notNull(getName(), "Facet name can't be a null !!!");
 
-		RangeBuilder rangeBuilder = AggregationBuilders.range(getName());
-		rangeBuilder.field(StringUtils.isNotBlank(keyField) ? keyField : field );
+		RangeAggregationBuilder rangeBuilder = AggregationBuilders.range(getName());
+		final String field = StringUtils.isNotBlank(keyField) ? keyField : this.field;
+		rangeBuilder.field(field);
 
 		for (Entry entry : entries) {
 			DoubleEntry doubleEntry = (DoubleEntry) entry;
 			rangeBuilder.addRange(validateValue(doubleEntry.getFrom(), Double.NEGATIVE_INFINITY), validateValue(doubleEntry.getTo(), Double.POSITIVE_INFINITY));
 		}
 
-		rangeBuilder.subAggregation(AggregationBuilders.extendedStats(INTERNAL_STATS));
+		rangeBuilder.subAggregation(AggregationBuilders.extendedStats(INTERNAL_STATS).field(field));
 		if(StringUtils.isNotBlank(valueField)){
 			rangeBuilder.subAggregation(AggregationBuilders.sum(RANGE_INTERNAL_SUM).field(valueField));
 		}

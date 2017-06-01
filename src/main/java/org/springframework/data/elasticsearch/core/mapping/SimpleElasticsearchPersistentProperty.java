@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
+import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
 /**
@@ -30,12 +29,13 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
 public class SimpleElasticsearchPersistentProperty extends
 		AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements ElasticsearchPersistentProperty {
 
-	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
-	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
+	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<>();
+	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<>();
 
 	static {
 		SUPPORTED_ID_TYPES.add(String.class);
@@ -43,19 +43,19 @@ public class SimpleElasticsearchPersistentProperty extends
 		SUPPORTED_ID_PROPERTY_NAMES.add("documentId");
 	}
 
-	public SimpleElasticsearchPersistentProperty(Field field, PropertyDescriptor propertyDescriptor,
-												 PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
-		super(field, propertyDescriptor, owner, simpleTypeHolder);
+	public SimpleElasticsearchPersistentProperty(Property property,
+			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
+		super(property, owner, simpleTypeHolder);
 	}
 
 	@Override
 	public String getFieldName() {
-		return field.getName();
+		return getProperty().getName();
 	}
 
 	@Override
 	public boolean isIdProperty() {
-		return super.isIdProperty() || (field != null ? SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName()) : false);
+		return super.isIdProperty() || SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName());
 	}
 
 	@Override

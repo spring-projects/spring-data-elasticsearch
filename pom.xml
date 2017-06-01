@@ -4,13 +4,12 @@
 
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-elasticsearch</artifactId>
-    <version>2.1.0.BUILD-SNAPSHOT</version>
+    <version>3.0.0.BUILD-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.data.build</groupId>
         <artifactId>spring-data-parent</artifactId>
-        <version>1.9.0.BUILD-SNAPSHOT</version>
-        <relativePath>../spring-data-build/parent/pom.xml</relativePath>
+        <version>2.0.0.BUILD-SNAPSHOT</version>
     </parent>
 
     <name>Spring Data Elasticsearch</name>
@@ -18,14 +17,10 @@
     <url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 
     <properties>
-
-        <dist.key>DATAES</dist.key>
-
         <commonscollections>3.2.1</commonscollections>
         <commonslang>2.6</commonslang>
-        <elasticsearch>2.4.0</elasticsearch>
-        <springdata.commons>1.13.0.BUILD-SNAPSHOT</springdata.commons>
-
+        <elasticsearch>5.4.0</elasticsearch>
+        <springdata.commons>2.0.0.BUILD-SNAPSHOT</springdata.commons>
     </properties>
 
     <dependencies>
@@ -75,6 +70,30 @@
             <version>${elasticsearch}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>transport</artifactId>
+            <version>${elasticsearch}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+            <version>1.7.22</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.6.2</version>
+        </dependency>
+
         <!-- Jackson JSON Mapper -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -86,7 +105,7 @@
             <artifactId>jackson-databind</artifactId>
             <version>${jackson}</version>
         </dependency>
-        
+
         <!-- CDI -->
         <dependency>
             <groupId>javax.enterprise</groupId>
@@ -101,6 +120,12 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.openwebbeans.test</groupId>
@@ -125,12 +150,21 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency><!-- required by elasticsearch -->
+            <groupId>org.elasticsearch.plugin</groupId>
+            <artifactId>transport-netty4-client</artifactId>
+            <version>${elasticsearch}</version>
+            <!--<scope>test</scope>-->
+        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok}</version>
             <scope>test</scope>
         </dependency>
+
+
 
     </dependencies>
 
@@ -197,12 +231,12 @@
 
     <ciManagement>
         <system>Bamboo</system>
-        <url>http://build.springsource.org/browse/SPRINGDATAES</url>
+        <url>https://build.spring.io/browse/SPRINGDATAES</url>
     </ciManagement>
 
     <issueManagement>
         <system>JIRA</system>
-        <url>https://jira.springsource.org/browse/DATAES</url>
+        <url>https://jira.spring.io/browse/DATAES</url>
     </issueManagement>
 
 </project>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,15 +23,25 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.util.Assert;
 
@@ -43,27 +53,32 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Ryan Henszey
  * @author Kevin Leturc
+ * @author Mark Paluch
+ * @author Christoph Strobl
  */
-public abstract class AbstractElasticsearchRepository<T, ID extends Serializable> implements
-		ElasticsearchRepository<T, ID> {
+public abstract class AbstractElasticsearchRepository<T, ID extends Serializable>
+		implements ElasticsearchRepository<T, ID> {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(AbstractElasticsearchRepository.class);
 	protected ElasticsearchOperations elasticsearchOperations;
 	protected Class<T> entityClass;
 	protected ElasticsearchEntityInformation<T, ID> entityInformation;
 
-	public AbstractElasticsearchRepository() {
-	}
+	public AbstractElasticsearchRepository() {}
 
 	public AbstractElasticsearchRepository(ElasticsearchOperations elasticsearchOperations) {
-		Assert.notNull(elasticsearchOperations);
+
+		Assert.notNull(elasticsearchOperations, "ElasticsearchOperations must not be null!");
+
 		this.setElasticsearchOperations(elasticsearchOperations);
 	}
 
 	public AbstractElasticsearchRepository(ElasticsearchEntityInformation<T, ID> metadata,
-										   ElasticsearchOperations elasticsearchOperations) {
+			ElasticsearchOperations elasticsearchOperations) {
 		this(elasticsearchOperations);
-		Assert.notNull(metadata);
+
+		Assert.notNull(metadata, "ElasticsearchEntityInformation must not be null!");
+
 		this.entityInformation = metadata;
 		setEntityClass(this.entityInformation.getJavaType());
 		try {
@@ -89,19 +104,19 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	}
 
 	@Override
-	public T findOne(ID id) {
+	public Optional<T> findById(ID id) {
 		GetQuery query = new GetQuery();
 		query.setId(stringIdRepresentation(id));
-		return elasticsearchOperations.queryForObject(query, getEntityClass());
+		return Optional.ofNullable(elasticsearchOperations.queryForObject(query, getEntityClass()));
 	}
 
 	@Override
 	public Iterable<T> findAll() {
 		int itemCount = (int) this.count();
 		if (itemCount == 0) {
-			return new PageImpl<T>(Collections.<T>emptyList());
+			return new PageImpl<>(Collections.<T> emptyList());
 		}
-		return this.findAll(new PageRequest(0, Math.max(1, itemCount)));
+		return this.findAll(PageRequest.of(0, Math.max(1, itemCount)));
 	}
 
 	@Override
@@ -114,19 +129,17 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	public Iterable<T> findAll(Sort sort) {
 		int itemCount = (int) this.count();
 		if (itemCount == 0) {
-			return new PageImpl<T>(Collections.<T>emptyList());
+			return new PageImpl<>(Collections.<T> emptyList());
 		}
 		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withPageable(new PageRequest(0, itemCount, sort)).build();
+				.withPageable(PageRequest.of(0, itemCount, sort)).build();
 		return elasticsearchOperations.queryForPage(query, getEntityClass());
 	}
 
 	@Override
-	public Iterable<T> findAll(Iterable<ID> ids) {
+	public Iterable<T> findAllById(Iterable<ID> ids) {
 		Assert.notNull(ids, "ids can't be null.");
-		SearchQuery query = new NativeSearchQueryBuilder()
-				.withIds(stringIdsRepresentation(ids))
-				.build();
+		SearchQuery query = new NativeSearchQueryBuilder().withIds(stringIdsRepresentation(ids)).build();
 		return elasticsearchOperations.multiGet(query, getEntityClass());
 	}
 
@@ -147,7 +160,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	public <S extends T> List<S> save(List<S> entities) {
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
 		Assert.notEmpty(entities, "Cannot insert empty List.");
-		List<IndexQuery> queries = new ArrayList<IndexQuery>();
+		List<IndexQuery> queries = new ArrayList<>();
 		for (S s : entities) {
 			queries.add(createIndexQuery(s));
 		}
@@ -162,9 +175,9 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	}
 
 	@Override
-	public <S extends T> Iterable<S> save(Iterable<S> entities) {
+	public <S extends T> Iterable<S> saveAll(Iterable<S> entities) {
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
-		List<IndexQuery> queries = new ArrayList<IndexQuery>();
+		List<IndexQuery> queries = new ArrayList<>();
 		for (S s : entities) {
 			queries.add(createIndexQuery(s));
 		}
@@ -174,8 +187,8 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	}
 
 	@Override
-	public boolean exists(ID id) {
-		return findOne(id) != null;
+	public boolean existsById(ID id) {
+		return findById(id) != null;
 	}
 
 	@Override
@@ -183,9 +196,9 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(query).build();
 		int count = (int) elasticsearchOperations.count(searchQuery, getEntityClass());
 		if (count == 0) {
-			return new PageImpl<T>(Collections.<T>emptyList());
+			return new PageImpl<>(Collections.<T> emptyList());
 		}
-		searchQuery.setPageable(new PageRequest(0, count));
+		searchQuery.setPageable(PageRequest.of(0, count));
 		return elasticsearchOperations.queryForPage(searchQuery, getEntityClass());
 	}
 
@@ -214,7 +227,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	}
 
 	@Override
-	public void delete(ID id) {
+	public void deleteById(ID id) {
 		Assert.notNull(id, "Cannot delete entity with id 'null'.");
 		elasticsearchOperations.delete(entityInformation.getIndexName(), entityInformation.getType(),
 				stringIdRepresentation(id));
@@ -224,12 +237,12 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	@Override
 	public void delete(T entity) {
 		Assert.notNull(entity, "Cannot delete 'null' entity.");
-		delete(extractIdFromBean(entity));
+		deleteById(extractIdFromBean(entity));
 		elasticsearchOperations.refresh(entityInformation.getIndexName());
 	}
 
 	@Override
-	public void delete(Iterable<? extends T> entities) {
+	public void deleteAll(Iterable<? extends T> entities) {
 		Assert.notNull(entities, "Cannot delete 'null' list.");
 		for (T entity : entities) {
 			delete(entity);
@@ -303,15 +316,12 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	}
 
 	protected ID extractIdFromBean(T entity) {
-		if (entityInformation != null) {
-			return entityInformation.getId(entity);
-		}
-		return null;
+		return entityInformation.getId(entity).orElse(null);
 	}
 
 	private List<String> stringIdsRepresentation(Iterable<ID> ids) {
 		Assert.notNull(ids, "ids can't be null.");
-		List<String> stringIds = new ArrayList<String>();
+		List<String> stringIds = new ArrayList<>();
 		for (ID id : ids) {
 			stringIds.add(stringIdRepresentation(id));
 		}
@@ -321,16 +331,10 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	protected abstract String stringIdRepresentation(ID id);
 
 	private Long extractVersionFromBean(T entity) {
-		if (entityInformation != null) {
-			return entityInformation.getVersion(entity);
-		}
-		return null;
+		return entityInformation.getVersion(entity);
 	}
 
 	private String extractParentIdFromBean(T entity) {
-		if (entityInformation != null) {
-			return entityInformation.getParentId(entity);
-		}
-		return null;
+		return entityInformation.getParentId(entity);
 	}
 }

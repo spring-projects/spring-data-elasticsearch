@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,16 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 
 /**
  * @author Gad Akuka
+ * @author Christoph Strobl
  */
 public interface SampleUUIDKeyedElasticsearchRepository extends ElasticsearchRepository<SampleEntityUUIDKeyed, UUID> {
 
-	long deleteById(UUID id);
+	long deleteSampleEntityUUIDKeyedById(UUID id);
+
 	List<SampleEntityUUIDKeyed> deleteByAvailable(boolean available);
+
 	List<SampleEntityUUIDKeyed> deleteByMessage(String message);
+
 	void deleteByType(String type);
 
 }

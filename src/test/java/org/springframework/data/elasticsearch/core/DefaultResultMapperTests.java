@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import com.fasterxml.jackson.databind.util.ArrayIterator;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.Value;
-
-import java.util.*;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.databind.util.ArrayIterator;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
@@ -36,23 +31,24 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.internal.InternalSearchHitField;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.annotation.AccessType;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.DefaultResultMapperTests.ImmutableEntity;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.entities.Car;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Artur Konczak
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
 public class DefaultResultMapperTests {
 
@@ -85,7 +81,7 @@ public class DefaultResultMapperTests {
 		when(response.getAggregations()).thenReturn(aggregations);
 
 		//When
-		AggregatedPage<Car> page = (AggregatedPage<Car>) resultMapper.mapResults(response, Car.class, null);
+		AggregatedPage<Car> page = (AggregatedPage<Car>) resultMapper.mapResults(response, Car.class, Pageable.unpaged());
 
 		//Then
 		page.hasFacets();
@@ -103,7 +99,7 @@ public class DefaultResultMapperTests {
 		when(response.getHits()).thenReturn(searchHits);
 
 		//When
-		Page<Car> page = resultMapper.mapResults(response, Car.class, null);
+		Page<Car> page = resultMapper.mapResults(response, Car.class, Pageable.unpaged());
 
 		//Then
 		assertThat(page.hasContent(), is(true));
@@ -121,7 +117,7 @@ public class DefaultResultMapperTests {
 		when(response.getHits()).thenReturn(searchHits);
 
 		//When
-		Page<Car> page = resultMapper.mapResults(response, Car.class, null);
+		Page<Car> page = resultMapper.mapResults(response, Car.class, Pageable.unpaged());
 
 		//Then
 		assertThat(page.hasContent(), is(true));
@@ -143,19 +139,19 @@ public class DefaultResultMapperTests {
 		assertThat(result.getModel(), is("Grat"));
 		assertThat(result.getName(), is("Ford"));
 	}
-	
+
 	/**
 	 * @see DATAES-281.
 	 */
 	@Test
 	public void setsIdentifierOnImmutableType() {
-		
+
 		GetResponse response = mock(GetResponse.class);
 		when(response.getSourceAsString()).thenReturn("{}");
 		when(response.getId()).thenReturn("identifier");
-		
+
 		ImmutableEntity result = resultMapper.mapResult(response, ImmutableEntity.class);
-		
+
 		assertThat(result, is(notNullValue()));
 		assertThat(result.getId(), is("identifier"));
 	}
@@ -188,13 +184,13 @@ public class DefaultResultMapperTests {
 	}
 
 	private Map<String, SearchHitField> createCarFields(String name, String model) {
-		Map<String, SearchHitField> result = new HashMap<String, SearchHitField>();
-		result.put("name", new InternalSearchHitField("name", Arrays.<Object>asList(name)));
-		result.put("model", new InternalSearchHitField("model", Arrays.<Object>asList(model)));
+		Map<String, SearchHitField> result = new HashMap<>();
+		result.put("name", new SearchHitField("name", Arrays.asList(name)));
+		result.put("model", new SearchHitField("model", Arrays.asList(model)));
 		return result;
 	}
-	
-	@Document(indexName = "someIndex")
+
+	@Document(indexName = "test-index-immutable-internal")
 	@NoArgsConstructor(force = true)
 	@Getter
 	static class ImmutableEntity {

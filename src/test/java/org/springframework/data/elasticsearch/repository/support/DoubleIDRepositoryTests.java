@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import org.apache.commons.lang.math.RandomUtils;
 import org.junit.Before;
@@ -34,23 +35,22 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
+ * @author Christoph Strobl
  */
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/double-id-repository-test.xml")
 public class DoubleIDRepositoryTests {
 
-	@Autowired
-	private DoubleIDRepository repository;
+	@Autowired private DoubleIDRepository repository;
 
-	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
-
+	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
 	@Before
 	public void before() {
 		elasticsearchTemplate.deleteIndex(DoubleIDEntity.class);
 		elasticsearchTemplate.createIndex(DoubleIDEntity.class);
+		elasticsearchTemplate.putMapping(DoubleIDEntity.class);
 		elasticsearchTemplate.refresh(DoubleIDEntity.class);
 	}
 
@@ -70,13 +70,13 @@ public class DoubleIDRepositoryTests {
 		sampleEntity2.setVersion(System.currentTimeMillis());
 
 		// when
-		repository.save(Arrays.asList(sampleEntity1, sampleEntity2));
+		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2));
 		// then
-		DoubleIDEntity entity1FromElasticSearch = repository.findOne(documentId1);
-		assertThat(entity1FromElasticSearch, is(notNullValue()));
+		Optional<DoubleIDEntity> entity1FromElasticSearch = repository.findById(documentId1);
+		assertThat(entity1FromElasticSearch.isPresent(), is(true));
 
-		DoubleIDEntity entity2FromElasticSearch = repository.findOne(documentId2);
-		assertThat(entity2FromElasticSearch, is(notNullValue()));
+		Optional<DoubleIDEntity> entity2FromElasticSearch = repository.findById(documentId2);
+		assertThat(entity2FromElasticSearch.isPresent(), is(true));
 	}
 
 	@Test
@@ -90,7 +90,7 @@ public class DoubleIDRepositoryTests {
 		// when
 		repository.save(sampleEntity);
 		// then
-		DoubleIDEntity entityFromElasticSearch = repository.findOne(documentId);
-		assertThat(entityFromElasticSearch, is(notNullValue()));
+		Optional<DoubleIDEntity> entityFromElasticSearch = repository.findById(documentId);
+		assertThat(entityFromElasticSearch.isPresent(), is(true));
 	}
 }

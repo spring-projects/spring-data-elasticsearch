@@ -1,6 +1,87 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+<<<<<<< HEAD
+=======
+Changes in version 3.0.0.M3 (2017-05-09)
+----------------------------------------
+* DATAES-352 - Adapt to API changes in CrudRepository.
+* DATAES-350 - Adapt to moved CustomConversions to Spring Data Commons.
+* DATAES-344 - Release 3.0 M3 (Kay).
+
+
+Changes in version 2.0.10.RELEASE (2017-04-19)
+----------------------------------------------
+* DATAES-347 - Release 2.0.10 (Hopper SR10).
+
+
+Changes in version 2.1.3.RELEASE (2017-04-19)
+---------------------------------------------
+* DATAES-346 - Release 2.1.3 (Ingalls SR3).
+
+
+Changes in version 2.0.9.RELEASE (2017-04-19)
+---------------------------------------------
+* DATAES-336 - Release 2.0.9 (Hopper SR9).
+
+
+Changes in version 2.1.2.RELEASE (2017-04-19)
+---------------------------------------------
+* DATAES-335 - Release 2.1.2 (Ingalls SR2).
+
+
+Changes in version 3.0.0.M2 (2017-04-04)
+----------------------------------------
+* DATAES-342 - Adapt to API changes in RepositoryConfigurationExtensionSupport.
+* DATAES-329 - Remove references to single-argument assertion methods of Spring.
+* DATAES-328 - Integrate Data Commons Java 8 upgrade branch.
+* DATAES-325 - Remove references to GenericCollectionTypeResolver in favor of ResolvableType.
+* DATAES-322 - Update project documentation with the CLA tool integration.
+* DATAES-315 - Adapt API in RepositoryFactoryBeanSupport implementation.
+* DATAES-313 - Register repository factory in spring.factories for multi-store support.
+* DATAES-311 - Release 3.0 M2 (Kay).
+
+
+Changes in version 2.0.8.RELEASE (2017-03-02)
+---------------------------------------------
+* DATAES-329 - Remove references to single-argument assertion methods of Spring.
+* DATAES-326 - Release 2.0.8 (Hopper SR8).
+
+
+Changes in version 2.1.1.RELEASE (2017-03-02)
+---------------------------------------------
+* DATAES-329 - Remove references to single-argument assertion methods of Spring.
+* DATAES-327 - Release 2.1.1 (Ingalls SR1).
+* DATAES-325 - Remove references to GenericCollectionTypeResolver in favor of ResolvableType.
+
+
+Changes in version 2.0.7.RELEASE (2017-01-26)
+---------------------------------------------
+* DATAES-319 - Release 2.0.7 (Hopper SR7).
+
+
+Changes in version 2.1.0.RELEASE (2017-01-26)
+---------------------------------------------
+* DATAES-322 - Update project documentation with the CLA tool integration.
+* DATAES-320 - Release 2.1 GA (Ingalls).
+
+
+Changes in version 2.0.6.RELEASE (2016-12-21)
+---------------------------------------------
+* DATAES-304 - Release 2.0.6 (Hopper SR6).
+
+
+Changes in version 2.1.0.RC1 (2016-12-21)
+-----------------------------------------
+* DATAES-315 - Adapt API in RepositoryFactoryBeanSupport implementation.
+* DATAES-313 - Register repository factory in spring.factories for multi-store support.
+* DATAES-289 - Upgrade to Elasticsearch 2.4.
+* DATAES-284 - Downgrade to Jackson 2.7.5 until Elasticsearch is compatible with 2.8.
+* DATAES-281 - Can't save entity without id setter.
+* DATAES-275 - Release 2.1 RC1 (Ingalls).
+
+
+>>>>>>> upstream/master
 Changes in version 3.0.0.M1 (2016-11-23)
 ----------------------------------------
 * DATAES-307 - Set up 3.0 development.

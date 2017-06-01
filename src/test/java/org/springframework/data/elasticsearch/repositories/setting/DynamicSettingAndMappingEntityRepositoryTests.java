@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.repositories.setting;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import java.util.List;
 import java.util.Map;
@@ -120,7 +120,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		Map properties = (Map) mapping.get("properties");
 		assertThat(mapping, is(notNullValue()));
 		assertThat(properties, is(notNullValue()));
-		assertThat(((String) ((Map) properties.get("email")).get("type")), is("string"));
+		assertThat(((String) ((Map) properties.get("email")).get("type")), is("text"));
 		assertThat((String) ((Map) properties.get("email")).get("analyzer"), is("emailAnalyzer"));
 	}
 
@@ -145,7 +145,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		Map properties = (Map) mapping.get("properties");
 		assertThat(mapping, is(notNullValue()));
 		assertThat(properties, is(notNullValue()));
-		assertThat(((String) ((Map) properties.get("email")).get("type")), is("string"));
+		assertThat(((String) ((Map) properties.get("email")).get("type")), is("text"));
 		assertThat((String) ((Map) properties.get("email")).get("analyzer"), is("emailAnalyzer"));
 	}
 
@@ -161,7 +161,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		Map properties = (Map) mapping.get("properties");
 		assertThat(mapping, is(notNullValue()));
 		assertThat(properties, is(notNullValue()));
-		assertThat(((String) ((Map) properties.get("email")).get("type")), is("string"));
+		assertThat(((String) ((Map) properties.get("email")).get("type")), is("text"));
 		assertThat((String) ((Map) properties.get("email")).get("analyzer"), is("emailAnalyzer"));
 	}
 }

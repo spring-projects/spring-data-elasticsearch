@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.util.List;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
-import org.elasticsearch.search.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
@@ -33,18 +33,18 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
+ * @author Mark Paluch
  */
-
 public class NativeSearchQueryBuilder {
 
 	private QueryBuilder queryBuilder;
 	private QueryBuilder filterBuilder;
-    private List<ScriptField> scriptFields = new ArrayList<ScriptField>();
-	private List<SortBuilder> sortBuilders = new ArrayList<SortBuilder>();
-	private List<FacetRequest> facetRequests = new ArrayList<FacetRequest>();
-	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<AbstractAggregationBuilder>();
+    private List<ScriptField> scriptFields = new ArrayList<>();
+	private List<SortBuilder> sortBuilders = new ArrayList<>();
+	private List<FacetRequest> facetRequests = new ArrayList<>();
+	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<>();
 	private HighlightBuilder.Field[] highlightFields;
-	private Pageable pageable;
+	private Pageable pageable = Pageable.unpaged();
 	private String[] indices;
 	private String[] types;
 	private String[] fields;
@@ -142,9 +142,7 @@ public class NativeSearchQueryBuilder {
 
 	public NativeSearchQuery build() {
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightFields);
-		if (pageable != null) {
-			nativeSearchQuery.setPageable(pageable);
-		}
+		nativeSearchQuery.setPageable(pageable);
 
 		if (indices != null) {
 			nativeSearchQuery.addIndices(indices);
@@ -161,11 +159,11 @@ public class NativeSearchQueryBuilder {
 		if (sourceFilter != null) {
 			nativeSearchQuery.addSourceFilter(sourceFilter);
 		}
-		
+
 		if(indicesBoost != null) {
 		    nativeSearchQuery.setIndicesBoost(indicesBoost);
 		}
-		
+
         if (!isEmpty(scriptFields)) {
             nativeSearchQuery.setScriptFields(scriptFields);
         }
