@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.0.11.RELEASE (2017-06-07)
+----------------------------------------------
+* DATAES-348 - Release 2.0.11 (Hopper SR11).
+
+
 Changes in version 3.0.0.M3 (2017-05-09)
 ----------------------------------------
 * DATAES-352 - Adapt to API changes in CrudRepository.
