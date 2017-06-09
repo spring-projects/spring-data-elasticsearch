@@ -26,6 +26,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.FacetedPage;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.facet.request.*;
 import org.springframework.data.elasticsearch.core.facet.result.*;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -593,6 +594,16 @@ public class ElasticsearchTemplateFacetTests {
 		unit = facet.getIntervalUnit().get(2);
 		assertThat(unit.getKey(), is(Long.valueOf(YEAR_2002)));
 		assertThat(unit.getCount(), is(1L));
+	}
+
+	@Test
+	public void shouldNotThrowExceptionForNoFacets()
+	{
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+
+		AggregatedPage<ArticleEntity> result = elasticsearchTemplate.queryForPage(searchQuery, ArticleEntity.class);
+
+		assertThat(result.hasFacets(), is(false));
 	}
 }
 
