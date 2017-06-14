@@ -9,7 +9,7 @@
     <parent>
         <groupId>org.springframework.data.build</groupId>
         <artifactId>spring-data-parent</artifactId>
-        <version>2.0.0.BUILD-SNAPSHOT</version>
+        <version>2.0.0.M4</version>
     </parent>
 
     <name>Spring Data Elasticsearch</name>
@@ -20,7 +20,7 @@
         <commonscollections>3.2.1</commonscollections>
         <commonslang>2.6</commonslang>
         <elasticsearch>5.4.0</elasticsearch>
-        <springdata.commons>2.0.0.BUILD-SNAPSHOT</springdata.commons>
+        <springdata.commons>2.0.0.M4</springdata.commons>
     </properties>
 
     <dependencies>
@@ -150,7 +150,8 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency><!-- required by elasticsearch -->
+        <dependency>
+      <!-- required by elasticsearch -->
             <groupId>org.elasticsearch.plugin</groupId>
             <artifactId>transport-netty4-client</artifactId>
             <version>${elasticsearch}</version>
@@ -210,8 +211,8 @@
 
     <repositories>
         <repository>
-            <id>spring-libs-snapshot</id>
-            <url>https://repo.spring.io/libs-snapshot</url>
+            <id>spring-libs-milestone</id>
+            <url>https://repo.spring.io/libs-milestone</url>
         </repository>
     </repositories>
 
