@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.0.M4 (2017-06-14)
+----------------------------------------
+* DATAES-353 - Release 3.0 M4 (Kay).
+* DATAES-334 - Readme has broken jira link.
+* DATAES-285 - Upgrade to Elasticsearch 5.0.
+
+
 Changes in version 2.1.4.RELEASE (2017-06-08)
 ---------------------------------------------
 * DATAES-349 - Release 2.1.4 (Ingalls SR4).
