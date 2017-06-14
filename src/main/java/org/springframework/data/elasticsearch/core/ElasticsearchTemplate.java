@@ -106,7 +106,9 @@ import static org.springframework.util.CollectionUtils.isEmpty;
  * @author Young Gu
  * @author Oliver Gierke
  * @author Mark Janssen
+ * @author Mateusz Pulka
  * @author Mark Paluch
+
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -253,8 +255,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper) {
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
+		String indexType = query.getIndexType() != null ? query.getIndexType() : persistentEntity.getIndexType();
 		GetResponse response = client
-				.prepareGet(persistentEntity.getIndexName(), persistentEntity.getIndexType(), query.getId()).execute()
+				.prepareGet(persistentEntity.getIndexName(), indexType, query.getId()).execute()
 				.actionGet();
 
 		T entity = mapper.mapResult(response, clazz);

@@ -70,6 +70,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
  * @author Abdul Mohammed
  * @author Kevin Leturc
  * @author Mason Chan
+ * @author Mateusz Pulka
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -318,6 +319,34 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		assertThat(sampleEntities.getTotalElements(), equalTo(0L));
+	}
+
+	/*
+	DATAES-332
+ 	*/
+	@Test
+	public void shouldReturnObjectForGivenIdAndIndexType() {
+		//given
+		String documentId = randomNumeric(5);
+		String indexType = SampleEntity.class.getAnnotation(Document.class).type();
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).version(System.currentTimeMillis())
+				.build();
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+		elasticsearchTemplate.index(indexQuery);
+		//when
+		GetQuery getQuery = new GetQuery();
+		getQuery.setId(documentId);
+		getQuery.setIndexType(indexType);
+		SampleEntity sampleEntity1 = elasticsearchTemplate.queryForObject(getQuery, SampleEntity.class);
+
+		GetQuery getQuery1 = new GetQuery();
+		getQuery1.setId(documentId);
+		getQuery1.setIndexType("should_not_exist");
+		SampleEntity sampleEntity2 = elasticsearchTemplate.queryForObject(getQuery1, SampleEntity.class);
+		// then
+		assertNull("entity should be null...",sampleEntity2);
+		assertNotNull("entity can't be null....", sampleEntity1);
+		assertEquals(sampleEntity, sampleEntity1);
 	}
 
 	@Test
