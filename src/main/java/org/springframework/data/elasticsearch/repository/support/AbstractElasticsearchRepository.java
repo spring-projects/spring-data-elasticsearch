@@ -55,6 +55,7 @@ import org.springframework.util.Assert;
  * @author Kevin Leturc
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Michael Wirth
  */
 public abstract class AbstractElasticsearchRepository<T, ID extends Serializable>
 		implements ElasticsearchRepository<T, ID> {
@@ -188,7 +189,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 
 	@Override
 	public boolean existsById(ID id) {
-		return findById(id) != null;
+		return findById(id).isPresent();
 	}
 
 	@Override
