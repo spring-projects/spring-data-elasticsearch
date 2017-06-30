@@ -57,8 +57,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private short replicas;
 	private String refreshInterval;
 	private String indexStoreType;
-	private Optional<String> parentType = Optional.empty();
-	private Optional<ElasticsearchPersistentProperty> parentIdProperty = Optional.empty();
+	private String parentType;
+	private ElasticsearchPersistentProperty parentIdProperty;
 	private String settingPath;
 	private boolean createIndexAndMapping;
 
@@ -131,12 +131,12 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
-	public Optional<String> getParentType() {
+	public String getParentType() {
 		return parentType;
 	}
 
 	@Override
-	public Optional<ElasticsearchPersistentProperty> getParentIdProperty() {
+	public ElasticsearchPersistentProperty getParentIdProperty() {
 		return parentIdProperty;
 	}
 
@@ -154,15 +154,15 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
 		super.addPersistentProperty(property);
 
-		Optional<Parent> annotation = property.findAnnotation(Parent.class);
+		Parent annotation = property.findAnnotation(Parent.class);
 
-		annotation.ifPresent(parent -> {
-			Assert.isTrue(!this.parentIdProperty.isPresent(), "Only one field can hold a @Parent annotation");
-			Assert.isTrue(!this.parentType.isPresent(), "Only one field can hold a @Parent annotation");
+		if (annotation != null) {
+			Assert.isNull(this.parentIdProperty, "Only one field can hold a @Parent annotation");
+			Assert.isNull(this.parentType, "Only one field can hold a @Parent annotation");
 			Assert.isTrue(property.getType() == String.class, "Parent ID property should be String");
-			this.parentIdProperty = Optional.of(property);
-			this.parentType = Optional.of(parent.type());
-		});
+			this.parentIdProperty = property;
+			this.parentType = annotation.type();
+		}
 
 		if (property.isVersionProperty()) {
 			Assert.isTrue(property.getType() == Long.class, "Version property should be Long");

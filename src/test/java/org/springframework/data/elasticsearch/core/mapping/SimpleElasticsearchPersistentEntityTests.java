@@ -19,7 +19,7 @@ import java.beans.IntrospectionException;
 
 import org.junit.Test;
 import org.springframework.data.annotation.Version;
-import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;

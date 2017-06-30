@@ -316,7 +316,7 @@ public abstract class AbstractElasticsearchRepository<T, ID extends Serializable
 	}
 
 	protected ID extractIdFromBean(T entity) {
-		return entityInformation.getId(entity).orElse(null);
+		return entityInformation.getId(entity);
 	}
 
 	private List<String> stringIdsRepresentation(Iterable<ID> ids) {

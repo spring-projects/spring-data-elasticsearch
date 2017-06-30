@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.get.GetResponse;
@@ -176,15 +175,12 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
 
 			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(clazz);
-			Optional<ElasticsearchPersistentProperty> idProperty = persistentEntity.getIdProperty();
+			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
 
 			// Only deal with String because ES generated Ids are strings !
-
-			idProperty.ifPresent(property -> {
-				if (property.getType().isAssignableFrom(String.class)) {
-					persistentEntity.getPropertyAccessor(result).setProperty(property, Optional.ofNullable(id));
-				}
-			});
+			if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
+				persistentEntity.getPropertyAccessor(result).setProperty(idProperty, id);
+			}
 
 		}
 	}
