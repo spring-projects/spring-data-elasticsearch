@@ -33,6 +33,7 @@ import org.elasticsearch.search.SearchHitField;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Documents;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
@@ -50,6 +51,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * @author Young Gu
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author zzt
  */
 public class DefaultResultMapper extends AbstractResultMapper {
 
@@ -172,7 +174,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 
 	private <T> void setPersistentEntityId(T result, String id, Class<T> clazz) {
 
-		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
+		if (mappingContext != null && (clazz.isAnnotationPresent(Document.class) || clazz.isAnnotationPresent(Documents.class))) {
 
 			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(clazz);
 			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();

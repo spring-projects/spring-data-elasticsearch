@@ -23,6 +23,7 @@ import java.util.Collections;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Documents;
 import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.support.ElasticsearchRepositoryFactoryBean;
@@ -39,6 +40,7 @@ import org.w3c.dom.Element;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author zzt
  */
 public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurationExtensionSupport {
 
@@ -88,7 +90,7 @@ public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurat
 	 */
 	@Override
 	protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
-		return Collections.<Class<? extends Annotation>> singleton(Document.class);
+		return Collections.unmodifiableList(Arrays.asList(Document.class, Documents.class));
 	}
 
 	/*

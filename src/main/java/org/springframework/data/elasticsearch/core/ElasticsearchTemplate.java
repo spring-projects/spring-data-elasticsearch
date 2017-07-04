@@ -74,6 +74,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Documents;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
@@ -106,6 +107,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
  * @author Oliver Gierke
  * @author Mark Janssen
  * @author Mark Paluch
+ * @author zzt
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -1091,8 +1093,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz) {
-		Assert.isTrue(clazz.isAnnotationPresent(Document.class), "Unable to identify index name. " + clazz.getSimpleName()
-				+ " is not a Document. Make sure the document class is annotated with @Document(indexName=\"foo\")");
+		Assert.isTrue(clazz.isAnnotationPresent(Document.class) || clazz.isAnnotationPresent(Documents.class),
+				"Unable to identify index name. " + clazz.getSimpleName()
+				+ " is not a Document. Make sure the document class is annotated with @Document(indexName=\"foo\") or @Documents(indexPattern=\"foo#{bar.toString()}\")");
 		return elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(clazz);
 	}
 

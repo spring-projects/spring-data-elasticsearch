@@ -26,6 +26,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Documents;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
@@ -43,6 +44,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author zzt
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
@@ -80,6 +82,20 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.refreshInterval = document.refreshInterval();
 			this.indexStoreType = document.indexStoreType();
 			this.createIndexAndMapping = document.createIndex();
+		} else if (clazz.isAnnotationPresent(Documents.class)) {
+			Documents documents = clazz.getAnnotation(Documents.class);
+			Assert.hasText(documents.indexPattern(),
+					" Unknown indexPattern. Make sure the indexPattern is defined. e.g @Documents(indexPattern=\"foo#{bar.toString()}\")");
+			this.indexName = documents.indexPattern();
+			Assert.isTrue(indexName.contains(documents.indexBeanName() + "." + documents.indexBeanMethod()),
+					" Unknown indexBeanName or indexBeanMethod. Make sure the indexBeanName is contained in your indexPattern. e.g @Documents(indexPattern=\"foo#{bar.toString()}\", indexBean=\"bar\", indexBeanMethod=\"toString\"");
+			this.indexType = hasText(documents.type()) ? documents.type() : clazz.getSimpleName().toLowerCase(Locale.ENGLISH);
+			this.useServerConfiguration = documents.useServerConfiguration();
+			this.shards = documents.shards();
+			this.replicas = documents.replicas();
+			this.refreshInterval = documents.refreshInterval();
+			this.indexStoreType = documents.indexStoreType();
+			this.createIndexAndMapping = false;
 		}
 		if (clazz.isAnnotationPresent(Setting.class)) {
 			this.settingPath = typeInformation.getType().getAnnotation(Setting.class).settingPath();
