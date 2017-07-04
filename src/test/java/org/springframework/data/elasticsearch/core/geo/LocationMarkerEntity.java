@@ -15,18 +15,19 @@
  */
 package org.springframework.data.elasticsearch.core.geo;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.GeoPointField;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.GeoPointField;
-
 /**
  * @author Franck Marchand
+ * @author Lukas Vorisek
  */
 @Setter
 @Getter
@@ -48,4 +49,8 @@ public class LocationMarkerEntity {
 
     @GeoPointField
     private String locationAsGeoHash;
+
+    private GeoShapePoint locationAsGeoShape;
+
+    private GeoShape geoShape;
 }

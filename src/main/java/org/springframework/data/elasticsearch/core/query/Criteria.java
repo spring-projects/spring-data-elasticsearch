@@ -15,12 +15,22 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.geo.GeoShape;
+import org.springframework.data.elasticsearch.core.geo.GeoShapeMultiPolygon;
+import org.springframework.data.elasticsearch.core.geo.GeoShapePolygon;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
@@ -33,6 +43,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Franck Marchand
+ * @author Lukas Vorisek
  */
 public class Criteria {
 
@@ -443,6 +454,68 @@ public class Criteria {
 	}
 
 	/**
+	 *
+	 *
+	 * @param geoShapePolygon {@link GeoShapePolygon} polygon
+	 * @return Criteria the chaind criteria with the new 'geo_shape' criteria included.
+	 */
+	public Criteria within(GeoShapePolygon geoShapePolygon) {
+		Assert.notNull(geoShapePolygon, "geoShapePolygon value for criteria must not be null");
+		filterCriteria.add(new CriteriaEntry(OperationKey.WITHIN_POLYGON, geoShapePolygon));
+		return this;
+	}
+
+	/**
+	 *
+	 *
+	 * @param geoShapeMultiPolygon {@link GeoShapeMultiPolygon} polygon
+	 * @return Criteria the chaind criteria with the new 'geo_shape' criteria included.
+	 */
+	public Criteria within(GeoShapeMultiPolygon geoShapeMultiPolygon) {
+		Assert.notNull(geoShapeMultiPolygon, "geoShapePolygon value for criteria must not be null");
+		filterCriteria.add(new CriteriaEntry(OperationKey.WITHIN_POLYGON, geoShapeMultiPolygon));
+		return this;
+	}
+
+	/**
+	 *
+	 *
+	 * @param geoShapeMultiPolygon {@link GeoShapeMultiPolygon} polygon
+	 * @return Criteria the chaind criteria with the new 'geo_shape' criteria included.
+	 */
+	@SuppressWarnings("rawtypes")
+	public Criteria intersect(GeoShape geoShape) {
+		Assert.notNull(geoShape, "geoShape value for criteria must not be null");
+		filterCriteria.add(new CriteriaEntry(OperationKey.INTERSECT, geoShape));
+		return this;
+	}
+
+	/**
+	 *
+	 *
+	 * @param geoShape {@link GeoShape} geoShape
+	 * @return Criteria the chaind criteria with the new 'geo_shape' criteria included.
+	 */
+	@SuppressWarnings("rawtypes")
+	public Criteria disjoint(GeoShape geoShape) {
+		Assert.notNull(geoShape, "geoShape value for criteria must not be null");
+		filterCriteria.add(new CriteriaEntry(OperationKey.DISJOINT, geoShape));
+		return this;
+	}
+
+	/**
+	 *
+	 *
+	 * @param geoShape {@link GeoShape} geoShape
+	 * @return Criteria the chaind criteria with the new 'geo_shape' criteria included.
+	 */
+	public Criteria contains(GeoShape geoShape) {
+		Assert.notNull(geoShape, "geoShape value for criteria must not be null");
+		filterCriteria.add(new CriteriaEntry(OperationKey.CONTAINS, geoShape));
+		return this;
+	}
+
+	/**
 	 * Creates new CriteriaEntry for {@code location GeoBox bounding box}
 	 *
 	 * @param boundingBox {@link org.springframework.data.elasticsearch.core.geo.GeoBox} bounding box(left top corner + right bottom corner)
@@ -587,7 +660,7 @@ public class Criteria {
 	}
 
 	public enum OperationKey {
-		EQUALS, CONTAINS, STARTS_WITH, ENDS_WITH, EXPRESSION, BETWEEN, FUZZY, IN, NOT_IN, WITHIN, BBOX, NEAR, LESS, LESS_EQUAL, GREATER, GREATER_EQUAL;
+		EQUALS, CONTAINS, STARTS_WITH, ENDS_WITH, EXPRESSION, BETWEEN, FUZZY, IN, NOT_IN, WITHIN, WITHIN_POLYGON, BBOX, NEAR, LESS, LESS_EQUAL, GREATER, GREATER_EQUAL, INTERSECT, DISJOINT;
 	}
 
 	public static class CriteriaEntry {
@@ -616,4 +689,5 @@ public class Criteria {
 					'}';
 		}
 	}
+
 }

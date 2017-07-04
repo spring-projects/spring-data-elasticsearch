@@ -165,6 +165,17 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- required by elasticsearch for geo_shape support -->
+        <dependency>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
+            <version>1.13</version>
+        </dependency>
+        <dependency>
+            <groupId>org.locationtech.spatial4j</groupId>
+            <artifactId>spatial4j</artifactId>
+            <version>0.6</version>
+        </dependency>
 
 
     </dependencies>

@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.geo.CustomGeoModule;
+import org.springframework.data.elasticsearch.core.geo.GeoShapeModule;
 import org.springframework.data.geo.*;
 import java.util.List;
 
@@ -53,6 +54,7 @@ public class DefaultEntityMapper implements EntityMapper {
 		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 		objectMapper.registerModule(new CustomGeoModule());
+		objectMapper.registerModule(new GeoShapeModule());
 	}
 
 	@Override

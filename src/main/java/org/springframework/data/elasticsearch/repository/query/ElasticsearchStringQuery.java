@@ -19,9 +19,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
+import org.springframework.data.elasticsearch.core.convert.GeoShapeConverter;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.util.Assert;
@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Lukas Vorisek
  */
 public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQuery {
 
@@ -50,6 +51,8 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		if (!conversionService.canConvert(org.joda.time.LocalDateTime.class, String.class)) {
 			conversionService.addConverter(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE);
 		}
+
+		conversionService.addConverter(GeoShapeConverter.getInstance());
 	}
 
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,

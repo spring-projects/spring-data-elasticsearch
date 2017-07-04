@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013 - 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,25 +15,26 @@
  */
 package org.springframework.data.elasticsearch.entities;
 
-import java.lang.Double;
-import java.lang.Long;
-import java.lang.Object;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import static org.springframework.data.elasticsearch.annotations.FieldType.text;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import org.springframework.data.elasticsearch.core.geo.GeoShape;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Lukas Vorisek
  */
 
 @Setter
@@ -57,6 +58,8 @@ public class SampleEntity {
 	private String highlightedMessage;
 
 	private GeoPoint location;
+
+	private GeoShape geoShape;
 
 	@Version
 	private Long version;

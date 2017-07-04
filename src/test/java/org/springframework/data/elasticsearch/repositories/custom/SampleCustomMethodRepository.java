@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.geo.GeoShapePolygon;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.geo.Box;
@@ -33,6 +34,7 @@ import org.springframework.data.geo.Point;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Kevin Leturc
+ * @author Lukas Vorisek
  */
 public interface SampleCustomMethodRepository extends ElasticsearchRepository<SampleEntity, String> {
 
@@ -45,6 +47,9 @@ public interface SampleCustomMethodRepository extends ElasticsearchRepository<Sa
 
 	@Query("{\"bool\" : {\"must\" : {\"term\" : {\"message\" : \"?0\"}}}}")
 	List<SampleEntity> findByMessage(String message);
+
+	@Query("{\"bool\" : {\"must\" : {}, \"filter\" : {\"geo_shape\": {\"geoShape\": {\"shape\": ?0, \"relation\": \"within\" }}}}}}")
+	List<SampleEntity> findInPolygon(GeoShapePolygon polygon);
 
 	Page<SampleEntity> findByAvailable(boolean available, Pageable pageable);
 

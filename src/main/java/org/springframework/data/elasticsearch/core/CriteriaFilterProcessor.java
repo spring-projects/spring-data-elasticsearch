@@ -15,18 +15,46 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.springframework.data.elasticsearch.core.query.Criteria.*;
-
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
 import org.elasticsearch.common.geo.GeoDistance;
-import org.elasticsearch.index.query.*;
+import org.elasticsearch.common.geo.ShapeRelation;
+import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
+import org.elasticsearch.common.geo.builders.GeometryCollectionBuilder;
+import org.elasticsearch.common.geo.builders.LineStringBuilder;
+import org.elasticsearch.common.geo.builders.MultiLineStringBuilder;
+import org.elasticsearch.common.geo.builders.MultiPointBuilder;
+import org.elasticsearch.common.geo.builders.MultiPolygonBuilder;
+import org.elasticsearch.common.geo.builders.PolygonBuilder;
+import org.elasticsearch.common.geo.builders.ShapeBuilder;
+import org.elasticsearch.common.geo.builders.ShapeBuilders;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.GeoBoundingBoxQueryBuilder;
+import org.elasticsearch.index.query.GeoDistanceQueryBuilder;
+import org.elasticsearch.index.query.GeoShapeQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.vividsolutions.jts.geom.Coordinate;
+
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.geo.GeoShape;
+import org.springframework.data.elasticsearch.core.geo.GeoShapeGeometryCollection;
+import org.springframework.data.elasticsearch.core.geo.GeoShapeLinestring;
+import org.springframework.data.elasticsearch.core.geo.GeoShapeMultiLinestring;
+import org.springframework.data.elasticsearch.core.geo.GeoShapeMultiPoint;
+import org.springframework.data.elasticsearch.core.geo.GeoShapeMultiPolygon;
+import org.springframework.data.elasticsearch.core.geo.GeoShapePoint;
+import org.springframework.data.elasticsearch.core.geo.GeoShapePolygon;
 import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.Criteria.OperationKey;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
@@ -39,9 +67,11 @@ import org.springframework.util.Assert;
  * @author Franck Marchand
  * @author Mohsin Husen
  * @author Artur Konczak
+ * @author Lukas Vorisek
  *
  */
 class CriteriaFilterProcessor {
+	Logger log = LoggerFactory.getLogger(CriteriaFilterProcessor.class);
 
 
 	QueryBuilder createFilterFromCriteria(Criteria criteria) {
@@ -147,6 +177,84 @@ class CriteriaFilterProcessor {
 				break;
 			}
 
+			case WITHIN_POLYGON: {
+				Assert.isInstanceOf(GeoShape.class, value, "Value of a geo_shape filter should be GeoShape.");
+
+				ShapeBuilder shapeBuilder = null;
+				if(value instanceof GeoShapePolygon) {
+					shapeBuilder = polygonBuilder((GeoShapePolygon) value);
+				} else if (value instanceof GeoShapeMultiPolygon) {
+					shapeBuilder = polygonBuilder((GeoShapeMultiPolygon) value);
+				} else {
+					Assert.isTrue(false, "Value of a geo_shape filter must be GeoShapePolygon or GeoShapeMultiPolygon!");
+				}
+
+				Assert.notNull(shapeBuilder, "No one suitable shapeBuilder!");
+
+				GeoShapeQueryBuilder geoShapeQueryBuilder;
+				try {
+					geoShapeQueryBuilder = QueryBuilders.geoWithinQuery(fieldName, shapeBuilder);
+					filter = geoShapeQueryBuilder;
+				} catch (IOException e) {
+					log.error("Cannot construct GeoShapeQueryBuilder", e);
+					filter = null;
+				}
+
+				break;
+			}
+
+			case INTERSECT: {
+				Assert.isInstanceOf(GeoShape.class, value, "Value of a geo_shape filter should be GeoShape.");
+
+				ShapeBuilder shapeBuilder = shapeBuilder((GeoShape<?>) value);
+				Assert.notNull(shapeBuilder, "Unrecognized type of shape. Can't create shape builder.");
+
+				try {
+					GeoShapeQueryBuilder geoShapeQueryBuilder = QueryBuilders.geoIntersectionQuery(fieldName, shapeBuilder);
+					filter = geoShapeQueryBuilder;
+				} catch (IOException e) {
+					log.error("Cannot construct GeoShapeQueryBuilder", e);
+					filter = null;
+				}
+
+				break;
+			}
+
+			case DISJOINT: {
+				Assert.isInstanceOf(GeoShape.class, value, "Value of a geo_shape filter should be GeoShape.");
+
+				ShapeBuilder shapeBuilder = shapeBuilder((GeoShape<?>) value);
+				Assert.notNull(shapeBuilder, "Unrecognized type of shape. Can't create shape builder.");
+
+				try {
+					GeoShapeQueryBuilder geoShapeQueryBuilder = QueryBuilders.geoDisjointQuery(fieldName, shapeBuilder);
+					filter = geoShapeQueryBuilder;
+				} catch (IOException e) {
+					log.error("Cannot construct GeoShapeQueryBuilder", e);
+					filter = null;
+				}
+
+				break;
+			}
+
+			case CONTAINS: {
+				Assert.isInstanceOf(GeoShape.class, value, "Value of a geo_shape filter should be GeoShape.");
+
+				ShapeBuilder shapeBuilder = shapeBuilder((GeoShape<?>) value);
+				Assert.notNull(shapeBuilder, "Unrecognized type of shape. Can't create shape builder.");
+
+				try {
+					GeoShapeQueryBuilder geoShapeQueryBuilder = QueryBuilders.geoShapeQuery(fieldName, shapeBuilder);
+					geoShapeQueryBuilder.relation(ShapeRelation.CONTAINS);
+					filter = geoShapeQueryBuilder;
+				} catch (IOException e) {
+					log.error("Cannot construct GeoShapeQueryBuilder", e);
+					filter = null;
+				}
+
+				break;
+			}
+
 			case BBOX: {
 				filter = QueryBuilders.geoBoundingBoxQuery(fieldName);
 
@@ -171,6 +279,147 @@ class CriteriaFilterProcessor {
 
 		return filter;
 	}
+
+	/**
+	 * Create ShapeBuilder (Elasticsearch) based on data from GeoShape.
+	 * @param value
+	 * @return the Elasticsearch polygon builder or null if doesn't know that GeoShape.
+	 */
+	private ShapeBuilder shapeBuilder(GeoShape<?> value) {
+		ShapeBuilder shapeBuilder = null;
+
+		switch(value.getType()) {
+		case POLYGON:
+			shapeBuilder = polygonBuilder((GeoShapePolygon) value);
+			break;
+		case MULTIPOLYGON:
+			shapeBuilder = polygonBuilder((GeoShapeMultiPolygon) value);
+			break;
+		case POINT:
+			GeoShapePoint pointValue = (GeoShapePoint) value;
+			shapeBuilder = ShapeBuilders.newPoint(new Coordinate(pointValue.getX(), pointValue.getY()));
+			break;
+		case LINESTRING:
+			shapeBuilder = linestringBuilder((GeoShapeLinestring) value);
+			break;
+		case MULTILINESTRING:
+			shapeBuilder = multiLinestringBuilder((GeoShapeMultiLinestring) value);
+			break;
+		case GEOMETRY_COLLECTION:
+			shapeBuilder = geometryCollectionBuilder((GeoShapeGeometryCollection) value);
+			break;
+		case MULTIPOINT:
+			shapeBuilder = multiPointBuilder((GeoShapeMultiPoint) value);
+			break;
+		default:
+			break;
+		}
+
+		return shapeBuilder;
+	}
+
+	/**
+	 * Create ShapeBuilder (Elasticsearch) based on data from GeoShapeGeometryCollection.
+	 * @param value
+	 * @return the Elasticsearch polygon builder
+	 */
+	private ShapeBuilder geometryCollectionBuilder(GeoShapeGeometryCollection value) {
+		GeometryCollectionBuilder builder = new GeometryCollectionBuilder();
+
+		for(GeoShape<?> shape : value.getCoordinates()) {
+			builder.shape(shapeBuilder(shape));
+		}
+
+		return builder;
+	}
+
+	/**
+	 * Create MultiPointBuilder (Elasticsearch) based on data from GeoShapeMultiPoint.
+	 * @param value
+	 * @return the Elasticsearch polygon builder
+	 */
+	private MultiPointBuilder multiPointBuilder(GeoShapeMultiPoint value) {
+		CoordinatesBuilder builder = new CoordinatesBuilder();
+		for(org.springframework.data.elasticsearch.core.geo.GeoShape.Coordinate coordiante : value.getCoordinates()) {
+			builder.coordinate(coordiante.getX(), coordiante.getY());
+		}
+
+		return ShapeBuilders.newMultiPoint(builder.build());
+	}
+
+	/**
+	 * Create MultiLineStringBuilder (Elasticsearch) based on data from GeoShapeMultiLinestring.
+	 * @param value
+	 * @return the Elasticsearch polygon builder
+	 */
+	private MultiLineStringBuilder multiLinestringBuilder(GeoShapeMultiLinestring value) {
+		org.elasticsearch.common.geo.builders.MultiLineStringBuilder builder = ShapeBuilders.newMultiLinestring();
+
+		for(GeoShapeLinestring linestring : value.getCoordinates()) {
+			builder.linestring(linestringBuilder(linestring));
+		}
+
+		return builder;
+	}
+
+
+	/**
+	 * Create LineStringBuilder (Elasticsearch) based on data from GeoShapeLinestring.
+	 * @param value
+	 * @return the Elasticsearch polygon builder
+	 */
+	private LineStringBuilder linestringBuilder(GeoShapeLinestring value) {
+		CoordinatesBuilder coordinatesBuilder = new CoordinatesBuilder();
+
+		for(org.springframework.data.elasticsearch.core.geo.GeoShape.Coordinate coordiante : value.getCoordinates()) {
+			coordinatesBuilder.coordinate(coordiante.getX(), coordiante.getY());
+		}
+
+		return ShapeBuilders.newLineString(coordinatesBuilder);
+	}
+
+	/**
+	 * Create PolygonBuilder (Elasticsearch) based on data from GeoShapePolygon.
+	 * @param value
+	 * @return the Elasticsearch polygon builder
+	 */
+	private PolygonBuilder polygonBuilder(GeoShapePolygon polygon) {
+		CoordinatesBuilder coordinatesBuilder = new CoordinatesBuilder();
+		Iterator<GeoShapeLinestring> iterator = polygon.getCoordinates().iterator();
+
+		for(org.springframework.data.elasticsearch.core.geo.GeoShape.Coordinate coordinate : iterator.next().getCoordinates()) {
+			coordinatesBuilder.coordinate(coordinate.getX(), coordinate.getY());
+		}
+		PolygonBuilder shapeBuilder = ShapeBuilders.newPolygon(coordinatesBuilder);
+		while(iterator.hasNext()) {
+			GeoShapeLinestring linestring = iterator.next();
+			CoordinatesBuilder holeCoordinates = new CoordinatesBuilder();
+			for(org.springframework.data.elasticsearch.core.geo.GeoShape.Coordinate coordinate : linestring.getCoordinates()) {
+				holeCoordinates.coordinate(coordinate.getX(), coordinate.getY());
+			}
+			LineStringBuilder hole = new LineStringBuilder(holeCoordinates);
+			shapeBuilder.hole(hole);
+		}
+
+		return shapeBuilder;
+	}
+
+	/**
+	 * Create MultiPolygonBuilder (Elasticsearch) based on data from GeoShapeMultiPolygon.
+	 * @param value
+	 * @return the Elasticsearch polygon builder
+	 */
+	private MultiPolygonBuilder polygonBuilder(GeoShapeMultiPolygon value) {
+		GeoShapeMultiPolygon polygon = value;
+
+		MultiPolygonBuilder polygonBuilder = ShapeBuilders.newMultiPolygon();
+		for(GeoShapePolygon pol : polygon.getCoordinates()) {
+			polygonBuilder.polygon(polygonBuilder(pol));
+		}
+
+		return polygonBuilder;
+	}
+
 
 
 	/**

@@ -15,9 +15,13 @@
  */
 package org.springframework.data.elasticsearch.repositories;
 
-import static org.apache.commons.lang.RandomStringUtils.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.apache.commons.lang.RandomStringUtils.random;
+import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,12 +31,16 @@ import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.geo.GeoShape;
+import org.springframework.data.elasticsearch.core.geo.GeoShapePoint;
+import org.springframework.data.elasticsearch.core.geo.GeoShapePolygon;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repositories.custom.SampleCustomMethodRepository;
 import org.springframework.data.geo.Box;
@@ -48,6 +56,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Franck Marchand
  * @author Kevin Leturc
  * @author Christoph Strobl
+ * @author Lukas Vorisek
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:custom-method-repository-test.xml")
@@ -1195,6 +1204,32 @@ public class CustomMethodRepositoryTests {
 		long count = repository.countByLocationNear(new Point(45.7806d, 3.0875d), new Distance(2, Metrics.KILOMETERS));
 		// then
 		assertThat(count, is(equalTo(1L)));
+	}
+
+	/*
+	DATAES-169
+	 */
+	@Test
+	public void shouldExecuteCustomMethodOnGeoShape() {
+		// given
+		GeoShape geoShape = new GeoShapePoint(new Point(5, 5));
+
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setMessage("some message");
+		sampleEntity.setGeoShape(geoShape);
+		repository.save(sampleEntity);
+		// when
+		GeoShapePolygon findingPolygon = new GeoShapePolygon(new Point(0, 0), new Point(0, 20), new Point(20, 20), new Point(20, 0), new Point(0, 0));
+		List<SampleEntity> list = repository.findInPolygon(findingPolygon);
+
+		GeoShapePolygon findingPolygon2 = new GeoShapePolygon(new Point(10,10), new Point(10, 20), new Point(20, 20), new Point(20, 10), new Point(10, 10));
+		List<SampleEntity> list2 = repository.findInPolygon(findingPolygon2);
+		// then
+		assertThat((long) list.size(), is(equalTo(1L)));
+		assertThat((long) list2.size(), is(equalTo(0L)));
 	}
 
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {

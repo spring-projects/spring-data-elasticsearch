@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,11 @@
 
 package org.springframework.data.elasticsearch.core;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.buildIndex;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -29,12 +30,20 @@ import java.util.List;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.builder.SampleInheritedEntityBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.entities.*;
+import org.springframework.data.elasticsearch.entities.Book;
 import org.springframework.data.elasticsearch.entities.GeoEntity;
+import org.springframework.data.elasticsearch.entities.Group;
+import org.springframework.data.elasticsearch.entities.MinimalEntity;
+import org.springframework.data.elasticsearch.entities.SampleInheritedEntity;
+import org.springframework.data.elasticsearch.entities.SampleTransientEntity;
+import org.springframework.data.elasticsearch.entities.SimpleRecursiveEntity;
+import org.springframework.data.elasticsearch.entities.StockPrice;
+import org.springframework.data.elasticsearch.entities.User;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -43,6 +52,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Jakub Vavrik
  * @author Mohsin Husen
  * @author Keivn Leturc
+ * @author Lukas Vorisek
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -192,5 +202,23 @@ public class MappingBuilderTests {
 
 		//then
 
+	}
+
+	/**
+	 * DATAES-169 - Geo Shape support
+	 * @throws IOException
+	 */
+	@Test
+	public void shouldBuildMappingsForGeoShape() throws IOException {
+		//given
+
+		//when
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(GeoEntity.class, "mapping", "id", null);
+
+		//then
+		final String result = xContentBuilder.string();
+
+		assertThat(result, containsString("\"polygonB\":{\"type\":\"geo_shape\""));
+		assertThat(result, containsString("\"polygonA\":{\"type\":\"geo_shape\",\"tree\":\"geohash\",\"precision\":\"5m\",\"orientation\":\"ccw\""));
 	}
 }

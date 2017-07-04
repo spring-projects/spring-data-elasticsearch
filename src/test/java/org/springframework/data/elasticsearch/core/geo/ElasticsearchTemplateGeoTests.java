@@ -15,12 +15,21 @@
  */
 package org.springframework.data.elasticsearch.core.geo;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.elasticsearch.common.geo.GeoHashUtils;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.Criteria;
@@ -30,9 +39,6 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.data.geo.Point;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 /**
  * @author Rizwan Idrees
@@ -81,23 +87,31 @@ public class ElasticsearchTemplateGeoTests {
 		String latLonString = "51.000000, 0.100000";
 		String geohash = "u10j46mkfekr";
 		GeoHashUtils.stringEncode(0.100000,51.000000);
+		GeoShapePoint geoShapePoint = new GeoShapePoint(lonLatArray[0], lonLatArray[1]);
+		GeoShapePolygon geoShapePolygon = new GeoShapePolygon(new Point(12.348, 50.233), new Point(14.853, 48.6619), new Point(15.3369, 50.9584), new Point(12.348, 50.233));
 		LocationMarkerEntity location1 = LocationMarkerEntity.builder()
 				.id("1").name("Artur Konczak")
 				.locationAsString(latLonString)
 				.locationAsArray(lonLatArray)
 				.locationAsGeoHash(geohash)
+				.locationAsGeoShape(geoShapePoint)
+				.geoShape(geoShapePolygon)
 				.build();
 		LocationMarkerEntity location2 = LocationMarkerEntity.builder()
 				.id("2").name("Mohsin Husen")
 				.locationAsString(geohash.substring(0, 8))
 				.locationAsArray(lonLatArray)
 				.locationAsGeoHash(geohash.substring(0, 8))
+				.locationAsGeoShape(geoShapePoint)
+				.geoShape(geoShapePolygon)
 				.build();
 		LocationMarkerEntity location3 = LocationMarkerEntity.builder()
 				.id("3").name("Rizwan Idrees")
 				.locationAsString(geohash)
 				.locationAsArray(lonLatArray)
 				.locationAsGeoHash(geohash)
+				.locationAsGeoShape(geoShapePoint)
+				.geoShape(geoShapePolygon)
 				.build();
 		indexQueries.add(buildIndex(location1));
 		indexQueries.add(buildIndex(location2));
@@ -181,6 +195,175 @@ public class ElasticsearchTemplateGeoTests {
 
 		//then
 		assertThat(geoAuthorsForGeoCriteria.size(), is(3));
+	}
+
+	@Test
+	public void shouldFindAnnotatedGeoMarkersInPolygonGivenCriteriaQuery() {
+		//given
+		loadAnnotationBaseEntities();
+		CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(
+				new Criteria("locationAsGeoShape").within(new GeoShapePolygon(new Point(0,0), new Point(0,100), new Point(100,100), new Point(100,0), new Point(0,0))));
+
+		GeoShapePolygon polygonWithHole = (new GeoShapePolygon(new Point(0,0), new Point(0,100), new Point(100,100), new Point(100,0), new Point(0,0)))
+				.addHole(new Point(20, 20), new Point(20, 50), new Point(50, 50), new Point(50, 20), new Point(20,20));
+		CriteriaQuery geoLocationCriteriaQueryWithHole = new CriteriaQuery(
+				new Criteria("locationAsGeoShape").within(polygonWithHole));
+		CriteriaQuery geoShapeCriteriaQueryWithHole = new CriteriaQuery(
+				new Criteria("geoShape").within(polygonWithHole));
+		//when
+		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery, LocationMarkerEntity.class);
+		List<LocationMarkerEntity> geoAuthorsForGeoCriteriaWithHole = elasticsearchTemplate.queryForList(geoLocationCriteriaQueryWithHole, LocationMarkerEntity.class);
+		List<LocationMarkerEntity> geoAuthorsForGeoShapeCriteriaWithHole = elasticsearchTemplate.queryForList(geoShapeCriteriaQueryWithHole, LocationMarkerEntity.class);
+
+		//then
+		assertThat(geoAuthorsForGeoCriteria.size(), is(3));
+		assertThat(geoAuthorsForGeoCriteriaWithHole.size(), is(3));
+		assertThat(geoAuthorsForGeoShapeCriteriaWithHole.size(), is(3));
+	}
+
+	@Test
+	public void shouldNotFindAnnotatedGeoMarkersInPolygonGivenCriteriaQuery() {
+		//given
+		loadAnnotationBaseEntities();
+		CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(
+				new Criteria("locationAsGeoShape").within(new GeoShapePolygon(new Point(0,0), new Point(0,10), new Point(10,10), new Point(10,0), new Point(0,0))));
+
+		GeoShapePolygon polygon = new GeoShapePolygon(new Point(-5,0), new Point(-5,70), new Point(70,70), new Point(70,0), new Point(-5,0));
+		GeoShapePolygon polygonWithHole	= polygon.addHole(new Point(-2, 60), new Point(-2, 50), new Point(10, 50), new Point(10, 60), new Point(-2,60));
+		CriteriaQuery geoLocationCriteriaQueryWithoutHole = new CriteriaQuery(new Criteria("locationAsGeoShape").within(polygon));
+		CriteriaQuery geoLocationCriteriaQueryWithHole = new CriteriaQuery(new Criteria("locationAsGeoShape").within(polygonWithHole));
+
+		GeoShapePolygon polygonForPolygon = new GeoShapePolygon(new Point(0,0), new Point(0,100), new Point(100,100), new Point(100, 0), new Point(0,0));
+		GeoShapePolygon polygonForPolygonWithHole = polygonForPolygon.addHole(new Point(9, 46), new Point(21, 46), new Point(21, 53), new Point(9, 53), new Point(9, 46));
+		CriteriaQuery polygonCriteriaQueryWithoutHole = new CriteriaQuery(new Criteria("geoShape").within(polygonForPolygon));
+		CriteriaQuery polygonCriteriaQueryWithHole = new CriteriaQuery(new Criteria("geoShape").within(polygonForPolygonWithHole));
+
+		//when
+		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery, LocationMarkerEntity.class);
+		List<LocationMarkerEntity> geoAuthorsForGeoCriteriaWithoutHole = elasticsearchTemplate.queryForList(geoLocationCriteriaQueryWithoutHole, LocationMarkerEntity.class);
+		List<LocationMarkerEntity> geoAuthorsForGeoCriteriaWithHole = elasticsearchTemplate.queryForList(geoLocationCriteriaQueryWithHole, LocationMarkerEntity.class);
+		List<LocationMarkerEntity> geoAuthorsForGeoshapeCriteriaWithoutHole = elasticsearchTemplate.queryForList(polygonCriteriaQueryWithoutHole, LocationMarkerEntity.class);
+		List<LocationMarkerEntity> geoAuthorsForGeoshapeCriteriaWithHole = elasticsearchTemplate.queryForList(polygonCriteriaQueryWithHole, LocationMarkerEntity.class);
+
+		//then
+		assertThat(geoAuthorsForGeoCriteria.size(), is(0));
+		assertThat(geoAuthorsForGeoCriteriaWithoutHole.size(), is(3));
+		assertThat(geoAuthorsForGeoCriteriaWithHole.size(), is(0));
+		assertThat(geoAuthorsForGeoshapeCriteriaWithoutHole.size(), is(3));
+		assertThat(geoAuthorsForGeoshapeCriteriaWithHole.size(), is(0));
+	}
+
+	@Test
+	public void shouldFindAnnotatedGeoMarkersInMultiPolygonGivenCriteriaQuery() {
+		//given
+		loadAnnotationBaseEntities();
+
+		GeoShapeMultiPolygon multipolygon = new GeoShapeMultiPolygon(
+				new GeoShapePolygon(new Point(0,0), new Point(0,90), new Point(100,90), new Point(100,0), new Point(0,0)),
+				new GeoShapePolygon(new Point(150,80), new Point(150,90), new Point(180,90), new Point(180,80), new Point(150,80)));
+		CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(
+				new Criteria("locationAsGeoShape").within(multipolygon));
+
+		//when
+		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery, LocationMarkerEntity.class);
+
+		//then
+		assertThat(geoAuthorsForGeoCriteria.size(), is(3));
+	}
+
+	@Test
+	public void shouldFindGeoShapeIntersectWithLineByGivenCriteriaQuery() {
+		//given
+		loadAnnotationBaseEntities();
+
+		GeoShape badLine = new GeoShapeLinestring(new Point(0,0), new Point(20,20));
+		CriteriaQuery badGeoCriteria = new CriteriaQuery(new Criteria("locationAsGeoShape").intersect(badLine));
+		GeoShape line = new GeoShapeLinestring(new Point(0,51), new Point(20,51));
+		CriteriaQuery geoCriteria = new CriteriaQuery(new Criteria("locationAsGeoShape").intersect(line));
+
+		//when
+		List<LocationMarkerEntity> badGeoLineCriteriaResult = elasticsearchTemplate.queryForList(badGeoCriteria, LocationMarkerEntity.class);
+		List<LocationMarkerEntity> geoLineCriteriaResult = elasticsearchTemplate.queryForList(geoCriteria, LocationMarkerEntity.class);
+
+		//then
+		assertThat(badGeoLineCriteriaResult.size(), is(0));
+		assertThat(geoLineCriteriaResult.size(), is(3));
+	}
+
+	@Test
+	public void shouldFindGeoShapeIntersectWithPointByGivenCriteriaQuery() {
+		//given
+		loadAnnotationBaseEntities();
+
+		GeoShapePoint badPoint = new GeoShapePoint(new Point(0,0));
+		CriteriaQuery badGeoCriteria = new CriteriaQuery(new Criteria("locationAsGeoShape").intersect(badPoint));
+		GeoShapePoint point = new GeoShapePoint(new Point(0.1,51));
+		CriteriaQuery geoCriteria = new CriteriaQuery(new Criteria("locationAsGeoShape").intersect(point));
+
+		//when
+		List<LocationMarkerEntity> badGeoLineCriteriaResult = elasticsearchTemplate.queryForList(badGeoCriteria, LocationMarkerEntity.class);
+		List<LocationMarkerEntity> geoLineCriteriaResult = elasticsearchTemplate.queryForList(geoCriteria, LocationMarkerEntity.class);
+
+		//then
+		assertThat(badGeoLineCriteriaResult.size(), is(0));
+		assertThat(geoLineCriteriaResult.size(), is(3));
+	}
+
+	@Test
+	public void shouldFindGeoShapeDisjointWithLineByGivenCriteriaQuery() {
+		//given
+		loadAnnotationBaseEntities();
+
+		GeoShape<?> badLine = new GeoShapeLinestring(new Point(0,51), new Point(20,51));
+		CriteriaQuery badGeoCriteria = new CriteriaQuery(new Criteria("locationAsGeoShape").disjoint(badLine));
+		GeoShape<?> line = new GeoShapeLinestring(new Point(0,0), new Point(20,20));
+		CriteriaQuery geoCriteria = new CriteriaQuery(new Criteria("locationAsGeoShape").disjoint(line));
+
+		//when
+		List<LocationMarkerEntity> badGeoLineCriteriaResult = elasticsearchTemplate.queryForList(badGeoCriteria, LocationMarkerEntity.class);
+		List<LocationMarkerEntity> geoLineCriteriaResult = elasticsearchTemplate.queryForList(geoCriteria, LocationMarkerEntity.class);
+
+		//then
+		assertThat(badGeoLineCriteriaResult.size(), is(0));
+		assertThat(geoLineCriteriaResult.size(), is(3));
+	}
+
+	@Test
+	public void shouldFindGeoShapeDisjointWithPointByGivenCriteriaQuery() {
+		//given
+		loadAnnotationBaseEntities();
+
+		GeoShapePoint badPoint = new GeoShapePoint(new Point(0.1,51));
+		CriteriaQuery badGeoCriteria = new CriteriaQuery(new Criteria("locationAsGeoShape").disjoint(badPoint));
+		GeoShapePoint point = new GeoShapePoint(new Point(0,0));
+		CriteriaQuery geoCriteria = new CriteriaQuery(new Criteria("locationAsGeoShape").disjoint(point));
+
+		//when
+		List<LocationMarkerEntity> badGeoLineCriteriaResult = elasticsearchTemplate.queryForList(badGeoCriteria, LocationMarkerEntity.class);
+		List<LocationMarkerEntity> geoLineCriteriaResult = elasticsearchTemplate.queryForList(geoCriteria, LocationMarkerEntity.class);
+
+		//then
+		assertThat(badGeoLineCriteriaResult.size(), is(0));
+		assertThat(geoLineCriteriaResult.size(), is(3));
+	}
+
+	@Test
+	public void shouldFindGeoShapeContainsWithPointByGivenCriteriaQuery() {
+		//given
+		loadAnnotationBaseEntities();
+
+		GeoShapePoint badPoint = new GeoShapePoint(new Point(0,0));
+		CriteriaQuery badGeoCriteria = new CriteriaQuery(new Criteria("locationAsGeoShape").contains(badPoint));
+		GeoShapePoint point = new GeoShapePoint(new Point(0.1,51));
+		CriteriaQuery geoCriteria = new CriteriaQuery(new Criteria("locationAsGeoShape").contains(point));
+
+		//when
+		List<LocationMarkerEntity> badGeoLineCriteriaResult = elasticsearchTemplate.queryForList(badGeoCriteria, LocationMarkerEntity.class);
+		List<LocationMarkerEntity> geoLineCriteriaResult = elasticsearchTemplate.queryForList(geoCriteria, LocationMarkerEntity.class);
+
+		//then
+		assertThat(badGeoLineCriteriaResult.size(), is(0));
+		assertThat(geoLineCriteriaResult.size(), is(3));
 	}
 
 	@Test

@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
@@ -29,11 +30,13 @@ import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.geo.GeoShape;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
@@ -50,6 +53,7 @@ import static org.springframework.util.StringUtils.*;
  * @author Dennis Maaß
  * @author Pavel Luhin
  * @author Mark Paluch
+ * @author Lukas Vorisek
  */
 class MappingBuilder {
 
@@ -70,9 +74,13 @@ class MappingBuilder {
 	public static final String INDEX_VALUE_NOT_ANALYZED = "not_analyzed";
 	public static final String TYPE_VALUE_STRING = "text";
 	public static final String TYPE_VALUE_GEO_POINT = "geo_point";
+	public static final String TYPE_VALUE_GEO_SHAPE = "geo_shape";
 	public static final String TYPE_VALUE_COMPLETION = "completion";
 	public static final String TYPE_VALUE_GEO_HASH_PREFIX = "geohash_prefix";
 	public static final String TYPE_VALUE_GEO_HASH_PRECISION = "geohash_precision";
+	private static final String TYPE_VALUE_GEOSHAPE_TREE = "tree";
+	private static final String TYPE_VALUE_GEOSHAPE_PRECISION = "precision";
+	private static final String TYPE_VALUE_GEOSHAPE_ORIENTATION = "orientation";
 
 	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = SimpleTypeHolder.DEFAULT;
 
@@ -128,10 +136,11 @@ class MappingBuilder {
 			}
 
 			boolean isGeoPointField = isGeoPointField(field);
+			boolean isGeoShapeField = isGeoShapeField(field);
 			boolean isCompletionField = isCompletionField(field);
 
 			Field singleField = field.getAnnotation(Field.class);
-			if (!isGeoPointField && !isCompletionField && isEntity(field) && isAnnotated(field)) {
+			if (!isGeoPointField && !isGeoShapeField && !isCompletionField && isEntity(field) && isAnnotated(field)) {
 				if (singleField == null) {
 					continue;
 				}
@@ -146,6 +155,10 @@ class MappingBuilder {
 
 			if (isGeoPointField) {
 				applyGeoPointFieldMapping(xContentBuilder, field);
+			}
+
+			if(isGeoShapeField) {
+				applyGeoShapeFieldMapping(xContentBuilder, field);
 			}
 
 			if (isCompletionField) {
@@ -192,6 +205,20 @@ class MappingBuilder {
 	private static void applyGeoPointFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
 		xContentBuilder.startObject(field.getName());
 		xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_GEO_POINT);
+		xContentBuilder.endObject();
+	}
+
+	private static void applyGeoShapeFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
+		xContentBuilder.startObject(field.getName());
+		xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_GEO_SHAPE);
+
+		GeoShapeField annotation = field.getAnnotation(GeoShapeField.class);
+		if (annotation != null) {
+			xContentBuilder.field(TYPE_VALUE_GEOSHAPE_TREE, annotation.tree().name());
+			xContentBuilder.field(TYPE_VALUE_GEOSHAPE_PRECISION, annotation.precision());
+			xContentBuilder.field(TYPE_VALUE_GEOSHAPE_ORIENTATION, annotation.orientation().name());
+		}
+
 		xContentBuilder.endObject();
 	}
 
@@ -354,6 +381,10 @@ class MappingBuilder {
 
 	private static boolean isGeoPointField(java.lang.reflect.Field field) {
 		return field.getType() == GeoPoint.class || field.getAnnotation(GeoPointField.class) != null;
+	}
+
+	private static boolean isGeoShapeField(java.lang.reflect.Field field) {
+		return GeoShape.class.isAssignableFrom(field.getType()) || field.getAnnotation(GeoShapeField.class) != null;
 	}
 
 	private static boolean isCompletionField(java.lang.reflect.Field field) {
