@@ -15,9 +15,11 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.Is.*;
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,6 +29,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.entities.Chat;
 import org.springframework.data.elasticsearch.repositories.chat.ChatRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -44,9 +47,18 @@ public class IndexNameVarTest {
 	private static final String second = "2017-07";
 	@Autowired private ChatRepository repository;
 	@Autowired private IndexNameVar indexNameVar;
+	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
 	@Before
 	public void setup() {
+		elasticsearchTemplate.deleteIndex(Chat.class);
+		elasticsearchTemplate.createIndex(Chat.class);
+		elasticsearchTemplate.putMapping(Chat.class);
+		elasticsearchTemplate.refresh(Chat.class);
+	}
+
+	@Test
+	public void setVars() throws Exception {
 		// given
 		indexNameVar.setVars(first);
 		repository.save(new Chat("1", "s1", "s2", "hello!"));
@@ -55,25 +67,25 @@ public class IndexNameVarTest {
 		indexNameVar.setVars(second);
 		repository.save(new Chat("10", "s1", "s2", "what are you doing"));
 		repository.save(new Chat("11", "s2", "s1", "having meal"));
-	}
-
-	@Test
-	public void setVars() throws Exception {
-		// when
-		service.submit(() -> {
+		Callable<Void> r1 = () -> {
+			// when
 			indexNameVar.setVars(first);
 			Page<Chat> s1 = repository.findBySender("s1", new PageRequest(0, 10));
 			// then
 			assertThat(s1.getTotalElements() == 2, is(true));
 			System.out.println(s1.getContent());
-		});
-		service.submit(() -> {
+			return null;
+		};
+		Callable<Void> r2 = () -> {
+			// when
 			indexNameVar.setVars(second);
 			Page<Chat> s1 = repository.findBySender("s1", new PageRequest(0, 10));
 			// then
 			assertThat(s1.getTotalElements() == 1, is(true));
 			System.out.println(s1.getContent());
-		});
+			return null;
+		};
+		service.invokeAll(Arrays.asList(r1, r2));
 	}
 
 }

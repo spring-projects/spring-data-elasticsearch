@@ -30,7 +30,7 @@ import org.springframework.data.elasticsearch.annotations.Documents;
 @Getter
 @NoArgsConstructor
 @Builder
-@Documents(indexPattern = "chat_#{indexNameVar}", type = "chat")
+@Documents(indexPattern = "chat_#{indexNameVar.toString()}", type = "chat")
 public class Chat {
 
 	@Id private String id;

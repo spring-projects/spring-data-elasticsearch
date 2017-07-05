@@ -34,8 +34,18 @@ public @interface Documents {
 
 	String indexPattern();
 
+	/**
+	 * The name of bean that you declared to be used in your {@link #indexPattern()}
+	 *
+	 * @see #indexPattern()
+	 * @see #indexBeanMethod()
+	 * @see org.springframework.data.elasticsearch.repository.support.IndexNameVar
+	 */
 	String indexBeanName() default "indexNameVar";
 
+	/**
+	 * A method of your {@link #indexBeanName()}, which returns String to used as part of index name
+	 */
 	String indexBeanMethod() default "toString";
 
 	String type() default "";
