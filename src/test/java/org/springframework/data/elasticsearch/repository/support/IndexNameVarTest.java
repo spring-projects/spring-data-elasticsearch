@@ -57,7 +57,7 @@ public class IndexNameVarTest {
 		elasticsearchTemplate.refresh(Chat.class);
 	}
 
-	@Test
+	@Test // DATAES-233
 	public void setVars() throws Exception {
 		// given
 		indexNameVar.setVars(first);
