@@ -70,7 +70,7 @@ public class IndexNameVarTest {
 		Callable<Void> r1 = () -> {
 			// when
 			indexNameVar.setVars(first);
-			Page<Chat> s1 = repository.findBySender("s1", new PageRequest(0, 10));
+			Page<Chat> s1 = repository.findBySender("s1", PageRequest.of(0, 10));
 			// then
 			assertThat(s1.getTotalElements() == 2, is(true));
 			System.out.println(s1.getContent());
@@ -79,7 +79,7 @@ public class IndexNameVarTest {
 		Callable<Void> r2 = () -> {
 			// when
 			indexNameVar.setVars(second);
-			Page<Chat> s1 = repository.findBySender("s1", new PageRequest(0, 10));
+			Page<Chat> s1 = repository.findBySender("s1", PageRequest.of(0, 10));
 			// then
 			assertThat(s1.getTotalElements() == 1, is(true));
 			System.out.println(s1.getContent());
