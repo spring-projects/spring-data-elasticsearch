@@ -17,7 +17,10 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import java.lang.reflect.Method;
 
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.elasticsearch.annotations.Highlight;
+import org.springframework.data.elasticsearch.annotations.HighlightField;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -34,10 +37,12 @@ import org.springframework.data.repository.query.QueryMethod;
 public class ElasticsearchQueryMethod extends QueryMethod {
 
 	private final Query queryAnnotation;
+	private final Highlight highlightAnnotation;
 
 	public ElasticsearchQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory) {
 		super(method, metadata, factory);
 		this.queryAnnotation = method.getAnnotation(Query.class);
+		this.highlightAnnotation = method.getAnnotation(Highlight.class);
 	}
 
 	public boolean hasAnnotatedQuery() {
@@ -46,5 +51,20 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 
 	public String getAnnotatedQuery() {
 		return (String) AnnotationUtils.getValue(queryAnnotation, "value");
+	}
+
+	public boolean hasHighlight() {
+		return highlightAnnotation != null;
+	}
+
+	public HighlightBuilder getHighlight() {
+		HighlightBuilder highlightBuilder = new HighlightBuilder();
+		if (hasHighlight()) {
+			for (HighlightField field : highlightAnnotation.fields()) {
+				highlightBuilder.field(new HighlightBuilder.Field(field.name()).fragmentOffset(field.fragmentOffset())
+						.fragmentSize(field.fragmentSize()).preTags(field.preTags()).postTags(field.postTags()));
+			}
+		}
+		return highlightBuilder;
 	}
 }
