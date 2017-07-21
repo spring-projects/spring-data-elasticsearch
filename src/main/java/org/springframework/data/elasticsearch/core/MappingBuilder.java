@@ -15,29 +15,31 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.apache.commons.lang.StringUtils.*;
-import static org.elasticsearch.common.xcontent.XContentFactory.*;
-import static org.springframework.util.StringUtils.*;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.annotations.CompletionField;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import static org.apache.commons.lang.StringUtils.*;
+import static org.elasticsearch.common.xcontent.XContentFactory.*;
+import static org.springframework.util.StringUtils.*;
 
 /**
  * @author Rizwan Idrees
@@ -190,21 +192,6 @@ class MappingBuilder {
 	private static void applyGeoPointFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
 		xContentBuilder.startObject(field.getName());
 		xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_GEO_POINT);
-
-		GeoPointField annotation = field.getAnnotation(GeoPointField.class);
-//		if (annotation != null) {
-//			if (annotation.geoHashPrefix()) {
-//				xContentBuilder.field(TYPE_VALUE_GEO_HASH_PREFIX, true);
-//				if (StringUtils.isNotEmpty(annotation.geoHashPrecision())) {
-//					if (NumberUtils.isNumber(annotation.geoHashPrecision())) {
-//						xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, Integer.parseInt(annotation.geoHashPrecision()));
-//					} else {
-//						xContentBuilder.field(TYPE_VALUE_GEO_HASH_PRECISION, annotation.geoHashPrecision());
-//					}
-//				}
-//			}
-//		}
-
 		xContentBuilder.endObject();
 	}
 
