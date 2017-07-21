@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.join.query.JoinQueryBuilders.hasChildQuery;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 

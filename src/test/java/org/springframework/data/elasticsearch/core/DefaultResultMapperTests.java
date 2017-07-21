@@ -41,6 +41,8 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.entities.Car;
+
+import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -72,12 +74,7 @@ public class DefaultResultMapperTests {
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
-		Aggregation aggregationToReturn = createCarAggregation();
-		Aggregations aggregations = mock(Aggregations.class);
-		Iterator<Aggregation> iter = Collections.singletonList(aggregationToReturn).iterator();
-
-		when(aggregations.iterator()).thenReturn(iter).thenReturn(iter);
-		when(aggregations.get("engine")).thenReturn(aggregationToReturn);
+		Aggregations aggregations = new Aggregations(asList(createCarAggregation()));
 		when(response.getAggregations()).thenReturn(aggregations);
 
 		//When
@@ -86,7 +83,7 @@ public class DefaultResultMapperTests {
 		//Then
 		page.hasFacets();
 		assertThat(page.hasAggregations(), is(true));
-		assertThat(page.getAggregation("engine").getName(), is("Diesel"));
+		assertThat(page.getAggregation("Diesel").getName(), is("Diesel"));
 	}
 
 	@Test
@@ -185,8 +182,8 @@ public class DefaultResultMapperTests {
 
 	private Map<String, SearchHitField> createCarFields(String name, String model) {
 		Map<String, SearchHitField> result = new HashMap<>();
-		result.put("name", new SearchHitField("name", Arrays.asList(name)));
-		result.put("model", new SearchHitField("model", Arrays.asList(model)));
+		result.put("name", new SearchHitField("name", asList(name)));
+		result.put("model", new SearchHitField("model", asList(model)));
 		return result;
 	}
 
