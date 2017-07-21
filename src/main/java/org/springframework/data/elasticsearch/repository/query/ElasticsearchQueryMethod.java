@@ -22,6 +22,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.HighlightField;
 import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
@@ -66,5 +67,13 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 			}
 		}
 		return highlightBuilder;
+	}
+
+	public boolean hasExtras() {
+		return hasHighlight();
+	}
+
+	public NativeSearchQueryBuilder toNativeSearchBuilder() {
+		return new NativeSearchQueryBuilder().withHighlightFields(getHighlight().fields().toArray(new HighlightBuilder.Field[0]));
 	}
 }

@@ -18,13 +18,18 @@ package org.springframework.data.elasticsearch.repository.query;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.HighlightMapper;
 import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.util.Assert;
+
+import static org.elasticsearch.index.query.QueryBuilders.wrapperQuery;
 
 /**
  * ElasticsearchStringQuery
@@ -63,17 +68,23 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	public Object execute(Object[] parameters) {
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
 		StringQuery stringQuery = createQuery(accessor);
+		NativeSearchQuery searchQuery = null;
+		if (queryMethod.hasExtras()) {
+			searchQuery = queryMethod.toNativeSearchBuilder()
+					.withQuery(wrapperQuery(replacePlaceholders(stringQuery.getSource(), accessor))).build();
+		}
+		Class<?> javaType = queryMethod.getEntityInformation().getJavaType();
 		if (queryMethod.isPageQuery()) {
 			stringQuery.setPageable(accessor.getPageable());
-			return elasticsearchOperations.queryForPage(stringQuery, queryMethod.getEntityInformation().getJavaType());
+			return !queryMethod.hasExtras() ? elasticsearchOperations.queryForPage(stringQuery, javaType) : elasticsearchOperations.queryForPage(searchQuery, javaType, new HighlightMapper());
 		} else if (queryMethod.isCollectionQuery()) {
 			if (accessor.getPageable().isPaged()) {
 				stringQuery.setPageable(accessor.getPageable());
 			}
-			return elasticsearchOperations.queryForList(stringQuery, queryMethod.getEntityInformation().getJavaType());
+			return elasticsearchOperations.queryForList(stringQuery, javaType);
 		}
 
-		return elasticsearchOperations.queryForObject(stringQuery, queryMethod.getEntityInformation().getJavaType());
+		return elasticsearchOperations.queryForObject(stringQuery, javaType);
 	}
 
 	protected StringQuery createQuery(ParametersParameterAccessor parameterAccessor) {
