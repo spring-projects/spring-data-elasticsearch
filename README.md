@@ -54,7 +54,7 @@ the appropriate dependency version.
 
 |   spring data elasticsearch         | elasticsearch |
 |:-----------------------------------:|:-------------:|
-|           3.0.0.BUILD-SNAPSHOT      |      5.4.0    |
+|           3.0.0.M4                  |      5.4.0    |
 |           2.0.4.RELEASE             |      2.4.0    |
 |           2.0.0.RELEASE             |      2.2.0    |
 |           1.4.0.M1                  |      1.7.3    |
