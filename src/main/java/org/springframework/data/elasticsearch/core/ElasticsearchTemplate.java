@@ -15,17 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
@@ -87,6 +76,19 @@ import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMa
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
 import static org.apache.commons.lang.StringUtils.*;
 import static org.elasticsearch.client.Requests.*;
 import static org.elasticsearch.index.VersionType.*;
@@ -273,6 +275,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	@Override
+	public <T> T queryForObject(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
+		Page<T> page = queryForPage(query, clazz, mapper);
+		Assert.isTrue(page.getTotalElements() < 2, "Expected 1 but found " + page.getTotalElements() + " results");
+		return page.getTotalElements() > 0 ? page.getContent().get(0) : null;
+	}
+
+	@Override
 	public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz) {
 		return queryForPage(query, clazz, resultsMapper);
 	}
@@ -302,6 +311,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> List<T> queryForList(SearchQuery query, Class<T> clazz) {
 		return queryForPage(query, clazz).getContent();
+	}
+
+	@Override
+	public <T> List<T> queryForList(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
+		return queryForPage(query, clazz, mapper).getContent();
 	}
 
 	@Override

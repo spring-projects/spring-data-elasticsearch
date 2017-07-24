@@ -22,7 +22,15 @@ import org.elasticsearch.common.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.util.CloseableIterator;
 
 import java.util.LinkedList;
@@ -173,6 +181,8 @@ public interface ElasticsearchOperations {
 	 */
 	<T> T queryForObject(StringQuery query, Class<T> clazz);
 
+	<T> T queryForObject(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
+
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page}
 	 *
@@ -287,6 +297,17 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	<T> List<T> queryForList(SearchQuery query, Class<T> clazz);
+
+	/**
+	 * Execute the search query against elasticsearch and return result as {@link List} using custom mapper
+	 *
+	 * @param query
+	 * @param clazz
+	 * @param mapper
+	 * @param <T>
+	 * @return
+	 */
+	<T> List<T> queryForList(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
 	 * Execute the query against elasticsearch and return ids
