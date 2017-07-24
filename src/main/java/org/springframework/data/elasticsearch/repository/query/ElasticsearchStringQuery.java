@@ -15,19 +15,22 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import org.elasticsearch.index.query.WrapperQueryBuilder;
-import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
-import org.springframework.util.Assert;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import org.elasticsearch.index.query.WrapperQueryBuilder;
+import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchResultMapper;
+import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.repository.query.ParametersParameterAccessor;
+import org.springframework.util.Assert;
 
 /**
  * ElasticsearchStringQuery
@@ -35,13 +38,13 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author zzt
  */
 public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQuery {
 
 	private static final Pattern PARAMETER_PLACEHOLDER = Pattern.compile("\\?(\\d+)");
-	private String query;
-
 	private final GenericConversionService conversionService = new GenericConversionService();
+	private String query;
 
 	{
 		if (!conversionService.canConvert(java.util.Date.class, String.class)) {
@@ -66,23 +69,29 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	public Object execute(Object[] parameters) {
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
 		StringQuery stringQuery = createQuery(accessor);
-		NativeSearchQuery searchQuery = null;
 		if (queryMethod.hasExtras()) {
-			searchQuery = queryMethod.toNativeSearchBuilder()
+			NativeSearchQuery searchQuery = queryMethod.toNativeSearchBuilder()
 					.withQuery(toQueryBuilder(accessor, stringQuery)).build();
+			return queryDiff(accessor, searchQuery, queryMethod.getHighlightMapper());
 		}
+		return queryDiff(accessor, stringQuery, null);
+	}
+
+	private Object queryDiff(ParametersParameterAccessor accessor, Query query, SearchResultMapper mapper) {
 		Class<?> javaType = queryMethod.getEntityInformation().getJavaType();
 		if (queryMethod.isPageQuery()) {
-			stringQuery.setPageable(accessor.getPageable());
-			return !queryMethod.hasExtras() ? elasticsearchOperations.queryForPage(stringQuery, javaType) : elasticsearchOperations.queryForPage(searchQuery, javaType, queryMethod.getHighlightMapper());
+			query.setPageable(accessor.getPageable());
+			return mapper == null ? elasticsearchOperations.queryForPage((StringQuery) query, javaType)
+					: elasticsearchOperations.queryForPage((SearchQuery) query, javaType, mapper);
 		} else if (queryMethod.isCollectionQuery()) {
 			if (accessor.getPageable().isPaged()) {
-				stringQuery.setPageable(accessor.getPageable());
+				query.setPageable(accessor.getPageable());
 			}
-			return !queryMethod.hasExtras() ? elasticsearchOperations.queryForList(stringQuery, javaType) : elasticsearchOperations.queryForList(searchQuery, javaType, queryMethod.getHighlightMapper());
+			return mapper == null ? elasticsearchOperations.queryForList((StringQuery) query, javaType)
+					: elasticsearchOperations.queryForList((SearchQuery) query, javaType, mapper);
 		}
-
-		return !queryMethod.hasExtras() ? elasticsearchOperations.queryForObject(stringQuery, javaType): elasticsearchOperations.queryForObject(searchQuery, javaType, queryMethod.getHighlightMapper());
+		return mapper == null ? elasticsearchOperations.queryForObject((StringQuery) query, javaType)
+				: elasticsearchOperations.queryForObject((SearchQuery) query, javaType, mapper);
 	}
 
 	private WrapperQueryBuilder toQueryBuilder(ParametersParameterAccessor accessor, StringQuery stringQuery) {

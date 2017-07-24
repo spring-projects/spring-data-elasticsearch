@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
 
@@ -24,6 +25,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author zzt
  */
 public class CriteriaQuery extends AbstractQuery {
 
@@ -78,5 +80,14 @@ public class CriteriaQuery extends AbstractQuery {
 
 	public Criteria getCriteria() {
 		return this.criteria;
+	}
+
+
+	public QueryBuilder toQuery() {
+		return new CriteriaQueryProcessor().createQueryFromCriteria(getCriteria());
+	}
+
+	public QueryBuilder toFilter() {
+		return new CriteriaFilterProcessor().createFilterFromCriteria(getCriteria());
 	}
 }

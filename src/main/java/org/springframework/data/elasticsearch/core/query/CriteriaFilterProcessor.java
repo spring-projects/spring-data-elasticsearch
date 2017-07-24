@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
+package org.springframework.data.elasticsearch.core.query;
 
 import static org.springframework.data.elasticsearch.core.query.Criteria.*;
 
@@ -39,7 +39,7 @@ import org.springframework.util.Assert;
  * @author Franck Marchand
  * @author Mohsin Husen
  * @author Artur Konczak
- *
+ * @author zzt
  */
 class CriteriaFilterProcessor {
 

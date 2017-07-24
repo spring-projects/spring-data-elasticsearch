@@ -16,10 +16,13 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchResultMapper;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repository.query.parser.ElasticsearchQueryCreator;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
@@ -35,6 +38,7 @@ import org.springframework.data.util.StreamUtils;
  * @author Mohsin Husen
  * @author Kevin Leturc
  * @author Mark Paluch
+ * @author zzt
  */
 public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery {
 
@@ -55,30 +59,47 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 			Object result = countOrGetDocumentsForDelete(query, accessor);
 			elasticsearchOperations.delete(query, queryMethod.getEntityInformation().getJavaType());
 			return result;
-		} else if (queryMethod.isPageQuery()) {
-			query.setPageable(accessor.getPageable());
-			return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
-		} else if (queryMethod.isStreamQuery()) {
-			Class<?> entityType = queryMethod.getEntityInformation().getJavaType();
-			if (query.getPageable().isUnpaged()) {
-				int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
-				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
-			}
-
-			return StreamUtils.createStreamFromIterator((CloseableIterator<Object>) elasticsearchOperations.stream(query, entityType));
-
-		} else if (queryMethod.isCollectionQuery()) {
-			if (accessor.getPageable() == null) {
-				int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
-				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
-			} else {
-			    query.setPageable(accessor.getPageable());
-		    }
-			return elasticsearchOperations.queryForList(query, queryMethod.getEntityInformation().getJavaType());
 		} else if (tree.isCountProjection()) {
 			return elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
 		}
-		return elasticsearchOperations.queryForObject(query, queryMethod.getEntityInformation().getJavaType());
+
+		if (queryMethod.hasExtras()) {
+			NativeSearchQuery searchQuery = queryMethod.toNativeSearchBuilder()
+					.withQuery(query.toQuery()).withFilter(query.toFilter()).build();
+			return queryDiff(accessor, searchQuery, queryMethod.getHighlightMapper());
+		}
+		return queryDiff(accessor, query, null);
+
+	}
+
+	private Object queryDiff(ParametersParameterAccessor accessor, Query query, SearchResultMapper mapper) {
+		Class<?> javaType = queryMethod.getEntityInformation().getJavaType();
+		if(queryMethod.isPageQuery()) {
+			query.setPageable(accessor.getPageable());
+			return mapper == null ? elasticsearchOperations.queryForPage((CriteriaQuery) query, javaType)
+					: elasticsearchOperations.queryForPage((SearchQuery) query, javaType, mapper);
+		} else if (queryMethod.isStreamQuery()) {
+			if (query.getPageable().isUnpaged()) {
+				int itemCount = (int) elasticsearchOperations.count((CriteriaQuery) query, javaType);
+				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
+			}
+
+			CloseableIterator<?> stream = mapper == null ? elasticsearchOperations.stream((CriteriaQuery) query, javaType)
+					: elasticsearchOperations.stream((SearchQuery) query, javaType, mapper);
+			return StreamUtils.createStreamFromIterator((CloseableIterator<Object>) stream);
+
+		} else if (queryMethod.isCollectionQuery()) {
+			if (accessor.getPageable() == null) {
+				int itemCount = (int) elasticsearchOperations.count((CriteriaQuery) query, javaType);
+				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
+			} else {
+				query.setPageable(accessor.getPageable());
+			}
+			return mapper == null ? elasticsearchOperations.queryForList((CriteriaQuery) query, javaType)
+					: elasticsearchOperations.queryForList((SearchQuery) query, javaType, mapper);
+		}
+		return mapper == null ? elasticsearchOperations.queryForObject((CriteriaQuery) query, javaType)
+				: elasticsearchOperations.queryForObject((SearchQuery) query, javaType, mapper);
 	}
 
 	private Object countOrGetDocumentsForDelete(CriteriaQuery query, ParametersParameterAccessor accessor) {
