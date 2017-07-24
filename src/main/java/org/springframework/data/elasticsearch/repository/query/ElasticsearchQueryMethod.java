@@ -15,17 +15,18 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import java.lang.reflect.Method;
-
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.HighlightField;
 import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.elasticsearch.core.HighlightMapper;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
+
+import java.lang.reflect.Method;
 
 /**
  * ElasticsearchQueryMethod
@@ -54,11 +55,11 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		return (String) AnnotationUtils.getValue(queryAnnotation, "value");
 	}
 
-	public boolean hasHighlight() {
+	private boolean hasHighlight() {
 		return highlightAnnotation != null;
 	}
 
-	public HighlightBuilder getHighlight() {
+	private HighlightBuilder getHighlight() {
 		HighlightBuilder highlightBuilder = new HighlightBuilder();
 		if (hasHighlight()) {
 			for (HighlightField field : highlightAnnotation.fields()) {
@@ -75,5 +76,9 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 
 	public NativeSearchQueryBuilder toNativeSearchBuilder() {
 		return new NativeSearchQueryBuilder().withHighlightFields(getHighlight().fields().toArray(new HighlightBuilder.Field[0]));
+	}
+
+	public HighlightMapper getHighlightMapper() {
+		return new HighlightMapper(highlightAnnotation);
 	}
 }

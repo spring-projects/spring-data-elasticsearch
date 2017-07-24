@@ -16,4 +16,9 @@ public @interface HighlightField {
 	int fragmentOffset() default -1;
 
 	int numOfFragments() default -1;
+
+	/**
+	 * used to concat multiple fragments
+	 */
+	String fragmentSeparator() default " ... ";
 }

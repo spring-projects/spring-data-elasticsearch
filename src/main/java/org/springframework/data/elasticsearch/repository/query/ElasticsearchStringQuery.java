@@ -15,21 +15,19 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.WrapperQueryBuilder;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.HighlightMapper;
 import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.util.Assert;
 
-import static org.elasticsearch.index.query.QueryBuilders.wrapperQuery;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 /**
  * ElasticsearchStringQuery
@@ -71,20 +69,24 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		NativeSearchQuery searchQuery = null;
 		if (queryMethod.hasExtras()) {
 			searchQuery = queryMethod.toNativeSearchBuilder()
-					.withQuery(wrapperQuery(replacePlaceholders(stringQuery.getSource(), accessor))).build();
+					.withQuery(toQueryBuilder(accessor, stringQuery)).build();
 		}
 		Class<?> javaType = queryMethod.getEntityInformation().getJavaType();
 		if (queryMethod.isPageQuery()) {
 			stringQuery.setPageable(accessor.getPageable());
-			return !queryMethod.hasExtras() ? elasticsearchOperations.queryForPage(stringQuery, javaType) : elasticsearchOperations.queryForPage(searchQuery, javaType, new HighlightMapper());
+			return !queryMethod.hasExtras() ? elasticsearchOperations.queryForPage(stringQuery, javaType) : elasticsearchOperations.queryForPage(searchQuery, javaType, queryMethod.getHighlightMapper());
 		} else if (queryMethod.isCollectionQuery()) {
 			if (accessor.getPageable().isPaged()) {
 				stringQuery.setPageable(accessor.getPageable());
 			}
-			return elasticsearchOperations.queryForList(stringQuery, javaType);
+			return !queryMethod.hasExtras() ? elasticsearchOperations.queryForList(stringQuery, javaType) : elasticsearchOperations.queryForList(searchQuery, javaType, queryMethod.getHighlightMapper());
 		}
 
-		return elasticsearchOperations.queryForObject(stringQuery, javaType);
+		return !queryMethod.hasExtras() ? elasticsearchOperations.queryForObject(stringQuery, javaType): elasticsearchOperations.queryForObject(searchQuery, javaType, queryMethod.getHighlightMapper());
+	}
+
+	private WrapperQueryBuilder toQueryBuilder(ParametersParameterAccessor accessor, StringQuery stringQuery) {
+		return wrapperQuery(replacePlaceholders(stringQuery.getSource(), accessor));
 	}
 
 	protected StringQuery createQuery(ParametersParameterAccessor parameterAccessor) {
