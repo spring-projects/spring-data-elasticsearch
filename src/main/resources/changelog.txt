@@ -1,6 +1,14 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.0.RC1 (2017-07-25)
+-----------------------------------------
+* DATAES-373 - Update ES to 5.5.0.
+* DATAES-369 - Adapt to API changes in mapping subsystem.
+* DATAES-359 - Release 3.0 RC1 (Kay).
+* DATAES-274 - Jackson throws exception when deserializing Page.
+
+
 Changes in version 2.1.5.RELEASE (2017-07-24)
 ---------------------------------------------
 * DATAES-358 - Release 2.1.5 (Ingalls SR5).
