@@ -49,6 +49,8 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	private Boolean clientIgnoreClusterName = Boolean.FALSE;
 	private String clientPingTimeout = "5s";
 	private String clientNodesSamplerInterval = "5s";
+	private String username;
+	private String password;
 	private TransportClient client;
 	private Properties properties;
 	static final String COLON = ":";
@@ -111,6 +113,7 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 				.put("client.transport.ignore_cluster_name", clientIgnoreClusterName)
 				.put("client.transport.ping_timeout", clientPingTimeout)
 				.put("client.transport.nodes_sampler_interval", clientNodesSamplerInterval)
+				.put("shield.user", String.format("%s:%s", this.username, this.password))
 				.build();
 	}
 
@@ -152,5 +155,20 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
 	public void setProperties(Properties properties) {
 		this.properties = properties;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getPassword() {
+		return password;
 	}
 }
