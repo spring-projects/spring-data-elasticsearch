@@ -20,6 +20,9 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.query.WrapperQueryBuilder;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -94,7 +97,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 				: elasticsearchOperations.queryForObject((SearchQuery) query, javaType, mapper);
 	}
 
-	private WrapperQueryBuilder toQueryBuilder(ParametersParameterAccessor accessor, StringQuery stringQuery) {
+	private QueryBuilder toQueryBuilder(ParametersParameterAccessor accessor, StringQuery stringQuery) {
 		return wrapperQuery(replacePlaceholders(stringQuery.getSource(), accessor));
 	}
 
