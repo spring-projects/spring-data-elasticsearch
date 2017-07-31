@@ -1,20 +1,19 @@
 package org.springframework.data.elasticsearch.repositories.highlight;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.entities.Book;
 import org.springframework.data.elasticsearch.entities.File;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.List;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 /**
  * @author zzt
@@ -30,10 +29,10 @@ public class FileRepoTests {
 
 	@Before
 	public void before() {
-		elasticsearchTemplate.deleteIndex(Book.class);
-		elasticsearchTemplate.createIndex(Book.class);
-		elasticsearchTemplate.putMapping(Book.class);
-		elasticsearchTemplate.refresh(Book.class);
+		elasticsearchTemplate.deleteIndex(File.class);
+		elasticsearchTemplate.createIndex(File.class);
+		elasticsearchTemplate.putMapping(File.class);
+		elasticsearchTemplate.refresh(File.class);
 	}
 
 	@Test
