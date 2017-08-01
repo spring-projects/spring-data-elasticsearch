@@ -25,6 +25,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 
@@ -63,6 +64,9 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		HighlightBuilder highlightBuilder = new HighlightBuilder();
 		if (hasHighlight()) {
 			for (HighlightField field : highlightAnnotation.fields()) {
+				if (StringUtils.isEmpty(field.name())) {
+					continue;
+				}
 				highlightBuilder.field(new HighlightBuilder.Field(field.name()).fragmentOffset(field.fragmentOffset())
 						.fragmentSize(field.fragmentSize()).preTags(field.preTags()).postTags(field.postTags()));
 			}

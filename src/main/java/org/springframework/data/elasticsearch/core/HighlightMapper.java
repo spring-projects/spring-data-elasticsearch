@@ -5,6 +5,7 @@ import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
@@ -36,6 +37,9 @@ public class HighlightMapper extends DefaultResultMapper {
 			T t = chunk.get(i);
 			Map<String, HighlightField> highlightFields = at.getHighlightFields();
 			for (org.springframework.data.elasticsearch.annotations.HighlightField field : highlight.fields()) {
+				if (!highlightFields.containsKey(field.name())) {
+					continue;
+				}
 				Text[] fragments = highlightFields.get(field.name()).fragments();
 				if (fragments != null) {
 					PropertyAccessor myAccessor = PropertyAccessorFactory.forBeanPropertyAccess(t);

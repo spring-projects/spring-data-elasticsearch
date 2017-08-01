@@ -44,9 +44,7 @@ public class FileRepoTests {
 		fileRepo.save(new File("2", "content summary here", content0));
 		fileRepo.save(new File("3", "test again", content1));
 		fileRepo.save(new File("4", "again summary", content1));
-		String em = "em";
-
-		// File file3 = fileRepo.findById("1").get();
+		String em = "<em>";
 
 		// when
 		List<File> file1 = fileRepo.findByContent("search", PageRequest.of(0, 10)).getContent();
@@ -60,20 +58,34 @@ public class FileRepoTests {
 		// then
 		assertThat(file2.size(), equalTo(2));
 		for (File file : file2) {
-			assertTrue(file.getTitle().contains(em));
+			assertFalse(file.getTitle().contains(em));
 		}
 		// when
-		List<File> f3 = fileRepo.findByTitleOrContent("test", PageRequest.of(0, 10)).getContent();
+		List<File> file3 = fileRepo.findByTitleButHighlightContent("test");
+		// then
+		assertThat(file3.size(), equalTo(2));
+		for (File file : file3) {
+			assertFalse(file.getTitle().contains(em));
+		}
+		// when
+		List<File> f3 = fileRepo.findByTitleOrContentHighlightTitle("test", PageRequest.of(0, 10)).getContent();
 		// then
 		assertThat(f3.size(), equalTo(3));
 		for (File file : f3) {
-			assertTrue(file.getTitle().contains(em) || file.getContent().contains(em));
+			assertTrue(file.getTitle().contains(em + "test") || file.getContent().contains("test"));
 		}
 		// when
-		List<File> f4 = fileRepo.findByTitleOrContentInList("b");
+		List<File> f4 = fileRepo.findByTitleOrContentInListHighlightContent("here");
 		// then
-		assertThat(f4.size(), equalTo(3));
+		assertThat(f4.size(), equalTo(4));
 		for (File file : f4) {
+			assertTrue(file.getTitle().contains("here") || file.getContent().contains(em + "here"));
+		}
+		// when
+		List<File> f5 = fileRepo.findByTitleOrContentInListHighlightBoth("here");
+		// then
+		assertThat(f5.size(), equalTo(4));
+		for (File file : f5) {
 			assertTrue(file.getTitle().contains(em) || file.getContent().contains(em));
 		}
 	}
