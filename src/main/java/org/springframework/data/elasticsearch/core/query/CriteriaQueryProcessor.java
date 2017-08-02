@@ -26,7 +26,6 @@ import java.util.ListIterator;
 
 import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
 import org.elasticsearch.index.query.*;
-import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.util.Assert;
 
 /**
