@@ -15,20 +15,21 @@
  */
 package org.springframework.data.elasticsearch.repositories.highlight;
 
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.entities.File;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.util.List;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 /**
  * @author zzt
@@ -51,7 +52,7 @@ public class FileRepoTests {
 	}
 
 	@Test
-	public void hasHighlight() {
+	public void hasHighlight() throws NoSuchMethodException {
 		// given
 		String content0 = "elastic search highlight annotation test";
 		String content1 = "simple content here";
@@ -59,6 +60,7 @@ public class FileRepoTests {
 		fileRepo.save(new File("2", "content summary here", content0));
 		fileRepo.save(new File("3", "test again", content1));
 		fileRepo.save(new File("4", "again summary", content1));
+		fileRepo.save(new File("5", "This is a very long title, which contains more than one word 'very'", content1));
 		String em = "<em>";
 
 		// when
@@ -92,16 +94,32 @@ public class FileRepoTests {
 		// when
 		List<File> f4 = fileRepo.findByTitleOrContentInListHighlightContent("here");
 		// then
-		assertThat(f4.size(), equalTo(4));
+		assertThat(f4.size(), equalTo(5));
 		for (File file : f4) {
 			assertTrue(file.getTitle().contains("here") || file.getContent().contains(em + "here"));
 		}
 		// when
 		List<File> f5 = fileRepo.findByTitleOrContentInListHighlightBoth("here");
 		// then
-		assertThat(f5.size(), equalTo(4));
+		assertThat(f5.size(), equalTo(5));
 		for (File file : f5) {
 			assertTrue(file.getTitle().contains(em) || file.getContent().contains(em));
+		}
+		// test multiple pages
+		// when
+		List<File> f6 = fileRepo.findByTitleOrContentHighlightTitle("here", PageRequest.of(1, 10)).getContent();
+		// then
+		assertThat(f6.size(), equalTo(0));
+		// test highlight concat
+		// when
+		List<File> f7 = fileRepo.findByTitleOrContentInListHighlightBoth("very");
+		// then
+		assertThat(f7.size(), equalTo(1));
+		Highlight highlight = FileRepo.class.getDeclaredMethod("findByTitleOrContentInListHighlightBoth", String.class)
+				.getAnnotation(Highlight.class);
+		String s = highlight.fields()[0].fragmentSeparator();
+		for (File file : f7) {
+			assertTrue(file.getTitle().contains(em) && file.getTitle().contains(s));
 		}
 	}
 }

@@ -47,7 +47,7 @@ public class HighlightMapper extends DefaultResultMapper {
 		AggregatedPage<T> res = super.mapResults(response, clazz, pageable);
 		List<T> chunk = res.getContent();
 		SearchHits hits = response.getHits();
-		for (int i = 0; i < hits.getTotalHits(); i++) {
+		for (int i = 0; i < hits.getHits().length; i++) {
 			SearchHit at = hits.getAt(i);
 			T t = chunk.get(i);
 			Map<String, HighlightField> highlightFields = at.getHighlightFields();
