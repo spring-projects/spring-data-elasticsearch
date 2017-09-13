@@ -829,6 +829,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		return getSearchResponse(requestBuilder.setQuery(searchQuery.getQuery()).execute()).getScrollId();
 	}
 
+	@Override
+	public <T> String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields, Class<T> clazz) {
+		setPersistentEntityIndexAndType(query, clazz);
+		return scan(query, scrollTimeInMillis, noFields);
+	}
+
 	private SearchRequestBuilder prepareScan(Query query, long scrollTimeInMillis, boolean noFields) {
 		SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(query.getIndices())).setSearchType(SCAN)
 				.setTypes(toArray(query.getTypes()))

@@ -537,6 +537,16 @@ public interface ElasticsearchOperations {
 	String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields);
 
 	/**
+	 * Returns scroll id for scan query
+	 *
+	 * @param query
+	 * @param scrollTimeInMillis
+	 * @param noFields
+	 * @return
+	 */
+	<T> String scan(SearchQuery query, long scrollTimeInMillis, boolean noFields, Class<T> clazz);
+
+	/**
 	 * Scrolls the results for give scroll id
 	 *
 	 * @param scrollId
