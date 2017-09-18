@@ -20,8 +20,9 @@ import static org.junit.Assert.*;
 
 import java.util.Optional;
 
-import org.apache.webbeans.cditest.CdiTestContainer;
-import org.apache.webbeans.cditest.CdiTestContainerLoader;
+import javax.enterprise.inject.se.SeContainer;
+import javax.enterprise.inject.se.SeContainerInitializer;
+
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -35,27 +36,29 @@ import org.springframework.data.elasticsearch.entities.Product;
  */
 public class CdiRepositoryTests {
 
-	private static CdiTestContainer cdiContainer;
+	private static SeContainer cdiContainer;
 	private CdiProductRepository repository;
 	private SamplePersonRepository personRepository;
 	private QualifiedProductRepository qualifiedProductRepository;
 
 	@BeforeClass
-	public static void init() throws Exception {
-		cdiContainer = CdiTestContainerLoader.getCdiContainer();
-		cdiContainer.startApplicationScope();
-		cdiContainer.bootContainer();
+	public static void init() {
+
+		cdiContainer = SeContainerInitializer.newInstance() //
+				.disableDiscovery() //
+				.addPackages(CdiRepositoryClient.class) //
+				.initialize();
 	}
 
 	@AfterClass
-	public static void shutdown() throws Exception {
-		cdiContainer.stopContexts();
-		cdiContainer.shutdownContainer();
+	public static void shutdown() {
+		cdiContainer.close();
 	}
 
 	@Before
 	public void setUp() {
-		CdiRepositoryClient client = cdiContainer.getInstance(CdiRepositoryClient.class);
+
+		CdiRepositoryClient client = cdiContainer.select(CdiRepositoryClient.class).get();
 		repository = client.getRepository();
 		personRepository = client.getSamplePersonRepository();
 		repository.deleteAll();
@@ -64,6 +67,7 @@ public class CdiRepositoryTests {
 
 	@Test
 	public void testCdiRepository() {
+
 		assertNotNull(repository);
 
 		Product bean = new Product();
@@ -132,7 +136,6 @@ public class CdiRepositoryTests {
 	 */
 	@Test
 	public void returnOneFromCustomImpl() {
-
 		assertThat(personRepository.returnOne(), is(1));
 	}
 }
