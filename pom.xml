@@ -21,7 +21,7 @@
         <commonslang>2.6</commonslang>
         <elasticsearch>5.5.0</elasticsearch>
         <springdata.commons>2.0.0.BUILD-SNAPSHOT</springdata.commons>
-		<java-module-name>spring.data.elasticsearch</java-module-name>
+        <java-module-name>spring.data.elasticsearch</java-module-name>
     </properties>
 
     <dependencies>
@@ -129,19 +129,37 @@
             </exclusions>
         </dependency>
 
-		<dependency>
-			<groupId>javax.annotation</groupId>
-			<artifactId>javax.annotation-api</artifactId>
-			<version>${javax-annotation-api}</version>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.apache.openwebbeans.test</groupId>
+            <artifactId>cditest-owb</artifactId>
+            <version>1.2.8</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.geronimo.specs</groupId>
+                    <artifactId>geronimo-jcdi_1.0_spec</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.geronimo.specs</groupId>
+                    <artifactId>geronimo-atinject_1.0_spec</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <!-- Upgrade xbean to 4.5 to prevent incompatibilities due to ASM versions -->
+        <dependency>
+            <groupId>org.apache.xbean</groupId>
+            <artifactId>xbean-asm5-shaded</artifactId>
+            <version>4.5</version>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.apache.openwebbeans</groupId>
-			<artifactId>openwebbeans-se</artifactId>
-			<version>${webbeans}</version>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>3.0-alpha-1</version>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
       <!-- required by elasticsearch -->
