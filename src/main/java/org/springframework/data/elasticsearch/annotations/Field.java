@@ -29,6 +29,7 @@ import java.lang.annotation.Target;
  * @author Jonathan Yan
  * @author Jakub Vavrik
  * @author Kevin Leturc
+ * @author Nikita Klimov
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -55,4 +56,6 @@ public @interface Field {
 	String[] ignoreFields() default {};
 
 	boolean includeInParent() default false;
+
+	TermVector termVector() default TermVector.NO;
 }

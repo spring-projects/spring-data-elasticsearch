@@ -21,7 +21,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- *
+ * @author Artur Konczak
+ * @author Mohsin Husen
+ * @author Nikita Klimov
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -40,4 +42,6 @@ public @interface InnerField {
 	String searchAnalyzer() default "";
 
 	String indexAnalyzer() default "";
+
+	TermVector termVector() default TermVector.NO;
 }

@@ -32,6 +32,7 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.annotations.TermVector;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -50,6 +51,7 @@ import static org.springframework.util.StringUtils.*;
  * @author Dennis Maaß
  * @author Pavel Luhin
  * @author Mark Paluch
+ * @author Nikita Klimov
  */
 class MappingBuilder {
 
@@ -62,6 +64,8 @@ class MappingBuilder {
 	public static final String FIELD_INDEX_ANALYZER = "analyzer";
 	public static final String FIELD_PROPERTIES = "properties";
 	public static final String FIELD_PARENT = "_parent";
+	public static final String FIELD_TERM_VECTOR = "term_vector";
+	public static final TermVector FIELD_TERM_VECTOR_DEFAULT = TermVector.NO;
 
 	public static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
 	public static final String COMPLETION_PRESERVE_POSITION_INCREMENTS = "preserve_position_increments";
@@ -251,6 +255,9 @@ class MappingBuilder {
 		if (isNotBlank(fieldAnnotation.analyzer())) {
 			xContentBuilder.field(FIELD_INDEX_ANALYZER, fieldAnnotation.analyzer());
 		}
+		if (fieldAnnotation.termVector() != FIELD_TERM_VECTOR_DEFAULT) {
+			xContentBuilder.field(FIELD_TERM_VECTOR, fieldAnnotation.termVector());
+		}
 		xContentBuilder.endObject();
 	}
 
@@ -278,6 +285,9 @@ class MappingBuilder {
 		if (annotation.fielddata()) {
 			builder.field(FIELD_DATA, annotation.fielddata());
 		}
+		if (annotation.termVector() != FIELD_TERM_VECTOR_DEFAULT) {
+			builder.field(FIELD_TERM_VECTOR, annotation.termVector());
+		}
 		builder.endObject();
 	}
 
@@ -290,6 +300,9 @@ class MappingBuilder {
 											 MultiField annotation, boolean nestedOrObjectField) throws IOException {
 		builder.startObject(field.getName());
 		builder.field(FIELD_TYPE, annotation.mainField().type());
+		if (annotation.mainField().termVector() != FIELD_TERM_VECTOR_DEFAULT) {
+			builder.field(FIELD_TERM_VECTOR, annotation.mainField().termVector());
+		}
 		builder.startObject("fields");
 		//add standard field
 		//addSingleFieldMapping(builder, field, annotation.mainField(), nestedOrObjectField);

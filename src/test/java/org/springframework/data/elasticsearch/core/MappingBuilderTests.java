@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
+import com.jayway.jsonpath.JsonPath;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +44,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Jakub Vavrik
  * @author Mohsin Husen
  * @author Keivn Leturc
+ * @author Nikita Klimov
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -165,6 +167,40 @@ public class MappingBuilderTests {
 		assertThat(result, containsString("\"pointB\":{\"type\":\"geo_point\""));
 		assertThat(result, containsString("\"pointC\":{\"type\":\"geo_point\""));
 		assertThat(result, containsString("\"pointD\":{\"type\":\"geo_point\""));
+	}
+
+	@Test
+	public void shouldBuildMappingForSingleFieldWithTermVector() throws IOException {
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(TermVectorsEntity.class, "mapping", "id", null);
+		String mappingRequest = xContentBuilder.string();
+		String singleFieldTermVector = JsonPath.parse(mappingRequest).read("$.mapping.properties.standaloneContent.term_vector");
+
+		assertThat(singleFieldTermVector, is("yes"));
+	}
+
+	@Test
+	public void shouldBuildMappingForMainFieldInMultiFieldWithTermVector() throws IOException {
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(TermVectorsEntity.class, "mapping", "id", null);
+		String mappingRequest = xContentBuilder.string();
+		String multiFieldMainFieldTermVector = JsonPath.parse(mappingRequest).read("$.mapping.properties.content.term_vector");
+
+		assertThat(multiFieldMainFieldTermVector, is("yes"));
+	}
+
+	@Test
+	public void shouldBuildMappingForInnerFieldsInMultiFieldWithTermVector() throws IOException {
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(TermVectorsEntity.class, "mapping", "id", null);
+		String mappingRequest = xContentBuilder.string();
+
+		String innerFieldWithTerms = JsonPath.parse(mappingRequest).read("$.mapping.properties.content.fields.withTerms.term_vector");
+		String innerFieldWithTermsAndItPositions = JsonPath.parse(mappingRequest).read("$.mapping.properties.content.fields.withTermsAndItPositions.term_vector");
+		String innerFieldWithTermsAndItOffsets = JsonPath.parse(mappingRequest).read("$.mapping.properties.content.fields.withTermsAndItOffsets.term_vector");
+		String innerFieldWithTermsAndItPositionsAndItOffsets = JsonPath.parse(mappingRequest).read("$.mapping.properties.content.fields.withTermsAndItPositionsAndItOffsets.term_vector");
+
+		assertThat(innerFieldWithTerms, is("yes"));
+		assertThat(innerFieldWithTermsAndItPositions, is("with_positions"));
+		assertThat(innerFieldWithTermsAndItOffsets, is("with_offsets"));
+		assertThat(innerFieldWithTermsAndItPositionsAndItOffsets, is("with_positions_offsets"));
 	}
 
 	/**
