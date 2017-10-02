@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.0.RELEASE (2017-10-02)
+---------------------------------------------
+* DATAES-397 - Add explicit automatic module name for Java 9.
+* DATAES-395 - Upgrade to OpenWebBeans 2.0.1.
+* DATAES-392 - Release 3.0 GA (Kay).
+
+
 Changes in version 3.0.0.RC3 (2017-09-11)
 -----------------------------------------
 * DATAES-376 - Release 3.0 RC3 (Kay).
