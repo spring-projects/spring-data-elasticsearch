@@ -48,6 +48,7 @@ import org.springframework.data.elasticsearch.core.facet.result.TermResult;
  * @author Artur Konczak
  * @author Jonathan Yan
  * @author Philipp Kräutli
+ * @author Remco Zigterman
  */
 @Deprecated
 public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedPage<T>, AggregatedPage<T> {
@@ -60,7 +61,7 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 	}
 
 	public FacetedPageImpl(List<T> content, Pageable pageable, long total) {
-		super(content, Pageable.unpaged(), total);
+		super(content, pageable, total);
 	}
 
 	@Override
