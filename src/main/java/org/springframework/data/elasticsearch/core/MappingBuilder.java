@@ -28,7 +28,6 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.springframework.core.GenericCollectionTypeResolver;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
@@ -47,6 +46,7 @@ import org.springframework.data.util.TypeInformation;
  * @author Alexander Volz
  * @author Dennis Maaß
  * @author Pavel Luhin
+ * @author Oliver Gierke
  */
 
 class MappingBuilder {
@@ -308,19 +308,19 @@ class MappingBuilder {
 	}
 
 	protected static boolean isEntity(java.lang.reflect.Field field) {
-		TypeInformation typeInformation = ClassTypeInformation.from(field.getType());
+		
+		TypeInformation<?> typeInformation = ClassTypeInformation.from(field.getType());
 		Class<?> clazz = getFieldType(field);
 		boolean isComplexType = !SIMPLE_TYPE_HOLDER.isSimpleType(clazz);
-		return isComplexType && !Map.class.isAssignableFrom(typeInformation.getType());
+		return isComplexType && !typeInformation.isMap();
 	}
 
 	protected static Class<?> getFieldType(java.lang.reflect.Field field) {
-		Class<?> clazz = field.getType();
-		TypeInformation typeInformation = ClassTypeInformation.from(clazz);
-		if (typeInformation.isCollectionLike()) {
-			clazz = GenericCollectionTypeResolver.getCollectionFieldType(field) != null ? GenericCollectionTypeResolver.getCollectionFieldType(field) : typeInformation.getComponentType().getType();
-		}
-		return clazz;
+		
+		return ClassTypeInformation.from(field.getDeclaringClass()) //
+				.getProperty(field.getName()) //
+				.getActualType() //
+				.getType();
 	}
 
 	private static boolean isAnyPropertyAnnotatedAsField(java.lang.reflect.Field[] fields) {
