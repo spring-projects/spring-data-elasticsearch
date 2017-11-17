@@ -19,7 +19,8 @@ package org.springframework.data.elasticsearch.annotations;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
+ * @author zzt
  */
 public enum FieldType {
-	text, Integer, Long, Date, Float, Double, Boolean, Object, Auto, Nested, Ip, Attachment, keyword
+	text, Byte, Short, Integer, Long, Date, HalfFloat, ScaledFloat, Float, Double, Boolean, Object, Auto, Nested, Ip, Attachment, keyword
 }
