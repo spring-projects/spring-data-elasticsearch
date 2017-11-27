@@ -9,7 +9,7 @@
     <parent>
         <groupId>org.springframework.data.build</groupId>
         <artifactId>spring-data-parent</artifactId>
-        <version>1.9.9.RELEASE</version>
+        <version>1.9.10.BUILD-SNAPSHOT</version>
         <relativePath>../spring-data-build/parent/pom.xml</relativePath>
     </parent>
 
@@ -24,7 +24,7 @@
         <commonscollections>3.2.1</commonscollections>
         <commonslang>2.6</commonslang>
         <elasticsearch>2.4.0</elasticsearch>
-        <springdata.commons>1.13.9.RELEASE</springdata.commons>
+        <springdata.commons>1.13.10.BUILD-SNAPSHOT</springdata.commons>
 
     </properties>
 
@@ -176,8 +176,8 @@
 
     <repositories>
         <repository>
-            <id>spring-libs-release</id>
-            <url>https://repo.spring.io/libs-release</url>
+            <id>spring-libs-snapshot</id>
+            <url>https://repo.spring.io/libs-snapshot</url>
         </repository>
     </repositories>
 
