@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.2.RELEASE (2017-11-27)
+---------------------------------------------
+* DATAES-414 - Reduce scope of Lo4j dependencies to test.
+* DATAES-411 - Release 3.0.2 (Kay SR2).
+
+
 Changes in version 2.1.9.RELEASE (2017-11-27)
 ---------------------------------------------
 * DATAES-408 - Ensure Spring 5 compatibility in Ingalls.
