@@ -70,6 +70,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
  * @author Abdul Mohammed
  * @author Kevin Leturc
  * @author Mason Chan
+ * @author Ted Liang
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -418,6 +419,88 @@ public class ElasticsearchTemplateTests {
 		// then
 		assertThat(sampleEntities.getTotalElements(), equalTo(3L));
 		assertThat(sampleEntities.getContent().get(0).getRate(), is(sampleEntity2.getRate()));
+	}
+
+	@Test
+	public void shouldSortResultsGivenNullFirstSortCriteria() {
+		// given
+		List<IndexQuery> indexQueries;
+		// first document
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId)
+				.message("abc")
+				.rate(15)
+				.version(System.currentTimeMillis()).build();
+
+		// second document
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2)
+				.message("xyz")
+				.rate(5)
+				.version(System.currentTimeMillis()).build();
+
+		// third document
+		String documentId3 = randomNumeric(5);
+		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3)
+				.rate(10)
+				.version(System.currentTimeMillis()).build();
+
+		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+
+		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withPageable(new PageRequest(0, 10, new Sort(new Sort.Order(Sort.Direction.ASC, "message",
+						Sort.NullHandling.NULLS_FIRST))))
+				.build();
+		// when
+		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+		// then
+		assertThat(sampleEntities.getTotalElements(), equalTo(3L));
+		assertThat(sampleEntities.getContent().get(0).getRate(), is(sampleEntity3.getRate()));
+		assertThat(sampleEntities.getContent().get(1).getMessage(), is(sampleEntity1.getMessage()));
+	}
+
+	@Test
+	public void shouldSortResultsGivenNullLastSortCriteria() {
+		// given
+		List<IndexQuery> indexQueries;
+		// first document
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId)
+				.message("abc")
+				.rate(15)
+				.version(System.currentTimeMillis()).build();
+
+		// second document
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2)
+				.message("xyz")
+				.rate(5)
+				.version(System.currentTimeMillis()).build();
+
+		// third document
+		String documentId3 = randomNumeric(5);
+		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3)
+				.rate(10)
+				.version(System.currentTimeMillis()).build();
+
+		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+
+		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withPageable(new PageRequest(0, 10, new Sort(new Sort.Order(Sort.Direction.ASC, "message",
+						Sort.NullHandling.NULLS_LAST))))
+				.build();
+		// when
+		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+		// then
+		assertThat(sampleEntities.getTotalElements(), equalTo(3L));
+		assertThat(sampleEntities.getContent().get(0).getRate(), is(sampleEntity1.getRate()));
+		assertThat(sampleEntities.getContent().get(1).getMessage(), is(sampleEntity2.getMessage()));
 	}
 
 	@Test
