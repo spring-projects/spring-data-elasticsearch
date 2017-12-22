@@ -60,7 +60,7 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 	}
 
 	public FacetedPageImpl(List<T> content, Pageable pageable, long total) {
-		super(content, Pageable.unpaged(), total);
+		super(content, pageable, total);
 	}
 
 	@Override
