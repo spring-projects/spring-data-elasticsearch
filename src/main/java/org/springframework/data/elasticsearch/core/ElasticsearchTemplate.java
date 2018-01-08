@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import org.elasticsearch.action.ListenableActionFuture;
+import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -53,6 +53,7 @@ import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -900,7 +901,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		return getSearchResponse(searchRequest.setQuery(searchQuery.getQuery()).execute());
 	}
 
-	private SearchResponse getSearchResponse(ListenableActionFuture<SearchResponse> response) {
+	private SearchResponse getSearchResponse(ActionFuture<SearchResponse> response) {
 		return searchTimeout == null ? response.actionGet() : response.actionGet(searchTimeout);
 	}
 
@@ -927,7 +928,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public boolean createIndex(String indexName, Object settings) {
 		CreateIndexRequestBuilder createIndexRequestBuilder = client.admin().indices().prepareCreate(indexName);
 		if (settings instanceof String) {
-			createIndexRequestBuilder.setSettings(String.valueOf(settings));
+			createIndexRequestBuilder.setSettings(String.valueOf(settings), XContentType.JSON);
 		} else if (settings instanceof Map) {
 			createIndexRequestBuilder.setSettings((Map) settings);
 		} else if (settings instanceof XContentBuilder) {
@@ -961,7 +962,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public Map getSetting(String indexName) {
 		Assert.notNull(indexName, "No index defined for getSettings");
 		return client.admin().indices().getSettings(new GetSettingsRequest()).actionGet().getIndexToSettings()
-				.get(indexName).getAsMap();
+				.get(indexName).getAsGroups();
 	}
 
 	private <T> SearchRequestBuilder prepareSearch(Query query, Class<T> clazz) {

@@ -649,7 +649,7 @@ public class ElasticsearchTemplateTests {
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<String> values = new ArrayList<>();
 				for (SearchHit searchHit : response.getHits()) {
-					values.add((String) searchHit.getSource().get("message"));
+					values.add((String) searchHit.getSourceAsMap().get("message"));
 				}
 				return new AggregatedPageImpl<>((List<T>) values);
 			}
@@ -780,7 +780,7 @@ public class ElasticsearchTemplateTests {
 				if (response.getHits().getHits().length <= 0) {
 					return new AggregatedPageImpl<T>(Collections.EMPTY_LIST, response.getScrollId());
 				}
-				String message = (String) searchHit.getSource().get("message");
+				String message = (String) searchHit.getSourceAsMap().get("message");
 				SampleEntity sampleEntity = new SampleEntity();
 				sampleEntity.setId(searchHit.getId());
 				sampleEntity.setMessage(message);
@@ -1192,7 +1192,7 @@ public class ElasticsearchTemplateTests {
 					}
 					SampleEntity user = new SampleEntity();
 					user.setId(searchHit.getId());
-					user.setMessage((String) searchHit.getSource().get("message"));
+					user.setMessage((String) searchHit.getSourceAsMap().get("message"));
 					user.setHighlightedMessage(searchHit.getHighlightFields().get("message").fragments()[0].toString());
 					chunk.add(user);
 				}
@@ -1256,7 +1256,7 @@ public class ElasticsearchTemplateTests {
 				for (SearchHit searchHit : response.getHits()) {
 					SampleEntity sampleEntity = new SampleEntity();
 					sampleEntity.setId(searchHit.getId());
-					sampleEntity.setMessage((String) searchHit.getSource().get("message"));
+					sampleEntity.setMessage((String) searchHit.getSourceAsMap().get("message"));
 					values.add(sampleEntity);
 				}
 				return new AggregatedPageImpl<>((List<T>) values);
@@ -1431,11 +1431,11 @@ public class ElasticsearchTemplateTests {
 						return null;
 					}
 					Map<String, Object> person = new HashMap<>();
-					person.put("userId", searchHit.getSource().get("userId"));
-					person.put("email", searchHit.getSource().get("email"));
-					person.put("title", searchHit.getSource().get("title"));
-					person.put("firstName", searchHit.getSource().get("firstName"));
-					person.put("lastName", searchHit.getSource().get("lastName"));
+					person.put("userId", searchHit.getSourceAsMap().get("userId"));
+					person.put("email", searchHit.getSourceAsMap().get("email"));
+					person.put("title", searchHit.getSourceAsMap().get("title"));
+					person.put("firstName", searchHit.getSourceAsMap().get("firstName"));
+					person.put("lastName", searchHit.getSourceAsMap().get("lastName"));
 					chunk.add(person);
 				}
 				if (chunk.size() > 0) {
@@ -1942,9 +1942,9 @@ public class ElasticsearchTemplateTests {
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<ResultAggregator> values = new ArrayList<>();
 				for (SearchHit searchHit : response.getHits()) {
-					String id = String.valueOf(searchHit.getSource().get("id"));
-					String firstName = StringUtils.isNotEmpty((String) searchHit.getSource().get("firstName")) ? (String) searchHit.getSource().get("firstName") : "";
-					String lastName = StringUtils.isNotEmpty((String) searchHit.getSource().get("lastName")) ? (String) searchHit.getSource().get("lastName") : "";
+					String id = String.valueOf(searchHit.getSourceAsMap().get("id"));
+					String firstName = StringUtils.isNotEmpty((String) searchHit.getSourceAsMap().get("firstName")) ? (String) searchHit.getSourceAsMap().get("firstName") : "";
+					String lastName = StringUtils.isNotEmpty((String) searchHit.getSourceAsMap().get("lastName")) ? (String) searchHit.getSourceAsMap().get("lastName") : "";
 					values.add(new ResultAggregator(id, firstName, lastName));
 				}
 				return new AggregatedPageImpl<>((List<T>) values);
