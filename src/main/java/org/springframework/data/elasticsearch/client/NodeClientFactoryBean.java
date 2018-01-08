@@ -38,6 +38,7 @@ import static java.util.Arrays.*;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Ilkang Na
  */
 
 public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingBean, DisposableBean {
@@ -99,7 +100,7 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 		if (StringUtils.isNotBlank(pathConfiguration)) {
 			InputStream stream = getClass().getClassLoader().getResourceAsStream(pathConfiguration);
 			if (stream != null) {
-				return Settings.builder().loadFromStream(pathConfiguration, getClass().getClassLoader().getResourceAsStream(pathConfiguration)).build();
+				return Settings.builder().loadFromStream(pathConfiguration, getClass().getClassLoader().getResourceAsStream(pathConfiguration), false).build();
 			}
 			logger.error(String.format("Unable to read node configuration from file [%s]", pathConfiguration));
 		}
