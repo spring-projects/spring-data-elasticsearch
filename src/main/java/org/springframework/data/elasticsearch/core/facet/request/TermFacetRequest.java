@@ -31,6 +31,7 @@ import org.springframework.util.Assert;
  * Term facet
  *
  * @author Artur Konczak
+ * @author Ilkang Na
  */
 @Deprecated
 public class TermFacetRequest extends AbstractFacetRequest {

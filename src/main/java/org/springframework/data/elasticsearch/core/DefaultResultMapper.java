@@ -50,6 +50,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * @author Young Gu
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Ilkang Na
  */
 public class DefaultResultMapper extends AbstractResultMapper {
 

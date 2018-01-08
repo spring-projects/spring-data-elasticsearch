@@ -38,6 +38,7 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Jakub Vavrik
  * @author Piotr Betkier
+ * @author Ilkang Na
  */
 
 public class TransportClientFactoryBean implements FactoryBean<TransportClient>, InitializingBean, DisposableBean {

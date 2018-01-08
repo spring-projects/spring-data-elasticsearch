@@ -49,6 +49,7 @@ import static org.mockito.Mockito.*;
  * @author Artur Konczak
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Ilkang Na
  */
 public class DefaultResultMapperTests {
 
