@@ -1,3 +1,3 @@
 #enabled scripts - this require groovy
-script.inline: true
+#script.inline: true
 #node.max_local_storage_nodes: 100
