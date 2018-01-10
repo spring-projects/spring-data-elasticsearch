@@ -38,6 +38,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * DynamicSettingAndMappingEntityRepositoryTests
  *
  * @author Mohsin Husen
+ * @author Ilkang Na
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:dynamic-settings-test.xml")
