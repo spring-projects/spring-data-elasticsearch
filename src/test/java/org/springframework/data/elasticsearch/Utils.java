@@ -38,7 +38,6 @@ public class Utils {
 		return new NodeClientFactoryBean.TestNode(
 				Settings.builder()
 						.put("transport.type", "netty4")
-						.put("transport.type", "local")
 						.put("http.type", "netty4")
 						.put("path.home", pathHome)
 						.put("path.data", pathData)
