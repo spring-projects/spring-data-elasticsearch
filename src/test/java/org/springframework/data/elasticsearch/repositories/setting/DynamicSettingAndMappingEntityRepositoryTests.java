@@ -134,7 +134,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		String mappings = "{\n" +
 				"    \"test-setting-type\" : {\n" +
 				"        \"properties\" : {\n" +
-				"            \"email\" : {\"type\" : \"string\", \"analyzer\" : \"emailAnalyzer\" }\n" +
+				"            \"email\" : {\"type\" : \"text\", \"analyzer\" : \"emailAnalyzer\" }\n" +
 				"        }\n" +
 				"    }\n" +
 				"}";
