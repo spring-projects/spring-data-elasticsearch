@@ -86,7 +86,6 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 		nodeClient = (NodeClient) new TestNode(
 				Settings.builder().put(loadConfig())
 						.put("transport.type", "netty4")
-//						.put("transport.type", "local")
 						.put("http.type", "netty4")
 						.put("path.home", this.pathHome)
 						.put("path.data", this.pathData)
