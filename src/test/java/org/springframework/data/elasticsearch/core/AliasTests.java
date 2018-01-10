@@ -101,7 +101,7 @@ public class AliasTests {
 		// then
 		elasticsearchTemplate.removeAlias(aliasQuery);
 		aliases = elasticsearchTemplate.queryForAlias(indexName);
-		assertThat(aliases, is(nullValue()));
+		assertThat(aliases, anyOf(is(nullValue()), hasSize(0)));
 	}
 
 	/*
