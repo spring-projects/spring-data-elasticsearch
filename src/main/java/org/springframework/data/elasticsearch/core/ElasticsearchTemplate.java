@@ -15,18 +15,22 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.elasticsearch.client.Requests.indicesExistsRequest;
+import static org.elasticsearch.client.Requests.refreshRequest;
+import static org.elasticsearch.index.VersionType.EXTERNAL;
+import static org.elasticsearch.index.query.QueryBuilders.moreLikeThisQuery;
+import static org.elasticsearch.index.query.QueryBuilders.wrapperQuery;
+import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMapping;
+import static org.springframework.util.CollectionUtils.isEmpty;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import org.elasticsearch.action.ListenableActionFuture;
+import java.util.*;
+
+import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -51,8 +55,10 @@ import org.elasticsearch.client.Requests;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.collect.MapBuilder;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -87,12 +93,6 @@ import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMa
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
-import static org.apache.commons.lang.StringUtils.*;
-import static org.elasticsearch.client.Requests.*;
-import static org.elasticsearch.index.VersionType.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
-import static org.springframework.util.CollectionUtils.isEmpty;
 
 /**
  * ElasticsearchTemplate
@@ -106,6 +106,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
  * @author Oliver Gierke
  * @author Mark Janssen
  * @author Mark Paluch
+ * @author Ilkang Na
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -208,7 +209,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		Assert.notNull(type, "No type defined for putMapping()");
 		PutMappingRequestBuilder requestBuilder = client.admin().indices().preparePutMapping(indexName).setType(type);
 		if (mapping instanceof String) {
-			requestBuilder.setSource(String.valueOf(mapping));
+			requestBuilder.setSource(String.valueOf(mapping), XContentType.JSON);
 		} else if (mapping instanceof Map) {
 			requestBuilder.setSource((Map) mapping);
 		} else if (mapping instanceof XContentBuilder) {
@@ -867,8 +868,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		}
 
 		if (!searchQuery.getScriptFields().isEmpty()) {
-			//_source should be return all the time
-			//searchRequest.addStoredField("_source");
+			// _source should be return all the time
+			// searchRequest.addStoredField("_source");
 			for (ScriptField scriptedField : searchQuery.getScriptFields()) {
 				searchRequest.addScriptField(scriptedField.fieldName(), scriptedField.script());
 			}
@@ -900,7 +901,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		return getSearchResponse(searchRequest.setQuery(searchQuery.getQuery()).execute());
 	}
 
-	private SearchResponse getSearchResponse(ListenableActionFuture<SearchResponse> response) {
+	private SearchResponse getSearchResponse(ActionFuture<SearchResponse> response) {
 		return searchTimeout == null ? response.actionGet() : response.actionGet(searchTimeout);
 	}
 
@@ -927,7 +928,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public boolean createIndex(String indexName, Object settings) {
 		CreateIndexRequestBuilder createIndexRequestBuilder = client.admin().indices().prepareCreate(indexName);
 		if (settings instanceof String) {
-			createIndexRequestBuilder.setSettings(String.valueOf(settings));
+			createIndexRequestBuilder.setSettings(String.valueOf(settings), Requests.INDEX_CONTENT_TYPE);
 		} else if (settings instanceof Map) {
 			createIndexRequestBuilder.setSettings((Map) settings);
 		} else if (settings instanceof XContentBuilder) {
@@ -960,8 +961,16 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public Map getSetting(String indexName) {
 		Assert.notNull(indexName, "No index defined for getSettings");
-		return client.admin().indices().getSettings(new GetSettingsRequest()).actionGet().getIndexToSettings()
-				.get(indexName).getAsMap();
+		Settings settings = client.admin().indices().getSettings(new GetSettingsRequest()).actionGet().getIndexToSettings()
+				.get(indexName);
+
+		SortedMap<String, String> settingsMap = new TreeMap<>();
+
+		settings.keySet().forEach((key) -> {
+			settingsMap.put(key, String.valueOf(settings.get(key)));
+		});
+
+		return Collections.unmodifiableSortedMap(settingsMap);
 	}
 
 	private <T> SearchRequestBuilder prepareSearch(Query query, Class<T> clazz) {
@@ -989,7 +998,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		searchRequestBuilder.setFrom(startRecord);
 
 		if (!query.getFields().isEmpty()) {
-			searchRequestBuilder.setFetchSource(toArray(query.getFields()),null);
+			searchRequestBuilder.setFetchSource(toArray(query.getFields()), null);
 		}
 
 		if (query.getSort() != null) {
@@ -1008,7 +1017,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	private IndexRequestBuilder prepareIndex(IndexQuery query) {
 		try {
 			String indexName = isBlank(query.getIndexName())
-					? retrieveIndexNameFromPersistentEntity(query.getObject().getClass())[0] : query.getIndexName();
+					? retrieveIndexNameFromPersistentEntity(query.getObject().getClass())[0]
+					: query.getIndexName();
 			String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
 					: query.getType();
 
@@ -1022,9 +1032,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				} else {
 					indexRequestBuilder = client.prepareIndex(indexName, type);
 				}
-				indexRequestBuilder.setSource(resultsMapper.getEntityMapper().mapToString(query.getObject()));
+				indexRequestBuilder.setSource(resultsMapper.getEntityMapper().mapToString(query.getObject()),
+						Requests.INDEX_CONTENT_TYPE);
 			} else if (query.getSource() != null) {
-				indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource());
+				indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource(),
+						Requests.INDEX_CONTENT_TYPE);
 			} else {
 				throw new ElasticsearchException(
 						"object or source is null, failed to index the document [id: " + query.getId() + "]");
@@ -1059,7 +1071,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public Boolean addAlias(AliasQuery query) {
 		Assert.notNull(query.getIndexName(), "No index defined for Alias");
 		Assert.notNull(query.getAliasName(), "No alias defined");
-		final IndicesAliasesRequest.AliasActions aliasAction = IndicesAliasesRequest.AliasActions.add().alias(query.getAliasName()).index(query.getIndexName());
+		final IndicesAliasesRequest.AliasActions aliasAction = IndicesAliasesRequest.AliasActions.add()
+				.alias(query.getAliasName()).index(query.getIndexName());
 
 		if (query.getFilterBuilder() != null) {
 			aliasAction.filter(query.getFilterBuilder());
@@ -1101,7 +1114,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntityFor(entity.getClass());
 		Object identifier = persistentEntity.getIdentifierAccessor(entity).getIdentifier();
 
-		if (identifier != null){
+		if (identifier != null) {
 			return identifier.toString();
 		}
 
