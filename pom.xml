@@ -20,7 +20,7 @@
         <commonscollections>3.2.1</commonscollections>
         <commonslang>2.6</commonslang>
         <elasticsearch>6.1.0</elasticsearch>
-        <log4j>2.8.2</log4j>
+        <log4j>2.9.1</log4j>
         <springdata.commons>2.1.0.BUILD-SNAPSHOT</springdata.commons>
         <java-module-name>spring.data.elasticsearch</java-module-name>
     </properties>
