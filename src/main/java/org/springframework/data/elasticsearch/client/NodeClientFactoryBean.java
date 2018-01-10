@@ -91,7 +91,6 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 						.put("path.data", this.pathData)
 						.put("cluster.name", this.clusterName)
 						.put("node.max_local_storage_nodes", 100)
-//						.put("script.inline", "true")
 						.build(), asList(Netty4Plugin.class)).start().client();
 	}
 
