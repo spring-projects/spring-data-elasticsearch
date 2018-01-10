@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 the original author or authors.
+ * Copyright 2014-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
@@ -71,6 +72,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
  * @author Kevin Leturc
  * @author Mason Chan
  * @author Ilkang Na
+ * @author Alen Turkovic
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -241,6 +243,33 @@ public class ElasticsearchTemplateTests {
 		// then
 		assertThat(sampleEntities, is(notNullValue()));
 		assertThat(sampleEntities.getTotalElements(), greaterThanOrEqualTo(1L));
+	}
+
+	// DATAES-422 - Add support for IndicesOptions in search queries
+	@Test
+	public void shouldPassIndicesOptionsForGivenSearchQuery() {
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery idxQuery = new IndexQueryBuilder().withIndexName(INDEX_1_NAME)
+				.withId(sampleEntity.getId())
+				.withObject(sampleEntity).build();
+
+		elasticsearchTemplate.index(idxQuery);
+		elasticsearchTemplate.refresh(INDEX_1_NAME);
+
+		// when
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(matchAllQuery())
+				.withIndices(INDEX_1_NAME, INDEX_2_NAME)
+				.withIndicesOptions(IndicesOptions.lenientExpandOpen())
+				.build();
+		Page<SampleEntity> entities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+		// then
+		assertThat(entities, is(notNullValue()));
+		assertThat(entities.getTotalElements(), greaterThanOrEqualTo(1L));
 	}
 
 	@Test
