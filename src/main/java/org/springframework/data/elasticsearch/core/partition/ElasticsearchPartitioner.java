@@ -1,10 +1,13 @@
 package org.springframework.data.elasticsearch.core.partition;
 
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
+import org.springframework.data.elasticsearch.core.partition.keys.Partition;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+
+import java.util.List;
 
 /**
  * Created by franck.lefebure on 24/02/2016.
@@ -26,4 +29,6 @@ public interface ElasticsearchPartitioner {
     public <T> boolean isIndexPartitioned(T object);
 
     public <T> boolean isIndexPartitioned(Class<T> clazz);
+
+    public <T> List<String> getPartitionedIndices(List<Partition> partitions, Class<T> clazz);
 }

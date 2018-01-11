@@ -212,4 +212,27 @@ public class DefaultElasticsearchPartitioner implements ElasticsearchPartitioner
             }
         }
     }
+
+    @Override
+    public <T> List<String> getPartitionedIndices(List<Partition> targetedPartitions, Class<T> clazz) {
+        ElasticsearchPersistentEntity persistentEntity = elasticsearchOperations.getElasticsearchConverter().getMappingContext().getPersistentEntity(clazz);
+        String indexName = persistentEntity.getIndexName();
+
+        List<String> existingPartitions = elasticsearchPartitionsCache.listIndicesForPrefix(indexName);
+        if (targetedPartitions == null || targetedPartitions.size() == 0 ) return existingPartitions;
+
+        List<String> slices = Partition.getPartitions(targetedPartitions, persistentEntity.getPartitionersFields(), persistentEntity.getPartitioners(), persistentEntity.getPartitionersParameters(), persistentEntity.getPartitionSeparator());
+        List<String> indices = new ArrayList<String>();
+        for (String slice : slices) {
+            String partition = indexName + persistentEntity.getPartitionSeparator() + slice;
+            if (existingPartitions.contains(partition)) {
+                indices.add(partition);
+            }
+        }
+
+        // if no partitions match query, add the empty base index, so no errors are triggered
+        if (indices.isEmpty())
+            indices.add(indexName);
+        return indices;
+    }
 }
