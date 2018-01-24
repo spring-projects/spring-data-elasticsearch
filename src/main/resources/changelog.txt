@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.3.RELEASE (2018-01-24)
+---------------------------------------------
+* DATAES-424 - Fix line endings.
+* DATAES-417 - Release 3.0.3 (Kay SR3).
+
+
 Changes in version 2.1.10.RELEASE (2018-01-24)
 ----------------------------------------------
 * DATAES-416 - Release 2.1.10 (Ingalls SR10).
