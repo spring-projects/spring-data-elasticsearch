@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.1.10.RELEASE (2018-01-24)
+----------------------------------------------
+* DATAES-416 - Release 2.1.10 (Ingalls SR10).
+
+
 Changes in version 3.0.2.RELEASE (2017-11-27)
 ---------------------------------------------
 * DATAES-414 - Reduce scope of Lo4j dependencies to test.
