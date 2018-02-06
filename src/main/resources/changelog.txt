@@ -1,6 +1,15 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.0.M1 (2018-02-06)
+----------------------------------------
+* DATAES-424 - Fix line endings.
+* DATAES-414 - Reduce scope of Lo4j dependencies to test.
+* DATAES-410 - Adapt API changes in Property in test cases.
+* DATAES-401 - Release 3.1 M1 (Lovelace).
+* DATAES-361 - log4j2.xml in classpath root of the library prevents Spring Boot's logging auto-configuration to work.
+
+
 Changes in version 3.0.3.RELEASE (2018-01-24)
 ---------------------------------------------
 * DATAES-424 - Fix line endings.
