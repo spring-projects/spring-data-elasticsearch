@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.5.RELEASE (2018-02-28)
+---------------------------------------------
+* DATAES-429 - Release 3.0.5 (Kay SR5).
+
+
 Changes in version 3.0.4.RELEASE (2018-02-19)
 ---------------------------------------------
 * DATAES-425 - Release 3.0.4 (Kay SR4).
