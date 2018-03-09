@@ -29,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
@@ -961,16 +962,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public Map getSetting(String indexName) {
 		Assert.notNull(indexName, "No index defined for getSettings");
-		Settings settings = client.admin().indices().getSettings(new GetSettingsRequest()).actionGet().getIndexToSettings()
-				.get(indexName);
-
-		SortedMap<String, String> settingsMap = new TreeMap<>();
-
-		settings.keySet().forEach((key) -> {
-			settingsMap.put(key, String.valueOf(settings.get(key)));
-		});
-
-		return Collections.unmodifiableSortedMap(settingsMap);
+		Settings settings = client.admin().indices().getSettings(new GetSettingsRequest()).actionGet()
+				.getIndexToSettings().get(indexName);
+		return settings.keySet().stream().collect(Collectors.toMap((key)->key, (key)->settings.get(key)));
 	}
 
 	private <T> SearchRequestBuilder prepareSearch(Query query, Class<T> clazz) {
