@@ -15,18 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+
 import com.fasterxml.jackson.databind.util.ArrayIterator;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
@@ -51,6 +49,7 @@ import static org.mockito.Mockito.*;
  * @author Artur Konczak
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Ilkang Na
  */
 public class DefaultResultMapperTests {
 
@@ -70,7 +69,7 @@ public class DefaultResultMapperTests {
 		//Given
 		SearchHit[] hits = {createCarHit("Ford", "Grat"), createCarHit("BMW", "Arrow")};
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.totalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(2L);
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
@@ -91,7 +90,7 @@ public class DefaultResultMapperTests {
 		//Given
 		SearchHit[] hits = {createCarHit("Ford", "Grat"), createCarHit("BMW", "Arrow")};
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.totalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(2L);
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
@@ -109,7 +108,7 @@ public class DefaultResultMapperTests {
 		//Given
 		SearchHit[] hits = {createCarPartialHit("Ford", "Grat"), createCarPartialHit("BMW", "Arrow")};
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.totalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(2L);
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
@@ -161,13 +160,13 @@ public class DefaultResultMapperTests {
 
 	private SearchHit createCarHit(String name, String model) {
 		SearchHit hit = mock(SearchHit.class);
-		when(hit.sourceAsString()).thenReturn(createJsonCar(name, model));
+		when(hit.getSourceAsString()).thenReturn(createJsonCar(name, model));
 		return hit;
 	}
 
 	private SearchHit createCarPartialHit(String name, String model) {
 		SearchHit hit = mock(SearchHit.class);
-		when(hit.sourceAsString()).thenReturn(null);
+		when(hit.getSourceAsString()).thenReturn(null);
 		when(hit.getFields()).thenReturn(createCarFields(name, model));
 		return hit;
 	}
@@ -180,10 +179,10 @@ public class DefaultResultMapperTests {
 		return sb.toString();
 	}
 
-	private Map<String, SearchHitField> createCarFields(String name, String model) {
-		Map<String, SearchHitField> result = new HashMap<>();
-		result.put("name", new SearchHitField("name", asList(name)));
-		result.put("model", new SearchHitField("model", asList(model)));
+	private Map<String, DocumentField> createCarFields(String name, String model) {
+		Map<String, DocumentField> result = new HashMap<>();
+		result.put("name", new DocumentField("name", asList(name)));
+		result.put("model", new DocumentField("model", asList(model)));
 		return result;
 	}
 

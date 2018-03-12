@@ -26,6 +26,7 @@ import static java.util.Arrays.*;
 /**
  * @author Mohsin Husen
  * @author Artur Konczak
+ * @author Ilkang Na
  */
 public class Utils {
 
@@ -38,13 +39,11 @@ public class Utils {
 		return new NodeClientFactoryBean.TestNode(
 				Settings.builder()
 						.put("transport.type", "netty4")
-						.put("transport.type", "local")
 						.put("http.type", "netty4")
 						.put("path.home", pathHome)
 						.put("path.data", pathData)
 						.put("cluster.name", clusterName)
 						.put("node.max_local_storage_nodes", 100)
-						.put("script.inline", "true")
 						.build(), asList(Netty4Plugin.class)).start().client();
 	}
 }
