@@ -40,6 +40,8 @@ import org.springframework.data.elasticsearch.core.facet.result.StatisticalResul
 import org.springframework.data.elasticsearch.core.facet.result.Term;
 import org.springframework.data.elasticsearch.core.facet.result.TermResult;
 
+import static java.util.Optional.ofNullable;
+
 /**
  * Container for query result and facet results
  *
@@ -61,7 +63,7 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 	}
 
 	public FacetedPageImpl(List<T> content, Pageable pageable, long total) {
-		super(content, pageable, total);
+		super(content, ofNullable(pageable).orElse(Pageable.unpaged()), total);
 	}
 
 	@Override
