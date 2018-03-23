@@ -51,6 +51,7 @@ import static org.springframework.util.StringUtils.*;
  * @author Pavel Luhin
  * @author Mark Paluch
  * @author Sascha Woo
+ * @author Nordine Bittich
  */
 class MappingBuilder {
 
@@ -221,83 +222,101 @@ class MappingBuilder {
 	}
 
 	/**
-	 * Apply mapping for a single @Field annotation
+	 * Add mapping for @Field annotation
 	 *
 	 * @throws IOException
 	 */
-	private static void addSingleFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field,
-											  Field fieldAnnotation, boolean nestedOrObjectField) throws IOException {
-		xContentBuilder.startObject(field.getName());
-		if(!nestedOrObjectField) {
-			xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
+	private static void addSingleFieldMapping(XContentBuilder builder, java.lang.reflect.Field field, Field annotation, boolean nestedOrObjectField) throws IOException {
+		builder.startObject(field.getName());
+		addFieldMappingParameters(builder, annotation, nestedOrObjectField);
+		builder.endObject();
+	}
+
+	/**
+	 * Add mapping for @MultiField annotation
+	 *
+	 * @throws IOException
+	 */
+	private static void addMultiFieldMapping(
+		XContentBuilder builder,
+		java.lang.reflect.Field field,
+		MultiField annotation,
+		boolean nestedOrObjectField) throws IOException {
+
+		// main field
+		builder.startObject(field.getName());
+		addFieldMappingParameters(builder, annotation.mainField(), nestedOrObjectField);
+
+		// inner fields
+		builder.startObject("fields");
+		for (InnerField innerField : annotation.otherFields()) {
+			builder.startObject(innerField.suffix());
+			addFieldMappingParameters(builder, innerField, false);
+			builder.endObject();
 		}
-		if(fieldAnnotation.fielddata()) {
-			xContentBuilder.field(FIELD_DATA, fieldAnnotation.fielddata());
+		builder.endObject();
+
+		builder.endObject();
+	}
+
+	private static void addFieldMappingParameters(XContentBuilder builder, Object annotation, boolean nestedOrObjectField) throws IOException {
+		boolean index = true;
+		boolean store = false;
+		boolean fielddata = false;
+		FieldType type = null;
+		DateFormat dateFormat = null;
+		String datePattern = null;
+		String analyzer = null;
+		String searchAnalyzer = null;
+
+		if (annotation instanceof Field) {
+			// @Field
+			Field fieldAnnotation = (Field) annotation;
+			index = fieldAnnotation.index();
+			store = fieldAnnotation.store();
+			fielddata = fieldAnnotation.fielddata();
+			type = fieldAnnotation.type();
+			dateFormat = fieldAnnotation.format();
+			datePattern = fieldAnnotation.pattern();
+			analyzer = fieldAnnotation.analyzer();
+			searchAnalyzer = fieldAnnotation.searchAnalyzer();
+		} else if (annotation instanceof InnerField) {
+			// @InnerField
+			InnerField fieldAnnotation = (InnerField) annotation;
+			index = fieldAnnotation.index();
+			store = fieldAnnotation.store();
+			fielddata = fieldAnnotation.fielddata();
+			type = fieldAnnotation.type();
+			dateFormat = fieldAnnotation.format();
+			datePattern = fieldAnnotation.pattern();
+			analyzer = fieldAnnotation.analyzer();
+			searchAnalyzer = fieldAnnotation.searchAnalyzer();
+		} else {
+			throw new IllegalArgumentException("annotation must be an instance of @Field or @InnerField");
 		}
 
-		if (FieldType.Auto != fieldAnnotation.type()) {
-			xContentBuilder.field(FIELD_TYPE, fieldAnnotation.type().name().toLowerCase());
-			if (FieldType.Date == fieldAnnotation.type() && DateFormat.none != fieldAnnotation.format()) {
-				xContentBuilder.field(FIELD_FORMAT, DateFormat.custom == fieldAnnotation.format()
-						? fieldAnnotation.pattern() : fieldAnnotation.format());
+		if (!nestedOrObjectField) {
+			builder.field(FIELD_STORE, store);
+		}
+		if (fielddata) {
+			builder.field(FIELD_DATA, fielddata);
+		}
+		if (type != FieldType.Auto) {
+			builder.field(FIELD_TYPE, type.name().toLowerCase());
+
+			if (type == FieldType.Date && dateFormat != DateFormat.none) {
+				builder.field(FIELD_FORMAT, dateFormat == DateFormat.custom ? datePattern : dateFormat.toString());
 			}
 		}
-		if(!fieldAnnotation.index()) {
-			xContentBuilder.field(FIELD_INDEX, fieldAnnotation.index());
+		if (!index) {
+			builder.field(FIELD_INDEX, index);
 		}
-		if (isNotBlank(fieldAnnotation.searchAnalyzer())) {
-			xContentBuilder.field(FIELD_SEARCH_ANALYZER, fieldAnnotation.searchAnalyzer());
+		if (isNotBlank(analyzer)) {
+			builder.field(FIELD_INDEX_ANALYZER, analyzer);
 		}
-		if (isNotBlank(fieldAnnotation.analyzer())) {
-			xContentBuilder.field(FIELD_INDEX_ANALYZER, fieldAnnotation.analyzer());
+		if (isNotBlank(searchAnalyzer)) {
+			builder.field(FIELD_SEARCH_ANALYZER, searchAnalyzer);
 		}
-		xContentBuilder.endObject();
-	}
-
-	/**
-	 * Apply mapping for a single nested @Field annotation
-	 *
-	 * @throws IOException
-	 */
-	private static void addNestedFieldMapping(XContentBuilder builder, java.lang.reflect.Field field,
-											  InnerField annotation) throws IOException {
-		builder.startObject(annotation.suffix());
-		//builder.field(FIELD_STORE, annotation.store());
-		if (FieldType.Auto != annotation.type()) {
-			builder.field(FIELD_TYPE, annotation.type().name().toLowerCase());
-		}
-		if(!annotation.index()) {
-			builder.field(FIELD_INDEX, annotation.index());
-		}
-		if (isNotBlank(annotation.searchAnalyzer())) {
-			builder.field(FIELD_SEARCH_ANALYZER, annotation.searchAnalyzer());
-		}
-		if (isNotBlank(annotation.indexAnalyzer())) {
-			builder.field(FIELD_INDEX_ANALYZER, annotation.indexAnalyzer());
-		}
-		if (annotation.fielddata()) {
-			builder.field(FIELD_DATA, annotation.fielddata());
-		}
-		builder.endObject();
-	}
-
-	/**
-	 * Multi field mappings for string type fields, support for sorts and facets
-	 *
-	 * @throws IOException
-	 */
-	private static void addMultiFieldMapping(XContentBuilder builder, java.lang.reflect.Field field,
-											 MultiField annotation, boolean nestedOrObjectField) throws IOException {
-		builder.startObject(field.getName());
-		builder.field(FIELD_TYPE, annotation.mainField().type().name().toLowerCase());
-		builder.startObject("fields");
-		//add standard field
-		//addSingleFieldMapping(builder, field, annotation.mainField(), nestedOrObjectField);
-		for (InnerField innerField : annotation.otherFields()) {
-			addNestedFieldMapping(builder, field, innerField);
-		}
-		builder.endObject();
-		builder.endObject();
 	}
 
 	protected static boolean isEntity(java.lang.reflect.Field field) {

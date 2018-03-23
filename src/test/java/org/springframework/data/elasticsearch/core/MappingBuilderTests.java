@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Test;
@@ -43,6 +44,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Jakub Vavrik
  * @author Mohsin Husen
  * @author Keivn Leturc
+ * @author Nordine Bittich
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -189,8 +191,28 @@ public class MappingBuilderTests {
 		elasticsearchTemplate.createIndex(Book.class);
 		elasticsearchTemplate.putMapping(Book.class);
 		//when
-
 		//then
 
+	}
+
+	@Test // DATAES-420
+	public void shouldUseBothAnalyzer() {
+		//given
+		elasticsearchTemplate.deleteIndex(Book.class);
+		elasticsearchTemplate.createIndex(Book.class);
+		elasticsearchTemplate.putMapping(Book.class);
+
+		//when
+		Map mapping = elasticsearchTemplate.getMapping(Book.class);
+		Map descriptionMapping = (Map) ((Map) mapping.get("properties")).get("description");
+		Map prefixDescription = (Map) ((Map) descriptionMapping.get("fields")).get("prefix");
+
+		//then
+		assertThat(prefixDescription.size(), is(3));
+		assertThat(prefixDescription.get("type"), equalTo("text"));
+		assertThat(prefixDescription.get("analyzer"), equalTo("stop"));
+		assertThat(prefixDescription.get("search_analyzer"), equalTo("standard"));
+		assertThat(descriptionMapping.get("type"), equalTo("text"));
+		assertThat(descriptionMapping.get("analyzer"), equalTo("whitespace"));
 	}
 }
