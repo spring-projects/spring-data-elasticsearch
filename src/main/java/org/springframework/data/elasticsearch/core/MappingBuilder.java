@@ -15,11 +15,18 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.apache.commons.lang.StringUtils.EMPTY;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import static org.springframework.util.StringUtils.hasText;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import org.elasticsearch.common.CheckedConsumer;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.ClassPathResource;
@@ -37,10 +44,6 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
-import static org.apache.commons.lang.StringUtils.*;
-import static org.elasticsearch.common.xcontent.XContentFactory.*;
-import static org.springframework.util.StringUtils.*;
-
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -50,6 +53,7 @@ import static org.springframework.util.StringUtils.*;
  * @author Dennis Maaß
  * @author Pavel Luhin
  * @author Mark Paluch
+ * @author Nordine Bittich
  */
 class MappingBuilder {
 
@@ -226,7 +230,7 @@ class MappingBuilder {
 	 * @throws IOException
 	 */
 	private static void addSingleFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field,
-											  Field fieldAnnotation, boolean nestedOrObjectField) throws IOException {
+											  Field fieldAnnotation, boolean nestedOrObjectField, CheckedConsumer<XContentBuilder, IOException> nestedContentConsumer) throws IOException {
 		xContentBuilder.startObject(field.getName());
 		if(!nestedOrObjectField) {
 			xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
@@ -251,6 +255,7 @@ class MappingBuilder {
 		if (isNotBlank(fieldAnnotation.analyzer())) {
 			xContentBuilder.field(FIELD_INDEX_ANALYZER, fieldAnnotation.analyzer());
 		}
+		nestedContentConsumer.accept(xContentBuilder);
 		xContentBuilder.endObject();
 	}
 
@@ -281,23 +286,24 @@ class MappingBuilder {
 		builder.endObject();
 	}
 
-	/**
-	 * Multi field mappings for string type fields, support for sorts and facets
-	 *
-	 * @throws IOException
-	 */
+	private static void addSingleFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field, Field fieldAnnotation, boolean nestedOrObjectField) throws IOException {
+		addSingleFieldMapping(xContentBuilder, field, fieldAnnotation, nestedOrObjectField, builder -> {/* Default consumer - do nothing */});
+
+	}
+		/**
+		 * Multi field mappings for string type fields, support for sorts and facets
+		 *
+		 * @throws IOException
+		 */
 	private static void addMultiFieldMapping(XContentBuilder builder, java.lang.reflect.Field field,
 											 MultiField annotation, boolean nestedOrObjectField) throws IOException {
-		builder.startObject(field.getName());
-		builder.field(FIELD_TYPE, annotation.mainField().type());
-		builder.startObject("fields");
-		//add standard field
-		//addSingleFieldMapping(builder, field, annotation.mainField(), nestedOrObjectField);
-		for (InnerField innerField : annotation.otherFields()) {
-			addNestedFieldMapping(builder, field, innerField);
-		}
-		builder.endObject();
-		builder.endObject();
+		addSingleFieldMapping(builder, field, annotation.mainField(), nestedOrObjectField, b -> {
+			b.startObject("fields");
+			for (InnerField innerField : annotation.otherFields()) {
+				addNestedFieldMapping(b, field, innerField);
+			}
+			b.endObject();
+		});
 	}
 
 	protected static boolean isEntity(java.lang.reflect.Field field) {

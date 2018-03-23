@@ -16,16 +16,19 @@
 
 package org.springframework.data.elasticsearch.core;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.buildIndex;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
+import org.assertj.core.api.Assertions;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,8 +36,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.builder.SampleInheritedEntityBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.entities.*;
+import org.springframework.data.elasticsearch.entities.Book;
 import org.springframework.data.elasticsearch.entities.GeoEntity;
+import org.springframework.data.elasticsearch.entities.Group;
+import org.springframework.data.elasticsearch.entities.MinimalEntity;
+import org.springframework.data.elasticsearch.entities.SampleInheritedEntity;
+import org.springframework.data.elasticsearch.entities.SampleTransientEntity;
+import org.springframework.data.elasticsearch.entities.SimpleRecursiveEntity;
+import org.springframework.data.elasticsearch.entities.StockPrice;
+import org.springframework.data.elasticsearch.entities.User;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -43,6 +53,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Jakub Vavrik
  * @author Mohsin Husen
  * @author Keivn Leturc
+ * @author Nordine Bittich
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -183,13 +194,35 @@ public class MappingBuilderTests {
 
 	}
 
+	/*
+	 * DATAES-420
+	 */
+	@Test
+	public void shouldUseBothAnalyzer() {
+		//given
+		elasticsearchTemplate.deleteIndex(Book.class);
+		elasticsearchTemplate.createIndex(Book.class);
+		elasticsearchTemplate.putMapping(Book.class);
+		//when
+		Map mapping = elasticsearchTemplate.getMapping(Book.class);
+		Map descriptionMapping =
+				(Map) ((Map) mapping.get("properties")).get("description");
+		Map prefixDescription = (Map) ((Map) ((descriptionMapping).get("fields"))).get("prefix");
+		//then
+		Assertions.assertThat(prefixDescription).hasSize(3);
+		Assertions.assertThat(prefixDescription.get("type")).isEqualTo("text");
+		Assertions.assertThat(prefixDescription.get("analyzer")).isEqualTo("stop");
+		Assertions.assertThat(prefixDescription.get("search_analyzer")).isEqualTo("standard");
+		Assertions.assertThat(descriptionMapping.get("type")).isEqualTo("text");
+		Assertions.assertThat(descriptionMapping.get("analyzer")).isEqualTo("whitespace");
+	}
+
 	@Test
 	public void shouldMapBooks() {
 		//given
 		elasticsearchTemplate.createIndex(Book.class);
 		elasticsearchTemplate.putMapping(Book.class);
 		//when
-
 		//then
 
 	}
