@@ -42,8 +42,8 @@ public class ArticleEntity {
 	@MultiField(
 			mainField = @Field(type = Text),
 			otherFields = {
-					@InnerField(suffix = "untouched", type = Text, store = true, fielddata = true, indexAnalyzer = "keyword"),
-					@InnerField(suffix = "sort", type = Text, store = true, indexAnalyzer = "keyword")
+					@InnerField(suffix = "untouched", type = Text, store = true, fielddata = true, analyzer = "keyword"),
+					@InnerField(suffix = "sort", type = Text, store = true, analyzer = "keyword")
 			}
 	)
 	private List<String> authors = new ArrayList<>();

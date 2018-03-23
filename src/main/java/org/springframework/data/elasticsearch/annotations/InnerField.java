@@ -33,11 +33,15 @@ public @interface InnerField {
 
 	boolean index() default true;
 
+	DateFormat format() default DateFormat.none;
+
+	String pattern() default "";
+
 	boolean store() default false;
 
 	boolean fielddata() default false;
 
 	String searchAnalyzer() default "";
 
-	String indexAnalyzer() default "";
+	String analyzer() default "";
 }
