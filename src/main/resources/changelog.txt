@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.6.RELEASE (2018-04-04)
+---------------------------------------------
+* DATAES-434 - Remove explicit declaration of Jackson library versions.
+* DATAES-430 - Release 3.0.6 (Kay SR6).
+
+
 Changes in version 2.1.11.RELEASE (2018-04-04)
 ----------------------------------------------
 * DATAES-434 - Remove explicit declaration of Jackson library versions.
