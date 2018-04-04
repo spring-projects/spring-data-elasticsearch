@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.1.11.RELEASE (2018-04-04)
+----------------------------------------------
+* DATAES-434 - Remove explicit declaration of Jackson library versions.
+* DATAES-424 - Fix line endings.
+* DATAES-423 - Release 2.1.11 (Ingalls SR11).
+
+
 Changes in version 3.0.5.RELEASE (2018-02-28)
 ---------------------------------------------
 * DATAES-429 - Release 3.0.5 (Kay SR5).
