@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -241,7 +242,12 @@ class MappingBuilder {
 	 */
 	private static void addSingleFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field,
 											  Field fieldAnnotation, boolean nestedOrObjectField) throws IOException {
-		xContentBuilder.startObject(field.getName());
+		String name = field.getName();
+		JsonProperty prop = field.getAnnotation(JsonProperty.class);
+		if(prop != null) {
+			name = prop.value();
+		}
+		xContentBuilder.startObject(name);
 		if(!nestedOrObjectField) {
 			xContentBuilder.field(FIELD_STORE, fieldAnnotation.store());
 		}
