@@ -277,6 +277,7 @@ public class SimpleElasticsearchRepositoryTests {
 
 	@Test // DATAES-363
 	public void shouldReturnFalseGivenDocumentWithIdDoesNotExist() {
+		
 		// given
 		String documentId = randomNumeric(5);
 
@@ -284,7 +285,7 @@ public class SimpleElasticsearchRepositoryTests {
 		boolean exist = repository.existsById(documentId);
 
 		// then
-		assertEquals(exist, false);
+		assertThat(exist, is(false));
 	}
 
 	@Test

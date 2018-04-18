@@ -265,6 +265,7 @@ public class UUIDElasticsearchRepositoryTests {
 
 	@Test // DATAES-363
 	public void shouldReturnFalseGivenDocumentWithIdDoesNotExist() {
+		
 		// given
 		UUID documentId = UUID.randomUUID();
 
@@ -272,7 +273,7 @@ public class UUIDElasticsearchRepositoryTests {
 		boolean exist = repository.existsById(documentId);
 
 		// then
-		assertEquals(exist, false);
+		assertThat(exist, is(false));
 	}
 
 	@Test
