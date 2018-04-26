@@ -45,6 +45,7 @@ import static org.junit.Assert.*;
  * @author Mohsin Husen
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Michael Wirth
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/simple-repository-test.xml")
@@ -260,6 +261,19 @@ public class UUIDElasticsearchRepositoryTests {
 
 		// then
 		assertEquals(exist, true);
+	}
+
+	@Test // DATAES-363
+	public void shouldReturnFalseGivenDocumentWithIdDoesNotExist() {
+		
+		// given
+		UUID documentId = UUID.randomUUID();
+
+		// when
+		boolean exist = repository.existsById(documentId);
+
+		// then
+		assertThat(exist, is(false));
 	}
 
 	@Test

@@ -47,6 +47,7 @@ import static org.springframework.data.domain.Sort.Direction.*;
  * @author Mohsin Husen
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Michael Wirth
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/simple-repository-test.xml")
@@ -272,6 +273,19 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// then
 		assertEquals(exist, true);
+	}
+
+	@Test // DATAES-363
+	public void shouldReturnFalseGivenDocumentWithIdDoesNotExist() {
+		
+		// given
+		String documentId = randomNumeric(5);
+
+		// when
+		boolean exist = repository.existsById(documentId);
+
+		// then
+		assertThat(exist, is(false));
 	}
 
 	@Test
