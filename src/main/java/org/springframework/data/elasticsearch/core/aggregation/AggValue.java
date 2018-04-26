@@ -1,11 +1,17 @@
 package org.springframework.data.elasticsearch.core.aggregation;
 
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.metrics.NumericMetricsAggregation;
+import org.elasticsearch.search.aggregations.support.ValuesSourceAggregationBuilder;
 
 import java.util.Map;
+import java.util.function.Function;
 
-public abstract class AggValue extends AggAssistant {
+/**
+ * This Assistant will get a single double number from response.
+ */
+public abstract class AggValue extends AggAssistant <Double> {
     public AggValue(String name) {
         super(name);
     }
@@ -25,5 +31,14 @@ public abstract class AggValue extends AggAssistant {
             return Double.isNaN(value) ? 0 : value;
         }
         return 0d;
+    }
+
+    public static AggValue value(String name, String fieldCode, Function<String, ? extends ValuesSourceAggregationBuilder> creator) {
+        return new AggValue(name) {
+            @Override
+            protected AbstractAggregationBuilder createBuilder() {
+                return creator.apply(name).field(fieldCode);
+            }
+        };
     }
 }

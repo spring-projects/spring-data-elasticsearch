@@ -6,9 +6,13 @@ import org.springframework.data.elasticsearch.core.ResultsExtractor;
 
 import java.util.List;
 
-public class AggAssistantListExtractor<T> implements ResultsExtractor<List<T>> {
+/**
+ * Extractor to extract data from response by AggList
+ * @param <T> The data type in result list.
+ */
+public class AggListExtractor<T> implements ResultsExtractor<List<T>> {
     private AggList<T> aggAssistant;
-    public AggAssistantListExtractor(AggList<T> aggAssistant) {
+    public AggListExtractor(AggList<T> aggAssistant) {
         this.aggAssistant = aggAssistant;
     }
     @Override

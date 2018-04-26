@@ -83,7 +83,7 @@ Extending ElasticsearchRepository for custom methods
         List<Book> findByNameAndPrice(String name, Integer price);
 
         List<Book> findByNameOrPrice(String name, Integer price);
-        
+
         Page<Book> findByName(String name,Pageable page);
 
         Page<Book> findByNameNot(String name,Pageable page);
@@ -202,8 +202,8 @@ Statistic data using AggAssistant
         private ElasticsearchTemplate elasticsearchTemplate;
 
         // Create an aggAsistant for aggregation all
-        AggValue avgAge = AggAssistant.value("avgAge", "age", AggregationBuilders::avg);
-        AggList<SchoolStatItem> schoolAggAssistant = AggAssistant.listField(
+        AggValue avgAge = AggValue.value("avgAge", "age", AggregationBuilders::avg);
+        AggList<SchoolStatItem> schoolAggAssistant = AggList.listField(
           "schoolName", // The name of this agg which is used like an id;
           "schoolName", // The field to be agg in type student-type
           (value, subItems) -> new SchoolStatItem(

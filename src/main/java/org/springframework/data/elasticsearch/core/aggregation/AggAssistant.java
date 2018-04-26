@@ -1,26 +1,40 @@
 package org.springframework.data.elasticsearch.core.aggregation;
 
-import org.elasticsearch.script.Script;
-import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.support.ValuesSourceAggregationBuilder;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
-public abstract class AggAssistant {
+/**
+ * The Assistant to create aggregation in query or read data from response.
+ * @param <T> The result type to collect from response.
+ */
+public abstract class AggAssistant<T> {
+    /**
+     * The name of agg used to identify AggAssistant, should not conflict in the same aggregate level.
+     */
     private String name;
+
+    /**
+     * The subAggs is low level aggregation of current aggregation. The name of subAggs should not conflict each other.
+     */
     private AggAssistant[] subAggs;
+
     public AggAssistant(String name, AggAssistant... subAggs) {
         this.name = name;
         this.subAggs = subAggs;
     }
+
+    /**
+     * Create an AggregationBuilder only for this AggAssistant, not include its subAggs
+     * @return
+     */
     protected abstract AbstractAggregationBuilder createBuilder();
-    public abstract Object collectValue(Aggregation aggregation);
+
+    /**
+     * Read result from aggregation
+     * @param aggregation This aggregation is exactly the aggregation of this AggAssistant.
+     * @return The final result contains subAggs result
+     */
+    public abstract T collectValue(Aggregation aggregation);
 
     public String getName() {
         return name;
@@ -38,6 +52,10 @@ public abstract class AggAssistant {
         this.subAggs = subAggs;
     }
 
+    /**
+     * Create an AggregationBuilder include its subAggs.This is the final AggregationBuilder.
+     * @return
+     */
     public AbstractAggregationBuilder toAggBuilder() {
         AbstractAggregationBuilder builder = createBuilder();
         if (subAggs != null) {
@@ -46,86 +64,5 @@ public abstract class AggAssistant {
             }
         }
         return builder;
-    }
-
-    public static AggValue value(String name, String fieldCode, Function<String, ? extends ValuesSourceAggregationBuilder> creator) {
-        return new AggValue(name) {
-            @Override
-            protected AbstractAggregationBuilder createBuilder() {
-                return creator.apply(name).field(fieldCode);
-            }
-        };
-    }
-
-    public static <T> AggList<T> listField(String name, String fieldCode,
-                                           BiFunction<String, Map<String, Object>, T> createResult,
-                                           AggAssistant... subAggs) {
-        return new AggList<T>(name, subAggs) {
-            @Override
-            protected AbstractAggregationBuilder createBuilder() {
-                return AggregationBuilders.terms(getName())
-                        .field(fieldCode)
-                        .size(1000);
-            }
-
-            @Override
-            public T createResult(String value, Map<String, Object> subItems) {
-                return createResult.apply(value, subItems);
-            }
-        };
-    }
-
-    public static <T> AggList<T> listScript(String name, Script script,
-                                            BiFunction<String, Map<String, Object>, T> createResult,
-                                            AggAssistant... subAggs) {
-        return new AggList<T>(name, subAggs) {
-            @Override
-            protected AbstractAggregationBuilder createBuilder() {
-                return AggregationBuilders.terms(getName())
-                        .script(script)
-                        .size(1000);
-            }
-
-            @Override
-            public T createResult(String value, Map<String, Object> subItems) {
-                return createResult.apply(value, subItems);
-            }
-        };
-    }
-
-    public static <T> AggList<T> listScriptId(String name, String scriptId,
-                                              BiFunction<String, Map<String, Object>, T> createResult,
-                                              AggAssistant... subAggs) {
-        return new AggList<T>(name, subAggs) {
-            @Override
-            protected AbstractAggregationBuilder createBuilder() {
-                return AggregationBuilders.terms(getName())
-                        .script(new Script(ScriptType.STORED, Script.DEFAULT_SCRIPT_LANG, scriptId, new HashMap<>()))
-                        .size(1000);
-            }
-
-            @Override
-            public T createResult(String value, Map<String, Object> subItems) {
-                return createResult.apply(value, subItems);
-            }
-        };
-    }
-
-    public static <T> AggList<T> listScriptCode(String name, String scriptCode,
-                                                BiFunction<String, Map<String, Object>, T> createResult,
-                                                AggAssistant... subAggs) {
-        return new AggList<T>(name, subAggs) {
-            @Override
-            protected AbstractAggregationBuilder createBuilder() {
-                return AggregationBuilders.terms(getName())
-                        .script(new Script(scriptCode))
-                        .size(1000);
-            }
-
-            @Override
-            public T createResult(String value, Map<String, Object> subItems) {
-                return createResult.apply(value, subItems);
-            }
-        };
     }
 }

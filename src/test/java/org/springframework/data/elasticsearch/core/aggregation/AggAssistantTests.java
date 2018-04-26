@@ -122,12 +122,12 @@ public class AggAssistantTests {
 
 	@Test
 	public void shouldReturnAggregatedResultGroupBySchoolGradeClassGenderWithAllCount() {
-		AggValue avgAge = AggAssistant.value("avgAge", "age", AggregationBuilders::avg);
-		AggList<GenderStatItem> genderAggAssistant = AggAssistant.listField("gender", "gender",
+		AggValue avgAge = AggValue.value("avgAge", "age", AggregationBuilders::avg);
+		AggList<GenderStatItem> genderAggAssistant = AggList.listField("gender", "gender",
 				(value, subItems) -> new GenderStatItem(value, (int) AggList.getDocCount(subItems), avgAge.readValue(subItems)),
 				avgAge);
 
-		AggList<ClassStatItem> classAggAssistant = AggAssistant.listField("class", "classNo",
+		AggList<ClassStatItem> classAggAssistant = AggList.listField("class", "classNo",
 				(value, subItems) -> ClassStatItem.builder()
 						.classNo(Integer.parseInt(value))
 						.statGenderByClass(genderAggAssistant.readValue(subItems))
@@ -135,7 +135,7 @@ public class AggAssistantTests {
 						.build(),
 				genderAggAssistant);
 
-		AggList<GradeStatItem> gradeAggAssistant = AggAssistant.listField("grade", "grade",
+		AggList<GradeStatItem> gradeAggAssistant = AggList.listField("grade", "grade",
 				(value, subItems) -> GradeStatItem.builder()
 						.grade(Integer.parseInt(value))
 						.statGenderByGrade(genderAggAssistant.readValue(subItems))
@@ -144,7 +144,7 @@ public class AggAssistantTests {
 						.build(),
 				genderAggAssistant, classAggAssistant);
 
-		AggList<SchoolStatItem> schoolAggAssistant = AggAssistant.listField("school", "schoolName",
+		AggList<SchoolStatItem> schoolAggAssistant = AggList.listField("school", "schoolName",
 				(value, subItems) -> SchoolStatItem.builder()
 						.schoolName(value)
 						.statGenderBySchool(genderAggAssistant.readValue(subItems))
@@ -162,7 +162,7 @@ public class AggAssistantTests {
 				.build();
 		// when
 		List<SchoolStatItem> schoolStatItems = elasticsearchTemplate.query(searchQuery,
-				new AggAssistantListExtractor<>(schoolAggAssistant));
+				new AggListExtractor<>(schoolAggAssistant));
 		// then
 		assertEquals("[{schoolName=Middle School,statGenderBySchool=[{gender=male,count=2,avgAge=12.0}, {gender=female,count=1,avgAge=12.0}],total=3,gradeStatItems=[{grade=3,statGenderByGrade=[{gender=male,count=2,avgAge=12.0}, {gender=female,count=1,avgAge=12.0}],total=3,classStatItems=[{classNo=2,statGenderByClass=[{gender=male,count=2,avgAge=12.0}, {gender=female,count=1,avgAge=12.0}],total=3}]}]}, {schoolName=Super School,statGenderBySchool=[{gender=male,count=2,avgAge=12.5}, {gender=female,count=1,avgAge=12.0}],total=3,gradeStatItems=[{grade=2,statGenderByGrade=[{gender=female,count=1,avgAge=12.0}, {gender=male,count=1,avgAge=13.0}],total=2,classStatItems=[{classNo=1,statGenderByClass=[{gender=female,count=1,avgAge=12.0}, {gender=male,count=1,avgAge=13.0}],total=2}]}, {grade=3,statGenderByGrade=[{gender=male,count=1,avgAge=12.0}],total=1,classStatItems=[{classNo=2,statGenderByClass=[{gender=male,count=1,avgAge=12.0}],total=1}]}]}]",
 				schoolStatItems.toString());

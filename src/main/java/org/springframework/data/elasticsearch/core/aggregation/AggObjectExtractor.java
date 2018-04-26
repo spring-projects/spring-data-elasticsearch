@@ -10,12 +10,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public class AggAssistantObjectExtractor<T> implements ResultsExtractor<T> {
+/**
+ * The Extractor to extract data by multi AggAssistant
+ * @param <T>
+ */
+public class AggObjectExtractor<T> implements ResultsExtractor<T> {
     private final Function<Map<String, Object>, T> valueCollector;
     private List<AggAssistant> aggAssistants = new ArrayList<>();
 
-    public AggAssistantObjectExtractor(Function<Map<String, Object>, T> valueCollector,
-                                       AggAssistant... aggAssistants) {
+    public AggObjectExtractor(Function<Map<String, Object>, T> valueCollector,
+                              AggAssistant... aggAssistants) {
         this.valueCollector = valueCollector;
         for (AggAssistant assistant : aggAssistants) {
             this.aggAssistants.add(assistant);

@@ -1,6 +1,10 @@
 package org.springframework.data.elasticsearch.core.aggregation;
 
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
@@ -9,10 +13,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
-public abstract class AggList<T> extends AggAssistant {
-    public AggList(String name, AggAssistant... subAggs) {
+/**
+ * The Assistant will return a List result from Aggregation
+ * @param <T> The data type in List
+ */
+public abstract class AggList<T> extends AggAssistant<List<T>> {
+    private BiFunction<String, Map<String, Object>, T> createResult;
+    public AggList(String name, BiFunction<String, Map<String, Object>, T> createResult, AggAssistant... subAggs) {
         super(name, subAggs);
+        this.createResult = createResult;
     }
 
     @Override
@@ -43,7 +54,7 @@ public abstract class AggList<T> extends AggAssistant {
                     subItems.put(assistant.getName(), subValue);
                 }
             }
-            T rowValue = createResult(value, subItems);
+            T rowValue = createResult.apply(value, subItems);
             if (rowValue != null) {
                 result.add(rowValue);
             }
@@ -59,10 +70,61 @@ public abstract class AggList<T> extends AggAssistant {
         return (List<T>) subItems.getOrDefault(this.getName(), defaultValue);
     }
 
-    public abstract T createResult(String value, Map<String, Object> subItems);
-
     public static long getDocCount(Map<String, Object> subItems) {
         Long v = (Long) subItems.getOrDefault("docCount", 0l);
         return v.longValue();
+    }
+
+
+    public static <T> AggList<T> listField(String name, String fieldCode,
+                                           BiFunction<String, Map<String, Object>, T> createResult,
+                                           AggAssistant... subAggs) {
+        return new AggList<T>(name, createResult, subAggs) {
+            @Override
+            protected AbstractAggregationBuilder createBuilder() {
+                return AggregationBuilders.terms(getName())
+                        .field(fieldCode)
+                        .size(1000);
+            }
+        };
+    }
+
+    public static <T> AggList<T> listScript(String name, Script script,
+                                            BiFunction<String, Map<String, Object>, T> createResult,
+                                            AggAssistant... subAggs) {
+        return new AggList<T>(name, createResult, subAggs) {
+            @Override
+            protected AbstractAggregationBuilder createBuilder() {
+                return AggregationBuilders.terms(getName())
+                        .script(script)
+                        .size(1000);
+            }
+        };
+    }
+
+    public static <T> AggList<T> listScriptId(String name, String scriptId,
+                                              BiFunction<String, Map<String, Object>, T> createResult,
+                                              AggAssistant... subAggs) {
+        return new AggList<T>(name, createResult, subAggs) {
+            @Override
+            protected AbstractAggregationBuilder createBuilder() {
+                return AggregationBuilders.terms(getName())
+                        .script(new Script(ScriptType.STORED, Script.DEFAULT_SCRIPT_LANG, scriptId, new HashMap<>()))
+                        .size(1000);
+            }
+        };
+    }
+
+    public static <T> AggList<T> listScriptCode(String name, String scriptCode,
+                                                BiFunction<String, Map<String, Object>, T> createResult,
+                                                AggAssistant... subAggs) {
+        return new AggList<T>(name, createResult, subAggs) {
+            @Override
+            protected AbstractAggregationBuilder createBuilder() {
+                return AggregationBuilders.terms(getName())
+                        .script(new Script(scriptCode))
+                        .size(1000);
+            }
+        };
     }
 }
