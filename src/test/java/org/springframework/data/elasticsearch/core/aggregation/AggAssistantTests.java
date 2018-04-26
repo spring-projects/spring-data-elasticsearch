@@ -120,7 +120,7 @@ public class AggAssistantTests {
 		elasticsearchTemplate.refresh(StudentEntity.class);
 	}
 
-	@Test
+	@Test //DATAES-444
 	public void shouldReturnAggregatedResultGroupBySchoolGradeClassGenderWithAllCount() {
 		AggValue avgAge = AggValue.value("avgAge", "age", AggregationBuilders::avg);
 		AggList<GenderStatItem> genderAggAssistant = AggList.listField("gender", "gender",
