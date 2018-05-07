@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.entities;
 
-import static org.springframework.data.elasticsearch.annotations.FieldType.text;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -31,7 +31,7 @@ public class SampleMappingEntity {
 	@Id
 	private String id;
 
-	@Field(type = text, index = false, store = true, analyzer = "standard")
+	@Field(type = Text, index = false, store = true, analyzer = "standard")
 	private String message;
 
 	private NestedEntity nested;
@@ -54,7 +54,7 @@ public class SampleMappingEntity {
 
 	static class NestedEntity {
 
-		@Field(type = text)
+		@Field(type = Text)
 		private String someField;
 
 		public String getSomeField() {
