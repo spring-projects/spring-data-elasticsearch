@@ -15,24 +15,27 @@
  */
 package org.springframework.data.elasticsearch.entities;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Nordine Bittich
  */
 @Setter
 @Getter
@@ -49,4 +52,9 @@ public class Book {
 	private Author author;
 	@Field(type = FieldType.Nested)
 	private Map<Integer, Collection<String>> buckets = new HashMap<>();
+	@MultiField(mainField = @Field(type = FieldType.text, analyzer = "whitespace"),
+			otherFields = { @InnerField(suffix = "prefix", type = FieldType.text,
+					indexAnalyzer = "stop", searchAnalyzer = "standard") })
+	private String description;
+
 }
