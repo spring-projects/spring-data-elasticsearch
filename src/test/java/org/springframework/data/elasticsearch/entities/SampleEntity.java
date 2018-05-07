@@ -49,9 +49,9 @@ public class SampleEntity {
 
 	@Id
 	private String id;
-	@Field(type = text, store = true, fielddata = true)
+	@Field(type = Text, store = true, fielddata = true)
 	private String type;
-	@Field(type = text, store = true, fielddata = true)
+	@Field(type = Text, store = true, fielddata = true)
 	private String message;
 	private int rate;
 	@ScriptedField

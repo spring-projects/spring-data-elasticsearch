@@ -1,7 +1,7 @@
 package org.springframework.data.elasticsearch.entities;
 
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.text;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
 
 import java.util.Date;
 
@@ -19,7 +19,7 @@ public class SampleDateMappingEntity {
 	@Id
 	private String id;
 
-	@Field(type = text, index = false, store = true, analyzer = "standard")
+	@Field(type = Text, index = false, store = true, analyzer = "standard")
 	private String message;
 
 	@Field(type = Date, format = DateFormat.custom, pattern = "dd.MM.yyyy hh:mm")
