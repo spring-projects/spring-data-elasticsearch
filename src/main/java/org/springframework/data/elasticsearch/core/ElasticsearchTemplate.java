@@ -110,6 +110,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Ilkang Na
  * @author Alen Turkovic
+ * @author Sascha Woo
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -882,9 +883,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		}
 
 		if (searchQuery.getHighlightFields() != null) {
+			HighlightBuilder highlightBuilder = new HighlightBuilder();
 			for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
-				searchRequest.highlighter(new HighlightBuilder().field(highlightField));
+				highlightBuilder.field(highlightField);
 			}
+			searchRequest.highlighter(highlightBuilder);
 		}
 
 		if (!isEmpty(searchQuery.getIndicesBoost())) {
