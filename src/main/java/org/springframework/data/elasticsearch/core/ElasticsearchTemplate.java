@@ -106,6 +106,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
  * @author Oliver Gierke
  * @author Mark Janssen
  * @author Mark Paluch
+ * @author Sascha Woo
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -875,9 +876,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		}
 
 		if (searchQuery.getHighlightFields() != null) {
+			HighlightBuilder highlightBuilder = new HighlightBuilder();
 			for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
-				searchRequest.highlighter(new HighlightBuilder().field(highlightField));
+				highlightBuilder.field(highlightField);
 			}
+			searchRequest.highlighter(highlightBuilder);
 		}
 
 		if (!isEmpty(searchQuery.getIndicesBoost())) {

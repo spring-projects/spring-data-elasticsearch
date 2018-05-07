@@ -33,6 +33,7 @@ import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.hamcrest.Matchers;
@@ -70,6 +71,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
  * @author Abdul Mohammed
  * @author Kevin Leturc
  * @author Mason Chan
+ * @author Sascha Woo
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -1204,6 +1206,58 @@ public class ElasticsearchTemplateTests {
 		});
 
 		assertThat(sampleEntities.getContent().get(0).getHighlightedMessage(), is(highlightedMessage));
+	}
+
+	@Test // DATAES-412
+	public void shouldReturnMultipleHighlightFields() {
+
+		// given
+		String documentId = randomNumeric(5);
+		String actualType = "some test type";
+		String actualMessage = "some test message";
+		String highlightedType = "some <em>test</em> type";
+		String highlightedMessage = "some <em>test</em> message";
+
+		SampleEntity sampleEntity = SampleEntity.builder()
+			.id(documentId)
+			.type(actualType)
+			.message(actualMessage)
+			.version(System.currentTimeMillis())
+			.build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(
+					boolQuery()
+						.must(termQuery("type", "test"))
+						.must(termQuery("message", "test")))
+				.withHighlightFields(
+					new HighlightBuilder.Field("type"),
+					new HighlightBuilder.Field("message"))
+				.build();
+
+		// when
+		elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapper() {
+			@Override
+			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				for (SearchHit searchHit : response.getHits()) {
+					Map<String, HighlightField> highlightFields = searchHit.getHighlightFields();
+					HighlightField highlightFieldType = highlightFields.get("type");
+					HighlightField highlightFieldMessage = highlightFields.get("message");
+
+					// then
+					assertNotNull(highlightFieldType);
+					assertNotNull(highlightFieldMessage);
+					assertThat(highlightFieldType.fragments()[0].toString(), is(highlightedType));
+					assertThat(highlightFieldMessage.fragments()[0].toString(), is(highlightedMessage));
+				}
+				return null;
+			}
+		});
 	}
 
 	@Test
