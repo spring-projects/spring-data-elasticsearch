@@ -1,6 +1,16 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.7.RELEASE (2018-05-08)
+---------------------------------------------
+* DATAES-438 - Expected a boolean [true/false] for property [index] but got [not_analyzed].
+* DATAES-437 - Release 3.0.7 (Kay SR7).
+* DATAES-412 - Highlighted fields is not getting passed to the elastic search query.
+* DATAES-402 - Paging not working correctly.
+* DATAES-363 - AbstractElasticsearchRepository.existsById(..) always returns true.
+* DATAES-198 - @Version has no effect, so therefore is not useful with spring data elasticsearch.
+
+
 Changes in version 2.1.12.RELEASE (2018-05-08)
 ----------------------------------------------
 * DATAES-436 - Release 2.1.12 (Ingalls SR12).
