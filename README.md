@@ -52,17 +52,13 @@ the appropriate dependency version.
 </repository>
 ```
 
-|   spring data elasticsearch         | elasticsearch |
-|:-----------------------------------:|:-------------:|
-|           3.0.0.RC2                 |      5.5.0    |
-|           3.0.0.M4                  |      5.4.0    |
-|           2.0.4.RELEASE             |      2.4.0    |
-|           2.0.0.RELEASE             |      2.2.0    |
-|           1.4.0.M1                  |      1.7.3    |
-|           1.3.0.RELEASE             |      1.5.2    |
-|           1.2.0.RELEASE             |      1.4.4    |
-|           1.1.0.RELEASE             |      1.3.2    |
-|           1.0.0.RELEASE             |      1.1.1    |
+| spring data elasticsearch | elasticsearch |
+|:-------------------------:|:-------------:|
+| 3.1.x                     | 6.2.2         |
+| 3.0.x                     | 5.5.0         |
+| 2.1.x                     | 2.4.0         |
+| 2.0.x                     | 2.2.0         |
+| 1.3.x                     | 1.5.2         |
 
 
 ### ElasticsearchRepository
