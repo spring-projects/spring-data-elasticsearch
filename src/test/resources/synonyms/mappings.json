@@ -1,8 +1,5 @@
 {
   "synonym-type": {
-    "_all": {
-      "enabled": true
-    },
     "properties": {
       "text": {
         "type": "text",

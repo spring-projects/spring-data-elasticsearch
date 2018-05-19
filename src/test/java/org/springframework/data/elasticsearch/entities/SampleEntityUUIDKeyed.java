@@ -48,7 +48,7 @@ public class SampleEntityUUIDKeyed {
 	@Id
 	private UUID id;
 	private String type;
-	@Field(type = FieldType.text, fielddata = true)
+	@Field(type = FieldType.Text, fielddata = true)
 	private String message;
 	private int rate;
 	@ScriptedField

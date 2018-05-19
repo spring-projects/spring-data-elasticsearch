@@ -38,6 +38,7 @@ import static java.util.Arrays.*;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Ilkang Na
  */
 
 public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingBean, DisposableBean {
@@ -85,13 +86,11 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 		nodeClient = (NodeClient) new TestNode(
 				Settings.builder().put(loadConfig())
 						.put("transport.type", "netty4")
-						.put("transport.type", "local")
 						.put("http.type", "netty4")
 						.put("path.home", this.pathHome)
 						.put("path.data", this.pathData)
 						.put("cluster.name", this.clusterName)
 						.put("node.max_local_storage_nodes", 100)
-						.put("script.inline", "true")
 						.build(), asList(Netty4Plugin.class)).start().client();
 	}
 
@@ -99,7 +98,7 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 		if (StringUtils.isNotBlank(pathConfiguration)) {
 			InputStream stream = getClass().getClassLoader().getResourceAsStream(pathConfiguration);
 			if (stream != null) {
-				return Settings.builder().loadFromStream(pathConfiguration, getClass().getClassLoader().getResourceAsStream(pathConfiguration)).build();
+				return Settings.builder().loadFromStream(pathConfiguration, getClass().getClassLoader().getResourceAsStream(pathConfiguration), false).build();
 			}
 			logger.error(String.format("Unable to read node configuration from file [%s]", pathConfiguration));
 		}

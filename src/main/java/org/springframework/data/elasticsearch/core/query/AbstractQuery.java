@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.Assert;
@@ -30,6 +31,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Alen Turkovic
  */
 abstract class AbstractQuery implements Query {
 
@@ -43,6 +45,7 @@ abstract class AbstractQuery implements Query {
 	protected Collection<String> ids;
 	protected String route;
 	protected SearchType searchType = SearchType.DFS_QUERY_THEN_FETCH;
+	protected IndicesOptions indicesOptions;
 
 	@Override
 	public Sort getSort() {
@@ -148,5 +151,13 @@ abstract class AbstractQuery implements Query {
 
 	public SearchType getSearchType() {
 		return searchType;
+	}
+
+	public IndicesOptions getIndicesOptions() {
+		return indicesOptions;
+	}
+
+	public void setIndicesOptions(IndicesOptions indicesOptions) {
+		this.indicesOptions = indicesOptions;
 	}
 }

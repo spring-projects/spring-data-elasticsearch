@@ -28,8 +28,8 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHitField;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -39,6 +39,7 @@ import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPa
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -49,7 +50,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * @author Petar Tahchiev
  * @author Young Gu
  * @author Oliver Gierke
+ * @author Chris White
  * @author Mark Paluch
+ * @author Ilkang Na
  */
 public class DefaultResultMapper extends AbstractResultMapper {
 
@@ -77,17 +80,18 @@ public class DefaultResultMapper extends AbstractResultMapper {
 
 	@Override
 	public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-		long totalHits = response.getHits().totalHits();
+		long totalHits = response.getHits().getTotalHits();
 		List<T> results = new ArrayList<>();
 		for (SearchHit hit : response.getHits()) {
 			if (hit != null) {
 				T result = null;
-				if (StringUtils.isNotBlank(hit.sourceAsString())) {
-					result = mapEntity(hit.sourceAsString(), clazz);
+				if (StringUtils.isNotBlank(hit.getSourceAsString())) {
+					result = mapEntity(hit.getSourceAsString(), clazz);
 				} else {
 					result = mapEntity(hit.getFields().values(), clazz);
 				}
 				setPersistentEntityId(result, hit.getId(), clazz);
+				setPersistentEntityVersion(result, hit.getVersion(), clazz);
 				populateScriptFields(result, hit);
 				results.add(result);
 			}
@@ -102,7 +106,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 				ScriptedField scriptedField = field.getAnnotation(ScriptedField.class);
 				if (scriptedField != null) {
 					String name = scriptedField.name().isEmpty() ? field.getName() : scriptedField.name();
-					SearchHitField searchHitField = hit.getFields().get(name);
+					DocumentField searchHitField = hit.getFields().get(name);
 					if (searchHitField != null) {
 						field.setAccessible(true);
 						try {
@@ -119,17 +123,17 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		}
 	}
 
-	private <T> T mapEntity(Collection<SearchHitField> values, Class<T> clazz) {
+	private <T> T mapEntity(Collection<DocumentField> values, Class<T> clazz) {
 		return mapEntity(buildJSONFromFields(values), clazz);
 	}
 
-	private String buildJSONFromFields(Collection<SearchHitField> values) {
+	private String buildJSONFromFields(Collection<DocumentField> values) {
 		JsonFactory nodeFactory = new JsonFactory();
 		try {
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
 			JsonGenerator generator = nodeFactory.createGenerator(stream, JsonEncoding.UTF8);
 			generator.writeStartObject();
-			for (SearchHitField value : values) {
+			for (DocumentField value : values) {
 				if (value.getValues().size() > 1) {
 					generator.writeArrayFieldStart(value.getName());
 					for (Object val : value.getValues()) {
@@ -153,6 +157,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		T result = mapEntity(response.getSourceAsString(), clazz);
 		if (result != null) {
 			setPersistentEntityId(result, response.getId(), clazz);
+			setPersistentEntityVersion(result, response.getVersion(), clazz);
 		}
 		return result;
 	}
@@ -164,6 +169,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 			if (!response.isFailed() && response.getResponse().isExists()) {
 				T result = mapEntity(response.getResponse().getSourceAsString(), clazz);
 				setPersistentEntityId(result, response.getResponse().getId(), clazz);
+				setPersistentEntityVersion(result, response.getResponse().getVersion(), clazz);
 				list.add(result);
 			}
 		}
@@ -182,6 +188,22 @@ public class DefaultResultMapper extends AbstractResultMapper {
 				persistentEntity.getPropertyAccessor(result).setProperty(idProperty, id);
 			}
 
+		}
+	}
+
+	private <T> void setPersistentEntityVersion(T result, long version, Class<T> clazz) {
+		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
+
+			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(clazz);
+			ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
+
+			// Only deal with Long because ES versions are longs !
+			if (versionProperty != null && versionProperty.getType().isAssignableFrom(Long.class)) {
+				// check that a version was actually returned in the response, -1 would indicate that
+				// a search didn't request the version ids in the response, which would be an issue
+				Assert.isTrue(version != -1, "Version in response is -1");
+				persistentEntity.getPropertyAccessor(result).setProperty(versionProperty, version);
+			}
 		}
 	}
 }

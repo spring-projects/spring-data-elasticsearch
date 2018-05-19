@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.core.facet;
 
 import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
-import static org.springframework.data.elasticsearch.annotations.FieldType.text;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,14 +36,14 @@ public class ArticleEntity {
 	@Id
 	private String id;
 	private String title;
-	@Field(type = text, fielddata = true)
+	@Field(type = Text, fielddata = true)
 	private String subject;
 
 	@MultiField(
-			mainField = @Field(type = text),
+			mainField = @Field(type = Text),
 			otherFields = {
-					@InnerField(suffix = "untouched", type = text, store = true, fielddata = true, indexAnalyzer = "keyword"),
-					@InnerField(suffix = "sort", type = text, store = true, indexAnalyzer = "keyword")
+					@InnerField(suffix = "untouched", type = Text, store = true, fielddata = true, analyzer = "keyword"),
+					@InnerField(suffix = "sort", type = Text, store = true, analyzer = "keyword")
 			}
 	)
 	private List<String> authors = new ArrayList<>();

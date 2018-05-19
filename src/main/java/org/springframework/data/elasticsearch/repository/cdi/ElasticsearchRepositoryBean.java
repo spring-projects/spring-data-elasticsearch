@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,24 +60,21 @@ public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 		this.elasticsearchOperationsBean = operations;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.repository.cdi.CdiRepositoryBean#create(javax.enterprise.context.spi.CreationalContext, java.lang.Class, java.util.Optional)
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.cdi.CdiRepositoryBean#create(javax.enterprise.context.spi.CreationalContext, java.lang.Class)
 	 */
 	@Override
-	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType,
-			Optional<Object> customImplementation) {
+	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType) {
 
-		ElasticsearchOperations elasticsearchOperations = getDependencyInstance(elasticsearchOperationsBean,
+		ElasticsearchOperations operations = getDependencyInstance(elasticsearchOperationsBean,
 				ElasticsearchOperations.class);
 
-		ElasticsearchRepositoryFactory factory = new ElasticsearchRepositoryFactory(elasticsearchOperations);
-
-		return customImplementation //
-				.map(o -> factory.getRepository(repositoryType, o)) //
-				.orElseGet(() -> factory.getRepository(repositoryType));
+		return create(() -> new ElasticsearchRepositoryFactory(operations), repositoryType);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.cdi.CdiRepositoryBean#getScope()
 	 */
 	@Override

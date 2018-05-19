@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -34,6 +35,7 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Mark Paluch
+ * @author Alen Turkovic
  */
 public class NativeSearchQueryBuilder {
 
@@ -54,6 +56,7 @@ public class NativeSearchQueryBuilder {
 	private Collection<String> ids;
 	private String route;
 	private SearchType searchType;
+	private IndicesOptions indicesOptions;
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -140,6 +143,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	public NativeSearchQueryBuilder withIndicesOptions(IndicesOptions indicesOptions) {
+		this.indicesOptions = indicesOptions;
+		return this;
+	}
+
 	public NativeSearchQuery build() {
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightFields);
 		nativeSearchQuery.setPageable(pageable);
@@ -190,6 +198,10 @@ public class NativeSearchQueryBuilder {
 
 		if (searchType != null) {
 			nativeSearchQuery.setSearchType(searchType);
+		}
+
+		if (indicesOptions != null) {
+			nativeSearchQuery.setIndicesOptions(indicesOptions);
 		}
 
 		return nativeSearchQuery;
