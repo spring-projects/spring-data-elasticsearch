@@ -35,12 +35,24 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 * {@link ElasticsearchPersistentEntity}. This method is mainly used by {@link ElasticsearchPersistentEntity}
 	 * implementation to discover score property candidates on {@link ElasticsearchPersistentEntity} creation you should
 	 * rather call {@link ElasticsearchPersistentEntity#isScoreProperty(PersistentProperty)} to determine whether the
-	 * current property is the version property of that {@link ElasticsearchPersistentEntity} under consideration.
+	 * current property is the score property of that {@link ElasticsearchPersistentEntity} under consideration.
 	 *
 	 * @return
 	 * @since 3.1
 	 */
 	boolean isScoreProperty();
+
+	/**
+	 * Returns whether the current property is a <em>potential</em> parent property of the owning
+	 * {@link ElasticsearchPersistentEntity}. This method is mainly used by {@link ElasticsearchPersistentEntity}
+	 * implementation to discover parent property candidates on {@link ElasticsearchPersistentEntity} creation you should
+	 * rather call {@link ElasticsearchPersistentEntity#isParentProperty()} to determine whether the current property is
+	 * the parent property of that {@link ElasticsearchPersistentEntity} under consideration.
+	 *
+	 * @return
+	 * @since 3.1
+	 */
+	boolean isParentProperty();
 
 	public enum PropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
 
