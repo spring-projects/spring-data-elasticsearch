@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.core.mapping;
 import static org.springframework.util.StringUtils.*;
 
 import java.util.Locale;
-import java.util.Optional;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -28,12 +27,14 @@ import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -43,6 +44,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Sascha Woo
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
@@ -59,6 +61,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private String indexStoreType;
 	private String parentType;
 	private ElasticsearchPersistentProperty parentIdProperty;
+	private ElasticsearchPersistentProperty scoreProperty;
 	private String settingPath;
 	private boolean createIndexAndMapping;
 
@@ -151,6 +154,17 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
+	public boolean hasScoreProperty() {
+		return scoreProperty != null;
+	}
+
+	@Nullable
+	@Override
+	public ElasticsearchPersistentProperty getScoreProperty() {
+		return scoreProperty;
+	}
+
+	@Override
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
 		super.addPersistentProperty(property);
 
@@ -165,7 +179,21 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		}
 
 		if (property.isVersionProperty()) {
-			Assert.isTrue(property.getType() == Long.class, "Version property should be Long");
+			Assert.isTrue(property.getType() == Long.class, "Version property must be of type Long!");
+		}
+
+		if (property.isScoreProperty()) {
+			ElasticsearchPersistentProperty scoreProperty = this.scoreProperty;
+
+			if (scoreProperty != null) {
+				throw new MappingException(
+						String.format("Attempt to add score property %s but already have property %s registered "
+								+ "as version. Check your mapping configuration!", property.getField(), scoreProperty.getField()));
+			}
+
+			Assert.isTrue(property.getType() == Float.class || property.getType() == Float.TYPE, "Score property must be of type float!");
+
+			this.scoreProperty = property;
 		}
 	}
 }
