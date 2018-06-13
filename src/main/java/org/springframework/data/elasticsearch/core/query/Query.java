@@ -132,6 +132,7 @@ public interface Query {
 	 * Get if scores will be computed and tracked, regardless of whether sorting on a field. Defaults to <tt>false</tt>.
 	 * 
 	 * @return
+	 * @since 3.1
 	 */
 	boolean getTrackScores();
 

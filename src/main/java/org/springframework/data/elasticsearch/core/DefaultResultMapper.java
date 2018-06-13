@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 the original author or authors.
+ * Copyright 2014-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,30 +58,39 @@ import com.fasterxml.jackson.core.JsonGenerator;
  */
 public class DefaultResultMapper extends AbstractResultMapper {
 
-	private MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
+	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 
 	public DefaultResultMapper() {
 		this(new SimpleElasticsearchMappingContext());
 	}
 
 	public DefaultResultMapper(MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
+		
 		super(new DefaultEntityMapper(mappingContext));
+		
+		Assert.notNull(mappingContext, "MappingContext must not be null!");
+		
 		this.mappingContext = mappingContext;
 	}
 
 	public DefaultResultMapper(EntityMapper entityMapper) {
-		super(entityMapper);
+		this(new SimpleElasticsearchMappingContext(), entityMapper);
 	}
 
 	public DefaultResultMapper(
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext,
 			EntityMapper entityMapper) {
+		
 		super(entityMapper);
+		
+		Assert.notNull(mappingContext, "MappingContext must not be null!");
+		
 		this.mappingContext = mappingContext;
 	}
 
 	@Override
 	public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+		
 		long totalHits = response.getHits().getTotalHits();
 		float maxScore = response.getHits().getMaxScore();
 
@@ -98,6 +107,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 				setPersistentEntityId(result, hit.getId(), clazz);
 				setPersistentEntityVersion(result, hit.getVersion(), clazz);
 				setPersistentEntityScore(result, hit.getScore(), clazz);
+				
 				populateScriptFields(result, hit);
 				results.add(result);
 			}
@@ -184,7 +194,9 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	}
 
 	private <T> void setPersistentEntityId(T result, String id, Class<T> clazz) {
-		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
+		
+		if (clazz.isAnnotationPresent(Document.class)) {
+			
 			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(clazz);
 			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
 
@@ -196,7 +208,9 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	}
 
 	private <T> void setPersistentEntityVersion(T result, long version, Class<T> clazz) {
-		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
+		
+		if (clazz.isAnnotationPresent(Document.class)) {
+			
 			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(clazz);
 			ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
 
@@ -211,14 +225,17 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	}
 
 	private <T> void setPersistentEntityScore(T result, float score, Class<T> clazz) {
-		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
-			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(clazz);
-			ElasticsearchPersistentProperty scoreProperty = persistentEntity.getScoreProperty();
-			Class<?> type = scoreProperty.getType();
 
-			if (scoreProperty != null && (type == Float.class || type == Float.TYPE)) {
-				persistentEntity.getPropertyAccessor(result).setProperty(scoreProperty, score);
+		if (clazz.isAnnotationPresent(Document.class)) {
+
+			ElasticsearchPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(clazz);
+
+			if (!entity.hasScoreProperty()) {
+				return;
 			}
+
+			entity.getPropertyAccessor(result) //
+					.setProperty(entity.getScoreProperty(), score);
 		}
 	}
 }

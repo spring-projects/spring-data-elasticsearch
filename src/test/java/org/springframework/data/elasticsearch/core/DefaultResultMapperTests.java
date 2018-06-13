@@ -46,6 +46,7 @@ import org.springframework.data.elasticsearch.entities.Car;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;

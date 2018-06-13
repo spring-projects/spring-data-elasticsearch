@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,17 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.util.Lazy;
 
 /**
  * Elasticsearch specific {@link org.springframework.data.mapping.PersistentProperty} implementation processing
@@ -33,6 +34,7 @@ import org.springframework.data.util.Lazy;
  * @author Mohsin Husen
  * @author Mark Paluch
  * @author Sascha Woo
+ * @author Oliver Gierke
  */
 public class SimpleElasticsearchPersistentProperty extends
 		AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements ElasticsearchPersistentProperty {
@@ -40,7 +42,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<>();
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<>();
 	
-	private final Lazy<Boolean> isScore = Lazy.of(() -> isAnnotationPresent(Score.class));
+	private final boolean isScore; 
 
 	static {
 		SUPPORTED_ID_TYPES.add(String.class);
@@ -50,7 +52,14 @@ public class SimpleElasticsearchPersistentProperty extends
 
 	public SimpleElasticsearchPersistentProperty(Property property,
 			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
+		
 		super(property, owner, simpleTypeHolder);
+		
+		this.isScore = isAnnotationPresent(Score.class);
+		
+		if (isScore && !Arrays.asList(Float.TYPE, Float.class).contains(getType())) {
+			throw new MappingException(String.format("Score property %s must be either of type float or Float!", property.getName()));
+		}
 	}
 
 	@Override
@@ -68,8 +77,12 @@ public class SimpleElasticsearchPersistentProperty extends
 		return null;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty#isScoreProperty()
+	 */
 	@Override
 	public boolean isScoreProperty() {
-		return isScore.get();
+		return isScore;
 	}
 }

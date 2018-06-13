@@ -13,11 +13,11 @@ import org.springframework.data.annotation.ReadOnlyProperty;
  * Specifies that this field is used for storing the document score.
  * 
  * @author Sascha Woo
+ * @since 3.1
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 @Documented
 @Inherited
 @ReadOnlyProperty
-public @interface Score {
-}
+public @interface Score {}

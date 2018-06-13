@@ -36,7 +36,6 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.hamcrest.Matchers;
@@ -1516,6 +1515,7 @@ public class ElasticsearchTemplateTests {
 
 	@Test // DATAES-462
 	public void shouldReturnScores() {
+		
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 

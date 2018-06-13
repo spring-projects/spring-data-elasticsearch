@@ -165,11 +165,21 @@ abstract class AbstractQuery implements Query {
 		this.indicesOptions = indicesOptions;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.query.Query#getTrackScores()
+	 */
 	@Override
 	public boolean getTrackScores() {
 		return trackScores;
 	}
 
+	/**
+	 * Configures whether to track scores.
+	 * 
+	 * @param trackScores
+	 * @since 3.1
+	 */
 	public void setTrackScores(boolean trackScores) {
 		this.trackScores = trackScores;
 	}

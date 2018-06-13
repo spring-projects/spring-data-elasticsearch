@@ -130,6 +130,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	/**
+	 * @param trackScores whether to track scores.
+	 * @return
+	 * @since 3.1
+	 */
 	public NativeSearchQueryBuilder withTrackScores(boolean trackScores) {
 		this.trackScores = trackScores;
 		return this;

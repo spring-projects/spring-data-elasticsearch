@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.springframework.lang.Nullable;
  * @author Mohsin Husen
  * @author Mark Paluch
  * @author Sascha Woo
+ * @author Oliver Gierke
  */
 public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, ElasticsearchPersistentProperty> {
 
@@ -57,6 +58,7 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	 * {@literal true}, {@link #getScoreProperty()} will return a non-{@literal null} value.
 	 *
 	 * @return false when {@link ElasticsearchPersistentEntity} does not define a score property.
+	 * @since 3.1
 	 */
 	boolean hasScoreProperty();
 
@@ -66,6 +68,7 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	 *
 	 * @return the score {@link ElasticsearchPersistentProperty} of the {@link PersistentEntity} or {@literal null} if not
 	 *         defined.
+	 * @since 3.1
 	 */
 	@Nullable
 	ElasticsearchPersistentProperty getScoreProperty();

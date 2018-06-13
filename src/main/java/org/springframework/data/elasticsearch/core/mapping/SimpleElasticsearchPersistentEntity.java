@@ -183,6 +183,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		}
 
 		if (property.isScoreProperty()) {
+			
 			ElasticsearchPersistentProperty scoreProperty = this.scoreProperty;
 
 			if (scoreProperty != null) {
@@ -190,8 +191,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 						String.format("Attempt to add score property %s but already have property %s registered "
 								+ "as version. Check your mapping configuration!", property.getField(), scoreProperty.getField()));
 			}
-
-			Assert.isTrue(property.getType() == Float.class || property.getType() == Float.TYPE, "Score property must be of type float!");
 
 			this.scoreProperty = property;
 		}
