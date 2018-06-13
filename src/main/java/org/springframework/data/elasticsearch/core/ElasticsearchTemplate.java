@@ -991,7 +991,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(toArray(query.getIndices()))
 				.setSearchType(query.getSearchType())
 				.setTypes(toArray(query.getTypes()))
-				.setVersion(true);
+				.setVersion(true)
+				.setTrackScores(query.getTrackScores());
 
 		if (query.getSourceFilter() != null) {
 			SourceFilter sourceFilter = query.getSourceFilter();

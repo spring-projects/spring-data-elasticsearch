@@ -36,12 +36,13 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
  * @author Artur Konczak
  * @author Mark Paluch
  * @author Alen Turkovic
+ * @author Sascha Woo
  */
 public class NativeSearchQueryBuilder {
 
 	private QueryBuilder queryBuilder;
 	private QueryBuilder filterBuilder;
-    private List<ScriptField> scriptFields = new ArrayList<>();
+	private List<ScriptField> scriptFields = new ArrayList<>();
 	private List<SortBuilder> sortBuilders = new ArrayList<>();
 	private List<FacetRequest> facetRequests = new ArrayList<>();
 	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<>();
@@ -53,6 +54,7 @@ public class NativeSearchQueryBuilder {
 	private SourceFilter sourceFilter;
 	private List<IndexBoost> indicesBoost;
 	private float minScore;
+	private boolean trackScores;
 	private Collection<String> ids;
 	private String route;
 	private SearchType searchType;
@@ -73,10 +75,10 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-    public NativeSearchQueryBuilder withScriptField(ScriptField scriptField) {
-        this.scriptFields.add(scriptField);
-        return this;
-    }
+	public NativeSearchQueryBuilder withScriptField(ScriptField scriptField) {
+		this.scriptFields.add(scriptField);
+		return this;
+	}
 
 	public NativeSearchQueryBuilder addAggregation(AbstractAggregationBuilder aggregationBuilder) {
 		this.aggregationBuilders.add(aggregationBuilder);
@@ -119,12 +121,17 @@ public class NativeSearchQueryBuilder {
 	}
 
 	public NativeSearchQueryBuilder withSourceFilter(SourceFilter sourceFilter) {
-				this.sourceFilter = sourceFilter;
-				return this;
+		this.sourceFilter = sourceFilter;
+		return this;
 	}
 
 	public NativeSearchQueryBuilder withMinScore(float minScore) {
 		this.minScore = minScore;
+		return this;
+	}
+
+	public NativeSearchQueryBuilder withTrackScores(boolean trackScores) {
+		this.trackScores = trackScores;
 		return this;
 	}
 
@@ -149,8 +156,11 @@ public class NativeSearchQueryBuilder {
 	}
 
 	public NativeSearchQuery build() {
-		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders, highlightFields);
+		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders,
+				highlightFields);
+
 		nativeSearchQuery.setPageable(pageable);
+		nativeSearchQuery.setTrackScores(trackScores);
 
 		if (indices != null) {
 			nativeSearchQuery.addIndices(indices);
@@ -168,13 +178,13 @@ public class NativeSearchQueryBuilder {
 			nativeSearchQuery.addSourceFilter(sourceFilter);
 		}
 
-		if(indicesBoost != null) {
-		    nativeSearchQuery.setIndicesBoost(indicesBoost);
+		if (indicesBoost != null) {
+			nativeSearchQuery.setIndicesBoost(indicesBoost);
 		}
 
-        if (!isEmpty(scriptFields)) {
-            nativeSearchQuery.setScriptFields(scriptFields);
-        }
+		if (!isEmpty(scriptFields)) {
+			nativeSearchQuery.setScriptFields(scriptFields);
+		}
 
 		if (!isEmpty(facetRequests)) {
 			nativeSearchQuery.setFacets(facetRequests);
