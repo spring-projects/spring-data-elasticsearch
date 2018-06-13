@@ -54,6 +54,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * @author Chris White
  * @author Mark Paluch
  * @author Ilkang Na
+ * @author Sascha Woo
  */
 public class DefaultResultMapper extends AbstractResultMapper {
 
@@ -82,6 +83,8 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	@Override
 	public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 		long totalHits = response.getHits().getTotalHits();
+		float maxScore = response.getHits().getMaxScore();
+
 		List<T> results = new ArrayList<>();
 		for (SearchHit hit : response.getHits()) {
 			if (hit != null) {
@@ -91,14 +94,17 @@ public class DefaultResultMapper extends AbstractResultMapper {
 				} else {
 					result = mapEntity(hit.getFields().values(), clazz);
 				}
+
 				setPersistentEntityId(result, hit.getId(), clazz);
 				setPersistentEntityVersion(result, hit.getVersion(), clazz);
+				setPersistentEntityScore(result, hit.getScore(), clazz);
 				populateScriptFields(result, hit);
 				results.add(result);
 			}
 		}
 
-        return new AggregatedPageImpl<T>(results, pageable, totalHits, response.getAggregations(), response.getScrollId());
+		return new AggregatedPageImpl<T>(results, pageable, totalHits, response.getAggregations(), response.getScrollId(),
+				maxScore);
 	}
 
 	private <T> void populateScriptFields(T result, SearchHit hit) {
@@ -113,8 +119,8 @@ public class DefaultResultMapper extends AbstractResultMapper {
 						try {
 							field.set(result, searchHitField.getValue());
 						} catch (IllegalArgumentException e) {
-							throw new ElasticsearchException("failed to set scripted field: " + name + " with value: "
-									+ searchHitField.getValue(), e);
+							throw new ElasticsearchException(
+									"failed to set scripted field: " + name + " with value: " + searchHitField.getValue(), e);
 						} catch (IllegalAccessException e) {
 							throw new ElasticsearchException("failed to access scripted field: " + name, e);
 						}
@@ -178,9 +184,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	}
 
 	private <T> void setPersistentEntityId(T result, String id, Class<T> clazz) {
-
 		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
-
 			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(clazz);
 			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
 
@@ -188,13 +192,11 @@ public class DefaultResultMapper extends AbstractResultMapper {
 			if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
 				persistentEntity.getPropertyAccessor(result).setProperty(idProperty, id);
 			}
-
 		}
 	}
 
 	private <T> void setPersistentEntityVersion(T result, long version, Class<T> clazz) {
 		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
-
 			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(clazz);
 			ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
 
@@ -204,6 +206,18 @@ public class DefaultResultMapper extends AbstractResultMapper {
 				// a search didn't request the version ids in the response, which would be an issue
 				Assert.isTrue(version != -1, "Version in response is -1");
 				persistentEntity.getPropertyAccessor(result).setProperty(versionProperty, version);
+			}
+		}
+	}
+
+	private <T> void setPersistentEntityScore(T result, float score, Class<T> clazz) {
+		if (mappingContext != null && clazz.isAnnotationPresent(Document.class)) {
+			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(clazz);
+			ElasticsearchPersistentProperty scoreProperty = persistentEntity.getScoreProperty();
+			Class<?> type = scoreProperty.getType();
+
+			if (scoreProperty != null && (type == Float.class || type == Float.TYPE)) {
+				persistentEntity.getPropertyAccessor(result).setProperty(scoreProperty, score);
 			}
 		}
 	}

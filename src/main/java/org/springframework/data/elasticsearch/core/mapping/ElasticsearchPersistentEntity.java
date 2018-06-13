@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.mapping;
 
 import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.lang.Nullable;
 
 /**
  * ElasticsearchPersistentEntity
@@ -23,6 +24,7 @@ import org.springframework.data.mapping.PersistentEntity;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Sascha Woo
  */
 public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, ElasticsearchPersistentProperty> {
 
@@ -49,4 +51,22 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	String settingPath();
 
 	boolean isCreateIndexAndMapping();
+
+	/**
+	 * Returns whether the {@link ElasticsearchPersistentEntity} has an score property. If this call returns
+	 * {@literal true}, {@link #getScoreProperty()} will return a non-{@literal null} value.
+	 *
+	 * @return false when {@link ElasticsearchPersistentEntity} does not define a score property.
+	 */
+	boolean hasScoreProperty();
+
+	/**
+	 * Returns the score property of the {@link ElasticsearchPersistentEntity}. Can be {@literal null} in case no score
+	 * property is available on the entity.
+	 *
+	 * @return the score {@link ElasticsearchPersistentProperty} of the {@link PersistentEntity} or {@literal null} if not
+	 *         defined.
+	 */
+	@Nullable
+	ElasticsearchPersistentProperty getScoreProperty();
 }

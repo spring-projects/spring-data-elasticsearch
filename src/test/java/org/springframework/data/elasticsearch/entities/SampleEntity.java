@@ -15,29 +15,29 @@
  */
 package org.springframework.data.elasticsearch.entities;
 
-import java.lang.Double;
-import java.lang.Long;
-import java.lang.Object;
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Chris White
+ * @author Sascha Woo
  */
-
 @Setter
 @Getter
 @NoArgsConstructor
@@ -58,11 +58,11 @@ public class SampleEntity {
 	private Double scriptedRate;
 	private boolean available;
 	private String highlightedMessage;
-
 	private GeoPoint location;
-
 	@Version
 	private Long version;
+	@Score
+	private float score;
 
 	@Override
 	public boolean equals(Object o) {
