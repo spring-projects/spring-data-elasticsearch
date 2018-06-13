@@ -15,10 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import static java.util.Collections.addAll;
+import static java.util.Collections.*;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +34,7 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Mark Paluch
  * @author Alen Turkovic
+ * @author Sascha Woo
  */
 abstract class AbstractQuery implements Query {
 
@@ -46,6 +49,7 @@ abstract class AbstractQuery implements Query {
 	protected String route;
 	protected SearchType searchType = SearchType.DFS_QUERY_THEN_FETCH;
 	protected IndicesOptions indicesOptions;
+	protected boolean trackScores;
 
 	@Override
 	public Sort getSort() {
@@ -159,5 +163,14 @@ abstract class AbstractQuery implements Query {
 
 	public void setIndicesOptions(IndicesOptions indicesOptions) {
 		this.indicesOptions = indicesOptions;
+	}
+
+	@Override
+	public boolean getTrackScores() {
+		return trackScores;
+	}
+
+	public void setTrackScores(boolean trackScores) {
+		this.trackScores = trackScores;
 	}
 }
