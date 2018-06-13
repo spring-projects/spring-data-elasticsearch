@@ -30,6 +30,7 @@ import org.springframework.data.domain.Sort;
  * @author Mohsin Husen
  * @author Mark Paluch
  * @author Alen Turkovic
+ * @author Sascha Woo
  */
 public interface Query {
 
@@ -114,8 +115,7 @@ public interface Query {
 	void addSourceFilter(SourceFilter sourceFilter);
 
 	/**
-	 * Get SourceFilter to be returned to get include and exclude source
-	 * fields as part of search request.
+	 * Get SourceFilter to be returned to get include and exclude source fields as part of search request.
 	 *
 	 * @return SourceFilter
 	 */
@@ -127,6 +127,13 @@ public interface Query {
 	 * @return
 	 */
 	float getMinScore();
+
+	/**
+	 * Get if scores will be computed and tracked, regardless of whether sorting on a field. Defaults to <tt>false</tt>.
+	 * 
+	 * @return
+	 */
+	boolean getTrackScores();
 
 	/**
 	 * Get Ids
@@ -141,7 +148,6 @@ public interface Query {
 	 * @return
 	 */
 	String getRoute();
-
 
 	/**
 	 * Type of search

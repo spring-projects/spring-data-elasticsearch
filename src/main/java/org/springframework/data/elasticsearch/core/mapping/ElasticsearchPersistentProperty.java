@@ -23,11 +23,23 @@ import org.springframework.data.mapping.PersistentProperty;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Sascha Woo
  */
 
 public interface ElasticsearchPersistentProperty extends PersistentProperty<ElasticsearchPersistentProperty> {
 
 	String getFieldName();
+
+	/**
+	 * Returns whether the current property is a <em>potential</em> score property of the owning
+	 * {@link ElasticsearchPersistentEntity}. This method is mainly used by {@link ElasticsearchPersistentEntity}
+	 * implementation to discover score property candidates on {@link ElasticsearchPersistentEntity} creation you should
+	 * rather call {@link ElasticsearchPersistentEntity#isScoreProperty(PersistentProperty)} to determine whether the
+	 * current property is the version property of that {@link ElasticsearchPersistentEntity} under consideration.
+	 *
+	 * @return
+	 */
+	boolean isScoreProperty();
 
 	public enum PropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
 

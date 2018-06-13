@@ -18,11 +18,13 @@ package org.springframework.data.elasticsearch.core.mapping;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.util.Lazy;
 
 /**
  * Elasticsearch specific {@link org.springframework.data.mapping.PersistentProperty} implementation processing
@@ -30,12 +32,15 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Sascha Woo
  */
 public class SimpleElasticsearchPersistentProperty extends
 		AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements ElasticsearchPersistentProperty {
 
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<>();
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<>();
+	
+	private final Lazy<Boolean> isScore = Lazy.of(() -> isAnnotationPresent(Score.class));
 
 	static {
 		SUPPORTED_ID_TYPES.add(String.class);
@@ -61,5 +66,10 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Override
 	protected Association<ElasticsearchPersistentProperty> createAssociation() {
 		return null;
+	}
+
+	@Override
+	public boolean isScoreProperty() {
+		return isScore.get();
 	}
 }

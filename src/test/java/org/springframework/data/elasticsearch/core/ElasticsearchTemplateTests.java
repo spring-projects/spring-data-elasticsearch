@@ -36,6 +36,8 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -1512,6 +1514,31 @@ public class ElasticsearchTemplateTests {
 		assertThat(page.getContent().get(0).getMessage(), is("ab"));
 	}
 
+	@Test // DATAES-462
+	public void shouldReturnScores() {
+		// given
+		List<IndexQuery> indexQueries = new ArrayList<>();
+
+		indexQueries.add(buildIndex(SampleEntity.builder().id("1").message("ab xz").build()));
+		indexQueries.add(buildIndex(SampleEntity.builder().id("2").message("bc").build()));
+		indexQueries.add(buildIndex(SampleEntity.builder().id("3").message("ac xz hi").build()));
+
+		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		// when
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(termQuery("message", "xz"))
+				.withSort(SortBuilders.fieldSort("message"))
+				.withTrackScores(true)
+				.build();
+
+		AggregatedPage<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+
+		// then
+		assertThat(page.getMaxScore(), greaterThan(0f));
+		assertThat(page.getContent().get(0).getScore(), greaterThan(0f));
+	}
 
 	@Test
 	public void shouldDoIndexWithoutId() {
