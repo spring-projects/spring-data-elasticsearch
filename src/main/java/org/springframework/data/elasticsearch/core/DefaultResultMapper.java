@@ -38,6 +38,7 @@ import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.util.Assert;
 
@@ -59,11 +60,11 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	private MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 
 	public DefaultResultMapper() {
-		super(new DefaultEntityMapper());
+		this(new SimpleElasticsearchMappingContext());
 	}
 
 	public DefaultResultMapper(MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
-		super(new DefaultEntityMapper());
+		super(new DefaultEntityMapper(mappingContext));
 		this.mappingContext = mappingContext;
 	}
 
