@@ -1,6 +1,14 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.8.RELEASE (2018-06-13)
+---------------------------------------------
+* DATAES-460 - Avoid pulling in Netty 3 as dependency.
+* DATAES-448 - Release 3.0.8 (Kay SR8).
+* DATAES-420 - Analyzer of main field ignored when using @MultiField annotation.
+* DATAES-312 - NullHandling.NULLS_LAST not working in query.sort.
+
+
 Changes in version 2.1.13.RELEASE (2018-06-13)
 ----------------------------------------------
 * DATAES-447 - Release 2.1.13 (Ingalls SR13).
