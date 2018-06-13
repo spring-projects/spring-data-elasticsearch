@@ -37,7 +37,7 @@ import org.springframework.util.ReflectionUtils;
  */
 public class SimpleElasticsearchPersistentEntityTests {
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = MappingException.class)
 	public void shouldThrowExceptionGivenVersionPropertyIsNotLong() throws NoSuchFieldException, IntrospectionException {
 		// given
 		TypeInformation typeInformation = ClassTypeInformation.from(EntityWithWrongVersionType.class);

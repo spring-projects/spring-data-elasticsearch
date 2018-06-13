@@ -16,9 +16,9 @@
 package org.springframework.data.elasticsearch.core.mapping;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
+import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
@@ -39,39 +39,57 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 public class SimpleElasticsearchPersistentProperty extends
 		AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements ElasticsearchPersistentProperty {
 
-	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<>();
-	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<>();
-	
-	private final boolean isScore; 
+	private static final List<String> SUPPORTED_ID_PROPERTY_NAMES = Arrays.asList("id", "document");
 
-	static {
-		SUPPORTED_ID_TYPES.add(String.class);
-		SUPPORTED_ID_PROPERTY_NAMES.add("id");
-		SUPPORTED_ID_PROPERTY_NAMES.add("documentId");
-	}
+	private final boolean isScore;
+	private final boolean isParent;
+	private final boolean isId;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
 			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
-		
+
 		super(property, owner, simpleTypeHolder);
-		
+
+		this.isId = super.isIdProperty() || SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName());
 		this.isScore = isAnnotationPresent(Score.class);
-		
+		this.isParent = isAnnotationPresent(Parent.class);
+
+		if (isVersionProperty() && getType() != Long.class) {
+			throw new MappingException(String.format("Version property %s must be of type Long!", property.getName()));
+		}
+
 		if (isScore && !Arrays.asList(Float.TYPE, Float.class).contains(getType())) {
-			throw new MappingException(String.format("Score property %s must be either of type float or Float!", property.getName()));
+			throw new MappingException(
+					String.format("Score property %s must be either of type float or Float!", property.getName()));
+		}
+
+		if (isParent && getType() != String.class) {
+			throw new MappingException(String.format("Parent property %s must be of type String!", property.getName()));
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty#getFieldName()
+	 */
 	@Override
 	public String getFieldName() {
 		return getProperty().getName();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty#isIdProperty()
+	 */
 	@Override
 	public boolean isIdProperty() {
-		return super.isIdProperty() || SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName());
+		return isId;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.model.AbstractPersistentProperty#createAssociation()
+	 */
 	@Override
 	protected Association<ElasticsearchPersistentProperty> createAssociation() {
 		return null;
@@ -85,7 +103,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	public boolean isScoreProperty() {
 		return isScore;
 	}
-	
+
 	/* 
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.model.AbstractPersistentProperty#isImmutable()
@@ -93,5 +111,14 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Override
 	public boolean isImmutable() {
 		return false;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty#isParentProperty()
+	 */
+	@Override
+	public boolean isParentProperty() {
+		return isParent;
 	}
 }

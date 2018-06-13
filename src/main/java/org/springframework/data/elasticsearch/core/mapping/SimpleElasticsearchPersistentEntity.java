@@ -170,18 +170,18 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
 		super.addPersistentProperty(property);
 
-		Parent annotation = property.findAnnotation(Parent.class);
+		if (property.isParentProperty()) {
+			ElasticsearchPersistentProperty parentProperty = this.parentIdProperty;
 
-		if (annotation != null) {
-			Assert.isNull(this.parentIdProperty, "Only one field can hold a @Parent annotation");
-			Assert.isNull(this.parentType, "Only one field can hold a @Parent annotation");
-			Assert.isTrue(property.getType() == String.class, "Parent ID property should be String");
+			if (parentProperty != null) {
+				throw new MappingException(
+						String.format("Attempt to add parent property %s but already have property %s registered "
+								+ "as parent property. Check your mapping configuration!", property.getField(), parentProperty.getField()));
+			}
+
+			Parent parentAnnotation = property.findAnnotation(Parent.class);
 			this.parentIdProperty = property;
-			this.parentType = annotation.type();
-		}
-
-		if (property.isVersionProperty()) {
-			Assert.isTrue(property.getType() == Long.class, "Version property must be of type Long!");
+			this.parentType = parentAnnotation.type();
 		}
 
 		if (property.isScoreProperty()) {
@@ -191,7 +191,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			if (scoreProperty != null) {
 				throw new MappingException(
 						String.format("Attempt to add score property %s but already have property %s registered "
-								+ "as version. Check your mapping configuration!", property.getField(), scoreProperty.getField()));
+								+ "as score property. Check your mapping configuration!", property.getField(), scoreProperty.getField()));
 			}
 
 			this.scoreProperty = property;
