@@ -67,6 +67,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.ScoreSortBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -131,6 +132,8 @@ import org.springframework.util.StringUtils;
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
 	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchTemplate.class);
+	private static final String FIELD_SCORE = "_score";
+
 	private Client client;
 	private ElasticsearchConverter elasticsearchConverter;
 	private ResultsMapper resultsMapper;
@@ -1022,15 +1025,27 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 		if (query.getSort() != null) {
 			for (Sort.Order order : query.getSort()) {
-				FieldSortBuilder sort = SortBuilders.fieldSort(order.getProperty())
-						.order(order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC);
-				if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
-					sort.missing("_first");
+				SortOrder sortOrder = order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC;
+
+				if (FIELD_SCORE.equals(order.getProperty())) {
+					ScoreSortBuilder sort = SortBuilders //
+							.scoreSort() //
+							.order(sortOrder);
+
+					searchRequestBuilder.addSort(sort);
+				} else {
+					FieldSortBuilder sort = SortBuilders //
+							.fieldSort(order.getProperty()) //
+							.order(sortOrder);
+
+					if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
+						sort.missing("_first");
+					} else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
+						sort.missing("_last");
+					}
+
+					searchRequestBuilder.addSort(sort);
 				}
-				else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
-					sort.missing("_last");
-				}
-				searchRequestBuilder.addSort(sort);
 			}
 		}
 
