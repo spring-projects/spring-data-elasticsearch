@@ -15,20 +15,24 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.elasticsearch.client.Requests.indicesExistsRequest;
-import static org.elasticsearch.client.Requests.refreshRequest;
-import static org.elasticsearch.index.VersionType.EXTERNAL;
-import static org.elasticsearch.index.query.QueryBuilders.moreLikeThisQuery;
-import static org.elasticsearch.index.query.QueryBuilders.wrapperQuery;
-import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMapping;
+import static org.apache.commons.lang.StringUtils.*;
+import static org.elasticsearch.client.Requests.*;
+import static org.elasticsearch.index.VersionType.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.ActionFuture;
@@ -67,6 +71,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.ScoreSortBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -93,7 +98,21 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
+import org.springframework.data.elasticsearch.core.query.IndexBoost;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.ScriptField;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.core.query.SourceFilter;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 
@@ -118,6 +137,8 @@ import org.springframework.util.Assert;
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
 	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchTemplate.class);
+	private static final String FIELD_SCORE = "_score";
+
 	private Client client;
 	private ElasticsearchConverter elasticsearchConverter;
 	private ResultsMapper resultsMapper;
@@ -1015,15 +1036,27 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 		if (query.getSort() != null) {
 			for (Sort.Order order : query.getSort()) {
-				FieldSortBuilder sort = SortBuilders.fieldSort(order.getProperty())
-						.order(order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC);
-				if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
-					sort.missing("_first");
+				SortOrder sortOrder = order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC;
+
+				if (FIELD_SCORE.equals(order.getProperty())) {
+					ScoreSortBuilder sort = SortBuilders //
+							.scoreSort() //
+							.order(sortOrder);
+
+					searchRequestBuilder.addSort(sort);
+				} else {
+					FieldSortBuilder sort = SortBuilders //
+							.fieldSort(order.getProperty()) //
+							.order(sortOrder);
+
+					if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
+						sort.missing("_first");
+					} else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
+						sort.missing("_last");
+					}
+
+					searchRequestBuilder.addSort(sort);
 				}
-				else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
-					sort.missing("_last");
-				}
-				searchRequestBuilder.addSort(sort);
 			}
 		}
 

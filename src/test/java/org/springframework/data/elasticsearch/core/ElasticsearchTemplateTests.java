@@ -595,6 +595,29 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.getContent().get(1).getMessage(), is(sampleEntity2.getMessage()));
 	}
 
+	@Test // DATAES-467
+	public void shouldSortResultsByScore() {
+		// given
+		List<SampleEntity> entities = Arrays.asList( //
+				SampleEntity.builder().id("1").message("abc").build(), //
+				SampleEntity.builder().id("2").message("def").build(), //
+				SampleEntity.builder().id("3").message("ghi").build());
+
+		elasticsearchTemplate.bulkIndex(getIndexQueries(entities));
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+			.withQuery(matchAllQuery())
+			.withPageable(PageRequest.of(0, 10, Sort.by(Sort.Order.asc("_score"))))
+			.build();
+
+		// when
+		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+
+		// then
+		assertThat(sampleEntities.getTotalElements(), equalTo(3L));
+	}
+
 	@Test
 	public void shouldExecuteStringQuery() {
 		// given
