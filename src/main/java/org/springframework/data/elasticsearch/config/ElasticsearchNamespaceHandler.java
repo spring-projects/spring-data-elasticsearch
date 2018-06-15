@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ import org.springframework.data.repository.config.RepositoryConfigurationExtensi
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Don Wellington
  */
-
 public class ElasticsearchNamespaceHandler extends NamespaceHandlerSupport {
 
 	@Override
@@ -37,5 +37,6 @@ public class ElasticsearchNamespaceHandler extends NamespaceHandlerSupport {
 		registerBeanDefinitionParser("repositories", parser);
 		registerBeanDefinitionParser("node-client", new NodeClientBeanDefinitionParser());
 		registerBeanDefinitionParser("transport-client", new TransportClientBeanDefinitionParser());
+		registerBeanDefinitionParser("rest-client", new RestClientBeanDefinitionParser());
 	}
 }
