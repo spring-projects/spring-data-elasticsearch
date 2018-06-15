@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.beans.IntrospectionException;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -26,6 +27,7 @@ import org.springframework.data.elasticsearch.entities.SampleDateMappingEntity;
 /**
  * @author Jakub Vavrik
  * @author Mohsin Husen
+ * @author Don Wellington
  */
 public class SimpleElasticsearchDateMappingTests {
 
@@ -37,6 +39,9 @@ public class SimpleElasticsearchDateMappingTests {
 	@Test
 	public void testCorrectDateMappings() throws NoSuchFieldException, IntrospectionException, IOException {
 		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleDateMappingEntity.class, "mapping", "id", null);
-		Assert.assertEquals(EXPECTED_MAPPING, xContentBuilder.string());
+		xContentBuilder.close();
+		ByteArrayOutputStream bos = (ByteArrayOutputStream) xContentBuilder.getOutputStream();
+		String result = bos.toString();
+		Assert.assertEquals(EXPECTED_MAPPING, result);
 	}
 }

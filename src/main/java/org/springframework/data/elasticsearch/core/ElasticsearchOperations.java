@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,11 +42,6 @@ public interface ElasticsearchOperations {
 	 * @return Converter in use
 	 */
 	ElasticsearchConverter getElasticsearchConverter();
-
-	/**
-	 * @return elasticsearch client
-	 */
-	Client getClient();
 
 	/**
 	 * Create an index for a class
