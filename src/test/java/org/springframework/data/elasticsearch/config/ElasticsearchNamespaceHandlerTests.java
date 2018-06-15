@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.elasticsearch.client.RestClientFactoryBean;
 import org.springframework.data.elasticsearch.client.TransportClientFactoryBean;
 import org.springframework.data.elasticsearch.repositories.sample.SampleElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -31,6 +32,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Don Wellington
  */
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -51,5 +53,11 @@ public class ElasticsearchNamespaceHandlerTests {
 		assertThat(context.getBean(TransportClientFactoryBean.class), is(notNullValue()));
 		assertThat(context.getBean(SampleElasticsearchRepository.class),
 				is(instanceOf(SampleElasticsearchRepository.class)));
+	}
+	
+	@Test
+	public void shouldCreateRestClient() {
+		assertThat(context.getBean(RestClientFactoryBean.class), is(notNullValue()));
+		assertThat(context.getBean(RestClientFactoryBean.class), is(instanceOf(RestClientFactoryBean.class)));
 	}
 }

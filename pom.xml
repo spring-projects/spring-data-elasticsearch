@@ -19,7 +19,7 @@
     <properties>
         <commonscollections>3.2.1</commonscollections>
         <commonslang>2.6</commonslang>
-        <elasticsearch>6.2.2</elasticsearch>
+        <elasticsearch>6.3.0</elasticsearch>
         <log4j>2.9.1</log4j>
         <springdata.commons>2.2.0.BUILD-SNAPSHOT</springdata.commons>
         <java-module-name>spring.data.elasticsearch</java-module-name>
@@ -78,6 +78,18 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+		    <groupId>org.elasticsearch.client</groupId>
+		    <artifactId>elasticsearch-rest-high-level-client</artifactId>
+		    <version>${elasticsearch}</version>
+		    <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+		</dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -169,7 +181,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok}</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
 
     </dependencies>
