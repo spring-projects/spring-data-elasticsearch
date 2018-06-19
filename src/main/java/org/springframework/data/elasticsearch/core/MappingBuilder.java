@@ -37,7 +37,8 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
-import static org.apache.commons.lang.StringUtils.*;
+import org.springframework.util.StringUtils;
+
 import static org.elasticsearch.common.xcontent.XContentFactory.*;
 import static org.springframework.util.StringUtils.*;
 
@@ -88,7 +89,7 @@ class MappingBuilder {
 		// Properties
 		XContentBuilder xContentBuilder = mapping.startObject(FIELD_PROPERTIES);
 
-		mapEntity(xContentBuilder, clazz, true, idFieldName, EMPTY, false, FieldType.Auto, null);
+		mapEntity(xContentBuilder, clazz, true, idFieldName, "", false, FieldType.Auto, null);
 
 		return xContentBuilder.endObject().endObject().endObject();
 	}
@@ -119,7 +120,7 @@ class MappingBuilder {
 
 			if (field.isAnnotationPresent(Mapping.class)) {
 				String mappingPath = field.getAnnotation(Mapping.class).mappingPath();
-				if (isNotBlank(mappingPath)) {
+				if (!StringUtils.isEmpty(mappingPath)) {
 					ClassPathResource mappings = new ClassPathResource(mappingPath);
 					if (mappings.exists()) {
 						xContentBuilder.rawField(field.getName(), mappings.getInputStream());
@@ -137,7 +138,7 @@ class MappingBuilder {
 					continue;
 				}
 				boolean nestedOrObject = isNestedOrObjectField(field);
-				mapEntity(xContentBuilder, getFieldType(field), false, EMPTY, field.getName(), nestedOrObject, singleField.type(), field.getAnnotation(Field.class));
+				mapEntity(xContentBuilder, getFieldType(field), false, "", field.getName(), nestedOrObject, singleField.type(), field.getAnnotation(Field.class));
 				if (nestedOrObject) {
 					continue;
 				}
@@ -203,10 +204,10 @@ class MappingBuilder {
 			xContentBuilder.field(COMPLETION_MAX_INPUT_LENGTH, annotation.maxInputLength());
 			xContentBuilder.field(COMPLETION_PRESERVE_POSITION_INCREMENTS, annotation.preservePositionIncrements());
 			xContentBuilder.field(COMPLETION_PRESERVE_SEPARATORS, annotation.preserveSeparators());
-			if (isNotBlank(annotation.searchAnalyzer())) {
+			if (!StringUtils.isEmpty(annotation.searchAnalyzer())) {
 				xContentBuilder.field(FIELD_SEARCH_ANALYZER, annotation.searchAnalyzer());
 			}
-			if (isNotBlank(annotation.analyzer())) {
+			if (!StringUtils.isEmpty(annotation.analyzer())) {
 				xContentBuilder.field(FIELD_INDEX_ANALYZER, annotation.analyzer());
 			}
 		}
@@ -311,10 +312,10 @@ class MappingBuilder {
 		if (!index) {
 			builder.field(FIELD_INDEX, index);
 		}
-		if (isNotBlank(analyzer)) {
+		if (!StringUtils.isEmpty(analyzer)) {
 			builder.field(FIELD_INDEX_ANALYZER, analyzer);
 		}
-		if (isNotBlank(searchAnalyzer)) {
+		if (!StringUtils.isEmpty(searchAnalyzer)) {
 			builder.field(FIELD_SEARCH_ANALYZER, searchAnalyzer);
 		}
 	}
