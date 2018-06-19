@@ -16,8 +16,6 @@
 
 package org.springframework.data.elasticsearch.core.facet.request;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.util.automaton.RegExp;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -26,6 +24,8 @@ import org.elasticsearch.search.aggregations.bucket.terms.IncludeExclude;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Term facet
@@ -48,8 +48,8 @@ public class TermFacetRequest extends AbstractFacetRequest {
 	}
 
 	public void setFields(String... fields) {
-		Assert.isTrue(ArrayUtils.isNotEmpty(fields), "Term agg need one field only");
-		Assert.isTrue(ArrayUtils.getLength(fields) == 1, "Term agg need one field only");
+		Assert.isTrue(!ObjectUtils.isEmpty(fields), "Term agg need one field only");
+		Assert.isTrue(fields.length == 1, "Term agg need one field only");
 		this.fields = fields;
 	}
 
@@ -92,7 +92,7 @@ public class TermFacetRequest extends AbstractFacetRequest {
 			default:
 				termsBuilder.order(BucketOrder.count(true));
 		}
-		if (ArrayUtils.isNotEmpty(excludeTerms)) {
+		if (!ObjectUtils.isEmpty(excludeTerms)) {
 			termsBuilder.includeExclude(new IncludeExclude(null, excludeTerms));
 		}
 
@@ -100,7 +100,7 @@ public class TermFacetRequest extends AbstractFacetRequest {
 			termsBuilder.size(Integer.MAX_VALUE);
 		}
 
-		if (StringUtils.isNotBlank(regex)) {
+		if (!StringUtils.isEmpty(regex)) {
 			termsBuilder.includeExclude(new IncludeExclude(new RegExp(regex), null));
 		}
 
