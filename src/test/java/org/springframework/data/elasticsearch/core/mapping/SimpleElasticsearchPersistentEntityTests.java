@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.beans.IntrospectionException;
 
 import org.junit.Test;
 import org.springframework.data.annotation.Version;
-import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.elasticsearch.annotations.Score;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
@@ -30,6 +33,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Oliver Gierke
  */
 public class SimpleElasticsearchPersistentEntityTests {
 
@@ -62,11 +66,23 @@ public class SimpleElasticsearchPersistentEntityTests {
 		// when
 		entity.addPersistentProperty(persistentProperty2);
 	}
+	
+	@Test // DATAES-462
+	public void rejectsMultipleScoreProperties() {
+
+		SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
+
+		assertThatExceptionOfType(MappingException.class) //
+				.isThrownBy(() -> context.getRequiredPersistentEntity(TwoScoreProperties.class)) //
+				.withMessageContaining("first") //
+				.withMessageContaining("second");
+	}
 
 	private static SimpleElasticsearchPersistentProperty createProperty(SimpleElasticsearchPersistentEntity<?> entity,
 			String field) {
 
-		Property property = Property.of(ReflectionUtils.findField(entity.getTypeInformation().getType(), field));
+		TypeInformation<?> type = entity.getTypeInformation();
+		Property property = Property.of(type, ReflectionUtils.findField(entity.getType(), field));
 		return new SimpleElasticsearchPersistentProperty(property, entity, SimpleTypeHolder.DEFAULT);
 
 	}
@@ -104,5 +120,13 @@ public class SimpleElasticsearchPersistentEntityTests {
 		public void setVersion2(Long version2) {
 			this.version2 = version2;
 		}
+	}
+
+	// DATAES-462
+	
+	static class TwoScoreProperties {
+		
+		@Score float first;
+		@Score float second;
 	}
 }

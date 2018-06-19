@@ -42,6 +42,7 @@ public class CdiRepositoryTests {
 
 	@BeforeClass
 	public static void init() throws Exception {
+
 		cdiContainer = CdiTestContainerLoader.getCdiContainer();
 		cdiContainer.startApplicationScope();
 		cdiContainer.bootContainer();
@@ -49,12 +50,14 @@ public class CdiRepositoryTests {
 
 	@AfterClass
 	public static void shutdown() throws Exception {
+
 		cdiContainer.stopContexts();
 		cdiContainer.shutdownContainer();
 	}
 
 	@Before
 	public void setUp() {
+
 		CdiRepositoryClient client = cdiContainer.getInstance(CdiRepositoryClient.class);
 		repository = client.getRepository();
 		personRepository = client.getSamplePersonRepository();
@@ -64,6 +67,7 @@ public class CdiRepositoryTests {
 
 	@Test
 	public void testCdiRepository() {
+
 		assertNotNull(repository);
 
 		Product bean = new Product();
@@ -132,7 +136,6 @@ public class CdiRepositoryTests {
 	 */
 	@Test
 	public void returnOneFromCustomImpl() {
-
 		assertThat(personRepository.returnOne(), is(1));
 	}
 }

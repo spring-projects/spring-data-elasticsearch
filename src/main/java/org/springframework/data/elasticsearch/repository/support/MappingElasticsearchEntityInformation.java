@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import java.util.Optional;
-
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
@@ -59,13 +57,7 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 
 	@Override
 	public String getIdAttribute() {
-
-		ElasticsearchPersistentProperty property = entityMetadata.getIdProperty()
-				.orElseThrow(() -> new IllegalArgumentException(String.format(
-						"Unable to identify 'id' property in class %s. Make sure the 'id' property is annotated with @Id or named as 'id' or 'documentId'",
-						entityMetadata.getType().getSimpleName())));
-
-		return property.getFieldName();
+		return entityMetadata.getRequiredIdProperty().getFieldName();
 	}
 
 	@Override
@@ -81,13 +73,9 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 	@Override
 	public Long getVersion(T entity) {
 
-		Optional<ElasticsearchPersistentProperty> versionProperty = entityMetadata.getVersionProperty();
+		ElasticsearchPersistentProperty versionProperty = entityMetadata.getVersionProperty();
 		try {
-
-			return (Long) versionProperty //
-					.flatMap(property -> entityMetadata.getPropertyAccessor(entity).getProperty(property)) //
-					.orElse(null);
-
+			return versionProperty != null ? (Long) entityMetadata.getPropertyAccessor(entity).getProperty(versionProperty) : null;
 		} catch (Exception e) {
 			throw new IllegalStateException("failed to load version field", e);
 		}
@@ -96,12 +84,9 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 	@Override
 	public String getParentId(T entity) {
 
-		Optional<ElasticsearchPersistentProperty> parentProperty = entityMetadata.getParentIdProperty();
+		ElasticsearchPersistentProperty parentProperty = entityMetadata.getParentIdProperty();
 		try {
-
-			return (String) parentProperty //
-					.flatMap(property -> entityMetadata.getPropertyAccessor(entity).getProperty(property)) //
-					.orElse(null);
+			return parentProperty != null ? (String) entityMetadata.getPropertyAccessor(entity).getProperty(parentProperty) : null;
 		} catch (Exception e) {
 			throw new IllegalStateException("failed to load parent ID: " + e, e);
 		}

@@ -20,6 +20,7 @@ import static org.apache.commons.lang.StringUtils.*;
 import java.io.IOException;
 
 import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.util.Assert;
 
 /**
  * @author Artur Konczak
@@ -29,6 +30,9 @@ public abstract class AbstractResultMapper implements ResultsMapper {
 	private EntityMapper entityMapper;
 
 	public AbstractResultMapper(EntityMapper entityMapper) {
+		
+		Assert.notNull(entityMapper, "EntityMapper must not be null!");
+		
 		this.entityMapper = entityMapper;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.query;
 import java.util.Collection;
 import java.util.List;
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -28,6 +29,8 @@ import org.springframework.data.domain.Sort;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Alen Turkovic
+ * @author Sascha Woo
  */
 public interface Query {
 
@@ -112,8 +115,7 @@ public interface Query {
 	void addSourceFilter(SourceFilter sourceFilter);
 
 	/**
-	 * Get SourceFilter to be returned to get include and exclude source
-	 * fields as part of search request.
+	 * Get SourceFilter to be returned to get include and exclude source fields as part of search request.
 	 *
 	 * @return SourceFilter
 	 */
@@ -125,6 +127,14 @@ public interface Query {
 	 * @return
 	 */
 	float getMinScore();
+
+	/**
+	 * Get if scores will be computed and tracked, regardless of whether sorting on a field. Defaults to <tt>false</tt>.
+	 * 
+	 * @return
+	 * @since 3.1
+	 */
+	boolean getTrackScores();
 
 	/**
 	 * Get Ids
@@ -140,11 +150,17 @@ public interface Query {
 	 */
 	String getRoute();
 
-
 	/**
 	 * Type of search
 	 *
 	 * @return
 	 */
 	SearchType getSearchType();
+
+	/**
+	 * Get indices options
+	 *
+	 * @return null if not set
+	 */
+	IndicesOptions getIndicesOptions();
 }

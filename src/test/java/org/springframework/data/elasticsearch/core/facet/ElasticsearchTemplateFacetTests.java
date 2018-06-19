@@ -16,26 +16,33 @@
 
 package org.springframework.data.elasticsearch.core.facet;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.FacetedPage;
-import org.springframework.data.elasticsearch.core.facet.request.*;
-import org.springframework.data.elasticsearch.core.facet.result.*;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.facet.request.HistogramFacetRequestBuilder;
+import org.springframework.data.elasticsearch.core.facet.request.NativeFacetRequest;
+import org.springframework.data.elasticsearch.core.facet.request.RangeFacetRequestBuilder;
+import org.springframework.data.elasticsearch.core.facet.request.StatisticalFacetRequestBuilder;
+import org.springframework.data.elasticsearch.core.facet.request.TermFacetRequestBuilder;
+import org.springframework.data.elasticsearch.core.facet.result.HistogramResult;
+import org.springframework.data.elasticsearch.core.facet.result.IntervalUnit;
+import org.springframework.data.elasticsearch.core.facet.result.Range;
+import org.springframework.data.elasticsearch.core.facet.result.RangeResult;
+import org.springframework.data.elasticsearch.core.facet.result.StatisticalResult;
+import org.springframework.data.elasticsearch.core.facet.result.Term;
+import org.springframework.data.elasticsearch.core.facet.result.TermResult;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 /**
  * @author Rizwan Idrees
@@ -48,14 +55,14 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class ElasticsearchTemplateFacetTests {
 
-	public static final String RIZWAN_IDREES = "Rizwan Idrees";
-	public static final String MOHSIN_HUSEN = "Mohsin Husen";
-	public static final String JONATHAN_YAN = "Jonathan Yan";
-	public static final String ARTUR_KONCZAK = "Artur Konczak";
-	public static final int YEAR_2002 = 2002;
-	public static final int YEAR_2001 = 2001;
-	public static final int YEAR_2000 = 2000;
-	public static final String PUBLISHED_YEARS = "publishedYears";
+	private static final String RIZWAN_IDREES = "Rizwan Idrees";
+	private static final String MOHSIN_HUSEN = "Mohsin Husen";
+	private static final String JONATHAN_YAN = "Jonathan Yan";
+	private static final String ARTUR_KONCZAK = "Artur Konczak";
+	private static final int YEAR_2002 = 2002;
+	private static final int YEAR_2001 = 2001;
+	private static final int YEAR_2000 = 2000;
+	private static final String PUBLISHED_YEARS = "publishedYears";
 	@Autowired
 	private ElasticsearchTemplate elasticsearchTemplate;
 
@@ -597,6 +604,15 @@ public class ElasticsearchTemplateFacetTests {
 		unit = facet.getIntervalUnit().get(2);
 		assertThat(unit.getKey(), is(Long.valueOf(YEAR_2002)));
 		assertThat(unit.getCount(), is(1L));
+	}
+
+	@Test
+	public void shouldNotThrowExceptionForNoFacets()
+	{
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		AggregatedPage<ArticleEntity> result = elasticsearchTemplate.queryForPage(searchQuery, ArticleEntity.class);
+
+		assertThat(result.hasFacets(), is(false));
 	}
 }
 

@@ -29,10 +29,13 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Nordine Bittich
  */
 @Setter
 @Getter
@@ -49,4 +52,11 @@ public class Book {
 	private Author author;
 	@Field(type = FieldType.Nested)
 	private Map<Integer, Collection<String>> buckets = new HashMap<>();
+	@MultiField(
+		mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+		otherFields = {
+				@InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop", searchAnalyzer = "standard")
+		}
+	)
+	private String description;
 }

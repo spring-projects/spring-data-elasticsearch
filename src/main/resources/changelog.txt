@@ -1,8 +1,178 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
-<<<<<<< HEAD
-=======
+Changes in version 3.0.8.RELEASE (2018-06-13)
+---------------------------------------------
+* DATAES-460 - Avoid pulling in Netty 3 as dependency.
+* DATAES-448 - Release 3.0.8 (Kay SR8).
+* DATAES-420 - Analyzer of main field ignored when using @MultiField annotation.
+* DATAES-312 - NullHandling.NULLS_LAST not working in query.sort.
+
+
+Changes in version 2.1.13.RELEASE (2018-06-13)
+----------------------------------------------
+* DATAES-447 - Release 2.1.13 (Ingalls SR13).
+
+
+Changes in version 3.1.0.M3 (2018-05-17)
+----------------------------------------
+* DATAES-451 - Adapt to SpEL extension API changes in Spring Data Commons.
+* DATAES-440 - Release 3.1 M3 (Lovelace).
+* DATAES-422 - Add support for IndicesOptions in search queries.
+* DATAES-420 - Analyzer of main field ignored when using @MultiField annotation.
+* DATAES-412 - Highlighted fields is not getting passed to the elastic search query.
+* DATAES-363 - AbstractElasticsearchRepository.existsById(..) always returns true.
+* DATAES-312 - NullHandling.NULLS_LAST not working in query.sort.
+* DATAES-198 - @Version has no effect, so therefore is not useful with spring data elasticsearch.
+
+
+Changes in version 3.0.7.RELEASE (2018-05-08)
+---------------------------------------------
+* DATAES-438 - Expected a boolean [true/false] for property [index] but got [not_analyzed].
+* DATAES-437 - Release 3.0.7 (Kay SR7).
+* DATAES-412 - Highlighted fields is not getting passed to the elastic search query.
+* DATAES-402 - Paging not working correctly.
+* DATAES-363 - AbstractElasticsearchRepository.existsById(..) always returns true.
+* DATAES-198 - @Version has no effect, so therefore is not useful with spring data elasticsearch.
+
+
+Changes in version 2.1.12.RELEASE (2018-05-08)
+----------------------------------------------
+* DATAES-436 - Release 2.1.12 (Ingalls SR12).
+
+
+Changes in version 3.1.0.M2 (2018-04-13)
+----------------------------------------
+* DATAES-439 - Adapt to API changes in Spring Data Commons.
+* DATAES-434 - Remove explicit declaration of Jackson library versions.
+* DATAES-432 - Export composable repositories via CDI.
+* DATAES-427 - Release 3.1 M2 (Lovelace).
+
+
+Changes in version 3.0.6.RELEASE (2018-04-04)
+---------------------------------------------
+* DATAES-434 - Remove explicit declaration of Jackson library versions.
+* DATAES-430 - Release 3.0.6 (Kay SR6).
+
+
+Changes in version 2.1.11.RELEASE (2018-04-04)
+----------------------------------------------
+* DATAES-434 - Remove explicit declaration of Jackson library versions.
+* DATAES-424 - Fix line endings.
+* DATAES-423 - Release 2.1.11 (Ingalls SR11).
+
+
+Changes in version 3.0.5.RELEASE (2018-02-28)
+---------------------------------------------
+* DATAES-429 - Release 3.0.5 (Kay SR5).
+
+
+Changes in version 3.0.4.RELEASE (2018-02-19)
+---------------------------------------------
+* DATAES-425 - Release 3.0.4 (Kay SR4).
+
+
+Changes in version 3.1.0.M1 (2018-02-06)
+----------------------------------------
+* DATAES-424 - Fix line endings.
+* DATAES-414 - Reduce scope of Lo4j dependencies to test.
+* DATAES-410 - Adapt API changes in Property in test cases.
+* DATAES-401 - Release 3.1 M1 (Lovelace).
+* DATAES-361 - log4j2.xml in classpath root of the library prevents Spring Boot's logging auto-configuration to work.
+
+
+Changes in version 3.0.3.RELEASE (2018-01-24)
+---------------------------------------------
+* DATAES-424 - Fix line endings.
+* DATAES-417 - Release 3.0.3 (Kay SR3).
+
+
+Changes in version 2.1.10.RELEASE (2018-01-24)
+----------------------------------------------
+* DATAES-416 - Release 2.1.10 (Ingalls SR10).
+
+
+Changes in version 3.0.2.RELEASE (2017-11-27)
+---------------------------------------------
+* DATAES-414 - Reduce scope of Lo4j dependencies to test.
+* DATAES-411 - Release 3.0.2 (Kay SR2).
+
+
+Changes in version 2.1.9.RELEASE (2017-11-27)
+---------------------------------------------
+* DATAES-408 - Ensure Spring 5 compatibility in Ingalls.
+* DATAES-404 - Release 2.1.9 (Ingalls SR9).
+
+
+Changes in version 3.0.1.RELEASE (2017-10-27)
+---------------------------------------------
+* DATAES-410 - Adapt API changes in Property in test cases.
+* DATAES-400 - Release 3.0.1 (Kay SR1).
+* DATAES-361 - log4j2.xml in classpath root of the library prevents Spring Boot's logging auto-configuration to work.
+
+
+Changes in version 2.1.8.RELEASE (2017-10-11)
+---------------------------------------------
+* DATAES-391 - Release 2.1.8 (Ingalls SR8).
+
+
+Changes in version 3.0.0.RELEASE (2017-10-02)
+---------------------------------------------
+* DATAES-397 - Add explicit automatic module name for Java 9.
+* DATAES-395 - Upgrade to OpenWebBeans 2.0.1.
+* DATAES-392 - Release 3.0 GA (Kay).
+
+
+Changes in version 3.0.0.RC3 (2017-09-11)
+-----------------------------------------
+* DATAES-376 - Release 3.0 RC3 (Kay).
+
+
+Changes in version 2.1.7.RELEASE (2017-09-11)
+---------------------------------------------
+* DATAES-378 - Release 2.1.7 (Ingalls SR7).
+
+
+Changes in version 2.1.6.RELEASE (2017-07-26)
+---------------------------------------------
+* DATAES-374 - Release 2.1.6 (Ingalls SR6).
+
+
+Changes in version 3.0.0.RC2 (2017-07-25)
+-----------------------------------------
+* DATAES-375 - Release 3.0 RC2 (Kay).
+
+
+Changes in version 3.0.0.RC1 (2017-07-25)
+-----------------------------------------
+* DATAES-373 - Update ES to 5.5.0.
+* DATAES-369 - Adapt to API changes in mapping subsystem.
+* DATAES-359 - Release 3.0 RC1 (Kay).
+* DATAES-274 - Jackson throws exception when deserializing Page.
+
+
+Changes in version 2.1.5.RELEASE (2017-07-24)
+---------------------------------------------
+* DATAES-358 - Release 2.1.5 (Ingalls SR5).
+
+
+Changes in version 3.0.0.M4 (2017-06-14)
+----------------------------------------
+* DATAES-353 - Release 3.0 M4 (Kay).
+* DATAES-334 - Readme has broken jira link.
+* DATAES-285 - Upgrade to Elasticsearch 5.0.
+
+
+Changes in version 2.1.4.RELEASE (2017-06-08)
+---------------------------------------------
+* DATAES-349 - Release 2.1.4 (Ingalls SR4).
+
+
+Changes in version 2.0.11.RELEASE (2017-06-07)
+----------------------------------------------
+* DATAES-348 - Release 2.0.11 (Hopper SR11).
+
+
 Changes in version 3.0.0.M3 (2017-05-09)
 ----------------------------------------
 * DATAES-352 - Adapt to API changes in CrudRepository.
@@ -81,7 +251,6 @@ Changes in version 2.1.0.RC1 (2016-12-21)
 * DATAES-275 - Release 2.1 RC1 (Ingalls).
 
 
->>>>>>> upstream/master
 Changes in version 3.0.0.M1 (2016-11-23)
 ----------------------------------------
 * DATAES-307 - Set up 3.0 development.

@@ -2,7 +2,7 @@
     "test-setting-type": {
         "properties": {
             "email": {
-                "type": "string",
+                "type": "text",
                 "analyzer": "emailAnalyzer"
             }
         }
