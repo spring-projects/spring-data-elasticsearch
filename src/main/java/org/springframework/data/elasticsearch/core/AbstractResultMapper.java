@@ -15,11 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.apache.commons.lang.StringUtils.*;
-
 import java.io.IOException;
 
 import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Artur Konczak
@@ -33,7 +32,7 @@ public abstract class AbstractResultMapper implements ResultsMapper {
 	}
 
 	public <T> T mapEntity(String source, Class<T> clazz) {
-		if (isBlank(source)) {
+		if (StringUtils.isEmpty(source)) {
 			return null;
 		}
 		try {

@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client;
 
-import static org.apache.commons.lang.StringUtils.*;
-
 import io.netty.util.ThreadDeathWatcher;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
@@ -48,6 +46,7 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * TransportClientFactoryBean
@@ -108,13 +107,19 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
 		client = new SpringDataTransportClient(settings());
 		Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
-		for (String clusterNode : split(clusterNodes, COMMA)) {
-			String hostName = substringBeforeLast(clusterNode, COLON);
-			String port = substringAfterLast(clusterNode, COLON);
-			Assert.hasText(hostName, "[Assertion failed] missing host name in 'clusterNodes'");
-			Assert.hasText(port, "[Assertion failed] missing port in 'clusterNodes'");
-			logger.info("adding transport node : " + clusterNode);
-			client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)));
+		String[] clusterNodesArray = StringUtils.split(clusterNodes, COMMA);
+		if (clusterNodesArray != null) {
+			for (String clusterNode : clusterNodesArray) {
+				if (clusterNode != null) {
+					int colonPosition = clusterName.lastIndexOf(COLON);
+					String hostName = colonPosition != -1 ? clusterNode.substring(0, colonPosition) : clusterNode;
+					String port = colonPosition != -1 ? clusterNode.substring(colonPosition, clusterNode.length()) : "";
+					Assert.hasText(hostName, "[Assertion failed] missing host name in 'clusterNodes'");
+					Assert.hasText(port, "[Assertion failed] missing port in 'clusterNodes'");
+					logger.info("adding transport node : " + clusterNode);
+					client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)));
+				}
+			}
 		}
 		client.connectedNodes();
 	}

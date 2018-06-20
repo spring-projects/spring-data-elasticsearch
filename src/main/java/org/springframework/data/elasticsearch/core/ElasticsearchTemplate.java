@@ -15,6 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.elasticsearch.client.Requests.*;
+import static org.elasticsearch.index.VersionType.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
+import static org.springframework.util.CollectionUtils.isEmpty;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -26,6 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
@@ -86,15 +93,24 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
+import org.springframework.data.elasticsearch.core.query.IndexBoost;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.ScriptField;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.core.query.SourceFilter;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
-import static org.apache.commons.lang.StringUtils.*;
-import static org.elasticsearch.client.Requests.*;
-import static org.elasticsearch.index.VersionType.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
-import static org.springframework.util.CollectionUtils.isEmpty;
+import org.springframework.util.StringUtils;
 
 /**
  * ElasticsearchTemplate
@@ -178,9 +194,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public <T> boolean putMapping(Class<T> clazz) {
 		if (clazz.isAnnotationPresent(Mapping.class)) {
 			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
-			if (isNotBlank(mappingPath)) {
+			if (StringUtils.hasText(mappingPath)) {
 				String mappings = readFileFromClasspath(mappingPath);
-				if (isNotBlank(mappings)) {
+				if (StringUtils.hasText(mappings)) {
 					return putMapping(clazz, mappings);
 				}
 			} else {
@@ -564,9 +580,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private UpdateRequestBuilder prepareUpdate(UpdateQuery query) {
-		String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName()
+		String indexName = StringUtils.hasText(query.getIndexName()) ? query.getIndexName()
 				: getPersistentEntityFor(query.getClazz()).getIndexName();
-		String type = isNotBlank(query.getType()) ? query.getType()
+		String type = StringUtils.hasText(query.getType()) ? query.getType()
 				: getPersistentEntityFor(query.getClazz()).getIndexType();
 		Assert.notNull(indexName, "No index defined for Query");
 		Assert.notNull(type, "No type define for Query");
@@ -666,9 +682,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> void delete(DeleteQuery deleteQuery, Class<T> clazz) {
 
-		String indexName = isNotBlank(deleteQuery.getIndex()) ? deleteQuery.getIndex()
+		String indexName = StringUtils.hasText(deleteQuery.getIndex()) ? deleteQuery.getIndex()
 				: getPersistentEntityFor(clazz).getIndexName();
-		String typeName = isNotBlank(deleteQuery.getType()) ? deleteQuery.getType()
+		String typeName = StringUtils.hasText(deleteQuery.getType()) ? deleteQuery.getType()
 				: getPersistentEntityFor(clazz).getIndexType();
 		Integer pageSize = deleteQuery.getPageSize() != null ? deleteQuery.getPageSize() : 1000;
 		Long scrollTimeInMillis = deleteQuery.getScrollTimeInMillis() != null ? deleteQuery.getScrollTimeInMillis()
@@ -825,8 +841,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz) {
 
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
-		String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName() : persistentEntity.getIndexName();
-		String type = isNotBlank(query.getType()) ? query.getType() : persistentEntity.getIndexType();
+		String indexName = StringUtils.hasText(query.getIndexName()) ? query.getIndexName() : persistentEntity.getIndexName();
+		String type = StringUtils.hasText(query.getType()) ? query.getType() : persistentEntity.getIndexType();
 
 		Assert.notNull(indexName, "No 'indexName' defined for MoreLikeThisQuery");
 		Assert.notNull(type, "No 'type' defined for MoreLikeThisQuery");
@@ -921,9 +937,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	private <T> boolean createIndexWithSettings(Class<T> clazz) {
 		if (clazz.isAnnotationPresent(Setting.class)) {
 			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
-			if (isNotBlank(settingPath)) {
+			if (StringUtils.hasText(settingPath)) {
 				String settings = readFileFromClasspath(settingPath);
-				if (isNotBlank(settings)) {
+				if (StringUtils.hasText(settings)) {
 					return createIndex(getPersistentEntityFor(clazz).getIndexName(), settings);
 				}
 			} else {
@@ -1026,15 +1042,15 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	private IndexRequestBuilder prepareIndex(IndexQuery query) {
 		try {
-			String indexName = isBlank(query.getIndexName())
+			String indexName = StringUtils.isEmpty(query.getIndexName())
 					? retrieveIndexNameFromPersistentEntity(query.getObject().getClass())[0] : query.getIndexName();
-			String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
+			String type = StringUtils.isEmpty(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
 					: query.getType();
 
 			IndexRequestBuilder indexRequestBuilder = null;
 
 			if (query.getObject() != null) {
-				String id = isBlank(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();
+				String id = StringUtils.isEmpty(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();
 				// If we have a query id and a document id, do not ask ES to generate one.
 				if (id != null) {
 					indexRequestBuilder = client.prepareIndex(indexName, type, id);
@@ -1084,11 +1100,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			aliasAction.filter(query.getFilterBuilder());
 		} else if (query.getFilter() != null) {
 			aliasAction.filter(query.getFilter());
-		} else if (isNotBlank(query.getRouting())) {
+		} else if (StringUtils.hasText(query.getRouting())) {
 			aliasAction.routing(query.getRouting());
-		} else if (isNotBlank(query.getSearchRouting())) {
+		} else if (StringUtils.hasText(query.getSearchRouting())) {
 			aliasAction.searchRouting(query.getSearchRouting());
-		} else if (isNotBlank(query.getIndexRouting())) {
+		} else if (StringUtils.hasText(query.getIndexRouting())) {
 			aliasAction.indexRouting(query.getIndexRouting());
 		}
 		return client.admin().indices().prepareAliases().addAliasAction(aliasAction).execute().actionGet().isAcknowledged();
