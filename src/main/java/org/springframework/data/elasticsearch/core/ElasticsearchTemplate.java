@@ -19,7 +19,7 @@ import static org.elasticsearch.client.Requests.*;
 import static org.elasticsearch.index.VersionType.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
-import static org.springframework.util.CollectionUtils.isEmpty;
+import static org.springframework.util.CollectionUtils.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -51,6 +51,7 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
@@ -131,7 +132,8 @@ import org.springframework.util.StringUtils;
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
-	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchTemplate.class);
+	private static final Logger QUERY_LOGGER = LoggerFactory.getLogger("org.springframework.data.elasticsearch.core.QUERY");
+	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchTemplate.class);
 	private static final String FIELD_SCORE = "_score";
 
 	private Client client;
@@ -203,7 +205,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 					return putMapping(clazz, mappings);
 				}
 			} else {
-				logger.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
+				LOGGER.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
 			}
 		}
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
@@ -334,7 +336,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 		if (query.getFilter() != null) {
 			request.setPostFilter(query.getFilter());
 		}
-		SearchResponse response = getSearchResponse(request.execute());
+		SearchResponse response = getSearchResponse(request);
 		return extractIds(response);
 	}
 
@@ -357,11 +359,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 		if (elasticsearchFilter != null)
 			searchRequestBuilder.setPostFilter(elasticsearchFilter);
-		if (logger.isDebugEnabled()) {
-			logger.debug("doSearch query:\n" + searchRequestBuilder.toString());
-		}
 
-		SearchResponse response = getSearchResponse(searchRequestBuilder.execute());
+		SearchResponse response = getSearchResponse(searchRequestBuilder);
 		return resultsMapper.mapResults(response, clazz, criteriaQuery.getPageable());
 	}
 
@@ -372,7 +371,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	@Override
 	public <T> Page<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper) {
-		SearchResponse response = getSearchResponse(prepareSearch(query, clazz).setQuery(wrapperQuery(query.getSource())).execute());
+		SearchResponse response = getSearchResponse(prepareSearch(query, clazz).setQuery(wrapperQuery(query.getSource())));
 		return mapper.mapResults(response, clazz, query.getPageable());
 	}
 
@@ -788,7 +787,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			requestBuilder.setPostFilter(elasticsearchFilter);
 		}
 
-		return getSearchResponse(requestBuilder.execute());
+		return getSearchResponse(requestBuilder);
 	}
 
 	private SearchResponse doScroll(SearchRequestBuilder requestBuilder, SearchQuery searchQuery) {
@@ -800,7 +799,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			requestBuilder.setPostFilter(searchQuery.getFilter());
 		}
 
-		return getSearchResponse(requestBuilder.setQuery(searchQuery.getQuery()).execute());
+		return getSearchResponse(requestBuilder.setQuery(searchQuery.getQuery()));
 	}
 
 	public <T> Page<T> startScroll(long scrollTimeInMillis, SearchQuery searchQuery, Class<T> clazz) {
@@ -926,7 +925,16 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				searchRequest.addAggregation(aggregatedFacet.getFacet());
 			}
 		}
-		return getSearchResponse(searchRequest.setQuery(searchQuery.getQuery()).execute());
+		return getSearchResponse(searchRequest.setQuery(searchQuery.getQuery()));
+	}
+
+	private SearchResponse getSearchResponse(SearchRequestBuilder requestBuilder) {
+		
+		if (QUERY_LOGGER.isDebugEnabled()) {
+			QUERY_LOGGER.debug(requestBuilder.toString());
+		}
+		
+		return getSearchResponse(requestBuilder.execute());
 	}
 
 	private SearchResponse getSearchResponse(ListenableActionFuture<SearchResponse> response) {
@@ -946,7 +954,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 					return createIndex(getPersistentEntityFor(clazz).getIndexName(), settings);
 				}
 			} else {
-				logger.info("settingPath in @Setting has to be defined. Using default instead.");
+				LOGGER.info("settingPath in @Setting has to be defined. Using default instead.");
 			}
 		}
 		return createIndex(getPersistentEntityFor(clazz).getIndexName(), getDefaultSettings(getPersistentEntityFor(clazz)));
@@ -1239,14 +1247,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 				stringBuilder.append(line).append(lineSeparator);
 			}
 		} catch (Exception e) {
-			logger.debug(String.format("Failed to load file from url: %s: %s", url, e.getMessage()));
+			LOGGER.debug(String.format("Failed to load file from url: %s: %s", url, e.getMessage()));
 			return null;
 		} finally {
 			if (bufferedReader != null)
 				try {
 					bufferedReader.close();
 				} catch (IOException e) {
-					logger.debug(String.format("Unable to close buffered reader.. %s", e.getMessage()));
+					LOGGER.debug(String.format("Unable to close buffered reader.. %s", e.getMessage()));
 				}
 		}
 
