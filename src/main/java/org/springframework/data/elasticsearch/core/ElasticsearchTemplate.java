@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.apache.commons.lang.StringUtils.*;
 import static org.elasticsearch.client.Requests.*;
 import static org.elasticsearch.index.VersionType.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -115,6 +114,7 @@ import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * ElasticsearchTemplate
@@ -202,9 +202,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public <T> boolean putMapping(Class<T> clazz) {
 		if (clazz.isAnnotationPresent(Mapping.class)) {
 			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
-			if (isNotBlank(mappingPath)) {
+			if (!StringUtils.isEmpty(mappingPath)) {
 				String mappings = readFileFromClasspath(mappingPath);
-				if (isNotBlank(mappings)) {
+				if (!StringUtils.isEmpty(mappings)) {
 					return putMapping(clazz, mappings);
 				}
 			} else {
@@ -588,9 +588,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private UpdateRequestBuilder prepareUpdate(UpdateQuery query) {
-		String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName()
+		String indexName = !StringUtils.isEmpty(query.getIndexName()) ? query.getIndexName()
 				: getPersistentEntityFor(query.getClazz()).getIndexName();
-		String type = isNotBlank(query.getType()) ? query.getType()
+		String type = !StringUtils.isEmpty(query.getType()) ? query.getType()
 				: getPersistentEntityFor(query.getClazz()).getIndexType();
 		Assert.notNull(indexName, "No index defined for Query");
 		Assert.notNull(type, "No type define for Query");
@@ -690,9 +690,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	@Override
 	public <T> void delete(DeleteQuery deleteQuery, Class<T> clazz) {
 
-		String indexName = isNotBlank(deleteQuery.getIndex()) ? deleteQuery.getIndex()
+		String indexName = !StringUtils.isEmpty(deleteQuery.getIndex()) ? deleteQuery.getIndex()
 				: getPersistentEntityFor(clazz).getIndexName();
-		String typeName = isNotBlank(deleteQuery.getType()) ? deleteQuery.getType()
+		String typeName = !StringUtils.isEmpty(deleteQuery.getType()) ? deleteQuery.getType()
 				: getPersistentEntityFor(clazz).getIndexType();
 		Integer pageSize = deleteQuery.getPageSize() != null ? deleteQuery.getPageSize() : 1000;
 		Long scrollTimeInMillis = deleteQuery.getScrollTimeInMillis() != null ? deleteQuery.getScrollTimeInMillis()
@@ -849,8 +849,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz) {
 
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
-		String indexName = isNotBlank(query.getIndexName()) ? query.getIndexName() : persistentEntity.getIndexName();
-		String type = isNotBlank(query.getType()) ? query.getType() : persistentEntity.getIndexType();
+		String indexName = !StringUtils.isEmpty(query.getIndexName()) ? query.getIndexName() : persistentEntity.getIndexName();
+		String type = !StringUtils.isEmpty(query.getType()) ? query.getType() : persistentEntity.getIndexType();
 
 		Assert.notNull(indexName, "No 'indexName' defined for MoreLikeThisQuery");
 		Assert.notNull(type, "No 'type' defined for MoreLikeThisQuery");
@@ -945,9 +945,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	private <T> boolean createIndexWithSettings(Class<T> clazz) {
 		if (clazz.isAnnotationPresent(Setting.class)) {
 			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
-			if (isNotBlank(settingPath)) {
+			if (!StringUtils.isEmpty(settingPath)) {
 				String settings = readFileFromClasspath(settingPath);
-				if (isNotBlank(settings)) {
+				if (!StringUtils.isEmpty(settings)) {
 					return createIndex(getPersistentEntityFor(clazz).getIndexName(), settings);
 				}
 			} else {
@@ -1068,16 +1068,16 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 
 	private IndexRequestBuilder prepareIndex(IndexQuery query) {
 		try {
-			String indexName = isBlank(query.getIndexName())
+			String indexName = StringUtils.isEmpty(query.getIndexName())
 					? retrieveIndexNameFromPersistentEntity(query.getObject().getClass())[0]
 					: query.getIndexName();
-			String type = isBlank(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
+			String type = StringUtils.isEmpty(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
 					: query.getType();
 
 			IndexRequestBuilder indexRequestBuilder = null;
 
 			if (query.getObject() != null) {
-				String id = isBlank(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();
+				String id = StringUtils.isEmpty(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();
 				// If we have a query id and a document id, do not ask ES to generate one.
 				if (id != null) {
 					indexRequestBuilder = client.prepareIndex(indexName, type, id);
@@ -1130,11 +1130,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			aliasAction.filter(query.getFilterBuilder());
 		} else if (query.getFilter() != null) {
 			aliasAction.filter(query.getFilter());
-		} else if (isNotBlank(query.getRouting())) {
+		} else if (!StringUtils.isEmpty(query.getRouting())) {
 			aliasAction.routing(query.getRouting());
-		} else if (isNotBlank(query.getSearchRouting())) {
+		} else if (!StringUtils.isEmpty(query.getSearchRouting())) {
 			aliasAction.searchRouting(query.getSearchRouting());
-		} else if (isNotBlank(query.getIndexRouting())) {
+		} else if (!StringUtils.isEmpty(query.getIndexRouting())) {
 			aliasAction.indexRouting(query.getIndexRouting());
 		}
 		return client.admin().indices().prepareAliases().addAliasAction(aliasAction).execute().actionGet().isAcknowledged();
