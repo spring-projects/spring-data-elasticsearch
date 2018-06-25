@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
@@ -45,6 +44,7 @@ import org.springframework.util.Assert;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Artur Konczak
@@ -98,7 +98,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		for (SearchHit hit : response.getHits()) {
 			if (hit != null) {
 				T result = null;
-				if (StringUtils.isNotBlank(hit.getSourceAsString())) {
+				if (!StringUtils.isEmpty(hit.getSourceAsString())) {
 					result = mapEntity(hit.getSourceAsString(), clazz);
 				} else {
 					result = mapEntity(hit.getFields().values(), clazz);
