@@ -15,16 +15,16 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * ElasticsearchStringQuery
@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Petar Tahchiev
  */
 public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQuery {
 
@@ -44,11 +45,14 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		if (!conversionService.canConvert(java.util.Date.class, String.class)) {
 			conversionService.addConverter(DateTimeConverters.JavaDateConverter.INSTANCE);
 		}
-		if (!conversionService.canConvert(org.joda.time.ReadableInstant.class, String.class)) {
-			conversionService.addConverter(DateTimeConverters.JodaDateTimeConverter.INSTANCE);
-		}
-		if (!conversionService.canConvert(org.joda.time.LocalDateTime.class, String.class)) {
-			conversionService.addConverter(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE);
+
+		if (ClassUtils.isPresent("org.joda.time.DateTimeZone", ElasticsearchStringQuery.class.getClassLoader())) {
+			if (!conversionService.canConvert(org.joda.time.ReadableInstant.class, String.class)) {
+				conversionService.addConverter(DateTimeConverters.JodaDateTimeConverter.INSTANCE);
+			}
+			if (!conversionService.canConvert(org.joda.time.LocalDateTime.class, String.class)) {
+				conversionService.addConverter(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE);
+			}
 		}
 	}
 
@@ -59,8 +63,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		this.query = query;
 	}
 
-	@Override
-	public Object execute(Object[] parameters) {
+	@Override public Object execute(Object[] parameters) {
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
 		StringQuery stringQuery = createQuery(accessor);
 		if (queryMethod.isPageQuery()) {
