@@ -15,9 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client;
 
-import java.net.InetAddress;
-import java.util.Properties;
-
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
@@ -28,7 +25,10 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang.StringUtils;
+
+import java.net.InetAddress;
+import java.util.Properties;
 
 /**
  * TransportClientFactoryBean
@@ -42,7 +42,8 @@ import org.springframework.util.StringUtils;
 
 public class TransportClientFactoryBean implements FactoryBean<TransportClient>, InitializingBean, DisposableBean {
 
-	private static final Logger logger = LoggerFactory.getLogger(TransportClientFactoryBean.class);
+	private static final Logger logger = LoggerFactory.getLogger(
+			org.springframework.data.elasticsearch.client.TransportClientFactoryBean.class);
 	private String clusterNodes = "127.0.0.1:9300";
 	private String clusterName = "elasticsearch";
 	private Boolean clientTransportSniff = true;
@@ -94,9 +95,9 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 		if (clusterNodesArray != null) {
 			for (String clusterNode : clusterNodesArray) {
 				if (clusterNode != null) {
-					int colonPosition = clusterName.lastIndexOf(COLON);
+					int colonPosition = clusterNode.lastIndexOf(COLON);
 					String hostName = colonPosition != -1 ? clusterNode.substring(0, colonPosition) : clusterNode;
-					String port = colonPosition != -1 ? clusterNode.substring(colonPosition, clusterNode.length()) : "";
+					String port = colonPosition != -1 ? clusterNode.substring(colonPosition + 1, clusterNode.length()) : "";
 					Assert.hasText(hostName, "[Assertion failed] missing host name in 'clusterNodes'");
 					Assert.hasText(port, "[Assertion failed] missing port in 'clusterNodes'");
 					logger.info("adding transport node : " + clusterNode);

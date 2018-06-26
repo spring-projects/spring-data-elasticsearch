@@ -56,7 +56,6 @@
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
             <version>${commonslang}</version>
-            <scope>test</scope>
         </dependency>
 
         <!-- JODA Time -->
