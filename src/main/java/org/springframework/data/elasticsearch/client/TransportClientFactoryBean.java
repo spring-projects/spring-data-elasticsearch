@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.client;
 import io.netty.util.ThreadDeathWatcher;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,7 +30,6 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.SuppressForbidden;
 import org.elasticsearch.common.network.NetworkModule;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.reindex.ReindexPlugin;
 import org.elasticsearch.join.ParentJoinPlugin;
 import org.elasticsearch.percolator.PercolatorPlugin;
@@ -46,7 +44,6 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * TransportClientFactoryBean
@@ -55,12 +52,12 @@ import org.springframework.util.StringUtils;
  * @author Mohsin Husen
  * @author Jakub Vavrik
  * @author Piotr Betkier
+ * @author Oliver Gierke
  */
-
 public class TransportClientFactoryBean implements FactoryBean<TransportClient>, InitializingBean, DisposableBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(TransportClientFactoryBean.class);
-	private String clusterNodes = "127.0.0.1:9300";
+	private ClusterNodes clusterNodes = ClusterNodes.of("127.0.0.1:9300");
 	private String clusterName = "elasticsearch";
 	private Boolean clientTransportSniff = true;
 	private Boolean clientIgnoreClusterName = Boolean.FALSE;
@@ -68,8 +65,6 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	private String clientNodesSamplerInterval = "5s";
 	private TransportClient client;
 	private Properties properties;
-	static final String COLON = ":";
-	static final String COMMA = ",";
 
 	@Override
 	public void destroy() throws Exception {
@@ -106,21 +101,11 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	protected void buildClient() throws Exception {
 
 		client = new SpringDataTransportClient(settings());
-		Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
-		String[] clusterNodesArray = StringUtils.split(clusterNodes, COMMA);
-		if (clusterNodesArray != null) {
-			for (String clusterNode : clusterNodesArray) {
-				if (clusterNode != null) {
-					int colonPosition = clusterName.lastIndexOf(COLON);
-					String hostName = colonPosition != -1 ? clusterNode.substring(0, colonPosition) : clusterNode;
-					String port = colonPosition != -1 ? clusterNode.substring(colonPosition, clusterNode.length()) : "";
-					Assert.hasText(hostName, "[Assertion failed] missing host name in 'clusterNodes'");
-					Assert.hasText(port, "[Assertion failed] missing port in 'clusterNodes'");
-					logger.info("adding transport node : " + clusterNode);
-					client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)));
-				}
-			}
-		}
+
+		clusterNodes.stream() //
+				.peek(it -> logger.info("Adding transport node : " + it.toString())) //
+				.forEach(client::addTransportAddress);
+
 		client.connectedNodes();
 	}
 
@@ -128,17 +113,14 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 		if (properties != null) {
 			return Settings.builder().put(properties).build();
 		}
-		return Settings.builder()
-				.put("cluster.name", clusterName)
-				.put("client.transport.sniff", clientTransportSniff)
+		return Settings.builder().put("cluster.name", clusterName).put("client.transport.sniff", clientTransportSniff)
 				.put("client.transport.ignore_cluster_name", clientIgnoreClusterName)
 				.put("client.transport.ping_timeout", clientPingTimeout)
-				.put("client.transport.nodes_sampler_interval", clientNodesSamplerInterval)
-				.build();
+				.put("client.transport.nodes_sampler_interval", clientNodesSamplerInterval).build();
 	}
 
 	public void setClusterNodes(String clusterNodes) {
-		this.clusterNodes = clusterNodes;
+		this.clusterNodes = ClusterNodes.of(clusterNodes);
 	}
 
 	public void setClusterName(String clusterName) {
@@ -176,7 +158,7 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	public void setProperties(Properties properties) {
 		this.properties = properties;
 	}
-	
+
 	/**
 	 * Pretty exact copy of {@link PreBuiltTransportClient} except that we're inspecting the classpath for Netty
 	 * dependencies to only include the ones available. {@link PreBuiltTransportClient} expects both Netty 3 and Netty 4
@@ -236,8 +218,9 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 					found = true;
 				} catch (ClassNotFoundException | LinkageError e) {}
 			}
-			
-			Assert.state(found, "Neither Netty 3 or Netty 4 plugin found on the classpath. One of them is required to run the transport client!");
+
+			Assert.state(found,
+					"Neither Netty 3 or Netty 4 plugin found on the classpath. One of them is required to run the transport client!");
 
 			plugins.add(ReindexPlugin.class);
 			plugins.add(PercolatorPlugin.class);
