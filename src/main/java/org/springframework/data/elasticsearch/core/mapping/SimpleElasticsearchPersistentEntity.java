@@ -28,7 +28,9 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
+import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
@@ -194,5 +196,17 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 			this.scoreProperty = property;
 		}
+	}
+	
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#setPersistentPropertyAccessorFactory(org.springframework.data.mapping.model.PersistentPropertyAccessorFactory)
+	 */
+	@Override
+	public void setPersistentPropertyAccessorFactory(PersistentPropertyAccessorFactory factory) {
+		
+		// Do nothing to avoid the usage of ClassGeneratingPropertyAccessorFactory for now
+		// DATACMNS-1322 switches to proper immutability behavior which Spring Data Elasticsearch
+		// cannot yet implement
 	}
 }

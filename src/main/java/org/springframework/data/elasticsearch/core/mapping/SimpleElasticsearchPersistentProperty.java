@@ -85,4 +85,13 @@ public class SimpleElasticsearchPersistentProperty extends
 	public boolean isScoreProperty() {
 		return isScore;
 	}
+	
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.model.AbstractPersistentProperty#isImmutable()
+	 */
+	@Override
+	public boolean isImmutable() {
+		return false;
+	}
 }
