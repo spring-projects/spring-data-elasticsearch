@@ -29,6 +29,8 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.search.SearchHit;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -38,7 +40,9 @@ import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPa
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.core.JsonEncoding;
@@ -59,6 +63,8 @@ import org.springframework.util.StringUtils;
 public class DefaultResultMapper extends AbstractResultMapper {
 
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
+
+	private final ConversionService conversionService = new DefaultConversionService();
 
 	public DefaultResultMapper() {
 		this(new SimpleElasticsearchMappingContext());
@@ -200,9 +206,12 @@ public class DefaultResultMapper extends AbstractResultMapper {
 			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(clazz);
 			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
 
+			PersistentPropertyAccessor<T> accessor = new ConvertingPropertyAccessor<>(persistentEntity.getPropertyAccessor(result),
+					conversionService);
+
 			// Only deal with String because ES generated Ids are strings !
 			if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
-				persistentEntity.getPropertyAccessor(result).setProperty(idProperty, id);
+				accessor.setProperty(idProperty, id);
 			}
 		}
 	}
