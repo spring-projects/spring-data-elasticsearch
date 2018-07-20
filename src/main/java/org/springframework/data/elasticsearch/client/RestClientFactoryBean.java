@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client;
 
-import static org.apache.commons.lang.StringUtils.*;
-
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URL;
@@ -78,7 +76,7 @@ public class RestClientFactoryBean implements FactoryBean<RestHighLevelClient>, 
 
 		Assert.hasText(hosts, "[Assertion Failed] At least one host must be set.");
 		ArrayList<HttpHost> httpHosts = new ArrayList<HttpHost>();
-		for (String host : split(hosts, COMMA)) {
+		for (String host : hosts.split(COMMA)) {
 			URL hostUrl = new URL(host);
 			httpHosts.add(new HttpHost(hostUrl.getHost(), hostUrl.getPort(), hostUrl.getProtocol()));
 		}
