@@ -1,6 +1,16 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.9.RELEASE (2018-07-26)
+---------------------------------------------
+* DATAES-470 - TransportClientFactoryBean does not parse clusterNodes correctly.
+* DATAES-469 - Is org.elasticsearch:elasticsearch a necessary dependency?.
+* DATAES-467 - No mapping found for [_score] in order to sort on.
+* DATAES-465 - Release 3.0.9 (Kay SR9).
+* DATAES-317 - Add query logging to ElasticsearchTemplate.
+* DATAES-283 - Remove dependency to Commons Lang.
+
+
 Changes in version 3.1.0.RC1 (2018-07-26)
 -----------------------------------------
 * DATAES-471 - Adapt to changes in immutable entities support.
