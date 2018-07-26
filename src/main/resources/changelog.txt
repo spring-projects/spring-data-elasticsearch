@@ -1,6 +1,18 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.0.RC1 (2018-07-26)
+-----------------------------------------
+* DATAES-471 - Adapt to changes in immutable entities support.
+* DATAES-470 - TransportClientFactoryBean does not parse clusterNodes correctly.
+* DATAES-469 - Is org.elasticsearch:elasticsearch a necessary dependency?.
+* DATAES-467 - No mapping found for [_score] in order to sort on.
+* DATAES-464 - Add support for @ReadOnlyProperty to prevent properties from being written.
+* DATAES-462 - Add support for mapping document scores to entities.
+* DATAES-452 - Release 3.1 RC1 (Lovelace).
+* DATAES-317 - Add query logging to ElasticsearchTemplate.
+
+
 Changes in version 3.0.8.RELEASE (2018-06-13)
 ---------------------------------------------
 * DATAES-460 - Avoid pulling in Netty 3 as dependency.
