@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.1.14.RELEASE (2018-07-27)
+----------------------------------------------
+* DATAES-463 - Release 2.1.14 (Ingalls SR14).
+* DATAES-283 - Remove dependency to Commons Lang.
+
+
 Changes in version 3.0.9.RELEASE (2018-07-26)
 ---------------------------------------------
 * DATAES-470 - TransportClientFactoryBean does not parse clusterNodes correctly.
