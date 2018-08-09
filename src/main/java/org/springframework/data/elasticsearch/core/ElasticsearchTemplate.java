@@ -134,6 +134,7 @@ import org.springframework.util.StringUtils;
  * @author Alen Turkovic
  * @author Sascha Woo
  * @author Ted Liang
+ * @author Jean-Baptiste Nizet
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -905,8 +906,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 			}
 		}
 
-		if (searchQuery.getHighlightFields() != null) {
-			HighlightBuilder highlightBuilder = new HighlightBuilder();
+		if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
+			HighlightBuilder highlightBuilder = searchQuery.getHighlightBuilder();
+			if (highlightBuilder == null) {
+				highlightBuilder = new HighlightBuilder();
+			}
 			for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
 				highlightBuilder.field(highlightField);
 			}
@@ -934,11 +938,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, Applicati
 	}
 
 	private SearchResponse getSearchResponse(SearchRequestBuilder requestBuilder) {
-		
+
 		if (QUERY_LOGGER.isDebugEnabled()) {
 			QUERY_LOGGER.debug(requestBuilder.toString());
 		}
-		
+
 		return getSearchResponse(requestBuilder.execute());
 	}
 
