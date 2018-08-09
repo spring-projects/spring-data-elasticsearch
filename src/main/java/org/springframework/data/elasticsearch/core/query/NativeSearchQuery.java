@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import java.util.Arrays;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
+ * @author Jean-Baptiste Nizet
  */
 public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
@@ -41,6 +42,7 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
     private final List<ScriptField> scriptFields = new ArrayList<>();
 	private List<FacetRequest> facets;
 	private List<AbstractAggregationBuilder> aggregations;
+	private HighlightBuilder highlightBuilder;
 	private HighlightBuilder.Field[] highlightFields;
 	private List<IndexBoost> indicesBoost;
 
@@ -67,6 +69,15 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 		this.highlightFields = highlightFields;
 	}
 
+	public NativeSearchQuery(QueryBuilder query, QueryBuilder filter, List<SortBuilder> sorts,
+			HighlightBuilder highlighBuilder, HighlightBuilder.Field[] highlightFields) {
+		this.query = query;
+		this.filter = filter;
+		this.sorts = sorts;
+		this.highlightBuilder = highlighBuilder;
+		this.highlightFields = highlightFields;
+	}
+
 	public QueryBuilder getQuery() {
 		return query;
 	}
@@ -77,6 +88,11 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
 	public List<SortBuilder> getElasticsearchSorts() {
 		return sorts;
+	}
+
+	@Override
+	public HighlightBuilder getHighlightBuilder() {
+		return highlightBuilder;
 	}
 
 	@Override

@@ -77,6 +77,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
  * @author Ilkang Na
  * @author Alen Turkovic
  * @author Sascha Woo
+ * @author Jean-Baptiste Nizet
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -1415,6 +1416,88 @@ public class ElasticsearchTemplateTests {
 		});
 	}
 
+	@Test // DATAES-479
+	public void shouldHonorTheHighlightBuilderOptions() {
+
+		// given
+		String documentId = randomNumeric(5);
+		String actualMessage = "some test message with <html> unsafe <script> text";
+		String highlightedMessage = "some <em>test</em> message with &lt;html&gt; unsafe &lt;script&gt; text";
+
+		SampleEntity sampleEntity = SampleEntity.builder()
+				.id(documentId)
+				.message(actualMessage)
+				.version(System.currentTimeMillis())
+				.build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(termQuery("message", "test"))
+				.withHighlightBuilder(new HighlightBuilder().encoder("html"))
+				.withHighlightFields(new HighlightBuilder.Field("message"))
+				.build();
+		// when
+		elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapper() {
+			@Override
+			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				for (SearchHit searchHit : response.getHits()) {
+					Map<String, HighlightField> highlightFields = searchHit.getHighlightFields();
+					HighlightField highlightFieldMessage = highlightFields.get("message");
+
+					// then
+					assertNotNull(highlightFieldMessage);
+					assertThat(highlightFieldMessage.fragments()[0].toString(), is(highlightedMessage));
+				}
+				return null;
+			}
+		});
+	}
+
+	@Test // DATAES-479
+	public void shouldHighlightIfBuilderSetEvenIfFieldsNotSet() {
+
+		// given
+		String documentId = randomNumeric(5);
+		String actualMessage = "some test message text";
+		String highlightedMessage = "some <em>test</em> message text";
+
+		SampleEntity sampleEntity = SampleEntity.builder()
+				.id(documentId)
+				.message(actualMessage)
+				.version(System.currentTimeMillis())
+				.build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(termQuery("message", "test"))
+				.withHighlightBuilder(new HighlightBuilder().field("message"))
+				.withHighlightFields(new HighlightBuilder.Field("message"))
+				.build();
+		// when
+		elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapper() {
+			@Override
+			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				for (SearchHit searchHit : response.getHits()) {
+					Map<String, HighlightField> highlightFields = searchHit.getHighlightFields();
+					HighlightField highlightFieldMessage = highlightFields.get("message");
+
+					// then
+					assertNotNull(highlightFieldMessage);
+					assertThat(highlightFieldMessage.fragments()[0].toString(), is(highlightedMessage));
+				}
+				return null;
+			}
+		});
+	}
+
 	@Test
 	public void shouldDeleteDocumentBySpecifiedTypeUsingDeleteQuery() {
 		// given
@@ -1538,7 +1621,7 @@ public class ElasticsearchTemplateTests {
 
 	@Test // DATAES-462
 	public void shouldReturnScores() {
-		
+
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 
