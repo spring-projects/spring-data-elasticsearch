@@ -23,50 +23,55 @@ Page<SampleEntity> sampleEntities =
 ----
 ====
 
-[[elasticsearch.scan.and.scroll]]
-== Using Scan And Scroll For Big Result Set
+[[elasticsearch.scroll]]
+== Using Scroll For Big Result Set
 
-Elasticsearch has scan and scroll feature for getting big result set in chunks. `ElasticsearchTemplate` has scan and scroll methods that can be used as below.
+Elasticsearch has a scroll API for getting big result set in chunks. `ElasticsearchTemplate` has startScroll and continueScroll methods that can be used as below.
 
-.Using Scan and Scroll
+.Using startScroll and continueScroll
 ====
 [source,java]
 ----
 SearchQuery searchQuery = new NativeSearchQueryBuilder()
     .withQuery(matchAllQuery())
-    .withIndices("test-index")
-    .withTypes("test-type")
-    .withPageable(new PageRequest(0,1))
+    .withIndices(INDEX_NAME)
+    .withTypes(TYPE_NAME)
+    .withFields("message")
+    .withPageable(PageRequest.of(0, 10))
     .build();
-String scrollId = elasticsearchTemplate.scan(searchQuery,1000,false);
-List<SampleEntity> sampleEntities = new ArrayList<SampleEntity>();
-boolean hasRecords = true;
-while (hasRecords){
-    Page<SampleEntity> page = elasticsearchTemplate.scroll(scrollId, 5000L , new ResultsMapper<SampleEntity>()
-    {
-        @Override
-        public Page<SampleEntity> mapResults(SearchResponse response) {
-            List<SampleEntity> chunk = new ArrayList<SampleEntity>();
-            for(SearchHit searchHit : response.getHits()){
-                if(response.getHits().getHits().length <= 0) {
-                    return null;
-                }
-                SampleEntity user = new SampleEntity();
-                user.setId(searchHit.getId());
-                user.setMessage((String)searchHit.getSource().get("message"));
-                chunk.add(user);
-            }
-            return new PageImpl<SampleEntity>(chunk);
-        }
-    });
-    if(page != null) {
-        sampleEntities.addAll(page.getContent());
-        hasRecords = page.hasNextPage();
-    }
-    else{
-        hasRecords = false;
-    }
-    }
-}            
+
+Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class);
+
+String scrollId = ((ScrolledPage) scroll).getScrollId();
+List<SampleEntity> sampleEntities = new ArrayList<>();
+while (scroll.hasContent()) {
+    sampleEntities.addAll(scroll.getContent());
+    scrollId = ((ScrolledPage) scroll).getScrollId();
+    scroll = elasticsearchTemplate.continueScroll(scrollId, 1000, SampleEntity.class);
+}
+elasticsearchTemplate.clearScroll(scrollId);
+----
+====
+
+`ElasticsearchTemplate` additionally has the stream method which wraps the scan and scroll operations into a CloseableIterator.
+
+.Using stream
+====
+[source,java]
+----
+SearchQuery searchQuery = new NativeSearchQueryBuilder()
+    .withQuery(matchAllQuery())
+    .withIndices(INDEX_NAME)
+    .withTypes(TYPE_NAME)
+    .withFields("message")
+    .withPageable(PageRequest.of(0, 10))
+    .build();
+
+CloseableIterator<SampleEntity> stream = elasticsearchTemplate.stream(searchQuery, SampleEntity.class);
+
+List<SampleEntity> sampleEntities = new ArrayList<>();
+while (stream.hasNext()) {
+    sampleEntities.add(stream.next());
+}
 ----
 ====
