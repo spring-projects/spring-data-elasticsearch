@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.10.RELEASE (2018-09-10)
+----------------------------------------------
+* DATAES-473 - Release 3.0.10 (Kay SR10).
+
+
 Changes in version 2.1.15.RELEASE (2018-09-10)
 ----------------------------------------------
 * DATAES-474 - Release 2.1.15 (Ingalls SR15).
