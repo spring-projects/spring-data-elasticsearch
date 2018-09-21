@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.0.RELEASE (2018-09-21)
+---------------------------------------------
+* DATAES-480 - Release 3.1 GA (Lovelace).
+* DATAES-479 - NativeSearchQueryBuilder should have a withHighlighter() method.
+
+
 Changes in version 3.0.10.RELEASE (2018-09-10)
 ----------------------------------------------
 * DATAES-473 - Release 3.0.10 (Kay SR10).
