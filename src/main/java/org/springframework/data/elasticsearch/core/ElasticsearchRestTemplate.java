@@ -27,41 +27,30 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions;
-import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
-import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetRequest;
-import org.elasticsearch.action.get.MultiGetRequestBuilder;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.ClearScrollResponse;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.Response;
@@ -69,14 +58,12 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.Nullable;
-import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -1057,10 +1044,15 @@ public class ElasticsearchRestTemplate
 			}
 		}
 
-		if (searchQuery.getHighlightFields() != null) {
-			HighlightBuilder highlightBuilder = new HighlightBuilder();
-			for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
-				highlightBuilder.field(highlightField);
+		if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
+			HighlightBuilder highlightBuilder = searchQuery.getHighlightBuilder();
+			if (highlightBuilder == null) {
+				highlightBuilder = new HighlightBuilder();
+			}
+			if(searchQuery.getHighlightFields() != null) {
+				for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
+					highlightBuilder.field(highlightField);
+				}
 			}
 			searchRequest.source().highlighter(highlightBuilder);
 		}

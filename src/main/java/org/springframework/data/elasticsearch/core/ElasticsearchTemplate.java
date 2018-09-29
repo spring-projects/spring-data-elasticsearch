@@ -52,7 +52,6 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
@@ -911,8 +910,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 			if (highlightBuilder == null) {
 				highlightBuilder = new HighlightBuilder();
 			}
-			for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
-				highlightBuilder.field(highlightField);
+			if(searchQuery.getHighlightFields() != null) {
+				for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
+					highlightBuilder.field(highlightField);
+				}
 			}
 			searchRequest.highlighter(highlightBuilder);
 		}

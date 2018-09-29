@@ -29,7 +29,6 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
@@ -40,8 +39,8 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -58,8 +57,6 @@ import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.entities.SampleMappingEntity;
 import org.springframework.data.elasticsearch.entities.UseServerConfigurationEntity;
 import org.springframework.data.util.CloseableIterator;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
@@ -67,6 +64,7 @@ import static org.junit.Assert.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 /**
+ * Base for testing rest/transport templates
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Franck Marchand
@@ -79,8 +77,8 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
  * @author Sascha Woo
  * @author Jean-Baptiste Nizet
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:elasticsearch-template-test.xml")
+
+@Ignore
 public class ElasticsearchTemplateTests {
 
 	private static final String INDEX_NAME = "test-index-sample";
@@ -89,7 +87,7 @@ public class ElasticsearchTemplateTests {
 	private static final String TYPE_NAME = "test-type";
 
 	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	protected ElasticsearchOperations elasticsearchTemplate;
 
 	@Before
 	public void before() {
@@ -1289,15 +1287,6 @@ public class ElasticsearchTemplateTests {
 		assertThat(indexedEntity.getMessage(), is(messageAfterUpdate));
 	}
 
-	@Test(expected = DocumentMissingException.class)
-	public void shouldThrowExceptionIfDocumentDoesNotExistWhileDoingPartialUpdate() {
-		// when
-		IndexRequest indexRequest = new IndexRequest();
-		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5))
-				.withClass(SampleEntity.class).withIndexRequest(indexRequest).build();
-		elasticsearchTemplate.update(updateQuery);
-	}
-
 	@Test
 	public void shouldDoUpsertIfDocumentDoesNotExist() {
 		//given
@@ -1479,7 +1468,6 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(termQuery("message", "test"))
 				.withHighlightBuilder(new HighlightBuilder().field("message"))
-				.withHighlightFields(new HighlightBuilder.Field("message"))
 				.build();
 		// when
 		elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapper() {
@@ -1639,10 +1627,11 @@ public class ElasticsearchTemplateTests {
 				.withTrackScores(true)
 				.build();
 
-		AggregatedPage<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 
 		// then
-		assertThat(page.getMaxScore(), greaterThan(0f));
+		assertThat(page, instanceOf(AggregatedPage.class));
+		assertThat(((AggregatedPage)page).getMaxScore(), greaterThan(0f));
 		assertThat(page.getContent().get(0).getScore(), greaterThan(0f));
 	}
 
