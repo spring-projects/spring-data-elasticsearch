@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.Nullable;
 import org.springframework.data.domain.Page;
@@ -28,6 +27,7 @@ import org.springframework.data.util.CloseableIterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * ElasticsearchOperations
@@ -35,6 +35,7 @@ import java.util.Map;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Kevin Leturc
+ * @author Zetang Zeng
  */
 public interface ElasticsearchOperations {
 
@@ -187,6 +188,42 @@ public interface ElasticsearchOperations {
 	<T> Page<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
+	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link Page}
+	 *
+	 * @param queries
+	 * @param clazz
+	 * @return
+	 */
+	<T> List<Page<T>> queryForPage(List<SearchQuery> queries, Class<T> clazz);
+
+	/**
+	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link Page} using custom mapper
+	 *
+	 * @param queries
+	 * @param clazz
+	 * @return
+	 */
+	<T> List<Page<T>> queryForPage(List<SearchQuery> queries, Class<T> clazz, SearchResultMapper mapper);
+
+	/**
+	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link Page}
+	 *
+	 * @param queries
+	 * @param classes
+	 * @return
+	 */
+	List<Page<?>> queryForPage(List<SearchQuery> queries, List<Class<?>> classes);
+
+	/**
+	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link Page} using custom mapper
+	 *
+	 * @param queries
+	 * @param classes
+	 * @return
+	 */
+	List<Page<?>> queryForPage(List<SearchQuery> queries, List<Class<?>> classes, SearchResultMapper mapper);
+
+	/**
 	 * Execute the query against elasticsearch and return result as {@link Page}
 	 *
 	 * @param query
@@ -282,6 +319,29 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	<T> List<T> queryForList(SearchQuery query, Class<T> clazz);
+
+	/**
+	 * Execute the multi search query against elasticsearch and return result as {@link List}
+	 *
+	 * @param queries
+	 * @param clazz
+	 * @param <T>
+	 * @return
+	 */
+	default <T> List<List<T>> queryForList(List<SearchQuery> queries, Class<T> clazz) {
+		return queryForPage(queries, clazz).stream().map(Page::getContent).collect(Collectors.toList());
+	}
+
+	/**
+	 * Execute the multi search query against elasticsearch and return result as {@link List}
+	 *
+	 * @param queries
+	 * @param classes
+	 * @return
+	 */
+	default List<List<?>> queryForList(List<SearchQuery> queries, List<Class<?>> classes) {
+		return queryForPage(queries, classes).stream().map(Page::getContent).collect(Collectors.toList());
+	}
 
 	/**
 	 * Execute the query against elasticsearch and return ids

@@ -50,6 +50,8 @@ import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetRequestBuilder;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.action.search.MultiSearchRequest;
+import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
@@ -134,6 +136,7 @@ import org.springframework.util.StringUtils;
  * @author Sascha Woo
  * @author Ted Liang
  * @author Jean-Baptiste Nizet
+ * @author Zetang Zeng
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
@@ -312,6 +315,65 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
 		SearchResponse response = doSearch(prepareSearch(query, clazz), query);
 		return mapper.mapResults(response, clazz, query.getPageable());
+	}
+
+	@Override
+	public <T> List<Page<T>> queryForPage(List<SearchQuery> queries, Class<T> clazz) {
+		return queryForPage(queries, clazz, resultsMapper);
+	}
+
+	@Override
+	public <T> List<Page<T>> queryForPage(List<SearchQuery> queries, Class<T> clazz, SearchResultMapper mapper) {
+		MultiSearchRequest request = new MultiSearchRequest();
+		for (SearchQuery query : queries) {
+			request.add(prepareSearch(prepareSearch(query, clazz), query));
+		}
+		return doMultiSearch(queries, clazz, request, mapper);
+	}
+
+	private <T> List<Page<T>> doMultiSearch(List<SearchQuery> queries, Class<T> clazz, MultiSearchRequest request, SearchResultMapper resultsMapper) {
+		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
+		List<Page<T>> res = new ArrayList<>(queries.size());
+		int c = 0;
+		for (SearchQuery query : queries) {
+			res.add(resultsMapper.mapResults(items[c++].getResponse(), clazz, query.getPageable()));
+		}
+		return res;
+	}
+
+	private List<Page<?>> doMultiSearch(List<SearchQuery> queries, List<Class<?>> classes, MultiSearchRequest request, SearchResultMapper resultsMapper) {
+		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
+		List<Page<?>> res = new ArrayList<>(queries.size());
+		int c = 0;
+		Iterator<Class<?>> it = classes.iterator();
+		for (SearchQuery query : queries) {
+			res.add(resultsMapper.mapResults(items[c++].getResponse(), it.next(), query.getPageable()));
+		}
+		return res;
+	}
+
+	private MultiSearchResponse.Item[] getMultiSearchResult(MultiSearchRequest request) {
+		ActionFuture<MultiSearchResponse> future = client.multiSearch(request);
+		MultiSearchResponse response = future.actionGet();
+		MultiSearchResponse.Item[] items = response.getResponses();
+		Assert.isTrue(items.length == request.requests().size(), "Response should have same length with queries");
+		return items;
+	}
+
+	@Override
+	public List<Page<?>> queryForPage(List<SearchQuery> queries, List<Class<?>> classes) {
+		return queryForPage(queries, classes, resultsMapper);
+	}
+
+	@Override
+	public List<Page<?>> queryForPage(List<SearchQuery> queries, List<Class<?>> classes, SearchResultMapper mapper) {
+		Assert.isTrue(queries.size() == classes.size(), "Queries should have same length with classes");
+		MultiSearchRequest request = new MultiSearchRequest();
+		Iterator<Class<?>> it = classes.iterator();
+		for (SearchQuery query : queries) {
+			request.add(prepareSearch(prepareSearch(query, it.next()), query));
+		}
+		return doMultiSearch(queries, classes, request, mapper);
 	}
 
 	@Override
@@ -887,6 +949,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	private SearchResponse doSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
+		SearchRequestBuilder requestBuilder = prepareSearch(searchRequest, searchQuery);
+		return getSearchResponse(requestBuilder);
+	}
+
+	private SearchRequestBuilder prepareSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
 		if (searchQuery.getFilter() != null) {
 			searchRequest.setPostFilter(searchQuery.getFilter());
 		}
@@ -935,7 +1002,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 				searchRequest.addAggregation(aggregatedFacet.getFacet());
 			}
 		}
-		return getSearchResponse(searchRequest.setQuery(searchQuery.getQuery()));
+		return searchRequest.setQuery(searchQuery.getQuery());
 	}
 
 	private SearchResponse getSearchResponse(SearchRequestBuilder requestBuilder) {

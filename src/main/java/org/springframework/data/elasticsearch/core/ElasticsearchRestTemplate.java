@@ -47,6 +47,8 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.ClearScrollResponse;
+import org.elasticsearch.action.search.MultiSearchRequest;
+import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
@@ -127,6 +129,7 @@ import org.springframework.util.StringUtils;
  * @author Sascha Woo
  * @author Ted Liang
  * @author Don Wellington
+ * @author Zetang Zeng
  */
 public class ElasticsearchRestTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -333,6 +336,68 @@ public class ElasticsearchRestTemplate
 	public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
 		SearchResponse response = doSearch(prepareSearch(query, clazz), query);
 		return mapper.mapResults(response, clazz, query.getPageable());
+	}
+
+	@Override
+	public <T> List<Page<T>> queryForPage(List<SearchQuery> queries, Class<T> clazz) {
+		return queryForPage(queries, clazz, resultsMapper);
+	}
+
+	private <T> List<Page<T>> doMultiSearch(List<SearchQuery> queries, Class<T> clazz, MultiSearchRequest request, SearchResultMapper resultsMapper) {
+		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
+		List<Page<T>> res = new ArrayList<>(queries.size());
+		int c = 0;
+		for (SearchQuery query : queries) {
+			res.add(resultsMapper.mapResults(items[c++].getResponse(), clazz, query.getPageable()));
+		}
+		return res;
+	}
+
+	private List<Page<?>> doMultiSearch(List<SearchQuery> queries, List<Class<?>> classes, MultiSearchRequest request, SearchResultMapper resultsMapper) {
+		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
+		List<Page<?>> res = new ArrayList<>(queries.size());
+		int c = 0;
+		Iterator<Class<?>> it = classes.iterator();
+		for (SearchQuery query : queries) {
+			res.add(resultsMapper.mapResults(items[c++].getResponse(), it.next(), query.getPageable()));
+		}
+		return res;
+	}
+
+	private MultiSearchResponse.Item[] getMultiSearchResult(MultiSearchRequest request) {
+		MultiSearchResponse response;
+		try {
+			response = client.multiSearch(request);
+		} catch (IOException e) {
+			throw new ElasticsearchException("Error for search request: " + request.toString(), e);
+		}
+		MultiSearchResponse.Item[] items = response.getResponses();
+		Assert.isTrue(items.length == request.requests().size(), "Response should has same length with queries");
+		return items;
+	}
+
+	@Override
+	public <T> List<Page<T>> queryForPage(List<SearchQuery> queries, Class<T> clazz, SearchResultMapper mapper) {
+		MultiSearchRequest request = new MultiSearchRequest();
+		for (SearchQuery query : queries) {
+			request.add(prepareSearch(prepareSearch(query, clazz), query));
+		}
+		return doMultiSearch(queries, clazz, request, mapper);
+	}
+
+	@Override
+	public List<Page<?>> queryForPage(List<SearchQuery> queries, List<Class<?>> classes) {
+		return queryForPage(queries, classes, resultsMapper);
+	}
+
+	@Override
+	public List<Page<?>> queryForPage(List<SearchQuery> queries, List<Class<?>> classes, SearchResultMapper mapper) {
+		MultiSearchRequest request = new MultiSearchRequest();
+		Iterator<Class<?>> it = classes.iterator();
+		for (SearchQuery query : queries) {
+			request.add(prepareSearch(prepareSearch(query, it.next()), query));
+		}
+		return doMultiSearch(queries, classes, request, mapper);
 	}
 
 	@Override
@@ -1026,6 +1091,16 @@ public class ElasticsearchRestTemplate
 	}
 
 	private SearchResponse doSearch(SearchRequest searchRequest, SearchQuery searchQuery) {
+		prepareSearch(searchRequest, searchQuery);
+
+		try {
+			return client.search(searchRequest);
+		} catch (IOException e) {
+			throw new ElasticsearchException("Error for search request with scroll: " + searchRequest.toString(), e);
+		}
+	}
+
+	private SearchRequest prepareSearch(SearchRequest searchRequest, SearchQuery searchQuery) {
 		if (searchQuery.getFilter() != null) {
 			searchRequest.source().postFilter(searchQuery.getFilter());
 		}
@@ -1074,12 +1149,7 @@ public class ElasticsearchRestTemplate
 				searchRequest.source().aggregation(aggregatedFacet.getFacet());
 			}
 		}
-
-		try {
-			return client.search(searchRequest);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error for search request with scroll: " + searchRequest.toString(), e);
-		}
+		return searchRequest;
 	}
 
 	private SearchResponse getSearchResponse(ActionFuture<SearchResponse> response) {
