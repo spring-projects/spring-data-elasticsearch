@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
+import org.assertj.core.util.Lists;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -51,6 +52,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.entities.Book;
 import org.springframework.data.elasticsearch.entities.HetroEntity1;
 import org.springframework.data.elasticsearch.entities.HetroEntity2;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
@@ -76,6 +78,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
  * @author Alen Turkovic
  * @author Sascha Woo
  * @author Jean-Baptiste Nizet
+ * @author Zetang Zeng
  */
 
 @Ignore
@@ -1484,6 +1487,60 @@ public class ElasticsearchTemplateTests {
 				return null;
 			}
 		});
+	}
+
+	@Test // DATAES-487
+	public void shouldReturnSameEntityForMultiSearch() {
+		// given
+		List<IndexQuery> indexQueries = new ArrayList<>();
+
+		indexQueries.add(buildIndex(SampleEntity.builder().id("1").message("ab").build()));
+		indexQueries.add(buildIndex(SampleEntity.builder().id("2").message("bc").build()));
+		indexQueries.add(buildIndex(SampleEntity.builder().id("3").message("ac").build()));
+
+		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+		// when
+		List<SearchQuery> queries = new ArrayList<>();
+
+		queries.add(new NativeSearchQueryBuilder().withQuery(termQuery("message", "ab")).build());
+		queries.add(new NativeSearchQueryBuilder().withQuery(termQuery("message", "bc")).build());
+		queries.add(new NativeSearchQueryBuilder().withQuery(termQuery("message", "ac")).build());
+		// then
+		List<Page<SampleEntity>> sampleEntities = elasticsearchTemplate.queryForPage(queries, SampleEntity.class);
+		for (Page<SampleEntity> sampleEntity : sampleEntities) {
+			assertThat(sampleEntity.getTotalElements(), equalTo(1L));
+		}
+	}
+
+	@Test // DATAES-487
+	public void shouldReturnDifferentEntityForMultiSearch() {
+		// given
+		Class<Book> clazz = Book.class;
+		elasticsearchTemplate.deleteIndex(clazz);
+		elasticsearchTemplate.createIndex(clazz);
+		elasticsearchTemplate.putMapping(clazz);
+		elasticsearchTemplate.refresh(clazz);
+
+		List<IndexQuery> indexQueries = new ArrayList<>();
+
+		indexQueries.add(buildIndex(SampleEntity.builder().id("1").message("ab").build()));
+		indexQueries.add(buildIndex(Book.builder().id("2").description("bc").build()));
+
+		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+		elasticsearchTemplate.refresh(clazz);
+		// when
+		List<SearchQuery> queries = new ArrayList<>();
+
+		queries.add(new NativeSearchQueryBuilder().withQuery(termQuery("message", "ab")).build());
+		queries.add(new NativeSearchQueryBuilder().withQuery(termQuery("description", "bc")).build());
+		// then
+		List<Page<?>> pages = elasticsearchTemplate.queryForPage(queries, Lists.newArrayList(SampleEntity.class, clazz));
+		assertThat(pages.get(0).getTotalElements(), equalTo(1L));
+		assertThat(pages.get(0).getContent().get(0).getClass(), equalTo(SampleEntity.class));
+		assertThat(pages.get(1).getTotalElements(), equalTo(1L));
+		assertThat(pages.get(1).getContent().get(0).getClass(), equalTo(clazz));
 	}
 
 	@Test
