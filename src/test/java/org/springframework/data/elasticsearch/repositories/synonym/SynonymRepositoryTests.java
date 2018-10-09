@@ -59,7 +59,7 @@ public class SynonymRepositoryTests {
 	public void shouldDo() {
 		//given
 		SynonymEntity entry1 = new SynonymEntity();
-		entry1.setText("Elizabeth is the English queen");
+		entry1.setText("Elizabeth is the english queen");
 		SynonymEntity entry2 = new SynonymEntity();
 		entry2.setText("Other text");
 

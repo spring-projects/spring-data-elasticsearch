@@ -1,0 +1,17 @@
+{
+  "cluster_name": "elasticsearch",
+  "cluster_uuid": "r1tpSEemQZiSVJbfAqOLjg",
+  "name": "T14BIoj",
+  "tagline": "You Know, for Search",
+  "version": {
+    "build_date": "2018-08-17T23:18:47.308994Z",
+    "build_flavor": "default",
+    "build_hash": "595516e",
+    "build_snapshot": false,
+    "build_type": "tar",
+    "lucene_version": "7.4.0",
+    "minimum_index_compatibility_version": "5.0.0",
+    "minimum_wire_compatibility_version": "5.6.0",
+    "number": "6.4.0"
+  }
+}
