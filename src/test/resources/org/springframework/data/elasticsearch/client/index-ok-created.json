@@ -1,0 +1,14 @@
+{
+  "_index": "twitter",
+  "_type": "doc",
+  "_id": "10",
+  "_version": 1,
+  "result": "created",
+  "_shards": {
+    "total": 2,
+    "successful": 1,
+    "failed": 0
+  },
+  "_seq_no": 0,
+  "_primary_term": 1
+}
