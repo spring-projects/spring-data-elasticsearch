@@ -1,0 +1,34 @@
+{
+  "docs": [
+    {
+      "_index": "twitter",
+      "_type": "doc",
+      "_id": "1",
+      "_version": 1,
+      "found": true,
+      "_source": {
+        "user": "kimchy",
+        "post_date": "2009-11-15T13:12:00",
+        "message": "Trying out Elasticsearch, so far so good?"
+      }
+    },
+    {
+      "_index": "twitter",
+      "_type": "_doc",
+      "_id": "2",
+      "found": false
+    },
+    {
+      "_index": "twitter",
+      "_type": "doc",
+      "_id": "3",
+      "_version": 1,
+      "found": true,
+      "_source": {
+        "user": "elastic",
+        "post_date": "2010-01-15T01:46:38",
+        "message": "Building the site, should be kewl"
+      }
+    }
+  ]
+}

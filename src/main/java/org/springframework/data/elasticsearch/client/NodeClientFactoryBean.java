@@ -15,11 +15,15 @@
  */
 package org.springframework.data.elasticsearch.client;
 
+import static java.util.Arrays.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
+import org.elasticsearch.common.logging.LogConfigurator;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.InternalSettingsPreparer;
 import org.elasticsearch.node.Node;
@@ -32,8 +36,6 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.StringUtils;
 
-import static java.util.Arrays.*;
-
 /**
  * NodeClientFactoryBean
  *
@@ -41,7 +43,6 @@ import static java.util.Arrays.*;
  * @author Mohsin Husen
  * @author Ilkang Na
  */
-
 public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingBean, DisposableBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(NodeClientFactoryBean.class);
@@ -54,13 +55,22 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 	private String pathConfiguration;
 
 	public static class TestNode extends Node {
+
 		public TestNode(Settings preparedSettings, Collection<Class<? extends Plugin>> classpathPlugins) {
-			super(InternalSettingsPreparer.prepareEnvironment(preparedSettings, null), classpathPlugins);
+
+			super(InternalSettingsPreparer.prepareEnvironment(preparedSettings, null), classpathPlugins, false);
+		}
+
+		protected void registerDerivedNodeNameWithLogger(String nodeName) {
+			try {
+				 LogConfigurator.setNodeName(nodeName);
+			} catch (Exception e) {
+				// nagh - just forget about it
+			}
 		}
 	}
 
-	NodeClientFactoryBean() {
-	}
+	NodeClientFactoryBean() {}
 
 	public NodeClientFactoryBean(boolean local) {
 		this.local = local;
@@ -84,22 +94,18 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 	@Override
 	public void afterPropertiesSet() throws Exception {
 
-		nodeClient = (NodeClient) new TestNode(
-				Settings.builder().put(loadConfig())
-						.put("transport.type", "netty4")
-						.put("http.type", "netty4")
-						.put("path.home", this.pathHome)
-						.put("path.data", this.pathData)
-						.put("cluster.name", this.clusterName)
-						.put("node.max_local_storage_nodes", 100)
-						.build(), asList(Netty4Plugin.class)).start().client();
+		nodeClient = (NodeClient) new TestNode(Settings.builder().put(loadConfig()).put("transport.type", "netty4")
+				.put("http.type", "netty4").put("path.home", this.pathHome).put("path.data", this.pathData)
+				.put("cluster.name", this.clusterName).put("node.max_local_storage_nodes", 100).build(),
+				asList(Netty4Plugin.class)).start().client();
 	}
 
 	private Settings loadConfig() throws IOException {
 		if (!StringUtils.isEmpty(pathConfiguration)) {
 			InputStream stream = getClass().getClassLoader().getResourceAsStream(pathConfiguration);
 			if (stream != null) {
-				return Settings.builder().loadFromStream(pathConfiguration, getClass().getClassLoader().getResourceAsStream(pathConfiguration), false).build();
+				return Settings.builder().loadFromStream(pathConfiguration,
+						getClass().getClassLoader().getResourceAsStream(pathConfiguration), false).build();
 			}
 			logger.error(String.format("Unable to read node configuration from file [%s]", pathConfiguration));
 		}
