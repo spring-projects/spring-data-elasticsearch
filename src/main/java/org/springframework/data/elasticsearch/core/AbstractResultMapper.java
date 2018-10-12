@@ -15,11 +15,11 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.apache.commons.lang.StringUtils.*;
-
 import java.io.IOException;
 
 import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Artur Konczak
@@ -29,11 +29,14 @@ public abstract class AbstractResultMapper implements ResultsMapper {
 	private EntityMapper entityMapper;
 
 	public AbstractResultMapper(EntityMapper entityMapper) {
+		
+		Assert.notNull(entityMapper, "EntityMapper must not be null!");
+		
 		this.entityMapper = entityMapper;
 	}
 
 	public <T> T mapEntity(String source, Class<T> clazz) {
-		if (isBlank(source)) {
+		if (StringUtils.isEmpty(source)) {
 			return null;
 		}
 		try {

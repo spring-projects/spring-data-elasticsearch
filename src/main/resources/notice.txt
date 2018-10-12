@@ -1,4 +1,4 @@
-Spring Data Elasticsearch 3.0 GA
+Spring Data Elasticsearch 3.1 GA
 Copyright (c) [2013-2016] Pivotal Software, Inc.
 
 This product is licensed to you under the Apache License, Version 2.0 (the "License").

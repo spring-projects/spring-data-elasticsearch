@@ -19,13 +19,12 @@ package org.springframework.data.elasticsearch.core.facet.request;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.range.RangeAggregationBuilder;
 import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.util.Assert;
-
+import org.springframework.util.StringUtils;
 
 /**
  * Range facet for numeric fields
@@ -77,7 +76,7 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 		Assert.notNull(getName(), "Facet name can't be a null !!!");
 
 		RangeAggregationBuilder rangeBuilder = AggregationBuilders.range(getName());
-		final String field = StringUtils.isNotBlank(keyField) ? keyField : this.field;
+		final String field = !StringUtils.isEmpty(keyField) ? keyField : this.field;
 		rangeBuilder.field(field);
 
 		for (Entry entry : entries) {
@@ -86,7 +85,7 @@ public class RangeFacetRequest extends AbstractFacetRequest {
 		}
 
 		rangeBuilder.subAggregation(AggregationBuilders.extendedStats(INTERNAL_STATS).field(field));
-		if(StringUtils.isNotBlank(valueField)){
+		if(!StringUtils.isEmpty(valueField)){
 			rangeBuilder.subAggregation(AggregationBuilders.sum(RANGE_INTERNAL_SUM).field(valueField));
 		}
 

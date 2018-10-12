@@ -15,21 +15,16 @@
  */
 package org.springframework.data.elasticsearch.client;
 
-import static org.apache.commons.lang.StringUtils.*;
-
-import java.net.InetAddress;
 import java.util.Properties;
 
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.util.Assert;
 
 /**
  * TransportClientFactoryBean
@@ -38,12 +33,13 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Jakub Vavrik
  * @author Piotr Betkier
+ * @author Ilkang Na
+ * @author Oliver Gierke
  */
-
 public class TransportClientFactoryBean implements FactoryBean<TransportClient>, InitializingBean, DisposableBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(TransportClientFactoryBean.class);
-	private String clusterNodes = "127.0.0.1:9300";
+	private ClusterNodes clusterNodes = ClusterNodes.of("127.0.0.1:9300");
 	private String clusterName = "elasticsearch";
 	private Boolean clientTransportSniff = true;
 	private Boolean clientIgnoreClusterName = Boolean.FALSE;
@@ -51,8 +47,6 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	private String clientNodesSamplerInterval = "5s";
 	private TransportClient client;
 	private Properties properties;
-	static final String COLON = ":";
-	static final String COMMA = ",";
 
 	@Override
 	public void destroy() throws Exception {
@@ -89,21 +83,23 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	protected void buildClient() throws Exception {
 
 		client = new PreBuiltTransportClient(settings());
-		Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
-		for (String clusterNode : split(clusterNodes, COMMA)) {
-			String hostName = substringBeforeLast(clusterNode, COLON);
-			String port = substringAfterLast(clusterNode, COLON);
-			Assert.hasText(hostName, "[Assertion failed] missing host name in 'clusterNodes'");
-			Assert.hasText(port, "[Assertion failed] missing port in 'clusterNodes'");
-			logger.info("adding transport node : " + clusterNode);
-			client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)));
-		}
+		
+		clusterNodes.stream() //
+				.peek(it -> logger.info("Adding transport node : " + it.toString())) //
+				.forEach(client::addTransportAddress);
+		
 		client.connectedNodes();
 	}
 
 	private Settings settings() {
 		if (properties != null) {
-			return Settings.builder().put(properties).build();
+			Settings.Builder builder = Settings.builder();
+
+			properties.forEach((key, value) -> {
+				builder.put(key.toString(), value.toString());
+			});
+
+			return builder.build();
 		}
 		return Settings.builder()
 				.put("cluster.name", clusterName)
@@ -115,7 +111,7 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	}
 
 	public void setClusterNodes(String clusterNodes) {
-		this.clusterNodes = clusterNodes;
+		this.clusterNodes = ClusterNodes.of(clusterNodes);
 	}
 
 	public void setClusterName(String clusterName) {

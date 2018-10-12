@@ -31,6 +31,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 /**
  * @author Philipp Jardas
  */
+@Ignore(value = "DATAES-421")
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class ElasticsearchTemplateParentChildTests {
@@ -66,6 +68,7 @@ public class ElasticsearchTemplateParentChildTests {
 		elasticsearchTemplate.deleteIndex(ParentEntity.class);
 	}
 
+	@Ignore(value = "DATAES-421")
 	@Test
 	public void shouldIndexParentChildEntity() {
 		// index two parents
@@ -88,6 +91,7 @@ public class ElasticsearchTemplateParentChildTests {
 		assertThat("parents", parents, contains(hasProperty("id", is(parent1.getId()))));
 	}
 
+	@Ignore(value = "DATAES-421")
 	@Test
 	public void shouldUpdateChild() throws Exception {
 		// index parent and child
@@ -106,6 +110,7 @@ public class ElasticsearchTemplateParentChildTests {
 		assertThat(response.getShardInfo().getSuccessful(), is(1));
 	}
 
+	@Ignore(value = "DATAES-421")
 	@Test(expected = RoutingMissingException.class)
 	public void shouldFailWithRoutingMissingExceptionOnUpdateChildIfNotRoutingSetOnUpdateRequest() throws Exception {
 		// index parent and child
@@ -121,6 +126,7 @@ public class ElasticsearchTemplateParentChildTests {
 		update(updateRequest);
 	}
 
+	@Ignore(value = "DATAES-421")
 	@Test(expected = RoutingMissingException.class)
 	public void shouldFailWithRoutingMissingExceptionOnUpdateChildIfRoutingOnlySetOnRequestDoc() throws Exception {
 		// index parent and child

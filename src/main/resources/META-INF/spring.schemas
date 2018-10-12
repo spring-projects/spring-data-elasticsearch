@@ -1,2 +1,2 @@
-http\://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd=org/springframework/data/elasticsearch/config/spring-elasticsearch-1.0.xsd
-http\://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch.xsd=org/springframework/data/elasticsearch/config/spring-elasticsearch-1.0.xsd
+http\://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-3.2.xsd=org/springframework/data/elasticsearch/config/spring-elasticsearch-3.2.xsd
+http\://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch.xsd=org/springframework/data/elasticsearch/config/spring-elasticsearch-3.2.xsd

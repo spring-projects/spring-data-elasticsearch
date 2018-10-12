@@ -1,6 +1,146 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.0.RELEASE (2018-09-21)
+---------------------------------------------
+* DATAES-480 - Release 3.1 GA (Lovelace).
+* DATAES-479 - NativeSearchQueryBuilder should have a withHighlighter() method.
+
+
+Changes in version 3.0.10.RELEASE (2018-09-10)
+----------------------------------------------
+* DATAES-473 - Release 3.0.10 (Kay SR10).
+
+
+Changes in version 2.1.15.RELEASE (2018-09-10)
+----------------------------------------------
+* DATAES-474 - Release 2.1.15 (Ingalls SR15).
+
+
+Changes in version 3.1.0.RC2 (2018-08-20)
+-----------------------------------------
+* DATAES-472 - Release 3.1 RC2 (Lovelace).
+
+
+Changes in version 2.1.14.RELEASE (2018-07-27)
+----------------------------------------------
+* DATAES-463 - Release 2.1.14 (Ingalls SR14).
+* DATAES-283 - Remove dependency to Commons Lang.
+
+
+Changes in version 3.0.9.RELEASE (2018-07-26)
+---------------------------------------------
+* DATAES-470 - TransportClientFactoryBean does not parse clusterNodes correctly.
+* DATAES-469 - Is org.elasticsearch:elasticsearch a necessary dependency?.
+* DATAES-467 - No mapping found for [_score] in order to sort on.
+* DATAES-465 - Release 3.0.9 (Kay SR9).
+* DATAES-317 - Add query logging to ElasticsearchTemplate.
+* DATAES-283 - Remove dependency to Commons Lang.
+
+
+Changes in version 3.1.0.RC1 (2018-07-26)
+-----------------------------------------
+* DATAES-471 - Adapt to changes in immutable entities support.
+* DATAES-470 - TransportClientFactoryBean does not parse clusterNodes correctly.
+* DATAES-469 - Is org.elasticsearch:elasticsearch a necessary dependency?.
+* DATAES-467 - No mapping found for [_score] in order to sort on.
+* DATAES-464 - Add support for @ReadOnlyProperty to prevent properties from being written.
+* DATAES-462 - Add support for mapping document scores to entities.
+* DATAES-452 - Release 3.1 RC1 (Lovelace).
+* DATAES-317 - Add query logging to ElasticsearchTemplate.
+
+
+Changes in version 3.0.8.RELEASE (2018-06-13)
+---------------------------------------------
+* DATAES-460 - Avoid pulling in Netty 3 as dependency.
+* DATAES-448 - Release 3.0.8 (Kay SR8).
+* DATAES-420 - Analyzer of main field ignored when using @MultiField annotation.
+* DATAES-312 - NullHandling.NULLS_LAST not working in query.sort.
+
+
+Changes in version 2.1.13.RELEASE (2018-06-13)
+----------------------------------------------
+* DATAES-447 - Release 2.1.13 (Ingalls SR13).
+
+
+Changes in version 3.1.0.M3 (2018-05-17)
+----------------------------------------
+* DATAES-451 - Adapt to SpEL extension API changes in Spring Data Commons.
+* DATAES-440 - Release 3.1 M3 (Lovelace).
+* DATAES-422 - Add support for IndicesOptions in search queries.
+* DATAES-420 - Analyzer of main field ignored when using @MultiField annotation.
+* DATAES-412 - Highlighted fields is not getting passed to the elastic search query.
+* DATAES-363 - AbstractElasticsearchRepository.existsById(..) always returns true.
+* DATAES-312 - NullHandling.NULLS_LAST not working in query.sort.
+* DATAES-198 - @Version has no effect, so therefore is not useful with spring data elasticsearch.
+
+
+Changes in version 3.0.7.RELEASE (2018-05-08)
+---------------------------------------------
+* DATAES-438 - Expected a boolean [true/false] for property [index] but got [not_analyzed].
+* DATAES-437 - Release 3.0.7 (Kay SR7).
+* DATAES-412 - Highlighted fields is not getting passed to the elastic search query.
+* DATAES-402 - Paging not working correctly.
+* DATAES-363 - AbstractElasticsearchRepository.existsById(..) always returns true.
+* DATAES-198 - @Version has no effect, so therefore is not useful with spring data elasticsearch.
+
+
+Changes in version 2.1.12.RELEASE (2018-05-08)
+----------------------------------------------
+* DATAES-436 - Release 2.1.12 (Ingalls SR12).
+
+
+Changes in version 3.1.0.M2 (2018-04-13)
+----------------------------------------
+* DATAES-439 - Adapt to API changes in Spring Data Commons.
+* DATAES-434 - Remove explicit declaration of Jackson library versions.
+* DATAES-432 - Export composable repositories via CDI.
+* DATAES-427 - Release 3.1 M2 (Lovelace).
+
+
+Changes in version 3.0.6.RELEASE (2018-04-04)
+---------------------------------------------
+* DATAES-434 - Remove explicit declaration of Jackson library versions.
+* DATAES-430 - Release 3.0.6 (Kay SR6).
+
+
+Changes in version 2.1.11.RELEASE (2018-04-04)
+----------------------------------------------
+* DATAES-434 - Remove explicit declaration of Jackson library versions.
+* DATAES-424 - Fix line endings.
+* DATAES-423 - Release 2.1.11 (Ingalls SR11).
+
+
+Changes in version 3.0.5.RELEASE (2018-02-28)
+---------------------------------------------
+* DATAES-429 - Release 3.0.5 (Kay SR5).
+
+
+Changes in version 3.0.4.RELEASE (2018-02-19)
+---------------------------------------------
+* DATAES-425 - Release 3.0.4 (Kay SR4).
+
+
+Changes in version 3.1.0.M1 (2018-02-06)
+----------------------------------------
+* DATAES-424 - Fix line endings.
+* DATAES-414 - Reduce scope of Lo4j dependencies to test.
+* DATAES-410 - Adapt API changes in Property in test cases.
+* DATAES-401 - Release 3.1 M1 (Lovelace).
+* DATAES-361 - log4j2.xml in classpath root of the library prevents Spring Boot's logging auto-configuration to work.
+
+
+Changes in version 3.0.3.RELEASE (2018-01-24)
+---------------------------------------------
+* DATAES-424 - Fix line endings.
+* DATAES-417 - Release 3.0.3 (Kay SR3).
+
+
+Changes in version 2.1.10.RELEASE (2018-01-24)
+----------------------------------------------
+* DATAES-416 - Release 2.1.10 (Ingalls SR10).
+
+
 Changes in version 3.0.2.RELEASE (2017-11-27)
 ---------------------------------------------
 * DATAES-414 - Reduce scope of Lo4j dependencies to test.

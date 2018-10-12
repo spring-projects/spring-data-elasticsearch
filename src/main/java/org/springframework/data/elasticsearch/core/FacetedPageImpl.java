@@ -40,6 +40,8 @@ import org.springframework.data.elasticsearch.core.facet.result.StatisticalResul
 import org.springframework.data.elasticsearch.core.facet.result.Term;
 import org.springframework.data.elasticsearch.core.facet.result.TermResult;
 
+import static java.util.Optional.ofNullable;
+
 /**
  * Container for query result and facet results
  *
@@ -48,6 +50,7 @@ import org.springframework.data.elasticsearch.core.facet.result.TermResult;
  * @author Artur Konczak
  * @author Jonathan Yan
  * @author Philipp Kräutli
+ * @author Remco Zigterman
  */
 @Deprecated
 public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedPage<T>, AggregatedPage<T> {

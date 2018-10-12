@@ -6,7 +6,7 @@
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <elasticsearch:node-client id="client" local="true" cluster-name="#{T(java.util.UUID).randomUUID().toString()}"
-                               http-enabled="false" path-data="target/elasticsearchTestData" path-home="src/test/resources/test-home-dir"
+                               http-enabled="true" path-data="target/elasticsearchTestData" path-home="src/test/resources/test-home-dir"
                                path-configuration="node-client-configuration.yml"/>
 
     <!-- ip4 -->
