@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -112,7 +113,7 @@ class MappingBuilder {
 
 		for (java.lang.reflect.Field field : fields) {
 
-			if (field.isAnnotationPresent(Transient.class) || isInIgnoreFields(field, fieldAnnotation)) {
+			if (field.isAnnotationPresent(Transient.class) || isInIgnoreFields(field, fieldAnnotation) || Modifier.isStatic(field.getModifiers()) || Modifier.isProtected(field.getModifiers())) {
 				continue;
 			}
 
