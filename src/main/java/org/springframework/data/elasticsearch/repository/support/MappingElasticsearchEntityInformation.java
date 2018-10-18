@@ -19,7 +19,6 @@ import org.elasticsearch.index.VersionType;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
-import org.springframework.util.Assert;
 
 /**
  * Elasticsearch specific implementation of
@@ -34,6 +33,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Ivan Greene
+ * @author Sylvain Laurent
  */
 public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEntityInformation<T, ID>
 		implements ElasticsearchEntityInformation<T, ID> {
@@ -50,9 +50,6 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity, String indexName, String type, VersionType versionType) {
 		super(entity);
 
-		Assert.notNull(indexName, "IndexName must not be null!");
-		Assert.notNull(type, "IndexType must not be null!");
-
 		this.entityMetadata = entity;
 		this.indexName = indexName;
 		this.type = type;
@@ -66,12 +63,12 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 
 	@Override
 	public String getIndexName() {
-		return indexName;
+		return indexName != null ? indexName : entityMetadata.getIndexName();
 	}
 
 	@Override
 	public String getType() {
-		return type;
+		return type != null ? type : entityMetadata.getIndexType();
 	}
 
 	@Override
