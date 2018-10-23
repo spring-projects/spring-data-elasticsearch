@@ -64,6 +64,7 @@ class MappingBuilder {
 	public static final String FIELD_FORMAT = "format";
 	public static final String FIELD_SEARCH_ANALYZER = "search_analyzer";
 	public static final String FIELD_INDEX_ANALYZER = "analyzer";
+	public static final String FIELD_NORMALIZER = "normalizer";
 	public static final String FIELD_PROPERTIES = "properties";
 	public static final String FIELD_PARENT = "_parent";
 
@@ -270,6 +271,7 @@ class MappingBuilder {
 		String datePattern = null;
 		String analyzer = null;
 		String searchAnalyzer = null;
+		String normalizer = null;
 
 		if (annotation instanceof Field) {
 			// @Field
@@ -282,6 +284,7 @@ class MappingBuilder {
 			datePattern = fieldAnnotation.pattern();
 			analyzer = fieldAnnotation.analyzer();
 			searchAnalyzer = fieldAnnotation.searchAnalyzer();
+			normalizer = fieldAnnotation.normalizer();
 		} else if (annotation instanceof InnerField) {
 			// @InnerField
 			InnerField fieldAnnotation = (InnerField) annotation;
@@ -293,6 +296,7 @@ class MappingBuilder {
 			datePattern = fieldAnnotation.pattern();
 			analyzer = fieldAnnotation.analyzer();
 			searchAnalyzer = fieldAnnotation.searchAnalyzer();
+			normalizer = fieldAnnotation.normalizer();
 		} else {
 			throw new IllegalArgumentException("annotation must be an instance of @Field or @InnerField");
 		}
@@ -318,6 +322,9 @@ class MappingBuilder {
 		}
 		if (StringUtils.hasText(searchAnalyzer)) {
 			builder.field(FIELD_SEARCH_ANALYZER, searchAnalyzer);
+		}
+		if (!StringUtils.isEmpty(normalizer)) {
+			builder.field(FIELD_NORMALIZER, normalizer);
 		}
 	}
 

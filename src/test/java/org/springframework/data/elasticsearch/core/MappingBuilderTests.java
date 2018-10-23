@@ -45,6 +45,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Mohsin Husen
  * @author Keivn Leturc
  * @author Nordine Bittich
+ * @author Sascha Woo
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -214,5 +215,26 @@ public class MappingBuilderTests {
 		assertThat(prefixDescription.get("search_analyzer"), equalTo("standard"));
 		assertThat(descriptionMapping.get("type"), equalTo("text"));
 		assertThat(descriptionMapping.get("analyzer"), equalTo("whitespace"));
+	}
+
+	@Test // DATAES-492
+	public void shouldUseKeywordNormalizer() throws IOException {
+
+		// given
+		elasticsearchTemplate.deleteIndex(NormalizerEntity.class);
+		elasticsearchTemplate.createIndex(NormalizerEntity.class);
+		elasticsearchTemplate.putMapping(NormalizerEntity.class);
+
+		// when
+		Map mapping = elasticsearchTemplate.getMapping(NormalizerEntity.class);
+		Map properties = (Map) mapping.get("properties");
+		Map fieldName = (Map) properties.get("name");
+		Map fieldDescriptionLowerCase = (Map) ((Map) ((Map) properties.get("description")).get("fields")).get("lower_case");
+
+		// then
+		assertThat(fieldName.get("type"), equalTo("keyword"));
+		assertThat(fieldName.get("normalizer"), equalTo("lower_case_normalizer"));
+		assertThat(fieldDescriptionLowerCase.get("type"), equalTo("keyword"));
+		assertThat(fieldDescriptionLowerCase.get("normalizer"), equalTo("lower_case_normalizer"));
 	}
 }
