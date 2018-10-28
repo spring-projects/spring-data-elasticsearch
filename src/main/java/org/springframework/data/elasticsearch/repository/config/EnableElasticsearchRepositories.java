@@ -15,14 +15,14 @@
  */
 package org.springframework.data.elasticsearch.repository.config;
 
-import java.lang.annotation.*;
+import org.springframework.context.annotation.ComponentScan.*;
+import org.springframework.context.annotation.*;
+import org.springframework.data.elasticsearch.core.*;
+import org.springframework.data.elasticsearch.repository.support.*;
+import org.springframework.data.repository.config.*;
+import org.springframework.data.repository.query.QueryLookupStrategy.*;
 
-import org.springframework.context.annotation.ComponentScan.Filter;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.repository.support.ElasticsearchRepositoryFactoryBean;
-import org.springframework.data.repository.config.DefaultRepositoryBaseClass;
-import org.springframework.data.repository.query.QueryLookupStrategy.Key;
+import java.lang.annotation.*;
 
 /**
  * Annotation to enable Elasticsearch repositories. Will scan the package of the annotated configuration class for
@@ -90,7 +90,7 @@ public @interface EnableElasticsearchRepositories {
 	/**
 	 * Returns the key of the {@link org.springframework.data.repository.query.QueryLookupStrategy} to be used for lookup
 	 * queries for query methods. Defaults to
-	 * {@link org.springframework.data.repository.query.QueryLookupStrategy.Key#CREATE_IF_NOT_FOUND}.
+	 * {@link Key#CREATE_IF_NOT_FOUND}.
 	 *
 	 * @return
 	 */

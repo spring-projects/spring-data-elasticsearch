@@ -15,48 +15,29 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import org.apache.commons.lang.StringUtils;
-import org.elasticsearch.action.get.MultiGetItemResponse;
-import org.elasticsearch.action.get.MultiGetResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.script.Script;
-import org.elasticsearch.script.ScriptType;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.ElasticsearchException;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
-import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
+import org.apache.commons.lang.*;
+import org.elasticsearch.action.get.*;
+import org.elasticsearch.action.index.*;
+import org.elasticsearch.action.search.*;
+import org.elasticsearch.action.support.*;
+import org.elasticsearch.script.*;
+import org.elasticsearch.search.*;
+import org.elasticsearch.search.fetch.subphase.highlight.*;
+import org.elasticsearch.search.sort.*;
+import org.hamcrest.*;
+import org.junit.*;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.data.domain.*;
+import org.springframework.data.elasticsearch.*;
+import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.core.aggregation.*;
+import org.springframework.data.elasticsearch.core.aggregation.impl.*;
 import org.springframework.data.elasticsearch.core.query.*;
-import org.springframework.data.elasticsearch.entities.HetroEntity1;
-import org.springframework.data.elasticsearch.entities.HetroEntity2;
-import org.springframework.data.elasticsearch.entities.SampleEntity;
-import org.springframework.data.elasticsearch.entities.SampleMappingEntity;
-import org.springframework.data.elasticsearch.entities.UseServerConfigurationEntity;
-import org.springframework.data.util.CloseableIterator;
+import org.springframework.data.elasticsearch.entities.*;
+import org.springframework.data.util.*;
+
+import java.util.*;
+
 import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.Matchers.*;
@@ -2290,7 +2271,7 @@ public class ElasticsearchTemplateTests {
 				"    analyzer:\n" +
 				"      emailAnalyzer:\n" +
 				"        type: custom\n" +
-				"        tokenizer: uax_url_email\n"));
+				"        tokenizer: uax_url_email"));
 	}
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {

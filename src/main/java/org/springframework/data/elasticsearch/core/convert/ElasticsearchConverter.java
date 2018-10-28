@@ -15,10 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import org.springframework.core.convert.ConversionService;
-import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
-import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
-import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.core.convert.*;
+import org.springframework.data.elasticsearch.core.mapping.*;
+import org.springframework.data.mapping.context.*;
 
 /**
  * ElasticsearchConverter
@@ -30,14 +29,14 @@ import org.springframework.data.mapping.context.MappingContext;
 public interface ElasticsearchConverter {
 
 	/**
-	 * Returns the underlying {@link org.springframework.data.mapping.context.MappingContext} used by the converter.
+	 * Returns the underlying {@link MappingContext} used by the converter.
 	 *
 	 * @return never {@literal null}
 	 */
 	MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> getMappingContext();
 
 	/**
-	 * Returns the underlying {@link org.springframework.core.convert.ConversionService} used by the converter.
+	 * Returns the underlying {@link ConversionService} used by the converter.
 	 *
 	 * @return never {@literal null}.
 	 */
