@@ -15,17 +15,17 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import static java.util.Collections.*;
+import static java.util.stream.Collectors.*;
+
+import java.util.*;
+
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.search.*;
 import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.core.*;
 import org.springframework.data.elasticsearch.core.aggregation.*;
 import org.springframework.data.elasticsearch.core.aggregation.impl.*;
-
-import java.util.*;
-
-import static java.util.Collections.*;
-import static java.util.stream.Collectors.*;
 
 /**
  * @author Nikita Guchakov

@@ -17,9 +17,10 @@ package org.springframework.data.elasticsearch.core.utils;
 
 import lombok.experimental.*;
 import lombok.extern.slf4j.*;
-import org.springframework.core.io.*;
 
 import java.nio.file.*;
+
+import org.springframework.core.io.*;
 
 @Slf4j
 @UtilityClass

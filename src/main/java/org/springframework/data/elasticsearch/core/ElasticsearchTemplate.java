@@ -15,6 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static java.util.function.Function.*;
+import static org.elasticsearch.client.Requests.*;
+import static org.elasticsearch.index.VersionType.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.springframework.util.CollectionUtils.*;
+
+import java.io.*;
+import java.util.*;
+import java.util.stream.*;
+
 import org.elasticsearch.action.*;
 import org.elasticsearch.action.admin.indices.alias.*;
 import org.elasticsearch.action.admin.indices.alias.get.*;
@@ -46,16 +56,6 @@ import org.springframework.data.elasticsearch.core.facet.*;
 import org.springframework.data.elasticsearch.core.mapping.*;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.util.*;
-
-import java.io.*;
-import java.util.*;
-import java.util.stream.*;
-
-import static java.util.function.Function.*;
-import static org.elasticsearch.client.Requests.*;
-import static org.elasticsearch.index.VersionType.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.util.CollectionUtils.*;
 
 /**
  * ElasticsearchTemplate

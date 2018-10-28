@@ -15,10 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.springframework.data.util.*;
-
 import java.util.*;
 import java.util.function.*;
+
+import org.springframework.data.util.*;
 
 /**
  * Iterator through elastic scroll pages.

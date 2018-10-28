@@ -15,13 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static java.util.stream.Collectors.*;
+
 import lombok.experimental.*;
-import org.elasticsearch.action.bulk.*;
-import org.springframework.data.elasticsearch.*;
 
 import java.util.*;
 
-import static java.util.stream.Collectors.*;
+import org.elasticsearch.action.bulk.*;
+import org.springframework.data.elasticsearch.*;
 
 /**
  * @author Nikita Guchakov

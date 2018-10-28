@@ -15,6 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.elasticsearch.client.Requests.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
+import static org.springframework.util.CollectionUtils.isEmpty;
+import static org.springframework.util.StringUtils.*;
+
+import java.io.*;
+import java.util.*;
+import java.util.stream.*;
+
 import org.elasticsearch.action.admin.indices.create.*;
 import org.elasticsearch.action.admin.indices.refresh.*;
 import org.elasticsearch.action.get.*;
@@ -42,16 +52,6 @@ import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.utils.*;
 import org.springframework.data.util.*;
 import org.springframework.util.*;
-
-import java.io.*;
-import java.util.*;
-import java.util.stream.*;
-
-import static org.elasticsearch.client.Requests.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
-import static org.springframework.util.CollectionUtils.isEmpty;
-import static org.springframework.util.StringUtils.*;
 
 /**
  * @author Nikita Guchakov

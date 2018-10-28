@@ -15,6 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.apache.commons.lang.RandomStringUtils.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
+
+import java.util.*;
+
 import org.apache.commons.lang.*;
 import org.elasticsearch.action.get.*;
 import org.elasticsearch.action.index.*;
@@ -35,14 +43,6 @@ import org.springframework.data.elasticsearch.core.aggregation.impl.*;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.entities.*;
 import org.springframework.data.util.*;
-
-import java.util.*;
-
-import static org.apache.commons.lang.RandomStringUtils.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 /**
  * Base for testing rest/transport templates

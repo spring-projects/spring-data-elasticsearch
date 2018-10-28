@@ -15,9 +15,18 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import com.fasterxml.jackson.core.type.*;
-import com.fasterxml.jackson.databind.*;
+import static java.util.stream.Collectors.*;
+import static org.elasticsearch.index.VersionType.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.springframework.util.CollectionUtils.isEmpty;
+import static org.springframework.util.StringUtils.*;
+
 import lombok.extern.slf4j.*;
+
+import java.io.*;
+import java.util.*;
+import java.util.stream.*;
+
 import org.apache.http.util.*;
 import org.elasticsearch.action.*;
 import org.elasticsearch.action.admin.indices.alias.*;
@@ -52,15 +61,8 @@ import org.springframework.data.elasticsearch.core.mapping.*;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.util.*;
 
-import java.io.*;
-import java.util.*;
-import java.util.stream.*;
-
-import static java.util.stream.Collectors.*;
-import static org.elasticsearch.index.VersionType.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.util.CollectionUtils.isEmpty;
-import static org.springframework.util.StringUtils.*;
+import com.fasterxml.jackson.core.type.*;
+import com.fasterxml.jackson.databind.*;
 
 /**
  * ElasticsearchRestTemplate
@@ -760,8 +762,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticTemplate
 	public Boolean addAlias(AliasQuery query) {
 		Assert.notNull(query.getIndexName(), "No index defined for Alias");
 		Assert.notNull(query.getAliasName(), "No alias defined");
-		final AliasActions aliasAction = AliasActions.add()
-				.alias(query.getAliasName()).index(query.getIndexName());
+		final AliasActions aliasAction = AliasActions.add().alias(query.getAliasName()).index(query.getIndexName());
 
 		if (query.getFilterBuilder() != null) {
 			aliasAction.filter(query.getFilterBuilder());
