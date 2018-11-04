@@ -15,19 +15,35 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
-import static java.util.Collections.*;
-import static java.util.stream.Collectors.*;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.search.SearchHit;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.SearchResultMapper;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
-import org.elasticsearch.action.search.*;
-import org.elasticsearch.search.*;
-import org.springframework.data.domain.*;
-import org.springframework.data.elasticsearch.core.*;
-import org.springframework.data.elasticsearch.core.aggregation.*;
-import org.springframework.data.elasticsearch.core.aggregation.impl.*;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 
 /**
+ * @author Rizwan Idrees
+ * @author Mohsin Husen
+ * @author Artur Konczak
+ * @author Kevin Leturc
+ * @author Mason Chan
+ * @author Young Gu
+ * @author Oliver Gierke
+ * @author Mark Janssen
+ * @author Chris White
+ * @author Mark Paluch
+ * @author Ilkang Na
+ * @author Alen Turkovic
+ * @author Sascha Woo
+ * @author Ted Liang
+ * @author Don Wellington
  * @author Nikita Guchakov
  */
 public class IdResultMapper implements SearchResultMapper {

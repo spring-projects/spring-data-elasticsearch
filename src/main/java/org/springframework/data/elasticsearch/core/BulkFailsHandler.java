@@ -15,21 +15,39 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static java.util.stream.Collectors.*;
+import lombok.experimental.UtilityClass;
+import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.springframework.data.elasticsearch.ElasticsearchException;
 
-import lombok.experimental.*;
+import java.util.Arrays;
+import java.util.Map;
 
-import java.util.*;
-
-import org.elasticsearch.action.bulk.*;
-import org.springframework.data.elasticsearch.*;
+import static java.util.stream.Collectors.toMap;
 
 /**
+ * @author Rizwan Idrees
+ * @author Mohsin Husen
+ * @author Artur Konczak
+ * @author Kevin Leturc
+ * @author Mason Chan
+ * @author Young Gu
+ * @author Oliver Gierke
+ * @author Mark Janssen
+ * @author Chris White
+ * @author Mark Paluch
+ * @author Ilkang Na
+ * @author Alen Turkovic
+ * @author Sascha Woo
+ * @author Ted Liang
+ * @author Don Wellington
  * @author Nikita Guchakov
  */
 @UtilityClass
 public class BulkFailsHandler {
+
 	void checkForBulkUpdateFailure(BulkResponse bulkResponse) {
+
 		if (!bulkResponse.hasFailures()) {
 			return;
 		}

@@ -15,13 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core.utils;
 
-import lombok.experimental.*;
-import lombok.extern.slf4j.*;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-import org.springframework.core.io.*;
-
+/**
+ * @author Nikita Guchakov
+ */
 @Slf4j
 @UtilityClass
 public class ClassPathUtils {

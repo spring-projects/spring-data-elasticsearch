@@ -15,45 +15,75 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.elasticsearch.client.Requests.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
-import static org.springframework.util.CollectionUtils.isEmpty;
-import static org.springframework.util.StringUtils.*;
-
-import java.io.*;
-import java.util.*;
-import java.util.stream.*;
-
-import org.elasticsearch.action.admin.indices.create.*;
-import org.elasticsearch.action.admin.indices.refresh.*;
-import org.elasticsearch.action.get.*;
-import org.elasticsearch.action.search.*;
-import org.elasticsearch.client.*;
-import org.elasticsearch.common.*;
-import org.elasticsearch.common.collect.*;
-import org.elasticsearch.common.unit.*;
-import org.elasticsearch.common.xcontent.*;
-import org.elasticsearch.index.query.*;
-import org.elasticsearch.search.*;
-import org.elasticsearch.search.fetch.subphase.highlight.*;
-import org.elasticsearch.search.sort.*;
-import org.elasticsearch.search.suggest.*;
-import org.slf4j.*;
-import org.springframework.context.*;
-import org.springframework.data.domain.*;
-import org.springframework.data.elasticsearch.*;
-import org.springframework.data.elasticsearch.annotations.*;
-import org.springframework.data.elasticsearch.core.aggregation.*;
-import org.springframework.data.elasticsearch.core.convert.*;
-import org.springframework.data.elasticsearch.core.mapping.*;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetRequest;
+import org.elasticsearch.action.get.MultiGetResponse;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.Requests;
+import org.elasticsearch.common.Nullable;
+import org.elasticsearch.common.collect.MapBuilder;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.mapping.IdResultMapper;
 import org.springframework.data.elasticsearch.core.query.*;
-import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.utils.*;
-import org.springframework.data.util.*;
-import org.springframework.util.*;
+import org.springframework.data.elasticsearch.core.utils.ClassPathUtils;
+import org.springframework.data.util.CloseableIterator;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Stream;
+
+import static org.elasticsearch.client.Requests.refreshRequest;
+import static org.elasticsearch.index.query.QueryBuilders.moreLikeThisQuery;
+import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMapping;
+import static org.springframework.util.CollectionUtils.isEmpty;
+import static org.springframework.util.StringUtils.hasText;
 
 /**
+ * @author Rizwan Idrees
+ * @author Mohsin Husen
+ * @author Artur Konczak
+ * @author Kevin Leturc
+ * @author Mason Chan
+ * @author Young Gu
+ * @author Oliver Gierke
+ * @author Mark Janssen
+ * @author Chris White
+ * @author Mark Paluch
+ * @author Ilkang Na
+ * @author Alen Turkovic
+ * @author Sascha Woo
+ * @author Ted Liang
+ * @author Jean-Baptiste Nizet
+ * @author Don Wellington
  * @author Nikita Guchakov
  */
 public abstract class AbstractElasticTemplate implements ElasticsearchOperations, ApplicationContextAware {
@@ -61,9 +91,10 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 	private static final String FIELD_SCORE = "_score";
 
 	private final ResultsMapper resultsMapper;
-	private ElasticsearchConverter elasticsearchConverter;
+	private final ElasticsearchConverter elasticsearchConverter;
 
 	AbstractElasticTemplate(ElasticsearchConverter elasticsearchConverter, ResultsMapper resultsMapper) {
+
 		Assert.notNull(elasticsearchConverter, "ElasticsearchConverter must not be null!");
 		this.elasticsearchConverter = elasticsearchConverter;
 		Assert.notNull(resultsMapper, "ResultsMapper must not be null!");
@@ -77,6 +108,7 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 
 	@Override
 	public boolean createIndex(String indexName) {
+
 		Assert.notNull(indexName, "No index defined for Query");
 		try {
 			return createIndex(Requests.createIndexRequest(indexName));
@@ -94,6 +126,7 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz) {
+
 		if (clazz.isAnnotationPresent(Mapping.class)) {
 			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
 			if (!StringUtils.isEmpty(mappingPath)) {
@@ -139,6 +172,7 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 
 	@Override
 	public <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper) {
+
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
 		GetResponse response = queryForObject(query, persistentEntity.getIndexName(), persistentEntity.getIndexType());
 		return mapper.mapResult(response, clazz);
@@ -146,10 +180,19 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 
 	@Override
 	public <T> T queryForObject(CriteriaQuery query, Class<T> clazz) {
+
 		Page<T> page = queryForPage(query, clazz);
 		Assert.isTrue(page.getTotalElements() < 2, "Expected 1 but found " + page.getTotalElements() + " results");
 		return page.getTotalElements() > 0 ? page.getContent().get(0) : null;
 	}
+
+    @Override
+    public <T> T queryForObject(StringQuery query, Class<T> clazz) {
+
+        Page<T> page = queryForPage(query, clazz);
+        Assert.isTrue(page.getTotalElements() < 2, "Expected 1 but found " + page.getTotalElements() + " results");
+        return page.getTotalElements() > 0 ? page.getContent().get(0) : null;
+    }
 
 	@Override
 	public <T> Page<T> queryForPage(StringQuery query, Class<T> clazz) {
@@ -159,13 +202,6 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 	@Override
 	public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz) {
 		return queryForPage(query, clazz, resultsMapper);
-	}
-
-	@Override
-	public <T> T queryForObject(StringQuery query, Class<T> clazz) {
-		Page<T> page = queryForPage(query, clazz);
-		Assert.isTrue(page.getTotalElements() < 2, "Expected 1 but found " + page.getTotalElements() + " results");
-		return page.getTotalElements() > 0 ? page.getContent().get(0) : null;
 	}
 
 	@Override
@@ -189,7 +225,8 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 
 	@Override
 	public <T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz) {
-		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
+
+		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
 		return doStream(scrollTimeInMillis, (ScrolledPage<T>) startScroll(scrollTimeInMillis, query, clazz), clazz,
 				resultsMapper);
 	}
@@ -200,14 +237,13 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 	}
 
 	@Override
-	public <T> CloseableIterator<T> stream(SearchQuery query, final Class<T> clazz, final SearchResultMapper mapper) {
-		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
+	public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
+	    long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
 		return doStream(scrollTimeInMillis, (ScrolledPage<T>) startScroll(scrollTimeInMillis, query, clazz, mapper), clazz,
 				mapper);
 	}
 
-	private <T> CloseableIterator<T> doStream(final long scrollTimeInMillis, final ScrolledPage<T> page,
-			final Class<T> clazz, final SearchResultMapper mapper) {
+	private <T> CloseableIterator<T> doStream(long scrollTimeInMillis, ScrolledPage<T> page, Class<T> clazz, SearchResultMapper mapper) {
 		return new PageIterator<>(page,
 				nextScrollId -> (ScrolledPage<T>) continueScroll(nextScrollId, scrollTimeInMillis, clazz, mapper),
 				this::clearScroll);
@@ -225,6 +261,7 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 	}
 
 	HighlightBuilder highlightFromQuery(SearchQuery searchQuery) {
+
 		HighlightBuilder highlightBuilder = searchQuery.getHighlightBuilder();
 		if (highlightBuilder == null) {
 			highlightBuilder = new HighlightBuilder();
@@ -239,19 +276,18 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 	}
 
 	SortBuilder toSortBuilder(Sort.Order order) {
+
 		SortOrder sortOrder = order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC;
 		if (FIELD_SCORE.equals(order.getProperty())) {
 			return SortBuilders.scoreSort().order(sortOrder);
-		} else {
-			FieldSortBuilder fieldSortBuilder = SortBuilders.fieldSort(order.getProperty()).order(sortOrder);
-
-			if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
-				fieldSortBuilder.missing("_first");
-			} else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
-				fieldSortBuilder.missing("_last");
-			}
-			return fieldSortBuilder;
 		}
+		FieldSortBuilder fieldSortBuilder = SortBuilders.fieldSort(order.getProperty()).order(sortOrder);
+		if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
+			fieldSortBuilder.missing("_first");
+		} else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
+			fieldSortBuilder.missing("_last");
+		}
+		return fieldSortBuilder;
 	}
 
 	@Override
@@ -304,12 +340,14 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 
 	@Override
 	public ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz) {
+
 		Assert.isTrue(clazz.isAnnotationPresent(Document.class), "Unable to identify index name. " + clazz.getSimpleName()
 				+ " is not a Document. Make sure the document class is annotated with @Document(indexName=\"foo\")");
 		return elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(clazz);
 	}
 
 	SearchResponse doScroll(Class<?> clazz, long scrollTimeInMillis, CriteriaQuery criteriaQuery) {
+
 		Assert.notNull(criteriaQuery.getIndices(), "No index defined for Query");
 		Assert.notNull(criteriaQuery.getTypes(), "No type define for Query");
 		Assert.notNull(criteriaQuery.getPageable(), "Query.pageable is required for scan & scroll");
@@ -323,6 +361,7 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 
 	@Override
 	public <T> String delete(Class<T> clazz, String id) {
+
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
 		return delete(persistentEntity.getIndexName(), persistentEntity.getIndexType(), id);
 	}
@@ -388,6 +427,7 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 
 	@Override
 	public void delete(DeleteQuery deleteQuery) {
+
 		Assert.notNull(deleteQuery.getIndex(), "No index defined for Query");
 		Assert.notNull(deleteQuery.getType(), "No type define for Query");
 		delete(deleteQuery, null);
@@ -395,6 +435,7 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 
 	@Override
 	public <T> void delete(CriteriaQuery criteriaQuery, Class<T> clazz) {
+
 		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
 		Assert.notNull(elasticsearchQuery, "Query can not be null.");
 		DeleteQuery deleteQuery = new DeleteQuery();
@@ -431,6 +472,7 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 	}
 
 	SearchResponse doScroll(Class<?> clazz, long scrollTimeInMillis, SearchQuery searchQuery) {
+
 		Assert.notNull(searchQuery.getIndices(), "No index defined for Query");
 		Assert.notNull(searchQuery.getTypes(), "No type define for Query");
 		Assert.notNull(searchQuery.getPageable(), "Query.pageable is required for scan & scroll");
@@ -439,12 +481,14 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 
 	@Override
 	public <T> Page<T> startScroll(long scrollTimeInMillis, SearchQuery searchQuery, Class<T> clazz) {
+
 		SearchResponse response = doScroll(clazz, scrollTimeInMillis, searchQuery);
 		return resultsMapper.mapResults(response, clazz, null);
 	}
 
 	@Override
 	public <T> Page<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz) {
+
 		SearchResponse response = doScroll(clazz, scrollTimeInMillis, criteriaQuery);
 		return resultsMapper.mapResults(response, clazz, null);
 	}
@@ -452,6 +496,7 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 	@Override
 	public <T> Page<T> startScroll(long scrollTimeInMillis, SearchQuery searchQuery, Class<T> clazz,
 			SearchResultMapper mapper) {
+
 		SearchResponse response = doScroll(clazz, scrollTimeInMillis, searchQuery);
 		return mapper.mapResults(response, clazz, null);
 	}
@@ -459,6 +504,7 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 	@Override
 	public <T> Page<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz,
 			SearchResultMapper mapper) {
+
 		SearchResponse response = doScroll(clazz, scrollTimeInMillis, criteriaQuery);
 		return mapper.mapResults(response, clazz, null);
 	}
@@ -477,9 +523,7 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 
 		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntityFor(entity.getClass());
 		Object identifier = persistentEntity.getIdentifierAccessor(entity).getIdentifier();
-
 		return identifier != null ? identifier.toString() : null;
-
 	}
 
 	void setPersistentEntityId(Object entity, String id) {
@@ -488,7 +532,6 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 		ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
 
 		// Only deal with text because ES generated Ids are strings !
-
 		if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
 			persistentEntity.getPropertyAccessor(entity).setProperty(idProperty, id);
 		}
@@ -530,6 +573,7 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 	}
 
 	public void setApplicationContext(ApplicationContext context) {
+
 		if (getElasticsearchConverter() instanceof ApplicationContextAware) {
 			((ApplicationContextAware) getElasticsearchConverter()).setApplicationContext(context);
 		}
@@ -540,6 +584,7 @@ public abstract class AbstractElasticTemplate implements ElasticsearchOperations
 	}
 
 	private <T> boolean createIndexWithSettings(Class<T> clazz) {
+
 		if (clazz.isAnnotationPresent(Setting.class)) {
 			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
 			if (!StringUtils.isEmpty(settingPath)) {
