@@ -83,11 +83,11 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	protected void buildClient() throws Exception {
 
 		client = new PreBuiltTransportClient(settings());
-		
+
 		clusterNodes.stream() //
 				.peek(it -> logger.info("Adding transport node : " + it.toString())) //
 				.forEach(client::addTransportAddress);
-		
+
 		client.connectedNodes();
 	}
 

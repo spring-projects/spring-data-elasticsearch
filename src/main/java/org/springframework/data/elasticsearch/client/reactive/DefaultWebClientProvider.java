@@ -55,7 +55,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 
 	/**
 	 * Create new {@link DefaultWebClientProvider} with empty {@link HttpHeaders} and no-op {@literal error listener}.
-	 * 
+	 *
 	 * @param scheme must not be {@literal null}.
 	 * @param connector can be {@literal null}.
 	 * @param errorListener must not be {@literal null}.
