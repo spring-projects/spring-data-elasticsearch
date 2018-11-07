@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 /**
  * EsClient interface. Specify what client an ElasticSearchTemplate will return from getClient().
- * 
+ *
  * @author Don Wellington
  * @param <C>
  */
