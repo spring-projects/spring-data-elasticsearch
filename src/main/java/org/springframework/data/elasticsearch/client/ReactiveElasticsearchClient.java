@@ -22,6 +22,7 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
+import java.util.List;
 import java.util.function.Function;
 
 import org.apache.http.util.EntityUtils;
@@ -31,6 +32,7 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.main.MainRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Request;
@@ -41,16 +43,25 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
 import org.reactivestreams.Publisher;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.elasticsearch.client.ClientProvider.VerificationMode;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.reactive.ClientHttpResponse;
+import org.springframework.http.codec.HttpMessageReader;
 import org.springframework.util.Assert;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.reactive.function.BodyExtractor;
 import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
 import org.springframework.web.reactive.function.client.WebClientException;
@@ -59,7 +70,7 @@ import org.springframework.web.reactive.function.client.WebClientException;
  * A {@link WebClient} based client that connects to an Elasticsearch cluster through HTTP.
  * 
  * @author Christoph Strobl
- * @since 3.2
+ * @since 4.0
  */
 public class ReactiveElasticsearchClient {
 
@@ -105,12 +116,34 @@ public class ReactiveElasticsearchClient {
 	}
 
 	/**
+	 * Pings the remote Elasticsearch cluster and emits {@literal true} if the ping succeeded, {@literal false} otherwise.
+	 *
+	 * @return the {@link Mono} emitting the result of the ping attempt.
+	 */
+	public Mono<Boolean> ping() {
+		return ping(HttpHeaders.EMPTY);
+	}
+
+	/**
+	 * Pings the remote Elasticsearch cluster and emits {@literal true} if the ping succeeded, {@literal false} otherwise.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @return the {@link Mono} emitting the result of the ping attempt.
+	 */
+	public Mono<Boolean> ping(HttpHeaders headers) {
+
+		return request(new MainRequest(), RequestCreator.ping(), RawActionResponse.class, headers) //
+				.map(response -> response.statusCode().is2xxSuccessful()) //
+				.next();
+	}
+
+	/**
 	 * Execute the given {@link GetRequest} against the {@literal get} API.
 	 *
 	 * @param getRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html">Get API on
 	 *      elastic.co</a>
-	 * @return the {@link Mono} emittig the {@link GetResult result}.
+	 * @return the {@link Mono} emitting the {@link GetResult result}.
 	 */
 	public Mono<GetResult> get(GetRequest getRequest) {
 		return get(HttpHeaders.EMPTY, getRequest);
@@ -123,7 +156,7 @@ public class ReactiveElasticsearchClient {
 	 * @param getRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html">Get API on
 	 *      elastic.co</a>
-	 * @return the {@link Mono} emittig the {@link GetResult result}.
+	 * @return the {@link Mono} emitting the {@link GetResult result}.
 	 */
 	public Mono<GetResult> get(HttpHeaders headers, GetRequest getRequest) {
 
@@ -139,7 +172,7 @@ public class ReactiveElasticsearchClient {
 	 * @param searchRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html">Search API on
 	 *      elastic.co</a>
-	 * @return the {@link Flux} emittig {@link SearchHit hits} one by one.
+	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
 	 */
 	public Flux<SearchHit> search(SearchRequest searchRequest) {
 		return search(HttpHeaders.EMPTY, searchRequest);
@@ -237,6 +270,10 @@ public class ReactiveElasticsearchClient {
 
 	private <T> Publisher<? extends T> readResponseBody(Request request, ClientResponse response, Class<T> responseType) {
 
+		if (RawActionResponse.class.equals(responseType)) {
+			return Mono.just((T) new RawActionResponse(response));
+		}
+
 		if (response.statusCode().isError()) {
 
 			throw new HttpClientErrorException(response.statusCode(),
@@ -268,8 +305,11 @@ public class ReactiveElasticsearchClient {
 		static final Method SEARCH_METHOD = ReflectionUtils.findMethod(Request.class, "search", SearchRequest.class);
 		static final Method INDEX_METHOD = ReflectionUtils.findMethod(Request.class, "index", IndexRequest.class);
 		static final Method GET_METHOD = ReflectionUtils.findMethod(Request.class, "get", GetRequest.class);
+		static final Method PING_METHOD = ReflectionUtils.findMethod(Request.class, "ping");
 
 		static {
+
+			PING_METHOD.setAccessible(true);
 			SEARCH_METHOD.setAccessible(true);
 			INDEX_METHOD.setAccessible(true);
 			GET_METHOD.setAccessible(true);
@@ -286,6 +326,10 @@ public class ReactiveElasticsearchClient {
 		static Function<GetRequest, Request> get() {
 			return (request) -> (Request) ReflectionUtils.invokeMethod(GET_METHOD, Request.class, request);
 		}
+
+		static Function<MainRequest, Request> ping() {
+			return (request) -> (Request) ReflectionUtils.invokeMethod(PING_METHOD, Request.class);
+		}
 	}
 
 	public static class RequestBodyEncodingException extends WebClientException {
@@ -293,6 +337,88 @@ public class ReactiveElasticsearchClient {
 		RequestBodyEncodingException(String msg, Throwable ex) {
 			super(msg, ex);
 		}
+	}
+
+	static class RawActionResponse extends ActionResponse implements ClientResponse {
+
+		final ClientResponse delegate;
+
+		RawActionResponse(ClientResponse delegate) {
+			this.delegate = delegate;
+		}
+
+		public HttpStatus statusCode() {
+			return delegate.statusCode();
+		}
+
+		public int rawStatusCode() {
+			return delegate.rawStatusCode();
+		}
+
+		public Headers headers() {
+			return delegate.headers();
+		}
+
+		public MultiValueMap<String, ResponseCookie> cookies() {
+			return delegate.cookies();
+		}
+
+		public ExchangeStrategies strategies() {
+			return delegate.strategies();
+		}
+
+		public <T> T body(BodyExtractor<T, ? super ClientHttpResponse> extractor) {
+			return delegate.body(extractor);
+		}
+
+		public <T> Mono<T> bodyToMono(Class<? extends T> elementClass) {
+			return delegate.bodyToMono(elementClass);
+		}
+
+		public <T> Mono<T> bodyToMono(ParameterizedTypeReference<T> typeReference) {
+			return delegate.bodyToMono(typeReference);
+		}
+
+		public <T> Flux<T> bodyToFlux(Class<? extends T> elementClass) {
+			return delegate.bodyToFlux(elementClass);
+		}
+
+		public <T> Flux<T> bodyToFlux(ParameterizedTypeReference<T> typeReference) {
+			return delegate.bodyToFlux(typeReference);
+		}
+
+		public <T> Mono<ResponseEntity<T>> toEntity(Class<T> bodyType) {
+			return delegate.toEntity(bodyType);
+		}
+
+		public <T> Mono<ResponseEntity<T>> toEntity(ParameterizedTypeReference<T> typeReference) {
+			return delegate.toEntity(typeReference);
+		}
+
+		public <T> Mono<ResponseEntity<List<T>>> toEntityList(Class<T> elementType) {
+			return delegate.toEntityList(elementType);
+		}
+
+		public <T> Mono<ResponseEntity<List<T>>> toEntityList(ParameterizedTypeReference<T> typeReference) {
+			return delegate.toEntityList(typeReference);
+		}
+
+		public static Builder from(ClientResponse other) {
+			return ClientResponse.from(other);
+		}
+
+		public static Builder create(HttpStatus statusCode) {
+			return ClientResponse.create(statusCode);
+		}
+
+		public static Builder create(HttpStatus statusCode, ExchangeStrategies strategies) {
+			return ClientResponse.create(statusCode, strategies);
+		}
+
+		public static Builder create(HttpStatus statusCode, List<HttpMessageReader<?>> messageReaders) {
+			return ClientResponse.create(statusCode, messageReaders);
+		}
+
 	}
 
 }

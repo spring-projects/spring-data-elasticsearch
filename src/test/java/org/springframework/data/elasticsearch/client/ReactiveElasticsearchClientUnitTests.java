@@ -57,6 +57,17 @@ public class ReactiveElasticsearchClientUnitTests {
 		client = new ReactiveElasticsearchClient(hostProvider);
 	}
 
+	// --> PING
+
+	@Test // DATAES-488
+	public void pingShouldReturnTrueOnHttp200() {
+
+		hostProvider.when(HOST).receive(Receive::ok);
+
+		client.ping().as(StepVerifier::create).expectNext(true).verifyComplete();
+
+	}
+
 	// --> GET
 
 	@Test // DATAES-488
