@@ -30,6 +30,8 @@ import org.apache.http.util.EntityUtils;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetRequest;
@@ -317,6 +319,31 @@ public class ReactiveElasticsearchClient {
 	}
 
 	/**
+	 * Execute the given {@link DeleteRequest} against the {@literal delete} API to remove a document.
+	 *
+	 * @param deleteRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete.html">Delete API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link DeleteResponse}.
+	 */
+	public Mono<DeleteResponse> delete(DeleteRequest deleteRequest) {
+		return delete(HttpHeaders.EMPTY, deleteRequest);
+	}
+
+	/**
+	 * Execute the given {@link DeleteRequest} against the {@literal delete} API to remove a document.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param deleteRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete.html">Delete API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link DeleteResponse}.
+	 */
+	public Mono<DeleteResponse> delete(HttpHeaders headers, DeleteRequest deleteRequest) {
+		return sendRequest(deleteRequest, RequestCreator.delete(), DeleteResponse.class, headers).publishNext();
+	}
+
+	/**
 	 * Execute the given {@link SearchRequest} against the {@literal search} API.
 	 * 
 	 * @param searchRequest must not be {@literal null}.
@@ -487,6 +514,7 @@ public class ReactiveElasticsearchClient {
 		static final Method MULTI_GET_METHOD = ReflectionUtils.findMethod(Request.class, "multiGet", MultiGetRequest.class);
 		static final Method EXISTS_METHOD = ReflectionUtils.findMethod(Request.class, "exists", GetRequest.class);
 		static final Method UPDATE_METHOD = ReflectionUtils.findMethod(Request.class, "update", UpdateRequest.class);
+		static final Method DELETE_METHOD = ReflectionUtils.findMethod(Request.class, "delete", DeleteRequest.class);
 
 		static {
 
@@ -498,6 +526,7 @@ public class ReactiveElasticsearchClient {
 			MULTI_GET_METHOD.setAccessible(true);
 			EXISTS_METHOD.setAccessible(true);
 			UPDATE_METHOD.setAccessible(true);
+			DELETE_METHOD.setAccessible(true);
 		}
 
 		static Function<SearchRequest, Request> search() {
@@ -530,6 +559,10 @@ public class ReactiveElasticsearchClient {
 
 		static Function<UpdateRequest, Request> update() {
 			return (request) -> (Request) ReflectionUtils.invokeMethod(UPDATE_METHOD, Request.class, request);
+		}
+
+		static Function<DeleteRequest, Request> delete() {
+			return (request) -> (Request) ReflectionUtils.invokeMethod(DELETE_METHOD, Request.class, request);
 		}
 	}
 

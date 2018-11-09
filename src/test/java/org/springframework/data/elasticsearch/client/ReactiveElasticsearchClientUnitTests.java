@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.DocWriteResponse.Result;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
@@ -431,6 +432,42 @@ public class ReactiveElasticsearchClientUnitTests {
 				.as(StepVerifier::create) //
 				.expectError(ElasticsearchStatusException.class) //
 				.verify();
+	}
+
+	// --> DELETE
+
+	@Test // DATAES-488
+	public void deleteShouldHitEndpointCorrectly() {
+
+		hostProvider.when(HOST) //
+				.receiveDeleteOk();
+
+		client.delete(new DeleteRequest("twitter", "doc", "1")).then() //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		verify(hostProvider.client(HOST)).method(HttpMethod.DELETE);
+		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
+			verify(requestBodyUriSpec).uri(eq("/twitter/doc/1"), any(Map.class));
+		});
+	}
+
+	@Test // DATAES-488
+	public void deleteShouldEmitResponseCorrectly() {
+
+		hostProvider.when(HOST) //
+				.receiveDeleteOk();
+
+		client.delete(new DeleteRequest("twitter", "doc", "1")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(deleteResponse -> {
+
+					assertThat(deleteResponse.getResult()).isEqualTo(Result.DELETED);
+					assertThat(deleteResponse.getVersion()).isEqualTo(1);
+					assertThat(deleteResponse.getId()).isEqualTo("1");
+					assertThat(deleteResponse.getIndex()).isEqualTo("twitter");
+				}) //
+				.verifyComplete();
 	}
 
 	// --> SEARCH

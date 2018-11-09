@@ -292,7 +292,13 @@ public class ReactiveMockClientTestsUtils {
 
 			default Receive receiveUpdateOk() {
 
-				return receiveJsonFromFile("update-ok") //
+				return receiveJsonFromFile("update-ok-updated") //
+						.receive(Receive::ok);
+			}
+
+			default Receive receiveDeleteOk() {
+
+				return receiveJsonFromFile("update-ok-deleted") //
 						.receive(Receive::ok);
 			}
 
