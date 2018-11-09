@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.data.elasticsearch.client.ReactiveMockClientTestsUtils.WebClientProvider.Receive.*;
 
 import reactor.test.StepVerifier;
 
@@ -32,8 +33,6 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.data.elasticsearch.client.ReactiveMockClientTestsUtils.MockDelegatingElasticsearchClientProvider;
 import org.springframework.data.elasticsearch.client.ReactiveMockClientTestsUtils.WebClientProvider.Receive;
 import org.springframework.http.HttpMethod;
@@ -59,13 +58,74 @@ public class ReactiveElasticsearchClientUnitTests {
 
 	// --> PING
 
+	@Test
+	public void pingShouldHitMainEndpoint() {
+
+		hostProvider.when(HOST) //
+				.receive(Receive::ok);
+
+		client.ping() //
+				.then() //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
+			verify(requestBodyUriSpec).uri(eq("/"), any(Map.class));
+		});
+	}
+
 	@Test // DATAES-488
 	public void pingShouldReturnTrueOnHttp200() {
 
-		hostProvider.when(HOST).receive(Receive::ok);
+		hostProvider.when(HOST) //
+				.receive(Receive::ok);
 
-		client.ping().as(StepVerifier::create).expectNext(true).verifyComplete();
+		client.ping() //
+				.as(StepVerifier::create) //
+				.expectNext(true) //
+				.verifyComplete();
+	}
 
+	@Test // DATAES-488
+	public void pingShouldReturnFalseOnNonHttp200() {
+
+		hostProvider.when(HOST) //
+				.receive(Receive::error);
+
+		client.ping() //
+				.as(StepVerifier::create) //
+				.expectNext(false) //
+				.verifyComplete();
+	}
+
+	// --> INFO
+
+	@Test
+	public void infoShouldHitMainEndpoint() {
+
+		hostProvider.when(HOST) //
+				.receiveInfo();
+
+		client.info() //
+				.then() //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
+			verify(requestBodyUriSpec).uri(eq("/"), any(Map.class));
+		});
+	}
+
+	@Test // DATAES-488
+	public void infoShouldReturnResponseCorrectly() {
+
+		hostProvider.when(HOST) //
+				.receiveInfo();
+
+		client.info() //
+				.as(StepVerifier::create) //
+				.consumeNextWith(mainResponse -> {}) //
+				.verifyComplete();
 	}
 
 	// --> GET
@@ -131,8 +191,7 @@ public class ReactiveElasticsearchClientUnitTests {
 	public void searchShouldHitSearchEndpoint() {
 
 		hostProvider.when(HOST) //
-				.receive(Receive::json) //
-				.body(fromPath("search-ok-no-hits"));
+				.receiveSearchOk();
 
 		client.search(new SearchRequest("twitter")).as(StepVerifier::create).verifyComplete();
 
@@ -195,8 +254,7 @@ public class ReactiveElasticsearchClientUnitTests {
 	public void searchShouldReturnEmptyFluxIfNothingFound() {
 
 		hostProvider.when(HOST) //
-				.receive(Receive::json) //
-				.body(fromPath("search-ok-no-hits"));
+				.receiveSearchOk();
 
 		client.search(new SearchRequest("twitter")) //
 				.as(StepVerifier::create) //
@@ -209,8 +267,7 @@ public class ReactiveElasticsearchClientUnitTests {
 	public void indexNewShouldHitCreateEndpoint() {
 
 		hostProvider.when(HOST) //
-				.receive(Receive::json) //
-				.body(fromPath("index-ok-created"));
+				.receiveIndexCreated();
 
 		client.index(new IndexRequest("twitter").id("10").create(true).source(" { foo : \"bar\" }", XContentType.JSON))
 				.then() //
@@ -229,8 +286,7 @@ public class ReactiveElasticsearchClientUnitTests {
 	public void indexExistingShouldHitUpdateEndpoint() {
 
 		hostProvider.when(HOST) //
-				.receive(Receive::json) //
-				.body(fromPath("index-ok-updated"));
+				.receiveIndexUpdated();
 
 		client.index(new IndexRequest("twitter").id("10").source(" { foo : \"bar\" }", XContentType.JSON)).then() //
 				.as(StepVerifier::create) //
@@ -248,8 +304,7 @@ public class ReactiveElasticsearchClientUnitTests {
 	public void indexShouldReturnCreatedWhenNewDocumentIndexed() {
 
 		hostProvider.when(HOST) //
-				.receive(Receive::json) //
-				.body(fromPath("index-ok-created"));
+				.receiveIndexCreated();
 
 		client.index(new IndexRequest("twitter").id("10").create(true).source(" { foo : \"bar\" }", XContentType.JSON))
 				.as(StepVerifier::create) //
@@ -266,8 +321,7 @@ public class ReactiveElasticsearchClientUnitTests {
 	public void indexShouldReturnUpdatedWhenExistingDocumentIndexed() {
 
 		hostProvider.when(HOST) //
-				.receive(Receive::json) //
-				.body(fromPath("index-ok-updated"));
+				.receiveIndexUpdated();
 
 		client.index(new IndexRequest("twitter").id("1").source(" { foo : \"bar\" }", XContentType.JSON))
 				.as(StepVerifier::create) //
@@ -278,9 +332,5 @@ public class ReactiveElasticsearchClientUnitTests {
 					assertThat(response.getResult()).isEqualTo(Result.UPDATED);
 				}) //
 				.verifyComplete();
-	}
-
-	static Resource fromPath(String filename) {
-		return new ClassPathResource("/org/springframework/data/elasticsearch/client/" + filename + ".json");
 	}
 }

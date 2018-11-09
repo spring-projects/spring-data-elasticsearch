@@ -34,6 +34,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.mockito.Mockito;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
@@ -110,7 +111,7 @@ public class ReactiveMockClientTestsUtils {
 		private final ErrorCollector errorCollector;
 
 		public MockDelegatingElasticsearchClientProvider(HttpHeaders httpHeaders, WebClientProvider clientProvider,
-														 ErrorCollector errorCollector, T delegate) {
+				ErrorCollector errorCollector, T delegate) {
 
 			this.errorCollector = errorCollector;
 			this.clientProvider = clientProvider;
@@ -246,6 +247,26 @@ public class ReactiveMockClientTestsUtils {
 
 			Receive exchange(Consumer<RequestBodyUriSpec> bodySpec);
 
+			default Receive receiveInfo() {
+				return receive(Receive::json) //
+						.body(Receive.fromPath("info"));
+			}
+
+			default Receive receiveIndexCreated() {
+				return receive(Receive::json) //
+						.body(Receive.fromPath("index-ok-created"));
+			}
+
+			default Receive receiveIndexUpdated() {
+				return receive(Receive::json) //
+					.body(Receive.fromPath("index-ok-updated"));
+			}
+
+			default Receive receiveSearchOk() {
+				return receive(Receive::json) //
+						.body(Receive.fromPath("search-ok-no-hits"));
+			}
+
 		}
 
 		public interface Receive {
@@ -289,6 +310,10 @@ public class ReactiveMockClientTestsUtils {
 				Mockito.when(headers.contentType()).thenReturn(Optional.of(MediaType.APPLICATION_JSON));
 
 				Mockito.when(response.headers()).thenReturn(headers);
+			}
+
+			static Resource fromPath(String filename) {
+				return new ClassPathResource("/org/springframework/data/elasticsearch/client/" + filename + ".json");
 			}
 		}
 

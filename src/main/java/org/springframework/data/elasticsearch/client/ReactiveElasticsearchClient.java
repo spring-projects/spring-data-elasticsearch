@@ -33,6 +33,7 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.main.MainRequest;
+import org.elasticsearch.action.main.MainResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Request;
@@ -132,8 +133,18 @@ public class ReactiveElasticsearchClient {
 	 */
 	public Mono<Boolean> ping(HttpHeaders headers) {
 
-		return request(new MainRequest(), RequestCreator.ping(), RawActionResponse.class, headers) //
+		return sendRequest(new MainRequest(), RequestCreator.ping(), RawActionResponse.class, headers) //
 				.map(response -> response.statusCode().is2xxSuccessful()) //
+				.next();
+	}
+
+	public Mono<MainResponse> info() {
+		return info(HttpHeaders.EMPTY);
+	}
+
+	public Mono<MainResponse> info(HttpHeaders headers) {
+
+		return sendRequest(new MainRequest(), RequestCreator.info(), MainResponse.class, headers) //
 				.next();
 	}
 
@@ -160,7 +171,7 @@ public class ReactiveElasticsearchClient {
 	 */
 	public Mono<GetResult> get(HttpHeaders headers, GetRequest getRequest) {
 
-		return request(getRequest, RequestCreator.get(), GetResponse.class, headers) //
+		return sendRequest(getRequest, RequestCreator.get(), GetResponse.class, headers) //
 				.map(it -> new GetResult(it.getIndex(), it.getType(), it.getId(), it.getVersion(), it.isExists(),
 						it.getSourceAsBytesRef(), it.getFields())) //
 				.next();
@@ -189,7 +200,7 @@ public class ReactiveElasticsearchClient {
 	 */
 	public Flux<SearchHit> search(HttpHeaders headers, SearchRequest searchRequest) {
 
-		return request(searchRequest, RequestCreator.search(), SearchResponse.class, headers) //
+		return sendRequest(searchRequest, RequestCreator.search(), SearchResponse.class, headers) //
 				.map(SearchResponse::getHits) //
 				.flatMap(Flux::fromIterable);
 	}
@@ -216,31 +227,47 @@ public class ReactiveElasticsearchClient {
 	 * @return the {@link Mono} emitting the {@link IndexResponse}.
 	 */
 	public Mono<IndexResponse> index(HttpHeaders headers, IndexRequest indexRequest) {
-		return request(indexRequest, RequestCreator.index(), IndexResponse.class, headers).publishNext();
+		return sendRequest(indexRequest, RequestCreator.index(), IndexResponse.class, headers).publishNext();
 	}
 
-	private <Req extends ActionRequest, Resp extends ActionResponse> Flux<Resp> request(Req request,
-			Function<Req, Request> converter, Class<Resp> responseType, HttpHeaders headers) {
-		return request(converter.apply(request), responseType, headers);
-	}
+	/**
+	 * Compose the actual command/s to run against Elasticsearch using the underlying {@link WebClient connection}.
+	 * {@link #execute(ReactiveElasticsearchClientCallback) Execute} selects an active server from the available ones and
+	 * retries operations that fail with a {@link ConnectException} on another node if the previously selected one becomes
+	 * unavailable.
+	 *
+	 * @param callback the {@link ReactiveElasticsearchClientCallback callback} wielding the actual command to run.
+	 * @return the {@link Mono} emitting the {@link ClientResponse} once subscribed.
+	 */
+	public Mono<ClientResponse> execute(ReactiveElasticsearchClientCallback callback) {
 
-	private <AR extends ActionResponse> Flux<AR> request(Request request, Class<AR> responseType, HttpHeaders headers) {
-
-		return this.clientProvider.getActive(VerificationMode.LAZY, headers) //
-				.flatMapMany(webClient -> sendRequest(webClient, request, responseType, headers)) //
+		return this.clientProvider.getActive(VerificationMode.LAZY) //
+				.flatMap(it -> callback.doWithClient(it)) //
 				.onErrorResume(throwable -> {
 
 					if (throwable instanceof ConnectException) {
 
 						return clientProvider.getActive(VerificationMode.ALWAYS) //
-								.flatMapMany(webClient -> sendRequest(webClient, request, responseType, headers));
+								.flatMap(webClient -> callback.doWithClient(webClient));
 					}
 
 					return Mono.error(throwable);
 				});
 	}
 
-	private <T> Flux<T> sendRequest(WebClient webClient, Request request, Class<T> responseType, HttpHeaders headers) {
+	private <Req extends ActionRequest, Resp extends ActionResponse> Flux<Resp> sendRequest(Req request,
+			Function<Req, Request> converter, Class<Resp> responseType, HttpHeaders headers) {
+		return sendRequest(converter.apply(request), responseType, headers);
+	}
+
+	private <AR extends ActionResponse> Flux<AR> sendRequest(Request request, Class<AR> responseType,
+			HttpHeaders headers) {
+
+		return execute(webClient -> sendRequest(webClient, request, headers))
+				.flatMapMany(response -> readResponseBody(request, response, responseType));
+	}
+
+	private Mono<ClientResponse> sendRequest(WebClient webClient, Request request, HttpHeaders headers) {
 
 		RequestBodySpec requestBodySpec = webClient.method(HttpMethod.valueOf(request.getMethod().toUpperCase())) //
 				.uri(request.getEndpoint(), request.getParameters()) //
@@ -253,13 +280,13 @@ public class ReactiveElasticsearchClient {
 		}
 
 		return requestBodySpec //
-				.exchange() //
-				.flatMapMany(response -> readResponseBody(request, response, responseType));
+				.exchange();
 	}
 
 	private Publisher<String> bodyExtractor(Request request) {
 
 		return Mono.fromSupplier(() -> {
+
 			try {
 				return EntityUtils.toString(request.getEntity());
 			} catch (IOException e) {
@@ -300,12 +327,17 @@ public class ReactiveElasticsearchClient {
 		});
 	}
 
+	public interface ReactiveElasticsearchClientCallback {
+		Mono<ClientResponse> doWithClient(WebClient client);
+	}
+
 	static class RequestCreator {
 
 		static final Method SEARCH_METHOD = ReflectionUtils.findMethod(Request.class, "search", SearchRequest.class);
 		static final Method INDEX_METHOD = ReflectionUtils.findMethod(Request.class, "index", IndexRequest.class);
 		static final Method GET_METHOD = ReflectionUtils.findMethod(Request.class, "get", GetRequest.class);
 		static final Method PING_METHOD = ReflectionUtils.findMethod(Request.class, "ping");
+		static final Method INFO_METHOD = ReflectionUtils.findMethod(Request.class, "info");
 
 		static {
 
@@ -313,6 +345,7 @@ public class ReactiveElasticsearchClient {
 			SEARCH_METHOD.setAccessible(true);
 			INDEX_METHOD.setAccessible(true);
 			GET_METHOD.setAccessible(true);
+			INFO_METHOD.setAccessible(true);
 		}
 
 		static Function<SearchRequest, Request> search() {
@@ -329,6 +362,10 @@ public class ReactiveElasticsearchClient {
 
 		static Function<MainRequest, Request> ping() {
 			return (request) -> (Request) ReflectionUtils.invokeMethod(PING_METHOD, Request.class);
+		}
+
+		static Function<MainRequest, Request> info() {
+			return (request) -> (Request) ReflectionUtils.invokeMethod(INFO_METHOD, Request.class);
 		}
 	}
 
