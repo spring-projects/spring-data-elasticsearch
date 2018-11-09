@@ -31,7 +31,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * active ones.
  *
  * @author Christoph Strobl
- * @since 3.2
+ * @since 4.0
  */
 public interface ClientProvider {
 

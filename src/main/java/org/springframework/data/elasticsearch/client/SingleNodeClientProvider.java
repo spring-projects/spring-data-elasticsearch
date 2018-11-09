@@ -29,7 +29,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * @author Christoph Strobl
- * @since 3.2
+ * @since 4.0
  */
 @RequiredArgsConstructor
 class SingleNodeClientProvider implements ClientProvider {

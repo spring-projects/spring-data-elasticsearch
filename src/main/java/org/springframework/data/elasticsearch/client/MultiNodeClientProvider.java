@@ -36,7 +36,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * @author Christoph Strobl
- * @since 3.2
+ * @since 4.0
  */
 class MultiNodeClientProvider implements ClientProvider {
 
@@ -127,9 +127,7 @@ class MultiNodeClientProvider implements ClientProvider {
 				.flatMap(host -> {
 
 					Mono<ClientResponse> exchange = createWebClient(host, headers) //
-							.head()
-							.uri("/")
-							.exchange().doOnError(throwable -> {
+							.head().uri("/").exchange().doOnError(throwable -> {
 
 								hosts.put(host, new HostState(host, State.OFFLINE));
 								errorListener.accept(throwable);

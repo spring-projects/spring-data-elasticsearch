@@ -22,14 +22,14 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 
 /**
  * @author Christoph Strobl
- * @since 3.2
+ * @since 4.0
  */
 public class ElasticsearchExceptionTranslator implements PersistenceExceptionTranslator {
 
 	@Override
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 
-		if(ex instanceof ElasticsearchException) {
+		if (ex instanceof ElasticsearchException) {
 			// TODO: exception translation
 		}
 

@@ -54,7 +54,7 @@ import org.springframework.web.client.HttpClientErrorException;
 
 /**
  * @author Christoph Strobl
- * @since 3.2
+ * @since 4.0
  */
 public class ReactiveElasticsearchTemplate {
 
