@@ -259,6 +259,33 @@ public class ReactiveElasticsearchClient {
 	}
 
 	/**
+	 * Execute the given {@link IndexRequest} against the {@literal index} API.
+	 *
+	 * @param indexRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html">Index API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link IndexResponse}.
+	 */
+	public Mono<IndexResponse> index(IndexRequest indexRequest) {
+		return index(HttpHeaders.EMPTY, indexRequest);
+	}
+
+	/**
+	 * Execute the given {@link IndexRequest} against the {@literal index} API.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param indexRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html">Index API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link IndexResponse}.
+	 */
+	public Mono<IndexResponse> index(HttpHeaders headers, IndexRequest indexRequest) {
+		return sendRequest(indexRequest, RequestCreator.index(), IndexResponse.class, headers).publishNext();
+	}
+
+	
+
+	/**
 	 * Execute the given {@link SearchRequest} against the {@literal search} API.
 	 * 
 	 * @param searchRequest must not be {@literal null}.
@@ -284,31 +311,6 @@ public class ReactiveElasticsearchClient {
 		return sendRequest(searchRequest, RequestCreator.search(), SearchResponse.class, headers) //
 				.map(SearchResponse::getHits) //
 				.flatMap(Flux::fromIterable);
-	}
-
-	/**
-	 * Execute the given {@link IndexRequest} against the {@literal index} API.
-	 * 
-	 * @param indexRequest must not be {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html">Index API on
-	 *      elastic.co</a>
-	 * @return the {@link Mono} emitting the {@link IndexResponse}.
-	 */
-	public Mono<IndexResponse> index(IndexRequest indexRequest) {
-		return index(HttpHeaders.EMPTY, indexRequest);
-	}
-
-	/**
-	 * Execute the given {@link IndexRequest} against the {@literal index} API.
-	 *
-	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
-	 * @param indexRequest must not be {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html">Index API on
-	 *      elastic.co</a>
-	 * @return the {@link Mono} emitting the {@link IndexResponse}.
-	 */
-	public Mono<IndexResponse> index(HttpHeaders headers, IndexRequest indexRequest) {
-		return sendRequest(indexRequest, RequestCreator.index(), IndexResponse.class, headers).publishNext();
 	}
 
 	/**
