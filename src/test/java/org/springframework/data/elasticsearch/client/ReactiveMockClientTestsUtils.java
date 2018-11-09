@@ -254,19 +254,40 @@ public class ReactiveMockClientTestsUtils {
 			}
 
 			default Receive receiveInfo() {
-				return receiveJsonFromFile("info");
+
+				return receiveJsonFromFile("info") //
+						.receive(Receive::ok);
+
 			}
 
 			default Receive receiveIndexCreated() {
-				return receiveJsonFromFile("index-ok-created");
+
+				return receiveJsonFromFile("index-ok-created") //
+						.receive(Receive::ok);
 			}
 
 			default Receive receiveIndexUpdated() {
-				return receiveJsonFromFile("index-ok-updated");
+
+				return receiveJsonFromFile("index-ok-updated") //
+						.receive(Receive::ok);
 			}
 
 			default Receive receiveSearchOk() {
-				return receiveJsonFromFile("search-ok-no-hits");
+
+				return receiveJsonFromFile("search-ok-no-hits") //
+						.receive(Receive::ok);
+			}
+
+			default Receive receiveGetByIdNotFound() {
+
+				return receiveJsonFromFile("get-by-id-no-hit") //
+						.receive(Receive::notFound);
+			}
+
+			default Receive receiveGetById() {
+
+				return receiveJsonFromFile("get-by-id-ok") //
+						.receive(Receive::ok);
 			}
 
 		}
@@ -304,6 +325,10 @@ public class ReactiveMockClientTestsUtils {
 
 			static void error(ClientResponse response) {
 				Mockito.when(response.statusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+
+			static void notFound(ClientResponse response) {
+				Mockito.when(response.statusCode()).thenReturn(HttpStatus.NOT_FOUND);
 			}
 
 			static void json(ClientResponse response) {

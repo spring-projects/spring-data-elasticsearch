@@ -140,10 +140,21 @@ public class ReactiveElasticsearchClient {
 				.next();
 	}
 
+	/**
+	 * Get the cluster info otherwise provided when sending an HTTP request to port 9200.
+	 *
+	 * @return the {@link Mono} emitting the result of the info request.
+	 */
 	public Mono<MainResponse> info() {
 		return info(HttpHeaders.EMPTY);
 	}
 
+	/**
+	 * Get the cluster info otherwise provided when sending an HTTP request to port 9200.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @return the {@link Mono} emitting the result of the info request.
+	 */
 	public Mono<MainResponse> info(HttpHeaders headers) {
 
 		return sendRequest(new MainRequest(), RequestCreator.info(), MainResponse.class, headers) //
@@ -208,6 +219,43 @@ public class ReactiveElasticsearchClient {
 				.flatMap(Flux::fromArray) //
 				.filter(it -> !it.isFailed()) //
 				.map(it -> ReactiveElasticsearchClient.getResponseToGetResult(it.getResponse()));
+	}
+
+	/**
+	 * Checks for the existence of a document. Emits {@literal true} if it exists, {@literal false} otherwise.
+	 *
+	 * @param getRequest must not be {@literal null}.
+	 * @return the {@link Mono} emitting {@literal true} if it exists, {@literal false} otherwise.
+	 */
+	public Mono<Boolean> exists(GetRequest getRequest) {
+		return exists(HttpHeaders.EMPTY, getRequest);
+	}
+
+	/**
+	 * Checks for the existence of a document. Emits {@literal true} if it exists, {@literal false} otherwise.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param getRequest must not be {@literal null}.
+	 * @return the {@link Mono} emitting {@literal true} if it exists, {@literal false} otherwise.
+	 */
+	public Mono<Boolean> exists(HttpHeaders headers, GetRequest getRequest) {
+
+		return sendRequest(getRequest, RequestCreator.exists(), RawActionResponse.class, headers) //
+				.map(response -> {
+
+					if (response.statusCode().is2xxSuccessful()) {
+						return true;
+					}
+
+					if (response.statusCode().is5xxServerError()) {
+
+						throw new HttpClientErrorException(response.statusCode(), String.format(
+								"Exists request (%s) returned error code %s.", getRequest.toString(), response.statusCode().value()));
+					}
+
+					return false;
+				}) //
+				.next();
 	}
 
 	/**
@@ -344,7 +392,7 @@ public class ReactiveElasticsearchClient {
 			return Mono.just((T) new RawActionResponse(response));
 		}
 
-		if (response.statusCode().isError()) {
+		if (response.statusCode().is5xxServerError()) {
 
 			throw new HttpClientErrorException(response.statusCode(),
 					String.format("%s request to %s returned error code %s.", request.getMethod(), request.getEndpoint(),
@@ -382,6 +430,7 @@ public class ReactiveElasticsearchClient {
 		static final Method PING_METHOD = ReflectionUtils.findMethod(Request.class, "ping");
 		static final Method INFO_METHOD = ReflectionUtils.findMethod(Request.class, "info");
 		static final Method MULTI_GET_METHOD = ReflectionUtils.findMethod(Request.class, "multiGet", MultiGetRequest.class);
+		static final Method EXISTS_METHOD = ReflectionUtils.findMethod(Request.class, "exists", GetRequest.class);
 
 		static {
 
@@ -391,6 +440,7 @@ public class ReactiveElasticsearchClient {
 			GET_METHOD.setAccessible(true);
 			INFO_METHOD.setAccessible(true);
 			MULTI_GET_METHOD.setAccessible(true);
+			EXISTS_METHOD.setAccessible(true);
 		}
 
 		static Function<SearchRequest, Request> search() {
@@ -415,6 +465,10 @@ public class ReactiveElasticsearchClient {
 
 		static Function<MultiGetRequest, Request> multiGet() {
 			return (request) -> (Request) ReflectionUtils.invokeMethod(MULTI_GET_METHOD, Request.class, request);
+		}
+
+		static Function<GetRequest, Request> exists() {
+			return (request) -> (Request) ReflectionUtils.invokeMethod(EXISTS_METHOD, Request.class, request);
 		}
 	}
 

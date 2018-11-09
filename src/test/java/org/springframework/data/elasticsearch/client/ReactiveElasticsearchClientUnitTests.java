@@ -136,8 +136,7 @@ public class ReactiveElasticsearchClientUnitTests {
 	public void getShouldHitGetEndpoint() {
 
 		hostProvider.when(HOST) //
-				.receive(Receive::json) //
-				.body(fromPath("get-by-id-no-hit"));
+				.receiveGetByIdNotFound();
 
 		client.get(new GetRequest("twitter").id("1")) //
 				.then() //
@@ -154,8 +153,7 @@ public class ReactiveElasticsearchClientUnitTests {
 	public void getShouldReturnExistingDocument() {
 
 		hostProvider.when(HOST) //
-				.receive(Receive::json) //
-				.body(fromPath("get-by-id-ok"));
+				.receiveGetById();
 
 		client.get(new GetRequest("twitter").id("1")) //
 				.as(StepVerifier::create) //
@@ -176,8 +174,7 @@ public class ReactiveElasticsearchClientUnitTests {
 	public void getShouldReturnNonExisting() {
 
 		hostProvider.when(HOST) //
-				.receive(Receive::json) //
-				.body(fromPath("get-by-id-no-hit"));
+				.receiveGetByIdNotFound();
 
 		client.get(new GetRequest("twitter").id("1")) //
 				.as(StepVerifier::create) //
@@ -241,7 +238,7 @@ public class ReactiveElasticsearchClientUnitTests {
 	}
 
 	@Test // DATAES-488
-	public void multiGetShouldSkipNonExistingDocuments() {
+	public void multiGetShouldWorkForNonExistingDocuments() {
 
 		hostProvider.when(HOST) //
 				.receiveJsonFromFile("multi-get-ok-2-hits-1-unavailable");
@@ -259,6 +256,9 @@ public class ReactiveElasticsearchClientUnitTests {
 							.containsKey("post_date");
 				}) //
 				.consumeNextWith(result -> {
+					assertThat(result.isExists()).isFalse();
+				}) //
+				.consumeNextWith(result -> {
 
 					assertThat(result.isExists()).isTrue();
 					assertThat(result.getIndex()).isEqualTo("twitter");
@@ -269,6 +269,48 @@ public class ReactiveElasticsearchClientUnitTests {
 							.containsKey("post_date");
 				}) //
 				.verifyComplete();
+	}
+
+	// --> EXISTS
+
+	@Test // DATAES-488
+	public void existsShouldHitGetEndpoint() {
+
+		hostProvider.when(HOST) //
+				.receiveGetById();
+
+		client.exists(new GetRequest("twitter").id("1")) //
+				.then() //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		verify(hostProvider.client(HOST)).method(HttpMethod.HEAD);
+
+		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
+			verify(requestBodyUriSpec).uri(eq("/twitter/_all/1"), any(Map.class));
+		});
+	}
+
+	@Test // DATAES-488
+	public void existsShouldReturnTrueIfExists() {
+
+		hostProvider.when(HOST) //
+				.receiveGetById();
+
+		client.exists(new GetRequest("twitter").id("1")) //
+				.as(StepVerifier::create) //
+				.expectNext(true).verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void existsShouldReturnFalseIfNotExists() {
+
+		hostProvider.when(HOST) //
+				.receiveGetByIdNotFound();
+
+		client.exists(new GetRequest("twitter").id("1")) //
+				.as(StepVerifier::create) //
+				.expectNext(false).verifyComplete();
 	}
 
 	// --> SEARCH
