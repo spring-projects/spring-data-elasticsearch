@@ -24,13 +24,16 @@ import static org.springframework.data.elasticsearch.client.ReactiveMockClientTe
 
 import reactor.test.StepVerifier;
 
+import java.util.Collections;
 import java.util.Map;
 
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.junit.Before;
 import org.junit.Test;
@@ -171,16 +174,13 @@ public class ReactiveElasticsearchClientUnitTests {
 	}
 
 	@Test // DATAES-488
-	public void getShouldReturnNonExisting() {
+	public void getShouldReturnEmptyForNonExisting() {
 
 		hostProvider.when(HOST) //
 				.receiveGetByIdNotFound();
 
 		client.get(new GetRequest("twitter").id("1")) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(result -> {
-					assertThat(result.isExists()).isFalse();
-				}) //
 				.verifyComplete();
 	}
 
@@ -256,9 +256,6 @@ public class ReactiveElasticsearchClientUnitTests {
 							.containsKey("post_date");
 				}) //
 				.consumeNextWith(result -> {
-					assertThat(result.isExists()).isFalse();
-				}) //
-				.consumeNextWith(result -> {
 
 					assertThat(result.isExists()).isTrue();
 					assertThat(result.getIndex()).isEqualTo("twitter");
@@ -311,6 +308,129 @@ public class ReactiveElasticsearchClientUnitTests {
 		client.exists(new GetRequest("twitter").id("1")) //
 				.as(StepVerifier::create) //
 				.expectNext(false).verifyComplete();
+	}
+
+	// --> INDEX
+
+	@Test // DATAES-488
+	public void indexNewShouldHitCreateEndpoint() {
+
+		hostProvider.when(HOST) //
+				.receiveIndexCreated();
+
+		client.index(new IndexRequest("twitter").id("10").create(true).source(" { foo : \"bar\" }", XContentType.JSON))
+				.then() //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		verify(hostProvider.client(HOST)).method(HttpMethod.PUT);
+		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
+
+			verify(requestBodyUriSpec).uri(eq("/twitter/10/_create"), any(Map.class));
+			verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON);
+		});
+	}
+
+	@Test // DATAES-488
+	public void indexExistingShouldHitEndpointCorrectly() {
+
+		hostProvider.when(HOST) //
+				.receiveIndexUpdated();
+
+		client.index(new IndexRequest("twitter").id("10").source(" { foo : \"bar\" }", XContentType.JSON)).then() //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		verify(hostProvider.client(HOST)).method(HttpMethod.PUT);
+		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
+
+			verify(requestBodyUriSpec).uri(eq("/twitter/10"), any(Map.class));
+			verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON);
+		});
+	}
+
+	@Test // DATAES-488
+	public void indexShouldReturnCreatedWhenNewDocumentIndexed() {
+
+		hostProvider.when(HOST) //
+				.receiveIndexCreated();
+
+		client.index(new IndexRequest("twitter").id("10").create(true).source(" { foo : \"bar\" }", XContentType.JSON))
+				.as(StepVerifier::create) //
+				.consumeNextWith(response -> {
+
+					assertThat(response.getId()).isEqualTo("10");
+					assertThat(response.getIndex()).isEqualTo("twitter");
+					assertThat(response.getResult()).isEqualTo(Result.CREATED);
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void indexShouldReturnUpdatedWhenExistingDocumentIndexed() {
+
+		hostProvider.when(HOST) //
+				.receiveIndexUpdated();
+
+		client.index(new IndexRequest("twitter").id("1").source(" { foo : \"bar\" }", XContentType.JSON))
+				.as(StepVerifier::create) //
+				.consumeNextWith(response -> {
+
+					assertThat(response.getId()).isEqualTo("1");
+					assertThat(response.getIndex()).isEqualTo("twitter");
+					assertThat(response.getResult()).isEqualTo(Result.UPDATED);
+				}) //
+				.verifyComplete();
+	}
+
+	// --> UPDATE
+
+	@Test // DATAES-488
+	public void updateShouldHitEndpointCorrectly() {
+
+		hostProvider.when(HOST) //
+				.receiveUpdateOk();
+
+		client.update(new UpdateRequest("twitter", "doc", "1").doc(Collections.singletonMap("user", "cstrobl"))).then() //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		verify(hostProvider.client(HOST)).method(HttpMethod.POST);
+		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
+
+			verify(requestBodyUriSpec).uri(eq("/twitter/doc/1/_update"), any(Map.class));
+			verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON);
+		});
+	}
+
+	@Test // DATAES-488
+	public void updateShouldEmitResponseCorrectly() {
+
+		hostProvider.when(HOST) //
+				.receiveUpdateOk();
+
+		client.update(new UpdateRequest("twitter", "doc", "1").doc(Collections.singletonMap("user", "cstrobl")))
+				.as(StepVerifier::create) //
+				.consumeNextWith(updateResponse -> {
+
+					assertThat(updateResponse.getResult()).isEqualTo(Result.UPDATED);
+					assertThat(updateResponse.getVersion()).isEqualTo(2);
+					assertThat(updateResponse.getId()).isEqualTo("1");
+					assertThat(updateResponse.getIndex()).isEqualTo("twitter");
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void updateShouldEmitErrorWhenNotFound() {
+
+		hostProvider.when(HOST) //
+				.updateFail();
+
+		client.update(new UpdateRequest("twitter", "doc", "1").doc(Collections.singletonMap("user", "cstrobl")))
+				.as(StepVerifier::create) //
+				.expectError(ElasticsearchStatusException.class) //
+				.verify();
 	}
 
 	// --> SEARCH
@@ -389,76 +509,4 @@ public class ReactiveElasticsearchClientUnitTests {
 				.verifyComplete();
 	}
 
-	// --> INDEX
-
-	@Test // DATAES-488
-	public void indexNewShouldHitCreateEndpoint() {
-
-		hostProvider.when(HOST) //
-				.receiveIndexCreated();
-
-		client.index(new IndexRequest("twitter").id("10").create(true).source(" { foo : \"bar\" }", XContentType.JSON))
-				.then() //
-				.as(StepVerifier::create) //
-				.verifyComplete();
-
-		verify(hostProvider.client(HOST)).method(HttpMethod.PUT);
-		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-
-			verify(requestBodyUriSpec).uri(eq("/twitter/10/_create"), any(Map.class));
-			verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON);
-		});
-	}
-
-	@Test // DATAES-488
-	public void indexExistingShouldHitUpdateEndpoint() {
-
-		hostProvider.when(HOST) //
-				.receiveIndexUpdated();
-
-		client.index(new IndexRequest("twitter").id("10").source(" { foo : \"bar\" }", XContentType.JSON)).then() //
-				.as(StepVerifier::create) //
-				.verifyComplete();
-
-		verify(hostProvider.client(HOST)).method(HttpMethod.PUT);
-		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-
-			verify(requestBodyUriSpec).uri(eq("/twitter/10"), any(Map.class));
-			verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON);
-		});
-	}
-
-	@Test // DATAES-488
-	public void indexShouldReturnCreatedWhenNewDocumentIndexed() {
-
-		hostProvider.when(HOST) //
-				.receiveIndexCreated();
-
-		client.index(new IndexRequest("twitter").id("10").create(true).source(" { foo : \"bar\" }", XContentType.JSON))
-				.as(StepVerifier::create) //
-				.consumeNextWith(response -> {
-
-					assertThat(response.getId()).isEqualTo("10");
-					assertThat(response.getIndex()).isEqualTo("twitter");
-					assertThat(response.getResult()).isEqualTo(Result.CREATED);
-				}) //
-				.verifyComplete();
-	}
-
-	@Test // DATAES-488
-	public void indexShouldReturnUpdatedWhenExistingDocumentIndexed() {
-
-		hostProvider.when(HOST) //
-				.receiveIndexUpdated();
-
-		client.index(new IndexRequest("twitter").id("1").source(" { foo : \"bar\" }", XContentType.JSON))
-				.as(StepVerifier::create) //
-				.consumeNextWith(response -> {
-
-					assertThat(response.getId()).isEqualTo("1");
-					assertThat(response.getIndex()).isEqualTo("twitter");
-					assertThat(response.getResult()).isEqualTo(Result.UPDATED);
-				}) //
-				.verifyComplete();
-	}
 }

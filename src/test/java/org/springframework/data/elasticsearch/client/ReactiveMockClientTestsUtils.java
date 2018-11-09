@@ -290,6 +290,18 @@ public class ReactiveMockClientTestsUtils {
 						.receive(Receive::ok);
 			}
 
+			default Receive receiveUpdateOk() {
+
+				return receiveJsonFromFile("update-ok") //
+						.receive(Receive::ok);
+			}
+
+			default Receive updateFail() {
+
+				return receiveJsonFromFile("update-error-not-found") //
+						.receive(Receive::notFound);
+			}
+
 		}
 
 		public interface Receive {

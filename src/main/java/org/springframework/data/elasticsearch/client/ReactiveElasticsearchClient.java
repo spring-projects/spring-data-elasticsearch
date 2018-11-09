@@ -22,10 +22,12 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.Function;
 
 import org.apache.http.util.EntityUtils;
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.get.GetRequest;
@@ -38,12 +40,16 @@ import org.elasticsearch.action.main.MainRequest;
 import org.elasticsearch.action.main.MainResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.get.GetResult;
+import org.elasticsearch.rest.BytesRestResponse;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.reactivestreams.Publisher;
 import org.springframework.core.ParameterizedTypeReference;
@@ -60,6 +66,7 @@ import org.springframework.http.codec.HttpMessageReader;
 import org.springframework.util.Assert;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.reactive.function.BodyExtractor;
 import org.springframework.web.reactive.function.BodyExtractors;
@@ -185,6 +192,7 @@ public class ReactiveElasticsearchClient {
 	public Mono<GetResult> get(HttpHeaders headers, GetRequest getRequest) {
 
 		return sendRequest(getRequest, RequestCreator.get(), GetResponse.class, headers) //
+				.filter(GetResponse::isExists) //
 				.map(ReactiveElasticsearchClient::getResponseToGetResult) //
 				.next();
 	}
@@ -217,7 +225,7 @@ public class ReactiveElasticsearchClient {
 		return sendRequest(multiGetRequest, RequestCreator.multiGet(), MultiGetResponse.class, headers)
 				.map(MultiGetResponse::getResponses) //
 				.flatMap(Flux::fromArray) //
-				.filter(it -> !it.isFailed()) //
+				.filter(it -> !it.isFailed() && it.getResponse().isExists()) //
 				.map(it -> ReactiveElasticsearchClient.getResponseToGetResult(it.getResponse()));
 	}
 
@@ -259,10 +267,10 @@ public class ReactiveElasticsearchClient {
 	}
 
 	/**
-	 * Execute the given {@link IndexRequest} against the {@literal index} API.
+	 * Execute the given {@link IndexRequest} against the {@literal index} API to index a document.
 	 *
 	 * @param indexRequest must not be {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html">Index API on
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index.html">Index API on
 	 *      elastic.co</a>
 	 * @return the {@link Mono} emitting the {@link IndexResponse}.
 	 */
@@ -271,11 +279,11 @@ public class ReactiveElasticsearchClient {
 	}
 
 	/**
-	 * Execute the given {@link IndexRequest} against the {@literal index} API.
+	 * Execute the given {@link IndexRequest} against the {@literal index} API to index a document.
 	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param indexRequest must not be {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html">Index API on
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index.html">Index API on
 	 *      elastic.co</a>
 	 * @return the {@link Mono} emitting the {@link IndexResponse}.
 	 */
@@ -283,7 +291,30 @@ public class ReactiveElasticsearchClient {
 		return sendRequest(indexRequest, RequestCreator.index(), IndexResponse.class, headers).publishNext();
 	}
 
-	
+	/**
+	 * Execute the given {@link UpdateRequest} against the {@literal update} API to alter a document.
+	 *
+	 * @param updateRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html">Update API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link UpdateResponse}.
+	 */
+	public Mono<UpdateResponse> update(UpdateRequest updateRequest) {
+		return update(HttpHeaders.EMPTY, updateRequest);
+	}
+
+	/**
+	 * Execute the given {@link UpdateRequest} against the {@literal update} API to alter a document.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param updateRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html">Update API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link UpdateResponse}.
+	 */
+	public Mono<UpdateResponse> update(HttpHeaders headers, UpdateRequest updateRequest) {
+		return sendRequest(updateRequest, RequestCreator.update(), UpdateResponse.class, headers).publishNext();
+	}
 
 	/**
 	 * Execute the given {@link SearchRequest} against the {@literal search} API.
@@ -404,16 +435,38 @@ public class ReactiveElasticsearchClient {
 		return response.body(BodyExtractors.toDataBuffers()).flatMap(it -> {
 			try {
 
-				XContentParser parser = XContentType
-						.fromMediaTypeOrFormat(
-								response.headers().contentType().map(MediaType::toString).orElse(XContentType.JSON.mediaType()))
-						.xContent().createParser(NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION,
-								it.asInputStream(true));
+				String content = StreamUtils.copyToString(it.asInputStream(true), StandardCharsets.UTF_8);
 
-				// TODO: read findAndInvokeFromXContent cut response into pieces (at least for search)
+				try {
 
-				Method fromXContent = ReflectionUtils.findMethod(responseType, "fromXContent", XContentParser.class);
-				return Mono.just((T) ReflectionUtils.invokeMethod(fromXContent, responseType, parser));
+					XContentParser contentParser = XContentType
+							.fromMediaTypeOrFormat(
+									response.headers().contentType().map(MediaType::toString).orElse(XContentType.JSON.mediaType()))
+							.xContent()
+							.createParser(NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION, content);
+
+					Method fromXContent = ReflectionUtils.findMethod(responseType, "fromXContent", XContentParser.class);
+					return Mono.just((T) ReflectionUtils.invokeMethod(fromXContent, responseType, contentParser));
+				} catch (Exception parseFailure) {
+
+					try {
+
+						XContentParser errorParser = XContentType
+								.fromMediaTypeOrFormat(
+										response.headers().contentType().map(MediaType::toString).orElse(XContentType.JSON.mediaType()))
+								.xContent()
+								.createParser(NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION, content);
+
+						// return Mono.error to avoid ElasticsearchStatusException to be caught by outer catch.
+						return Mono.error(BytesRestResponse.errorFromXContent(errorParser));
+
+					} catch (Exception errorParseFailure) {
+
+						// return Mono.error to avoid ElasticsearchStatusException to be caught by outer catch.
+						return Mono.error(new ElasticsearchStatusException("Unable to parse response body",
+								RestStatus.fromCode(response.statusCode().value())));
+					}
+				}
 			} catch (IOException e) {
 				throw new DataAccessResourceFailureException("Error parsing XContent.", e);
 			}
@@ -433,6 +486,7 @@ public class ReactiveElasticsearchClient {
 		static final Method INFO_METHOD = ReflectionUtils.findMethod(Request.class, "info");
 		static final Method MULTI_GET_METHOD = ReflectionUtils.findMethod(Request.class, "multiGet", MultiGetRequest.class);
 		static final Method EXISTS_METHOD = ReflectionUtils.findMethod(Request.class, "exists", GetRequest.class);
+		static final Method UPDATE_METHOD = ReflectionUtils.findMethod(Request.class, "update", UpdateRequest.class);
 
 		static {
 
@@ -443,6 +497,7 @@ public class ReactiveElasticsearchClient {
 			INFO_METHOD.setAccessible(true);
 			MULTI_GET_METHOD.setAccessible(true);
 			EXISTS_METHOD.setAccessible(true);
+			UPDATE_METHOD.setAccessible(true);
 		}
 
 		static Function<SearchRequest, Request> search() {
@@ -471,6 +526,10 @@ public class ReactiveElasticsearchClient {
 
 		static Function<GetRequest, Request> exists() {
 			return (request) -> (Request) ReflectionUtils.invokeMethod(EXISTS_METHOD, Request.class, request);
+		}
+
+		static Function<UpdateRequest, Request> update() {
+			return (request) -> (Request) ReflectionUtils.invokeMethod(UPDATE_METHOD, Request.class, request);
 		}
 	}
 
