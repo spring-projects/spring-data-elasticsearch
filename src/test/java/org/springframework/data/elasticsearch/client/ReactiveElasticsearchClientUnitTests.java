@@ -28,11 +28,13 @@ import java.util.Map;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.junit.Before;
 import org.junit.Test;
+import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.client.ReactiveMockClientTestsUtils.MockDelegatingElasticsearchClientProvider;
 import org.springframework.data.elasticsearch.client.ReactiveMockClientTestsUtils.WebClientProvider.Receive;
 import org.springframework.http.HttpMethod;
@@ -181,6 +183,90 @@ public class ReactiveElasticsearchClientUnitTests {
 				.as(StepVerifier::create) //
 				.consumeNextWith(result -> {
 					assertThat(result.isExists()).isFalse();
+				}) //
+				.verifyComplete();
+	}
+
+	// --> MGET
+
+	@Test // DATAES-488
+	public void multiGetShouldHitMGetEndpoint() {
+
+		hostProvider.when(HOST) //
+				.receiveJsonFromFile("multi-get-ok-2-hits");
+
+		client.multiGet(new MultiGetRequest().add("twitter", "_doc", "1").add("twitter", "_doc", "2")) //
+				.then() //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		verify(hostProvider.client(HOST)).method(HttpMethod.POST);
+
+		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
+
+			verify(requestBodyUriSpec).uri(eq("/_mget"), any(Map.class));
+			verify(requestBodyUriSpec).body(any(Publisher.class), any(Class.class));
+		});
+	}
+
+	@Test // DATAES-488
+	public void multiGetShouldReturnExistingDocuments() {
+
+		hostProvider.when(HOST) //
+				.receiveJsonFromFile("multi-get-ok-2-hits");
+
+		client.multiGet(new MultiGetRequest().add("twitter", "_doc", "1").add("twitter", "_doc", "2")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(result -> {
+
+					assertThat(result.isExists()).isTrue();
+					assertThat(result.getIndex()).isEqualTo("twitter");
+					assertThat(result.getId()).isEqualTo("1");
+					assertThat(result.getSource()) //
+							.containsEntry("user", "kimchy") //
+							.containsEntry("message", "Trying out Elasticsearch, so far so good?") //
+							.containsKey("post_date");
+				}) //
+				.consumeNextWith(result -> {
+
+					assertThat(result.isExists()).isTrue();
+					assertThat(result.getIndex()).isEqualTo("twitter");
+					assertThat(result.getId()).isEqualTo("2");
+					assertThat(result.getSource()) //
+							.containsEntry("user", "kimchy") //
+							.containsEntry("message", "Another tweet, will it be indexed?") //
+							.containsKey("post_date");
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void multiGetShouldSkipNonExistingDocuments() {
+
+		hostProvider.when(HOST) //
+				.receiveJsonFromFile("multi-get-ok-2-hits-1-unavailable");
+
+		client.multiGet(new MultiGetRequest().add("twitter", "_doc", "1").add("twitter", "_doc", "2")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(result -> {
+
+					assertThat(result.isExists()).isTrue();
+					assertThat(result.getIndex()).isEqualTo("twitter");
+					assertThat(result.getId()).isEqualTo("1");
+					assertThat(result.getSource()) //
+							.containsEntry("user", "kimchy") //
+							.containsEntry("message", "Trying out Elasticsearch, so far so good?") //
+							.containsKey("post_date");
+				}) //
+				.consumeNextWith(result -> {
+
+					assertThat(result.isExists()).isTrue();
+					assertThat(result.getIndex()).isEqualTo("twitter");
+					assertThat(result.getId()).isEqualTo("3");
+					assertThat(result.getSource()) //
+							.containsEntry("user", "elastic") //
+							.containsEntry("message", "Building the site, should be kewl") //
+							.containsKey("post_date");
 				}) //
 				.verifyComplete();
 	}

@@ -247,24 +247,26 @@ public class ReactiveMockClientTestsUtils {
 
 			Receive exchange(Consumer<RequestBodyUriSpec> bodySpec);
 
-			default Receive receiveInfo() {
+			default Receive receiveJsonFromFile(String file) {
+
 				return receive(Receive::json) //
-						.body(Receive.fromPath("info"));
+						.body(Receive.fromPath(file));
+			}
+
+			default Receive receiveInfo() {
+				return receiveJsonFromFile("info");
 			}
 
 			default Receive receiveIndexCreated() {
-				return receive(Receive::json) //
-						.body(Receive.fromPath("index-ok-created"));
+				return receiveJsonFromFile("index-ok-created");
 			}
 
 			default Receive receiveIndexUpdated() {
-				return receive(Receive::json) //
-					.body(Receive.fromPath("index-ok-updated"));
+				return receiveJsonFromFile("index-ok-updated");
 			}
 
 			default Receive receiveSearchOk() {
-				return receive(Receive::json) //
-						.body(Receive.fromPath("search-ok-no-hits"));
+				return receiveJsonFromFile("search-ok-no-hits");
 			}
 
 		}

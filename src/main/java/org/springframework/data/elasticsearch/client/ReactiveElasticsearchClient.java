@@ -30,6 +30,8 @@ import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetRequest;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.main.MainRequest;
@@ -149,7 +151,7 @@ public class ReactiveElasticsearchClient {
 	}
 
 	/**
-	 * Execute the given {@link GetRequest} against the {@literal get} API.
+	 * Execute the given {@link GetRequest} against the {@literal get} API to retrieve a document by id.
 	 *
 	 * @param getRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html">Get API on
@@ -161,7 +163,7 @@ public class ReactiveElasticsearchClient {
 	}
 
 	/**
-	 * Execute the given {@link GetRequest} against the {@literal get} API.
+	 * Execute the given {@link GetRequest} against the {@literal get} API to retrieve a document by id.
 	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param getRequest must not be {@literal null}.
@@ -172,9 +174,40 @@ public class ReactiveElasticsearchClient {
 	public Mono<GetResult> get(HttpHeaders headers, GetRequest getRequest) {
 
 		return sendRequest(getRequest, RequestCreator.get(), GetResponse.class, headers) //
-				.map(it -> new GetResult(it.getIndex(), it.getType(), it.getId(), it.getVersion(), it.isExists(),
-						it.getSourceAsBytesRef(), it.getFields())) //
+				.map(ReactiveElasticsearchClient::getResponseToGetResult) //
 				.next();
+	}
+
+	/**
+	 * Execute the given {@link MultiGetRequest} against the {@literal multi-get} API to retrieve multiple documents by
+	 * id.
+	 *
+	 * @param multiGetRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html">Multi Get API on
+	 *      elastic.co</a>
+	 * @return the {@link Flux} emitting the {@link GetResult result}.
+	 */
+	public Flux<GetResult> multiGet(MultiGetRequest multiGetRequest) {
+		return multiGet(HttpHeaders.EMPTY, multiGetRequest);
+	}
+
+	/**
+	 * Execute the given {@link MultiGetRequest} against the {@literal multi-get} API to retrieve multiple documents by
+	 * id.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param multiGetRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html">Multi Get API on
+	 *      elastic.co</a>
+	 * @return the {@link Flux} emitting the {@link GetResult result}.
+	 */
+	public Flux<GetResult> multiGet(HttpHeaders headers, MultiGetRequest multiGetRequest) {
+
+		return sendRequest(multiGetRequest, RequestCreator.multiGet(), MultiGetResponse.class, headers)
+				.map(MultiGetResponse::getResponses) //
+				.flatMap(Flux::fromArray) //
+				.filter(it -> !it.isFailed()) //
+				.map(it -> ReactiveElasticsearchClient.getResponseToGetResult(it.getResponse()));
 	}
 
 	/**
@@ -254,6 +287,16 @@ public class ReactiveElasticsearchClient {
 					return Mono.error(throwable);
 				});
 	}
+
+	// --> Private Response helpers
+
+	private static GetResult getResponseToGetResult(GetResponse response) {
+
+		return new GetResult(response.getIndex(), response.getType(), response.getId(), response.getVersion(),
+				response.isExists(), response.getSourceAsBytesRef(), response.getFields());
+	}
+
+	// -->
 
 	private <Req extends ActionRequest, Resp extends ActionResponse> Flux<Resp> sendRequest(Req request,
 			Function<Req, Request> converter, Class<Resp> responseType, HttpHeaders headers) {
@@ -338,6 +381,7 @@ public class ReactiveElasticsearchClient {
 		static final Method GET_METHOD = ReflectionUtils.findMethod(Request.class, "get", GetRequest.class);
 		static final Method PING_METHOD = ReflectionUtils.findMethod(Request.class, "ping");
 		static final Method INFO_METHOD = ReflectionUtils.findMethod(Request.class, "info");
+		static final Method MULTI_GET_METHOD = ReflectionUtils.findMethod(Request.class, "multiGet", MultiGetRequest.class);
 
 		static {
 
@@ -346,6 +390,7 @@ public class ReactiveElasticsearchClient {
 			INDEX_METHOD.setAccessible(true);
 			GET_METHOD.setAccessible(true);
 			INFO_METHOD.setAccessible(true);
+			MULTI_GET_METHOD.setAccessible(true);
 		}
 
 		static Function<SearchRequest, Request> search() {
@@ -366,6 +411,10 @@ public class ReactiveElasticsearchClient {
 
 		static Function<MainRequest, Request> info() {
 			return (request) -> (Request) ReflectionUtils.invokeMethod(INFO_METHOD, Request.class);
+		}
+
+		static Function<MultiGetRequest, Request> multiGet() {
+			return (request) -> (Request) ReflectionUtils.invokeMethod(MULTI_GET_METHOD, Request.class, request);
 		}
 	}
 
