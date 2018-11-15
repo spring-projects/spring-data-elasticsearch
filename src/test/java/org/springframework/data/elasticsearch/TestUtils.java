@@ -43,16 +43,21 @@ public final class TestUtils {
 	}
 
 	@SneakyThrows
-	public static void flushIndex(String... index) {
+	public static void deleteIndex(String... indexes) {
 
-		if (ObjectUtils.isEmpty(index)) {
+		if (ObjectUtils.isEmpty(indexes)) {
 			return;
 		}
 
 		try (RestHighLevelClient client = restHighLevelClient()) {
-			client.indices().delete(new DeleteIndexRequest(index));
-		} catch (ElasticsearchStatusException ex) {
-			// just ignore it
+			for (String index : indexes) {
+
+				try {
+					client.indices().delete(new DeleteIndexRequest(index));
+				} catch (ElasticsearchStatusException ex) {
+					// just ignore it
+				}
+			}
 		}
 	}
 }

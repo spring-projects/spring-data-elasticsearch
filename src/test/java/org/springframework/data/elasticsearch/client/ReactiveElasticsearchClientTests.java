@@ -28,12 +28,18 @@ import java.util.UUID;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.Version;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,7 +82,8 @@ public class ReactiveElasticsearchClientTests {
 	@After
 	public void after() throws IOException {
 
-		TestUtils.flushIndex(INDEX_I, INDEX_II);
+		TestUtils.deleteIndex(INDEX_I, INDEX_II);
+
 		syncClient.close();
 	}
 
@@ -338,7 +345,66 @@ public class ReactiveElasticsearchClientTests {
 				.as(StepVerifier::create) //
 				.consumeErrorWith(error -> {
 					assertThat(error).isInstanceOf(ElasticsearchStatusException.class);
-				}).verify();
+				}) //
+				.verify();
+	}
+
+	@Test // DATAES-488
+	public void deleteShouldRemoveExistingDocument() {
+
+		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+
+		DeleteRequest request = new DeleteRequest(INDEX_I, TYPE_I, id);
+
+		client.delete(request) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+					assertThat(it.status()).isEqualTo(RestStatus.OK);
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void deleteShouldReturnNotFoundForNonExistingDocument() {
+
+		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+
+		DeleteRequest request = new DeleteRequest(INDEX_I, TYPE_I, "this-one-does-not-exist");
+
+		client.delete(request) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+					assertThat(it.status()).isEqualTo(RestStatus.NOT_FOUND);
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void searchShouldFindExistingDocuments() {
+
+		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+
+		SearchRequest request = new SearchRequest(INDEX_I).types(TYPE_I) //
+				.source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery()));
+
+		client.search(request) //
+				.as(StepVerifier::create) //
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void searchShouldCompleteIfNothingFound() throws IOException {
+
+		syncClient.indices().create(new CreateIndexRequest(INDEX_I));
+
+		SearchRequest request = new SearchRequest(INDEX_I).types(TYPE_I) //
+				.source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery()));
+
+		client.search(request) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
 	}
 
 	AddToIndexOfType addSourceDocument() {
@@ -354,6 +420,7 @@ public class ReactiveElasticsearchClientTests {
 		return new IndexRequest(index, type) //
 				.id(UUID.randomUUID().toString()) //
 				.source(source) //
+				.setRefreshPolicy(RefreshPolicy.IMMEDIATE) //
 				.create(true);
 	}
 
