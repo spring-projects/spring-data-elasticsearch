@@ -26,11 +26,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.rest.RestStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -234,6 +237,110 @@ public class ReactiveElasticsearchClientTests {
 				.verifyComplete();
 	}
 
+	@Test // DATAES-488
+	public void existsReturnsTrueForExistingDocuments() {
+
+		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+
+		client.exists(new GetRequest(INDEX_I, TYPE_I, id)) //
+				.as(StepVerifier::create) //
+				.expectNext(true)//
+				.verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void existsReturnsFalseForNonExistingDocuments() {
+
+		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+
+		client.exists(new GetRequest(INDEX_II, TYPE_I, id)) //
+				.as(StepVerifier::create) //
+				.expectNext(false)//
+				.verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void indexShouldAddDocument() {
+
+		IndexRequest request = indexRequest(DOC_SOURCE, INDEX_I, TYPE_I);
+
+		client.index(request) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+
+					assertThat(it.status()).isEqualTo(RestStatus.CREATED);
+					assertThat(it.getId()).isEqualTo(request.id());
+				})//
+				.verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void indexShouldErrorForExistingDocuments() {
+
+		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+
+		IndexRequest request = indexRequest(DOC_SOURCE, INDEX_I, TYPE_I)//
+				.id(id);
+
+		client.index(request) //
+				.as(StepVerifier::create) //
+				.consumeErrorWith(error -> {
+					assertThat(error).isInstanceOf(ElasticsearchStatusException.class);
+				}) //
+				.verify();
+	}
+
+	@Test // DATAES-488
+	public void updateShouldUpsertNonExistingDocumentWhenUsedWithUpsert() {
+
+		String id = UUID.randomUUID().toString();
+		UpdateRequest request = new UpdateRequest(INDEX_I, TYPE_I, id) //
+				.doc(DOC_SOURCE) //
+				.docAsUpsert(true);
+
+		client.update(request) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+
+					assertThat(it.status()).isEqualTo(RestStatus.CREATED);
+					assertThat(it.getId()).isEqualTo(id);
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void updateShouldUpdateExistingDocument() {
+
+		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+
+		UpdateRequest request = new UpdateRequest(INDEX_I, TYPE_I, id) //
+				.doc(Collections.singletonMap("dutiful", "farseer"));
+
+		client.update(request) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+
+					assertThat(it.status()).isEqualTo(RestStatus.OK);
+					assertThat(it.getId()).isEqualTo(id);
+					assertThat(it.getVersion()).isEqualTo(2);
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void updateShouldErrorNonExistingDocumentWhenNotUpserted() {
+
+		String id = UUID.randomUUID().toString();
+		UpdateRequest request = new UpdateRequest(INDEX_I, TYPE_I, id) //
+				.doc(DOC_SOURCE);
+
+		client.update(request) //
+				.as(StepVerifier::create) //
+				.consumeErrorWith(error -> {
+					assertThat(error).isInstanceOf(ElasticsearchStatusException.class);
+				}).verify();
+	}
+
 	AddToIndexOfType addSourceDocument() {
 		return add(DOC_SOURCE);
 	}
@@ -242,15 +349,18 @@ public class ReactiveElasticsearchClientTests {
 		return new AddDocument(source);
 	}
 
-	String doIndex(Map source, String index, String type) {
+	IndexRequest indexRequest(Map source, String index, String type) {
 
-		IndexRequest indexRequest = new IndexRequest(index, type) //
+		return new IndexRequest(index, type) //
 				.id(UUID.randomUUID().toString()) //
 				.source(source) //
 				.create(true);
+	}
+
+	String doIndex(Map source, String index, String type) {
 
 		try {
-			return syncClient.index(indexRequest).getId();
+			return syncClient.index(indexRequest(source, index, type)).getId();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
