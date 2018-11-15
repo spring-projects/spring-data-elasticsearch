@@ -98,6 +98,16 @@ public class ReactiveElasticsearchClient {
 	}
 
 	/**
+	 * Create a new {@link ReactiveElasticsearchClient} for {@literal localhost}. <br />
+	 * This is just a convenience option mainly used for testing purposes.
+	 *
+	 * @return new instance of {@link ReactiveElasticsearchClient}.
+	 */
+	public static ReactiveElasticsearchClient local() {
+		return create("http://localhost:9200");
+	}
+
+	/**
 	 * Create a new {@link ReactiveElasticsearchClient} aware of the given nodes in the cluster. <br />
 	 * <strong>NOTE</strong> If the cluster requires authentication be sure to provide {@link HttpHeaders} via
 	 * {@link #create(HttpHeaders, String...)}.
@@ -431,7 +441,8 @@ public class ReactiveElasticsearchClient {
 		}
 
 		return requestBodySpec //
-				.exchange();
+				.exchange() //
+				.onErrorReturn(ConnectException.class, ClientResponse.create(HttpStatus.SERVICE_UNAVAILABLE).build());
 	}
 
 	private Publisher<String> bodyExtractor(Request request) {
@@ -652,7 +663,5 @@ public class ReactiveElasticsearchClient {
 		public static Builder create(HttpStatus statusCode, List<HttpMessageReader<?>> messageReaders) {
 			return ClientResponse.create(statusCode, messageReaders);
 		}
-
 	}
-
 }
