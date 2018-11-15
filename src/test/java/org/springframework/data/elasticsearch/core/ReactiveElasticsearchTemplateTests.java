@@ -23,12 +23,9 @@ import reactor.test.StepVerifier;
 
 import java.util.List;
 
-import org.apache.http.HttpHost;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.client.ElasticsearchClients;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -47,8 +44,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@Before
 	public void setUp() {
 
-		restTemplate = new ElasticsearchRestTemplate(
-				new RestHighLevelClient(RestClient.builder(HttpHost.create("http://localhost:9200"))));
+		restTemplate = new ElasticsearchRestTemplate(ElasticsearchClients.createClient().connectedToLocalhost().rest());
 
 		restTemplate.deleteIndex(SampleEntity.class);
 		restTemplate.createIndex(SampleEntity.class);
@@ -57,7 +53,7 @@ public class ReactiveElasticsearchTemplateTests {
 		restTemplate.refresh(SampleEntity.class);
 
 		template = new ReactiveElasticsearchTemplate(
-				ReactiveElasticsearchClient.create("http://localhost:9201", "http://localhost:9200"));
+				ElasticsearchClients.createClient().connectedTo("http://localhost:9201", "http://localhost:9200").reactive());
 	}
 
 	@Test // DATAES-488

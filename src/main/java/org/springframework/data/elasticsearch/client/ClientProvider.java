@@ -182,6 +182,14 @@ public interface ClientProvider {
 			this.timestamp = Instant.now();
 		}
 
+		static HostState online(String host) {
+			return new HostState(host, State.ONLINE);
+		}
+
+		static HostState offline(String host) {
+			return new HostState(host, State.OFFLINE);
+		}
+
 		boolean isOnline() {
 			return online(this);
 		}

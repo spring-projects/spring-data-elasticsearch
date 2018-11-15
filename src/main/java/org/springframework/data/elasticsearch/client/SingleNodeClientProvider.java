@@ -16,7 +16,6 @@
 
 package org.springframework.data.elasticsearch.client;
 
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
@@ -31,16 +30,39 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author Christoph Strobl
  * @since 4.0
  */
-@RequiredArgsConstructor
 class SingleNodeClientProvider implements ClientProvider {
 
 	private final HttpHeaders headers;
 	private final Consumer<Throwable> errorListener;
-	private final String host;
+	private final String hostname;
+	private volatile HostState state;
+
+	SingleNodeClientProvider(HttpHeaders headers, Consumer<Throwable> errorListener, String host) {
+
+		this.headers = headers;
+		this.errorListener = errorListener;
+		this.hostname = host;
+		this.state = new HostState(hostname, State.UNKNOWN);
+	}
+
+	public Mono<Void> refresh() {
+
+		return createWebClient(hostname, headers) //
+				.head().uri("/").exchange() //
+				.flatMap(it -> {
+					state = HostState.online(hostname);
+					return Mono.<Void> empty();
+				}).onErrorResume(throwable -> {
+
+					state = HostState.offline(hostname);
+					errorListener.accept(throwable);
+					return Mono.empty();
+				});
+	}
 
 	@Override
 	public Mono<String> lookupActiveHost(VerificationMode verificationMode) {
-		return Mono.just(host);
+		return Mono.just(hostname);
 	}
 
 	@Override
@@ -50,16 +72,16 @@ class SingleNodeClientProvider implements ClientProvider {
 
 	@Override
 	public Collection<HostState> status() {
-		return Collections.singleton(new HostState(host, State.ONLINE));
+		return Collections.singleton(state);
 	}
 
 	@Override
 	public ClientProvider withDefaultHeaders(HttpHeaders headers) {
-		return new SingleNodeClientProvider(headers, errorListener, host);
+		return new SingleNodeClientProvider(headers, errorListener, hostname);
 	}
 
 	@Override
 	public ClientProvider withErrorListener(Consumer<Throwable> errorListener) {
-		return new SingleNodeClientProvider(headers, errorListener, host);
+		return new SingleNodeClientProvider(headers, errorListener, hostname);
 	}
 }

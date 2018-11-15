@@ -18,11 +18,10 @@ package org.springframework.data.elasticsearch;
 
 import lombok.SneakyThrows;
 
-import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.springframework.data.elasticsearch.client.ElasticsearchClients;
 import org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient;
 import org.springframework.util.ObjectUtils;
 
@@ -35,11 +34,11 @@ public final class TestUtils {
 	private TestUtils() {}
 
 	public static RestHighLevelClient restHighLevelClient() {
-		return new RestHighLevelClient(RestClient.builder(HttpHost.create("http://localhost:9200")));
+		return ElasticsearchClients.createClient().connectedToLocalhost().rest();
 	}
 
 	public static ReactiveElasticsearchClient reactiveClient() {
-		return ReactiveElasticsearchClient.local();
+		return ElasticsearchClients.createClient().connectedToLocalhost().reactive();
 	}
 
 	@SneakyThrows

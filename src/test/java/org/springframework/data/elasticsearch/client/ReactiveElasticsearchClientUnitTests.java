@@ -59,7 +59,7 @@ public class ReactiveElasticsearchClientUnitTests {
 	public void setUp() {
 
 		hostProvider = ReactiveMockClientTestsUtils.provider(HOST);
-		client = new ReactiveElasticsearchClient(hostProvider);
+		client = new DefaultReactiveElasticsearchClient(hostProvider);
 	}
 
 	// --> PING

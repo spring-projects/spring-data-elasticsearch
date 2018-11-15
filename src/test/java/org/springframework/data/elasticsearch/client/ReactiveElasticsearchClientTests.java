@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.client;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.springframework.http.HttpHeaders;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -97,7 +98,7 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void pingForUnknownHostShouldReturnFalse() {
 
-		ReactiveElasticsearchClient.create("http://localhost:4711").ping() //
+		DefaultReactiveElasticsearchClient.create(HttpHeaders.EMPTY, "http://localhost:4711").ping() //
 				.as(StepVerifier::create) //
 				.expectNext(false) //
 				.verifyComplete();
