@@ -59,6 +59,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.elasticsearch.client.ClientProvider.HostState;
 import org.springframework.data.elasticsearch.client.ClientProvider.VerificationMode;
+import org.springframework.data.elasticsearch.client.util.RequestConverters;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -367,63 +368,40 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	static class RequestCreator {
 
-		static final Method SEARCH_METHOD = ReflectionUtils.findMethod(Request.class, "search", SearchRequest.class);
-		static final Method INDEX_METHOD = ReflectionUtils.findMethod(Request.class, "index", IndexRequest.class);
-		static final Method GET_METHOD = ReflectionUtils.findMethod(Request.class, "get", GetRequest.class);
-		static final Method PING_METHOD = ReflectionUtils.findMethod(Request.class, "ping");
-		static final Method INFO_METHOD = ReflectionUtils.findMethod(Request.class, "info");
-		static final Method MULTI_GET_METHOD = ReflectionUtils.findMethod(Request.class, "multiGet", MultiGetRequest.class);
-		static final Method EXISTS_METHOD = ReflectionUtils.findMethod(Request.class, "exists", GetRequest.class);
-		static final Method UPDATE_METHOD = ReflectionUtils.findMethod(Request.class, "update", UpdateRequest.class);
-		static final Method DELETE_METHOD = ReflectionUtils.findMethod(Request.class, "delete", DeleteRequest.class);
-
-		static {
-
-			PING_METHOD.setAccessible(true);
-			SEARCH_METHOD.setAccessible(true);
-			INDEX_METHOD.setAccessible(true);
-			GET_METHOD.setAccessible(true);
-			INFO_METHOD.setAccessible(true);
-			MULTI_GET_METHOD.setAccessible(true);
-			EXISTS_METHOD.setAccessible(true);
-			UPDATE_METHOD.setAccessible(true);
-			DELETE_METHOD.setAccessible(true);
-		}
-
 		static Function<SearchRequest, Request> search() {
-			return (request) -> (Request) ReflectionUtils.invokeMethod(SEARCH_METHOD, Request.class, request);
+			return RequestConverters::search;
 		}
 
 		static Function<IndexRequest, Request> index() {
-			return (request) -> (Request) ReflectionUtils.invokeMethod(INDEX_METHOD, Request.class, request);
+			return RequestConverters::index;
 		}
 
 		static Function<GetRequest, Request> get() {
-			return (request) -> (Request) ReflectionUtils.invokeMethod(GET_METHOD, Request.class, request);
+			return RequestConverters::get;
 		}
 
 		static Function<MainRequest, Request> ping() {
-			return (request) -> (Request) ReflectionUtils.invokeMethod(PING_METHOD, Request.class);
+			return (request) -> RequestConverters.ping();
 		}
 
 		static Function<MainRequest, Request> info() {
-			return (request) -> (Request) ReflectionUtils.invokeMethod(INFO_METHOD, Request.class);
+			return (request) -> RequestConverters.info();
 		}
 
 		static Function<MultiGetRequest, Request> multiGet() {
-			return (request) -> (Request) ReflectionUtils.invokeMethod(MULTI_GET_METHOD, Request.class, request);
+			return RequestConverters::multiGet;
 		}
 
 		static Function<GetRequest, Request> exists() {
-			return (request) -> (Request) ReflectionUtils.invokeMethod(EXISTS_METHOD, Request.class, request);
+			return RequestConverters::exists;
 		}
 
 		static Function<UpdateRequest, Request> update() {
-			return (request) -> (Request) ReflectionUtils.invokeMethod(UPDATE_METHOD, Request.class, request);
+			return RequestConverters::update;
 		}
 
 		static Function<DeleteRequest, Request> delete() {
-			return (request) -> (Request) ReflectionUtils.invokeMethod(DELETE_METHOD, Request.class, request);
+			return RequestConverters::delete;
 		}
 	}
 

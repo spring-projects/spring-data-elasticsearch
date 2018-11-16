@@ -14,11 +14,11 @@
       "filter": {
         "synonym_filter": {
           "type": "synonym",
+          "lenient" : true,
           "synonyms": [
             "british,english",
             "queen,monarch"
-          ],
-          "ignore_case": "true"
+          ]
         }
       }
     }
