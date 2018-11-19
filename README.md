@@ -1,11 +1,18 @@
-Spring Data Elasticsearch
-=========================
+Spring Data Elasticsearch 4.0
+=============================
 
-Spring Data implementation for ElasticSearch
+:warning: This is a development branch - Do not use in production! :warning:
 
-Spring Data makes it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services as well as provide improved support for relational database technologies.
+Spring Data implementation for [ElasticSearch 6.5](http://www.elasticsearch.org/)
 
-The Spring Data Elasticsearch project provides integration with the [elasticsearch](http://www.elasticsearch.org/) search engine.
+Planned Features in 4.0
+-----------------------
+ 
+* Elasticsearch 6.5 compatibility
+* Reactive EleasticsearchClient implementation based on WebClient
+* Reactive ElasticsearchTemplate and ElasticsearchRepository
+* Spring Exception Translator implementation
+* Kotlin Extensions for ElasticsearchTemplate
 
 Guide
 ------------
@@ -54,6 +61,7 @@ the appropriate dependency version.
 
 | spring data elasticsearch | elasticsearch |
 |:-------------------------:|:-------------:|
+| 4.0.x                     | 6.5.0         |
 | 3.1.x                     | 6.2.2         |
 | 3.0.x                     | 5.5.0         |
 | 2.1.x                     | 2.4.0         |
