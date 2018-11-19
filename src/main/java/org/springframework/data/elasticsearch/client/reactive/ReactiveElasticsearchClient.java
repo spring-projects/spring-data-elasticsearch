@@ -1,5 +1,5 @@
 /*
- * Copyright 2018. the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package org.springframework.data.elasticsearch.client;
+package org.springframework.data.elasticsearch.client.reactive;
 
+import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -34,7 +35,6 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
-import org.springframework.data.elasticsearch.client.ClientProvider.HostState;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -272,7 +272,7 @@ public interface ReactiveElasticsearchClient {
 	}
 
 	/**
-	 * Client status information like known hosts.
+	 * Cumulative client {@link ElasticsearchHost} information.
 	 *
 	 * @author Christoph Strobl
 	 * @since 4.0
@@ -280,24 +280,24 @@ public interface ReactiveElasticsearchClient {
 	interface Status {
 
 		/**
-		 * Get the list of known hosts and their status.
+		 * Get the list of known hosts and their getCachedHostState.
 		 * 
 		 * @return never {@literal null}.
 		 */
-		Collection<HostState> hosts();
+		Collection<ElasticsearchHost> hosts();
 
 		/**
 		 * @return {@literal true} if at least one host is available.
 		 */
 		default boolean isOk() {
 
-			Collection<HostState> hosts = hosts();
+			Collection<ElasticsearchHost> hosts = hosts();
 
 			if (CollectionUtils.isEmpty(hosts)) {
 				return false;
 			}
 
-			return hosts().stream().filter(it -> !it.isOnline()).findFirst().isPresent();
+			return !hosts().stream().filter(it -> !it.isOnline()).findFirst().isPresent();
 		}
 	}
 }

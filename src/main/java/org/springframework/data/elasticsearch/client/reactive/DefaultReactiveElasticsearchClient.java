@@ -1,5 +1,5 @@
 /*
- * Copyright 2018. the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package org.springframework.data.elasticsearch.client;
+package org.springframework.data.elasticsearch.client.reactive;
 
+import org.springframework.data.elasticsearch.client.ElasticsearchHost;
+import org.springframework.data.elasticsearch.client.NoReachableHostException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -57,8 +59,7 @@ import org.elasticsearch.search.SearchHit;
 import org.reactivestreams.Publisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.data.elasticsearch.client.ClientProvider.HostState;
-import org.springframework.data.elasticsearch.client.ClientProvider.VerificationMode;
+import org.springframework.data.elasticsearch.client.reactive.HostProvider.VerificationMode;
 import org.springframework.data.elasticsearch.client.util.RequestConverters;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -89,16 +90,15 @@ import org.springframework.web.reactive.function.client.WebClientException;
  */
 public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearchClient {
 
-	private final ClientProvider clientProvider;
+	private final HostProvider hostProvider;
 
 	/**
-	 * Create a new {@link DefaultReactiveElasticsearchClient} using the given clientProvider to obtain server
-	 * connections.
+	 * Create a new {@link DefaultReactiveElasticsearchClient} using the given hostProvider to obtain server connections.
 	 *
-	 * @param clientProvider must not be {@literal null}.
+	 * @param hostProvider must not be {@literal null}.
 	 */
-	public DefaultReactiveElasticsearchClient(ClientProvider clientProvider) {
-		this.clientProvider = clientProvider;
+	public DefaultReactiveElasticsearchClient(HostProvider hostProvider) {
+		this.hostProvider = hostProvider;
 	}
 
 	/**
@@ -114,26 +114,26 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		Assert.notEmpty(hosts, "Elasticsearch Cluster needs to consist of at least one host");
 
-		ClientProvider clientProvider = ClientProvider.provider(hosts);
+		HostProvider hostProvider = HostProvider.provider(hosts);
 		return new DefaultReactiveElasticsearchClient(
-				headers.isEmpty() ? clientProvider : clientProvider.withDefaultHeaders(headers));
+				headers.isEmpty() ? hostProvider : hostProvider.withDefaultHeaders(headers));
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders)
 	 */
 	@Override
 	public Mono<Boolean> ping(HttpHeaders headers) {
 
 		return sendRequest(new MainRequest(), RequestCreator.ping(), RawActionResponse.class, headers) //
 				.map(response -> response.statusCode().is2xxSuccessful()) //
-				.next();
+				.onErrorResume(NoReachableHostException.class, error -> Mono.just(false)).next();
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient#info(org.springframework.http.HttpHeaders)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#info(org.springframework.http.HttpHeaders)
 	 */
 	@Override
 	public Mono<MainResponse> info(HttpHeaders headers) {
@@ -144,7 +144,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient#get(org.springframework.http.HttpHeaderss, org.elasticsearch.action.get.GetRequest)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#get(org.springframework.http.HttpHeaderss, org.elasticsearch.action.get.GetRequest)
 	 */
 	@Override
 	public Mono<GetResult> get(HttpHeaders headers, GetRequest getRequest) {
@@ -157,7 +157,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient#multiGet(org.springframework.http.HttpHeaders, org.elasticsearch.action.get.MultiGetRequest)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#multiGet(org.springframework.http.HttpHeaders, org.elasticsearch.action.get.MultiGetRequest)
 	 */
 	@Override
 	public Flux<GetResult> multiGet(HttpHeaders headers, MultiGetRequest multiGetRequest) {
@@ -171,7 +171,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient#exists(org.springframework.http.HttpHeaders, org.elasticsearch.action.get.GetRequest)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#exists(org.springframework.http.HttpHeaders, org.elasticsearch.action.get.GetRequest)
 	 */
 	@Override
 	public Mono<Boolean> exists(HttpHeaders headers, GetRequest getRequest) {
@@ -196,7 +196,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.index.IndexRequest)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.index.IndexRequest)
 	 */
 	@Override
 	public Mono<IndexResponse> index(HttpHeaders headers, IndexRequest indexRequest) {
@@ -205,7 +205,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.update.UpdateRequest)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.update.UpdateRequest)
 	 */
 	@Override
 	public Mono<UpdateResponse> update(HttpHeaders headers, UpdateRequest updateRequest) {
@@ -214,7 +214,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.delete.DeleteRequest)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.delete.DeleteRequest)
 	 */
 	@Override
 	public Mono<DeleteResponse> delete(HttpHeaders headers, DeleteRequest deleteRequest) {
@@ -223,7 +223,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.search.SearchRequest)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.search.SearchRequest)
 	 */
 	@Override
 	public Flux<SearchHit> search(HttpHeaders headers, SearchRequest searchRequest) {
@@ -235,18 +235,18 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient#ping(org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient.ReactiveElasticsearchClientCallback)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.ReactiveElasticsearchClientCallback)
 	 */
 	@Override
 	public Mono<ClientResponse> execute(ReactiveElasticsearchClientCallback callback) {
 
-		return this.clientProvider.getActive(VerificationMode.LAZY) //
+		return this.hostProvider.getActive(VerificationMode.LAZY) //
 				.flatMap(it -> callback.doWithClient(it)) //
 				.onErrorResume(throwable -> {
 
 					if (throwable instanceof ConnectException) {
 
-						return clientProvider.getActive(VerificationMode.ALWAYS) //
+						return hostProvider.getActive(VerificationMode.FORCE) //
 								.flatMap(webClient -> callback.doWithClient(webClient));
 					}
 
@@ -257,8 +257,8 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	@Override
 	public Mono<Status> status() {
 
-		return clientProvider.refresh() //
-				.then(Mono.just(new ClientStatus(clientProvider.status())));
+		return hostProvider.clusterInfo() //
+				.map(it -> new ClientStatus(it.getNodes()));
 	}
 
 	// --> Private Response helpers
@@ -494,25 +494,24 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	}
 
 	/**
-	 * Reactive client {@link org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient.Status}
-	 * implementation.
+	 * Reactive client {@link ReactiveElasticsearchClient.Status} implementation.
 	 * 
 	 * @author Christoph Strobl
 	 */
 	class ClientStatus implements Status {
 
-		private final Collection<HostState> connectedHosts;
+		private final Collection<ElasticsearchHost> connectedHosts;
 
-		ClientStatus(Collection<HostState> connectedHosts) {
+		ClientStatus(Collection<ElasticsearchHost> connectedHosts) {
 			this.connectedHosts = connectedHosts;
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient.Status#hosts()
+		 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Status#hosts()
 		 */
 		@Override
-		public Collection<HostState> hosts() {
+		public Collection<ElasticsearchHost> hosts() {
 			return connectedHosts;
 		}
 	}

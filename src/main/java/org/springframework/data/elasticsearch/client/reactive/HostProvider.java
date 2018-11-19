@@ -1,5 +1,5 @@
 /*
- * Copyright 2018. the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package org.springframework.data.elasticsearch.client;
+package org.springframework.data.elasticsearch.client.reactive;
 
+import org.springframework.data.elasticsearch.client.NoReachableHostException;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
-import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 import java.util.function.Consumer;
 
+import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -33,10 +35,10 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author Christoph Strobl
  * @since 4.0
  */
-public interface ClientProvider {
+public interface HostProvider {
 
 	/**
-	 * Lookup an active host in {@link VerificationMode#LAZY lazy} mode utilizing cached {@link HostState}.
+	 * Lookup an active host in {@link VerificationMode#LAZY lazy} mode utilizing cached {@link ElasticsearchHost}.
 	 *
 	 * @return the {@link Mono} emitting the active host or {@link Mono#error(Throwable) an error} if none found.
 	 */
@@ -47,12 +49,14 @@ public interface ClientProvider {
 	/**
 	 * Lookup an active host in using the given {@link VerificationMode}.
 	 *
-	 * @return the {@link Mono} emitting the active host or {@link Mono#error(Throwable) an error} if none found.
+	 * @param verificationMode
+	 * @return the {@link Mono} emitting the active host or {@link Mono#error(Throwable) an error}
+	 *         ({@link NoReachableHostException}) if none found.
 	 */
 	Mono<String> lookupActiveHost(VerificationMode verificationMode);
 
 	/**
-	 * Get the {@link WebClient} connecting to an active host utilizing cached {@link HostState}.
+	 * Get the {@link WebClient} connecting to an active host utilizing cached {@link ElasticsearchHost}.
 	 *
 	 * @return the {@link Mono} emitting the client for an active host or {@link Mono#error(Throwable) an error} if none
 	 *         found.
@@ -69,7 +73,7 @@ public interface ClientProvider {
 	 *         found.
 	 */
 	default Mono<WebClient> getActive(VerificationMode verificationMode) {
-		return getActive(verificationMode, HttpHeaders.EMPTY);
+		return getActive(verificationMode, getDefaultHeaders());
 	}
 
 	/**
@@ -96,127 +100,85 @@ public interface ClientProvider {
 	}
 
 	/**
-	 * Refresh cached {@link HostState} for known hosts.
+	 * Obtain information about known cluster nodes.
 	 *
-	 * @return the {@link Mono} signaling operation completion.
+	 * @return the {@link Mono} emitting {@link ClusterInformation} when available.
 	 */
-	default Mono<Void> refresh() {
-		return Mono.empty();
-	}
+	Mono<ClusterInformation> clusterInfo();
 
 	/**
-	 * Obtain the current {@link HostState} cache. <br />
-	 * <strong>Note</strong> Use {@link #refresh()} to update.
+	 * Obtain the {@link HttpHeaders} to be used by default.
 	 *
-	 * @return never {@literal null}.
+	 * @return never {@literal null}. {@link HttpHeaders#EMPTY} by default.
 	 */
-	Collection<HostState> status();
+	HttpHeaders getDefaultHeaders();
 
 	/**
-	 * Create a new instance of {@link ClientProvider} applying the given headers by default.
+	 * Create a new instance of {@link HostProvider} applying the given headers by default.
 	 *
 	 * @param headers must not be {@literal null}.
-	 * @return new instance of {@link ClientProvider}.
+	 * @return new instance of {@link HostProvider}.
 	 */
-	ClientProvider withDefaultHeaders(HttpHeaders headers);
+	HostProvider withDefaultHeaders(HttpHeaders headers);
 
 	/**
-	 * Create a new instance of {@link ClientProvider} calling the given {@link Consumer} on error.
+	 * Create a new instance of {@link HostProvider} calling the given {@link Consumer} on error.
 	 *
 	 * @param errorListener must not be {@literal null}.
-	 * @return new instance of {@link ClientProvider}.
+	 * @return new instance of {@link HostProvider}.
 	 */
-	ClientProvider withErrorListener(Consumer<Throwable> errorListener);
+	HostProvider withErrorListener(Consumer<Throwable> errorListener);
 
 	/**
-	 * Create a new {@link ClientProvider} best suited for the given number of hosts.
+	 * Create a new {@link HostProvider} best suited for the given number of hosts.
 	 *
 	 * @param hosts must not be {@literal null} nor empty.
-	 * @return new instance of {@link ClientProvider}.
+	 * @return new instance of {@link HostProvider}.
 	 */
-	static ClientProvider provider(String... hosts) {
+	static HostProvider provider(String... hosts) {
 
 		Assert.notEmpty(hosts, "Please provide at least one host to connect to.");
 
 		if (hosts.length == 1) {
-			return new SingleNodeClientProvider(HttpHeaders.EMPTY, (err) -> {}, hosts[0]);
+			return new SingleNodeHostProvider(HttpHeaders.EMPTY, (err) -> {}, hosts[0]);
 		} else {
-			return new MultiNodeClientProvider(HttpHeaders.EMPTY, (err) -> {}, hosts);
+			return new MultiNodeHostProvider(HttpHeaders.EMPTY, (err) -> {}, hosts);
 		}
 	}
 
 	/**
-	 * Create a new {@link ClientProvider} best suited for the {@link ClusterNodes}.
-	 *
-	 * @param nodes must not be {@literal null}.
-	 * @return new instance of {@link ClientProvider}.
-	 */
-	static ClientProvider provider(ClusterNodes nodes) {
-
-		Assert.notNull(nodes, "Nodes must not be null!");
-		return provider(nodes.stream().map(it -> it.toString()).toArray(len -> new String[len]));
-	}
-
-	/**
 	 * @author Christoph Strobl
+	 * @since 4.0
 	 */
 	enum VerificationMode {
-		ALWAYS, LAZY
+
+		/**
+		 * Actively check for cluster node health.
+		 */
+		FORCE,
+
+		/**
+		 * Use cached data for cluster node health.
+		 */
+		LAZY
 	}
 
 	/**
-	 * Value Object containing meta information about cluster nodes.
+	 * Value object accumulating information about cluster an Elasticsearch cluster.
 	 *
-	 * @author Christoph Strobl
+	 * @author Christoph Strobll
+	 * @since 4.0.
 	 */
-	class HostState {
+	class ClusterInformation {
 
-		private final String host;
-		private final State state;
-		private final Instant timestamp;
+		private final Set<ElasticsearchHost> nodes;
 
-		HostState(String host, State state) {
-
-			this.host = host;
-			this.state = state;
-			this.timestamp = Instant.now();
+		public ClusterInformation(Set<ElasticsearchHost> nodes) {
+			this.nodes = nodes;
 		}
 
-		static HostState online(String host) {
-			return new HostState(host, State.ONLINE);
-		}
-
-		static HostState offline(String host) {
-			return new HostState(host, State.OFFLINE);
-		}
-
-		boolean isOnline() {
-			return online(this);
-		}
-
-		public String getHost() {
-			return host;
-		}
-
-		public State getState() {
-			return state;
-		}
-
-		public Instant getTimestamp() {
-			return timestamp;
-		}
-
-		@Override
-		public String toString() {
-			return "Host(" + host + ", " + state.name() + ")";
-		}
-
-		static boolean online(HostState state) {
-			return state.state.equals(State.ONLINE);
-		}
-
-		public enum State {
-			ONLINE, OFFLINE, UNKNOWN
+		public Set<ElasticsearchHost> getNodes() {
+			return Collections.unmodifiableSet(nodes);
 		}
 	}
 }

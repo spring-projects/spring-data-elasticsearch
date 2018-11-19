@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package org.springframework.data.elasticsearch.client;
+package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.springframework.http.HttpHeaders;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -45,6 +44,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.elasticsearch.TestUtils;
+import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018. the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.elasticsearch.client;
+package org.springframework.data.elasticsearch.client.reactive;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -23,50 +23,58 @@ import reactor.util.function.Tuple2;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import org.springframework.data.elasticsearch.client.ClientProvider.HostState.State;
+import org.springframework.data.elasticsearch.client.ElasticsearchHost;
+import org.springframework.data.elasticsearch.client.ElasticsearchHost.State;
+import org.springframework.data.elasticsearch.client.NoReachableHostException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.ClientResponse;
-import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * @author Christoph Strobl
  * @since 4.0
  */
-class MultiNodeClientProvider implements ClientProvider {
+class MultiNodeHostProvider implements HostProvider {
 
 	private final HttpHeaders headers;
 	private final Consumer<Throwable> errorListener;
-	private final Map<String, HostState> hosts;
+	private final Map<String, ElasticsearchHost> hosts;
 
-	MultiNodeClientProvider(HttpHeaders headers, Consumer<Throwable> errorListener, String... hosts) {
+	MultiNodeHostProvider(HttpHeaders headers, Consumer<Throwable> errorListener, String... hosts) {
 
 		this.headers = headers;
 		this.errorListener = errorListener;
 		this.hosts = new ConcurrentHashMap<>();
 		for (String host : hosts) {
-			this.hosts.put(host, new HostState(host, State.UNKNOWN));
+			this.hosts.put(host, new ElasticsearchHost(host, State.UNKNOWN));
 		}
 	}
 
-	public Mono<Void> refresh() {
-		return nodes(null).map(this::updateNodeState).buffer(hosts.size()).then();
+	public Mono<ClusterInformation> clusterInfo() {
+		return nodes(null).map(this::updateNodeState).buffer(hosts.size())
+				.then(Mono.just(new ClusterInformation(new LinkedHashSet<>(this.hosts.values()))));
 	}
 
-	public Collection<HostState> status() {
+	Collection<ElasticsearchHost> getCachedHostState() {
 		return hosts.values();
+	}
+
+	@Override
+	public HttpHeaders getDefaultHeaders() {
+		return this.headers;
 	}
 
 	@Override
 	public Mono<String> lookupActiveHost(VerificationMode verificationMode) {
 
 		if (VerificationMode.LAZY.equals(verificationMode)) {
-			for (HostState entry : hosts()) {
+			for (ElasticsearchHost entry : hosts()) {
 				if (entry.isOnline()) {
 					return Mono.just(entry.getHost());
 				}
@@ -76,23 +84,17 @@ class MultiNodeClientProvider implements ClientProvider {
 		return findActiveHostInKnownActives() //
 				.switchIfEmpty(findActiveHostInUnresolved()) //
 				.switchIfEmpty(findActiveHostInDead()) //
-				.switchIfEmpty(Mono.error(
-						() -> new IllegalStateException(String.format("No active host found. Cluster state is %s", status()))));
+				.switchIfEmpty(Mono.error(() -> new NoReachableHostException(new LinkedHashSet<>(getCachedHostState()))));
 	}
 
 	@Override
-	public Mono<WebClient> getActive(VerificationMode verificationMode) {
-		return getActive(verificationMode, headers);
+	public HostProvider withDefaultHeaders(HttpHeaders headers) {
+		return new MultiNodeHostProvider(headers, errorListener, hosts.keySet().toArray(new String[0]));
 	}
 
 	@Override
-	public ClientProvider withDefaultHeaders(HttpHeaders headers) {
-		return new MultiNodeClientProvider(headers, errorListener, hosts.keySet().toArray(new String[0]));
-	}
-
-	@Override
-	public ClientProvider withErrorListener(Consumer<Throwable> errorListener) {
-		return new MultiNodeClientProvider(headers, errorListener, hosts.keySet().toArray(new String[0]));
+	public HostProvider withErrorListener(Consumer<Throwable> errorListener) {
+		return new MultiNodeHostProvider(headers, errorListener, hosts.keySet().toArray(new String[0]));
 	}
 
 	private Mono<String> findActiveHostInKnownActives() {
@@ -108,28 +110,28 @@ class MultiNodeClientProvider implements ClientProvider {
 	}
 
 	private Mono<String> findActiveForSate(State state) {
-		return nodes(state).map(this::updateNodeState).filter(HostState::isOnline).map(it -> it.getHost()).next();
+		return nodes(state).map(this::updateNodeState).filter(ElasticsearchHost::isOnline).map(it -> it.getHost()).next();
 	}
 
-	private HostState updateNodeState(Tuple2<String, ClientResponse> tuple2) {
+	private ElasticsearchHost updateNodeState(Tuple2<String, ClientResponse> tuple2) {
 
 		State state = tuple2.getT2().statusCode().isError() ? State.OFFLINE : State.ONLINE;
-		HostState hostState = new HostState(tuple2.getT1(), state);
-		hosts.put(tuple2.getT1(), hostState);
-		return hostState;
+		ElasticsearchHost elasticsearchHost = new ElasticsearchHost(tuple2.getT1(), state);
+		hosts.put(tuple2.getT1(), elasticsearchHost);
+		return elasticsearchHost;
 	}
 
 	private Flux<Tuple2<String, ClientResponse>> nodes(@Nullable State state) {
 
 		return Flux.fromIterable(hosts()) //
 				.filter(entry -> state != null ? entry.getState().equals(state) : true) //
-				.map(HostState::getHost) //
+				.map(ElasticsearchHost::getHost) //
 				.flatMap(host -> {
 
 					Mono<ClientResponse> exchange = createWebClient(host, headers) //
 							.head().uri("/").exchange().doOnError(throwable -> {
 
-								hosts.put(host, new HostState(host, State.OFFLINE));
+								hosts.put(host, new ElasticsearchHost(host, State.OFFLINE));
 								errorListener.accept(throwable);
 							});
 
@@ -140,9 +142,9 @@ class MultiNodeClientProvider implements ClientProvider {
 				});
 	}
 
-	private List<HostState> hosts() {
+	private List<ElasticsearchHost> hosts() {
 
-		List<HostState> hosts = new ArrayList<>(this.hosts.values());
+		List<ElasticsearchHost> hosts = new ArrayList<>(this.hosts.values());
 		Collections.shuffle(hosts);
 
 		return hosts;

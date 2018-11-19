@@ -1,5 +1,5 @@
 /*
- * Copyright 2018. the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ import org.apache.http.message.BasicHeader;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.springframework.data.elasticsearch.client.reactive.DefaultReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.Assert;
 
@@ -138,7 +140,7 @@ public final class ElasticsearchClients {
 		ElasticsearchClientBuilder withDefaultHeaders(HttpHeaders defaultHeaders);
 	}
 
-	static class ElasticsearchClientBuilderImpl
+	private static class ElasticsearchClientBuilderImpl
 			implements ElasticsearchClientBuilder, ClientBuilderWithRequiredHost, MaybeSecureClientBuilder {
 
 		private List<String> hosts = new ArrayList<>();

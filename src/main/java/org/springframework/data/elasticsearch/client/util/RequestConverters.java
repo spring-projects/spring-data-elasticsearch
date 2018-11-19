@@ -77,6 +77,7 @@ import org.elasticsearch.index.reindex.ReindexRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.tasks.TaskId;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.http.HttpMethod;
 
 /**
@@ -84,7 +85,7 @@ import org.springframework.http.HttpMethod;
  * Original implementation source {@link org.elasticsearch.client.RequestConverters} by {@literal Elasticsearch}
  * (<a href="https://www.elastic.co">https://www.elastic.co</a>) licensed under the Apache License, Version 2.0.
  * </p>
- * Modified for usage with {@link org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient}.
+ * Modified for usage with {@link ReactiveElasticsearchClient}.
  *
  * @since 4.0
  */

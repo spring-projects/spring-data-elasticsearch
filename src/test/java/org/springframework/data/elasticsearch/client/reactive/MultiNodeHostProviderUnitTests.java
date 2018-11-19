@@ -1,5 +1,5 @@
 /*
- * Copyright 2018. the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.elasticsearch.client;
+package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -24,25 +24,25 @@ import reactor.test.StepVerifier;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.data.elasticsearch.client.ClientProvider.HostState;
-import org.springframework.data.elasticsearch.client.ClientProvider.HostState.State;
-import org.springframework.data.elasticsearch.client.ClientProvider.VerificationMode;
-import org.springframework.data.elasticsearch.client.ReactiveMockClientTestsUtils.MockDelegatingElasticsearchClientProvider;
-import org.springframework.data.elasticsearch.client.ReactiveMockClientTestsUtils.WebClientProvider.Receive;
+import org.springframework.data.elasticsearch.client.reactive.HostProvider.VerificationMode;
+import org.springframework.data.elasticsearch.client.ElasticsearchHost;
+import org.springframework.data.elasticsearch.client.ElasticsearchHost.State;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockDelegatingElasticsearchHostProvider;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.WebClientProvider.Receive;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
 /**
  * @author Christoph Strobl
  * @currentRead Golden Fool - Robin Hobb
  */
-public class MultiClientProviderUnitTests {
+public class MultiNodeHostProviderUnitTests {
 
 	static final String HOST_1 = ":9200";
 	static final String HOST_2 = ":9201";
 	static final String HOST_3 = ":9202";
 
-	MockDelegatingElasticsearchClientProvider<MultiNodeClientProvider> mock;
-	MultiNodeClientProvider provider;
+	MockDelegatingElasticsearchHostProvider<MultiNodeHostProvider> mock;
+	MultiNodeHostProvider provider;
 
 	@Before
 	public void setUp() {
@@ -58,10 +58,10 @@ public class MultiClientProviderUnitTests {
 		mock.when(HOST_2).receive(Receive::ok);
 		mock.when(HOST_3).receive(Receive::ok);
 
-		provider.refresh().as(StepVerifier::create).verifyComplete();
+		provider.clusterInfo().as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		assertThat(provider.status()).extracting(HostState::getState).containsExactly(State.OFFLINE, State.ONLINE,
-				State.ONLINE);
+		assertThat(provider.getCachedHostState()).extracting(ElasticsearchHost::getState).containsExactly(State.OFFLINE,
+				State.ONLINE, State.ONLINE);
 	}
 
 	@Test // DATAES-488
@@ -91,7 +91,7 @@ public class MultiClientProviderUnitTests {
 		mock.when(HOST_2).receive(Receive::ok);
 		mock.when(HOST_3).receive(Receive::error);
 
-		provider.refresh().as(StepVerifier::create).verifyComplete();
+		provider.clusterInfo().as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		provider.getActive(VerificationMode.LAZY).as(StepVerifier::create).expectNext(mock.client(HOST_2)).verifyComplete();
 
@@ -105,9 +105,9 @@ public class MultiClientProviderUnitTests {
 		mock.when(HOST_2).receive(Receive::ok);
 		mock.when(HOST_3).receive(Receive::error);
 
-		provider.refresh().as(StepVerifier::create).verifyComplete();
+		provider.clusterInfo().as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		provider.getActive(VerificationMode.ALWAYS).as(StepVerifier::create).expectNext(mock.client(HOST_2))
+		provider.getActive(VerificationMode.FORCE).as(StepVerifier::create).expectNext(mock.client(HOST_2))
 				.verifyComplete();
 
 		verify(mock.client(HOST_2), times(2)).head();
@@ -130,9 +130,9 @@ public class MultiClientProviderUnitTests {
 
 		mock.when(HOST_3).receive(Receive::error);
 
-		provider.refresh().as(StepVerifier::create).verifyComplete();
-		assertThat(provider.status()).extracting(HostState::getState).containsExactly(State.OFFLINE, State.OFFLINE,
-				State.OFFLINE);
+		provider.clusterInfo().as(StepVerifier::create).expectNextCount(1).verifyComplete();
+		assertThat(provider.getCachedHostState()).extracting(ElasticsearchHost::getState).containsExactly(State.OFFLINE,
+				State.OFFLINE, State.OFFLINE);
 
 		provider.getActive().as(StepVerifier::create).expectNext(mock.client(HOST_2)).verifyComplete();
 

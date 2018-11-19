@@ -1,5 +1,5 @@
 /*
- * Copyright 2018. the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.springframework.data.elasticsearch.client;
+package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.springframework.data.elasticsearch.client.ReactiveMockClientTestsUtils.WebClientProvider.Receive.*;
+import static org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.WebClientProvider.Receive.*;
 
 import reactor.test.StepVerifier;
 
@@ -39,9 +39,10 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.junit.Before;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
-import org.springframework.data.elasticsearch.client.ReactiveMockClientTestsUtils.MockDelegatingElasticsearchClientProvider;
-import org.springframework.data.elasticsearch.client.ReactiveMockClientTestsUtils.WebClientProvider.Receive;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockDelegatingElasticsearchHostProvider;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.WebClientProvider.Receive;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 /**
@@ -52,13 +53,13 @@ public class ReactiveElasticsearchClientUnitTests {
 
 	static final String HOST = ":9200";
 
-	MockDelegatingElasticsearchClientProvider<ClientProvider> hostProvider;
+	MockDelegatingElasticsearchHostProvider<HostProvider> hostProvider;
 	ReactiveElasticsearchClient client;
 
 	@Before
 	public void setUp() {
 
-		hostProvider = ReactiveMockClientTestsUtils.provider(HOST);
+		hostProvider = ReactiveMockClientTestsUtils.provider(HOST).withActiveDefaultHost(HOST);
 		client = new DefaultReactiveElasticsearchClient(hostProvider);
 	}
 
@@ -138,6 +139,10 @@ public class ReactiveElasticsearchClientUnitTests {
 
 	@Test // DATAES-488
 	public void getShouldHitGetEndpoint() {
+
+		hostProvider.when(HOST).receive(clientResponse -> {
+			when(clientResponse.statusCode()).thenReturn(HttpStatus.ACCEPTED, HttpStatus.NOT_FOUND);
+		});
 
 		hostProvider.when(HOST) //
 				.receiveGetByIdNotFound();

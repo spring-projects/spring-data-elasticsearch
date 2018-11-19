@@ -1,5 +1,5 @@
 /*
- * Copyright 2018. the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.data.elasticsearch.client.ElasticsearchClients;
+import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -44,16 +44,15 @@ public class ReactiveElasticsearchTemplateTests {
 	@Before
 	public void setUp() {
 
-		restTemplate = new ElasticsearchRestTemplate(ElasticsearchClients.createClient().connectedToLocalhost().rest());
+		restTemplate = new ElasticsearchRestTemplate(TestUtils.restHighLevelClient());
 
-		restTemplate.deleteIndex(SampleEntity.class);
+		TestUtils.deleteIndex("test-index-sample");
+
 		restTemplate.createIndex(SampleEntity.class);
 		restTemplate.putMapping(SampleEntity.class);
-
 		restTemplate.refresh(SampleEntity.class);
 
-		template = new ReactiveElasticsearchTemplate(
-				ElasticsearchClients.createClient().connectedTo("http://localhost:9201", "http://localhost:9200").reactive());
+		template = new ReactiveElasticsearchTemplate(TestUtils.reactiveClient());
 	}
 
 	@Test // DATAES-488

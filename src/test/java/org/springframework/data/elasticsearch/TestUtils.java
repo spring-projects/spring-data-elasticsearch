@@ -20,9 +20,10 @@ import lombok.SneakyThrows;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.data.elasticsearch.client.ElasticsearchClients;
-import org.springframework.data.elasticsearch.client.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -52,7 +53,7 @@ public final class TestUtils {
 			for (String index : indexes) {
 
 				try {
-					client.indices().delete(new DeleteIndexRequest(index));
+					client.indices().delete(new DeleteIndexRequest(index), RequestOptions.DEFAULT);
 				} catch (ElasticsearchStatusException ex) {
 					// just ignore it
 				}

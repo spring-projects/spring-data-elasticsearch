@@ -32,7 +32,6 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +55,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Mohsin Husen
  * @author Artur Konczak
  */
-//@Ignore("error with custom tokenizer")
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/repository-test-nested-object.xml")
 public class NestedObjectTests {
