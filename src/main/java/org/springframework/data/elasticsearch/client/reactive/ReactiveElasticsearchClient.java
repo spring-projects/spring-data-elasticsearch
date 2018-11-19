@@ -16,12 +16,12 @@
 
 package org.springframework.data.elasticsearch.client.reactive;
 
-import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.net.ConnectException;
 import java.util.Collection;
+import java.util.function.Consumer;
 
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -35,6 +35,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
+import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -95,6 +96,21 @@ public interface ReactiveElasticsearchClient {
 	}
 
 	/**
+	 * Execute a {@link GetRequest} against the {@literal get} API to retrieve a document by id.
+	 *
+	 * @param consumer never {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html">Get API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link GetResult result}.
+	 */
+	default Mono<GetResult> get(Consumer<GetRequest> consumer) {
+
+		GetRequest request = new GetRequest();
+		consumer.accept(request);
+		return get(request);
+	}
+
+	/**
 	 * Execute the given {@link GetRequest} against the {@literal get} API to retrieve a document by id.
 	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
@@ -116,6 +132,21 @@ public interface ReactiveElasticsearchClient {
 	 */
 	default Flux<GetResult> multiGet(MultiGetRequest multiGetRequest) {
 		return multiGet(HttpHeaders.EMPTY, multiGetRequest);
+	}
+
+	/**
+	 * Execute a {@link MultiGetRequest} against the {@literal multi-get} API to retrieve multiple documents by id.
+	 *
+	 * @param consumer never {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html">Multi Get API on
+	 *      elastic.co</a>
+	 * @return the {@link Flux} emitting the {@link GetResult result}.
+	 */
+	default Flux<GetResult> multiGet(Consumer<MultiGetRequest> consumer) {
+
+		MultiGetRequest request = new MultiGetRequest();
+		consumer.accept(request);
+		return multiGet(request);
 	}
 
 	/**
@@ -143,6 +174,19 @@ public interface ReactiveElasticsearchClient {
 	/**
 	 * Checks for the existence of a document. Emits {@literal true} if it exists, {@literal false} otherwise.
 	 *
+	 * @param consumer never {@literal null}.
+	 * @return the {@link Mono} emitting {@literal true} if it exists, {@literal false} otherwise.
+	 */
+	default Mono<Boolean> exists(Consumer<GetRequest> consumer) {
+
+		GetRequest request = new GetRequest();
+		consumer.accept(request);
+		return exists(request);
+	}
+
+	/**
+	 * Checks for the existence of a document. Emits {@literal true} if it exists, {@literal false} otherwise.
+	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param getRequest must not be {@literal null}.
 	 * @return the {@link Mono} emitting {@literal true} if it exists, {@literal false} otherwise.
@@ -159,6 +203,21 @@ public interface ReactiveElasticsearchClient {
 	 */
 	default Mono<IndexResponse> index(IndexRequest indexRequest) {
 		return index(HttpHeaders.EMPTY, indexRequest);
+	}
+
+	/**
+	 * Execute an {@link IndexRequest} against the {@literal index} API to index a document.
+	 *
+	 * @param consumer never {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index.html">Index API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link IndexResponse}.
+	 */
+	default Mono<IndexResponse> index(Consumer<IndexRequest> consumer) {
+
+		IndexRequest request = new IndexRequest();
+		consumer.accept(request);
+		return index(request);
 	}
 
 	/**
@@ -185,6 +244,21 @@ public interface ReactiveElasticsearchClient {
 	}
 
 	/**
+	 * Execute an {@link UpdateRequest} against the {@literal update} API to alter a document.
+	 *
+	 * @param consumer never {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html">Update API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link UpdateResponse}.
+	 */
+	default Mono<UpdateResponse> update(Consumer<UpdateRequest> consumer) {
+
+		UpdateRequest request = new UpdateRequest();
+		consumer.accept(request);
+		return update(request);
+	}
+
+	/**
 	 * Execute the given {@link UpdateRequest} against the {@literal update} API to alter a document.
 	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
@@ -208,6 +282,21 @@ public interface ReactiveElasticsearchClient {
 	}
 
 	/**
+	 * Execute a {@link DeleteRequest} against the {@literal delete} API to remove a document.
+	 *
+	 * @param consumer never {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete.html">Delete API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link DeleteResponse}.
+	 */
+	default Mono<DeleteResponse> delete(Consumer<DeleteRequest> consumer) {
+
+		DeleteRequest request = new DeleteRequest();
+		consumer.accept(request);
+		return delete(request);
+	}
+
+	/**
 	 * Execute the given {@link DeleteRequest} against the {@literal delete} API to remove a document.
 	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
@@ -228,6 +317,21 @@ public interface ReactiveElasticsearchClient {
 	 */
 	default Flux<SearchHit> search(SearchRequest searchRequest) {
 		return search(HttpHeaders.EMPTY, searchRequest);
+	}
+
+	/**
+	 * Execute a {@link SearchRequest} against the {@literal search} API.
+	 *
+	 * @param consumer never {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html">Search API on
+	 *      elastic.co</a>
+	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
+	 */
+	default Flux<SearchHit> search(Consumer<SearchRequest> consumer) {
+
+		SearchRequest request = new SearchRequest();
+		consumer.accept(request);
+		return search(request);
 	}
 
 	/**
