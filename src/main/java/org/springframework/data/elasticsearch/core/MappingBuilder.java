@@ -66,6 +66,7 @@ class MappingBuilder {
 	public static final String FIELD_NORMALIZER = "normalizer";
 	public static final String FIELD_PROPERTIES = "properties";
 	public static final String FIELD_PARENT = "_parent";
+	public static final String FIELD_COPY_TO = "copy_to";
 
 	public static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
 	public static final String COMPLETION_PRESERVE_POSITION_INCREMENTS = "preserve_position_increments";
@@ -271,6 +272,7 @@ class MappingBuilder {
 		String analyzer = null;
 		String searchAnalyzer = null;
 		String normalizer = null;
+		String[] copyTo = null;
 
 		if (annotation instanceof Field) {
 			// @Field
@@ -284,6 +286,7 @@ class MappingBuilder {
 			analyzer = fieldAnnotation.analyzer();
 			searchAnalyzer = fieldAnnotation.searchAnalyzer();
 			normalizer = fieldAnnotation.normalizer();
+			copyTo = fieldAnnotation.copyTo();
 		} else if (annotation instanceof InnerField) {
 			// @InnerField
 			InnerField fieldAnnotation = (InnerField) annotation;
@@ -324,6 +327,9 @@ class MappingBuilder {
 		}
 		if (!StringUtils.isEmpty(normalizer)) {
 			builder.field(FIELD_NORMALIZER, normalizer);
+		}
+		if (copyTo != null && copyTo.length > 0) {
+			builder.field(FIELD_COPY_TO, copyTo);
 		}
 	}
 
