@@ -16,17 +16,17 @@
 
 package org.springframework.data.elasticsearch.client.reactive;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
-import org.springframework.data.elasticsearch.client.NoReachableHostException;
 import reactor.test.StepVerifier;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost.State;
+import org.springframework.data.elasticsearch.client.NoReachableHostException;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockDelegatingElasticsearchHostProvider;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.WebClientProvider.Receive;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive;
 
 /**
  * @author Christoph Strobl

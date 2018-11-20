@@ -37,7 +37,7 @@ public class NoReachableHostException extends RuntimeException {
 	private static String createMessage(Set<ElasticsearchHost> hosts) {
 
 		if (hosts.size() == 1) {
-			return String.format("Host '%s' not reachable. Cluster state is offline.", hosts.iterator().next().getHost());
+			return String.format("Host '%s' not reachable. Cluster state is offline.", hosts.iterator().next().getEndpoint());
 		}
 
 		return String.format("No active host found in cluster. (%s) of (%s) nodes offline.", hosts.size(), hosts.size());

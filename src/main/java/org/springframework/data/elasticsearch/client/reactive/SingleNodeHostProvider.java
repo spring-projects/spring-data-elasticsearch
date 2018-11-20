@@ -13,95 +13,96 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.client.reactive;
 
 import reactor.core.publisher.Mono;
 
+import java.net.InetSocketAddress;
 import java.util.Collections;
-import java.util.function.Consumer;
 
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost.State;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
-import org.springframework.http.HttpHeaders;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
+ * {@link HostProvider} for a single host.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 4.0
  */
 class SingleNodeHostProvider implements HostProvider {
 
-	private final HttpHeaders headers;
-	private final Consumer<Throwable> errorListener;
-	private final String hostname;
+	private final WebClientProvider clientProvider;
+	private final InetSocketAddress endpoint;
 	private volatile ElasticsearchHost state;
 
-	SingleNodeHostProvider(HttpHeaders headers, Consumer<Throwable> errorListener, String host) {
+	SingleNodeHostProvider(WebClientProvider clientProvider, InetSocketAddress endpoint) {
 
-		this.headers = headers;
-		this.errorListener = errorListener;
-		this.hostname = host;
-		this.state = new ElasticsearchHost(hostname, State.UNKNOWN);
+		this.clientProvider = clientProvider;
+		this.endpoint = endpoint;
+		this.state = new ElasticsearchHost(this.endpoint, State.UNKNOWN);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#clusterInfo()
+	 */
 	@Override
 	public Mono<ClusterInformation> clusterInfo() {
 
-		return createWebClient(hostname, headers) //
+		return createWebClient(endpoint) //
 				.head().uri("/").exchange() //
 				.flatMap(it -> {
 
-					if(it.statusCode().isError()) {
-						state = ElasticsearchHost.offline(hostname);
+					if (it.statusCode().isError()) {
+						state = ElasticsearchHost.offline(endpoint);
 					} else {
-						state = ElasticsearchHost.online(hostname);
+						state = ElasticsearchHost.online(endpoint);
 					}
 					return Mono.just(state);
 				}).onErrorResume(throwable -> {
 
-					state = ElasticsearchHost.offline(hostname);
-					errorListener.accept(throwable);
+					state = ElasticsearchHost.offline(endpoint);
+					clientProvider.getErrorListener().accept(throwable);
 					return Mono.just(state);
 				}) //
 				.flatMap(it -> Mono.just(new ClusterInformation(Collections.singleton(it))));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#createWebClient(java.net.InetSocketAddress)
+	 */
 	@Override
-	public Mono<String> lookupActiveHost(VerificationMode verificationMode) {
+	public WebClient createWebClient(InetSocketAddress endpoint) {
+		return this.clientProvider.get(endpoint);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#lookupActiveHost(org.springframework.data.elasticsearch.client.reactive.HostProvider.VerificationMode)
+	 */
+	@Override
+	public Mono<InetSocketAddress> lookupActiveHost(VerificationMode verificationMode) {
 
 		if (VerificationMode.LAZY.equals(verificationMode) && state.isOnline()) {
-			return Mono.just(hostname);
+			return Mono.just(endpoint);
 		}
 
 		return clusterInfo().flatMap(it -> {
 
 			ElasticsearchHost host = it.getNodes().iterator().next();
 			if (host.isOnline()) {
-				return Mono.just(host.getHost());
+				return Mono.just(host.getEndpoint());
 			}
 
 			return Mono.error(() -> new NoReachableHostException(Collections.singleton(host)));
 		});
 	}
 
-	@Override
-	public HttpHeaders getDefaultHeaders() {
-		return this.headers;
-	}
-
-	@Override
-	public HostProvider withDefaultHeaders(HttpHeaders headers) {
-		return new SingleNodeHostProvider(headers, errorListener, hostname);
-	}
-
-	@Override
-	public HostProvider withErrorListener(Consumer<Throwable> errorListener) {
-		return new SingleNodeHostProvider(headers, errorListener, hostname);
-	}
-
 	ElasticsearchHost getCachedHostState() {
 		return state;
 	}
-
 }

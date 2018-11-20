@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.core;
 
 import static org.apache.commons.lang.RandomStringUtils.*;
@@ -25,17 +24,22 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Christoph Strobl
  * @currentRead Golden Fool - Robin Hobb
  */
+@RunWith(SpringRunner.class)
+@ContextConfiguration("classpath:infrastructure.xml")
 public class ReactiveElasticsearchTemplateTests {
 
 	private ElasticsearchRestTemplate restTemplate;
