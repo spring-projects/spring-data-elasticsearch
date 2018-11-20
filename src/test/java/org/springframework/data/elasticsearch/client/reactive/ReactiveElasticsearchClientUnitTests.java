@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.WebClientProvider.Receive.*;
+import static org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive.*;
 
 import reactor.test.StepVerifier;
 
@@ -40,7 +38,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockDelegatingElasticsearchHostProvider;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.WebClientProvider.Receive;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

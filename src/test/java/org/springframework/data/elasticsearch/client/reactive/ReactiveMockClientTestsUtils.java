@@ -13,21 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.mockito.Mockito.*;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -35,10 +36,8 @@ import java.util.function.Supplier;
 import org.mockito.Mockito;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.WebClientProvider.Send;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Send;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -52,9 +51,10 @@ import org.springframework.web.reactive.function.client.WebClient.RequestHeaders
 
 /**
  * @author Christoph Strobl
- * @since 2018/10
  */
 public class ReactiveMockClientTestsUtils {
+
+	private final static Map<String, InetSocketAddress> ADDRESS_CACHE = new ConcurrentHashMap<>();
 
 	public static MockDelegatingElasticsearchHostProvider<SingleNodeHostProvider> single(String host) {
 		return provider(host);
@@ -66,31 +66,26 @@ public class ReactiveMockClientTestsUtils {
 
 	public static <T extends HostProvider> MockDelegatingElasticsearchHostProvider<T> provider(String... hosts) {
 
-		WebClientProvider clientProvider = new WebClientProvider();
 		ErrorCollector errorCollector = new ErrorCollector();
+		MockWebClientProvider clientProvider = new MockWebClientProvider(errorCollector);
 		HostProvider delegate = null;
 
 		if (hosts.length == 1) {
 
-			delegate = new SingleNodeHostProvider(HttpHeaders.EMPTY, errorCollector, hosts[0]) {
-				@Override // hook in there to modify result
-				public WebClient createWebClient(String host, HttpHeaders headers) {
-					return clientProvider.get(host);
-				}
-			};
+			delegate = new SingleNodeHostProvider(clientProvider, getInetSocketAddress(hosts[0])) {};
 		} else {
 
-			delegate = new MultiNodeHostProvider(HttpHeaders.EMPTY, errorCollector, hosts) {
-				@Override // hook in there to modify result
-				public WebClient createWebClient(String host, HttpHeaders headers) {
-					return clientProvider.get(host);
-				}
-			};
+			delegate = new MultiNodeHostProvider(clientProvider, Arrays.stream(hosts)
+					.map(ReactiveMockClientTestsUtils::getInetSocketAddress).toArray(InetSocketAddress[]::new)) {};
 		}
 
 		return new MockDelegatingElasticsearchHostProvider(HttpHeaders.EMPTY, clientProvider, errorCollector, delegate,
 				null);
 
+	}
+
+	private static InetSocketAddress getInetSocketAddress(String hostAndPort) {
+		return ADDRESS_CACHE.computeIfAbsent(hostAndPort, ElasticsearchHost::parse);
 	}
 
 	public static class ErrorCollector implements Consumer<Throwable> {
@@ -110,11 +105,11 @@ public class ReactiveMockClientTestsUtils {
 	public static class MockDelegatingElasticsearchHostProvider<T extends HostProvider> implements HostProvider {
 
 		private final T delegate;
-		private final WebClientProvider clientProvider;
+		private final MockWebClientProvider clientProvider;
 		private final ErrorCollector errorCollector;
 		private @Nullable String activeDefaultHost;
 
-		public MockDelegatingElasticsearchHostProvider(HttpHeaders httpHeaders, WebClientProvider clientProvider,
+		public MockDelegatingElasticsearchHostProvider(HttpHeaders httpHeaders, MockWebClientProvider clientProvider,
 				ErrorCollector errorCollector, T delegate, String activeDefaultHost) {
 
 			this.errorCollector = errorCollector;
@@ -123,14 +118,14 @@ public class ReactiveMockClientTestsUtils {
 			this.activeDefaultHost = activeDefaultHost;
 		}
 
-		public Mono<String> lookupActiveHost() {
+		public Mono<InetSocketAddress> lookupActiveHost() {
 			return delegate.lookupActiveHost();
 		}
 
-		public Mono<String> lookupActiveHost(VerificationMode verificationMode) {
+		public Mono<InetSocketAddress> lookupActiveHost(VerificationMode verificationMode) {
 
 			if (StringUtils.hasText(activeDefaultHost)) {
-				return Mono.just(activeDefaultHost);
+				return Mono.just(getInetSocketAddress(activeDefaultHost));
 			}
 
 			return delegate.lookupActiveHost(verificationMode);
@@ -144,32 +139,19 @@ public class ReactiveMockClientTestsUtils {
 			return delegate.getActive(verificationMode);
 		}
 
-		public Mono<WebClient> getActive(VerificationMode verificationMode, HttpHeaders headers) {
-			return delegate.getActive(verificationMode, headers);
-		}
-
-		public WebClient createWebClient(String host, HttpHeaders headers) {
-			return delegate.createWebClient(host, headers);
+		public WebClient createWebClient(InetSocketAddress endpoint) {
+			return delegate.createWebClient(endpoint);
 		}
 
 		@Override
 		public Mono<ClusterInformation> clusterInfo() {
 
 			if (StringUtils.hasText(activeDefaultHost)) {
-				return Mono.just(new ClusterInformation(Collections.singleton(ElasticsearchHost.online(activeDefaultHost))));
+				return Mono.just(new ClusterInformation(
+						Collections.singleton(ElasticsearchHost.online(getInetSocketAddress(activeDefaultHost)))));
 			}
 
 			return delegate.clusterInfo();
-		}
-
-		@Override
-		public HttpHeaders getDefaultHeaders() {
-			return delegate.getDefaultHeaders();
-		}
-
-		@Override
-		public HostProvider withDefaultHeaders(HttpHeaders headers) {
-			throw new UnsupportedOperationException();
 		}
 
 		public Send when(String host) {
@@ -188,28 +170,25 @@ public class ReactiveMockClientTestsUtils {
 			return delegate;
 		}
 
-		@Override
-		public HostProvider withErrorListener(Consumer<Throwable> errorListener) {
-			throw new UnsupportedOperationException();
-		}
-
 		public MockDelegatingElasticsearchHostProvider<T> withActiveDefaultHost(String host) {
 			return new MockDelegatingElasticsearchHostProvider(HttpHeaders.EMPTY, clientProvider, errorCollector, delegate,
 					host);
 		}
 	}
 
-	public static class WebClientProvider {
+	public static class MockWebClientProvider implements WebClientProvider {
 
 		private final Object lock = new Object();
+		private final Consumer<Throwable> errorListener;
 
-		private Map<String, WebClient> clientMap;
-		private Map<String, RequestHeadersUriSpec> headersUriSpecMap;
-		private Map<String, RequestBodyUriSpec> bodyUriSpecMap;
-		private Map<String, ClientResponse> responseMap;
+		private Map<InetSocketAddress, WebClient> clientMap;
+		private Map<InetSocketAddress, RequestHeadersUriSpec> headersUriSpecMap;
+		private Map<InetSocketAddress, RequestBodyUriSpec> bodyUriSpecMap;
+		private Map<InetSocketAddress, ClientResponse> responseMap;
 
-		public WebClientProvider() {
+		public MockWebClientProvider(Consumer<Throwable> errorListener) {
 
+			this.errorListener = errorListener;
 			this.clientMap = new LinkedHashMap<>();
 			this.headersUriSpecMap = new LinkedHashMap<>();
 			this.bodyUriSpecMap = new LinkedHashMap<>();
@@ -217,10 +196,14 @@ public class ReactiveMockClientTestsUtils {
 		}
 
 		public WebClient get(String host) {
+			return get(getInetSocketAddress(host));
+		}
+
+		public WebClient get(InetSocketAddress endpoint) {
 
 			synchronized (lock) {
 
-				return clientMap.computeIfAbsent(host, key -> {
+				return clientMap.computeIfAbsent(endpoint, key -> {
 
 					WebClient webClient = mock(WebClient.class);
 
@@ -243,17 +226,39 @@ public class ReactiveMockClientTestsUtils {
 					Mockito.when(bodyUriSpec.exchange()).thenReturn(Mono.just(response));
 					Mockito.when(response.statusCode()).thenReturn(HttpStatus.ACCEPTED);
 
-					headersUriSpecMap.putIfAbsent(host, headersUriSpec);
-					bodyUriSpecMap.putIfAbsent(host, bodyUriSpec);
-					responseMap.putIfAbsent(host, response);
+					headersUriSpecMap.putIfAbsent(key, headersUriSpec);
+					bodyUriSpecMap.putIfAbsent(key, bodyUriSpec);
+					responseMap.putIfAbsent(key, response);
 
 					return webClient;
 				});
 			}
 		}
 
+		@Override
+		public HttpHeaders getDefaultHeaders() {
+			return HttpHeaders.EMPTY;
+		}
+
+		@Override
+		public WebClientProvider withDefaultHeaders(HttpHeaders headers) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Consumer<Throwable> getErrorListener() {
+			return errorListener;
+		}
+
+		@Override
+		public WebClientProvider withErrorListener(Consumer<Throwable> errorListener) {
+			throw new UnsupportedOperationException();
+		}
+
 		public Send when(String host) {
-			return new CallbackImpl(get(host), headersUriSpecMap.get(host), bodyUriSpecMap.get(host), responseMap.get(host));
+			InetSocketAddress inetSocketAddress = getInetSocketAddress(host);
+			return new CallbackImpl(get(host), headersUriSpecMap.get(inetSocketAddress),
+					bodyUriSpecMap.get(inetSocketAddress), responseMap.get(inetSocketAddress));
 		}
 
 		public interface Client {
@@ -342,7 +347,7 @@ public class ReactiveMockClientTestsUtils {
 			}
 
 			default Receive body(Supplier<byte[]> json) {
-				return body(new DefaultDataBufferFactory().wrap(json.get()));
+				return body(json.get());
 			}
 
 			default Receive body(Resource resource) {
@@ -356,8 +361,8 @@ public class ReactiveMockClientTestsUtils {
 				});
 			}
 
-			default Receive body(DataBuffer dataBuffer) {
-				return receive(response -> Mockito.when(response.body(any())).thenReturn(Flux.just(dataBuffer)));
+			default Receive body(byte[] bytes) {
+				return receive(response -> Mockito.when(response.body(any())).thenReturn(Mono.just(bytes)));
 			}
 
 			static void ok(ClientResponse response) {
