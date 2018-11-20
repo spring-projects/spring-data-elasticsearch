@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch;
 
 import lombok.SneakyThrows;
@@ -22,12 +21,15 @@ import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.springframework.data.elasticsearch.client.ElasticsearchClients;
+import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
 import org.springframework.util.ObjectUtils;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @currentRead Fool's Fate - Robin Hobb
  */
 public final class TestUtils {
@@ -35,11 +37,11 @@ public final class TestUtils {
 	private TestUtils() {}
 
 	public static RestHighLevelClient restHighLevelClient() {
-		return ElasticsearchClients.createClient().connectedToLocalhost().rest();
+		return RestClients.create(ClientConfiguration.create("localhost:9200")).rest();
 	}
 
 	public static ReactiveElasticsearchClient reactiveClient() {
-		return ElasticsearchClients.createClient().connectedToLocalhost().reactive();
+		return ReactiveRestClients.create(ClientConfiguration.create("localhost:9200"));
 	}
 
 	@SneakyThrows

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.client.reactive;
 
 import reactor.core.publisher.Flux;
@@ -35,6 +34,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
+import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.CollectionUtils;
@@ -42,10 +42,13 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * A reactive client to connect to Elasticsearch. <br />
- * 
+ * A reactive client to connect to Elasticsearch.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 4.0
+ * @see ClientConfiguration
+ * @see ReactiveRestClients
  */
 public interface ReactiveElasticsearchClient {
 
@@ -385,7 +388,7 @@ public interface ReactiveElasticsearchClient {
 
 		/**
 		 * Get the list of known hosts and their getCachedHostState.
-		 * 
+		 *
 		 * @return never {@literal null}.
 		 */
 		Collection<ElasticsearchHost> hosts();
@@ -401,7 +404,7 @@ public interface ReactiveElasticsearchClient {
 				return false;
 			}
 
-			return !hosts().stream().filter(it -> !it.isOnline()).findFirst().isPresent();
+			return hosts().stream().anyMatch(ElasticsearchHost::isOnline);
 		}
 	}
 }

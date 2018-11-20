@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.core;
 
 import static org.elasticsearch.index.VersionType.*;
 
-import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -31,6 +29,7 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -130,7 +129,7 @@ public class ReactiveElasticsearchTemplate {
 		ElasticsearchPersistentEntity<?> persistentEntity = lookupPersistentEntity(resultType);
 		GetRequest request = new GetRequest(persistentEntity.getIndexName(), persistentEntity.getIndexType(), id);
 
-		return goGet(id, persistentEntity, index, type).map(it -> mapper.mapEntity(it.sourceAsString(), resultType));
+		return doGet(id, persistentEntity, index, type).map(it -> mapper.mapEntity(it.sourceAsString(), resultType));
 	}
 
 	/**
@@ -198,7 +197,7 @@ public class ReactiveElasticsearchTemplate {
 
 	// Customization Hooks
 
-	protected Mono<GetResult> goGet(String id, ElasticsearchPersistentEntity<?> entity, @Nullable String index,
+	protected Mono<GetResult> doGet(String id, ElasticsearchPersistentEntity<?> entity, @Nullable String index,
 			@Nullable String type) {
 
 		String indexToUse = indexName(index, entity);
@@ -342,7 +341,7 @@ public class ReactiveElasticsearchTemplate {
 	}
 
 	// Additional types
-	public interface ClientCallback<T extends Publisher> {
+	public interface ClientCallback<T extends Publisher<?>> {
 
 		T doWithClient(ReactiveElasticsearchClient client);
 	}

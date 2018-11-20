@@ -1,0 +1,127 @@
+/*
+ * Copyright 2018 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.springframework.data.elasticsearch.client.reactive;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.reactive.ClientHttpConnector;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClient.Builder;
+
+/**
+ * Default {@link WebClientProvider} that uses cached {@link WebClient} instances per {@code hostAndPort}.
+ *
+ * @author Mark Paluch
+ */
+class DefaultWebClientProvider implements WebClientProvider {
+
+	private final Map<String, WebClient> cachedClients;
+
+	private final @Nullable ClientHttpConnector connector;
+	private final Consumer<Throwable> errorListener;
+	private final HttpHeaders headers;
+
+	DefaultWebClientProvider(@Nullable ClientHttpConnector connector) {
+		this(connector, e -> {}, HttpHeaders.EMPTY);
+	}
+
+	private DefaultWebClientProvider(@Nullable ClientHttpConnector connector, Consumer<Throwable> errorListener,
+			HttpHeaders headers) {
+		this(new ConcurrentHashMap<>(), connector, errorListener, headers);
+	}
+
+	private DefaultWebClientProvider(Map<String, WebClient> cachedClients, @Nullable ClientHttpConnector connector,
+			Consumer<Throwable> errorListener, HttpHeaders headers) {
+
+		this.cachedClients = cachedClients;
+		this.connector = connector;
+		this.errorListener = errorListener;
+		this.headers = headers;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#get(java.lang.String)
+	 */
+	@Override
+	public WebClient get(String baseUrl) {
+
+		Assert.notNull(baseUrl, "Base URL must not be empty!");
+
+		return this.cachedClients.computeIfAbsent(baseUrl, key -> {
+
+			Builder builder = WebClient.builder().defaultHeaders(it -> it.addAll(getDefaultHeaders()));
+
+			if (connector != null) {
+				builder.clientConnector(connector);
+			}
+
+			return builder.baseUrl(key).filter((request, next) -> next.exchange(request).doOnError(errorListener)).build();
+		});
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#getDefaultHeaders()
+	 */
+	@Override
+	public HttpHeaders getDefaultHeaders() {
+		return headers;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#withDefaultHeaders(org.springframework.http.HttpHeaders)
+	 */
+	@Override
+	public WebClientProvider withDefaultHeaders(HttpHeaders headers) {
+
+		Assert.notNull(headers, "HttpHeaders must not be null");
+
+		HttpHeaders merged = new HttpHeaders();
+		merged.addAll(this.headers);
+		merged.addAll(headers);
+
+		return new DefaultWebClientProvider(this.connector, errorListener, merged);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#getErrorListener()
+	 */
+	@Override
+	public Consumer<Throwable> getErrorListener() {
+		return this.errorListener;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#withErrorListener(java.util.function.Consumer)
+	 */
+	@Override
+	public WebClientProvider withErrorListener(Consumer<Throwable> errorListener) {
+
+		Assert.notNull(errorListener, "Error listener must not be null");
+
+		Consumer<Throwable> listener = this.errorListener.andThen(errorListener);
+		return new DefaultWebClientProvider(this.connector, listener, this.headers);
+	}
+}

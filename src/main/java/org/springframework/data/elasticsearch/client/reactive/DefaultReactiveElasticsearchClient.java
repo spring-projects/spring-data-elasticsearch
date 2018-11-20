@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.client.reactive;
 
-import org.springframework.data.elasticsearch.client.ElasticsearchHost;
-import org.springframework.data.elasticsearch.client.NoReachableHostException;
+import io.netty.handler.ssl.ClientAuth;
+import io.netty.handler.ssl.JdkSslContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -27,7 +27,10 @@ import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
+
+import javax.net.ssl.SSLContext;
 
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.ElasticsearchStatusException;
@@ -57,47 +60,48 @@ import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.reactivestreams.Publisher;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.ElasticsearchHost;
+import org.springframework.data.elasticsearch.client.NoReachableHostException;
 import org.springframework.data.elasticsearch.client.reactive.HostProvider.VerificationMode;
 import org.springframework.data.elasticsearch.client.util.RequestConverters;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.reactive.ClientHttpResponse;
-import org.springframework.http.codec.HttpMessageReader;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.util.Assert;
-import org.springframework.util.MultiValueMap;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StreamUtils;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.reactive.function.BodyExtractor;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.client.ClientResponse;
-import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
-import org.springframework.web.reactive.function.client.WebClientException;
 
 /**
- * A {@link WebClient} based {@link ReactiveElasticsearchClient} that connects to an Elasticsearch cluster through HTTP.
- * 
+ * A {@link WebClient} based {@link ReactiveElasticsearchClient} that connects to an Elasticsearch cluster using HTTP.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 4.0
+ * @see ClientConfiguration
+ * @see ReactiveRestClients
  */
 public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearchClient {
 
 	private final HostProvider hostProvider;
 
 	/**
-	 * Create a new {@link DefaultReactiveElasticsearchClient} using the given hostProvider to obtain server connections.
+	 * Create a new {@link DefaultReactiveElasticsearchClient} using the given {@link HostProvider} to obtain server
+	 * connections.
 	 *
 	 * @param hostProvider must not be {@literal null}.
 	 */
 	public DefaultReactiveElasticsearchClient(HostProvider hostProvider) {
+
+		Assert.notNull(hostProvider, "HostProvider must not be null");
+
 		this.hostProvider = hostProvider;
 	}
 
@@ -112,11 +116,58 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 */
 	public static ReactiveElasticsearchClient create(HttpHeaders headers, String... hosts) {
 
+		Assert.notNull(headers, "HttpHeaders must not be null");
 		Assert.notEmpty(hosts, "Elasticsearch Cluster needs to consist of at least one host");
 
-		HostProvider hostProvider = HostProvider.provider(hosts);
-		return new DefaultReactiveElasticsearchClient(
-				headers.isEmpty() ? hostProvider : hostProvider.withDefaultHeaders(headers));
+		HostProvider hostProvider = HostProvider.provider(WebClientProvider.create().withDefaultHeaders(headers), hosts);
+		return new DefaultReactiveElasticsearchClient(hostProvider);
+	}
+
+	/**
+	 * Create a new {@link DefaultReactiveElasticsearchClient} given {@link ClientConfiguration}. <br />
+	 * <strong>NOTE</strong> If the cluster requires authentication be sure to provide the according {@link HttpHeaders}
+	 * correctly.
+	 *
+	 * @param clientConfiguration Client configuration. Must not be {@literal null}.
+	 * @return new instance of {@link DefaultReactiveElasticsearchClient}.
+	 */
+	public static ReactiveElasticsearchClient create(ClientConfiguration clientConfiguration) {
+
+		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null");
+
+		String[] hosts = formattedHosts(clientConfiguration.getHosts(), clientConfiguration.useSsl());
+
+		WebClientProvider provider = getWebClientProvider(clientConfiguration);
+
+		HostProvider hostProvider = HostProvider.provider(provider, hosts);
+		return new DefaultReactiveElasticsearchClient(hostProvider);
+	}
+
+	private static WebClientProvider getWebClientProvider(ClientConfiguration clientConfiguration) {
+
+		WebClientProvider provider;
+
+		if (clientConfiguration.useSsl()) {
+
+			ReactorClientHttpConnector connector = new ReactorClientHttpConnector(HttpClient.create().secure(sslConfig -> {
+
+				Optional<SSLContext> sslContext = clientConfiguration.getSslContext();
+
+				sslContext.ifPresent(it -> {
+					sslConfig.sslContext(new JdkSslContext(it, true, ClientAuth.NONE));
+				});
+			}));
+			provider = WebClientProvider.create(connector);
+		} else {
+			provider = WebClientProvider.create();
+		}
+
+		return provider.withDefaultHeaders(clientConfiguration.getDefaultHeaders());
+	}
+
+	private static String[] formattedHosts(List<String> hosts, boolean useSsl) {
+		return hosts.stream().map(it -> it.startsWith("http") ? it : (useSsl ? "https" : "http") + "://" + it)
+				.toArray(String[]::new);
 	}
 
 	/*
@@ -144,7 +195,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#get(org.springframework.http.HttpHeaderss, org.elasticsearch.action.get.GetRequest)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#get(org.springframework.http.HttpHeaders, org.elasticsearch.action.get.GetRequest)
 	 */
 	@Override
 	public Mono<GetResult> get(HttpHeaders headers, GetRequest getRequest) {
@@ -177,20 +228,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	public Mono<Boolean> exists(HttpHeaders headers, GetRequest getRequest) {
 
 		return sendRequest(getRequest, RequestCreator.exists(), RawActionResponse.class, headers) //
-				.map(response -> {
-
-					if (response.statusCode().is2xxSuccessful()) {
-						return true;
-					}
-
-					if (response.statusCode().is5xxServerError()) {
-
-						throw new HttpClientErrorException(response.statusCode(), String.format(
-								"Exists request (%s) returned error code %s.", getRequest.toString(), response.statusCode().value()));
-					}
-
-					return false;
-				}) //
+				.map(response -> response.statusCode().is2xxSuccessful()) //
 				.next();
 	}
 
@@ -241,13 +279,13 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	public Mono<ClientResponse> execute(ReactiveElasticsearchClientCallback callback) {
 
 		return this.hostProvider.getActive(VerificationMode.LAZY) //
-				.flatMap(it -> callback.doWithClient(it)) //
+				.flatMap(callback::doWithClient) //
 				.onErrorResume(throwable -> {
 
 					if (throwable instanceof ConnectException) {
 
-						return hostProvider.getActive(VerificationMode.FORCE) //
-								.flatMap(webClient -> callback.doWithClient(webClient));
+						return hostProvider.getActive(VerificationMode.ACTIVE) //
+								.flatMap(callback::doWithClient);
 					}
 
 					return Mono.error(throwable);
@@ -315,55 +353,60 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	private <T> Publisher<? extends T> readResponseBody(Request request, ClientResponse response, Class<T> responseType) {
 
 		if (RawActionResponse.class.equals(responseType)) {
-			return Mono.just((T) new RawActionResponse(response));
+			return Mono.just(responseType.cast(RawActionResponse.create(response)));
 		}
 
 		if (response.statusCode().is5xxServerError()) {
-
-			throw new HttpClientErrorException(response.statusCode(),
-					String.format("%s request to %s returned error code %s.", request.getMethod(), request.getEndpoint(),
-							response.statusCode().value()));
+			return handleServerError(request, response);
 		}
 
-		return response.body(BodyExtractors.toDataBuffers()).flatMap(it -> {
+		return response.body(BodyExtractors.toMono(byte[].class)) //
+				.map(it -> new String(it, StandardCharsets.UTF_8)) //
+				.flatMap(content -> {
+					return doDecode(response, responseType, content);
+				});
+	}
+
+	private static <T> Mono<T> doDecode(ClientResponse response, Class<T> responseType, String content) {
+
+		String mediaType = response.headers().contentType().map(MediaType::toString).orElse(XContentType.JSON.mediaType());
+
+		try {
+
+			XContentParser contentParser = createParser(mediaType, content);
+
 			try {
 
-				String content = StreamUtils.copyToString(it.asInputStream(true), StandardCharsets.UTF_8);
+				Method fromXContent = ReflectionUtils.findMethod(responseType, "fromXContent", XContentParser.class);
+				return Mono
+						.justOrEmpty(responseType.cast(ReflectionUtils.invokeMethod(fromXContent, responseType, contentParser)));
 
+			} catch (Exception errorParseFailure) {
 				try {
-
-					XContentParser contentParser = XContentType
-							.fromMediaTypeOrFormat(
-									response.headers().contentType().map(MediaType::toString).orElse(XContentType.JSON.mediaType()))
-							.xContent()
-							.createParser(NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION, content);
-
-					Method fromXContent = ReflectionUtils.findMethod(responseType, "fromXContent", XContentParser.class);
-					return Mono.just((T) ReflectionUtils.invokeMethod(fromXContent, responseType, contentParser));
-				} catch (Exception parseFailure) {
-
-					try {
-
-						XContentParser errorParser = XContentType
-								.fromMediaTypeOrFormat(
-										response.headers().contentType().map(MediaType::toString).orElse(XContentType.JSON.mediaType()))
-								.xContent()
-								.createParser(NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION, content);
-
-						// return Mono.error to avoid ElasticsearchStatusException to be caught by outer catch.
-						return Mono.error(BytesRestResponse.errorFromXContent(errorParser));
-
-					} catch (Exception errorParseFailure) {
-
-						// return Mono.error to avoid ElasticsearchStatusException to be caught by outer catch.
-						return Mono.error(new ElasticsearchStatusException("Unable to parse response body",
-								RestStatus.fromCode(response.statusCode().value())));
-					}
+					return Mono.error(BytesRestResponse.errorFromXContent(contentParser));
+				} catch (Exception e) {
+					// return Mono.error to avoid ElasticsearchStatusException to be caught by outer catch.
+					return Mono.error(new ElasticsearchStatusException("Unable to parse response body",
+							RestStatus.fromCode(response.statusCode().value())));
 				}
-			} catch (IOException e) {
-				throw new DataAccessResourceFailureException("Error parsing XContent.", e);
 			}
-		});
+
+		} catch (IOException e) {
+			return Mono.error(new DataAccessResourceFailureException("Error parsing XContent.", e));
+		}
+	}
+
+	private static XContentParser createParser(String mediaType, String content) throws IOException {
+
+		return XContentType.fromMediaTypeOrFormat(mediaType) //
+				.xContent() //
+				.createParser(NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION, content);
+	}
+
+	private static <T> Publisher<? extends T> handleServerError(Request request, ClientResponse response) {
+		return Mono.error(
+				new HttpServerErrorException(response.statusCode(), String.format("%s request to %s returned error code %s.",
+						request.getMethod(), request.getEndpoint(), response.statusCode().value())));
 	}
 
 	static class RequestCreator {
@@ -405,97 +448,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		}
 	}
 
-	public static class RequestBodyEncodingException extends WebClientException {
-
-		RequestBodyEncodingException(String msg, Throwable ex) {
-			super(msg, ex);
-		}
-	}
-
-	static class RawActionResponse extends ActionResponse implements ClientResponse {
-
-		final ClientResponse delegate;
-
-		RawActionResponse(ClientResponse delegate) {
-			this.delegate = delegate;
-		}
-
-		public HttpStatus statusCode() {
-			return delegate.statusCode();
-		}
-
-		public int rawStatusCode() {
-			return delegate.rawStatusCode();
-		}
-
-		public Headers headers() {
-			return delegate.headers();
-		}
-
-		public MultiValueMap<String, ResponseCookie> cookies() {
-			return delegate.cookies();
-		}
-
-		public ExchangeStrategies strategies() {
-			return delegate.strategies();
-		}
-
-		public <T> T body(BodyExtractor<T, ? super ClientHttpResponse> extractor) {
-			return delegate.body(extractor);
-		}
-
-		public <T> Mono<T> bodyToMono(Class<? extends T> elementClass) {
-			return delegate.bodyToMono(elementClass);
-		}
-
-		public <T> Mono<T> bodyToMono(ParameterizedTypeReference<T> typeReference) {
-			return delegate.bodyToMono(typeReference);
-		}
-
-		public <T> Flux<T> bodyToFlux(Class<? extends T> elementClass) {
-			return delegate.bodyToFlux(elementClass);
-		}
-
-		public <T> Flux<T> bodyToFlux(ParameterizedTypeReference<T> typeReference) {
-			return delegate.bodyToFlux(typeReference);
-		}
-
-		public <T> Mono<ResponseEntity<T>> toEntity(Class<T> bodyType) {
-			return delegate.toEntity(bodyType);
-		}
-
-		public <T> Mono<ResponseEntity<T>> toEntity(ParameterizedTypeReference<T> typeReference) {
-			return delegate.toEntity(typeReference);
-		}
-
-		public <T> Mono<ResponseEntity<List<T>>> toEntityList(Class<T> elementType) {
-			return delegate.toEntityList(elementType);
-		}
-
-		public <T> Mono<ResponseEntity<List<T>>> toEntityList(ParameterizedTypeReference<T> typeReference) {
-			return delegate.toEntityList(typeReference);
-		}
-
-		public static Builder from(ClientResponse other) {
-			return ClientResponse.from(other);
-		}
-
-		public static Builder create(HttpStatus statusCode) {
-			return ClientResponse.create(statusCode);
-		}
-
-		public static Builder create(HttpStatus statusCode, ExchangeStrategies strategies) {
-			return ClientResponse.create(statusCode, strategies);
-		}
-
-		public static Builder create(HttpStatus statusCode, List<HttpMessageReader<?>> messageReaders) {
-			return ClientResponse.create(statusCode, messageReaders);
-		}
-	}
-
 	/**
 	 * Reactive client {@link ReactiveElasticsearchClient.Status} implementation.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 */
 	class ClientStatus implements Status {

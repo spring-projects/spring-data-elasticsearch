@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.mockito.Mockito.*;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
@@ -35,10 +33,8 @@ import java.util.function.Supplier;
 import org.mockito.Mockito;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.WebClientProvider.Send;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Send;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -52,7 +48,6 @@ import org.springframework.web.reactive.function.client.WebClient.RequestHeaders
 
 /**
  * @author Christoph Strobl
- * @since 2018/10
  */
 public class ReactiveMockClientTestsUtils {
 
@@ -66,26 +61,16 @@ public class ReactiveMockClientTestsUtils {
 
 	public static <T extends HostProvider> MockDelegatingElasticsearchHostProvider<T> provider(String... hosts) {
 
-		WebClientProvider clientProvider = new WebClientProvider();
 		ErrorCollector errorCollector = new ErrorCollector();
+		MockWebClientProvider clientProvider = new MockWebClientProvider(errorCollector);
 		HostProvider delegate = null;
 
 		if (hosts.length == 1) {
 
-			delegate = new SingleNodeHostProvider(HttpHeaders.EMPTY, errorCollector, hosts[0]) {
-				@Override // hook in there to modify result
-				public WebClient createWebClient(String host, HttpHeaders headers) {
-					return clientProvider.get(host);
-				}
-			};
+			delegate = new SingleNodeHostProvider(clientProvider, hosts[0]) {};
 		} else {
 
-			delegate = new MultiNodeHostProvider(HttpHeaders.EMPTY, errorCollector, hosts) {
-				@Override // hook in there to modify result
-				public WebClient createWebClient(String host, HttpHeaders headers) {
-					return clientProvider.get(host);
-				}
-			};
+			delegate = new MultiNodeHostProvider(clientProvider, hosts) {};
 		}
 
 		return new MockDelegatingElasticsearchHostProvider(HttpHeaders.EMPTY, clientProvider, errorCollector, delegate,
@@ -110,11 +95,11 @@ public class ReactiveMockClientTestsUtils {
 	public static class MockDelegatingElasticsearchHostProvider<T extends HostProvider> implements HostProvider {
 
 		private final T delegate;
-		private final WebClientProvider clientProvider;
+		private final MockWebClientProvider clientProvider;
 		private final ErrorCollector errorCollector;
 		private @Nullable String activeDefaultHost;
 
-		public MockDelegatingElasticsearchHostProvider(HttpHeaders httpHeaders, WebClientProvider clientProvider,
+		public MockDelegatingElasticsearchHostProvider(HttpHeaders httpHeaders, MockWebClientProvider clientProvider,
 				ErrorCollector errorCollector, T delegate, String activeDefaultHost) {
 
 			this.errorCollector = errorCollector;
@@ -144,12 +129,8 @@ public class ReactiveMockClientTestsUtils {
 			return delegate.getActive(verificationMode);
 		}
 
-		public Mono<WebClient> getActive(VerificationMode verificationMode, HttpHeaders headers) {
-			return delegate.getActive(verificationMode, headers);
-		}
-
-		public WebClient createWebClient(String host, HttpHeaders headers) {
-			return delegate.createWebClient(host, headers);
+		public WebClient createWebClient(String baseUrl) {
+			return delegate.createWebClient(baseUrl);
 		}
 
 		@Override
@@ -160,16 +141,6 @@ public class ReactiveMockClientTestsUtils {
 			}
 
 			return delegate.clusterInfo();
-		}
-
-		@Override
-		public HttpHeaders getDefaultHeaders() {
-			return delegate.getDefaultHeaders();
-		}
-
-		@Override
-		public HostProvider withDefaultHeaders(HttpHeaders headers) {
-			throw new UnsupportedOperationException();
 		}
 
 		public Send when(String host) {
@@ -188,28 +159,25 @@ public class ReactiveMockClientTestsUtils {
 			return delegate;
 		}
 
-		@Override
-		public HostProvider withErrorListener(Consumer<Throwable> errorListener) {
-			throw new UnsupportedOperationException();
-		}
-
 		public MockDelegatingElasticsearchHostProvider<T> withActiveDefaultHost(String host) {
 			return new MockDelegatingElasticsearchHostProvider(HttpHeaders.EMPTY, clientProvider, errorCollector, delegate,
 					host);
 		}
 	}
 
-	public static class WebClientProvider {
+	public static class MockWebClientProvider implements WebClientProvider {
 
 		private final Object lock = new Object();
+		private final Consumer<Throwable> errorListener;
 
 		private Map<String, WebClient> clientMap;
 		private Map<String, RequestHeadersUriSpec> headersUriSpecMap;
 		private Map<String, RequestBodyUriSpec> bodyUriSpecMap;
 		private Map<String, ClientResponse> responseMap;
 
-		public WebClientProvider() {
+		public MockWebClientProvider(Consumer<Throwable> errorListener) {
 
+			this.errorListener = errorListener;
 			this.clientMap = new LinkedHashMap<>();
 			this.headersUriSpecMap = new LinkedHashMap<>();
 			this.bodyUriSpecMap = new LinkedHashMap<>();
@@ -250,6 +218,26 @@ public class ReactiveMockClientTestsUtils {
 					return webClient;
 				});
 			}
+		}
+
+		@Override
+		public HttpHeaders getDefaultHeaders() {
+			return HttpHeaders.EMPTY;
+		}
+
+		@Override
+		public WebClientProvider withDefaultHeaders(HttpHeaders headers) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Consumer<Throwable> getErrorListener() {
+			return errorListener;
+		}
+
+		@Override
+		public WebClientProvider withErrorListener(Consumer<Throwable> errorListener) {
+			throw new UnsupportedOperationException();
 		}
 
 		public Send when(String host) {
@@ -342,7 +330,7 @@ public class ReactiveMockClientTestsUtils {
 			}
 
 			default Receive body(Supplier<byte[]> json) {
-				return body(new DefaultDataBufferFactory().wrap(json.get()));
+				return body(json.get());
 			}
 
 			default Receive body(Resource resource) {
@@ -356,8 +344,8 @@ public class ReactiveMockClientTestsUtils {
 				});
 			}
 
-			default Receive body(DataBuffer dataBuffer) {
-				return receive(response -> Mockito.when(response.body(any())).thenReturn(Flux.just(dataBuffer)));
+			default Receive body(byte[] bytes) {
+				return receive(response -> Mockito.when(response.body(any())).thenReturn(Mono.just(bytes)));
 			}
 
 			static void ok(ClientResponse response) {

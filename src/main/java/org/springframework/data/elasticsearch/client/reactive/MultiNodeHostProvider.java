@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.client.reactive;
 
 import reactor.core.publisher.Flux;
@@ -27,49 +26,61 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost.State;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
-import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
+ * {@link HostProvider} for a cluster of nodes.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 4.0
  */
 class MultiNodeHostProvider implements HostProvider {
 
-	private final HttpHeaders headers;
-	private final Consumer<Throwable> errorListener;
+	private final WebClientProvider clientProvider;
 	private final Map<String, ElasticsearchHost> hosts;
 
-	MultiNodeHostProvider(HttpHeaders headers, Consumer<Throwable> errorListener, String... hosts) {
+	MultiNodeHostProvider(WebClientProvider clientProvider, String... hosts) {
 
-		this.headers = headers;
-		this.errorListener = errorListener;
+		this.clientProvider = clientProvider;
 		this.hosts = new ConcurrentHashMap<>();
 		for (String host : hosts) {
 			this.hosts.put(host, new ElasticsearchHost(host, State.UNKNOWN));
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#clusterInfo()
+	 */
 	public Mono<ClusterInformation> clusterInfo() {
 		return nodes(null).map(this::updateNodeState).buffer(hosts.size())
 				.then(Mono.just(new ClusterInformation(new LinkedHashSet<>(this.hosts.values()))));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#createWebClient(java.lang.String)
+	 */
+	@Override
+	public WebClient createWebClient(String baseUrl) {
+		return this.clientProvider.get(baseUrl);
 	}
 
 	Collection<ElasticsearchHost> getCachedHostState() {
 		return hosts.values();
 	}
 
-	@Override
-	public HttpHeaders getDefaultHeaders() {
-		return this.headers;
-	}
-
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#lookupActiveHost(org.springframework.data.elasticsearch.client.reactive.HostProvider.VerificationMode)
+	 */
 	@Override
 	public Mono<String> lookupActiveHost(VerificationMode verificationMode) {
 
@@ -85,16 +96,6 @@ class MultiNodeHostProvider implements HostProvider {
 				.switchIfEmpty(findActiveHostInUnresolved()) //
 				.switchIfEmpty(findActiveHostInDead()) //
 				.switchIfEmpty(Mono.error(() -> new NoReachableHostException(new LinkedHashSet<>(getCachedHostState()))));
-	}
-
-	@Override
-	public HostProvider withDefaultHeaders(HttpHeaders headers) {
-		return new MultiNodeHostProvider(headers, errorListener, hosts.keySet().toArray(new String[0]));
-	}
-
-	@Override
-	public HostProvider withErrorListener(Consumer<Throwable> errorListener) {
-		return new MultiNodeHostProvider(headers, errorListener, hosts.keySet().toArray(new String[0]));
 	}
 
 	private Mono<String> findActiveHostInKnownActives() {
@@ -124,21 +125,21 @@ class MultiNodeHostProvider implements HostProvider {
 	private Flux<Tuple2<String, ClientResponse>> nodes(@Nullable State state) {
 
 		return Flux.fromIterable(hosts()) //
-				.filter(entry -> state != null ? entry.getState().equals(state) : true) //
+				.filter(entry -> state == null || entry.getState().equals(state)) //
 				.map(ElasticsearchHost::getHost) //
 				.flatMap(host -> {
 
-					Mono<ClientResponse> exchange = createWebClient(host, headers) //
+					Mono<ClientResponse> exchange = createWebClient(host) //
 							.head().uri("/").exchange().doOnError(throwable -> {
 
 								hosts.put(host, new ElasticsearchHost(host, State.OFFLINE));
-								errorListener.accept(throwable);
+								clientProvider.getErrorListener().accept(throwable);
 							});
 
 					return Mono.just(host).zipWith(exchange);
 				}) //
 				.onErrorContinue((throwable, o) -> {
-					errorListener.accept(throwable);
+					clientProvider.getErrorListener().accept(throwable);
 				});
 	}
 

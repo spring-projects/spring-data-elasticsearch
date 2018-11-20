@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.assertj.core.api.Assertions.*;
@@ -43,14 +42,20 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @currentRead Fool's Fate - Robin Hobb
  */
+@RunWith(SpringRunner.class)
+@ContextConfiguration("classpath:infrastructure.xml")
 public class ReactiveElasticsearchClientTests {
 
 	static final String INDEX_I = "idx-1-reactive-client-tests";

@@ -18,6 +18,8 @@ package org.springframework.data.elasticsearch.client;
 
 import java.time.Instant;
 
+import org.springframework.util.Assert;
+
 /**
  * Value Object containing information about Elasticsearch cluster nodes.
  *
@@ -31,6 +33,9 @@ public class ElasticsearchHost {
 	private final Instant timestamp;
 
 	public ElasticsearchHost(String host, State state) {
+
+		Assert.notNull(host, "Host must not be null");
+		Assert.notNull(state, "State must not be null");
 
 		this.host = host;
 		this.state = state;

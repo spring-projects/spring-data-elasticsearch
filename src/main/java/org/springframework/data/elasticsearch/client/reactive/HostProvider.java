@@ -13,18 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.client.reactive;
 
-import org.springframework.data.elasticsearch.client.NoReachableHostException;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
-import org.springframework.http.HttpHeaders;
+import org.springframework.data.elasticsearch.client.NoReachableHostException;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -33,7 +30,8 @@ import org.springframework.web.reactive.function.client.WebClient;
  * active ones.
  *
  * @author Christoph Strobl
- * @since 4.0
+ * @author Mark Paluch
+ * @since 4.0 TODO: Encapsulate host (scheme, host, port) within a value object.
  */
 public interface HostProvider {
 
@@ -73,31 +71,16 @@ public interface HostProvider {
 	 *         found.
 	 */
 	default Mono<WebClient> getActive(VerificationMode verificationMode) {
-		return getActive(verificationMode, getDefaultHeaders());
+		return lookupActiveHost(verificationMode).map(host -> createWebClient(host));
 	}
 
 	/**
-	 * Get the {@link WebClient} with default {@link HttpHeaders} connecting to an active host.
+	 * Creates a {@link WebClient} for {@code baseUrl}.
 	 *
-	 * @param verificationMode must not be {@literal null}.
-	 * @param headers must not be {@literal null}.
-	 * @return the {@link Mono} emitting the client for an active host or {@link Mono#error(Throwable) an error} if none
-	 *         found.
-	 */
-	default Mono<WebClient> getActive(VerificationMode verificationMode, HttpHeaders headers) {
-		return lookupActiveHost(verificationMode).map(host -> createWebClient(host, headers));
-	}
-
-	/**
-	 * Get the {@link WebClient} with default {@link HttpHeaders} connecting to the given host.
-	 *
-	 * @param host must not be {@literal null}.
-	 * @param headers must not be {@literal null}.
+	 * @param baseUrl
 	 * @return
 	 */
-	default WebClient createWebClient(String host, HttpHeaders headers) {
-		return WebClient.builder().baseUrl(host).defaultHeaders(defaultHeaders -> defaultHeaders.putAll(headers)).build();
-	}
+	WebClient createWebClient(String baseUrl);
 
 	/**
 	 * Obtain information about known cluster nodes.
@@ -107,42 +90,21 @@ public interface HostProvider {
 	Mono<ClusterInformation> clusterInfo();
 
 	/**
-	 * Obtain the {@link HttpHeaders} to be used by default.
+	 * Create a new {@link HostProvider} best suited for the given {@link WebClientProvider} and number of hosts.
 	 *
-	 * @return never {@literal null}. {@link HttpHeaders#EMPTY} by default.
-	 */
-	HttpHeaders getDefaultHeaders();
-
-	/**
-	 * Create a new instance of {@link HostProvider} applying the given headers by default.
-	 *
-	 * @param headers must not be {@literal null}.
-	 * @return new instance of {@link HostProvider}.
-	 */
-	HostProvider withDefaultHeaders(HttpHeaders headers);
-
-	/**
-	 * Create a new instance of {@link HostProvider} calling the given {@link Consumer} on error.
-	 *
-	 * @param errorListener must not be {@literal null}.
-	 * @return new instance of {@link HostProvider}.
-	 */
-	HostProvider withErrorListener(Consumer<Throwable> errorListener);
-
-	/**
-	 * Create a new {@link HostProvider} best suited for the given number of hosts.
-	 *
+	 * @param clientProvider must not be {@literal null} .
 	 * @param hosts must not be {@literal null} nor empty.
 	 * @return new instance of {@link HostProvider}.
 	 */
-	static HostProvider provider(String... hosts) {
+	static HostProvider provider(WebClientProvider clientProvider, String... hosts) {
 
+		Assert.notNull(clientProvider, "WebClientProvider must not be null");
 		Assert.notEmpty(hosts, "Please provide at least one host to connect to.");
 
 		if (hosts.length == 1) {
-			return new SingleNodeHostProvider(HttpHeaders.EMPTY, (err) -> {}, hosts[0]);
+			return new SingleNodeHostProvider(clientProvider, hosts[0]);
 		} else {
-			return new MultiNodeHostProvider(HttpHeaders.EMPTY, (err) -> {}, hosts);
+			return new MultiNodeHostProvider(clientProvider, hosts);
 		}
 	}
 
@@ -155,7 +117,7 @@ public interface HostProvider {
 		/**
 		 * Actively check for cluster node health.
 		 */
-		FORCE,
+		ACTIVE,
 
 		/**
 		 * Use cached data for cluster node health.

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.assertj.core.api.Assertions.*;
@@ -24,11 +23,11 @@ import reactor.test.StepVerifier;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.data.elasticsearch.client.reactive.HostProvider.VerificationMode;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost.State;
+import org.springframework.data.elasticsearch.client.reactive.HostProvider.VerificationMode;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockDelegatingElasticsearchHostProvider;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.WebClientProvider.Receive;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
 /**
@@ -107,7 +106,7 @@ public class MultiNodeHostProviderUnitTests {
 
 		provider.clusterInfo().as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		provider.getActive(VerificationMode.FORCE).as(StepVerifier::create).expectNext(mock.client(HOST_2))
+		provider.getActive(VerificationMode.ACTIVE).as(StepVerifier::create).expectNext(mock.client(HOST_2))
 				.verifyComplete();
 
 		verify(mock.client(HOST_2), times(2)).head();
