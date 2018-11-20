@@ -24,6 +24,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -32,11 +33,21 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.builder.SampleInheritedEntityBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.entities.*;
+import org.springframework.data.elasticsearch.entities.Book;
+import org.springframework.data.elasticsearch.entities.CopyToEntity;
 import org.springframework.data.elasticsearch.entities.GeoEntity;
+import org.springframework.data.elasticsearch.entities.Group;
+import org.springframework.data.elasticsearch.entities.MinimalEntity;
+import org.springframework.data.elasticsearch.entities.NormalizerEntity;
+import org.springframework.data.elasticsearch.entities.SampleInheritedEntity;
+import org.springframework.data.elasticsearch.entities.SampleTransientEntity;
+import org.springframework.data.elasticsearch.entities.SimpleRecursiveEntity;
+import org.springframework.data.elasticsearch.entities.StockPrice;
+import org.springframework.data.elasticsearch.entities.User;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -243,5 +254,25 @@ public class MappingBuilderTests {
 		assertThat(fieldName.get("normalizer"), equalTo("lower_case_normalizer"));
 		assertThat(fieldDescriptionLowerCase.get("type"), equalTo("keyword"));
 		assertThat(fieldDescriptionLowerCase.get("normalizer"), equalTo("lower_case_normalizer"));
+	}
+
+	@Test // DATAES-503
+	public void shouldUseCopyTo() throws IOException {
+
+		// given
+		elasticsearchTemplate.deleteIndex(CopyToEntity.class);
+		elasticsearchTemplate.createIndex(CopyToEntity.class);
+		elasticsearchTemplate.putMapping(CopyToEntity.class);
+
+		// when
+		Map mapping = elasticsearchTemplate.getMapping(CopyToEntity.class);
+		Map properties = (Map) mapping.get("properties");
+		Map fieldFirstName = (Map) properties.get("firstName");
+		Map fieldLastName = (Map) properties.get("lastName");
+
+		// then
+		List<String> copyToValue = Arrays.asList("name");
+		assertThat(fieldFirstName.get("copy_to"), equalTo(copyToValue));
+		assertThat(fieldLastName.get("copy_to"), equalTo(copyToValue));
 	}
 }
