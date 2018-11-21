@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,7 +36,7 @@ public interface ClientConfiguration {
 	 *
 	 * @return a new {@link ClientConfigurationBuilder} instance.
 	 */
-	static ClientConfigurationBuilderWithRequiredHost builder() {
+	static ClientConfigurationBuilderWithRequiredEndpoint builder() {
 		return new ClientConfigurationBuilder();
 	}
 
@@ -55,11 +56,27 @@ public interface ClientConfiguration {
 	}
 
 	/**
-	 * Returns the configured hosts. Hosts contain the hostname and port.
+	 * Creates a new {@link ClientConfiguration} instance configured to a single host given {@link InetSocketAddress}.
+	 * <p/>
+	 * For example given the endpoint http://localhost:9200
 	 *
-	 * @return the configured hosts. Hosts contain the hostname and port.
+	 * <pre class="code">
+	 * ClientConfiguration configuration = ClientConfiguration
+	 * 		.create(InetSocketAddress.createUnresolved("localhost", 9200));
+	 * </pre>
+	 *
+	 * @return a new {@link ClientConfigurationBuilder} instance.
 	 */
-	List<String> getHosts();
+	static ClientConfiguration create(InetSocketAddress socketAddress) {
+		return new ClientConfigurationBuilder().connectedTo(socketAddress).build();
+	}
+
+	/**
+	 * Returns the configured endpoints.
+	 *
+	 * @return the configured endpoints.
+	 */
+	List<InetSocketAddress> getEndpoints();
 
 	/**
 	 * Obtain the {@link HttpHeaders} to be used by default.
@@ -85,12 +102,10 @@ public interface ClientConfiguration {
 	/**
 	 * @author Christoph Strobl
 	 */
-	interface ClientConfigurationBuilderWithRequiredHost {
+	interface ClientConfigurationBuilderWithRequiredEndpoint {
 
 		/**
-		 * @param hostAndPort the {@literal host} and {@literal port} formatted as String {@literal host:port}. You may
-		 *          leave out {@literal http / https} and use {@link MaybeSecureClientConfigurationBuilder#usingSsl()
-		 *          viaSsl}.
+		 * @param hostAndPort the {@literal host} and {@literal port} formatted as String {@literal host:port}.
 		 * @return the {@link MaybeSecureClientConfigurationBuilder}.
 		 */
 		default MaybeSecureClientConfigurationBuilder connectedTo(String hostAndPort) {
@@ -99,11 +114,24 @@ public interface ClientConfiguration {
 
 		/**
 		 * @param hostAndPorts the list of {@literal host} and {@literal port} combinations formatted as String
-		 *          {@literal host:port}. You may leave out {@literal http / https} and use
-		 *          {@link MaybeSecureClientConfigurationBuilder#usingSsl() viaSsl}.
+		 *          {@literal host:port}.
 		 * @return the {@link MaybeSecureClientConfigurationBuilder}.
 		 */
 		MaybeSecureClientConfigurationBuilder connectedTo(String... hostAndPorts);
+
+		/**
+		 * @param endpoint the {@literal host} and {@literal port}.
+		 * @return the {@link MaybeSecureClientConfigurationBuilder}.
+		 */
+		default MaybeSecureClientConfigurationBuilder connectedTo(InetSocketAddress endpoint) {
+			return connectedTo(new InetSocketAddress[] { endpoint });
+		}
+
+		/**
+		 * @param endpoints the list of {@literal host} and {@literal port} combinations.
+		 * @return the {@link MaybeSecureClientConfigurationBuilder}.
+		 */
+		MaybeSecureClientConfigurationBuilder connectedTo(InetSocketAddress... endpoints);
 
 		/**
 		 * Obviously for testing.
@@ -123,7 +151,7 @@ public interface ClientConfiguration {
 		/**
 		 * Connect via {@literal https} <br />
 		 * <strong>NOTE</strong> You need to leave out the protocol in
-		 * {@link ClientConfigurationBuilderWithRequiredHost#connectedTo(String)}.
+		 * {@link ClientConfigurationBuilderWithRequiredEndpoint#connectedTo(String)}.
 		 *
 		 * @return the {@link ClientConfigurationBuilderWithOptionalDefaultHeaders}.
 		 */
@@ -132,7 +160,7 @@ public interface ClientConfiguration {
 		/**
 		 * Connect via {@literal https} using the given {@link SSLContext}.<br />
 		 * <strong>NOTE</strong> You need to leave out the protocol in
-		 * {@link ClientConfigurationBuilderWithRequiredHost#connectedTo(String)}.
+		 * {@link ClientConfigurationBuilderWithRequiredEndpoint#connectedTo(String)}.
 		 *
 		 * @return the {@link ClientConfigurationBuilderWithOptionalDefaultHeaders}.
 		 */
@@ -146,7 +174,7 @@ public interface ClientConfiguration {
 	interface ClientConfigurationBuilderWithOptionalDefaultHeaders {
 
 		/**
-		 * @param defaultHeaders
+		 * @param defaultHeaders must not be {@literal null}.
 		 * @return the {@link ClientConfigurationBuilderWithOptionalDefaultHeaders}
 		 */
 		ClientConfigurationBuilderWithOptionalDefaultHeaders withDefaultHeaders(HttpHeaders defaultHeaders);

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,12 +34,13 @@ import org.springframework.lang.Nullable;
  */
 class DefaultClientConfiguration implements ClientConfiguration {
 
-	private final List<String> hosts;
+	private final List<InetSocketAddress> hosts;
 	private final HttpHeaders headers;
 	private final boolean useSsl;
 	private final @Nullable SSLContext sslContext;
 
-	DefaultClientConfiguration(List<String> hosts, HttpHeaders headers, boolean useSsl, @Nullable SSLContext sslContext) {
+	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
+			@Nullable SSLContext sslContext) {
 
 		this.hosts = Collections.unmodifiableList(new ArrayList<>(hosts));
 		this.headers = new HttpHeaders(headers);
@@ -46,21 +48,37 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		this.sslContext = sslContext;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getEndpoints()
+	 */
 	@Override
-	public List<String> getHosts() {
+	public List<InetSocketAddress> getEndpoints() {
 		return this.hosts;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getDefaultHeaders()
+	 */
 	@Override
 	public HttpHeaders getDefaultHeaders() {
 		return this.headers;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#useSsl()
+	 */
 	@Override
 	public boolean useSsl() {
 		return this.useSsl;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getSslContext()
+	 */
 	@Override
 	public Optional<SSLContext> getSslContext() {
 		return Optional.ofNullable(this.sslContext);

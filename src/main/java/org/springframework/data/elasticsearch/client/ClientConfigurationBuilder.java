@@ -15,14 +15,16 @@
  */
 package org.springframework.data.elasticsearch.client;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
 
 import org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithOptionalDefaultHeaders;
-import org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithRequiredHost;
+import org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithRequiredEndpoint;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.MaybeSecureClientConfigurationBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
@@ -36,22 +38,44 @@ import org.springframework.util.Assert;
  * @since 4.0
  */
 class ClientConfigurationBuilder
-		implements ClientConfigurationBuilderWithRequiredHost, MaybeSecureClientConfigurationBuilder {
+		implements ClientConfigurationBuilderWithRequiredEndpoint, MaybeSecureClientConfigurationBuilder {
 
-	private List<String> hosts = new ArrayList<>();
+	private List<InetSocketAddress> hosts = new ArrayList<>();
 	private HttpHeaders headers = HttpHeaders.EMPTY;
 	private boolean useSsl;
 	private @Nullable SSLContext sslContext;
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithRequiredEndpoint#connectedTo(java.lang.String[])
+	 */
 	@Override
 	public MaybeSecureClientConfigurationBuilder connectedTo(String... hostAndPorts) {
 
 		Assert.notEmpty(hostAndPorts, "At least one host is required");
 
-		this.hosts.addAll(Arrays.asList(hostAndPorts));
+		this.hosts.addAll(Arrays.stream(hostAndPorts).map(ClientConfigurationBuilder::parse).collect(Collectors.toList()));
 		return this;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithRequiredEndpoint#connectedTo(java.net.InetSocketAddress[])
+	 */
+	@Override
+	public MaybeSecureClientConfigurationBuilder connectedTo(InetSocketAddress... endpoints) {
+
+		Assert.notEmpty(endpoints, "At least one endpoint is required");
+
+		this.hosts.addAll(Arrays.asList(endpoints));
+
+		return this;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.MaybeSecureClientConfigurationBuilder#usingSsl()
+	 */
 	@Override
 	public ClientConfigurationBuilderWithOptionalDefaultHeaders usingSsl() {
 
@@ -59,6 +83,10 @@ class ClientConfigurationBuilder
 		return this;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.MaybeSecureClientConfigurationBuilder#usingSsl(javax.net.ssl.SSLContext)
+	 */
 	@Override
 	public ClientConfigurationBuilderWithOptionalDefaultHeaders usingSsl(SSLContext sslContext) {
 
@@ -69,6 +97,10 @@ class ClientConfigurationBuilder
 		return this;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithOptionalDefaultHeaders#withDefaultHeaders(org.springframework.http.HttpHeaders)
+	 */
 	@Override
 	public ClientConfigurationBuilderWithOptionalDefaultHeaders withDefaultHeaders(HttpHeaders defaultHeaders) {
 
@@ -78,8 +110,16 @@ class ClientConfigurationBuilder
 		return this;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithOptionalDefaultHeaders#build()
+	 */
 	@Override
 	public ClientConfiguration build() {
 		return new DefaultClientConfiguration(this.hosts, this.headers, this.useSsl, this.sslContext);
+	}
+
+	private static InetSocketAddress parse(String hostAndPort) {
+		return InetSocketAddressParser.parse(hostAndPort, ElasticsearchHost.DEFAULT_PORT);
 	}
 }

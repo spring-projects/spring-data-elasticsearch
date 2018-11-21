@@ -20,12 +20,15 @@ import static org.mockito.Mockito.*;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -51,6 +54,8 @@ import org.springframework.web.reactive.function.client.WebClient.RequestHeaders
  */
 public class ReactiveMockClientTestsUtils {
 
+	private final static Map<String, InetSocketAddress> ADDRESS_CACHE = new ConcurrentHashMap<>();
+
 	public static MockDelegatingElasticsearchHostProvider<SingleNodeHostProvider> single(String host) {
 		return provider(host);
 	}
@@ -67,15 +72,20 @@ public class ReactiveMockClientTestsUtils {
 
 		if (hosts.length == 1) {
 
-			delegate = new SingleNodeHostProvider(clientProvider, hosts[0]) {};
+			delegate = new SingleNodeHostProvider(clientProvider, getInetSocketAddress(hosts[0])) {};
 		} else {
 
-			delegate = new MultiNodeHostProvider(clientProvider, hosts) {};
+			delegate = new MultiNodeHostProvider(clientProvider, Arrays.stream(hosts)
+					.map(ReactiveMockClientTestsUtils::getInetSocketAddress).toArray(InetSocketAddress[]::new)) {};
 		}
 
 		return new MockDelegatingElasticsearchHostProvider(HttpHeaders.EMPTY, clientProvider, errorCollector, delegate,
 				null);
 
+	}
+
+	private static InetSocketAddress getInetSocketAddress(String hostAndPort) {
+		return ADDRESS_CACHE.computeIfAbsent(hostAndPort, ElasticsearchHost::parse);
 	}
 
 	public static class ErrorCollector implements Consumer<Throwable> {
@@ -108,14 +118,14 @@ public class ReactiveMockClientTestsUtils {
 			this.activeDefaultHost = activeDefaultHost;
 		}
 
-		public Mono<String> lookupActiveHost() {
+		public Mono<InetSocketAddress> lookupActiveHost() {
 			return delegate.lookupActiveHost();
 		}
 
-		public Mono<String> lookupActiveHost(VerificationMode verificationMode) {
+		public Mono<InetSocketAddress> lookupActiveHost(VerificationMode verificationMode) {
 
 			if (StringUtils.hasText(activeDefaultHost)) {
-				return Mono.just(activeDefaultHost);
+				return Mono.just(getInetSocketAddress(activeDefaultHost));
 			}
 
 			return delegate.lookupActiveHost(verificationMode);
@@ -129,15 +139,16 @@ public class ReactiveMockClientTestsUtils {
 			return delegate.getActive(verificationMode);
 		}
 
-		public WebClient createWebClient(String baseUrl) {
-			return delegate.createWebClient(baseUrl);
+		public WebClient createWebClient(InetSocketAddress endpoint) {
+			return delegate.createWebClient(endpoint);
 		}
 
 		@Override
 		public Mono<ClusterInformation> clusterInfo() {
 
 			if (StringUtils.hasText(activeDefaultHost)) {
-				return Mono.just(new ClusterInformation(Collections.singleton(ElasticsearchHost.online(activeDefaultHost))));
+				return Mono.just(new ClusterInformation(
+						Collections.singleton(ElasticsearchHost.online(getInetSocketAddress(activeDefaultHost)))));
 			}
 
 			return delegate.clusterInfo();
@@ -170,10 +181,10 @@ public class ReactiveMockClientTestsUtils {
 		private final Object lock = new Object();
 		private final Consumer<Throwable> errorListener;
 
-		private Map<String, WebClient> clientMap;
-		private Map<String, RequestHeadersUriSpec> headersUriSpecMap;
-		private Map<String, RequestBodyUriSpec> bodyUriSpecMap;
-		private Map<String, ClientResponse> responseMap;
+		private Map<InetSocketAddress, WebClient> clientMap;
+		private Map<InetSocketAddress, RequestHeadersUriSpec> headersUriSpecMap;
+		private Map<InetSocketAddress, RequestBodyUriSpec> bodyUriSpecMap;
+		private Map<InetSocketAddress, ClientResponse> responseMap;
 
 		public MockWebClientProvider(Consumer<Throwable> errorListener) {
 
@@ -185,10 +196,14 @@ public class ReactiveMockClientTestsUtils {
 		}
 
 		public WebClient get(String host) {
+			return get(getInetSocketAddress(host));
+		}
+
+		public WebClient get(InetSocketAddress endpoint) {
 
 			synchronized (lock) {
 
-				return clientMap.computeIfAbsent(host, key -> {
+				return clientMap.computeIfAbsent(endpoint, key -> {
 
 					WebClient webClient = mock(WebClient.class);
 
@@ -211,9 +226,9 @@ public class ReactiveMockClientTestsUtils {
 					Mockito.when(bodyUriSpec.exchange()).thenReturn(Mono.just(response));
 					Mockito.when(response.statusCode()).thenReturn(HttpStatus.ACCEPTED);
 
-					headersUriSpecMap.putIfAbsent(host, headersUriSpec);
-					bodyUriSpecMap.putIfAbsent(host, bodyUriSpec);
-					responseMap.putIfAbsent(host, response);
+					headersUriSpecMap.putIfAbsent(key, headersUriSpec);
+					bodyUriSpecMap.putIfAbsent(key, bodyUriSpec);
+					responseMap.putIfAbsent(key, response);
 
 					return webClient;
 				});
@@ -241,7 +256,9 @@ public class ReactiveMockClientTestsUtils {
 		}
 
 		public Send when(String host) {
-			return new CallbackImpl(get(host), headersUriSpecMap.get(host), bodyUriSpecMap.get(host), responseMap.get(host));
+			InetSocketAddress inetSocketAddress = getInetSocketAddress(host);
+			return new CallbackImpl(get(host), headersUriSpecMap.get(inetSocketAddress),
+					bodyUriSpecMap.get(inetSocketAddress), responseMap.get(inetSocketAddress));
 		}
 
 		public interface Client {

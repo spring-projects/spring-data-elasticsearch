@@ -18,6 +18,8 @@ package org.springframework.data.elasticsearch.client;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.net.InetSocketAddress;
+
 import javax.net.ssl.SSLContext;
 
 import org.junit.Test;
@@ -35,7 +37,7 @@ public class ClientConfigurationUnitTests {
 
 		ClientConfiguration clientConfiguration = ClientConfiguration.create("localhost:9200");
 
-		assertThat(clientConfiguration.getHosts()).containsOnly("localhost:9200");
+		assertThat(clientConfiguration.getEndpoints()).containsOnly(InetSocketAddress.createUnresolved("localhost", 9200));
 	}
 
 	@Test // DATAES-488
@@ -50,7 +52,8 @@ public class ClientConfigurationUnitTests {
 				.withDefaultHeaders(headers) //
 				.build();
 
-		assertThat(clientConfiguration.getHosts()).containsOnly("foo", "bar");
+		assertThat(clientConfiguration.getEndpoints()).containsOnly(InetSocketAddress.createUnresolved("foo", 9200),
+				InetSocketAddress.createUnresolved("bar", 9200));
 		assertThat(clientConfiguration.useSsl()).isTrue();
 		assertThat(clientConfiguration.getDefaultHeaders().get("foo")).containsOnly("bar");
 	}
@@ -65,7 +68,8 @@ public class ClientConfigurationUnitTests {
 				.usingSsl(sslContext) //
 				.build();
 
-		assertThat(clientConfiguration.getHosts()).containsOnly("foo", "bar");
+		assertThat(clientConfiguration.getEndpoints()).containsOnly(InetSocketAddress.createUnresolved("foo", 9200),
+				InetSocketAddress.createUnresolved("bar", 9200));
 		assertThat(clientConfiguration.useSsl()).isTrue();
 		assertThat(clientConfiguration.getSslContext()).contains(sslContext);
 	}

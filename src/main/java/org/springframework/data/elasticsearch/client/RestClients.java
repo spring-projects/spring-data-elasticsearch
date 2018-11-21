@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -53,7 +54,7 @@ public final class RestClients {
 
 		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null!");
 
-		HttpHost[] httpHosts = formattedHosts(clientConfiguration.getHosts(), clientConfiguration.useSsl()).stream()
+		HttpHost[] httpHosts = formattedHosts(clientConfiguration.getEndpoints(), clientConfiguration.useSsl()).stream()
 				.map(HttpHost::create).toArray(HttpHost[]::new);
 		RestClientBuilder builder = RestClient.builder(httpHosts);
 		HttpHeaders headers = clientConfiguration.getDefaultHeaders();
@@ -76,9 +77,8 @@ public final class RestClients {
 		return () -> client;
 	}
 
-	private static List<String> formattedHosts(List<String> hosts, boolean useSsl) {
-		return hosts.stream().map(it -> it.startsWith("http") ? it : (useSsl ? "https" : "http") + "://" + it)
-				.collect(Collectors.toList());
+	private static List<String> formattedHosts(List<InetSocketAddress> hosts, boolean useSsl) {
+		return hosts.stream().map(it -> (useSsl ? "https" : "http") + "://" + it).collect(Collectors.toList());
 	}
 
 	/**

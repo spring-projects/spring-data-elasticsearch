@@ -16,6 +16,7 @@
 
 package org.springframework.data.elasticsearch.client;
 
+import java.net.InetSocketAddress;
 import java.time.Instant;
 
 import org.springframework.util.Assert;
@@ -28,16 +29,21 @@ import org.springframework.util.Assert;
  */
 public class ElasticsearchHost {
 
-	private final String host;
+	/**
+	 * Default HTTP port for Elasticsearch servers.
+	 */
+	public static final int DEFAULT_PORT = 9200;
+
+	private final InetSocketAddress endpoint;
 	private final State state;
 	private final Instant timestamp;
 
-	public ElasticsearchHost(String host, State state) {
+	public ElasticsearchHost(InetSocketAddress endpoint, State state) {
 
-		Assert.notNull(host, "Host must not be null");
+		Assert.notNull(endpoint, "Host must not be null");
 		Assert.notNull(state, "State must not be null");
 
-		this.host = host;
+		this.endpoint = endpoint;
 		this.state = state;
 		this.timestamp = Instant.now();
 	}
@@ -46,7 +52,7 @@ public class ElasticsearchHost {
 	 * @param host must not be {@literal null}.
 	 * @return new instance of {@link ElasticsearchHost}.
 	 */
-	public static ElasticsearchHost online(String host) {
+	public static ElasticsearchHost online(InetSocketAddress host) {
 		return new ElasticsearchHost(host, State.ONLINE);
 	}
 
@@ -54,8 +60,18 @@ public class ElasticsearchHost {
 	 * @param host must not be {@literal null}.
 	 * @return new instance of {@link ElasticsearchHost}.
 	 */
-	public static ElasticsearchHost offline(String host) {
+	public static ElasticsearchHost offline(InetSocketAddress host) {
 		return new ElasticsearchHost(host, State.OFFLINE);
+	}
+
+	/**
+	 * Parse a {@literal hostAndPort} string into a {@link InetSocketAddress}.
+	 *
+	 * @param hostAndPort the string containing host and port or IP address and port in the format {@code host:port}.
+	 * @return the parsed {@link InetSocketAddress}.
+	 */
+	public static InetSocketAddress parse(String hostAndPort) {
+		return InetSocketAddressParser.parse(hostAndPort, DEFAULT_PORT);
 	}
 
 	/**
@@ -68,8 +84,8 @@ public class ElasticsearchHost {
 	/**
 	 * @return never {@literal null}.
 	 */
-	public String getHost() {
-		return host;
+	public InetSocketAddress getEndpoint() {
+		return endpoint;
 	}
 
 	/**
@@ -88,7 +104,7 @@ public class ElasticsearchHost {
 
 	@Override
 	public String toString() {
-		return "ElasticsearchHost(" + host + ", " + state.name() + ")";
+		return "ElasticsearchHost(" + endpoint + ", " + state.name() + ")";
 	}
 
 	public enum State {

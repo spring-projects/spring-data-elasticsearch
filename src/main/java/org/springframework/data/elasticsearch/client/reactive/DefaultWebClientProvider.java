@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -30,43 +31,46 @@ import org.springframework.web.reactive.function.client.WebClient.Builder;
  * Default {@link WebClientProvider} that uses cached {@link WebClient} instances per {@code hostAndPort}.
  *
  * @author Mark Paluch
+ * @since 4.0
  */
 class DefaultWebClientProvider implements WebClientProvider {
 
-	private final Map<String, WebClient> cachedClients;
+	private final Map<InetSocketAddress, WebClient> cachedClients;
 
+	private final String scheme;
 	private final @Nullable ClientHttpConnector connector;
 	private final Consumer<Throwable> errorListener;
 	private final HttpHeaders headers;
 
-	DefaultWebClientProvider(@Nullable ClientHttpConnector connector) {
-		this(connector, e -> {}, HttpHeaders.EMPTY);
+	DefaultWebClientProvider(String scheme, @Nullable ClientHttpConnector connector) {
+		this(scheme, connector, e -> {}, HttpHeaders.EMPTY);
 	}
 
-	private DefaultWebClientProvider(@Nullable ClientHttpConnector connector, Consumer<Throwable> errorListener,
-			HttpHeaders headers) {
-		this(new ConcurrentHashMap<>(), connector, errorListener, headers);
-	}
-
-	private DefaultWebClientProvider(Map<String, WebClient> cachedClients, @Nullable ClientHttpConnector connector,
+	private DefaultWebClientProvider(String scheme, @Nullable ClientHttpConnector connector,
 			Consumer<Throwable> errorListener, HttpHeaders headers) {
+		this(new ConcurrentHashMap<>(), scheme, connector, errorListener, headers);
+	}
+
+	private DefaultWebClientProvider(Map<InetSocketAddress, WebClient> cachedClients, String scheme,
+			@Nullable ClientHttpConnector connector, Consumer<Throwable> errorListener, HttpHeaders headers) {
 
 		this.cachedClients = cachedClients;
+		this.scheme = scheme;
 		this.connector = connector;
 		this.errorListener = errorListener;
 		this.headers = headers;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#get(java.lang.String)
+	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#get(java.net.InetSocketAddress)
 	 */
 	@Override
-	public WebClient get(String baseUrl) {
+	public WebClient get(InetSocketAddress endpoint) {
 
-		Assert.notNull(baseUrl, "Base URL must not be empty!");
+		Assert.notNull(endpoint, "Endpoint must not be empty!");
 
-		return this.cachedClients.computeIfAbsent(baseUrl, key -> {
+		return this.cachedClients.computeIfAbsent(endpoint, key -> {
 
 			Builder builder = WebClient.builder().defaultHeaders(it -> it.addAll(getDefaultHeaders()));
 
@@ -74,11 +78,13 @@ class DefaultWebClientProvider implements WebClientProvider {
 				builder.clientConnector(connector);
 			}
 
-			return builder.baseUrl(key).filter((request, next) -> next.exchange(request).doOnError(errorListener)).build();
+			String baseUrl = String.format("%s://%s:%d", this.scheme, key.getHostString(), key.getPort());
+			return builder.baseUrl(baseUrl).filter((request, next) -> next.exchange(request).doOnError(errorListener))
+					.build();
 		});
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#getDefaultHeaders()
 	 */
@@ -87,7 +93,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 		return headers;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#withDefaultHeaders(org.springframework.http.HttpHeaders)
 	 */
@@ -100,10 +106,10 @@ class DefaultWebClientProvider implements WebClientProvider {
 		merged.addAll(this.headers);
 		merged.addAll(headers);
 
-		return new DefaultWebClientProvider(this.connector, errorListener, merged);
+		return new DefaultWebClientProvider(this.scheme, this.connector, errorListener, merged);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#getErrorListener()
 	 */
@@ -112,7 +118,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 		return this.errorListener;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#withErrorListener(java.util.function.Consumer)
 	 */
@@ -122,6 +128,6 @@ class DefaultWebClientProvider implements WebClientProvider {
 		Assert.notNull(errorListener, "Error listener must not be null");
 
 		Consumer<Throwable> listener = this.errorListener.andThen(errorListener);
-		return new DefaultWebClientProvider(this.connector, listener, this.headers);
+		return new DefaultWebClientProvider(this.scheme, this.connector, listener, this.headers);
 	}
 }

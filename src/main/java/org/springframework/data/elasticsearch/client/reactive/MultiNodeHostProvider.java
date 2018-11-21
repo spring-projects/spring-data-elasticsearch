@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,14 +45,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 class MultiNodeHostProvider implements HostProvider {
 
 	private final WebClientProvider clientProvider;
-	private final Map<String, ElasticsearchHost> hosts;
+	private final Map<InetSocketAddress, ElasticsearchHost> hosts;
 
-	MultiNodeHostProvider(WebClientProvider clientProvider, String... hosts) {
+	MultiNodeHostProvider(WebClientProvider clientProvider, InetSocketAddress... endpoints) {
 
 		this.clientProvider = clientProvider;
 		this.hosts = new ConcurrentHashMap<>();
-		for (String host : hosts) {
-			this.hosts.put(host, new ElasticsearchHost(host, State.UNKNOWN));
+		for (InetSocketAddress endpoint : endpoints) {
+			this.hosts.put(endpoint, new ElasticsearchHost(endpoint, State.UNKNOWN));
 		}
 	}
 
@@ -66,11 +67,11 @@ class MultiNodeHostProvider implements HostProvider {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#createWebClient(java.lang.String)
+	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#createWebClient(java.net.InetSocketAddress)
 	 */
 	@Override
-	public WebClient createWebClient(String baseUrl) {
-		return this.clientProvider.get(baseUrl);
+	public WebClient createWebClient(InetSocketAddress endpoint) {
+		return this.clientProvider.get(endpoint);
 	}
 
 	Collection<ElasticsearchHost> getCachedHostState() {
@@ -82,12 +83,12 @@ class MultiNodeHostProvider implements HostProvider {
 	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#lookupActiveHost(org.springframework.data.elasticsearch.client.reactive.HostProvider.VerificationMode)
 	 */
 	@Override
-	public Mono<String> lookupActiveHost(VerificationMode verificationMode) {
+	public Mono<InetSocketAddress> lookupActiveHost(VerificationMode verificationMode) {
 
 		if (VerificationMode.LAZY.equals(verificationMode)) {
 			for (ElasticsearchHost entry : hosts()) {
 				if (entry.isOnline()) {
-					return Mono.just(entry.getHost());
+					return Mono.just(entry.getEndpoint());
 				}
 			}
 		}
@@ -98,23 +99,24 @@ class MultiNodeHostProvider implements HostProvider {
 				.switchIfEmpty(Mono.error(() -> new NoReachableHostException(new LinkedHashSet<>(getCachedHostState()))));
 	}
 
-	private Mono<String> findActiveHostInKnownActives() {
+	private Mono<InetSocketAddress> findActiveHostInKnownActives() {
 		return findActiveForSate(State.ONLINE);
 	}
 
-	private Mono<String> findActiveHostInUnresolved() {
+	private Mono<InetSocketAddress> findActiveHostInUnresolved() {
 		return findActiveForSate(State.UNKNOWN);
 	}
 
-	private Mono<String> findActiveHostInDead() {
+	private Mono<InetSocketAddress> findActiveHostInDead() {
 		return findActiveForSate(State.OFFLINE);
 	}
 
-	private Mono<String> findActiveForSate(State state) {
-		return nodes(state).map(this::updateNodeState).filter(ElasticsearchHost::isOnline).map(it -> it.getHost()).next();
+	private Mono<InetSocketAddress> findActiveForSate(State state) {
+		return nodes(state).map(this::updateNodeState).filter(ElasticsearchHost::isOnline)
+				.map(ElasticsearchHost::getEndpoint).next();
 	}
 
-	private ElasticsearchHost updateNodeState(Tuple2<String, ClientResponse> tuple2) {
+	private ElasticsearchHost updateNodeState(Tuple2<InetSocketAddress, ClientResponse> tuple2) {
 
 		State state = tuple2.getT2().statusCode().isError() ? State.OFFLINE : State.ONLINE;
 		ElasticsearchHost elasticsearchHost = new ElasticsearchHost(tuple2.getT1(), state);
@@ -122,11 +124,11 @@ class MultiNodeHostProvider implements HostProvider {
 		return elasticsearchHost;
 	}
 
-	private Flux<Tuple2<String, ClientResponse>> nodes(@Nullable State state) {
+	private Flux<Tuple2<InetSocketAddress, ClientResponse>> nodes(@Nullable State state) {
 
 		return Flux.fromIterable(hosts()) //
 				.filter(entry -> state == null || entry.getState().equals(state)) //
-				.map(ElasticsearchHost::getHost) //
+				.map(ElasticsearchHost::getEndpoint) //
 				.flatMap(host -> {
 
 					Mono<ClientResponse> exchange = createWebClient(host) //

@@ -15,47 +15,62 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import java.net.InetSocketAddress;
 import java.util.function.Consumer;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.reactive.ClientHttpConnector;
+import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * Provider for {@link WebClient} instances for a specific {@code host}.
+ * Provider for {@link WebClient}s using a pre-configured {@code scheme}. This class returns {@link WebClient} for a
+ * specific {@link InetSocketAddress endpoint} and encapsulates common configuration aspects of {@link WebClient} so
+ * that code using {@link WebClient} is not required to apply further configuration to the actual client.
+ * <p/>
+ * Client instances are typically cached allowing reuse of pooled connections if configured on the
+ * {@link ClientHttpConnector}.
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 4.0 TODO: Encapsulate host (scheme, host, port) within a value object.
+ * @since 4.0
  */
 public interface WebClientProvider {
 
 	/**
-	 * Creates a new {@link WebClientProvider} using a default {@link ClientHttpConnector}.
+	 * Creates a new {@link WebClientProvider} using the given {@code scheme} and a default {@link ClientHttpConnector}.
 	 *
+	 * @param scheme protocol scheme such as {@literal http} or {@literal https}.
 	 * @return the resulting {@link WebClientProvider}.
 	 */
-	static WebClientProvider create() {
-		return new DefaultWebClientProvider(null);
+	static WebClientProvider create(String scheme) {
+
+		Assert.hasText(scheme, "Protocol scheme must not be empty");
+
+		return new DefaultWebClientProvider(scheme, null);
 	}
 
 	/**
-	 * Creates a new {@link WebClientProvider} given {@link ClientHttpConnector}.
+	 * Creates a new {@link WebClientProvider} given {@code scheme} and {@link ClientHttpConnector}.
 	 *
+	 * @param scheme protocol scheme such as {@literal http} or {@literal https}.
 	 * @param connector the HTTP connector to use.
 	 * @return the resulting {@link WebClientProvider}.
 	 */
-	static WebClientProvider create(ClientHttpConnector connector) {
-		return new DefaultWebClientProvider(connector);
+	static WebClientProvider create(String scheme, ClientHttpConnector connector) {
+
+		Assert.hasText(scheme, "Protocol scheme must not be empty");
+
+		return new DefaultWebClientProvider(scheme, connector);
 	}
 
 	/**
 	 * Obtain the {@link WebClient} configured with {@link #withDefaultHeaders(HttpHeaders) default HTTP headers} and
-	 * {@link Consumer} error callback for a given {@code baseUrl}.
+	 * {@link Consumer} error callback for a given {@link InetSocketAddress endpoint}.
 	 *
-	 * @return the {@link WebClient} for the given {@code baseUrl}.
+	 * @return the {@link WebClient} for the given {@link InetSocketAddress endpoint}.
 	 */
-	WebClient get(String baseUrl);
+	WebClient get(InetSocketAddress endpoint);
 
 	/**
 	 * Obtain the {@link HttpHeaders} to be used by default.

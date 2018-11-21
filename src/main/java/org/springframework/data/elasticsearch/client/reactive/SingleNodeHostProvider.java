@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client.reactive;
 
 import reactor.core.publisher.Mono;
 
+import java.net.InetSocketAddress;
 import java.util.Collections;
 
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
@@ -28,19 +29,20 @@ import org.springframework.web.reactive.function.client.WebClient;
  * {@link HostProvider} for a single host.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 4.0
  */
 class SingleNodeHostProvider implements HostProvider {
 
 	private final WebClientProvider clientProvider;
-	private final String baseUrl;
+	private final InetSocketAddress endpoint;
 	private volatile ElasticsearchHost state;
 
-	SingleNodeHostProvider(WebClientProvider clientProvider, String baseUrl) {
+	SingleNodeHostProvider(WebClientProvider clientProvider, InetSocketAddress endpoint) {
 
 		this.clientProvider = clientProvider;
-		this.baseUrl = baseUrl;
-		this.state = new ElasticsearchHost(this.baseUrl, State.UNKNOWN);
+		this.endpoint = endpoint;
+		this.state = new ElasticsearchHost(this.endpoint, State.UNKNOWN);
 	}
 
 	/*
@@ -50,19 +52,19 @@ class SingleNodeHostProvider implements HostProvider {
 	@Override
 	public Mono<ClusterInformation> clusterInfo() {
 
-		return createWebClient(baseUrl) //
+		return createWebClient(endpoint) //
 				.head().uri("/").exchange() //
 				.flatMap(it -> {
 
 					if (it.statusCode().isError()) {
-						state = ElasticsearchHost.offline(baseUrl);
+						state = ElasticsearchHost.offline(endpoint);
 					} else {
-						state = ElasticsearchHost.online(baseUrl);
+						state = ElasticsearchHost.online(endpoint);
 					}
 					return Mono.just(state);
 				}).onErrorResume(throwable -> {
 
-					state = ElasticsearchHost.offline(baseUrl);
+					state = ElasticsearchHost.offline(endpoint);
 					clientProvider.getErrorListener().accept(throwable);
 					return Mono.just(state);
 				}) //
@@ -71,11 +73,11 @@ class SingleNodeHostProvider implements HostProvider {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#createWebClient(java.lang.String)
+	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#createWebClient(java.net.InetSocketAddress)
 	 */
 	@Override
-	public WebClient createWebClient(String baseUrl) {
-		return this.clientProvider.get(baseUrl);
+	public WebClient createWebClient(InetSocketAddress endpoint) {
+		return this.clientProvider.get(endpoint);
 	}
 
 	/*
@@ -83,17 +85,17 @@ class SingleNodeHostProvider implements HostProvider {
 	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#lookupActiveHost(org.springframework.data.elasticsearch.client.reactive.HostProvider.VerificationMode)
 	 */
 	@Override
-	public Mono<String> lookupActiveHost(VerificationMode verificationMode) {
+	public Mono<InetSocketAddress> lookupActiveHost(VerificationMode verificationMode) {
 
 		if (VerificationMode.LAZY.equals(verificationMode) && state.isOnline()) {
-			return Mono.just(baseUrl);
+			return Mono.just(endpoint);
 		}
 
 		return clusterInfo().flatMap(it -> {
 
 			ElasticsearchHost host = it.getNodes().iterator().next();
 			if (host.isOnline()) {
-				return Mono.just(host.getHost());
+				return Mono.just(host.getEndpoint());
 			}
 
 			return Mono.error(() -> new NoReachableHostException(Collections.singleton(host)));
@@ -103,5 +105,4 @@ class SingleNodeHostProvider implements HostProvider {
 	ElasticsearchHost getCachedHostState() {
 		return state;
 	}
-
 }

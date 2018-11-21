@@ -24,9 +24,9 @@ import reactor.netty.http.client.HttpClient;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -119,8 +119,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		Assert.notNull(headers, "HttpHeaders must not be null");
 		Assert.notEmpty(hosts, "Elasticsearch Cluster needs to consist of at least one host");
 
-		HostProvider hostProvider = HostProvider.provider(WebClientProvider.create().withDefaultHeaders(headers), hosts);
-		return new DefaultReactiveElasticsearchClient(hostProvider);
+		ClientConfiguration clientConfiguration = ClientConfiguration.builder().connectedTo(hosts)
+				.withDefaultHeaders(headers).build();
+		return create(clientConfiguration);
 	}
 
 	/**
@@ -135,11 +136,10 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null");
 
-		String[] hosts = formattedHosts(clientConfiguration.getHosts(), clientConfiguration.useSsl());
-
 		WebClientProvider provider = getWebClientProvider(clientConfiguration);
 
-		HostProvider hostProvider = HostProvider.provider(provider, hosts);
+		HostProvider hostProvider = HostProvider.provider(provider,
+				clientConfiguration.getEndpoints().toArray(new InetSocketAddress[0]));
 		return new DefaultReactiveElasticsearchClient(hostProvider);
 	}
 
@@ -157,17 +157,12 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 					sslConfig.sslContext(new JdkSslContext(it, true, ClientAuth.NONE));
 				});
 			}));
-			provider = WebClientProvider.create(connector);
+			provider = WebClientProvider.create("https", connector);
 		} else {
-			provider = WebClientProvider.create();
+			provider = WebClientProvider.create("http");
 		}
 
 		return provider.withDefaultHeaders(clientConfiguration.getDefaultHeaders());
-	}
-
-	private static String[] formattedHosts(List<String> hosts, boolean useSsl) {
-		return hosts.stream().map(it -> it.startsWith("http") ? it : (useSsl ? "https" : "http") + "://" + it)
-				.toArray(String[]::new);
 	}
 
 	/*

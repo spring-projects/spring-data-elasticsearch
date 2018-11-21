@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client.reactive;
 
 import reactor.core.publisher.Mono;
 
+import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.Set;
 
@@ -31,7 +32,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 4.0 TODO: Encapsulate host (scheme, host, port) within a value object.
+ * @since 4.0
  */
 public interface HostProvider {
 
@@ -40,7 +41,7 @@ public interface HostProvider {
 	 *
 	 * @return the {@link Mono} emitting the active host or {@link Mono#error(Throwable) an error} if none found.
 	 */
-	default Mono<String> lookupActiveHost() {
+	default Mono<InetSocketAddress> lookupActiveHost() {
 		return lookupActiveHost(VerificationMode.LAZY);
 	}
 
@@ -51,7 +52,7 @@ public interface HostProvider {
 	 * @return the {@link Mono} emitting the active host or {@link Mono#error(Throwable) an error}
 	 *         ({@link NoReachableHostException}) if none found.
 	 */
-	Mono<String> lookupActiveHost(VerificationMode verificationMode);
+	Mono<InetSocketAddress> lookupActiveHost(VerificationMode verificationMode);
 
 	/**
 	 * Get the {@link WebClient} connecting to an active host utilizing cached {@link ElasticsearchHost}.
@@ -71,16 +72,16 @@ public interface HostProvider {
 	 *         found.
 	 */
 	default Mono<WebClient> getActive(VerificationMode verificationMode) {
-		return lookupActiveHost(verificationMode).map(host -> createWebClient(host));
+		return lookupActiveHost(verificationMode).map(this::createWebClient);
 	}
 
 	/**
-	 * Creates a {@link WebClient} for {@code baseUrl}.
+	 * Creates a {@link WebClient} for {@link InetSocketAddress endpoint}.
 	 *
 	 * @param baseUrl
 	 * @return
 	 */
-	WebClient createWebClient(String baseUrl);
+	WebClient createWebClient(InetSocketAddress endpoint);
 
 	/**
 	 * Obtain information about known cluster nodes.
@@ -96,15 +97,15 @@ public interface HostProvider {
 	 * @param hosts must not be {@literal null} nor empty.
 	 * @return new instance of {@link HostProvider}.
 	 */
-	static HostProvider provider(WebClientProvider clientProvider, String... hosts) {
+	static HostProvider provider(WebClientProvider clientProvider, InetSocketAddress... endpoints) {
 
 		Assert.notNull(clientProvider, "WebClientProvider must not be null");
-		Assert.notEmpty(hosts, "Please provide at least one host to connect to.");
+		Assert.notEmpty(endpoints, "Please provide at least one endpoint to connect to.");
 
-		if (hosts.length == 1) {
-			return new SingleNodeHostProvider(clientProvider, hosts[0]);
+		if (endpoints.length == 1) {
+			return new SingleNodeHostProvider(clientProvider, endpoints[0]);
 		} else {
-			return new MultiNodeHostProvider(clientProvider, hosts);
+			return new MultiNodeHostProvider(clientProvider, endpoints);
 		}
 	}
 
