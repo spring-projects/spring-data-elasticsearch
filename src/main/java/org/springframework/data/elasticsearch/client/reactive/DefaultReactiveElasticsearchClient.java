@@ -64,7 +64,7 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
-import org.springframework.data.elasticsearch.client.reactive.HostProvider.VerificationMode;
+import org.springframework.data.elasticsearch.client.reactive.HostProvider.Verification;
 import org.springframework.data.elasticsearch.client.util.RequestConverters;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -153,9 +153,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 				Optional<SSLContext> sslContext = clientConfiguration.getSslContext();
 
-				sslContext.ifPresent(it -> {
-					sslConfig.sslContext(new JdkSslContext(it, true, ClientAuth.NONE));
-				});
+				sslContext.ifPresent(it -> sslConfig.sslContext(new JdkSslContext(it, true, ClientAuth.NONE)));
 			}));
 			provider = WebClientProvider.create("https", connector);
 		} else {
@@ -273,13 +271,13 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	@Override
 	public Mono<ClientResponse> execute(ReactiveElasticsearchClientCallback callback) {
 
-		return this.hostProvider.getActive(VerificationMode.LAZY) //
+		return this.hostProvider.getActive(Verification.LAZY) //
 				.flatMap(callback::doWithClient) //
 				.onErrorResume(throwable -> {
 
 					if (throwable instanceof ConnectException) {
 
-						return hostProvider.getActive(VerificationMode.ACTIVE) //
+						return hostProvider.getActive(Verification.ACTIVE) //
 								.flatMap(callback::doWithClient);
 					}
 
@@ -357,9 +355,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		return response.body(BodyExtractors.toMono(byte[].class)) //
 				.map(it -> new String(it, StandardCharsets.UTF_8)) //
-				.flatMap(content -> {
-					return doDecode(response, responseType, content);
-				});
+				.flatMap(content -> doDecode(response, responseType, content));
 	}
 
 	private static <T> Mono<T> doDecode(ClientResponse response, Class<T> responseType, String content) {

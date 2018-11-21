@@ -37,64 +37,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 public interface HostProvider {
 
 	/**
-	 * Lookup an active host in {@link VerificationMode#LAZY lazy} mode utilizing cached {@link ElasticsearchHost}.
-	 *
-	 * @return the {@link Mono} emitting the active host or {@link Mono#error(Throwable) an error} if none found.
-	 */
-	default Mono<InetSocketAddress> lookupActiveHost() {
-		return lookupActiveHost(VerificationMode.LAZY);
-	}
-
-	/**
-	 * Lookup an active host in using the given {@link VerificationMode}.
-	 *
-	 * @param verificationMode
-	 * @return the {@link Mono} emitting the active host or {@link Mono#error(Throwable) an error}
-	 *         ({@link NoReachableHostException}) if none found.
-	 */
-	Mono<InetSocketAddress> lookupActiveHost(VerificationMode verificationMode);
-
-	/**
-	 * Get the {@link WebClient} connecting to an active host utilizing cached {@link ElasticsearchHost}.
-	 *
-	 * @return the {@link Mono} emitting the client for an active host or {@link Mono#error(Throwable) an error} if none
-	 *         found.
-	 */
-	default Mono<WebClient> getActive() {
-		return getActive(VerificationMode.LAZY);
-	}
-
-	/**
-	 * Get the {@link WebClient} connecting to an active host.
-	 *
-	 * @param verificationMode must not be {@literal null}.
-	 * @return the {@link Mono} emitting the client for an active host or {@link Mono#error(Throwable) an error} if none
-	 *         found.
-	 */
-	default Mono<WebClient> getActive(VerificationMode verificationMode) {
-		return lookupActiveHost(verificationMode).map(this::createWebClient);
-	}
-
-	/**
-	 * Creates a {@link WebClient} for {@link InetSocketAddress endpoint}.
-	 *
-	 * @param baseUrl
-	 * @return
-	 */
-	WebClient createWebClient(InetSocketAddress endpoint);
-
-	/**
-	 * Obtain information about known cluster nodes.
-	 *
-	 * @return the {@link Mono} emitting {@link ClusterInformation} when available.
-	 */
-	Mono<ClusterInformation> clusterInfo();
-
-	/**
 	 * Create a new {@link HostProvider} best suited for the given {@link WebClientProvider} and number of hosts.
 	 *
 	 * @param clientProvider must not be {@literal null} .
-	 * @param hosts must not be {@literal null} nor empty.
+	 * @param endpoints must not be {@literal null} nor empty.
 	 * @return new instance of {@link HostProvider}.
 	 */
 	static HostProvider provider(WebClientProvider clientProvider, InetSocketAddress... endpoints) {
@@ -110,10 +56,66 @@ public interface HostProvider {
 	}
 
 	/**
+	 * Lookup an active host in {@link Verification#LAZY lazy} mode utilizing cached {@link ElasticsearchHost}.
+	 *
+	 * @return the {@link Mono} emitting the active host or {@link Mono#error(Throwable) an error} if none found.
+	 */
+	default Mono<InetSocketAddress> lookupActiveHost() {
+		return lookupActiveHost(Verification.LAZY);
+	}
+
+	/**
+	 * Lookup an active host in using the given {@link Verification}.
+	 *
+	 * @param verification
+	 * @return the {@link Mono} emitting the active host or {@link Mono#error(Throwable) an error}
+	 *         ({@link NoReachableHostException}) if none found.
+	 */
+	Mono<InetSocketAddress> lookupActiveHost(Verification verification);
+
+	/**
+	 * Get the {@link WebClient} connecting to an active host utilizing cached {@link ElasticsearchHost}.
+	 *
+	 * @return the {@link Mono} emitting the client for an active host or {@link Mono#error(Throwable) an error} if none
+	 *         found.
+	 */
+	default Mono<WebClient> getActive() {
+		return getActive(Verification.LAZY);
+	}
+
+	/**
+	 * Get the {@link WebClient} connecting to an active host.
+	 *
+	 * @param verification must not be {@literal null}.
+	 * @return the {@link Mono} emitting the client for an active host or {@link Mono#error(Throwable) an error} if none
+	 *         found.
+	 */
+	default Mono<WebClient> getActive(Verification verification) {
+		return lookupActiveHost(verification).map(this::createWebClient);
+	}
+
+	/**
+	 * Creates a {@link WebClient} for {@link InetSocketAddress endpoint}.
+	 *
+	 * @param endpoint must not be {@literal null}.
+	 * @return a {@link WebClient} using the the given endpoint as {@literal base url}.
+	 */
+	WebClient createWebClient(InetSocketAddress endpoint);
+
+	/**
+	 * Obtain information about known cluster nodes.
+	 *
+	 * @return the {@link Mono} emitting {@link ClusterInformation} when available.
+	 */
+	Mono<ClusterInformation> clusterInfo();
+
+	/**
+	 * {@link Verification} allows to influence the lookup strategy for active hosts.
+	 *
 	 * @author Christoph Strobl
 	 * @since 4.0
 	 */
-	enum VerificationMode {
+	enum Verification {
 
 		/**
 		 * Actively check for cluster node health.
@@ -127,9 +129,9 @@ public interface HostProvider {
 	}
 
 	/**
-	 * Value object accumulating information about cluster an Elasticsearch cluster.
+	 * Value object accumulating information about an Elasticsearch cluster.
 	 *
-	 * @author Christoph Strobll
+	 * @author Christoph Strobl
 	 * @since 4.0.
 	 */
 	class ClusterInformation {

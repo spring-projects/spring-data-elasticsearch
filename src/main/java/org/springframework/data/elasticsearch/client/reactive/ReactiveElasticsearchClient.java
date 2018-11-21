@@ -87,18 +87,6 @@ public interface ReactiveElasticsearchClient {
 	Mono<MainResponse> info(HttpHeaders headers);
 
 	/**
-	 * Execute the given {@link GetRequest} against the {@literal get} API to retrieve a document by id.
-	 *
-	 * @param getRequest must not be {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html">Get API on
-	 *      elastic.co</a>
-	 * @return the {@link Mono} emitting the {@link GetResult result}.
-	 */
-	default Mono<GetResult> get(GetRequest getRequest) {
-		return get(HttpHeaders.EMPTY, getRequest);
-	}
-
-	/**
 	 * Execute a {@link GetRequest} against the {@literal get} API to retrieve a document by id.
 	 *
 	 * @param consumer never {@literal null}.
@@ -116,6 +104,18 @@ public interface ReactiveElasticsearchClient {
 	/**
 	 * Execute the given {@link GetRequest} against the {@literal get} API to retrieve a document by id.
 	 *
+	 * @param getRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html">Get API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link GetResult result}.
+	 */
+	default Mono<GetResult> get(GetRequest getRequest) {
+		return get(HttpHeaders.EMPTY, getRequest);
+	}
+
+	/**
+	 * Execute the given {@link GetRequest} against the {@literal get} API to retrieve a document by id.
+	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param getRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html">Get API on
@@ -123,19 +123,6 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Mono} emitting the {@link GetResult result}.
 	 */
 	Mono<GetResult> get(HttpHeaders headers, GetRequest getRequest);
-
-	/**
-	 * Execute the given {@link MultiGetRequest} against the {@literal multi-get} API to retrieve multiple documents by
-	 * id.
-	 *
-	 * @param multiGetRequest must not be {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html">Multi Get API on
-	 *      elastic.co</a>
-	 * @return the {@link Flux} emitting the {@link GetResult result}.
-	 */
-	default Flux<GetResult> multiGet(MultiGetRequest multiGetRequest) {
-		return multiGet(HttpHeaders.EMPTY, multiGetRequest);
-	}
 
 	/**
 	 * Execute a {@link MultiGetRequest} against the {@literal multi-get} API to retrieve multiple documents by id.
@@ -156,6 +143,19 @@ public interface ReactiveElasticsearchClient {
 	 * Execute the given {@link MultiGetRequest} against the {@literal multi-get} API to retrieve multiple documents by
 	 * id.
 	 *
+	 * @param multiGetRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html">Multi Get API on
+	 *      elastic.co</a>
+	 * @return the {@link Flux} emitting the {@link GetResult result}.
+	 */
+	default Flux<GetResult> multiGet(MultiGetRequest multiGetRequest) {
+		return multiGet(HttpHeaders.EMPTY, multiGetRequest);
+	}
+
+	/**
+	 * Execute the given {@link MultiGetRequest} against the {@literal multi-get} API to retrieve multiple documents by
+	 * id.
+	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param multiGetRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html">Multi Get API on
@@ -163,16 +163,6 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Flux} emitting the {@link GetResult result}.
 	 */
 	Flux<GetResult> multiGet(HttpHeaders headers, MultiGetRequest multiGetRequest);
-
-	/**
-	 * Checks for the existence of a document. Emits {@literal true} if it exists, {@literal false} otherwise.
-	 *
-	 * @param getRequest must not be {@literal null}.
-	 * @return the {@link Mono} emitting {@literal true} if it exists, {@literal false} otherwise.
-	 */
-	default Mono<Boolean> exists(GetRequest getRequest) {
-		return exists(HttpHeaders.EMPTY, getRequest);
-	}
 
 	/**
 	 * Checks for the existence of a document. Emits {@literal true} if it exists, {@literal false} otherwise.
@@ -190,23 +180,21 @@ public interface ReactiveElasticsearchClient {
 	/**
 	 * Checks for the existence of a document. Emits {@literal true} if it exists, {@literal false} otherwise.
 	 *
+	 * @param getRequest must not be {@literal null}.
+	 * @return the {@link Mono} emitting {@literal true} if it exists, {@literal false} otherwise.
+	 */
+	default Mono<Boolean> exists(GetRequest getRequest) {
+		return exists(HttpHeaders.EMPTY, getRequest);
+	}
+
+	/**
+	 * Checks for the existence of a document. Emits {@literal true} if it exists, {@literal false} otherwise.
+	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param getRequest must not be {@literal null}.
 	 * @return the {@link Mono} emitting {@literal true} if it exists, {@literal false} otherwise.
 	 */
 	Mono<Boolean> exists(HttpHeaders headers, GetRequest getRequest);
-
-	/**
-	 * Execute the given {@link IndexRequest} against the {@literal index} API to index a document.
-	 *
-	 * @param indexRequest must not be {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index.html">Index API on
-	 *      elastic.co</a>
-	 * @return the {@link Mono} emitting the {@link IndexResponse}.
-	 */
-	default Mono<IndexResponse> index(IndexRequest indexRequest) {
-		return index(HttpHeaders.EMPTY, indexRequest);
-	}
 
 	/**
 	 * Execute an {@link IndexRequest} against the {@literal index} API to index a document.
@@ -226,6 +214,18 @@ public interface ReactiveElasticsearchClient {
 	/**
 	 * Execute the given {@link IndexRequest} against the {@literal index} API to index a document.
 	 *
+	 * @param indexRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index.html">Index API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link IndexResponse}.
+	 */
+	default Mono<IndexResponse> index(IndexRequest indexRequest) {
+		return index(HttpHeaders.EMPTY, indexRequest);
+	}
+
+	/**
+	 * Execute the given {@link IndexRequest} against the {@literal index} API to index a document.
+	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param indexRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index.html">Index API on
@@ -233,18 +233,6 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Mono} emitting the {@link IndexResponse}.
 	 */
 	Mono<IndexResponse> index(HttpHeaders headers, IndexRequest indexRequest);
-
-	/**
-	 * Execute the given {@link UpdateRequest} against the {@literal update} API to alter a document.
-	 *
-	 * @param updateRequest must not be {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html">Update API on
-	 *      elastic.co</a>
-	 * @return the {@link Mono} emitting the {@link UpdateResponse}.
-	 */
-	default Mono<UpdateResponse> update(UpdateRequest updateRequest) {
-		return update(HttpHeaders.EMPTY, updateRequest);
-	}
 
 	/**
 	 * Execute an {@link UpdateRequest} against the {@literal update} API to alter a document.
@@ -264,6 +252,18 @@ public interface ReactiveElasticsearchClient {
 	/**
 	 * Execute the given {@link UpdateRequest} against the {@literal update} API to alter a document.
 	 *
+	 * @param updateRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html">Update API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link UpdateResponse}.
+	 */
+	default Mono<UpdateResponse> update(UpdateRequest updateRequest) {
+		return update(HttpHeaders.EMPTY, updateRequest);
+	}
+
+	/**
+	 * Execute the given {@link UpdateRequest} against the {@literal update} API to alter a document.
+	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param updateRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html">Update API on
@@ -271,18 +271,6 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Mono} emitting the {@link UpdateResponse}.
 	 */
 	Mono<UpdateResponse> update(HttpHeaders headers, UpdateRequest updateRequest);
-
-	/**
-	 * Execute the given {@link DeleteRequest} against the {@literal delete} API to remove a document.
-	 *
-	 * @param deleteRequest must not be {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete.html">Delete API on
-	 *      elastic.co</a>
-	 * @return the {@link Mono} emitting the {@link DeleteResponse}.
-	 */
-	default Mono<DeleteResponse> delete(DeleteRequest deleteRequest) {
-		return delete(HttpHeaders.EMPTY, deleteRequest);
-	}
 
 	/**
 	 * Execute a {@link DeleteRequest} against the {@literal delete} API to remove a document.
@@ -302,6 +290,18 @@ public interface ReactiveElasticsearchClient {
 	/**
 	 * Execute the given {@link DeleteRequest} against the {@literal delete} API to remove a document.
 	 *
+	 * @param deleteRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete.html">Delete API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the {@link DeleteResponse}.
+	 */
+	default Mono<DeleteResponse> delete(DeleteRequest deleteRequest) {
+		return delete(HttpHeaders.EMPTY, deleteRequest);
+	}
+
+	/**
+	 * Execute the given {@link DeleteRequest} against the {@literal delete} API to remove a document.
+	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param deleteRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete.html">Delete API on
@@ -309,18 +309,6 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Mono} emitting the {@link DeleteResponse}.
 	 */
 	Mono<DeleteResponse> delete(HttpHeaders headers, DeleteRequest deleteRequest);
-
-	/**
-	 * Execute the given {@link SearchRequest} against the {@literal search} API.
-	 *
-	 * @param searchRequest must not be {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html">Search API on
-	 *      elastic.co</a>
-	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
-	 */
-	default Flux<SearchHit> search(SearchRequest searchRequest) {
-		return search(HttpHeaders.EMPTY, searchRequest);
-	}
 
 	/**
 	 * Execute a {@link SearchRequest} against the {@literal search} API.
@@ -335,6 +323,18 @@ public interface ReactiveElasticsearchClient {
 		SearchRequest request = new SearchRequest();
 		consumer.accept(request);
 		return search(request);
+	}
+
+	/**
+	 * Execute the given {@link SearchRequest} against the {@literal search} API.
+	 *
+	 * @param searchRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html">Search API on
+	 *      elastic.co</a>
+	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
+	 */
+	default Flux<SearchHit> search(SearchRequest searchRequest) {
+		return search(HttpHeaders.EMPTY, searchRequest);
 	}
 
 	/**
@@ -364,7 +364,7 @@ public interface ReactiveElasticsearchClient {
 	 * <strong>NOTE</strong> the actual implementation might choose to actively check the current cluster state by pinging
 	 * known nodes.
 	 *
-	 * @return
+	 * @return the actual {@link Status} information.
 	 */
 	Mono<Status> status();
 
@@ -387,7 +387,7 @@ public interface ReactiveElasticsearchClient {
 	interface Status {
 
 		/**
-		 * Get the list of known hosts and their getCachedHostState.
+		 * Get the collection of known hosts.
 		 *
 		 * @return never {@literal null}.
 		 */

@@ -122,21 +122,21 @@ public class ReactiveMockClientTestsUtils {
 			return delegate.lookupActiveHost();
 		}
 
-		public Mono<InetSocketAddress> lookupActiveHost(VerificationMode verificationMode) {
+		public Mono<InetSocketAddress> lookupActiveHost(Verification verification) {
 
 			if (StringUtils.hasText(activeDefaultHost)) {
 				return Mono.just(getInetSocketAddress(activeDefaultHost));
 			}
 
-			return delegate.lookupActiveHost(verificationMode);
+			return delegate.lookupActiveHost(verification);
 		}
 
 		public Mono<WebClient> getActive() {
 			return delegate.getActive();
 		}
 
-		public Mono<WebClient> getActive(VerificationMode verificationMode) {
-			return delegate.getActive(verificationMode);
+		public Mono<WebClient> getActive(Verification verification) {
+			return delegate.getActive(verification);
 		}
 
 		public WebClient createWebClient(InetSocketAddress endpoint) {

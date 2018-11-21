@@ -26,7 +26,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ClientHttpResponse;
-import org.springframework.http.codec.HttpMessageReader;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyExtractor;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -34,6 +33,9 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies;
 
 /**
  * Extension to {@link ActionResponse} that also implements {@link ClientResponse}.
+ *
+ * @author Christoph Strobl
+ * @since 4.0
  */
 class RawActionResponse extends ActionResponse implements ClientResponse {
 
@@ -43,30 +45,15 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 		this.delegate = delegate;
 	}
 
-	public static RawActionResponse create(ClientResponse response) {
+	static RawActionResponse create(ClientResponse response) {
 		return new RawActionResponse(response);
-	}
-
-	public static Builder builder(ClientResponse other) {
-		return ClientResponse.from(other);
-	}
-
-	public static Builder builder(HttpStatus statusCode) {
-		return ClientResponse.create(statusCode);
-	}
-
-	public static Builder builder(HttpStatus statusCode, ExchangeStrategies strategies) {
-		return ClientResponse.create(statusCode, strategies);
-	}
-
-	public static Builder builder(HttpStatus statusCode, List<HttpMessageReader<?>> messageReaders) {
-		return ClientResponse.create(statusCode, messageReaders);
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#statusCode()
 	 */
+	@Override
 	public HttpStatus statusCode() {
 		return delegate.statusCode();
 	}
@@ -75,6 +62,7 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#rawStatusCode()
 	 */
+	@Override
 	public int rawStatusCode() {
 		return delegate.rawStatusCode();
 	}
@@ -83,6 +71,7 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#headers()
 	 */
+	@Override
 	public Headers headers() {
 		return delegate.headers();
 	}
@@ -91,6 +80,7 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#cookies()
 	 */
+	@Override
 	public MultiValueMap<String, ResponseCookie> cookies() {
 		return delegate.cookies();
 	}
@@ -99,6 +89,7 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#strategies()
 	 */
+	@Override
 	public ExchangeStrategies strategies() {
 		return delegate.strategies();
 	}
@@ -107,6 +98,7 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#body(org.springframework.web.reactive.function.BodyExtractor)
 	 */
+	@Override
 	public <T> T body(BodyExtractor<T, ? super ClientHttpResponse> extractor) {
 		return delegate.body(extractor);
 	}
@@ -115,6 +107,7 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#bodyToMono(java.lang.Class)
 	 */
+	@Override
 	public <T> Mono<T> bodyToMono(Class<? extends T> elementClass) {
 		return delegate.bodyToMono(elementClass);
 	}
@@ -123,6 +116,7 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#bodyToMono(org.springframework.core.ParameterizedTypeReference)
 	 */
+	@Override
 	public <T> Mono<T> bodyToMono(ParameterizedTypeReference<T> typeReference) {
 		return delegate.bodyToMono(typeReference);
 	}
@@ -131,6 +125,7 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#bodyToFlux(java.lang.Class)
 	 */
+	@Override
 	public <T> Flux<T> bodyToFlux(Class<? extends T> elementClass) {
 		return delegate.bodyToFlux(elementClass);
 	}
@@ -139,6 +134,7 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#bodyToFlux(org.springframework.core.ParameterizedTypeReference)
 	 */
+	@Override
 	public <T> Flux<T> bodyToFlux(ParameterizedTypeReference<T> typeReference) {
 		return delegate.bodyToFlux(typeReference);
 	}
@@ -147,6 +143,7 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#toEntity(java.lang.Class)
 	 */
+	@Override
 	public <T> Mono<ResponseEntity<T>> toEntity(Class<T> bodyType) {
 		return delegate.toEntity(bodyType);
 	}
@@ -155,6 +152,7 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#toEntity(org.springframework.core.ParameterizedTypeReference)
 	 */
+	@Override
 	public <T> Mono<ResponseEntity<T>> toEntity(ParameterizedTypeReference<T> typeReference) {
 		return delegate.toEntity(typeReference);
 	}
@@ -163,6 +161,7 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#toEntityList(java.lang.Class)
 	 */
+	@Override
 	public <T> Mono<ResponseEntity<List<T>>> toEntityList(Class<T> elementType) {
 		return delegate.toEntityList(elementType);
 	}
@@ -171,6 +170,7 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#toEntityList(org.springframework.core.ParameterizedTypeReference)
 	 */
+	@Override
 	public <T> Mono<ResponseEntity<List<T>>> toEntityList(ParameterizedTypeReference<T> typeReference) {
 		return delegate.toEntityList(typeReference);
 	}

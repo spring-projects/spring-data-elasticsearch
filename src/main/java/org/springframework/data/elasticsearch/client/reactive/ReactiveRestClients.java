@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.client.reactive;
 
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.RestClients.ElasticsearchRestClient;
 import org.springframework.util.Assert;
 
 /**
@@ -34,7 +33,7 @@ public final class ReactiveRestClients {
 	/**
 	 * Start here to create a new client tailored to your needs.
 	 *
-	 * @return new instance of {@link ElasticsearchRestClient}.
+	 * @return new instance of {@link ReactiveElasticsearchClient}.
 	 */
 	public static ReactiveElasticsearchClient create(ClientConfiguration clientConfiguration) {
 
