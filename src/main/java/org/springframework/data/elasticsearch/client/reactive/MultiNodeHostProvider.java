@@ -74,18 +74,14 @@ class MultiNodeHostProvider implements HostProvider {
 		return this.clientProvider.get(endpoint);
 	}
 
-	Collection<ElasticsearchHost> getCachedHostState() {
-		return hosts.values();
-	}
-
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#lookupActiveHost(org.springframework.data.elasticsearch.client.reactive.HostProvider.VerificationMode)
+	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#lookupActiveHost(org.springframework.data.elasticsearch.client.reactive.HostProvider.Verification)
 	 */
 	@Override
-	public Mono<InetSocketAddress> lookupActiveHost(VerificationMode verificationMode) {
+	public Mono<InetSocketAddress> lookupActiveHost(Verification verification) {
 
-		if (VerificationMode.LAZY.equals(verificationMode)) {
+		if (Verification.LAZY.equals(verification)) {
 			for (ElasticsearchHost entry : hosts()) {
 				if (entry.isOnline()) {
 					return Mono.just(entry.getEndpoint());
@@ -97,6 +93,10 @@ class MultiNodeHostProvider implements HostProvider {
 				.switchIfEmpty(findActiveHostInUnresolved()) //
 				.switchIfEmpty(findActiveHostInDead()) //
 				.switchIfEmpty(Mono.error(() -> new NoReachableHostException(new LinkedHashSet<>(getCachedHostState()))));
+	}
+
+	Collection<ElasticsearchHost> getCachedHostState() {
+		return hosts.values();
 	}
 
 	private Mono<InetSocketAddress> findActiveHostInKnownActives() {
@@ -140,9 +140,7 @@ class MultiNodeHostProvider implements HostProvider {
 
 					return Mono.just(host).zipWith(exchange);
 				}) //
-				.onErrorContinue((throwable, o) -> {
-					clientProvider.getErrorListener().accept(throwable);
-				});
+				.onErrorContinue((throwable, o) -> clientProvider.getErrorListener().accept(throwable));
 	}
 
 	private List<ElasticsearchHost> hosts() {

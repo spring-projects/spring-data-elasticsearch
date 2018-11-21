@@ -31,6 +31,7 @@ import org.springframework.web.reactive.function.client.WebClient.Builder;
  * Default {@link WebClientProvider} that uses cached {@link WebClient} instances per {@code hostAndPort}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 4.0
  */
 class DefaultWebClientProvider implements WebClientProvider {
@@ -42,19 +43,32 @@ class DefaultWebClientProvider implements WebClientProvider {
 	private final Consumer<Throwable> errorListener;
 	private final HttpHeaders headers;
 
+	/**
+	 * Create new {@link DefaultWebClientProvider} with empty {@link HttpHeaders} and no-op {@literal error listener}.
+	 *
+	 * @param scheme must not be {@literal null}.
+	 * @param connector can be {@literal null}.
+	 */
 	DefaultWebClientProvider(String scheme, @Nullable ClientHttpConnector connector) {
 		this(scheme, connector, e -> {}, HttpHeaders.EMPTY);
 	}
 
+	/**
+	 * Create new {@link DefaultWebClientProvider} with empty {@link HttpHeaders} and no-op {@literal error listener}.
+	 * 
+	 * @param scheme must not be {@literal null}.
+	 * @param connector can be {@literal null}.
+	 * @param errorListener must not be {@literal null}.
+	 * @param headers must not be {@literal null}.
+	 */
 	private DefaultWebClientProvider(String scheme, @Nullable ClientHttpConnector connector,
 			Consumer<Throwable> errorListener, HttpHeaders headers) {
-		this(new ConcurrentHashMap<>(), scheme, connector, errorListener, headers);
-	}
 
-	private DefaultWebClientProvider(Map<InetSocketAddress, WebClient> cachedClients, String scheme,
-			@Nullable ClientHttpConnector connector, Consumer<Throwable> errorListener, HttpHeaders headers) {
+		Assert.notNull(scheme, "Scheme must not be null! A common scheme would be 'http'.");
+		Assert.notNull(errorListener, "ErrorListener must not be null! You may want use a no-op one 'e -> {}' instead.");
+		Assert.notNull(headers, "headers must not be null! Think about using 'HttpHeaders.EMPTY' as an alternative.");
 
-		this.cachedClients = cachedClients;
+		this.cachedClients = new ConcurrentHashMap<>();
 		this.scheme = scheme;
 		this.connector = connector;
 		this.errorListener = errorListener;
@@ -70,18 +84,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 
 		Assert.notNull(endpoint, "Endpoint must not be empty!");
 
-		return this.cachedClients.computeIfAbsent(endpoint, key -> {
-
-			Builder builder = WebClient.builder().defaultHeaders(it -> it.addAll(getDefaultHeaders()));
-
-			if (connector != null) {
-				builder.clientConnector(connector);
-			}
-
-			String baseUrl = String.format("%s://%s:%d", this.scheme, key.getHostString(), key.getPort());
-			return builder.baseUrl(baseUrl).filter((request, next) -> next.exchange(request).doOnError(errorListener))
-					.build();
-		});
+		return this.cachedClients.computeIfAbsent(endpoint, this::createWebClientForSocketAddress);
 	}
 
 	/*
@@ -100,7 +103,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 	@Override
 	public WebClientProvider withDefaultHeaders(HttpHeaders headers) {
 
-		Assert.notNull(headers, "HttpHeaders must not be null");
+		Assert.notNull(headers, "HttpHeaders must not be null.");
 
 		HttpHeaders merged = new HttpHeaders();
 		merged.addAll(this.headers);
@@ -125,9 +128,21 @@ class DefaultWebClientProvider implements WebClientProvider {
 	@Override
 	public WebClientProvider withErrorListener(Consumer<Throwable> errorListener) {
 
-		Assert.notNull(errorListener, "Error listener must not be null");
+		Assert.notNull(errorListener, "Error listener must not be null.");
 
 		Consumer<Throwable> listener = this.errorListener.andThen(errorListener);
 		return new DefaultWebClientProvider(this.scheme, this.connector, listener, this.headers);
+	}
+
+	protected WebClient createWebClientForSocketAddress(InetSocketAddress socketAddress) {
+
+		Builder builder = WebClient.builder().defaultHeaders(it -> it.addAll(getDefaultHeaders()));
+
+		if (connector != null) {
+			builder = builder.clientConnector(connector);
+		}
+
+		String baseUrl = String.format("%s://%s:%d", this.scheme, socketAddress.getHostString(), socketAddress.getPort());
+		return builder.baseUrl(baseUrl).filter((request, next) -> next.exchange(request).doOnError(errorListener)).build();
 	}
 }

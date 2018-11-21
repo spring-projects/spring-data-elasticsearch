@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.client.reactive;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.springframework.data.elasticsearch.client.reactive.HostProvider.Verification;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -25,7 +26,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost.State;
-import org.springframework.data.elasticsearch.client.reactive.HostProvider.VerificationMode;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockDelegatingElasticsearchHostProvider;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -92,7 +92,7 @@ public class MultiNodeHostProviderUnitTests {
 
 		provider.clusterInfo().as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		provider.getActive(VerificationMode.LAZY).as(StepVerifier::create).expectNext(mock.client(HOST_2)).verifyComplete();
+		provider.getActive(Verification.LAZY).as(StepVerifier::create).expectNext(mock.client(HOST_2)).verifyComplete();
 
 		verify(mock.client(":9201")).head();
 	}
@@ -106,7 +106,7 @@ public class MultiNodeHostProviderUnitTests {
 
 		provider.clusterInfo().as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		provider.getActive(VerificationMode.ACTIVE).as(StepVerifier::create).expectNext(mock.client(HOST_2))
+		provider.getActive(Verification.ACTIVE).as(StepVerifier::create).expectNext(mock.client(HOST_2))
 				.verifyComplete();
 
 		verify(mock.client(HOST_2), times(2)).head();

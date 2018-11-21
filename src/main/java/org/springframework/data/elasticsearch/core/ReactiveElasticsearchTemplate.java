@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.elasticsearch.index.VersionType.*;
 
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -222,7 +223,7 @@ public class ReactiveElasticsearchTemplate {
 	protected Mono<IndexResponse> doIndex(Object value, ElasticsearchPersistentEntity<?> entity, @Nullable String index,
 			@Nullable String type) {
 
-		PersistentPropertyAccessor propertyAccessor = entity.getPropertyAccessor(value);
+		PersistentPropertyAccessor<?> propertyAccessor = entity.getPropertyAccessor(value);
 		Object id = propertyAccessor.getProperty(entity.getIdProperty());
 
 		String indexToUse = indexName(index, entity);
@@ -298,7 +299,10 @@ public class ReactiveElasticsearchTemplate {
 		List<FieldSortBuilder> mappedSort = new ArrayList<>();
 		for (Sort.Order order : query.getSort()) {
 
-			FieldSortBuilder sort = SortBuilders.fieldSort(entity.getPersistentProperty(order.getProperty()).getFieldName())
+			ElasticsearchPersistentProperty property = entity.getPersistentProperty(order.getProperty());
+			String fieldName = property != null ? property.getFieldName() : order.getProperty();
+
+			FieldSortBuilder sort = SortBuilders.fieldSort(fieldName)
 					.order(order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC);
 
 			if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {

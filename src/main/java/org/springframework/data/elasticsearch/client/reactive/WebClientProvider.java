@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.reactive.ClientHttpConnector;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -38,6 +39,15 @@ import org.springframework.web.reactive.function.client.WebClient;
 public interface WebClientProvider {
 
 	/**
+	 * Creates a new {@link WebClientProvider} using the {@code http} scheme and a default {@link ClientHttpConnector}.
+	 *
+	 * @return the resulting {@link WebClientProvider}.
+	 */
+	static WebClientProvider http() {
+		return create("http");
+	}
+
+	/**
 	 * Creates a new {@link WebClientProvider} using the given {@code scheme} and a default {@link ClientHttpConnector}.
 	 *
 	 * @param scheme protocol scheme such as {@literal http} or {@literal https}.
@@ -54,10 +64,10 @@ public interface WebClientProvider {
 	 * Creates a new {@link WebClientProvider} given {@code scheme} and {@link ClientHttpConnector}.
 	 *
 	 * @param scheme protocol scheme such as {@literal http} or {@literal https}.
-	 * @param connector the HTTP connector to use.
+	 * @param connector the HTTP connector to use. Can be {@literal null}.
 	 * @return the resulting {@link WebClientProvider}.
 	 */
-	static WebClientProvider create(String scheme, ClientHttpConnector connector) {
+	static WebClientProvider create(String scheme, @Nullable ClientHttpConnector connector) {
 
 		Assert.hasText(scheme, "Protocol scheme must not be empty");
 
@@ -80,19 +90,19 @@ public interface WebClientProvider {
 	HttpHeaders getDefaultHeaders();
 
 	/**
+	 * Obtain the {@link Consumer error listener} to be used;
+	 *
+	 * @return never {@literal null}.
+	 */
+	Consumer<Throwable> getErrorListener();
+
+	/**
 	 * Create a new instance of {@link WebClientProvider} applying the given headers by default.
 	 *
 	 * @param headers must not be {@literal null}.
 	 * @return new instance of {@link WebClientProvider}.
 	 */
 	WebClientProvider withDefaultHeaders(HttpHeaders headers);
-
-	/**
-	 * Obtain the {@link Consumer error listener} to be used;
-	 *
-	 * @return never {@literal null}.
-	 */
-	Consumer<Throwable> getErrorListener();
 
 	/**
 	 * Create a new instance of {@link WebClientProvider} calling the given {@link Consumer} on error.
