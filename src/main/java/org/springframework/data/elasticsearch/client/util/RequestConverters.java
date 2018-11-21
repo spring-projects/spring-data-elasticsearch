@@ -481,7 +481,7 @@ public class RequestConverters {
 				.withWaitForActiveShards(updateByQueryRequest.getWaitForActiveShards())
 				.withRequestsPerSecond(updateByQueryRequest.getRequestsPerSecond())
 				.withIndicesOptions(updateByQueryRequest.indicesOptions());
-		if (updateByQueryRequest.isAbortOnVersionConflict() == false) {
+		if (!updateByQueryRequest.isAbortOnVersionConflict()) {
 			params.putParam("conflicts", "proceed");
 		}
 		if (updateByQueryRequest.getBatchSize() != AbstractBulkByScrollRequest.DEFAULT_SCROLL_SIZE) {
@@ -505,7 +505,7 @@ public class RequestConverters {
 				.withWaitForActiveShards(deleteByQueryRequest.getWaitForActiveShards())
 				.withRequestsPerSecond(deleteByQueryRequest.getRequestsPerSecond())
 				.withIndicesOptions(deleteByQueryRequest.indicesOptions());
-		if (deleteByQueryRequest.isAbortOnVersionConflict() == false) {
+		if (!deleteByQueryRequest.isAbortOnVersionConflict()) {
 			params.putParam("conflicts", "proceed");
 		}
 		if (deleteByQueryRequest.getBatchSize() != AbstractBulkByScrollRequest.DEFAULT_SCROLL_SIZE) {
@@ -689,7 +689,7 @@ public class RequestConverters {
 
 		Params withFetchSourceContext(FetchSourceContext fetchSourceContext) {
 			if (fetchSourceContext != null) {
-				if (fetchSourceContext.fetchSource() == false) {
+				if (!fetchSourceContext.fetchSource()) {
 					putParam("_source", Boolean.FALSE.toString());
 				}
 				if (fetchSourceContext.includes() != null && fetchSourceContext.includes().length > 0) {
@@ -722,7 +722,7 @@ public class RequestConverters {
 		}
 
 		Params withRealtime(boolean realtime) {
-			if (realtime == false) {
+			if (!realtime) {
 				return putParam("realtime", Boolean.FALSE.toString());
 			}
 			return this;
@@ -803,7 +803,7 @@ public class RequestConverters {
 			withIgnoreUnavailable(indicesOptions.ignoreUnavailable());
 			putParam("allow_no_indices", Boolean.toString(indicesOptions.allowNoIndices()));
 			String expandWildcards;
-			if (indicesOptions.expandWildcardsOpen() == false && indicesOptions.expandWildcardsClosed() == false) {
+			if (!indicesOptions.expandWildcardsOpen() && !indicesOptions.expandWildcardsClosed()) {
 				expandWildcards = "none";
 			} else {
 				StringJoiner joiner = new StringJoiner(",");
@@ -827,14 +827,14 @@ public class RequestConverters {
 
 		Params withHuman(boolean human) {
 			if (human) {
-				putParam("human", Boolean.toString(human));
+				putParam("human", "true");
 			}
 			return this;
 		}
 
 		Params withLocal(boolean local) {
 			if (local) {
-				putParam("local", Boolean.toString(local));
+				putParam("local", "true");
 			}
 			return this;
 		}

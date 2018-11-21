@@ -82,12 +82,12 @@ class SingleNodeHostProvider implements HostProvider {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#lookupActiveHost(org.springframework.data.elasticsearch.client.reactive.HostProvider.VerificationMode)
+	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#lookupActiveHost(org.springframework.data.elasticsearch.client.reactive.HostProvider.Verification)
 	 */
 	@Override
-	public Mono<InetSocketAddress> lookupActiveHost(VerificationMode verificationMode) {
+	public Mono<InetSocketAddress> lookupActiveHost(Verification verification) {
 
-		if (VerificationMode.LAZY.equals(verificationMode) && state.isOnline()) {
+		if (Verification.LAZY.equals(verification) && state.isOnline()) {
 			return Mono.just(endpoint);
 		}
 
