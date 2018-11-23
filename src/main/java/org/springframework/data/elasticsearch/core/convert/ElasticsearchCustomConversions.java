@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
+package org.springframework.data.elasticsearch.core.convert;
 
-import org.springframework.util.Assert;
+import java.util.Collection;
+
+import org.springframework.data.convert.CustomConversions;
 
 /**
- * @author Artur Konczak
+ * @author Christoph Strobl
+ * @since 4.0
  */
-public abstract class AbstractResultMapper implements ResultsMapper {
+public class ElasticsearchCustomConversions extends CustomConversions {
 
-	private EntityMapper entityMapper;
-
-	public AbstractResultMapper(EntityMapper entityMapper) {
-
-		Assert.notNull(entityMapper, "EntityMapper must not be null!");
-
-		this.entityMapper = entityMapper;
-	}
-
-	@Override
-	public EntityMapper getEntityMapper() {
-		return this.entityMapper;
+	/**
+	 * Creates a new {@link CustomConversions} instance registering the given converters.
+	 *
+	 * @param converters must not be {@literal null}.
+	 */
+	public ElasticsearchCustomConversions(Collection<?> converters) {
+		super(StoreConversions.NONE, converters);
 	}
 }
