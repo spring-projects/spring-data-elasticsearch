@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.elasticsearch.index.VersionType.*;
 
-import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -25,16 +24,25 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.WrapperQueryBuilder;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
@@ -45,24 +53,35 @@ import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsea
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.mapping.IdentifierAccessor;
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.HttpClientErrorException;
 
 /**
  * @author Christoph Strobl
  * @since 4.0
  */
-public class ReactiveElasticsearchTemplate {
+public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations {
 
 	private final ReactiveElasticsearchClient client;
 	private final ElasticsearchConverter converter;
-	private final DefaultResultMapper mapper;
+	private final ResultsMapper resultMapper;
 	private final ElasticsearchExceptionTranslator exceptionTranslator;
+
+	private @Nullable RefreshPolicy refreshPolicy = RefreshPolicy.IMMEDIATE;
+	private @Nullable IndicesOptions indicesOptions = IndicesOptions.strictExpandOpenAndForbidClosed();
 
 	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client) {
 		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()));
@@ -72,225 +91,471 @@ public class ReactiveElasticsearchTemplate {
 
 		this.client = client;
 		this.converter = converter;
-		this.mapper = new DefaultResultMapper(converter.getMappingContext());
+		this.resultMapper = new DefaultResultMapper(converter.getMappingContext());
 		this.exceptionTranslator = new ElasticsearchExceptionTranslator();
 	}
 
-	public <T> Mono<T> index(T entity) {
-		return index(entity, null);
-	}
-
-	public <T> Mono<T> index(T entity, String index) {
-		return index(entity, index, null);
-	}
-
-	/**
-	 * Add the given entity to the index.
-	 *
-	 * @param entity
-	 * @param index
-	 * @param type
-	 * @param <T>
-	 * @return
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exctute(ClientCallback)
 	 */
-	public <T> Mono<T> index(T entity, String index, String type) {
+	@Override
+	public <T> Publisher<T> execute(ClientCallback<Publisher<T>> callback) {
+		return Flux.defer(() -> callback.doWithClient(getClient())).onErrorMap(this::translateException);
+	}
 
-		ElasticsearchPersistentEntity<?> persistentEntity = lookupPersistentEntity(entity.getClass());
-		return doIndex(entity, persistentEntity, index, type) //
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#index(Object, String, String)
+	 */
+	@Override
+	public <T> Mono<T> save(T entity, @Nullable String index, @Nullable String type) {
+
+		Assert.notNull(entity, "Entity must not be null!");
+
+		AdaptableEntity<T> adaptableEntity = ConverterAwareAdaptableEntity.of(entity, converter);
+
+		return doIndex(entity, adaptableEntity, index, type) //
 				.map(it -> {
-
-					// TODO: update id if necessary!
-					// it.getId()
-					// it.getVersion()
-
-					return entity;
+					return adaptableEntity.updateIdIfNecessary(it.getId());
 				});
 	}
 
-	public <T> Mono<T> get(String id, Class<T> resultType) {
-		return get(id, resultType, null);
-	}
+	private Mono<IndexResponse> doIndex(Object value, AdaptableEntity<?> entity, @Nullable String index,
+			@Nullable String type) {
 
-	public <T> Mono<T> get(String id, Class<T> resultType, @Nullable String index) {
-		return get(id, resultType, index, null);
-	}
+		return Mono.defer(() -> {
 
-	/**
-	 * Fetch the entity with given id.
-	 *
-	 * @param id must not be {@literal null}.
-	 * @param resultType must not be {@literal null}.
-	 * @param index
-	 * @param type
-	 * @param <T>
-	 * @return the {@link Mono} emitting the entity or signalling completion if none found.
-	 */
-	public <T> Mono<T> get(String id, Class<T> resultType, @Nullable String index, @Nullable String type) {
+			Object id = entity.getId();
 
-		ElasticsearchPersistentEntity<?> persistentEntity = lookupPersistentEntity(resultType);
-		GetRequest request = new GetRequest(persistentEntity.getIndexName(), persistentEntity.getIndexType(), id);
+			String indexToUse = indexName(index, entity);
+			String typeToUse = typeName(type, entity);
 
-		return doGet(id, persistentEntity, index, type).map(it -> mapper.mapEntity(it.sourceAsString(), resultType));
-	}
+			IndexRequest request = id != null ? new IndexRequest(indexToUse, typeToUse, id.toString())
+					: new IndexRequest(indexToUse, typeToUse);
 
-	/**
-	 * Search the index for entities matching the given {@link CriteriaQuery query}.
-	 *
-	 * @param query must not be {@literal null}.
-	 * @param resultType must not be {@literal null}.
-	 * @param <T>
-	 * @return
-	 */
-	public <T> Flux<T> query(CriteriaQuery query, Class<T> resultType) {
-
-		ElasticsearchPersistentEntity<?> entity = lookupPersistentEntity(resultType);
-
-		SearchRequest request = new SearchRequest(indices(query, entity));
-		request.types(indexTypes(query, entity));
-
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-		searchSourceBuilder.query(mappedQuery(query, entity));
-		// TODO: request.source().postFilter(elasticsearchFilter); -- filter query
-
-		searchSourceBuilder.version(entity.hasVersionProperty()); // This has been true by default before
-		searchSourceBuilder.trackScores(query.getTrackScores());
-
-		if (query.getSourceFilter() != null) {
-			searchSourceBuilder.fetchSource(query.getSourceFilter().getIncludes(), query.getSourceFilter().getExcludes());
-		}
-
-		if (query.getPageable().isPaged()) {
-
-			long offset = query.getPageable().getOffset();
-			if (offset > Integer.MAX_VALUE) {
-				throw new IllegalArgumentException(String.format("Offset must not be more than %s", Integer.MAX_VALUE));
+			try {
+				request.source(resultMapper.getEntityMapper().mapToString(value), Requests.INDEX_CONTENT_TYPE);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
 
-			searchSourceBuilder.from((int) offset);
-			searchSourceBuilder.size(query.getPageable().getPageSize());
-		}
+			if (entity.isVersioned()) {
 
-		if (query.getIndicesOptions() != null) {
-			request.indicesOptions(query.getIndicesOptions());
-		}
+				Object version = entity.getVersion();
+				if (version != null) {
+					request.version(((Number) version).longValue());
+					request.versionType(EXTERNAL);
+				}
+			}
 
-		sort(query, entity).forEach(searchSourceBuilder::sort);
+			if (entity.getPersistentEntity().getParentIdProperty() != null) {
 
-		if (query.getMinScore() > 0) {
-			searchSourceBuilder.minScore(query.getMinScore());
-		}
-		request.source(searchSourceBuilder);
+				Object parentId = entity.getPropertyValue(entity.getPersistentEntity().getParentIdProperty());
+				if (parentId != null) {
+					request.parent(parentId.toString());
+				}
+			}
 
-		return Flux.from(
-				execute(client -> client.search(request).map(it -> mapper.mapEntity(it.getSourceAsString(), resultType))));
+			request = prepareIndexRequest(value, request);
+			return doIndex(request);
+		});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#findById(String, Class, String, String)
+	 */
+	@Override
+	public <T> Mono<T> findById(String id, Class<T> entityType, @Nullable String index, @Nullable String type) {
+
+		Assert.notNull(id, "Id must not be null!");
+
+		return doFindById(id, BasicElasticsearchEntity.of(entityType, converter), index, type)
+				.map(it -> resultMapper.mapEntity(it, entityType));
+	}
+
+	private Mono<GetResult> doFindById(String id, ElasticsearchEntity<?> entity, @Nullable String index,
+			@Nullable String type) {
+
+		return Mono.defer(() -> {
+
+			String indexToUse = indexName(index, entity);
+			String typeToUse = typeName(type, entity);
+
+			return doFindById(new GetRequest(indexToUse, typeToUse, id));
+		});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exists(String, Class, String, String)
+	 */
+	@Override
+	public Mono<Boolean> exists(String id, Class<?> entityType, String index, String type) {
+
+		Assert.notNull(id, "Id must not be null!");
+
+		return doExists(id, BasicElasticsearchEntity.of(entityType, converter), index, type);
+	}
+
+	private Mono<Boolean> doExists(String id, ElasticsearchEntity<?> entity, @Nullable String index,
+			@Nullable String type) {
+
+		return Mono.defer(() -> {
+
+			String indexToUse = indexName(index, entity);
+			String typeToUse = typeName(type, entity);
+
+			return doExists(new GetRequest(indexToUse, typeToUse, id));
+		});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#find(Query, Class, String, String, Class)
+	 */
+	@Override
+	public <T> Flux<T> find(Query query, Class<?> entityType, @Nullable String index, @Nullable String type,
+			Class<T> resultType) {
+
+		return doFind(query, BasicElasticsearchEntity.of(entityType, converter), index, type)
+				.map(it -> resultMapper.mapEntity(it, resultType));
+	}
+
+	private Flux<SearchHit> doFind(Query query, ElasticsearchEntity<?> entity, @Nullable String index,
+			@Nullable String type) {
+
+		return Flux.defer(() -> {
+
+			SearchRequest request = new SearchRequest(indices(query, () -> indexName(index, entity)));
+			request.types(indexTypes(query, () -> typeName(type, entity)));
+
+			SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+			searchSourceBuilder.query(mappedQuery(query, entity.getPersistentEntity()));
+
+			// TODO: request.source().postFilter(elasticsearchFilter); -- filter query
+
+			searchSourceBuilder.version(entity.isVersioned()); // This has been true by default before
+			searchSourceBuilder.trackScores(query.getTrackScores());
+
+			if (query.getSourceFilter() != null) {
+				searchSourceBuilder.fetchSource(query.getSourceFilter().getIncludes(), query.getSourceFilter().getExcludes());
+			}
+
+			if (query.getPageable().isPaged()) {
+
+				long offset = query.getPageable().getOffset();
+				if (offset > Integer.MAX_VALUE) {
+					throw new IllegalArgumentException(String.format("Offset must not be more than %s", Integer.MAX_VALUE));
+				}
+
+				searchSourceBuilder.from((int) offset);
+				searchSourceBuilder.size(query.getPageable().getPageSize());
+			}
+
+			if (query.getIndicesOptions() != null) {
+				request.indicesOptions(query.getIndicesOptions());
+			}
+
+			sort(query, entity.getPersistentEntity()).forEach(searchSourceBuilder::sort);
+
+			if (query.getMinScore() > 0) {
+				searchSourceBuilder.minScore(query.getMinScore());
+			}
+
+			request.source(searchSourceBuilder);
+
+			request = prepareSearchRequest(request);
+
+			return doFind(request);
+		});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#count(Query, Class, String, String)
+	 */
+	@Override
+	public Mono<Long> count(Query query, Class<?> entityType, String index, String type) {
+
+		// TODO: ES 7.0 has a dedicated CountRequest - use that one once available.
+		return find(query, entityType, index, type).count();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(Object, String, String)
+	 */
+	@Override
+	public Mono<String> delete(Object entity, @Nullable String index, @Nullable String type) {
+
+		AdaptableEntity<?> elasticsearchEntity = ConverterAwareAdaptableEntity.of(entity, converter);
+
+		return Mono.defer(() -> doDeleteById(entity, ObjectUtils.nullSafeToString(elasticsearchEntity.getId()),
+				elasticsearchEntity, index, type));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(String, Class, String, String)
+	 */
+	@Override
+	public Mono<String> deleteById(String id, Class<?> entityType, @Nullable String index, @Nullable String type) {
+
+		Assert.notNull(id, "Id must not be null!");
+
+		return doDeleteById(null, id, BasicElasticsearchEntity.of(entityType, converter), index, type);
+
+	}
+
+	private Mono<String> doDeleteById(@Nullable Object source, String id, ElasticsearchEntity<?> entity,
+			@Nullable String index, @Nullable String type) {
+
+		return Mono.defer(() -> {
+
+			String indexToUse = indexName(index, entity);
+			String typeToUse = typeName(type, entity);
+
+			return doDelete(prepareDeleteRequest(source, new DeleteRequest(indexToUse, typeToUse, id)));
+		});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#deleteBy(Query, Class, String, String)
+	 */
+	@Override
+	public Mono<Long> deleteBy(Query query, Class<?> entityType, String index, String type) {
+
+		Assert.notNull(query, "Query must not be null!");
+
+		return doDeleteBy(query, BasicElasticsearchEntity.of(entityType, converter), index, type)
+				.map(BulkByScrollResponse::getDeleted).publishNext();
+	}
+
+	private Flux<BulkByScrollResponse> doDeleteBy(Query query, ElasticsearchEntity<?> entity, @Nullable String index,
+			@Nullable String type) {
+
+		return Flux.defer(() -> {
+
+			DeleteByQueryRequest request = new DeleteByQueryRequest(indices(query, () -> indexName(index, entity)));
+			request.types(indexTypes(query, () -> typeName(type, entity)));
+			request.setQuery(mappedQuery(query, entity.getPersistentEntity()));
+
+			return doDeleteBy(prepareDeleteByRequest(request));
+		});
+	}
+
+	// Property Setters / Getters
+
+	/**
+	 * Set the default {@link RefreshPolicy} to apply when writing to Elasticsearch.
+	 *
+	 * @param refreshPolicy can be {@literal null}.
+	 */
+	public void setRefreshPolicy(@Nullable RefreshPolicy refreshPolicy) {
+		this.refreshPolicy = refreshPolicy;
 	}
 
 	/**
-	 * Execute within a {@link ClientCallback} managing resources and translating errors.
+	 * Set the default {@link IndicesOptions} for {@link SearchRequest search requests}.
 	 *
-	 * @param callback must not be {@literal null}.
-	 * @param <T>
-	 * @return the {@link Publisher} emitting results.
+	 * @param indicesOptions can be {@literal null}.
 	 */
-	public <T> Publisher<T> execute(ClientCallback<Publisher<T>> callback) {
-		return Flux.from(callback.doWithClient(this.client)).onErrorMap(this::translateException);
+	public void setIndicesOptions(@Nullable IndicesOptions indicesOptions) {
+		this.indicesOptions = indicesOptions;
 	}
 
 	// Customization Hooks
 
-	protected Mono<GetResult> doGet(String id, ElasticsearchPersistentEntity<?> entity, @Nullable String index,
-			@Nullable String type) {
-
-		String indexToUse = indexName(index, entity);
-		String typeToUse = typeName(type, entity);
-
-		return doGet(new GetRequest(indexToUse, typeToUse, id));
+	/**
+	 * Obtain the {@link ReactiveElasticsearchClient} to operate upon.
+	 *
+	 * @return never {@literal null}.
+	 */
+	protected ReactiveElasticsearchClient getClient() {
+		return this.client;
 	}
 
-	protected Mono<GetResult> doGet(GetRequest request) {
+	/**
+	 * Pre process the write request before it is sent to the server, eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param request must not be {@literal null}.
+	 * @param <R>
+	 * @return the processed {@link WriteRequest}.
+	 */
+	protected <R extends WriteRequest<R>> R prepareWriteRequest(R request) {
 
-		return Mono.from(execute(client -> client.get(request))) //
-				.onErrorResume((it) -> {
+		if (refreshPolicy == null) {
+			return request;
+		}
 
-					if (it instanceof HttpClientErrorException) {
-						return ((HttpClientErrorException) it).getRawStatusCode() == 404;
-					}
-					return false;
-
-				}, (it) -> Mono.empty());
+		return request.setRefreshPolicy(refreshPolicy);
 	}
 
-	protected Mono<IndexResponse> doIndex(Object value, ElasticsearchPersistentEntity<?> entity, @Nullable String index,
-			@Nullable String type) {
-
-		PersistentPropertyAccessor<?> propertyAccessor = entity.getPropertyAccessor(value);
-		Object id = propertyAccessor.getProperty(entity.getIdProperty());
-
-		String indexToUse = indexName(index, entity);
-		String typeToUse = typeName(type, entity);
-
-		IndexRequest request = id != null ? new IndexRequest(indexToUse, typeToUse, id.toString())
-				: new IndexRequest(indexToUse, typeToUse);
-
-		try {
-			request.source(mapper.getEntityMapper().mapToString(value), Requests.INDEX_CONTENT_TYPE);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		if (entity.hasVersionProperty()) {
-
-			Object version = propertyAccessor.getProperty(entity.getVersionProperty());
-			if (version != null) {
-				request.version(((Number) version).longValue());
-				request.versionType(EXTERNAL);
-			}
-		}
-
-		if (entity.getParentIdProperty() != null) {
-
-			Object parentId = propertyAccessor.getProperty(entity.getParentIdProperty());
-			if (parentId != null) {
-				request.parent(parentId.toString());
-			}
-		}
-
-		return doIndex(request.setRefreshPolicy(RefreshPolicy.IMMEDIATE));
+	/**
+	 * Customization hook to modify a generated {@link IndexRequest} prior to its execution. Eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param source the source object the {@link IndexRequest} was derived from.
+	 * @param request the generated {@link IndexRequest}.
+	 * @return never {@literal null}.
+	 */
+	protected IndexRequest prepareIndexRequest(Object source, IndexRequest request) {
+		return prepareWriteRequest(request);
 	}
 
+	/**
+	 * Customization hook to modify a generated {@link SearchRequest} prior to its execution. Eg. by setting the
+	 * {@link SearchRequest#indicesOptions(IndicesOptions) indices options} if applicable.
+	 *
+	 * @param request the generated {@link SearchRequest}.
+	 * @return never {@literal null}.
+	 */
+	protected SearchRequest prepareSearchRequest(SearchRequest request) {
+
+		if (indicesOptions == null) {
+			return request;
+		}
+
+		return request.indicesOptions(indicesOptions);
+	}
+
+	/**
+	 * Customization hook to modify a generated {@link DeleteRequest} prior to its execution. Eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param source the source object the {@link DeleteRequest} was derived from. My be {@literal null} if using the
+	 *          {@literal id} directly.
+	 * @param request the generated {@link DeleteRequest}.
+	 * @return never {@literal null}.
+	 */
+	protected DeleteRequest prepareDeleteRequest(@Nullable Object source, DeleteRequest request) {
+		return prepareWriteRequest(request);
+	}
+
+	/**
+	 * Customization hook to modify a generated {@link DeleteByQueryRequest} prior to its execution. Eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param request the generated {@link DeleteByQueryRequest}.
+	 * @return never {@literal null}.
+	 */
+	protected DeleteByQueryRequest prepareDeleteByRequest(DeleteByQueryRequest request) {
+
+		if (refreshPolicy != null && !RefreshPolicy.NONE.equals(refreshPolicy)) {
+			request = request.setRefresh(true);
+		}
+
+		if (indicesOptions != null) {
+			request = request.setIndicesOptions(indicesOptions);
+		}
+
+		return request;
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 * You know what you're doing here? Well fair enough, go ahead on your own risk.
+	 *
+	 * @param request the already prepared {@link IndexRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
 	protected Mono<IndexResponse> doIndex(IndexRequest request) {
 		return Mono.from(execute(client -> client.index(request)));
 	}
 
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link GetRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<GetResult> doFindById(GetRequest request) {
+		return Mono.from(execute(client -> client.get(request)));
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link GetRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<Boolean> doExists(GetRequest request) {
+		return Mono.from(execute(client -> client.exists(request)));
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link SearchRequest} ready to be executed.
+	 * @return a {@link Flux} emitting the result of the operation.
+	 */
+	protected Flux<SearchHit> doFind(SearchRequest request) {
+		return Flux.from(execute(client -> client.search(request)));
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link DeleteRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<String> doDelete(DeleteRequest request) {
+
+		return Mono.from(execute(client -> client.delete(request))) //
+
+				.flatMap(it -> {
+
+					if (HttpStatus.valueOf(it.status().getStatus()).equals(HttpStatus.NOT_FOUND)) {
+						return Mono.empty();
+					}
+
+					return Mono.just(it.getId());
+				});
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link DeleteByQueryRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<BulkByScrollResponse> doDeleteBy(DeleteByQueryRequest request) {
+		return Mono.from(execute(client -> client.deleteBy(request)));
+	}
+
 	// private helpers
 
-	private static String indexName(@Nullable String index, ElasticsearchPersistentEntity<?> entity) {
+	private static String indexName(@Nullable String index, ElasticsearchEntity<?> entity) {
 		return StringUtils.isEmpty(index) ? entity.getIndexName() : index;
 	}
 
-	private static String typeName(@Nullable String type, ElasticsearchPersistentEntity<?> entity) {
-		return StringUtils.isEmpty(type) ? entity.getIndexType() : type;
+	private static String typeName(@Nullable String type, ElasticsearchEntity<?> entity) {
+		return StringUtils.isEmpty(type) ? entity.getTypeName() : type;
 	}
 
-	private static String[] indices(CriteriaQuery query, ElasticsearchPersistentEntity<?> entity) {
+	private static String[] indices(Query query, Supplier<String> index) {
 
 		if (query.getIndices().isEmpty()) {
-			return new String[] { entity.getIndexName() };
+			return new String[] { index.get() };
 		}
 
 		return query.getIndices().toArray(new String[0]);
 	}
 
-	private static String[] indexTypes(CriteriaQuery query, ElasticsearchPersistentEntity<?> entity) {
+	private static String[] indexTypes(Query query, Supplier<String> indexType) {
 
 		if (query.getTypes().isEmpty()) {
-			return new String[] { entity.getIndexType() };
+			return new String[] { indexType.get() };
 		}
 
 		return query.getTypes().toArray(new String[0]);
 	}
 
-	private List<FieldSortBuilder> sort(Query query, ElasticsearchPersistentEntity<?> entity) {
+	private static List<FieldSortBuilder> sort(Query query, ElasticsearchPersistentEntity<?> entity) {
 
 		if (query.getSort() == null || query.getSort().isUnsorted()) {
 			return Collections.emptyList();
@@ -317,10 +582,20 @@ public class ReactiveElasticsearchTemplate {
 		return mappedSort;
 	}
 
-	private QueryBuilder mappedQuery(CriteriaQuery query, ElasticsearchPersistentEntity<?> entity) {
+	private QueryBuilder mappedQuery(Query query, ElasticsearchPersistentEntity<?> entity) {
 
 		// TODO: we need to actually map the fields to the according field names!
-		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(query.getCriteria());
+
+		QueryBuilder elasticsearchQuery = null;
+
+		if (query instanceof CriteriaQuery) {
+			elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(((CriteriaQuery) query).getCriteria());
+		} else if (query instanceof StringQuery) {
+			elasticsearchQuery = new WrapperQueryBuilder(((StringQuery) query).getSource());
+		} else {
+			throw new IllegalArgumentException(String.format("Unknown query type '%s'.", query.getClass()));
+		}
+
 		return elasticsearchQuery != null ? elasticsearchQuery : QueryBuilders.matchAllQuery();
 	}
 
@@ -336,17 +611,166 @@ public class ReactiveElasticsearchTemplate {
 
 	private Throwable translateException(Throwable throwable) {
 
-		if (!(throwable instanceof RuntimeException)) {
-			return throwable;
-		}
+		RuntimeException exception = throwable instanceof RuntimeException ? (RuntimeException) throwable
+				: new RuntimeException(throwable.getMessage(), throwable);
+		RuntimeException potentiallyTranslatedException = exceptionTranslator.translateExceptionIfPossible(exception);
 
-		RuntimeException ex = exceptionTranslator.translateExceptionIfPossible((RuntimeException) throwable);
-		return ex != null ? ex : throwable;
+		return potentiallyTranslatedException != null ? potentiallyTranslatedException : throwable;
 	}
 
-	// Additional types
-	public interface ClientCallback<T extends Publisher<?>> {
+	/**
+	 * @param <T>
+	 * @author Christoph Strobl
+	 * @since 4.0
+	 */
+	protected interface ElasticsearchEntity<T> {
 
-		T doWithClient(ReactiveElasticsearchClient client);
+		default boolean isIdentifiable() {
+			return getPersistentEntity().hasVersionProperty();
+		}
+
+		default boolean isVersioned() {
+			return getPersistentEntity().hasVersionProperty();
+		}
+
+		default ElasticsearchPersistentProperty getIdProperty() {
+			return getPersistentEntity().getIdProperty();
+		}
+
+		default String getIndexName() {
+			return getPersistentEntity().getIndexName();
+		}
+
+		default String getTypeName() {
+			return getPersistentEntity().getIndexType();
+		}
+
+		ElasticsearchPersistentEntity<?> getPersistentEntity();
+	}
+
+	protected interface AdaptableEntity<T> extends ElasticsearchEntity<T> {
+
+		PersistentPropertyAccessor<T> getPropertyAccessor();
+
+		IdentifierAccessor getIdentifierAccessor();
+
+		@Nullable
+		default Object getId() {
+			return getIdentifierAccessor().getIdentifier();
+		}
+
+		default Object getVersion() {
+			return getPropertyAccessor().getProperty(getPersistentEntity().getRequiredVersionProperty());
+		}
+
+		@Nullable
+		default Object getPropertyValue(PersistentProperty<?> property) {
+			return getPropertyAccessor().getProperty(property);
+		}
+
+		default T getBean() {
+			return getPropertyAccessor().getBean();
+		}
+
+		default T updateIdIfNecessary(Object id) {
+
+			if (id == null || !getPersistentEntity().hasIdProperty() || getId() != null) {
+				return getPropertyAccessor().getBean();
+			}
+
+			return updatePropertyValue(getPersistentEntity().getIdProperty(), id);
+		}
+
+		default T updatePropertyValue(PersistentProperty<?> property, @Nullable Object value) {
+
+			getPropertyAccessor().setProperty(property, value);
+			return getPropertyAccessor().getBean();
+		}
+
+	}
+
+	protected static class BasicElasticsearchEntity<T> implements ElasticsearchEntity<T> {
+
+		final ElasticsearchPersistentEntity<?> entity;
+
+		BasicElasticsearchEntity(ElasticsearchPersistentEntity<?> entity) {
+			this.entity = entity;
+		}
+
+		static <T> BasicElasticsearchEntity<T> of(T bean, ElasticsearchConverter converter) {
+			return new BasicElasticsearchEntity<>(converter.getMappingContext().getRequiredPersistentEntity(bean.getClass()));
+		}
+
+		static <T> BasicElasticsearchEntity<T> of(Class<T> type, ElasticsearchConverter converter) {
+
+			if (Object.class.equals(type)) {
+				return new BasicElasticsearchEntity<>(new SimpleElasticsearchPersistentEntity<>(ClassTypeInformation.OBJECT));
+			}
+
+			return new BasicElasticsearchEntity<>(converter.getMappingContext().getRequiredPersistentEntity(type));
+		}
+
+		@Override
+		public ElasticsearchPersistentEntity<?> getPersistentEntity() {
+			return entity;
+		}
+	}
+
+	protected static class ConverterAwareAdaptableEntity<T> implements AdaptableEntity<T> {
+
+		final ElasticsearchPersistentEntity<?> entity;
+		final PersistentPropertyAccessor<T> propertyAccessor;
+		final IdentifierAccessor idAccessor;
+		final ElasticsearchConverter converter;
+
+		ConverterAwareAdaptableEntity(ElasticsearchPersistentEntity<?> entity, IdentifierAccessor idAccessor,
+				PersistentPropertyAccessor<T> propertyAccessor, ElasticsearchConverter converter) {
+
+			this.entity = entity;
+			this.propertyAccessor = propertyAccessor;
+			this.idAccessor = idAccessor;
+			this.converter = converter;
+		}
+
+		static <T> ConverterAwareAdaptableEntity<T> of(T bean, ElasticsearchConverter converter) {
+
+			ElasticsearchPersistentEntity<?> entity = converter.getMappingContext()
+					.getRequiredPersistentEntity(bean.getClass());
+			IdentifierAccessor idAccessor = entity.getIdentifierAccessor(bean);
+			PersistentPropertyAccessor<T> propertyAccessor = entity.getPropertyAccessor(bean);
+
+			return new ConverterAwareAdaptableEntity<>(entity, idAccessor, propertyAccessor, converter);
+		}
+
+		@Override
+		public PersistentPropertyAccessor<T> getPropertyAccessor() {
+			return propertyAccessor;
+		}
+
+		@Override
+		public IdentifierAccessor getIdentifierAccessor() {
+
+			if (entity.getTypeInformation().isMap()) {
+
+				return () -> {
+
+					Object id = idAccessor.getIdentifier();
+					if (id != null) {
+						return id;
+					}
+
+					Map<?, ?> source = (Map<?, ?>) propertyAccessor.getBean();
+					return source.get("id");
+				};
+			}
+
+			return idAccessor;
+		}
+
+		@Override
+		public ElasticsearchPersistentEntity<?> getPersistentEntity() {
+			return entity;
+		}
+
 	}
 }

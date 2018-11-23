@@ -16,8 +16,11 @@
 
 package org.springframework.data.elasticsearch.core;
 
+import java.net.ConnectException;
+
 import org.elasticsearch.ElasticsearchException;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 
 /**
@@ -31,6 +34,12 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 
 		if (ex instanceof ElasticsearchException) {
 			// TODO: exception translation
+			ElasticsearchException elasticsearchExption = (ElasticsearchException) ex;
+//			elasticsearchExption.get
+		}
+
+		if(ex.getCause() instanceof ConnectException) {
+			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
 
 		return null;
