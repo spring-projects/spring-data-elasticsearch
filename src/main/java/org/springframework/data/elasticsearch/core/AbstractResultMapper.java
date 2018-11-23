@@ -15,11 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.io.IOException;
-
-import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * @author Artur Konczak
@@ -29,21 +25,10 @@ public abstract class AbstractResultMapper implements ResultsMapper {
 	private EntityMapper entityMapper;
 
 	public AbstractResultMapper(EntityMapper entityMapper) {
-		
-		Assert.notNull(entityMapper, "EntityMapper must not be null!");
-		
-		this.entityMapper = entityMapper;
-	}
 
-	public <T> T mapEntity(String source, Class<T> clazz) {
-		if (StringUtils.isEmpty(source)) {
-			return null;
-		}
-		try {
-			return entityMapper.mapToObject(source, clazz);
-		} catch (IOException e) {
-			throw new ElasticsearchException("failed to map source [ " + source + "] to class " + clazz.getSimpleName(), e);
-		}
+		Assert.notNull(entityMapper, "EntityMapper must not be null!");
+
+		this.entityMapper = entityMapper;
 	}
 
 	@Override

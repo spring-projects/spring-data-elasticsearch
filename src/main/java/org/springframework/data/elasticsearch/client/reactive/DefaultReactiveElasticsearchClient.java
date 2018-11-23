@@ -60,7 +60,6 @@ import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.reactivestreams.Publisher;
-import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
@@ -364,27 +363,22 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		try {
 
-			XContentParser contentParser = createParser(mediaType, content);
+			Method fromXContent = ReflectionUtils.findMethod(responseType, "fromXContent", XContentParser.class);
+
+			return Mono.justOrEmpty(responseType
+					.cast(ReflectionUtils.invokeMethod(fromXContent, responseType, createParser(mediaType, content))));
+
+		} catch (Exception errorParseFailure) {
 
 			try {
+				return Mono.error(BytesRestResponse.errorFromXContent(createParser(mediaType, content)));
+			} catch (Exception e) {
 
-				Method fromXContent = ReflectionUtils.findMethod(responseType, "fromXContent", XContentParser.class);
 				return Mono
-						.justOrEmpty(responseType.cast(ReflectionUtils.invokeMethod(fromXContent, responseType, contentParser)));
-
-			} catch (Exception errorParseFailure) {
-				try {
-					return Mono.error(BytesRestResponse.errorFromXContent(contentParser));
-				} catch (Exception e) {
-					// return Mono.error to avoid ElasticsearchStatusException to be caught by outer catch.
-					return Mono.error(new ElasticsearchStatusException("Unable to parse response body",
-							RestStatus.fromCode(response.statusCode().value())));
-				}
+						.error(new ElasticsearchStatusException(content, RestStatus.fromCode(response.statusCode().value())));
 			}
-
-		} catch (IOException e) {
-			return Mono.error(new DataAccessResourceFailureException("Error parsing XContent.", e));
 		}
+
 	}
 
 	private static XContentParser createParser(String mediaType, String content) throws IOException {

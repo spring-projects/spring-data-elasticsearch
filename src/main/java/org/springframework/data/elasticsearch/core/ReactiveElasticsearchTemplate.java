@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.elasticsearch.index.VersionType.*;
 
-import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -25,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.index.IndexRequest;
@@ -45,11 +45,15 @@ import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsea
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.mapping.IdentifierAccessor;
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -57,11 +61,11 @@ import org.springframework.web.client.HttpClientErrorException;
  * @author Christoph Strobl
  * @since 4.0
  */
-public class ReactiveElasticsearchTemplate {
+public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations {
 
 	private final ReactiveElasticsearchClient client;
 	private final ElasticsearchConverter converter;
-	private final DefaultResultMapper mapper;
+	private final ResultsMapper resultMapper;
 	private final ElasticsearchExceptionTranslator exceptionTranslator;
 
 	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client) {
@@ -72,75 +76,101 @@ public class ReactiveElasticsearchTemplate {
 
 		this.client = client;
 		this.converter = converter;
-		this.mapper = new DefaultResultMapper(converter.getMappingContext());
+		this.resultMapper = new DefaultResultMapper(converter.getMappingContext());
 		this.exceptionTranslator = new ElasticsearchExceptionTranslator();
 	}
 
-	public <T> Mono<T> index(T entity) {
-		return index(entity, null);
-	}
-
-	public <T> Mono<T> index(T entity, String index) {
-		return index(entity, index, null);
-	}
-
-	/**
-	 * Add the given entity to the index.
-	 *
-	 * @param entity
-	 * @param index
-	 * @param type
-	 * @param <T>
-	 * @return
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exctute(ClientCallback)
 	 */
-	public <T> Mono<T> index(T entity, String index, String type) {
+	@Override
+	public <T> Publisher<T> execute(ClientCallback<Publisher<T>> callback) {
+		return Flux.defer(() -> callback.doWithClient(this.client)).onErrorMap(this::translateException);
+	}
 
-		ElasticsearchPersistentEntity<?> persistentEntity = lookupPersistentEntity(entity.getClass());
-		return doIndex(entity, persistentEntity, index, type) //
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#index(Object, String, String)
+	 */
+	@Override
+	public <T> Mono<T> index(T entity, @Nullable String index, @Nullable String type) {
+
+		Assert.notNull(entity, "Entity must not be null!");
+
+		AdaptableEntity<T> adaptableEntity = ConverterAwareAdaptableEntity.of(entity, converter);
+
+		return doIndex(entity, adaptableEntity, index, type) //
 				.map(it -> {
-
-					// TODO: update id if necessary!
-					// it.getId()
-					// it.getVersion()
-
-					return entity;
+					return adaptableEntity.updateIdIfNecessary(it.getId());
 				});
 	}
 
-	public <T> Mono<T> get(String id, Class<T> resultType) {
-		return get(id, resultType, null);
+	private Mono<IndexResponse> doIndex(Object value, AdaptableEntity<?> entity, @Nullable String index,
+			@Nullable String type) {
+
+		return Mono.defer(() -> {
+
+			Object id = entity.getId();
+
+			String indexToUse = indexName(index, entity);
+			String typeToUse = typeName(type, entity);
+
+			IndexRequest request = id != null ? new IndexRequest(indexToUse, typeToUse, id.toString())
+					: new IndexRequest(indexToUse, typeToUse);
+
+			try {
+				request.source(resultMapper.getEntityMapper().mapToString(value), Requests.INDEX_CONTENT_TYPE);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+
+			if (entity.isVersioned()) {
+
+				Object version = entity.getVersion();
+				if (version != null) {
+					request.version(((Number) version).longValue());
+					request.versionType(EXTERNAL);
+				}
+			}
+
+			if (entity.getPersistentEntity().getParentIdProperty() != null) {
+
+				Object parentId = entity.getPropertyValue(entity.getPersistentEntity().getParentIdProperty());
+				if (parentId != null) {
+					request.parent(parentId.toString());
+				}
+			}
+
+			return doIndex(request.setRefreshPolicy(RefreshPolicy.IMMEDIATE));
+		});
 	}
 
-	public <T> Mono<T> get(String id, Class<T> resultType, @Nullable String index) {
-		return get(id, resultType, index, null);
-	}
-
-	/**
-	 * Fetch the entity with given id.
-	 *
-	 * @param id must not be {@literal null}.
-	 * @param resultType must not be {@literal null}.
-	 * @param index
-	 * @param type
-	 * @param <T>
-	 * @return the {@link Mono} emitting the entity or signalling completion if none found.
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#findById(String, Class, String, String)
 	 */
-	public <T> Mono<T> get(String id, Class<T> resultType, @Nullable String index, @Nullable String type) {
+	@Override
+	public <T> Mono<T> findById(String id, Class<T> resultType, @Nullable String index, @Nullable String type) {
 
-		ElasticsearchPersistentEntity<?> persistentEntity = lookupPersistentEntity(resultType);
-		GetRequest request = new GetRequest(persistentEntity.getIndexName(), persistentEntity.getIndexType(), id);
+		Assert.notNull(id, "Id must not be null!");
+		
+		ElasticsearchEntity<?> persistentEntity = BasicElasticsearchEntity.of(resultType, converter);
 
-		return doGet(id, persistentEntity, index, type).map(it -> mapper.mapEntity(it.sourceAsString(), resultType));
+		return doFindById(id, persistentEntity, index, type)
+				.map(it -> resultMapper.mapEntity(it.sourceAsString(), resultType));
 	}
 
-	/**
-	 * Search the index for entities matching the given {@link CriteriaQuery query}.
-	 *
-	 * @param query must not be {@literal null}.
-	 * @param resultType must not be {@literal null}.
-	 * @param <T>
-	 * @return
-	 */
+	private Mono<GetResult> doFindById(String id, ElasticsearchEntity<?> entity, @Nullable String index,
+			@Nullable String type) {
+
+		String indexToUse = indexName(index, entity);
+		String typeToUse = typeName(type, entity);
+
+		return doFindById(new GetRequest(indexToUse, typeToUse, id));
+	}
+
+	@Override
 	public <T> Flux<T> query(CriteriaQuery query, Class<T> resultType) {
 
 		ElasticsearchPersistentEntity<?> entity = lookupPersistentEntity(resultType);
@@ -181,33 +211,17 @@ public class ReactiveElasticsearchTemplate {
 		}
 		request.source(searchSourceBuilder);
 
-		return Flux.from(
-				execute(client -> client.search(request).map(it -> mapper.mapEntity(it.getSourceAsString(), resultType))));
-	}
-
-	/**
-	 * Execute within a {@link ClientCallback} managing resources and translating errors.
-	 *
-	 * @param callback must not be {@literal null}.
-	 * @param <T>
-	 * @return the {@link Publisher} emitting results.
-	 */
-	public <T> Publisher<T> execute(ClientCallback<Publisher<T>> callback) {
-		return Flux.from(callback.doWithClient(this.client)).onErrorMap(this::translateException);
+		return Flux.from(execute(
+				client -> client.search(request).map(it -> resultMapper.mapEntity(it.getSourceAsString(), resultType))));
 	}
 
 	// Customization Hooks
 
-	protected Mono<GetResult> doGet(String id, ElasticsearchPersistentEntity<?> entity, @Nullable String index,
-			@Nullable String type) {
-
-		String indexToUse = indexName(index, entity);
-		String typeToUse = typeName(type, entity);
-
-		return doGet(new GetRequest(indexToUse, typeToUse, id));
+	protected Mono<IndexResponse> doIndex(IndexRequest request) {
+		return Mono.from(execute(client -> client.index(request)));
 	}
 
-	protected Mono<GetResult> doGet(GetRequest request) {
+	protected Mono<GetResult> doFindById(GetRequest request) {
 
 		return Mono.from(execute(client -> client.get(request))) //
 				.onErrorResume((it) -> {
@@ -220,56 +234,14 @@ public class ReactiveElasticsearchTemplate {
 				}, (it) -> Mono.empty());
 	}
 
-	protected Mono<IndexResponse> doIndex(Object value, ElasticsearchPersistentEntity<?> entity, @Nullable String index,
-			@Nullable String type) {
-
-		PersistentPropertyAccessor<?> propertyAccessor = entity.getPropertyAccessor(value);
-		Object id = propertyAccessor.getProperty(entity.getIdProperty());
-
-		String indexToUse = indexName(index, entity);
-		String typeToUse = typeName(type, entity);
-
-		IndexRequest request = id != null ? new IndexRequest(indexToUse, typeToUse, id.toString())
-				: new IndexRequest(indexToUse, typeToUse);
-
-		try {
-			request.source(mapper.getEntityMapper().mapToString(value), Requests.INDEX_CONTENT_TYPE);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		if (entity.hasVersionProperty()) {
-
-			Object version = propertyAccessor.getProperty(entity.getVersionProperty());
-			if (version != null) {
-				request.version(((Number) version).longValue());
-				request.versionType(EXTERNAL);
-			}
-		}
-
-		if (entity.getParentIdProperty() != null) {
-
-			Object parentId = propertyAccessor.getProperty(entity.getParentIdProperty());
-			if (parentId != null) {
-				request.parent(parentId.toString());
-			}
-		}
-
-		return doIndex(request.setRefreshPolicy(RefreshPolicy.IMMEDIATE));
-	}
-
-	protected Mono<IndexResponse> doIndex(IndexRequest request) {
-		return Mono.from(execute(client -> client.index(request)));
-	}
-
 	// private helpers
 
-	private static String indexName(@Nullable String index, ElasticsearchPersistentEntity<?> entity) {
+	private static String indexName(@Nullable String index, ElasticsearchEntity<?> entity) {
 		return StringUtils.isEmpty(index) ? entity.getIndexName() : index;
 	}
 
-	private static String typeName(@Nullable String type, ElasticsearchPersistentEntity<?> entity) {
-		return StringUtils.isEmpty(type) ? entity.getIndexType() : type;
+	private static String typeName(@Nullable String type, ElasticsearchEntity<?> entity) {
+		return StringUtils.isEmpty(type) ? entity.getTypeName() : type;
 	}
 
 	private static String[] indices(CriteriaQuery query, ElasticsearchPersistentEntity<?> entity) {
@@ -336,17 +308,161 @@ public class ReactiveElasticsearchTemplate {
 
 	private Throwable translateException(Throwable throwable) {
 
-		if (!(throwable instanceof RuntimeException)) {
-			return throwable;
-		}
+		RuntimeException exception = throwable instanceof RuntimeException ? (RuntimeException) throwable
+				: new RuntimeException(throwable.getMessage(), throwable);
+		RuntimeException potentiallyTranslatedException = exceptionTranslator.translateExceptionIfPossible(exception);
 
-		RuntimeException ex = exceptionTranslator.translateExceptionIfPossible((RuntimeException) throwable);
-		return ex != null ? ex : throwable;
+		return potentiallyTranslatedException != null ? potentiallyTranslatedException : throwable;
 	}
 
-	// Additional types
-	public interface ClientCallback<T extends Publisher<?>> {
+	/**
+	 * @param <T>
+	 * @author Christoph Strobl
+	 * @since 4.0
+	 */
+	protected interface ElasticsearchEntity<T> {
 
-		T doWithClient(ReactiveElasticsearchClient client);
+		default boolean isIdentifiable() {
+			return getPersistentEntity().hasVersionProperty();
+		}
+
+		default boolean isVersioned() {
+			return getPersistentEntity().hasVersionProperty();
+		}
+
+		default ElasticsearchPersistentProperty getIdProperty() {
+			return getPersistentEntity().getIdProperty();
+		}
+
+		default String getIndexName() {
+			return getPersistentEntity().getIndexName();
+		}
+
+		default String getTypeName() {
+			return getPersistentEntity().getIndexType();
+		}
+
+		ElasticsearchPersistentEntity<?> getPersistentEntity();
+	}
+
+	protected interface AdaptableEntity<T> extends ElasticsearchEntity<T> {
+
+		PersistentPropertyAccessor<T> getPropertyAccessor();
+
+		IdentifierAccessor getIdentifierAccessor();
+
+		@Nullable
+		default Object getId() {
+			return getIdentifierAccessor().getIdentifier();
+		}
+
+		default Object getVersion() {
+			return getPropertyAccessor().getProperty(getPersistentEntity().getRequiredVersionProperty());
+		}
+
+		@Nullable
+		default Object getPropertyValue(PersistentProperty<?> property) {
+			return getPropertyAccessor().getProperty(property);
+		}
+
+		default T getBean() {
+			return getPropertyAccessor().getBean();
+		}
+
+		default T updateIdIfNecessary(Object id) {
+
+			if (id == null || !getPersistentEntity().hasIdProperty() || getId() != null) {
+				return getPropertyAccessor().getBean();
+			}
+
+			return updatePropertyValue(getPersistentEntity().getIdProperty(), id);
+		}
+
+		default T updatePropertyValue(PersistentProperty<?> property, @Nullable Object value) {
+
+			getPropertyAccessor().setProperty(property, value);
+			return getPropertyAccessor().getBean();
+		}
+
+	}
+
+	protected static class BasicElasticsearchEntity<T> implements ElasticsearchEntity<T> {
+
+		final ElasticsearchPersistentEntity<?> entity;
+
+		BasicElasticsearchEntity(ElasticsearchPersistentEntity<?> entity) {
+			this.entity = entity;
+		}
+
+		static <T> BasicElasticsearchEntity<T> of(T bean, ElasticsearchConverter converter) {
+			return new BasicElasticsearchEntity<>(converter.getMappingContext().getRequiredPersistentEntity(bean.getClass()));
+		}
+
+		static <T> BasicElasticsearchEntity<T> of(Class<T> type, ElasticsearchConverter converter) {
+			return new BasicElasticsearchEntity<>(converter.getMappingContext().getRequiredPersistentEntity(type));
+		}
+
+		@Override
+		public ElasticsearchPersistentEntity<?> getPersistentEntity() {
+			return entity;
+		}
+	}
+
+	protected static class ConverterAwareAdaptableEntity<T> implements AdaptableEntity<T> {
+
+		final ElasticsearchPersistentEntity<?> entity;
+		final PersistentPropertyAccessor<T> propertyAccessor;
+		final IdentifierAccessor idAccessor;
+		final ElasticsearchConverter converter;
+
+		ConverterAwareAdaptableEntity(ElasticsearchPersistentEntity<?> entity, IdentifierAccessor idAccessor,
+				PersistentPropertyAccessor<T> propertyAccessor, ElasticsearchConverter converter) {
+
+			this.entity = entity;
+			this.propertyAccessor = propertyAccessor;
+			this.idAccessor = idAccessor;
+			this.converter = converter;
+		}
+
+		static <T> ConverterAwareAdaptableEntity<T> of(T bean, ElasticsearchConverter converter) {
+
+			ElasticsearchPersistentEntity<?> entity = converter.getMappingContext()
+					.getRequiredPersistentEntity(bean.getClass());
+			IdentifierAccessor idAccessor = entity.getIdentifierAccessor(bean);
+			PersistentPropertyAccessor<T> propertyAccessor = entity.getPropertyAccessor(bean);
+
+			return new ConverterAwareAdaptableEntity<>(entity, idAccessor, propertyAccessor, converter);
+		}
+
+		@Override
+		public PersistentPropertyAccessor<T> getPropertyAccessor() {
+			return propertyAccessor;
+		}
+
+		@Override
+		public IdentifierAccessor getIdentifierAccessor() {
+
+			if (entity.getTypeInformation().isMap()) {
+
+				return () -> {
+
+					Object id = idAccessor.getIdentifier();
+					if (id != null) {
+						return id;
+					}
+
+					Map<?, ?> source = (Map<?, ?>) propertyAccessor.getBean();
+					return source.get("id");
+				};
+			}
+
+			return idAccessor;
+		}
+
+		@Override
+		public ElasticsearchPersistentEntity<?> getPersistentEntity() {
+			return entity;
+		}
+
 	}
 }

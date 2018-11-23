@@ -15,15 +15,35 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.io.IOException;
+
+import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
+
 /**
  * ResultsMapper
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
+ * @author Christoph Strobl
  */
 
 public interface ResultsMapper extends SearchResultMapper, GetResultMapper, MultiGetResultMapper {
 
 	EntityMapper getEntityMapper();
+
+	@Nullable
+	default <T> T mapEntity(String source, Class<T> clazz) {
+
+		if (StringUtils.isEmpty(source)) {
+			return null;
+		}
+		try {
+			return getEntityMapper().mapToObject(source, clazz);
+		} catch (IOException e) {
+			throw new ElasticsearchException("failed to map source [ " + source + "] to class " + clazz.getSimpleName(), e);
+		}
+	}
 }

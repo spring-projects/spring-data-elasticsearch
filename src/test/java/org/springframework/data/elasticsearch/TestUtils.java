@@ -17,8 +17,11 @@ package org.springframework.data.elasticsearch;
 
 import lombok.SneakyThrows;
 
+import java.io.IOException;
+
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
@@ -26,6 +29,7 @@ import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Strobl
@@ -60,6 +64,50 @@ public final class TestUtils {
 					// just ignore it
 				}
 			}
+		}
+	}
+
+	public static OfType documentWithId(String id) {
+		return new DocumentLookup(id);
+	}
+
+	public interface ExistsIn {
+		boolean existsIn(String index);
+	}
+
+	public interface OfType extends ExistsIn {
+		ExistsIn ofType(String type);
+	}
+
+	private static class DocumentLookup implements OfType {
+
+		private String id;
+		private String type;
+
+		public DocumentLookup(String id) {
+			this.id = id;
+		}
+
+		@Override
+		public boolean existsIn(String index) {
+
+			GetRequest request = new GetRequest(index).id(id);
+			if (StringUtils.hasText(type)) {
+				request = request.type(type);
+			}
+			try {
+				return restHighLevelClient().get(request, RequestOptions.DEFAULT).isExists();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			return false;
+		}
+
+		@Override
+		public ExistsIn ofType(String type) {
+			this.type = type;
+			return this;
 		}
 	}
 }

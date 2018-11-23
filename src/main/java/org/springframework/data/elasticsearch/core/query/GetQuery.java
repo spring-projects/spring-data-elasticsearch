@@ -32,4 +32,11 @@ public class GetQuery {
 	public void setId(String id) {
 		this.id = id;
 	}
+
+	public static GetQuery getById(String id) {
+
+		GetQuery query = new GetQuery();
+		query.setId(id);
+		return query;
+	}
 }
