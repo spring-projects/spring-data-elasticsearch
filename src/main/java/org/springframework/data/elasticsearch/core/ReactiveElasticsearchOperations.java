@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.springframework.data.elasticsearch.core.query.Query;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -25,6 +26,13 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
+ * Interface that specifies a basic set of Elasticsearch operations executed in a reactive way.
+ * <p>
+ * Implemented by {@link ReactiveElasticsearchTemplate}. Not often used but a useful option for extensibility and
+ * testability (as it can be easily mocked, stubbed, or be the target of a JDK proxy). Command execution using
+ * {@link ReactiveElasticsearchOperations} is deferred until a {@link org.reactivestreams.Subscriber} subscribes to the
+ * {@link Publisher}.
+ *
  * @author Christoph Strobl
  * @since 4.0
  */
@@ -46,10 +54,10 @@ public interface ReactiveElasticsearchOperations {
 	 * @param <T>
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
-	default <T> Mono<T> index(Mono<? extends T> entityPublisher) {
+	default <T> Mono<T> insert(Mono<? extends T> entityPublisher) {
 
 		Assert.notNull(entityPublisher, "EntityPublisher must not be null!");
-		return entityPublisher.flatMap(this::index);
+		return entityPublisher.flatMap(this::insert);
 	}
 
 	/**
@@ -59,8 +67,8 @@ public interface ReactiveElasticsearchOperations {
 	 * @param <T>
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
-	default <T> Mono<T> index(T entity) {
-		return index(entity, null);
+	default <T> Mono<T> insert(T entity) {
+		return insert(entity, null);
 	}
 
 	/**
@@ -72,10 +80,10 @@ public interface ReactiveElasticsearchOperations {
 	 * @param <T>
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
-	default <T> Mono<T> index(Mono<? extends T> entityPublisher, String index) {
+	default <T> Mono<T> insert(Mono<? extends T> entityPublisher, String index) {
 
 		Assert.notNull(entityPublisher, "EntityPublisher must not be null!");
-		return entityPublisher.flatMap(it -> index(it, index));
+		return entityPublisher.flatMap(it -> insert(it, index));
 	}
 
 	/**
@@ -87,8 +95,8 @@ public interface ReactiveElasticsearchOperations {
 	 * @param <T>
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
-	default <T> Mono<T> index(T entity, @Nullable String index) {
-		return index(entity, index, null);
+	default <T> Mono<T> insert(T entity, @Nullable String index) {
+		return insert(entity, index, null);
 	}
 
 	/**
@@ -102,10 +110,10 @@ public interface ReactiveElasticsearchOperations {
 	 * @param <T>
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
-	default <T> Mono<T> index(Mono<? extends T> entityPublisher, @Nullable String index, @Nullable String type) {
+	default <T> Mono<T> insert(Mono<? extends T> entityPublisher, @Nullable String index, @Nullable String type) {
 
 		Assert.notNull(entityPublisher, "EntityPublisher must not be null!");
-		return entityPublisher.flatMap(it -> index(it, index, type));
+		return entityPublisher.flatMap(it -> insert(it, index, type));
 	}
 
 	/**
@@ -118,7 +126,7 @@ public interface ReactiveElasticsearchOperations {
 	 * @param <T>
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
-	<T> Mono<T> index(T entity, @Nullable String index, @Nullable String type);
+	<T> Mono<T> insert(T entity, @Nullable String index, @Nullable String type);
 
 	/**
 	 * Find the document with the given {@literal id} mapped onto the given {@literal entityType}.
@@ -133,6 +141,8 @@ public interface ReactiveElasticsearchOperations {
 	}
 
 	/**
+	 * Fetch the entity with given {@literal id}.
+	 *
 	 * @param id the {@literal _id} of the document to fetch.
 	 * @param entityType the domain type used for mapping the document.
 	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
@@ -145,7 +155,7 @@ public interface ReactiveElasticsearchOperations {
 	}
 
 	/**
-	 * Fetch the entity with given id.
+	 * Fetch the entity with given {@literal id}.
 	 *
 	 * @param id must not be {@literal null}.
 	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
@@ -158,15 +168,76 @@ public interface ReactiveElasticsearchOperations {
 	<T> Mono<T> findById(String id, Class<T> entityType, @Nullable String index, @Nullable String type);
 
 	/**
+	 * Check if an entity with given {@literal id} exists.
+	 * 
+	 * @param id the {@literal _id} of the document to look for.
+	 * @param entityType the domain type used.
+	 * @return a {@link Mono} emitting {@literal true} if a matching document exists, {@literal false} otherwise.
+	 */
+	default Mono<Boolean> exists(String id, Class<?> entityType) {
+		return exists(id, entityType, null);
+	}
+
+	/**
+	 * Check if an entity with given {@literal id} exists.
+	 *
+	 * @param id the {@literal _id} of the document to look for.
+	 * @param entityType the domain type used.
+	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @return a {@link Mono} emitting {@literal true} if a matching document exists, {@literal false} otherwise.
+	 */
+	default Mono<Boolean> exists(String id, Class<?> entityType, @Nullable String index) {
+		return exists(id, entityType, index, null);
+	}
+
+	/**
+	 * Check if an entity with given {@literal id} exists.
+	 *
+	 * @param id the {@literal _id} of the document to look for.
+	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @return a {@link Mono} emitting {@literal true} if a matching document exists, {@literal false} otherwise.
+	 */
+	default Mono<Boolean> exists(String id, Class<?> entityType, @Nullable String index, @Nullable String type) {
+
+		// TODO: use driver exists as soon as available
+		return findById(id, entityType, index, type).map(it -> Boolean.TRUE).defaultIfEmpty(Boolean.FALSE);
+	}
+
+	/**
 	 * Search the index for entities matching the given {@link CriteriaQuery query}.
 	 *
 	 * @param query must not be {@literal null}.
-	 * @param resultType must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
 	 * @param <T>
 	 * @return
 	 */
-	<T> Flux<T> query(CriteriaQuery query, Class<T> resultType);
+	default <T> Flux<T> find(Query query, Class<T> entityType) {
+		return find(query, entityType, null);
+	}
 
+	default <T> Flux<T> find(Query query, Class<T> entityType, @Nullable String index) {
+		return find(query, entityType, index, null);
+	}
+
+	default <T> Flux<T> find(Query query, Class<T> entityType, @Nullable String index, @Nullable String type) {
+		return find(query, entityType, index, type, entityType);
+	}
+
+	<T> Flux<T> find(Query query, Class<?> entityType, @Nullable String index, @Nullable String type,
+			Class<T> resultType);
+
+	/**
+	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on
+	 * {@link ReactiveElasticsearchClient}.
+	 *
+	 * @param <T>
+	 * @author Christoph Strobl
+	 * @since 4.0
+	 */
 	interface ClientCallback<T extends Publisher<?>> {
 
 		T doWithClient(ReactiveElasticsearchClient client);

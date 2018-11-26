@@ -25,16 +25,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.WrapperQueryBuilder;
+import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
@@ -49,6 +54,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
@@ -68,6 +74,9 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	private final ResultsMapper resultMapper;
 	private final ElasticsearchExceptionTranslator exceptionTranslator;
 
+	private @Nullable RefreshPolicy refreshPolicy = RefreshPolicy.IMMEDIATE;
+	private @Nullable IndicesOptions indicesOptions;
+
 	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client) {
 		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()));
 	}
@@ -86,7 +95,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 */
 	@Override
 	public <T> Publisher<T> execute(ClientCallback<Publisher<T>> callback) {
-		return Flux.defer(() -> callback.doWithClient(this.client)).onErrorMap(this::translateException);
+		return Flux.defer(() -> callback.doWithClient(getClient())).onErrorMap(this::translateException);
 	}
 
 	/*
@@ -94,7 +103,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#index(Object, String, String)
 	 */
 	@Override
-	public <T> Mono<T> index(T entity, @Nullable String index, @Nullable String type) {
+	public <T> Mono<T> insert(T entity, @Nullable String index, @Nullable String type) {
 
 		Assert.notNull(entity, "Entity must not be null!");
 
@@ -142,7 +151,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				}
 			}
 
-			return doIndex(request.setRefreshPolicy(RefreshPolicy.IMMEDIATE));
+			request = prepareIndexRequest(value, request);
+			return doIndex(request);
 		});
 	}
 
@@ -151,72 +161,163 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#findById(String, Class, String, String)
 	 */
 	@Override
-	public <T> Mono<T> findById(String id, Class<T> resultType, @Nullable String index, @Nullable String type) {
+	public <T> Mono<T> findById(String id, Class<T> entityType, @Nullable String index, @Nullable String type) {
 
 		Assert.notNull(id, "Id must not be null!");
-		
-		ElasticsearchEntity<?> persistentEntity = BasicElasticsearchEntity.of(resultType, converter);
+
+		ElasticsearchEntity<?> persistentEntity = BasicElasticsearchEntity.of(entityType, converter);
 
 		return doFindById(id, persistentEntity, index, type)
-				.map(it -> resultMapper.mapEntity(it.sourceAsString(), resultType));
+				.map(it -> resultMapper.mapEntity(it.sourceAsString(), entityType));
 	}
 
 	private Mono<GetResult> doFindById(String id, ElasticsearchEntity<?> entity, @Nullable String index,
 			@Nullable String type) {
 
-		String indexToUse = indexName(index, entity);
-		String typeToUse = typeName(type, entity);
+		return Mono.defer(() -> {
 
-		return doFindById(new GetRequest(indexToUse, typeToUse, id));
+			String indexToUse = indexName(index, entity);
+			String typeToUse = typeName(type, entity);
+
+			return doFindById(new GetRequest(indexToUse, typeToUse, id));
+		});
 	}
 
 	@Override
-	public <T> Flux<T> query(CriteriaQuery query, Class<T> resultType) {
+	public <T> Flux<T> find(Query query, Class<?> entityType, @Nullable String index, @Nullable String type,
+			Class<T> resultType) {
 
-		ElasticsearchPersistentEntity<?> entity = lookupPersistentEntity(resultType);
+		ElasticsearchEntity<?> persistentEntity = BasicElasticsearchEntity.of(resultType, converter);
 
-		SearchRequest request = new SearchRequest(indices(query, entity));
-		request.types(indexTypes(query, entity));
+		return doFind(query, persistentEntity, index, type)
+				.map(it -> resultMapper.mapEntity(it.getSourceAsString(), resultType));
+	}
 
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-		searchSourceBuilder.query(mappedQuery(query, entity));
-		// TODO: request.source().postFilter(elasticsearchFilter); -- filter query
+	private Flux<SearchHit> doFind(Query query, ElasticsearchEntity<?> entity, @Nullable String index,
+			@Nullable String type) {
 
-		searchSourceBuilder.version(entity.hasVersionProperty()); // This has been true by default before
-		searchSourceBuilder.trackScores(query.getTrackScores());
+		return Flux.defer(() -> {
 
-		if (query.getSourceFilter() != null) {
-			searchSourceBuilder.fetchSource(query.getSourceFilter().getIncludes(), query.getSourceFilter().getExcludes());
-		}
+			SearchRequest request = new SearchRequest(indices(query, () -> indexName(index, entity)));
+			request.types(indexTypes(query, () -> typeName(type, entity)));
 
-		if (query.getPageable().isPaged()) {
+			SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+			searchSourceBuilder.query(mappedQuery(query, entity.getPersistentEntity()));
 
-			long offset = query.getPageable().getOffset();
-			if (offset > Integer.MAX_VALUE) {
-				throw new IllegalArgumentException(String.format("Offset must not be more than %s", Integer.MAX_VALUE));
+			// TODO: request.source().postFilter(elasticsearchFilter); -- filter query
+
+			searchSourceBuilder.version(entity.isVersioned()); // This has been true by default before
+			searchSourceBuilder.trackScores(query.getTrackScores());
+
+			if (query.getSourceFilter() != null) {
+				searchSourceBuilder.fetchSource(query.getSourceFilter().getIncludes(), query.getSourceFilter().getExcludes());
 			}
 
-			searchSourceBuilder.from((int) offset);
-			searchSourceBuilder.size(query.getPageable().getPageSize());
-		}
+			if (query.getPageable().isPaged()) {
 
-		if (query.getIndicesOptions() != null) {
-			request.indicesOptions(query.getIndicesOptions());
-		}
+				long offset = query.getPageable().getOffset();
+				if (offset > Integer.MAX_VALUE) {
+					throw new IllegalArgumentException(String.format("Offset must not be more than %s", Integer.MAX_VALUE));
+				}
 
-		sort(query, entity).forEach(searchSourceBuilder::sort);
+				searchSourceBuilder.from((int) offset);
+				searchSourceBuilder.size(query.getPageable().getPageSize());
+			}
 
-		if (query.getMinScore() > 0) {
-			searchSourceBuilder.minScore(query.getMinScore());
-		}
-		request.source(searchSourceBuilder);
+			if (query.getIndicesOptions() != null) {
+				request.indicesOptions(query.getIndicesOptions());
+			}
 
-		return Flux.from(execute(
-				client -> client.search(request).map(it -> resultMapper.mapEntity(it.getSourceAsString(), resultType))));
+			sort(query, entity.getPersistentEntity()).forEach(searchSourceBuilder::sort);
+
+			if (query.getMinScore() > 0) {
+				searchSourceBuilder.minScore(query.getMinScore());
+			}
+
+			request.source(searchSourceBuilder);
+
+			request = prepareSearchRequest(request);
+
+			return doFind(request);
+		});
+	}
+
+	// Property Setters / Getters
+
+	/**
+	 * Set the default {@link RefreshPolicy} to apply when writing to Elasticsearch.
+	 *
+	 * @param refreshPolicy can be {@literal null}.
+	 */
+	public void setRefreshPolicy(@Nullable RefreshPolicy refreshPolicy) {
+		this.refreshPolicy = refreshPolicy;
+	}
+
+	/**
+	 * Set the default {@link IndicesOptions} for {@link SearchRequest search requests}.
+	 *
+	 * @param indicesOptions can be {@literal null}.
+	 */
+	public void setIndicesOptions(@Nullable IndicesOptions indicesOptions) {
+		this.indicesOptions = indicesOptions;
 	}
 
 	// Customization Hooks
 
+	/**
+	 * Obtain the {@link ReactiveElasticsearchClient} to operate upon.
+	 *
+	 * @return never {@literal null}.
+	 */
+	protected ReactiveElasticsearchClient getClient() {
+		return this.client;
+	}
+
+	/**
+	 * Pre process the write request before it is sent to the server, eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param request must not be {@literal null}.
+	 * @param <R>
+	 * @return the processed {@link WriteRequest}.
+	 */
+	protected <R extends WriteRequest<R>> R prepareWriteRequest(R request) {
+
+		if (refreshPolicy == null) {
+			return request;
+		}
+
+		return request.setRefreshPolicy(refreshPolicy);
+	}
+
+	/**
+	 * Customization hook to modify a generated {@link IndexRequest} prior to its execution. Eg. by setting the *
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param source the source object the {@link IndexRequest} was derived from.
+	 * @param request the generated {@link IndexRequest}.
+	 * @return never {@literal null}.
+	 */
+	protected IndexRequest prepareIndexRequest(Object source, IndexRequest request) {
+		return prepareWriteRequest(request);
+	}
+
+	protected SearchRequest prepareSearchRequest(SearchRequest request) {
+
+		if (indicesOptions == null) {
+			return request;
+		}
+
+		return request.indicesOptions(indicesOptions);
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 * You know what you're doing here? Well fair enough, go ahead on your own risk.
+	 *
+	 * @param request the already prepared {@link IndexRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
 	protected Mono<IndexResponse> doIndex(IndexRequest request) {
 		return Mono.from(execute(client -> client.index(request)));
 	}
@@ -234,6 +335,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				}, (it) -> Mono.empty());
 	}
 
+	protected Flux<SearchHit> doFind(SearchRequest request) {
+		return Flux.from(execute(client -> client.search(request)));
+	}
+
 	// private helpers
 
 	private static String indexName(@Nullable String index, ElasticsearchEntity<?> entity) {
@@ -244,25 +349,25 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return StringUtils.isEmpty(type) ? entity.getTypeName() : type;
 	}
 
-	private static String[] indices(CriteriaQuery query, ElasticsearchPersistentEntity<?> entity) {
+	private static String[] indices(Query query, Supplier<String> index) {
 
 		if (query.getIndices().isEmpty()) {
-			return new String[] { entity.getIndexName() };
+			return new String[] { index.get() };
 		}
 
 		return query.getIndices().toArray(new String[0]);
 	}
 
-	private static String[] indexTypes(CriteriaQuery query, ElasticsearchPersistentEntity<?> entity) {
+	private static String[] indexTypes(Query query, Supplier<String> indexType) {
 
 		if (query.getTypes().isEmpty()) {
-			return new String[] { entity.getIndexType() };
+			return new String[] { indexType.get() };
 		}
 
 		return query.getTypes().toArray(new String[0]);
 	}
 
-	private List<FieldSortBuilder> sort(Query query, ElasticsearchPersistentEntity<?> entity) {
+	private static List<FieldSortBuilder> sort(Query query, ElasticsearchPersistentEntity<?> entity) {
 
 		if (query.getSort() == null || query.getSort().isUnsorted()) {
 			return Collections.emptyList();
@@ -289,10 +394,20 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return mappedSort;
 	}
 
-	private QueryBuilder mappedQuery(CriteriaQuery query, ElasticsearchPersistentEntity<?> entity) {
+	private QueryBuilder mappedQuery(Query query, ElasticsearchPersistentEntity<?> entity) {
 
 		// TODO: we need to actually map the fields to the according field names!
-		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(query.getCriteria());
+
+		QueryBuilder elasticsearchQuery = null;
+
+		if (query instanceof CriteriaQuery) {
+			elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(((CriteriaQuery) query).getCriteria());
+		} else if (query instanceof StringQuery) {
+			elasticsearchQuery = new WrapperQueryBuilder(((StringQuery) query).getSource());
+		} else {
+			throw new IllegalArgumentException(String.format("Unknown query type '%s'.", query.getClass()));
+		}
+
 		return elasticsearchQuery != null ? elasticsearchQuery : QueryBuilders.matchAllQuery();
 	}
 
