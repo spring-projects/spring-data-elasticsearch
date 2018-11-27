@@ -341,12 +341,57 @@ public class ReactiveElasticsearchTemplateTests {
 
 		index(randomEntity("test message"), randomEntity("test test"), randomEntity("some message"));
 
-		CriteriaQuery query = new CriteriaQuery(
-				new Criteria("message").contains("test"));
+		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
 
 		template.count(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-504
+	public void deleteShouldRemoveExistingDocumentById() {
+
+		SampleEntity sampleEntity = randomEntity("test message");
+		index(sampleEntity);
+
+		template.delete(sampleEntity.getId(), SampleEntity.class) //
+				.as(StepVerifier::create)//
+				.expectNext(sampleEntity.getId()) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-504
+	public void deleteShouldRemoveExistingDocumentByIdUsingIndexName() {
+
+		SampleEntity sampleEntity = randomEntity("test message");
+		index(sampleEntity);
+
+		template.delete(sampleEntity.getId(), DEFAULT_INDEX, "test-type") //
+				.as(StepVerifier::create)//
+				.expectNext(sampleEntity.getId()) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-504
+	public void deleteShouldRemoveExistingDocument() {
+
+		SampleEntity sampleEntity = randomEntity("test message");
+		index(sampleEntity);
+
+		template.delete(sampleEntity) //
+				.as(StepVerifier::create)//
+				.expectNext(sampleEntity.getId()) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-504
+	public void deleteByIdShouldCompleteWhenNothingDeleted() {
+
+		SampleEntity sampleEntity = randomEntity("test message");
+
+		template.delete(sampleEntity) //
+				.as(StepVerifier::create)//
 				.verifyComplete();
 	}
 

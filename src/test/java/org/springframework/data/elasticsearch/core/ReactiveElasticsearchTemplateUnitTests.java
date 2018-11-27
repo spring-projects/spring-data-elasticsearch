@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.action.search.SearchRequest.DEFAULT_INDICES_OPTIONS;
 import static org.mockito.Mockito.*;
 
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.springframework.data.elasticsearch.core.query.Criteria;
@@ -112,6 +113,34 @@ public class ReactiveElasticsearchTemplateUnitTests {
 				.verifyComplete();
 
 		assertThat(captor.getValue().indicesOptions()).isEqualTo(IndicesOptions.LENIENT_EXPAND_OPEN);
+	}
+
+	@Test // DATAES-504
+	public void deleteShouldUseDefaultRefreshPolicy() {
+
+		ArgumentCaptor<DeleteRequest> captor = ArgumentCaptor.forClass(DeleteRequest.class);
+		when(client.delete(captor.capture())).thenReturn(Mono.empty());
+
+		template.delete("id", "index", "type") //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(RefreshPolicy.IMMEDIATE);
+	}
+
+	@Test // DATAES-504
+	public void deleteShouldApplyRefreshPolicy() {
+
+		ArgumentCaptor<DeleteRequest> captor = ArgumentCaptor.forClass(DeleteRequest.class);
+		when(client.delete(captor.capture())).thenReturn(Mono.empty());
+
+		template.setRefreshPolicy(RefreshPolicy.WAIT_UNTIL);
+
+		template.delete("id", "index", "type") //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(RefreshPolicy.WAIT_UNTIL);
 	}
 
 }

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
@@ -52,14 +53,18 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -164,9 +169,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Assert.notNull(id, "Id must not be null!");
 
-		ElasticsearchEntity<?> persistentEntity = BasicElasticsearchEntity.of(entityType, converter);
-
-		return doFindById(id, persistentEntity, index, type)
+		return doFindById(id, BasicElasticsearchEntity.of(entityType, converter), index, type)
 				.map(it -> resultMapper.mapEntity(it.sourceAsString(), entityType));
 	}
 
@@ -191,9 +194,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Assert.notNull(id, "Id must not be null!");
 
-		ElasticsearchEntity<?> persistentEntity = BasicElasticsearchEntity.of(entityType, converter);
-
-		return doExists(id, persistentEntity, index, type);
+		return doExists(id, BasicElasticsearchEntity.of(entityType, converter), index, type);
 	}
 
 	private Mono<Boolean> doExists(String id, ElasticsearchEntity<?> entity, @Nullable String index,
@@ -216,9 +217,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	public <T> Flux<T> find(Query query, Class<?> entityType, @Nullable String index, @Nullable String type,
 			Class<T> resultType) {
 
-		ElasticsearchEntity<?> persistentEntity = BasicElasticsearchEntity.of(entityType, converter);
-
-		return doFind(query, persistentEntity, index, type)
+		return doFind(query, BasicElasticsearchEntity.of(entityType, converter), index, type)
 				.map(it -> resultMapper.mapEntity(it.getSourceAsString(), resultType));
 	}
 
@@ -282,6 +281,44 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return find(query, entityType, index, type).count();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(Object, String, String)
+	 */
+	@Override
+	public Mono<String> delete(Object entity, @Nullable String index, @Nullable String type) {
+
+		AdaptableEntity<?> elasticsearchEntity = ConverterAwareAdaptableEntity.of(entity, converter);
+
+		return Mono.defer(() -> doDeleteById(entity, ObjectUtils.nullSafeToString(elasticsearchEntity.getId()),
+				elasticsearchEntity, index, type));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(String, Class, String, String)
+	 */
+	@Override
+	public Mono<String> delete(String id, Class<?> entityType, @Nullable String index, @Nullable String type) {
+
+		Assert.notNull(id, "Id must not be null!");
+
+		return doDeleteById(null, id, BasicElasticsearchEntity.of(entityType, converter), index, type);
+
+	}
+
+	private Mono<String> doDeleteById(@Nullable Object source, String id, ElasticsearchEntity<?> entity,
+			@Nullable String index, @Nullable String type) {
+
+		return Mono.defer(() -> {
+
+			String indexToUse = indexName(index, entity);
+			String typeToUse = typeName(type, entity);
+
+			return doDelete(prepareDeleteRequest(source, new DeleteRequest(indexToUse, typeToUse, id)));
+		});
+	}
+
 	// Property Setters / Getters
 
 	/**
@@ -331,7 +368,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	/**
-	 * Customization hook to modify a generated {@link IndexRequest} prior to its execution. Eg. by setting the *
+	 * Customization hook to modify a generated {@link IndexRequest} prior to its execution. Eg. by setting the
 	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
 	 *
 	 * @param source the source object the {@link IndexRequest} was derived from.
@@ -342,6 +379,13 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return prepareWriteRequest(request);
 	}
 
+	/**
+	 * Customization hook to modify a generated {@link SearchRequest} prior to its execution. Eg. by setting the
+	 * {@link SearchRequest#indicesOptions(IndicesOptions) indices options} if applicable.
+	 *
+	 * @param request the generated {@link SearchRequest}.
+	 * @return never {@literal null}.
+	 */
 	protected SearchRequest prepareSearchRequest(SearchRequest request) {
 
 		if (indicesOptions == null) {
@@ -349,6 +393,19 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		}
 
 		return request.indicesOptions(indicesOptions);
+	}
+
+	/**
+	 * Customization hook to modify a generated {@link DeleteRequest} prior to its execution. Eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param source the source object the {@link DeleteRequest} was derived from. My be {@literal null} if using the
+	 *          {@literal id} directly.
+	 * @param request the generated {@link DeleteRequest}.
+	 * @return never {@literal null}.
+	 */
+	protected DeleteRequest prepareDeleteRequest(@Nullable Object source, DeleteRequest request) {
+		return prepareWriteRequest(request);
 	}
 
 	/**
@@ -386,10 +443,30 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * Customization hook on the actual execution result {@link Publisher}. <br />
 	 *
 	 * @param request the already prepared {@link SearchRequest} ready to be executed.
-	 * @return a {@link Mono} emitting the result of the operation.
+	 * @return a {@link Flux} emitting the result of the operation.
 	 */
 	protected Flux<SearchHit> doFind(SearchRequest request) {
 		return Flux.from(execute(client -> client.search(request)));
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link DeleteRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<String> doDelete(DeleteRequest request) {
+
+		return Mono.from(execute(client -> client.delete(request))) //
+
+				.flatMap(it -> {
+
+					if (HttpStatus.valueOf(it.status().getStatus()).equals(HttpStatus.NOT_FOUND)) {
+						return Mono.empty();
+					}
+
+					return Mono.just(it.getId());
+				});
 	}
 
 	// private helpers
@@ -567,6 +644,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		}
 
 		static <T> BasicElasticsearchEntity<T> of(Class<T> type, ElasticsearchConverter converter) {
+
+			if (Object.class.equals(type)) {
+				return new BasicElasticsearchEntity<>(new SimpleElasticsearchPersistentEntity<>(ClassTypeInformation.OBJECT));
+			}
+
 			return new BasicElasticsearchEntity<>(converter.getMappingContext().getRequiredPersistentEntity(type));
 		}
 

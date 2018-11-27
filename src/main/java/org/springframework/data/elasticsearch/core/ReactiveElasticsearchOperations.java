@@ -321,6 +321,93 @@ public interface ReactiveElasticsearchOperations {
 	Mono<Long> count(Query query, Class<?> entityType, @Nullable String index, @Nullable String type);
 
 	/**
+	 * Delete the given entity extracting index and type from entity metadata.
+	 *
+	 * @param entity must not be {@literal null}.
+	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
+	 */
+	default Mono<String> delete(Object entity) {
+		return delete(entity, null);
+	}
+
+	/**
+	 * Delete the given entity extracting index and type from entity metadata.
+	 *
+	 * @param entity must not be {@literal null}.
+	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
+	 */
+	default Mono<String> delete(Object entity, @Nullable String index) {
+		return delete(entity, index, null);
+	}
+
+	/**
+	 * Delete the given entity extracting index and type from entity metadata.
+	 *
+	 * @param entity must not be {@literal null}.
+	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
+	 */
+	Mono<String> delete(Object entity, @Nullable String index, @Nullable String type);
+
+	/**
+	 * Delete the entity with given {@literal id}.
+	 *
+	 * @param id must not be {@literal null}.
+	 * @param index the name of the target index.
+	 * @param type the name of the target type.
+	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
+	 */
+	default Mono<String> delete(String id, String index,String type) {
+
+		Assert.notNull(index, "Index must not be null!");
+		Assert.notNull(type, "Type must not be null!");
+
+		return delete(id, Object.class, index, type);
+	}
+
+	/**
+	 * Delete the entity with given {@literal id} extracting index and type from entity metadata.
+	 *
+	 * @param id must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
+	 */
+	default Mono<String> delete(String id, Class<?> entityType) {
+		return delete(id, entityType, null);
+	}
+
+	/**
+	 * Delete the entity with given {@literal id} extracting index and type from entity metadata.
+	 *
+	 * @param id must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
+	 */
+	default Mono<String> delete(String id, Class<?> entityType, @Nullable String index) {
+		return delete(id, entityType, index, null);
+	}
+
+	/**
+	 * Delete the entity with given {@literal id} extracting index and type from entity metadata.
+	 *
+	 * @param id must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
+	 */
+	Mono<String> delete(String id, Class<?> entityType, @Nullable String index, @Nullable String type);
+
+	/**
 	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on
 	 * {@link ReactiveElasticsearchClient}.
 	 *
