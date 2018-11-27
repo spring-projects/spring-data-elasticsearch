@@ -271,6 +271,17 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		});
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#count(Query, Class, String, String)
+	 */
+	@Override
+	public Mono<Long> count(Query query, Class<?> entityType, String index, String type) {
+
+		// TODO: ES 7.0 has a dedicated CountRequest - use that one once available.
+		return find(query, entityType, index, type).count();
+	}
+
 	// Property Setters / Getters
 
 	/**

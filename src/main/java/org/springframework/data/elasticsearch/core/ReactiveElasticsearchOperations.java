@@ -18,10 +18,11 @@ package org.springframework.data.elasticsearch.core;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import org.elasticsearch.index.query.QueryBuilders;
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -204,44 +205,44 @@ public interface ReactiveElasticsearchOperations {
 	Mono<Boolean> exists(String id, Class<?> entityType, @Nullable String index, @Nullable String type);
 
 	/**
-	 * Search the index for entities matching the given {@link CriteriaQuery query}.
+	 * Search the index for entities matching the given {@link Query query}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @param <T>
-	 * @return
+	 * @return a {@link Flux} emitting matching entities one by one.
 	 */
 	default <T> Flux<T> find(Query query, Class<T> entityType) {
 		return find(query, entityType, entityType);
 	}
 
 	/**
-	 * Search the index for entities matching the given {@link CriteriaQuery query}.
+	 * Search the index for entities matching the given {@link Query query}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType The entity type for mapping the query. Must not be {@literal null}.
 	 * @param returnType The mapping target type. Must not be {@literal null}. Th
 	 * @param <T>
-	 * @return
+	 * @return a {@link Flux} emitting matching entities one by one.
 	 */
 	default <T> Flux<T> find(Query query, Class<?> entityType, Class<T> returnType) {
 		return find(query, entityType, null, null, returnType);
 	}
 
 	/**
-	 * Search the index for entities matching the given {@link CriteriaQuery query}.
+	 * Search the index for entities matching the given {@link Query query}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @param <T>
-	 * @return
+	 * @return a {@link Flux} emitting matching entities one by one.
 	 */
 	default <T> Flux<T> find(Query query, Class<T> entityType, @Nullable String index) {
 		return find(query, entityType, index, null);
 	}
 
 	/**
-	 * Search the index for entities matching the given {@link CriteriaQuery query}.
+	 * Search the index for entities matching the given {@link Query query}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
@@ -250,14 +251,14 @@ public interface ReactiveElasticsearchOperations {
 	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
 	 *          {@literal null}.
 	 * @param <T>
-	 * @return
+	 * @returnm a {@link Flux} emitting matching entities one by one.
 	 */
 	default <T> Flux<T> find(Query query, Class<T> entityType, @Nullable String index, @Nullable String type) {
 		return find(query, entityType, index, type, entityType);
 	}
 
 	/**
-	 * Search the index for entities matching the given {@link CriteriaQuery query}.
+	 * Search the index for entities matching the given {@link Query query}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
@@ -267,10 +268,57 @@ public interface ReactiveElasticsearchOperations {
 	 *          {@literal null}.
 	 * @param resultType the projection result type.
 	 * @param <T>
-	 * @return
+	 * @return a {@link Flux} emitting matching entities one by one.
 	 */
 	<T> Flux<T> find(Query query, Class<?> entityType, @Nullable String index, @Nullable String type,
 			Class<T> resultType);
+
+	/**
+	 * Count the number of documents matching the given {@link Query}.
+	 *
+	 * @param entityType must not be {@literal null}.
+	 * @return a {@link Mono} emitting the nr of matching documents.
+	 */
+	default Mono<Long> count(Class<?> entityType) {
+		return count(new StringQuery(QueryBuilders.matchAllQuery().toString()), entityType, null);
+	}
+
+	/**
+	 * Count the number of documents matching the given {@link Query}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @return a {@link Mono} emitting the nr of matching documents.
+	 */
+	default Mono<Long> count(Query query, Class<?> entityType) {
+		return count(query, entityType, null);
+	}
+
+	/**
+	 * Count the number of documents matching the given {@link Query}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @return a {@link Mono} emitting the nr of matching documents.
+	 */
+	default Mono<Long> count(Query query, Class<?> entityType, @Nullable String index) {
+		return count(query, entityType, index, null);
+	}
+
+	/**
+	 * Count the number of documents matching the given {@link Query}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @return a {@link Mono} emitting the nr of matching documents.
+	 */
+	Mono<Long> count(Query query, Class<?> entityType, @Nullable String index, @Nullable String type);
 
 	/**
 	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on

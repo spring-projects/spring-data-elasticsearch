@@ -325,6 +325,31 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
+	@Test // DATAES-504
+	public void countShouldReturnCountAllWhenGivenNoQuery() {
+
+		index(randomEntity("test message"), randomEntity("test test"), randomEntity("some message"));
+
+		template.count(SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.expectNext(3L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-504
+	public void countShouldReturnCountMatchingDocuments() {
+
+		index(randomEntity("test message"), randomEntity("test test"), randomEntity("some message"));
+
+		CriteriaQuery query = new CriteriaQuery(
+				new Criteria("message").contains("test"));
+
+		template.count(query, SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.expectNext(2L) //
+				.verifyComplete();
+	}
+
 	// TODO: check field mapping !!!
 
 	// --> JUST some helpers
