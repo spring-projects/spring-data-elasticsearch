@@ -1,6 +1,14 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.12.RELEASE (2018-11-27)
+----------------------------------------------
+* DATAES-503 - Missing copy_to property in @Field Annotation.
+* DATAES-492 - Missing normalizer property in @Field and @InnerField Annotation.
+* DATAES-490 - Release 3.0.12 (Kay SR12).
+* DATAES-445 - Usage example of scan and scroll is misleading.
+
+
 Changes in version 2.1.17.RELEASE (2018-11-27)
 ----------------------------------------------
 * DATAES-491 - Release 2.1.17 (Ingalls SR17).
