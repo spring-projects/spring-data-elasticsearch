@@ -61,7 +61,6 @@ import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.HttpClientErrorException;
 
 /**
  * @author Christoph Strobl
@@ -180,6 +179,32 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			String typeToUse = typeName(type, entity);
 
 			return doFindById(new GetRequest(indexToUse, typeToUse, id));
+		});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exists(String, Class, String, String)
+	 */
+	@Override
+	public Mono<Boolean> exists(String id, Class<?> entityType, String index, String type) {
+
+		Assert.notNull(id, "Id must not be null!");
+
+		ElasticsearchEntity<?> persistentEntity = BasicElasticsearchEntity.of(entityType, converter);
+
+		return doExists(id, persistentEntity, index, type);
+	}
+
+	private Mono<Boolean> doExists(String id, ElasticsearchEntity<?> entity, @Nullable String index,
+			@Nullable String type) {
+
+		return Mono.defer(() -> {
+
+			String indexToUse = indexName(index, entity);
+			String typeToUse = typeName(type, entity);
+
+			return doExists(new GetRequest(indexToUse, typeToUse, id));
 		});
 	}
 
@@ -322,19 +347,32 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return Mono.from(execute(client -> client.index(request)));
 	}
 
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link GetRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
 	protected Mono<GetResult> doFindById(GetRequest request) {
-
-		return Mono.from(execute(client -> client.get(request))) //
-				.onErrorResume((it) -> {
-
-					if (it instanceof HttpClientErrorException) {
-						return ((HttpClientErrorException) it).getRawStatusCode() == 404;
-					}
-					return false;
-
-				}, (it) -> Mono.empty());
+		return Mono.from(execute(client -> client.get(request)));
 	}
 
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link GetRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<Boolean> doExists(GetRequest request) {
+		return Mono.from(execute(client -> client.exists(request)));
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link SearchRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
 	protected Flux<SearchHit> doFind(SearchRequest request) {
 		return Flux.from(execute(client -> client.search(request)));
 	}

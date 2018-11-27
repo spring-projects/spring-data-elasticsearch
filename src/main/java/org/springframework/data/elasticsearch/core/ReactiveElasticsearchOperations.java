@@ -201,11 +201,7 @@ public interface ReactiveElasticsearchOperations {
 	 *          {@literal null}.
 	 * @return a {@link Mono} emitting {@literal true} if a matching document exists, {@literal false} otherwise.
 	 */
-	default Mono<Boolean> exists(String id, Class<?> entityType, @Nullable String index, @Nullable String type) {
-
-		// TODO: use driver exists as soon as available
-		return findById(id, entityType, index, type).map(it -> Boolean.TRUE).defaultIfEmpty(Boolean.FALSE);
-	}
+	Mono<Boolean> exists(String id, Class<?> entityType, @Nullable String index, @Nullable String type);
 
 	/**
 	 * Search the index for entities matching the given {@link CriteriaQuery query}.
