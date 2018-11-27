@@ -18,6 +18,9 @@ package org.springframework.data.elasticsearch.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -304,6 +307,26 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
+	@Test // DATAES-504
+	public void shouldReturnProjectedTargetEntity() {
+
+		SampleEntity sampleEntity1 = randomEntity("test message");
+		SampleEntity sampleEntity2 = randomEntity("test test");
+		SampleEntity sampleEntity3 = randomEntity("some message");
+
+		index(sampleEntity1, sampleEntity2, sampleEntity3);
+
+		CriteriaQuery query = new CriteriaQuery(
+				new Criteria("message").contains("some").and("message").contains("message"));
+
+		template.find(query, SampleEntity.class, Message.class) //
+				.as(StepVerifier::create) //
+				.expectNext(new Message(sampleEntity3.getMessage())) //
+				.verifyComplete();
+	}
+
+	// TODO: check field mapping !!!
+
 	// --> JUST some helpers
 
 	private SampleEntity randomEntity(String message) {
@@ -333,5 +356,12 @@ public class ReactiveElasticsearchTemplateTests {
 		}
 
 		restTemplate.refresh(SampleEntity.class);
+	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	static class Message {
+		String message;
 	}
 }

@@ -15,13 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.springframework.data.elasticsearch.core.query.Query;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -212,17 +212,63 @@ public interface ReactiveElasticsearchOperations {
 	 * @return
 	 */
 	default <T> Flux<T> find(Query query, Class<T> entityType) {
-		return find(query, entityType, null);
+		return find(query, entityType, entityType);
 	}
 
+	/**
+	 * Search the index for entities matching the given {@link CriteriaQuery query}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType The entity type for mapping the query. Must not be {@literal null}.
+	 * @param returnType The mapping target type. Must not be {@literal null}. Th
+	 * @param <T>
+	 * @return
+	 */
+	default <T> Flux<T> find(Query query, Class<?> entityType, Class<T> returnType) {
+		return find(query, entityType, null, null, returnType);
+	}
+
+	/**
+	 * Search the index for entities matching the given {@link CriteriaQuery query}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param <T>
+	 * @return
+	 */
 	default <T> Flux<T> find(Query query, Class<T> entityType, @Nullable String index) {
 		return find(query, entityType, index, null);
 	}
 
+	/**
+	 * Search the index for entities matching the given {@link CriteriaQuery query}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @param <T>
+	 * @return
+	 */
 	default <T> Flux<T> find(Query query, Class<T> entityType, @Nullable String index, @Nullable String type) {
 		return find(query, entityType, index, type, entityType);
 	}
 
+	/**
+	 * Search the index for entities matching the given {@link CriteriaQuery query}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @param resultType the projection result type.
+	 * @param <T>
+	 * @return
+	 */
 	<T> Flux<T> find(Query query, Class<?> entityType, @Nullable String index, @Nullable String type,
 			Class<T> resultType);
 

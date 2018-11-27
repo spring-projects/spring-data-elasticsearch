@@ -208,11 +208,15 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		});
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#find(Query, Class, String, String, Class)
+	 */
 	@Override
 	public <T> Flux<T> find(Query query, Class<?> entityType, @Nullable String index, @Nullable String type,
 			Class<T> resultType) {
 
-		ElasticsearchEntity<?> persistentEntity = BasicElasticsearchEntity.of(resultType, converter);
+		ElasticsearchEntity<?> persistentEntity = BasicElasticsearchEntity.of(entityType, converter);
 
 		return doFind(query, persistentEntity, index, type)
 				.map(it -> resultMapper.mapEntity(it.getSourceAsString(), resultType));
