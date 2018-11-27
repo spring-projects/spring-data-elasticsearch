@@ -99,7 +99,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		SampleEntity sampleEntity = randomEntity("foo bar");
 
-		template.insert(sampleEntity)//
+		template.save(sampleEntity)//
 				.as(StepVerifier::create)//
 				.expectNextCount(1)//
 				.verifyComplete();
@@ -116,7 +116,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		SampleEntity sampleEntity = SampleEntity.builder().message("wohoo").build();
 
-		template.insert(sampleEntity) //
+		template.save(sampleEntity) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(it -> {
 
@@ -133,7 +133,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		SampleEntity sampleEntity = randomEntity("in another index");
 
-		template.insert(sampleEntity, ALTERNATE_INDEX).as(StepVerifier::create)//
+		template.save(sampleEntity, ALTERNATE_INDEX).as(StepVerifier::create)//
 				.expectNextCount(1)//
 				.verifyComplete();
 
@@ -149,7 +149,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		Map<String, Object> map = Collections.singletonMap("foo", "bar");
 
-		template.insert(map, ALTERNATE_INDEX, "singleton-map") //
+		template.save(map, ALTERNATE_INDEX, "singleton-map") //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
@@ -157,7 +157,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 	@Test(expected = IllegalArgumentException.class) // DATAES-504
 	public void insertShouldErrorOnNullEntity() {
-		template.insert(null);
+		template.save(null);
 	}
 
 	@Test // DATAES-504

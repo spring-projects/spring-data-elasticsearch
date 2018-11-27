@@ -109,7 +109,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#index(Object, String, String)
 	 */
 	@Override
-	public <T> Mono<T> insert(T entity, @Nullable String index, @Nullable String type) {
+	public <T> Mono<T> save(T entity, @Nullable String index, @Nullable String type) {
 
 		Assert.notNull(entity, "Entity must not be null!");
 

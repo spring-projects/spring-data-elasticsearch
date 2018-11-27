@@ -68,7 +68,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		ArgumentCaptor<IndexRequest> captor = ArgumentCaptor.forClass(IndexRequest.class);
 		when(client.index(captor.capture())).thenReturn(Mono.empty());
 
-		template.insert(Collections.singletonMap("key", "value"), "index", "type") //
+		template.save(Collections.singletonMap("key", "value"), "index", "type") //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -83,7 +83,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 		template.setRefreshPolicy(RefreshPolicy.WAIT_UNTIL);
 
-		template.insert(Collections.singletonMap("key", "value"), "index", "type") //
+		template.save(Collections.singletonMap("key", "value"), "index", "type") //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 

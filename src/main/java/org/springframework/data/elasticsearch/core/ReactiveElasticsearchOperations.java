@@ -55,10 +55,10 @@ public interface ReactiveElasticsearchOperations {
 	 * @param <T>
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
-	default <T> Mono<T> insert(Mono<? extends T> entityPublisher) {
+	default <T> Mono<T> save(Mono<? extends T> entityPublisher) {
 
 		Assert.notNull(entityPublisher, "EntityPublisher must not be null!");
-		return entityPublisher.flatMap(this::insert);
+		return entityPublisher.flatMap(this::save);
 	}
 
 	/**
@@ -68,8 +68,8 @@ public interface ReactiveElasticsearchOperations {
 	 * @param <T>
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
-	default <T> Mono<T> insert(T entity) {
-		return insert(entity, null);
+	default <T> Mono<T> save(T entity) {
+		return save(entity, null);
 	}
 
 	/**
@@ -81,10 +81,10 @@ public interface ReactiveElasticsearchOperations {
 	 * @param <T>
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
-	default <T> Mono<T> insert(Mono<? extends T> entityPublisher, String index) {
+	default <T> Mono<T> save(Mono<? extends T> entityPublisher, String index) {
 
 		Assert.notNull(entityPublisher, "EntityPublisher must not be null!");
-		return entityPublisher.flatMap(it -> insert(it, index));
+		return entityPublisher.flatMap(it -> save(it, index));
 	}
 
 	/**
@@ -96,8 +96,8 @@ public interface ReactiveElasticsearchOperations {
 	 * @param <T>
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
-	default <T> Mono<T> insert(T entity, @Nullable String index) {
-		return insert(entity, index, null);
+	default <T> Mono<T> save(T entity, @Nullable String index) {
+		return save(entity, index, null);
 	}
 
 	/**
@@ -111,10 +111,10 @@ public interface ReactiveElasticsearchOperations {
 	 * @param <T>
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
-	default <T> Mono<T> insert(Mono<? extends T> entityPublisher, @Nullable String index, @Nullable String type) {
+	default <T> Mono<T> save(Mono<? extends T> entityPublisher, @Nullable String index, @Nullable String type) {
 
 		Assert.notNull(entityPublisher, "EntityPublisher must not be null!");
-		return entityPublisher.flatMap(it -> insert(it, index, type));
+		return entityPublisher.flatMap(it -> save(it, index, type));
 	}
 
 	/**
@@ -127,7 +127,7 @@ public interface ReactiveElasticsearchOperations {
 	 * @param <T>
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
-	<T> Mono<T> insert(T entity, @Nullable String index, @Nullable String type);
+	<T> Mono<T> save(T entity, @Nullable String index, @Nullable String type);
 
 	/**
 	 * Find the document with the given {@literal id} mapped onto the given {@literal entityType}.
