@@ -16,23 +16,22 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.elasticsearch.action.search.SearchRequest.DEFAULT_INDICES_OPTIONS;
+import static org.elasticsearch.action.search.SearchRequest.*;
 import static org.mockito.Mockito.*;
 
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.support.IndicesOptions;
-import org.springframework.data.elasticsearch.core.query.Criteria;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.elasticsearch.entities.SampleEntity;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Collections;
 
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,6 +40,10 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.entities.SampleEntity;
 
 /**
  * @author Christoph Strobl
@@ -94,7 +97,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		when(client.search(captor.capture())).thenReturn(Flux.empty());
 
 		template.find(new CriteriaQuery(new Criteria("*")), SampleEntity.class) //
-		.as(StepVerifier::create) //
+				.as(StepVerifier::create) //
 				.verifyComplete();
 
 		assertThat(captor.getValue().indicesOptions()).isEqualTo(DEFAULT_INDICES_OPTIONS);
@@ -143,4 +146,59 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(RefreshPolicy.WAIT_UNTIL);
 	}
 
+	@Test // DATAES-504
+	public void deleteByShouldUseDefaultRefreshPolicy() {
+
+		ArgumentCaptor<DeleteByQueryRequest> captor = ArgumentCaptor.forClass(DeleteByQueryRequest.class);
+		when(client.deleteBy(captor.capture())).thenReturn(Mono.empty());
+
+		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, "index", "type") //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		assertThat(captor.getValue().isRefresh()).isTrue();
+	}
+
+	@Test // DATAES-504
+	public void deleteByShouldApplyRefreshPolicy() {
+
+		ArgumentCaptor<DeleteByQueryRequest> captor = ArgumentCaptor.forClass(DeleteByQueryRequest.class);
+		when(client.deleteBy(captor.capture())).thenReturn(Mono.empty());
+
+		template.setRefreshPolicy(RefreshPolicy.NONE);
+
+		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, "index", "type") //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		assertThat(captor.getValue().isRefresh()).isFalse();
+	}
+
+	@Test // DATAES-504
+	public void deleteByShouldApplyIndicesOptions() {
+
+		ArgumentCaptor<DeleteByQueryRequest> captor = ArgumentCaptor.forClass(DeleteByQueryRequest.class);
+		when(client.deleteBy(captor.capture())).thenReturn(Mono.empty());
+
+		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, "index", "type") //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		assertThat(captor.getValue().indicesOptions()).isEqualTo(DEFAULT_INDICES_OPTIONS);
+	}
+
+	@Test // DATAES-504
+	public void deleteByShouldApplyIndicesOptionsIfSet() {
+
+		ArgumentCaptor<DeleteByQueryRequest> captor = ArgumentCaptor.forClass(DeleteByQueryRequest.class);
+		when(client.deleteBy(captor.capture())).thenReturn(Mono.empty());
+
+		template.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
+
+		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, "index", "type") //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		assertThat(captor.getValue().indicesOptions()).isEqualTo(IndicesOptions.LENIENT_EXPAND_OPEN);
+	}
 }

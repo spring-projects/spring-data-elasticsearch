@@ -33,6 +33,8 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.index.get.GetResult;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
@@ -347,6 +349,29 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
 	 */
 	Flux<SearchHit> search(HttpHeaders headers, SearchRequest searchRequest);
+
+	/**
+	 * Execute the given {@link SearchRequest} against the {@literal search} API.
+	 *
+	 * @param deleteRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html">Delete By
+	 *      Query API on elastic.co</a>
+	 * @return a {@link Mono} emitting the emitting operation response.
+	 */
+	default Mono<BulkByScrollResponse> deleteBy(DeleteByQueryRequest deleteRequest) {
+		return deleteBy(HttpHeaders.EMPTY, deleteRequest);
+	}
+
+	/**
+	 * Execute the given {@link SearchRequest} against the {@literal search} API.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param deleteRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html">Delete By
+	 *      Query API on elastic.co</a>
+	 * @return a {@link Mono} emitting operation response.
+	 */
+	Mono<BulkByScrollResponse> deleteBy(HttpHeaders headers, DeleteByQueryRequest deleteRequest);
 
 	/**
 	 * Compose the actual command/s to run against Elasticsearch using the underlying {@link WebClient connection}.

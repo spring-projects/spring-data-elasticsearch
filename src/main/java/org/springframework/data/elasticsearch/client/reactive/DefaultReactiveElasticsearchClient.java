@@ -56,10 +56,13 @@ import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.get.GetResult;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.reactivestreams.Publisher;
+import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
@@ -248,7 +251,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 */
 	@Override
 	public Mono<DeleteResponse> delete(HttpHeaders headers, DeleteRequest deleteRequest) {
-		return sendRequest(deleteRequest, RequestCreator.delete(), DeleteResponse.class, headers).publishNext();
+
+		return sendRequest(deleteRequest, RequestCreator.delete(), DeleteResponse.class, headers) //
+				.publishNext();
 	}
 
 	/*
@@ -261,6 +266,16 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		return sendRequest(searchRequest, RequestCreator.search(), SearchResponse.class, headers) //
 				.map(SearchResponse::getHits) //
 				.flatMap(Flux::fromIterable);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.index.reindex.DeleteByQueryRequest)
+	 */
+	public Mono<BulkByScrollResponse> deleteBy(HttpHeaders headers, DeleteByQueryRequest deleteRequest) {
+
+		return sendRequest(deleteRequest, RequestCreator.deleteByQuery(), BulkByScrollResponse.class, headers) //
+				.publishNext();
 	}
 
 	/*
@@ -430,6 +445,18 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		static Function<DeleteRequest, Request> delete() {
 			return RequestConverters::delete;
+		}
+
+		static Function<DeleteByQueryRequest, Request> deleteByQuery() {
+
+			return request -> {
+
+				try {
+					return RequestConverters.deleteByQuery(request);
+				} catch (IOException e) {
+					throw new ElasticsearchException("Could not parse request", e);
+				}
+			};
 		}
 	}
 

@@ -40,6 +40,8 @@ import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.WrapperQueryBuilder;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -319,6 +321,32 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		});
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#deleteBy(Query, Class, String, String)
+	 */
+	@Override
+	public Mono<Long> deleteBy(Query query, Class<?> entityType, String index, String type) {
+
+		Assert.notNull(query, "Query must not be null!");
+
+		return doDeleteBy(query, BasicElasticsearchEntity.of(entityType, converter), index, type)
+				.map(BulkByScrollResponse::getDeleted).publishNext();
+	}
+
+	private Flux<BulkByScrollResponse> doDeleteBy(Query query, ElasticsearchEntity<?> entity, @Nullable String index,
+			@Nullable String type) {
+
+		return Flux.defer(() -> {
+
+			DeleteByQueryRequest request = new DeleteByQueryRequest(indices(query, () -> indexName(index, entity)));
+			request.types(indexTypes(query, () -> typeName(type, entity)));
+			request.setQuery(mappedQuery(query, entity.getPersistentEntity()));
+
+			return doDeleteBy(prepareDeleteByRequest(request));
+		});
+	}
+
 	// Property Setters / Getters
 
 	/**
@@ -409,6 +437,26 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	/**
+	 * Customization hook to modify a generated {@link DeleteByQueryRequest} prior to its execution. Eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param request the generated {@link DeleteByQueryRequest}.
+	 * @return never {@literal null}.
+	 */
+	protected DeleteByQueryRequest prepareDeleteByRequest(DeleteByQueryRequest request) {
+
+		if (refreshPolicy != null && !RefreshPolicy.NONE.equals(refreshPolicy)) {
+			request = request.setRefresh(true);
+		}
+
+		if (indicesOptions != null) {
+			request = request.setIndicesOptions(indicesOptions);
+		}
+
+		return request;
+	}
+
+	/**
 	 * Customization hook on the actual execution result {@link Publisher}. <br />
 	 * You know what you're doing here? Well fair enough, go ahead on your own risk.
 	 *
@@ -467,6 +515,16 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 					return Mono.just(it.getId());
 				});
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link DeleteByQueryRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<BulkByScrollResponse> doDeleteBy(DeleteByQueryRequest request) {
+		return Mono.from(execute(client -> client.deleteBy(request)));
 	}
 
 	// private helpers

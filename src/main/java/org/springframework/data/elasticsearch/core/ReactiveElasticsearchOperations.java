@@ -362,7 +362,7 @@ public interface ReactiveElasticsearchOperations {
 	 * @param type the name of the target type.
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	default Mono<String> delete(String id, String index,String type) {
+	default Mono<String> delete(String id, String index, String type) {
 
 		Assert.notNull(index, "Index must not be null!");
 		Assert.notNull(type, "Type must not be null!");
@@ -406,6 +406,43 @@ public interface ReactiveElasticsearchOperations {
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
 	Mono<String> delete(String id, Class<?> entityType, @Nullable String index, @Nullable String type);
+
+	/**
+	 * Delete the documents matching the given {@link Query} extracting index and type from entity metadata.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @return a {@link Mono} emitting the number of the removed documents.
+	 */
+	default Mono<Long> deleteBy(Query query, Class<?> entityType) {
+		return deleteBy(query, entityType, null);
+	}
+
+	/**
+	 * Delete the documents matching the given {@link Query} extracting index and type from entity metadata.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @return a {@link Mono} emitting the number of the removed documents.
+	 */
+	default Mono<Long> deleteBy(Query query, Class<?> entityType, @Nullable String index) {
+		return deleteBy(query, entityType, index, null);
+	}
+
+	/**
+	 * Delete the documents matching the given {@link Query} extracting index and type from entity metadata.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
+	 *          {@literal null}.
+	 * @return a {@link Mono} emitting the number of the removed documents.
+	 */
+	Mono<Long> deleteBy(Query query, Class<?> entityType, @Nullable String index, @Nullable String type);
 
 	/**
 	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on

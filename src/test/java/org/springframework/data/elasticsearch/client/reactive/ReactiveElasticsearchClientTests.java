@@ -37,6 +37,7 @@ import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.After;
@@ -410,6 +411,41 @@ public class ReactiveElasticsearchClientTests {
 
 		client.search(request) //
 				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void deleteByShouldRemoveExistingDocument() {
+
+		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+
+		DeleteByQueryRequest request = new DeleteByQueryRequest(INDEX_I) //
+				.setDocTypes(TYPE_I) //
+				.setQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("_id", id)));
+
+		client.deleteBy(request) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+
+					assertThat(it.getDeleted()).isEqualTo(1);
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-488
+	public void deleteByEmitResultWhenNothingRemoved() {
+
+		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+
+		DeleteByQueryRequest request = new DeleteByQueryRequest(INDEX_I) //
+				.setDocTypes(TYPE_I) //
+				.setQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("_id", "it-was-not-me")));
+
+		client.deleteBy(request) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+					assertThat(it.getDeleted()).isEqualTo(0);
+				}) //
 				.verifyComplete();
 	}
 

@@ -395,6 +395,32 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
+	@Test // DATAES-504
+	public void deleteByQueryShouldReturnNumberOfDeletedDocuments() {
+
+		index(randomEntity("test message"), randomEntity("test test"), randomEntity("some message"));
+
+		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
+
+		template.deleteBy(query, SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.expectNext(2L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-504
+	public void deleteByQueryShouldReturnZeroIfNothingDeleted() {
+
+		index(randomEntity("test message"));
+
+		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("luke"));
+
+		template.deleteBy(query, SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.expectNext(0L) //
+				.verifyComplete();
+	}
+
 	// TODO: check field mapping !!!
 
 	// --> JUST some helpers
