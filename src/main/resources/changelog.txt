@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.1.17.RELEASE (2018-11-27)
+----------------------------------------------
+* DATAES-491 - Release 2.1.17 (Ingalls SR17).
+
+
 Changes in version 3.1.2.RELEASE (2018-10-29)
 ---------------------------------------------
 * DATAES-489 - Release 3.1.2 (Lovelace SR2).
