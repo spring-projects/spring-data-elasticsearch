@@ -351,7 +351,22 @@ public interface ReactiveElasticsearchClient {
 	Flux<SearchHit> search(HttpHeaders headers, SearchRequest searchRequest);
 
 	/**
-	 * Execute the given {@link SearchRequest} against the {@literal search} API.
+	 * Execute a {@link DeleteByQueryRequest} against the {@literal delete by query} API.
+	 *
+	 * @param consumer never {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html">Delete By
+	 *      Query API on elastic.co</a>
+	 * @return a {@link Mono} emitting the emitting operation response.
+	 */
+	default Mono<BulkByScrollResponse> deleteBy(Consumer<DeleteByQueryRequest> consumer) {
+
+		DeleteByQueryRequest request = new DeleteByQueryRequest();
+		consumer.accept(request);
+		return deleteBy(request);
+	}
+
+	/**
+	 * Execute a {@link DeleteByQueryRequest} against the {@literal delete by query} API.
 	 *
 	 * @param deleteRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html">Delete By
@@ -363,7 +378,7 @@ public interface ReactiveElasticsearchClient {
 	}
 
 	/**
-	 * Execute the given {@link SearchRequest} against the {@literal search} API.
+	 * Execute a {@link DeleteByQueryRequest} against the {@literal delete by query} API.
 	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param deleteRequest must not be {@literal null}.
