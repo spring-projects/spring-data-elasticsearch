@@ -17,6 +17,9 @@ package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.junit.Rule;
+import org.springframework.data.elasticsearch.ElasticsearchVersion;
+import org.springframework.data.elasticsearch.ElasticsearchVersionRule;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -58,6 +61,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class ReactiveElasticsearchClientTests {
+
+	public @Rule ElasticsearchVersionRule elasticsearchVersion = ElasticsearchVersionRule.any();
 
 	static final String INDEX_I = "idx-1-reactive-client-tests";
 	static final String INDEX_II = "idx-2-reactive-client-tests";
@@ -415,6 +420,7 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-488
+	@ElasticsearchVersion(asOf = "6.5.0")
 	public void deleteByShouldRemoveExistingDocument() {
 
 		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
@@ -433,6 +439,7 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-488
+	@ElasticsearchVersion(asOf = "6.5.0")
 	public void deleteByEmitResultWhenNothingRemoved() {
 
 		addSourceDocument().ofType(TYPE_I).to(INDEX_I);

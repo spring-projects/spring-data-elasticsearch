@@ -28,6 +28,7 @@ import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
+import org.springframework.data.util.Version;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -46,6 +47,18 @@ public final class TestUtils {
 
 	public static ReactiveElasticsearchClient reactiveClient() {
 		return ReactiveRestClients.create(ClientConfiguration.create("localhost:9200"));
+	}
+
+	public static Version serverVersion() {
+
+		try (RestHighLevelClient client = restHighLevelClient()) {
+
+			org.elasticsearch.Version version = client.info(RequestOptions.DEFAULT).getVersion();
+			return new Version(version.major, version.minor, version.revision);
+
+		} catch (Exception e) {
+			return new Version(0, 0, 0);
+		}
 	}
 
 	@SneakyThrows

@@ -21,6 +21,9 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.junit.Rule;
+import org.springframework.data.elasticsearch.ElasticsearchVersion;
+import org.springframework.data.elasticsearch.ElasticsearchVersionRule;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -56,6 +59,8 @@ import org.springframework.util.StringUtils;
 @RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class ReactiveElasticsearchTemplateTests {
+
+	public @Rule ElasticsearchVersionRule elasticsearchVersion = ElasticsearchVersionRule.any();
 
 	static final String DEFAULT_INDEX = "test-index-sample";
 	static final String ALTERNATE_INDEX = "reactive-template-tests-alternate-index";
@@ -414,6 +419,7 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-504
+	@ElasticsearchVersion(asOf = "6.5.0")
 	public void deleteByQueryShouldReturnNumberOfDeletedDocuments() {
 
 		index(randomEntity("test message"), randomEntity("test test"), randomEntity("some message"));
@@ -427,6 +433,7 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-504
+	@ElasticsearchVersion(asOf = "6.5.0")
 	public void deleteByQueryShouldReturnZeroIfNothingDeleted() {
 
 		index(randomEntity("test message"));
