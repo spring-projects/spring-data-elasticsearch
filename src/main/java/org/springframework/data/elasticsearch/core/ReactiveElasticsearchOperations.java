@@ -362,12 +362,12 @@ public interface ReactiveElasticsearchOperations {
 	 * @param type the name of the target type.
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	default Mono<String> delete(String id, String index, String type) {
+	default Mono<String> deleteById(String id, String index, String type) {
 
 		Assert.notNull(index, "Index must not be null!");
 		Assert.notNull(type, "Type must not be null!");
 
-		return delete(id, Object.class, index, type);
+		return deleteById(id, Object.class, index, type);
 	}
 
 	/**
@@ -377,8 +377,8 @@ public interface ReactiveElasticsearchOperations {
 	 * @param entityType must not be {@literal null}.
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	default Mono<String> delete(String id, Class<?> entityType) {
-		return delete(id, entityType, null);
+	default Mono<String> deleteById(String id, Class<?> entityType) {
+		return deleteById(id, entityType, null);
 	}
 
 	/**
@@ -390,8 +390,8 @@ public interface ReactiveElasticsearchOperations {
 	 *          {@literal null}.
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	default Mono<String> delete(String id, Class<?> entityType, @Nullable String index) {
-		return delete(id, entityType, index, null);
+	default Mono<String> deleteById(String id, Class<?> entityType, @Nullable String index) {
+		return deleteById(id, entityType, index, null);
 	}
 
 	/**
@@ -405,7 +405,7 @@ public interface ReactiveElasticsearchOperations {
 	 *          {@literal null}.
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	Mono<String> delete(String id, Class<?> entityType, @Nullable String index, @Nullable String type);
+	Mono<String> deleteById(String id, Class<?> entityType, @Nullable String index, @Nullable String type);
 
 	/**
 	 * Delete the documents matching the given {@link Query} extracting index and type from entity metadata.

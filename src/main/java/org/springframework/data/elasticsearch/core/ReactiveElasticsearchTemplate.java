@@ -81,7 +81,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	private final ElasticsearchExceptionTranslator exceptionTranslator;
 
 	private @Nullable RefreshPolicy refreshPolicy = RefreshPolicy.IMMEDIATE;
-	private @Nullable IndicesOptions indicesOptions;
+	private @Nullable IndicesOptions indicesOptions = IndicesOptions.strictExpandOpenAndForbidClosed();
 
 	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client) {
 		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()));
@@ -172,7 +172,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		Assert.notNull(id, "Id must not be null!");
 
 		return doFindById(id, BasicElasticsearchEntity.of(entityType, converter), index, type)
-				.map(it -> resultMapper.mapEntity(it.sourceAsString(), entityType));
+				.map(it -> resultMapper.mapEntity(it, entityType));
 	}
 
 	private Mono<GetResult> doFindById(String id, ElasticsearchEntity<?> entity, @Nullable String index,
@@ -220,7 +220,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			Class<T> resultType) {
 
 		return doFind(query, BasicElasticsearchEntity.of(entityType, converter), index, type)
-				.map(it -> resultMapper.mapEntity(it.getSourceAsString(), resultType));
+				.map(it -> resultMapper.mapEntity(it, resultType));
 	}
 
 	private Flux<SearchHit> doFind(Query query, ElasticsearchEntity<?> entity, @Nullable String index,
@@ -301,7 +301,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(String, Class, String, String)
 	 */
 	@Override
-	public Mono<String> delete(String id, Class<?> entityType, @Nullable String index, @Nullable String type) {
+	public Mono<String> deleteById(String id, Class<?> entityType, @Nullable String index, @Nullable String type) {
 
 		Assert.notNull(id, "Id must not be null!");
 

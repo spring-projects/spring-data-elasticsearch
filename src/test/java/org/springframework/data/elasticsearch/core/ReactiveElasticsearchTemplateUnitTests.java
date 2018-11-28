@@ -124,7 +124,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		ArgumentCaptor<DeleteRequest> captor = ArgumentCaptor.forClass(DeleteRequest.class);
 		when(client.delete(captor.capture())).thenReturn(Mono.empty());
 
-		template.delete("id", "index", "type") //
+		template.deleteById("id", "index", "type") //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -139,7 +139,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 		template.setRefreshPolicy(RefreshPolicy.WAIT_UNTIL);
 
-		template.delete("id", "index", "type") //
+		template.deleteById("id", "index", "type") //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
