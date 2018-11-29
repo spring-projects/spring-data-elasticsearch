@@ -19,6 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,6 +34,8 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.config.RequestConfig.Builder;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HttpContext;
@@ -89,6 +92,21 @@ public final class RestClients {
 				clientBuilder.addInterceptorLast((HttpRequestInterceptor) LoggingInterceptors.INSTANCE);
 				clientBuilder.addInterceptorLast((HttpResponseInterceptor) LoggingInterceptors.INSTANCE);
 			}
+
+			Duration connectTimeout = clientConfiguration.getConnectTimeout();
+			Duration timeout = clientConfiguration.getSocketTimeout();
+
+			Builder requestConfigBuilder = RequestConfig.custom();
+			if (!connectTimeout.isNegative()) {
+				requestConfigBuilder.setConnectTimeout(Math.toIntExact(connectTimeout.toMillis()));
+				requestConfigBuilder.setConnectionRequestTimeout(Math.toIntExact(connectTimeout.toMillis()));
+			}
+
+			if (!timeout.isNegative()) {
+				requestConfigBuilder.setSocketTimeout(Math.toIntExact(timeout.toMillis()));
+			}
+
+			clientBuilder.setDefaultRequestConfig(requestConfigBuilder.build());
 
 			return clientBuilder;
 		});

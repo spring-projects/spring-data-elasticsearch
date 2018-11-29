@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.net.InetSocketAddress;
+import java.time.Duration;
 
 import javax.net.ssl.SSLContext;
 
@@ -40,7 +41,7 @@ public class ClientConfigurationUnitTests {
 		assertThat(clientConfiguration.getEndpoints()).containsOnly(InetSocketAddress.createUnresolved("localhost", 9200));
 	}
 
-	@Test // DATAES-488
+	@Test // DATAES-488, DATAES-504
 	public void shouldCreateCustomizedConfiguration() {
 
 		HttpHeaders headers = new HttpHeaders();
@@ -50,15 +51,17 @@ public class ClientConfigurationUnitTests {
 				.connectedTo("foo", "bar") //
 				.usingSsl() //
 				.withDefaultHeaders(headers) //
-				.build();
+				.withConnectTimeout(Duration.ofDays(1)).withSocketTimeout(Duration.ofDays(2)).build();
 
 		assertThat(clientConfiguration.getEndpoints()).containsOnly(InetSocketAddress.createUnresolved("foo", 9200),
 				InetSocketAddress.createUnresolved("bar", 9200));
 		assertThat(clientConfiguration.useSsl()).isTrue();
 		assertThat(clientConfiguration.getDefaultHeaders().get("foo")).containsOnly("bar");
+		assertThat(clientConfiguration.getConnectTimeout()).isEqualTo(Duration.ofDays(1));
+		assertThat(clientConfiguration.getSocketTimeout()).isEqualTo(Duration.ofDays(2));
 	}
 
-	@Test // DATAES-488
+	@Test // DATAES-488, DATAES-504
 	public void shouldCreateSslConfiguration() {
 
 		SSLContext sslContext = mock(SSLContext.class);
@@ -72,5 +75,7 @@ public class ClientConfigurationUnitTests {
 				InetSocketAddress.createUnresolved("bar", 9200));
 		assertThat(clientConfiguration.useSsl()).isTrue();
 		assertThat(clientConfiguration.getSslContext()).contains(sslContext);
+		assertThat(clientConfiguration.getConnectTimeout()).isEqualTo(Duration.ofSeconds(10));
+		assertThat(clientConfiguration.getSocketTimeout()).isEqualTo(Duration.ofSeconds(5));
 	}
 }

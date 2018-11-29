@@ -15,19 +15,25 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.JdkSslContext;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.tcp.TcpClient;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import javax.net.ssl.SSLContext;
@@ -152,18 +158,36 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		WebClientProvider provider;
 
+		TcpClient tcpClient = TcpClient.create();
+		Duration connectTimeout = clientConfiguration.getConnectTimeout();
+		Duration timeout = clientConfiguration.getSocketTimeout();
+
+		if (!connectTimeout.isNegative()) {
+			tcpClient = tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.toIntExact(connectTimeout.toMillis()));
+		}
+
+		if (!timeout.isNegative()) {
+			tcpClient = tcpClient.doOnConnected(connection -> connection //
+					.addHandlerLast(new ReadTimeoutHandler(timeout.toMillis(), TimeUnit.MILLISECONDS))
+					.addHandlerLast(new WriteTimeoutHandler(timeout.toMillis(), TimeUnit.MILLISECONDS)));
+		}
+
+		String scheme = "http";
+		HttpClient httpClient = HttpClient.from(tcpClient);
+
 		if (clientConfiguration.useSsl()) {
 
-			ReactorClientHttpConnector connector = new ReactorClientHttpConnector(HttpClient.create().secure(sslConfig -> {
+			httpClient = httpClient.secure(sslConfig -> {
 
 				Optional<SSLContext> sslContext = clientConfiguration.getSslContext();
-
 				sslContext.ifPresent(it -> sslConfig.sslContext(new JdkSslContext(it, true, ClientAuth.NONE)));
-			}));
-			provider = WebClientProvider.create("https", connector);
-		} else {
-			provider = WebClientProvider.create("http");
+			});
+
+			scheme = "https";
 		}
+
+		ReactorClientHttpConnector connector = new ReactorClientHttpConnector(httpClient);
+		provider = WebClientProvider.create(scheme, connector);
 
 		return provider.withDefaultHeaders(clientConfiguration.getDefaultHeaders());
 	}

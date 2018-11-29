@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.client;
 
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,17 +39,21 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	private final HttpHeaders headers;
 	private final boolean useSsl;
 	private final @Nullable SSLContext sslContext;
+	private final Duration soTimeout;
+	private final Duration connectTimeout;
 
 	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
-			@Nullable SSLContext sslContext) {
+			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout) {
 
 		this.hosts = Collections.unmodifiableList(new ArrayList<>(hosts));
 		this.headers = new HttpHeaders(headers);
 		this.useSsl = useSsl;
 		this.sslContext = sslContext;
+		this.soTimeout = soTimeout;
+		this.connectTimeout = connectTimeout;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getEndpoints()
 	 */
@@ -57,7 +62,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		return this.hosts;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getDefaultHeaders()
 	 */
@@ -66,7 +71,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		return this.headers;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#useSsl()
 	 */
@@ -75,7 +80,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		return this.useSsl;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getSslContext()
 	 */
@@ -83,4 +88,23 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	public Optional<SSLContext> getSslContext() {
 		return Optional.ofNullable(this.sslContext);
 	}
+
+	/*
+	* (non-Javadoc)
+	* @see org.springframework.data.elasticsearch.client.ClientConfiguration#getConnectTimeout()
+	*/
+	@Override
+	public Duration getConnectTimeout() {
+		return this.connectTimeout;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getSocketTimeout()
+	 */
+	@Override
+	public Duration getSocketTimeout() {
+		return this.soTimeout;
+	}
+
 }
