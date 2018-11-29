@@ -21,25 +21,26 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.junit.Rule;
-import org.springframework.data.elasticsearch.ElasticsearchVersion;
-import org.springframework.data.elasticsearch.ElasticsearchVersionRule;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.ElasticsearchVersion;
+import org.springframework.data.elasticsearch.ElasticsearchVersionRule;
 import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.query.Criteria;
@@ -53,7 +54,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StringUtils;
 
 /**
+ * Integration tests for {@link ReactiveElasticsearchTemplate}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @currentRead Golden Fool - Robin Hobb
  */
 @RunWith(SpringRunner.class)
@@ -140,7 +144,8 @@ public class ReactiveElasticsearchTemplateTests {
 
 		SampleEntity sampleEntity = randomEntity("in another index");
 
-		template.save(sampleEntity, ALTERNATE_INDEX).as(StepVerifier::create)//
+		template.save(sampleEntity, ALTERNATE_INDEX) //
+				.as(StepVerifier::create)//
 				.expectNextCount(1)//
 				.verifyComplete();
 
@@ -154,12 +159,13 @@ public class ReactiveElasticsearchTemplateTests {
 	@Test // DATAES-504
 	public void insertShouldAcceptPlainMapStructureAsSource() {
 
-		Map<String, Object> map = Collections.singletonMap("foo", "bar");
+		Map<String, Object> map = new LinkedHashMap<>(Collections.singletonMap("foo", "bar"));
 
 		template.save(map, ALTERNATE_INDEX, "singleton-map") //
 				.as(StepVerifier::create) //
-				.expectNextCount(1) //
-				.verifyComplete();
+				.consumeNextWith(actual -> {
+					assertThat(map).containsKey("id");
+				}).verifyComplete();
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAES-504
@@ -434,7 +440,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 	@Test // DATAES-504
 	@ElasticsearchVersion(asOf = "6.5.0")
-	public void deleteByQueryShouldReturnZeroIfNothingDeleted() {
+	public void deleteByQueryShouldReturnZeroIfNothingDeleted() throws Exception {
 
 		index(randomEntity("test message"));
 

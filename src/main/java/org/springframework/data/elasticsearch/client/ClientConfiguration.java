@@ -16,6 +16,8 @@
 package org.springframework.data.elasticsearch.client;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -100,6 +102,23 @@ public interface ClientConfiguration {
 	Optional<SSLContext> getSslContext();
 
 	/**
+	 * Returns the {@link java.time.Duration connect timeout}.
+	 *
+	 * @see java.net.Socket#connect(SocketAddress, int)
+	 * @see io.netty.channel.ChannelOption#CONNECT_TIMEOUT_MILLIS
+	 */
+	Duration getConnectTimeout();
+
+	/**
+	 * Returns the {@link java.time.Duration socket timeout} which is typically applied as SO-timeout/read timeout.
+	 *
+	 * @see java.net.Socket#setSoTimeout(int)
+	 * @see io.netty.handler.timeout.ReadTimeoutHandler
+	 * @see io.netty.handler.timeout.WriteTimeoutHandler
+	 */
+	Duration getSocketTimeout();
+
+	/**
 	 * @author Christoph Strobl
 	 */
 	interface ClientConfigurationBuilderWithRequiredEndpoint {
@@ -146,38 +165,59 @@ public interface ClientConfiguration {
 	/**
 	 * @author Christoph Strobl
 	 */
-	interface MaybeSecureClientConfigurationBuilder extends ClientConfigurationBuilderWithOptionalDefaultHeaders {
+	interface MaybeSecureClientConfigurationBuilder extends TerminalClientConfigurationBuilder {
 
 		/**
 		 * Connect via {@literal https} <br />
 		 * <strong>NOTE</strong> You need to leave out the protocol in
 		 * {@link ClientConfigurationBuilderWithRequiredEndpoint#connectedTo(String)}.
 		 *
-		 * @return the {@link ClientConfigurationBuilderWithOptionalDefaultHeaders}.
+		 * @return the {@link TerminalClientConfigurationBuilder}.
 		 */
-		ClientConfigurationBuilderWithOptionalDefaultHeaders usingSsl();
+		TerminalClientConfigurationBuilder usingSsl();
 
 		/**
 		 * Connect via {@literal https} using the given {@link SSLContext}.<br />
 		 * <strong>NOTE</strong> You need to leave out the protocol in
 		 * {@link ClientConfigurationBuilderWithRequiredEndpoint#connectedTo(String)}.
 		 *
-		 * @return the {@link ClientConfigurationBuilderWithOptionalDefaultHeaders}.
+		 * @return the {@link TerminalClientConfigurationBuilder}.
 		 */
-		ClientConfigurationBuilderWithOptionalDefaultHeaders usingSsl(SSLContext sslContext);
+		TerminalClientConfigurationBuilder usingSsl(SSLContext sslContext);
 	}
 
 	/**
 	 * @author Christoph Strobl
 	 * @author Mark Paluch
 	 */
-	interface ClientConfigurationBuilderWithOptionalDefaultHeaders {
+	interface TerminalClientConfigurationBuilder {
 
 		/**
 		 * @param defaultHeaders must not be {@literal null}.
-		 * @return the {@link ClientConfigurationBuilderWithOptionalDefaultHeaders}
+		 * @return the {@link TerminalClientConfigurationBuilder}
 		 */
-		ClientConfigurationBuilderWithOptionalDefaultHeaders withDefaultHeaders(HttpHeaders defaultHeaders);
+		TerminalClientConfigurationBuilder withDefaultHeaders(HttpHeaders defaultHeaders);
+
+		/**
+		 * Configure a {@link java.time.Duration} connect timeout.
+		 *
+		 * @param connectTimeout the timeout to use.
+		 * @return the {@link TerminalClientConfigurationBuilder}
+		 * @see java.net.Socket#connect(SocketAddress, int)
+		 * @see io.netty.channel.ChannelOption#CONNECT_TIMEOUT_MILLIS
+		 */
+		TerminalClientConfigurationBuilder withConnectTimeout(Duration connectTimeout);
+
+		/**
+		 * Configure a {@link java.time.Duration socket timeout} which is typically applied as SO-timeout/read timeout.
+		 *
+		 * @param soTimeout the timeout to use.
+		 * @return the {@link TerminalClientConfigurationBuilder}
+		 * @see java.net.Socket#setSoTimeout(int)
+		 * @see io.netty.handler.timeout.ReadTimeoutHandler
+		 * @see io.netty.handler.timeout.WriteTimeoutHandler
+		 */
+		TerminalClientConfigurationBuilder withSocketTimeout(Duration soTimeout);
 
 		/**
 		 * Build the {@link ClientConfiguration} object.

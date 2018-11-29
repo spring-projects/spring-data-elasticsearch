@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.client;
 
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,9 +24,9 @@ import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
 
-import org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithOptionalDefaultHeaders;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithRequiredEndpoint;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.MaybeSecureClientConfigurationBuilder;
+import org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -44,8 +45,10 @@ class ClientConfigurationBuilder
 	private HttpHeaders headers = HttpHeaders.EMPTY;
 	private boolean useSsl;
 	private @Nullable SSLContext sslContext;
+	private Duration connectTimeout = Duration.ofSeconds(10);
+	private Duration soTimeout = Duration.ofSeconds(5);
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithRequiredEndpoint#connectedTo(java.lang.String[])
 	 */
@@ -58,7 +61,7 @@ class ClientConfigurationBuilder
 		return this;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithRequiredEndpoint#connectedTo(java.net.InetSocketAddress[])
 	 */
@@ -72,23 +75,23 @@ class ClientConfigurationBuilder
 		return this;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.MaybeSecureClientConfigurationBuilder#usingSsl()
 	 */
 	@Override
-	public ClientConfigurationBuilderWithOptionalDefaultHeaders usingSsl() {
+	public TerminalClientConfigurationBuilder usingSsl() {
 
 		this.useSsl = true;
 		return this;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.MaybeSecureClientConfigurationBuilder#usingSsl(javax.net.ssl.SSLContext)
 	 */
 	@Override
-	public ClientConfigurationBuilderWithOptionalDefaultHeaders usingSsl(SSLContext sslContext) {
+	public TerminalClientConfigurationBuilder usingSsl(SSLContext sslContext) {
 
 		Assert.notNull(sslContext, "SSL Context must not be null");
 
@@ -97,12 +100,12 @@ class ClientConfigurationBuilder
 		return this;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithOptionalDefaultHeaders#withDefaultHeaders(org.springframework.http.HttpHeaders)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder#withDefaultHeaders(org.springframework.http.HttpHeaders)
 	 */
 	@Override
-	public ClientConfigurationBuilderWithOptionalDefaultHeaders withDefaultHeaders(HttpHeaders defaultHeaders) {
+	public TerminalClientConfigurationBuilder withDefaultHeaders(HttpHeaders defaultHeaders) {
 
 		Assert.notNull(defaultHeaders, "Default HTTP headers must not be null");
 
@@ -110,13 +113,40 @@ class ClientConfigurationBuilder
 		return this;
 	}
 
-	/* 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder#withConnectTimeout(java.time.Duration)
+	 */
+	@Override
+	public TerminalClientConfigurationBuilder withConnectTimeout(Duration connectTimeout) {
+
+		Assert.notNull(connectTimeout, "I/O timeout must not be null!");
+
+		this.connectTimeout = connectTimeout;
+		return this;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder#withTimeout(java.time.Duration)
+	 */
+	@Override
+	public TerminalClientConfigurationBuilder withSocketTimeout(Duration soTimeout) {
+
+		Assert.notNull(soTimeout, "Socket timeout must not be null!");
+
+		this.soTimeout = soTimeout;
+		return this;
+	}
+
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithOptionalDefaultHeaders#build()
 	 */
 	@Override
 	public ClientConfiguration build() {
-		return new DefaultClientConfiguration(this.hosts, this.headers, this.useSsl, this.sslContext);
+		return new DefaultClientConfiguration(this.hosts, this.headers, this.useSsl, this.sslContext, this.soTimeout,
+				this.connectTimeout);
 	}
 
 	private static InetSocketAddress parse(String hostAndPort) {

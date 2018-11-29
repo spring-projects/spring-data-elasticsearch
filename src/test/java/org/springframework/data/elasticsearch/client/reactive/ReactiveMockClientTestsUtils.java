@@ -214,11 +214,13 @@ public class ReactiveMockClientTestsUtils {
 					Mockito.when(headersUriSpec.uri(any(String.class))).thenReturn(headersUriSpec);
 					Mockito.when(headersUriSpec.uri(any(), any(Map.class))).thenReturn(headersUriSpec);
 					Mockito.when(headersUriSpec.headers(any(Consumer.class))).thenReturn(headersUriSpec);
+					Mockito.when(headersUriSpec.attribute(anyString(), anyString())).thenReturn(headersUriSpec);
 
 					RequestBodyUriSpec bodyUriSpec = mock(RequestBodyUriSpec.class);
 					Mockito.when(webClient.method(any())).thenReturn(bodyUriSpec);
 					Mockito.when(bodyUriSpec.body(any())).thenReturn(headersUriSpec);
 					Mockito.when(bodyUriSpec.uri(any(), any(Map.class))).thenReturn(bodyUriSpec);
+					Mockito.when(bodyUriSpec.attribute(anyString(), anyString())).thenReturn(bodyUriSpec);
 					Mockito.when(bodyUriSpec.headers(any(Consumer.class))).thenReturn(bodyUriSpec);
 
 					ClientResponse response = mock(ClientResponse.class);
