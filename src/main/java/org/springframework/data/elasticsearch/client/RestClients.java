@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -25,12 +26,21 @@ import java.util.stream.Collectors;
 import javax.net.ssl.SSLContext;
 
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.HttpContext;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.util.Assert;
 
 /**
@@ -42,6 +52,11 @@ import org.springframework.util.Assert;
  * @since 4.0
  */
 public final class RestClients {
+
+	/**
+	 * Name of whose value can be used to correlate log messages for this request.
+	 */
+	private static final String LOG_ID_ATTRIBUTE = RestClients.class.getName() + ".LOG_ID";
 
 	private RestClients() {}
 
@@ -69,6 +84,11 @@ public final class RestClients {
 		builder.setHttpClientConfigCallback(clientBuilder -> {
 			Optional<SSLContext> sslContext = clientConfiguration.getSslContext();
 			sslContext.ifPresent(clientBuilder::setSSLContext);
+
+			if (ClientLogger.isEnabled()) {
+				clientBuilder.addInterceptorLast((HttpRequestInterceptor) LoggingInterceptors.INSTANCE);
+				clientBuilder.addInterceptorLast((HttpResponseInterceptor) LoggingInterceptors.INSTANCE);
+			}
 
 			return clientBuilder;
 		});
@@ -106,6 +126,51 @@ public final class RestClients {
 		@Override
 		default void close() throws IOException {
 			rest().close();
+		}
+	}
+
+	/**
+	 * Logging interceptors for Elasticsearch client logging.
+	 *
+	 * @see ClientLogger
+	 */
+	enum LoggingInterceptors implements HttpResponseInterceptor, HttpRequestInterceptor {
+
+		INSTANCE;
+
+		@Override
+		public void process(HttpRequest request, HttpContext context) throws IOException {
+
+			String logId = (String) context.getAttribute(RestClients.LOG_ID_ATTRIBUTE);
+			if (logId == null) {
+				logId = ClientLogger.newLogId();
+				context.setAttribute(RestClients.LOG_ID_ATTRIBUTE, logId);
+			}
+
+			if (request instanceof HttpEntityEnclosingRequest && ((HttpEntityEnclosingRequest) request).getEntity() != null) {
+
+				HttpEntityEnclosingRequest entityRequest = (HttpEntityEnclosingRequest) request;
+				HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
+				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+				entity.writeTo(buffer);
+
+				if (!entity.isRepeatable()) {
+					entityRequest.setEntity(new ByteArrayEntity(buffer.toByteArray()));
+				}
+
+				ClientLogger.logRequest(logId, request.getRequestLine().getMethod(), request.getRequestLine().getUri(), "",
+						() -> new String(buffer.toByteArray()));
+			} else {
+				ClientLogger.logRequest(logId, request.getRequestLine().getMethod(), request.getRequestLine().getUri(), "");
+			}
+		}
+
+		@Override
+		public void process(HttpResponse response, HttpContext context) {
+
+			String logId = (String) context.getAttribute(RestClients.LOG_ID_ATTRIBUTE);
+
+			ClientLogger.logRawResponse(logId, HttpStatus.resolve(response.getStatusLine().getStatusCode()));
 		}
 	}
 }

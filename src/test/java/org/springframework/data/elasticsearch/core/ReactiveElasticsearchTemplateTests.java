@@ -21,9 +21,6 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.junit.Rule;
-import org.springframework.data.elasticsearch.ElasticsearchVersion;
-import org.springframework.data.elasticsearch.ElasticsearchVersionRule;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -36,10 +33,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.ElasticsearchVersion;
+import org.springframework.data.elasticsearch.ElasticsearchVersionRule;
 import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.query.Criteria;
@@ -53,6 +53,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StringUtils;
 
 /**
+ * Integration tests for {@link ReactiveElasticsearchTemplate}.
+ *
  * @author Christoph Strobl
  * @currentRead Golden Fool - Robin Hobb
  */
@@ -434,7 +436,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 	@Test // DATAES-504
 	@ElasticsearchVersion(asOf = "6.5.0")
-	public void deleteByQueryShouldReturnZeroIfNothingDeleted() {
+	public void deleteByQueryShouldReturnZeroIfNothingDeleted() throws Exception {
 
 		index(randomEntity("test message"));
 

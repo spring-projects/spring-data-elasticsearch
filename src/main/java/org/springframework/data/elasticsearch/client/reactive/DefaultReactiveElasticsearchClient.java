@@ -64,10 +64,12 @@ import org.elasticsearch.search.SearchHit;
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.ClientLogger;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
 import org.springframework.data.elasticsearch.client.reactive.HostProvider.Verification;
 import org.springframework.data.elasticsearch.client.util.RequestConverters;
+import org.springframework.data.util.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -77,6 +79,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.BodyExtractors;
+import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
@@ -324,20 +327,29 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	private <AR extends ActionResponse> Flux<AR> sendRequest(Request request, Class<AR> responseType,
 			HttpHeaders headers) {
 
-		return execute(webClient -> sendRequest(webClient, request, headers))
-				.flatMapMany(response -> readResponseBody(request, response, responseType));
+		String logId = ClientLogger.newLogId();
+
+		return execute(webClient -> sendRequest(webClient, logId, request, headers))
+				.flatMapMany(response -> readResponseBody(logId, request, response, responseType));
 	}
 
-	private Mono<ClientResponse> sendRequest(WebClient webClient, Request request, HttpHeaders headers) {
+	private Mono<ClientResponse> sendRequest(WebClient webClient, String logId, Request request, HttpHeaders headers) {
 
 		RequestBodySpec requestBodySpec = webClient.method(HttpMethod.valueOf(request.getMethod().toUpperCase())) //
 				.uri(request.getEndpoint(), request.getParameters()) //
+				.attribute(ClientRequest.LOG_ID_ATTRIBUTE, logId) //
 				.headers(theHeaders -> theHeaders.addAll(headers));
 
 		if (request.getEntity() != null) {
 
+			Lazy<String> body = bodyExtractor(request);
+
+			ClientLogger.logRequest(logId, request.getMethod().toUpperCase(), request.getEndpoint(), request.getParameters(),
+					body::get);
 			requestBodySpec.contentType(MediaType.valueOf(request.getEntity().getContentType().getValue()));
-			requestBodySpec.body(bodyExtractor(request), String.class);
+			requestBodySpec.body(Mono.fromSupplier(body::get), String.class);
+		} else {
+			ClientLogger.logRequest(logId, request.getMethod().toUpperCase(), request.getEndpoint(), request.getParameters());
 		}
 
 		return requestBodySpec //
@@ -345,9 +357,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.onErrorReturn(ConnectException.class, ClientResponse.create(HttpStatus.SERVICE_UNAVAILABLE).build());
 	}
 
-	private Publisher<String> bodyExtractor(Request request) {
+	private Lazy<String> bodyExtractor(Request request) {
 
-		return Mono.fromSupplier(() -> {
+		return Lazy.of(() -> {
 
 			try {
 				return EntityUtils.toString(request.getEntity());
@@ -357,19 +369,25 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		});
 	}
 
-	private <T> Publisher<? extends T> readResponseBody(Request request, ClientResponse response, Class<T> responseType) {
+	private <T> Publisher<? extends T> readResponseBody(String logId, Request request, ClientResponse response,
+			Class<T> responseType) {
 
 		if (RawActionResponse.class.equals(responseType)) {
+			ClientLogger.logRawResponse(logId, response.statusCode());
+
 			return Mono.just(responseType.cast(RawActionResponse.create(response)));
 		}
 
 		if (response.statusCode().is5xxServerError()) {
+			ClientLogger.logRawResponse(logId, response.statusCode());
 			return handleServerError(request, response);
 		}
 
 		return response.body(BodyExtractors.toMono(byte[].class)) //
 				.map(it -> new String(it, StandardCharsets.UTF_8)) //
-				.flatMap(content -> doDecode(response, responseType, content));
+				.doOnNext(it -> {
+					ClientLogger.logResponse(logId, response.statusCode(), it);
+				}).flatMap(content -> doDecode(response, responseType, content));
 	}
 
 	private static <T> Mono<T> doDecode(ClientResponse response, Class<T> responseType, String content) {

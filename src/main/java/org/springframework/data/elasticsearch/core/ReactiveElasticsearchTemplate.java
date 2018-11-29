@@ -48,6 +48,8 @@ import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -71,9 +73,13 @@ import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 4.0
  */
 public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations {
+
+	private static final Logger QUERY_LOGGER = LoggerFactory
+			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
 
 	private final ReactiveElasticsearchClient client;
 	private final ElasticsearchConverter converter;
@@ -494,6 +500,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @return a {@link Flux} emitting the result of the operation.
 	 */
 	protected Flux<SearchHit> doFind(SearchRequest request) {
+
+		if (QUERY_LOGGER.isDebugEnabled()) {
+			QUERY_LOGGER.debug("Executing doFind: {}", request);
+		}
+
 		return Flux.from(execute(client -> client.search(request)));
 	}
 
