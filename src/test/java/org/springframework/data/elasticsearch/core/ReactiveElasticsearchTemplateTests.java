@@ -27,6 +27,7 @@ import reactor.test.StepVerifier;
 import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -56,6 +57,7 @@ import org.springframework.util.StringUtils;
  * Integration tests for {@link ReactiveElasticsearchTemplate}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @currentRead Golden Fool - Robin Hobb
  */
 @RunWith(SpringRunner.class)
@@ -142,7 +144,8 @@ public class ReactiveElasticsearchTemplateTests {
 
 		SampleEntity sampleEntity = randomEntity("in another index");
 
-		template.save(sampleEntity, ALTERNATE_INDEX).as(StepVerifier::create)//
+		template.save(sampleEntity, ALTERNATE_INDEX) //
+				.as(StepVerifier::create)//
 				.expectNextCount(1)//
 				.verifyComplete();
 
@@ -156,12 +159,13 @@ public class ReactiveElasticsearchTemplateTests {
 	@Test // DATAES-504
 	public void insertShouldAcceptPlainMapStructureAsSource() {
 
-		Map<String, Object> map = Collections.singletonMap("foo", "bar");
+		Map<String, Object> map = new LinkedHashMap<>(Collections.singletonMap("foo", "bar"));
 
 		template.save(map, ALTERNATE_INDEX, "singleton-map") //
 				.as(StepVerifier::create) //
-				.expectNextCount(1) //
-				.verifyComplete();
+				.consumeNextWith(actual -> {
+					assertThat(map).containsKey("id");
+				}).verifyComplete();
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAES-504
