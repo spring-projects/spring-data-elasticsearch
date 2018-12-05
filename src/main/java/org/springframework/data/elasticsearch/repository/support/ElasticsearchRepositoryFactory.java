@@ -15,12 +15,13 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.springframework.data.querydsl.QuerydslUtils.*;
+import static org.springframework.data.querydsl.QuerydslUtils.QUERY_DSL_PRESENT;
 
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.elasticsearch.core.DocumentID;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchPartQuery;
@@ -36,7 +37,6 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.util.Assert;
 
 /**
@@ -69,7 +69,6 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	@Override
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected Object getTargetRepository(RepositoryInformation metadata) {
 		return getTargetRepositoryViaReflection(metadata, getEntityInformation(metadata.getDomainType()),
 				elasticsearchOperations);
@@ -87,6 +86,8 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 			return SimpleElasticsearchRepository.class;
 		} else if (metadata.getIdType() == UUID.class) {
 			return UUIDElasticsearchRepository.class;
+        } else if (DocumentID.class.isAssignableFrom(metadata.getIdType())) {
+          return DocumentIDElasticsearchRepository.class;
 		} else {
 			throw new IllegalArgumentException("Unsupported ID type " + metadata.getIdType());
 		}
