@@ -30,6 +30,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.main.MainResponse;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.index.get.GetResult;
@@ -349,6 +350,31 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
 	 */
 	Flux<SearchHit> search(HttpHeaders headers, SearchRequest searchRequest);
+
+	/**
+	 * Execute the given {@link SearchRequest} against the {@literal search scroll} API.
+	 *
+	 * @param searchRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html">Search
+	 *      Scroll API on elastic.co</a>
+	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
+	 */
+	default Flux<SearchHit> scroll(SearchRequest searchRequest) {
+		return scroll(HttpHeaders.EMPTY, searchRequest);
+	}
+
+	/**
+	 * Execute the given {@link SearchRequest} against the {@literal search scroll} API. <br />
+	 * Scroll keeps track of {@link SearchResponse#getScrollId() scrollIds} returned by the server and provides them when
+	 * requesting more results via {@code _search/scroll}. All bound server resources are freed on completion.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param searchRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html">Search
+	 *      Scroll API on elastic.co</a>
+	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
+	 */
+	Flux<SearchHit> scroll(HttpHeaders headers, SearchRequest searchRequest);
 
 	/**
 	 * Execute a {@link DeleteByQueryRequest} against the {@literal delete by query} API.
