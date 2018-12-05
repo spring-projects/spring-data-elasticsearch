@@ -20,7 +20,9 @@ import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.JdkSslContext;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
@@ -31,7 +33,10 @@ import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -53,11 +58,15 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.main.MainRequest;
 import org.elasticsearch.action.main.MainResponse;
+import org.elasticsearch.action.search.ClearScrollRequest;
+import org.elasticsearch.action.search.ClearScrollResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Request;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentParser;
@@ -67,6 +76,7 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.ElasticsearchException;
@@ -85,6 +95,7 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -299,6 +310,74 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#scroll(org.springframework.http.HttpHeaders, org.elasticsearch.action.search.SearchRequest)
+	 */
+	@Override
+	public Flux<SearchHit> scroll(HttpHeaders headers, SearchRequest searchRequest) {
+
+		TimeValue scrollTimeout = searchRequest.scroll() != null ? searchRequest.scroll().keepAlive()
+				: TimeValue.timeValueMinutes(1);
+
+		if (searchRequest.scroll() == null) {
+			searchRequest.scroll(scrollTimeout);
+		}
+
+		EmitterProcessor<ActionRequest> outbound = EmitterProcessor.create(false);
+		FluxSink<ActionRequest> request = outbound.sink();
+
+		EmitterProcessor<SearchResponse> inbound = EmitterProcessor.create(false);
+
+		Flux<SearchResponse> exchange = outbound.startWith(searchRequest).flatMap(it -> {
+
+			if (it instanceof SearchRequest) {
+				return sendRequest((SearchRequest) it, RequestCreator.search(), SearchResponse.class, headers);
+			} else if (it instanceof SearchScrollRequest) {
+				return sendRequest((SearchScrollRequest) it, RequestCreator.scroll(), SearchResponse.class, headers);
+			} else if (it instanceof ClearScrollRequest) {
+				return sendRequest((ClearScrollRequest) it, RequestCreator.clearScroll(), ClearScrollResponse.class, headers)
+						.flatMap(discard -> Flux.empty());
+			}
+
+			throw new IllegalArgumentException(
+					String.format("Cannot handle '%s'. Please make sure to use a 'SearchRequest' or 'SearchScrollRequest'."));
+		});
+
+		ScrollState state = new ScrollState();
+
+		Flux<SearchHit> searchHits = inbound.doOnNext(searchResponse -> {
+			state.updateScrollId(searchResponse.getScrollId());
+		}).<SearchResponse> handle((searchResponse, sink) -> {
+
+			if (searchResponse.getHits() != null && searchResponse.getHits().getHits() != null
+					&& searchResponse.getHits().getHits().length == 0) {
+
+				inbound.onComplete();
+				outbound.onComplete();
+
+			} else {
+
+				sink.next(searchResponse);
+
+				SearchScrollRequest searchScrollRequest = new SearchScrollRequest(state.getScrollId()).scroll(scrollTimeout);
+				request.next(searchScrollRequest);
+			}
+
+		}).map(SearchResponse::getHits) //
+				.flatMap(Flux::fromIterable) //
+				.doOnComplete(() -> {
+
+					ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+					clearScrollRequest.scrollIds(state.getScrollIds());
+
+					// just send the request, resources get cleaned up anyways after scrollTimeout has been reached.
+					sendRequest(clearScrollRequest, RequestCreator.clearScroll(), ClearScrollResponse.class, headers).subscribe();
+				});
+
+		return searchHits.doOnSubscribe(ignore -> exchange.subscribe(inbound));
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.index.reindex.DeleteByQueryRequest)
 	 */
 	public Mono<BulkByScrollResponse> deleteBy(HttpHeaders headers, DeleteByQueryRequest deleteRequest) {
@@ -482,6 +561,14 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 			return RequestConverters::search;
 		}
 
+		static Function<SearchScrollRequest, Request> scroll() {
+			return RequestConverters::searchScroll;
+		}
+
+		static Function<ClearScrollRequest, Request> clearScroll() {
+			return RequestConverters::clearScroll;
+		}
+
 		static Function<IndexRequest, Request> index() {
 			return RequestConverters::index;
 		}
@@ -548,5 +635,40 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		public Collection<ElasticsearchHost> hosts() {
 			return connectedHosts;
 		}
+	}
+
+	/**
+	 * Mutable state object holding scrollId to be used for {@link SearchScrollRequest#scroll(Scroll)}
+	 *
+	 * @author Christoph Strobl
+	 * @since 4.0
+	 */
+	private static class ScrollState {
+
+		private Object lock = new Object();
+
+		private String scrollId;
+		private List<String> pastIds = new ArrayList<>(1);
+
+		String getScrollId() {
+			return scrollId;
+		}
+
+		List<String> getScrollIds() {
+			return Collections.unmodifiableList(pastIds);
+		}
+
+		void updateScrollId(String scrollId) {
+
+			if (StringUtils.hasText(scrollId)) {
+
+				synchronized (lock) {
+
+					this.scrollId = scrollId;
+					pastIds.add(scrollId);
+				}
+			}
+		}
+
 	}
 }

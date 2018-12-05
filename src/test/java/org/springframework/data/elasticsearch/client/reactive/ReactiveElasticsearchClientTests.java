@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.Version;
@@ -36,7 +37,9 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
@@ -50,6 +53,7 @@ import org.springframework.data.elasticsearch.ElasticsearchVersion;
 import org.springframework.data.elasticsearch.ElasticsearchVersionRule;
 import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -111,8 +115,8 @@ public class ReactiveElasticsearchClientTests {
 	public void pingForUnknownHostShouldReturnFalse() {
 
 		DefaultReactiveElasticsearchClient
-				.create(ClientConfiguration.builder().connectedTo("localhost:4711")
-						.withConnectTimeout(Duration.ofSeconds(2)).build())
+				.create(ClientConfiguration.builder().connectedTo("localhost:4711").withConnectTimeout(Duration.ofSeconds(2))
+						.build())
 				.ping() //
 				.as(StepVerifier::create) //
 				.expectNext(false) //
@@ -413,7 +417,7 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void searchShouldCompleteIfNothingFound() throws IOException {
 
-		syncClient.indices().create(new CreateIndexRequest(INDEX_I));
+		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
 
 		SearchRequest request = new SearchRequest(INDEX_I).types(TYPE_I) //
 				.source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery()));
@@ -457,6 +461,39 @@ public class ReactiveElasticsearchClientTests {
 				.consumeNextWith(it -> {
 					assertThat(it.getDeleted()).isEqualTo(0);
 				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-510
+	public void scrollShouldReadWhileEndNotReached() {
+
+		IntStream.range(0, 100).forEach(it -> add(Collections.singletonMap(it + "-foo", "bar")).ofType(TYPE_I).to(INDEX_I));
+
+		SearchRequest request = new SearchRequest(INDEX_I).types(TYPE_I) //
+				.source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery()));
+
+		request = request.scroll(TimeValue.timeValueMinutes(1));
+
+		client.scroll(HttpHeaders.EMPTY, request) //
+				.as(StepVerifier::create) //
+				.expectNextCount(100) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-510
+	public void scrollShouldReadWhileTakeNotReached() {
+
+		IntStream.range(0, 100).forEach(it -> add(Collections.singletonMap(it + "-foo", "bar")).ofType(TYPE_I).to(INDEX_I));
+
+		SearchRequest request = new SearchRequest(INDEX_I).types(TYPE_I) //
+				.source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery()));
+
+		request = request.scroll(TimeValue.timeValueMinutes(1));
+
+		client.scroll(HttpHeaders.EMPTY, request) //
+				.take(73)
+				.as(StepVerifier::create) //
+				.expectNextCount(73) //
 				.verifyComplete();
 	}
 
