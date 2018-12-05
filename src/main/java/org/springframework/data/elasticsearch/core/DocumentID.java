@@ -6,5 +6,5 @@ import java.io.Serializable;
  * @author Murali Chevuri
  */
 public interface DocumentID extends Serializable {
-  String getDocumentId();
+	String getDocumentId();
 }

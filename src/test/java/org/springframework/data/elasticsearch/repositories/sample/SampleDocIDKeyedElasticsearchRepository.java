@@ -24,7 +24,8 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 /**
  * @author Murali Chevuri
  */
-public interface SampleDocIDKeyedElasticsearchRepository extends ElasticsearchRepository<SampleEntityDocumentIDKeyed, SampleDocumentID> {
+public interface SampleDocIDKeyedElasticsearchRepository
+		extends ElasticsearchRepository<SampleEntityDocumentIDKeyed, SampleDocumentID> {
 
 	List<SampleEntityDocumentIDKeyed> deleteByAvailable(boolean available);
 

@@ -31,7 +31,7 @@ public class DocumentIDElasticsearchRepository<T> extends AbstractElasticsearchR
 	}
 
 	public DocumentIDElasticsearchRepository(ElasticsearchEntityInformation<T, DocumentID> metadata,
-										 ElasticsearchOperations elasticsearchOperations) {
+			ElasticsearchOperations elasticsearchOperations) {
 		super(metadata, elasticsearchOperations);
 	}
 
