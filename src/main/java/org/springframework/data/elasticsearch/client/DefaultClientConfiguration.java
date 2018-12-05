@@ -31,6 +31,7 @@ import org.springframework.lang.Nullable;
  * Default {@link ClientConfiguration} implementation.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 4.0
  */
 class DefaultClientConfiguration implements ClientConfiguration {
@@ -90,9 +91,9 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	}
 
 	/*
-	* (non-Javadoc)
-	* @see org.springframework.data.elasticsearch.client.ClientConfiguration#getConnectTimeout()
-	*/
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getConnectTimeout()
+	 */
 	@Override
 	public Duration getConnectTimeout() {
 		return this.connectTimeout;

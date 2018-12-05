@@ -17,12 +17,10 @@ package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Rule;
-import org.springframework.data.elasticsearch.ElasticsearchVersion;
-import org.springframework.data.elasticsearch.ElasticsearchVersionRule;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,10 +43,13 @@ import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.data.elasticsearch.ElasticsearchVersion;
+import org.springframework.data.elasticsearch.ElasticsearchVersionRule;
 import org.springframework.data.elasticsearch.TestUtils;
-import org.springframework.http.HttpHeaders;
+import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -109,7 +110,10 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void pingForUnknownHostShouldReturnFalse() {
 
-		DefaultReactiveElasticsearchClient.create(HttpHeaders.EMPTY, "http://localhost:4711").ping() //
+		DefaultReactiveElasticsearchClient
+				.create(ClientConfiguration.builder().connectedTo("localhost:4711")
+						.withConnectTimeout(Duration.ofSeconds(2)).build())
+				.ping() //
 				.as(StepVerifier::create) //
 				.expectNext(false) //
 				.verifyComplete();

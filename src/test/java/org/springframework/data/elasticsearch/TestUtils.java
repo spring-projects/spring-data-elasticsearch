@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch;
 import lombok.SneakyThrows;
 
 import java.io.IOException;
+import java.time.Duration;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -41,12 +42,15 @@ public final class TestUtils {
 
 	private TestUtils() {}
 
+	private static final ClientConfiguration CONFIG = ClientConfiguration.builder().connectedToLocalhost()
+			.withConnectTimeout(Duration.ofSeconds(5)).withSocketTimeout(Duration.ofSeconds(3)).build();
+
 	public static RestHighLevelClient restHighLevelClient() {
-		return RestClients.create(ClientConfiguration.create("localhost:9200")).rest();
+		return RestClients.create(CONFIG).rest();
 	}
 
 	public static ReactiveElasticsearchClient reactiveClient() {
-		return ReactiveRestClients.create(ClientConfiguration.create("localhost:9200"));
+		return ReactiveRestClients.create(CONFIG);
 	}
 
 	public static Version serverVersion() {

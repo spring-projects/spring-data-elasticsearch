@@ -440,7 +440,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 	@Test // DATAES-504
 	@ElasticsearchVersion(asOf = "6.5.0")
-	public void deleteByQueryShouldReturnZeroIfNothingDeleted() throws Exception {
+	public void deleteByQueryShouldReturnZeroIfNothingDeleted() {
 
 		index(randomEntity("test message"));
 

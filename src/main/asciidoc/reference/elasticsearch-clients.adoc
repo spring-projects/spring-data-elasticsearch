@@ -81,3 +81,43 @@ Mono<IndexResponse> response = client.index(request ->
 <1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enbale SSL.
 ====
 
+NOTE: The ReactiveClient response, especially for search operations, is bound to the `from` (offset) & `size` (limit) options of the request.
+
+[[elasticsearch.clients.configuration]]
+== Client Configuration
+
+Client behaviour can be changed via the `ClientConfiguration` that allows to set options for SSL, connect and socket timeouts.
+
+.Client Configuration
+====
+[source,java]
+----
+
+ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+  .connectedTo("localhost:9200", "localhost:9291") <1>
+  .withConnectTimeout(Duration.ofSeconds(5)) <2>
+  .withSocketTimeout(Duration.ofSeconds(3)) <3>
+  .useSsl()
+  . // ... other options
+  .build();
+
+----
+<1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enbale SSL.
+<2> Set the connection timeout. Default is 10 sec.
+<3> Set the socket timeout. Default is 5 sec.
+====
+
+[[elasticsearch.clients.logging]]
+== Client Logging
+
+To see what is actually sent to and received from the server `Request` / `Response` logging on the transport level needs
+to be turned on as outlined in the snippet below.
+
+.Enable transport layer logging
+[source,xml]
+----
+<logger name="org.springframework.data.elasticsearch.client.WIRE" level="trace"/>
+----
+
+NOTE: The above applies to both the `RestHighLevelClient` and `ReactiveElasticsearchClient` when obtained via `RestClients`
+respectively `ReactiveRestClients`.

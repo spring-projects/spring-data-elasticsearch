@@ -118,11 +118,11 @@ class ClientConfigurationBuilder
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder#withConnectTimeout(java.time.Duration)
 	 */
 	@Override
-	public TerminalClientConfigurationBuilder withConnectTimeout(Duration connectTimeout) {
+	public TerminalClientConfigurationBuilder withConnectTimeout(Duration timeout) {
 
-		Assert.notNull(connectTimeout, "I/O timeout must not be null!");
+		Assert.notNull(timeout, "I/O timeout must not be null!");
 
-		this.connectTimeout = connectTimeout;
+		this.connectTimeout = timeout;
 		return this;
 	}
 
@@ -131,11 +131,11 @@ class ClientConfigurationBuilder
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder#withTimeout(java.time.Duration)
 	 */
 	@Override
-	public TerminalClientConfigurationBuilder withSocketTimeout(Duration soTimeout) {
+	public TerminalClientConfigurationBuilder withSocketTimeout(Duration timeout) {
 
-		Assert.notNull(soTimeout, "Socket timeout must not be null!");
+		Assert.notNull(timeout, "Socket timeout must not be null!");
 
-		this.soTimeout = soTimeout;
+		this.soTimeout = timeout;
 		return this;
 	}
 

@@ -28,6 +28,7 @@ import org.springframework.util.ObjectUtils;
  * level.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 4.0
  */
 public abstract class ClientLogger {
@@ -57,7 +58,8 @@ public abstract class ClientLogger {
 	 */
 	public static void logRequest(String logId, String method, String endpoint, Object parameters) {
 
-		if (WIRE_LOGGER.isTraceEnabled()) {
+		if (isEnabled()) {
+
 			WIRE_LOGGER.trace("[{}] Sending request {} {} with parameters: {}", logId, method.toUpperCase(), endpoint,
 					parameters);
 		}
@@ -75,7 +77,8 @@ public abstract class ClientLogger {
 	public static void logRequest(String logId, String method, String endpoint, Object parameters,
 			Supplier<Object> body) {
 
-		if (WIRE_LOGGER.isTraceEnabled()) {
+		if (isEnabled()) {
+
 			WIRE_LOGGER.trace("[{}] Sending request {} {} with parameters: {}{}Request body: {}", logId, method.toUpperCase(),
 					endpoint, parameters, lineSeparator, body.get());
 		}
@@ -89,7 +92,7 @@ public abstract class ClientLogger {
 	 */
 	public static void logRawResponse(String logId, HttpStatus statusCode) {
 
-		if (WIRE_LOGGER.isTraceEnabled()) {
+		if (isEnabled()) {
 			WIRE_LOGGER.trace("[{}] Received raw response: ", logId, statusCode);
 		}
 	}
@@ -103,7 +106,7 @@ public abstract class ClientLogger {
 	 */
 	public static void logResponse(String logId, HttpStatus statusCode, String body) {
 
-		if (WIRE_LOGGER.isTraceEnabled()) {
+		if (isEnabled()) {
 			WIRE_LOGGER.trace("[{}] Received response: {}{}Response body: {}", logId, statusCode, lineSeparator, body);
 		}
 	}
@@ -114,6 +117,11 @@ public abstract class ClientLogger {
 	 * @return a new, unique correlation Id.
 	 */
 	public static String newLogId() {
+
+		if (!isEnabled()) {
+			return "-";
+		}
+
 		return ObjectUtils.getIdentityHexString(new Object());
 	}
 }
