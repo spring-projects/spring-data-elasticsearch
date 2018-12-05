@@ -48,6 +48,7 @@ import org.springframework.util.Assert;
  * @author Gad Akuka
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Murali Chevuri
  */
 public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
@@ -86,8 +87,8 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 			return SimpleElasticsearchRepository.class;
 		} else if (metadata.getIdType() == UUID.class) {
 			return UUIDElasticsearchRepository.class;
-        } else if (DocumentID.class.isAssignableFrom(metadata.getIdType())) {
-          return DocumentIDElasticsearchRepository.class;
+		} else if (DocumentID.class.isAssignableFrom(metadata.getIdType())) {
+			return DocumentIDElasticsearchRepository.class;
 		} else {
 			throw new IllegalArgumentException("Unsupported ID type " + metadata.getIdType());
 		}

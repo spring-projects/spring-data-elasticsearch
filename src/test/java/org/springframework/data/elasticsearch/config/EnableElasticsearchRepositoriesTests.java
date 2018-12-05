@@ -45,6 +45,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Mohsin Husen
  * @author Kevin Leturc
  * @author Gad Akuka
+ * @author Murali Chevuri
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -89,9 +90,10 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 		String[] beanNamesForType = context.getBeanNamesForType(ElasticsearchRepository.class);
 
 		//then
-		assertThat(beanNamesForType.length, is(2));
+		assertThat(beanNamesForType.length, is(3));
 		assertTrue(Arrays.asList(beanNamesForType).contains("sampleElasticsearchRepository"));
 		assertTrue(Arrays.asList(beanNamesForType).contains("sampleUUIDKeyedElasticsearchRepository"));
+		assertTrue(Arrays.asList(beanNamesForType).contains("sampleDocIDKeyedElasticsearchRepository"));
 	}
 
 	@Test
