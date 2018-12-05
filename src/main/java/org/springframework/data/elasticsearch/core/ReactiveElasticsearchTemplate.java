@@ -62,6 +62,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.http.HttpStatus;
@@ -240,11 +241,13 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 			SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 			searchSourceBuilder.query(mappedQuery(query, entity));
-
-			// TODO: request.source().postFilter(elasticsearchFilter); -- filter query
-
 			searchSourceBuilder.version(entity.hasVersionProperty()); // This has been true by default before
 			searchSourceBuilder.trackScores(query.getTrackScores());
+
+			QueryBuilder postFilterQuery = mappedFilterQuery(query, entity);
+			if (postFilterQuery != null) {
+				searchSourceBuilder.postFilter(postFilterQuery);
+			}
 
 			if (query.getSourceFilter() != null) {
 				searchSourceBuilder.fetchSource(query.getSourceFilter().getIncludes(), query.getSourceFilter().getExcludes());
@@ -259,6 +262,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 				searchSourceBuilder.from((int) offset);
 				searchSourceBuilder.size(query.getPageable().getPageSize());
+			} else {
+
+				searchSourceBuilder.from(0);
+				searchSourceBuilder.size(10000); // this is the index.max_result_window default value
 			}
 
 			if (query.getIndicesOptions() != null) {
@@ -273,9 +280,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 			request.source(searchSourceBuilder);
 
-			request = prepareSearchRequest(request);
-
-			return doFind(request);
+			return doFind(prepareSearchRequest(request));
 		});
 	}
 
@@ -605,9 +610,13 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return elasticsearchQuery != null ? elasticsearchQuery : QueryBuilders.matchAllQuery();
 	}
 
-	private QueryBuilder mappedFilterQuery(CriteriaQuery query, ElasticsearchPersistentEntity<?> entity) {
+	@Nullable
+	private QueryBuilder mappedFilterQuery(Query query, ElasticsearchPersistentEntity<?> entity) {
 
-		// TODO: this is actually strange in the RestTemplate:L378 - need to check
+		if (query instanceof SearchQuery) {
+			return ((SearchQuery) query).getFilter();
+		}
+
 		return null;
 	}
 

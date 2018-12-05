@@ -156,20 +156,20 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	private static WebClientProvider getWebClientProvider(ClientConfiguration clientConfiguration) {
 
-		WebClientProvider provider;
+		Duration connectTimeout = clientConfiguration.getConnectTimeout();
+		Duration soTimeout = clientConfiguration.getSocketTimeout();
 
 		TcpClient tcpClient = TcpClient.create();
-		Duration connectTimeout = clientConfiguration.getConnectTimeout();
-		Duration timeout = clientConfiguration.getSocketTimeout();
 
 		if (!connectTimeout.isNegative()) {
 			tcpClient = tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.toIntExact(connectTimeout.toMillis()));
 		}
 
-		if (!timeout.isNegative()) {
+		if (!soTimeout.isNegative()) {
+
 			tcpClient = tcpClient.doOnConnected(connection -> connection //
-					.addHandlerLast(new ReadTimeoutHandler(timeout.toMillis(), TimeUnit.MILLISECONDS))
-					.addHandlerLast(new WriteTimeoutHandler(timeout.toMillis(), TimeUnit.MILLISECONDS)));
+					.addHandlerLast(new ReadTimeoutHandler(soTimeout.toMillis(), TimeUnit.MILLISECONDS))
+					.addHandlerLast(new WriteTimeoutHandler(soTimeout.toMillis(), TimeUnit.MILLISECONDS)));
 		}
 
 		String scheme = "http";
@@ -187,7 +187,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		}
 
 		ReactorClientHttpConnector connector = new ReactorClientHttpConnector(httpClient);
-		provider = WebClientProvider.create(scheme, connector);
+		WebClientProvider provider = WebClientProvider.create(scheme, connector);
 
 		return provider.withDefaultHeaders(clientConfiguration.getDefaultHeaders());
 	}
@@ -370,6 +370,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 			ClientLogger.logRequest(logId, request.getMethod().toUpperCase(), request.getEndpoint(), request.getParameters(),
 					body::get);
+
 			requestBodySpec.contentType(MediaType.valueOf(request.getEntity().getContentType().getValue()));
 			requestBodySpec.body(Mono.fromSupplier(body::get), String.class);
 		} else {
@@ -397,21 +398,21 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 			Class<T> responseType) {
 
 		if (RawActionResponse.class.equals(responseType)) {
-			ClientLogger.logRawResponse(logId, response.statusCode());
 
+			ClientLogger.logRawResponse(logId, response.statusCode());
 			return Mono.just(responseType.cast(RawActionResponse.create(response)));
 		}
 
 		if (response.statusCode().is5xxServerError()) {
+
 			ClientLogger.logRawResponse(logId, response.statusCode());
 			return handleServerError(request, response);
 		}
 
 		return response.body(BodyExtractors.toMono(byte[].class)) //
 				.map(it -> new String(it, StandardCharsets.UTF_8)) //
-				.doOnNext(it -> {
-					ClientLogger.logResponse(logId, response.statusCode(), it);
-				}).flatMap(content -> doDecode(response, responseType, content));
+				.doOnNext(it -> ClientLogger.logResponse(logId, response.statusCode(), it)) //
+				.flatMap(content -> doDecode(response, responseType, content));
 	}
 
 	private static <T> Mono<T> doDecode(ClientResponse response, Class<T> responseType, String content) {
@@ -435,7 +436,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 						.error(new ElasticsearchStatusException(content, RestStatus.fromCode(response.statusCode().value())));
 			}
 		}
-
 	}
 
 	private static XContentParser createParser(String mediaType, String content) throws IOException {
@@ -446,6 +446,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	}
 
 	private static <T> Publisher<? extends T> handleServerError(Request request, ClientResponse response) {
+
 		return Mono.error(
 				new HttpServerErrorException(response.statusCode(), String.format("%s request to %s returned error code %s.",
 						request.getMethod(), request.getEndpoint(), response.statusCode().value())));

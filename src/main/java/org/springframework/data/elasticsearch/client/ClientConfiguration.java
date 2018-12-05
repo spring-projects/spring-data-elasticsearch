@@ -199,25 +199,47 @@ public interface ClientConfiguration {
 		TerminalClientConfigurationBuilder withDefaultHeaders(HttpHeaders defaultHeaders);
 
 		/**
+		 * Configure the {@literal milliseconds} for the connect timeout.
+		 *
+		 * @param millis the timeout to use.
+		 * @return the {@link TerminalClientConfigurationBuilder}
+		 * @see #withConnectTimeout(Duration)
+		 */
+		default TerminalClientConfigurationBuilder withConnectTimeout(long millis) {
+			return withConnectTimeout(Duration.ofMillis(millis));
+		}
+
+		/**
 		 * Configure a {@link java.time.Duration} connect timeout.
 		 *
-		 * @param connectTimeout the timeout to use.
+		 * @param timeout the timeout to use. Must not be {@literal null}.
 		 * @return the {@link TerminalClientConfigurationBuilder}
 		 * @see java.net.Socket#connect(SocketAddress, int)
 		 * @see io.netty.channel.ChannelOption#CONNECT_TIMEOUT_MILLIS
 		 */
-		TerminalClientConfigurationBuilder withConnectTimeout(Duration connectTimeout);
+		TerminalClientConfigurationBuilder withConnectTimeout(Duration timeout);
+
+		/**
+		 * Configure the {@literal milliseconds} for the socket timeout.
+		 *
+		 * @param millis the timeout to use.
+		 * @return the {@link TerminalClientConfigurationBuilder}
+		 * @see #withSocketTimeout(Duration)
+		 */
+		default TerminalClientConfigurationBuilder withSocketTimeout(long millis) {
+			return withSocketTimeout(Duration.ofMillis(millis));
+		}
 
 		/**
 		 * Configure a {@link java.time.Duration socket timeout} which is typically applied as SO-timeout/read timeout.
 		 *
-		 * @param soTimeout the timeout to use.
+		 * @param timeout the timeout to use. Must not be {@literal null}.
 		 * @return the {@link TerminalClientConfigurationBuilder}
 		 * @see java.net.Socket#setSoTimeout(int)
 		 * @see io.netty.handler.timeout.ReadTimeoutHandler
 		 * @see io.netty.handler.timeout.WriteTimeoutHandler
 		 */
-		TerminalClientConfigurationBuilder withSocketTimeout(Duration soTimeout);
+		TerminalClientConfigurationBuilder withSocketTimeout(Duration timeout);
 
 		/**
 		 * Build the {@link ClientConfiguration} object.

@@ -85,19 +85,25 @@ public final class RestClients {
 		}
 
 		builder.setHttpClientConfigCallback(clientBuilder -> {
+
 			Optional<SSLContext> sslContext = clientConfiguration.getSslContext();
 			sslContext.ifPresent(clientBuilder::setSSLContext);
 
 			if (ClientLogger.isEnabled()) {
-				clientBuilder.addInterceptorLast((HttpRequestInterceptor) LoggingInterceptors.INSTANCE);
-				clientBuilder.addInterceptorLast((HttpResponseInterceptor) LoggingInterceptors.INSTANCE);
+
+				HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+
+				clientBuilder.addInterceptorLast((HttpRequestInterceptor) interceptor);
+				clientBuilder.addInterceptorLast((HttpResponseInterceptor) interceptor);
 			}
 
 			Duration connectTimeout = clientConfiguration.getConnectTimeout();
 			Duration timeout = clientConfiguration.getSocketTimeout();
 
 			Builder requestConfigBuilder = RequestConfig.custom();
+
 			if (!connectTimeout.isNegative()) {
+
 				requestConfigBuilder.setConnectTimeout(Math.toIntExact(connectTimeout.toMillis()));
 				requestConfigBuilder.setConnectionRequestTimeout(Math.toIntExact(connectTimeout.toMillis()));
 			}
@@ -151,16 +157,17 @@ public final class RestClients {
 	 * Logging interceptors for Elasticsearch client logging.
 	 *
 	 * @see ClientLogger
+	 * @since 4.0
 	 */
-	enum LoggingInterceptors implements HttpResponseInterceptor, HttpRequestInterceptor {
-
-		INSTANCE;
+	private static class HttpLoggingInterceptor implements HttpResponseInterceptor, HttpRequestInterceptor {
 
 		@Override
 		public void process(HttpRequest request, HttpContext context) throws IOException {
 
 			String logId = (String) context.getAttribute(RestClients.LOG_ID_ATTRIBUTE);
+
 			if (logId == null) {
+
 				logId = ClientLogger.newLogId();
 				context.setAttribute(RestClients.LOG_ID_ATTRIBUTE, logId);
 			}

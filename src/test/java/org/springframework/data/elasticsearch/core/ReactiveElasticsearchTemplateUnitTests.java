@@ -19,6 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.action.search.SearchRequest.*;
 import static org.mockito.Mockito.*;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -116,6 +118,36 @@ public class ReactiveElasticsearchTemplateUnitTests {
 				.verifyComplete();
 
 		assertThat(captor.getValue().indicesOptions()).isEqualTo(IndicesOptions.LENIENT_EXPAND_OPEN);
+	}
+
+	@Test // DATAES-504
+	public void findShouldApplyPaginationIfSet() {
+
+		ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
+		when(client.search(captor.capture())).thenReturn(Flux.empty());
+
+
+		template.find(new CriteriaQuery(new Criteria("*")).setPageable(PageRequest.of(2, 50)), SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		assertThat(captor.getValue().source().from()).isEqualTo(100);
+		assertThat(captor.getValue().source().size()).isEqualTo(50);
+	}
+
+	@Test // DATAES-504
+	public void findShouldApplyDefaultMaxIfPaginationNotSet() {
+
+		ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
+		when(client.search(captor.capture())).thenReturn(Flux.empty());
+
+
+		template.find(new CriteriaQuery(new Criteria("*")).setPageable(Pageable.unpaged()), SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		assertThat(captor.getValue().source().from()).isEqualTo(0);
+		assertThat(captor.getValue().source().size()).isEqualTo(10000);
 	}
 
 	@Test // DATAES-504

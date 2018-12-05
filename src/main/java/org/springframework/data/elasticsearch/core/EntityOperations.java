@@ -43,7 +43,7 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 class EntityOperations {
 
-	public static final String ID_FIELD = "id";
+	private static final String ID_FIELD = "id";
 
 	private final @NonNull MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context;
 
@@ -54,7 +54,7 @@ class EntityOperations {
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T> Entity<T> forEntity(T entity) {
+	<T> Entity<T> forEntity(T entity) {
 
 		Assert.notNull(entity, "Bean must not be null!");
 
@@ -73,7 +73,7 @@ class EntityOperations {
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T> AdaptibleEntity<T> forEntity(T entity, ConversionService conversionService) {
+	<T> AdaptibleEntity<T> forEntity(T entity, ConversionService conversionService) {
 
 		Assert.notNull(entity, "Bean must not be null!");
 		Assert.notNull(conversionService, "ConversionService must not be null!");
@@ -97,7 +97,7 @@ class EntityOperations {
 	 * @see ElasticsearchPersistentEntity#getIndexName()
 	 * @see ElasticsearchPersistentEntity#getIndexType()
 	 */
-	public IndexCoordinates determineIndex(Entity<?> entity, @Nullable String index, @Nullable String type) {
+	IndexCoordinates determineIndex(Entity<?> entity, @Nullable String index, @Nullable String type) {
 		return determineIndex(entity.getPersistentEntity(), index, type);
 	}
 
@@ -114,7 +114,7 @@ class EntityOperations {
 	 * @see ElasticsearchPersistentEntity#getIndexName()
 	 * @see ElasticsearchPersistentEntity#getIndexType()
 	 */
-	public IndexCoordinates determineIndex(ElasticsearchPersistentEntity<?> persistentEntity, @Nullable String index,
+	IndexCoordinates determineIndex(ElasticsearchPersistentEntity<?> persistentEntity, @Nullable String index,
 			@Nullable String type) {
 		return new IndexCoordinates(indexName(persistentEntity, index), typeName(persistentEntity, type));
 	}
@@ -214,20 +214,21 @@ class EntityOperations {
 	 * Information and commands on an entity.
 	 *
 	 * @author Mark Paluch
+	 * @author Christoph Strobl
 	 */
 	interface AdaptibleEntity<T> extends Entity<T> {
 
 		/**
 		 * Returns whether the entity has a parent.
 		 *
-		 * @return
+		 * @return {@literal true} if the entity has a parent that has an {@literal id}.
 		 */
 		boolean hasParent();
 
 		/**
 		 * Returns the parent Id. Can be {@literal null}.
 		 *
-		 * @return
+		 * @return can be {@literal null}.
 		 */
 		@Nullable
 		Object getParentId();
@@ -236,8 +237,8 @@ class EntityOperations {
 		 * Populates the identifier of the backing entity if it has an identifier property and there's no identifier
 		 * currently present.
 		 *
-		 * @param id must not be {@literal null}.
-		 * @return
+		 * @param id can be {@literal null}.
+		 * @return can be {@literal null}.
 		 */
 		@Nullable
 		T populateIdIfNecessary(@Nullable Object id);
@@ -267,16 +268,16 @@ class EntityOperations {
 	}
 
 	/**
-	 * Plain entity without applying further mapping.
-	 *
 	 * @param <T>
+	 * @author Christoph Strobl
+	 * @since 4.0
 	 */
 	@RequiredArgsConstructor
-	private static class UnmappedEntity<T extends Map<String, Object>> implements AdaptibleEntity<T> {
+	private static class MapBackedEntity<T extends Map<String, Object>> implements AdaptibleEntity<T> {
 
 		private final T map;
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#getId()
 		 */
@@ -285,7 +286,7 @@ class EntityOperations {
 			return map.get(ID_FIELD);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#hasParent()
 		 */
@@ -294,7 +295,7 @@ class EntityOperations {
 			return false;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#getParentId()
 		 */
@@ -303,7 +304,7 @@ class EntityOperations {
 			return null;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#populateIdIfNecessary(java.lang.Object)
 		 */
@@ -316,7 +317,7 @@ class EntityOperations {
 			return map;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#initializeVersionProperty()
 		 */
@@ -325,7 +326,7 @@ class EntityOperations {
 			return map;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#getVersion()
 		 */
@@ -335,7 +336,7 @@ class EntityOperations {
 			return null;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#incrementVersion()
 		 */
@@ -344,7 +345,7 @@ class EntityOperations {
 			return map;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#getBean()
 		 */
@@ -353,7 +354,7 @@ class EntityOperations {
 			return map;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#isNew()
 		 */
@@ -362,7 +363,7 @@ class EntityOperations {
 			return map.get(ID_FIELD) != null;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#getPersistentEntity()
 		 */
@@ -373,11 +374,25 @@ class EntityOperations {
 	}
 
 	/**
+	 * Plain entity without applying further mapping.
+	 *
+	 * @param <T>
+	 * @since 4.0
+	 */
+	private static class UnmappedEntity<T extends Map<String, Object>> extends MapBackedEntity<T> {
+
+		UnmappedEntity(T map) {
+			super(map);
+		}
+	}
+
+	/**
 	 * Simple mapped entity without an associated {@link ElasticsearchPersistentEntity}.
 	 *
 	 * @param <T>
+	 * @since 4.0
 	 */
-	private static class SimpleMappedEntity<T extends Map<String, Object>> extends UnmappedEntity<T> {
+	private static class SimpleMappedEntity<T extends Map<String, Object>> extends MapBackedEntity<T> {
 
 		SimpleMappedEntity(T map) {
 			super(map);
@@ -471,6 +486,10 @@ class EntityOperations {
 		}
 	}
 
+	/**
+	 * @param <T>
+	 * @since 4.0
+	 */
 	private static class AdaptibleMappedEntity<T> extends MappedEntity<T> implements AdaptibleEntity<T> {
 
 		private final ElasticsearchPersistentEntity<?> entity;
