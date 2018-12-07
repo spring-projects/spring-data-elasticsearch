@@ -17,20 +17,28 @@ package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.mockito.Mockito.*;
 
+import org.mockito.ArgumentCaptor;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.mockito.Mockito;
@@ -215,21 +223,20 @@ public class ReactiveMockClientTestsUtils {
 					Mockito.when(headersUriSpec.uri(any(), any(Map.class))).thenReturn(headersUriSpec);
 					Mockito.when(headersUriSpec.headers(any(Consumer.class))).thenReturn(headersUriSpec);
 					Mockito.when(headersUriSpec.attribute(anyString(), anyString())).thenReturn(headersUriSpec);
+					Mockito.when(headersUriSpec.uri(any(Function.class))).thenReturn(headersUriSpec);
 
-					RequestBodyUriSpec bodyUriSpec = mock(RequestBodyUriSpec.class);
-					Mockito.when(webClient.method(any())).thenReturn(bodyUriSpec);
-					Mockito.when(bodyUriSpec.body(any())).thenReturn(headersUriSpec);
-					Mockito.when(bodyUriSpec.uri(any(), any(Map.class))).thenReturn(bodyUriSpec);
-					Mockito.when(bodyUriSpec.attribute(anyString(), anyString())).thenReturn(bodyUriSpec);
-					Mockito.when(bodyUriSpec.headers(any(Consumer.class))).thenReturn(bodyUriSpec);
+					RequestBodyUriSpec bodySpy = spy(WebClient.create().method(HttpMethod.POST));
+
+					Mockito.when(webClient.method(any())).thenReturn(bodySpy);
+					Mockito.when(bodySpy.body(any())).thenReturn(headersUriSpec);
 
 					ClientResponse response = mock(ClientResponse.class);
 					Mockito.when(headersUriSpec.exchange()).thenReturn(Mono.just(response));
-					Mockito.when(bodyUriSpec.exchange()).thenReturn(Mono.just(response));
+					Mockito.when(bodySpy.exchange()).thenReturn(Mono.just(response));
 					Mockito.when(response.statusCode()).thenReturn(HttpStatus.ACCEPTED);
 
 					headersUriSpecMap.putIfAbsent(key, headersUriSpec);
-					bodyUriSpecMap.putIfAbsent(key, bodyUriSpec);
+					bodyUriSpecMap.putIfAbsent(key, bodySpy);
 					responseMap.putIfAbsent(key, response);
 
 					return webClient;
@@ -272,6 +279,21 @@ public class ReactiveMockClientTestsUtils {
 			Receive get(Consumer<RequestHeadersUriSpec> headerSpec);
 
 			Receive exchange(Consumer<RequestBodyUriSpec> bodySpec);
+
+			default URI captureUri() {
+
+				Set<URI> capturingSet = new LinkedHashSet();
+
+				exchange(requestBodyUriSpec -> {
+
+					ArgumentCaptor<Function<UriBuilder, URI>> fkt = ArgumentCaptor.forClass(Function.class);
+					verify(requestBodyUriSpec).uri(fkt.capture());
+
+					capturingSet.add(fkt.getValue().apply(new DefaultUriBuilderFactory().builder()));
+				});
+
+				return capturingSet.iterator().next();
+			}
 
 			default Receive receiveJsonFromFile(String file) {
 

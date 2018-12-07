@@ -16,14 +16,14 @@
 package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive.*;
 
 import reactor.test.StepVerifier;
 
+import java.net.URI;
 import java.util.Collections;
-import java.util.Map;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.DocWriteResponse.Result;
@@ -33,7 +33,9 @@ import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.VersionType;
 import org.junit.Before;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
@@ -61,6 +63,29 @@ public class ReactiveElasticsearchClientUnitTests {
 		client = new DefaultReactiveElasticsearchClient(hostProvider);
 	}
 
+	@Test // DATAES-512
+	public void sendRequestShouldCarryOnRequestParameters() {
+
+		hostProvider.when(HOST).receiveDeleteOk();
+
+		DeleteRequest request = new DeleteRequest("index", "type", "id");
+		request.version(1000);
+		request.versionType(VersionType.EXTERNAL);
+		request.timeout(TimeValue.timeValueMinutes(10));
+
+		client.delete(request) //
+				.then() //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		URI uri = hostProvider.when(HOST).captureUri();
+
+		assertThat(uri.getQuery()) //
+				.contains("version=1000") //
+				.contains("version_type=external") //
+				.contains("timeout=10m");
+	}
+
 	// --> PING
 
 	@Test
@@ -74,9 +99,8 @@ public class ReactiveElasticsearchClientUnitTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-			verify(requestBodyUriSpec).uri(eq("/"), any(Map.class));
-		});
+		URI uri = hostProvider.when(HOST).captureUri();
+		assertThat(uri.getRawPath()).isEqualTo("/");
 	}
 
 	@Test // DATAES-488
@@ -116,9 +140,8 @@ public class ReactiveElasticsearchClientUnitTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-			verify(requestBodyUriSpec).uri(eq("/"), any(Map.class));
-		});
+		URI uri = hostProvider.when(HOST).captureUri();
+		assertThat(uri.getRawPath()).isEqualTo("/");
 	}
 
 	@Test // DATAES-488
@@ -151,9 +174,8 @@ public class ReactiveElasticsearchClientUnitTests {
 				.verifyComplete();
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.GET);
-		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-			verify(requestBodyUriSpec).uri(eq("/twitter/_all/1"), any(Map.class));
-		});
+		URI uri = hostProvider.when(HOST).captureUri();
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_all/1");
 	}
 
 	@Test // DATAES-488
@@ -204,10 +226,11 @@ public class ReactiveElasticsearchClientUnitTests {
 		verify(hostProvider.client(HOST)).method(HttpMethod.POST);
 
 		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-
-			verify(requestBodyUriSpec).uri(eq("/_mget"), any(Map.class));
 			verify(requestBodyUriSpec).body(any(Publisher.class), any(Class.class));
 		});
+
+		URI uri = hostProvider.when(HOST).captureUri();
+		assertThat(uri.getRawPath()).isEqualTo("/_mget");
 	}
 
 	@Test // DATAES-488
@@ -287,9 +310,8 @@ public class ReactiveElasticsearchClientUnitTests {
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.HEAD);
 
-		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-			verify(requestBodyUriSpec).uri(eq("/twitter/_all/1"), any(Map.class));
-		});
+		URI uri = hostProvider.when(HOST).captureUri();
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_all/1");
 	}
 
 	@Test // DATAES-488
@@ -329,10 +351,11 @@ public class ReactiveElasticsearchClientUnitTests {
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.PUT);
 		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-
-			verify(requestBodyUriSpec).uri(eq("/twitter/10/_create"), any(Map.class));
 			verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON);
 		});
+
+		URI uri = hostProvider.when(HOST).captureUri();
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/10/_create");
 	}
 
 	@Test // DATAES-488
@@ -347,10 +370,11 @@ public class ReactiveElasticsearchClientUnitTests {
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.PUT);
 		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-
-			verify(requestBodyUriSpec).uri(eq("/twitter/10"), any(Map.class));
 			verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON);
 		});
+
+		URI uri = hostProvider.when(HOST).captureUri();
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/10");
 	}
 
 	@Test // DATAES-488
@@ -401,10 +425,11 @@ public class ReactiveElasticsearchClientUnitTests {
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.POST);
 		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-
-			verify(requestBodyUriSpec).uri(eq("/twitter/doc/1/_update"), any(Map.class));
 			verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON);
 		});
+
+		URI uri = hostProvider.when(HOST).captureUri();
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/doc/1/_update");
 	}
 
 	@Test // DATAES-488
@@ -450,9 +475,8 @@ public class ReactiveElasticsearchClientUnitTests {
 				.verifyComplete();
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.DELETE);
-		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-			verify(requestBodyUriSpec).uri(eq("/twitter/doc/1"), any(Map.class));
-		});
+		URI uri = hostProvider.when(HOST).captureUri();
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/doc/1");
 	}
 
 	@Test // DATAES-488
@@ -484,9 +508,8 @@ public class ReactiveElasticsearchClientUnitTests {
 		client.search(new SearchRequest("twitter")).as(StepVerifier::create).verifyComplete();
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.POST);
-		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-			verify(requestBodyUriSpec).uri(eq("/twitter/_search"), any(Map.class));
-		});
+		URI uri = hostProvider.when(HOST).captureUri();
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_search");
 	}
 
 	@Test // DATAES-488
