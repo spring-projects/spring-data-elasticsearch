@@ -32,6 +32,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -82,6 +83,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.BodyExtractors;
@@ -360,9 +362,31 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	private Mono<ClientResponse> sendRequest(WebClient webClient, String logId, Request request, HttpHeaders headers) {
 
 		RequestBodySpec requestBodySpec = webClient.method(HttpMethod.valueOf(request.getMethod().toUpperCase())) //
-				.uri(request.getEndpoint(), request.getParameters()) //
+				.uri(builder -> {
+
+					builder = builder.path(request.getEndpoint());
+
+					if (!ObjectUtils.isEmpty(request.getParameters())) {
+						for (Entry<String, String> entry : request.getParameters().entrySet()) {
+							builder = builder.queryParam(entry.getKey(), entry.getValue());
+						}
+					}
+					return builder.build();
+				}) //
 				.attribute(ClientRequest.LOG_ID_ATTRIBUTE, logId) //
-				.headers(theHeaders -> theHeaders.addAll(headers));
+				.headers(theHeaders -> {
+
+					// add all the headers explicitly set
+					theHeaders.addAll(headers);
+
+					// and now those that might be set on the request.
+					if (request.getOptions() != null) {
+
+						if (!ObjectUtils.isEmpty(request.getOptions().getHeaders())) {
+							request.getOptions().getHeaders().forEach(it -> theHeaders.add(it.getName(), it.getValue()));
+						}
+					}
+				});
 
 		if (request.getEntity() != null) {
 
