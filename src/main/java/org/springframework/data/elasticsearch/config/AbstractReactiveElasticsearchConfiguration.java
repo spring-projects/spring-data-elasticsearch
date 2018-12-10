@@ -26,7 +26,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
- * @since 4.0
+ * @since 3.2
  * @see ElasticsearchConfigurationSupport
  */
 @Configuration

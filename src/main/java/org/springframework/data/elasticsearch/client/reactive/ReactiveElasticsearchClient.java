@@ -49,7 +49,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 4.0
+ * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
  */
@@ -438,7 +438,7 @@ public interface ReactiveElasticsearchClient {
 	 * Low level callback interface operating upon {@link WebClient} to send commands towards elasticsearch.
 	 *
 	 * @author Christoph Strobl
-	 * @since 4.0
+	 * @since 3.2
 	 */
 	interface ReactiveElasticsearchClientCallback {
 		Mono<ClientResponse> doWithClient(WebClient client);
@@ -448,7 +448,7 @@ public interface ReactiveElasticsearchClient {
 	 * Cumulative client {@link ElasticsearchHost} information.
 	 *
 	 * @author Christoph Strobl
-	 * @since 4.0
+	 * @since 3.2
 	 */
 	interface Status {
 

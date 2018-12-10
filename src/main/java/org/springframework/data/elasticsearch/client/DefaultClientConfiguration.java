@@ -32,7 +32,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
- * @since 4.0
+ * @since 3.2
  */
 class DefaultClientConfiguration implements ClientConfiguration {
 

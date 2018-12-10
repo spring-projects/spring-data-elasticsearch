@@ -40,7 +40,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 4.0
+ * @since 3.2
  */
 class MultiNodeHostProvider implements HostProvider {
 

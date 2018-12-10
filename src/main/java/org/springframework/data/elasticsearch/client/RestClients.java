@@ -52,7 +52,7 @@ import org.springframework.util.Assert;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 4.0
+ * @since 3.2
  */
 public final class RestClients {
 
@@ -157,7 +157,7 @@ public final class RestClients {
 	 * Logging interceptors for Elasticsearch client logging.
 	 *
 	 * @see ClientLogger
-	 * @since 4.0
+	 * @since 3.2
 	 */
 	private static class HttpLoggingInterceptor implements HttpResponseInterceptor, HttpRequestInterceptor {
 

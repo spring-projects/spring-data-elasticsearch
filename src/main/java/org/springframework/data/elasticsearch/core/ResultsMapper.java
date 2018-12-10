@@ -55,7 +55,7 @@ public interface ResultsMapper extends SearchResultMapper, GetResultMapper, Mult
 	 * @param type must not be {@literal null}.
 	 * @param <T>
 	 * @return can be {@literal null} if the {@link GetResult#isSourceEmpty() is empty}.
-	 * @since 4.0
+	 * @since 3.2
 	 */
 	@Nullable
 	default <T> T mapEntity(GetResult getResult, Class<T> type) {
@@ -80,7 +80,7 @@ public interface ResultsMapper extends SearchResultMapper, GetResultMapper, Mult
 	 * @param type must not be {@literal null}.
 	 * @param <T>
 	 * @return can be {@literal null} if the {@link SearchHit} does not have {@link SearchHit#hasSource() a source}.
-	 * @since 4.0
+	 * @since 3.2
 	 */
 	@Nullable
 	default <T> T mapEntity(SearchHit searchHit, Class<T> type) {

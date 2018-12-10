@@ -38,7 +38,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
- * @since 4.0
+ * @since 3.2
  */
 @RequiredArgsConstructor
 class EntityOperations {
@@ -270,7 +270,7 @@ class EntityOperations {
 	/**
 	 * @param <T>
 	 * @author Christoph Strobl
-	 * @since 4.0
+	 * @since 3.2
 	 */
 	@RequiredArgsConstructor
 	private static class MapBackedEntity<T extends Map<String, Object>> implements AdaptibleEntity<T> {
@@ -377,7 +377,7 @@ class EntityOperations {
 	 * Plain entity without applying further mapping.
 	 *
 	 * @param <T>
-	 * @since 4.0
+	 * @since 3.2
 	 */
 	private static class UnmappedEntity<T extends Map<String, Object>> extends MapBackedEntity<T> {
 
@@ -390,7 +390,7 @@ class EntityOperations {
 	 * Simple mapped entity without an associated {@link ElasticsearchPersistentEntity}.
 	 *
 	 * @param <T>
-	 * @since 4.0
+	 * @since 3.2
 	 */
 	private static class SimpleMappedEntity<T extends Map<String, Object>> extends MapBackedEntity<T> {
 
@@ -412,6 +412,7 @@ class EntityOperations {
 	 * Mapped entity with an associated {@link ElasticsearchPersistentEntity}.
 	 *
 	 * @param <T>
+	 * @since 3.2
 	 */
 	@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 	private static class MappedEntity<T> implements Entity<T> {
@@ -488,7 +489,7 @@ class EntityOperations {
 
 	/**
 	 * @param <T>
-	 * @since 4.0
+	 * @since 3.2
 	 */
 	private static class AdaptibleMappedEntity<T> extends MappedEntity<T> implements AdaptibleEntity<T> {
 

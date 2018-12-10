@@ -25,7 +25,7 @@ import org.springframework.util.Assert;
  * Value Object containing information about Elasticsearch cluster nodes.
  *
  * @author Christoph Strobl
- * @since 4.0
+ * @since 3.2
  */
 public class ElasticsearchHost {
 

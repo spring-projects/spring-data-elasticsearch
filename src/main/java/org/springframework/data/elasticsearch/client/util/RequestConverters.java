@@ -87,7 +87,7 @@ import org.springframework.http.HttpMethod;
  * </p>
  * Modified for usage with {@link ReactiveElasticsearchClient}.
  *
- * @since 4.0
+ * @since 3.2
  */
 public class RequestConverters {
 

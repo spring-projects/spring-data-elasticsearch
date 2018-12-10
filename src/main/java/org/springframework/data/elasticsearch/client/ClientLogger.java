@@ -29,7 +29,7 @@ import org.springframework.util.ObjectUtils;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
- * @since 4.0
+ * @since 3.2
  */
 public abstract class ClientLogger {
 

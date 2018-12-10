@@ -35,7 +35,7 @@ import org.springframework.util.Assert;
  * {@link Publisher}.
  *
  * @author Christoph Strobl
- * @since 4.0
+ * @since 3.2
  */
 public interface ReactiveElasticsearchOperations {
 
@@ -450,7 +450,7 @@ public interface ReactiveElasticsearchOperations {
 	 *
 	 * @param <T>
 	 * @author Christoph Strobl
-	 * @since 4.0
+	 * @since 3.2
 	 */
 	interface ClientCallback<T extends Publisher<?>> {
 

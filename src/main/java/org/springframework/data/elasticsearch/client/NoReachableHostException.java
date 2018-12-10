@@ -22,7 +22,7 @@ import java.util.Set;
  * {@link RuntimeException} to be emitted / thrown when the cluster is down (aka none of the known nodes is reachable).
  *
  * @author Christoph Strobl
- * @since 4.0
+ * @since 3.2
  */
 public class NoReachableHostException extends RuntimeException {
 

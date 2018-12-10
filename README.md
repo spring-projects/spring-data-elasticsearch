@@ -54,6 +54,7 @@ the appropriate dependency version.
 
 | spring data elasticsearch | elasticsearch |
 |:-------------------------:|:-------------:|
+| 3.2.x                     | 6.5.0         |
 | 3.1.x                     | 6.2.2         |
 | 3.0.x                     | 5.5.0         |
 | 2.1.x                     | 2.4.0         |
@@ -183,6 +184,78 @@ Searching entities using Elasticsearch Template
         .withQuery(queryString(documentId).field("id"))
         .build();
         Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
+```
+
+### Reactive Elasticsearch
+
+The `ReactiveElasticsearchClient` is a non official driver based on `WebClient`.
+It uses the request/response objects provided by the Elasticsearch core project.
+
+```java
+@Configuration
+public class Config {
+
+  @Bean
+  ReactiveElasticsearchClient client() {
+
+    ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+      .connectedTo("localhost:9200", "localhost:9291")
+      .build();
+
+    return ReactiveRestClients.create(clientConfiguration);
+  }
+}
+
+// ...
+
+Mono<IndexResponse> response = client.index(request ->
+
+  request.index("spring-data")
+    .type("elasticsearch")
+    .id(randomID())
+    .source(singletonMap("feature", "reactive-client"))
+    .setRefreshPolicy(IMMEDIATE)
+);
+```
+
+The reactive client response, especially for search operations, is bound to the `from` (offset) & `size` (limit) options of the request.
+
+`ReactiveElasticsearchOperations` is the gateway to executing high level commands against an Elasticsearch cluster using the `ReactiveElasticsearchClient`.
+The easiest way of setting up the `ReactiveElasticsearchTemplate` is via `AbstractReactiveElasticsearchConfiguration`.
+
+```java
+@Configuration
+public class Config extends AbstractReactiveElasticsearchConfiguration {
+
+    @Bean
+    @Override
+    public ReactiveElasticsearchClient reactiveElasticsearchClient() {
+        // ...
+    }
+}
+```
+
+If needed the `ReactiveElasticsearchTemplate` can be configured with default `RefreshPolicy` and `IndicesOptions` that get applied to the related requests by overriding the defaults of `refreshPolicy()` and `indicesOptions()`.
+
+```java
+template.save(new Person("Bruce Banner", 42))
+    .doOnNext(System.out::println)
+    .flatMap(person -> template.findById(person.id, Person.class))
+    .doOnNext(System.out::println)
+    .flatMap(person -> template.delete(person))
+    .doOnNext(System.out::println)
+    .flatMap(id -> template.count(Person.class))
+    .doOnNext(System.out::println)
+    .subscribe();
+```
+
+The above outputs the following sequence on the console.
+
+```bash
+> Person(id=QjWCWWcBXiLAnp77ksfR, name=Bruce Banner, age=42)
+> Person(id=QjWCWWcBXiLAnp77ksfR, name=Bruce Banner, age=42)
+> QjWCWWcBXiLAnp77ksfR
+> 0
 ```
 
 ### XML Namespace

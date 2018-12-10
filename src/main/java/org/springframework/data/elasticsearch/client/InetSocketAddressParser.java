@@ -24,7 +24,7 @@ import org.springframework.util.StringUtils;
  * Utility to parse endpoints in {@code host:port} format into {@link java.net.InetSocketAddress}.
  *
  * @author Mark Paluch
- * @since 4.0
+ * @since 3.2
  */
 class InetSocketAddressParser {
 

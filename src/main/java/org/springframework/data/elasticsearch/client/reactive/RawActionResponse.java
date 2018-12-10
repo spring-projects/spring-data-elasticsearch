@@ -35,7 +35,7 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies;
  * Extension to {@link ActionResponse} that also implements {@link ClientResponse}.
  *
  * @author Christoph Strobl
- * @since 4.0
+ * @since 3.2
  */
 class RawActionResponse extends ActionResponse implements ClientResponse {
 

@@ -73,7 +73,7 @@ import org.springframework.util.ObjectUtils;
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 4.0
+ * @since 3.2
  */
 public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations {
 

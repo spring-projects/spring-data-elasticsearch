@@ -24,7 +24,7 @@ import org.springframework.util.Assert;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 4.0
+ * @since 3.2
  */
 public final class ReactiveRestClients {
 

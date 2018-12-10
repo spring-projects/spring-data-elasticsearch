@@ -29,7 +29,7 @@ import org.springframework.http.HttpHeaders;
  * Configuration interface exposing common client configuration properties for Elasticsearch clients.
  *
  * @author Mark Paluch
- * @since 4.0
+ * @since 3.2
  */
 public interface ClientConfiguration {
 

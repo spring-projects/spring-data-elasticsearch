@@ -32,7 +32,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 4.0
+ * @since 3.2
  */
 public interface HostProvider {
 
@@ -113,7 +113,7 @@ public interface HostProvider {
 	 * {@link Verification} allows to influence the lookup strategy for active hosts.
 	 *
 	 * @author Christoph Strobl
-	 * @since 4.0
+	 * @since 3.2
 	 */
 	enum Verification {
 
@@ -132,7 +132,7 @@ public interface HostProvider {
 	 * Value object accumulating information about an Elasticsearch cluster.
 	 *
 	 * @author Christoph Strobl
-	 * @since 4.0.
+	 * @since 3.2
 	 */
 	class ClusterInformation {
 

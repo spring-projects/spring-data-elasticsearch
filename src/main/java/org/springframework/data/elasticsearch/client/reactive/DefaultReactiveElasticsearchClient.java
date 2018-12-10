@@ -110,7 +110,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 4.0
+ * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
  */
@@ -657,7 +657,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 * Mutable state object holding scrollId to be used for {@link SearchScrollRequest#scroll(Scroll)}
 	 *
 	 * @author Christoph Strobl
-	 * @since 4.0
+	 * @since 3.2
 	 */
 	private static class ScrollState {
 

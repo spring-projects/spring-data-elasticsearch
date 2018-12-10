@@ -39,7 +39,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Strobl
- * @since 4.0
+ * @since 3.2
  */
 @Configuration
 public class ElasticsearchConfigurationSupport {

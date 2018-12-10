@@ -32,7 +32,7 @@ import org.springframework.web.reactive.function.client.WebClient.Builder;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
- * @since 4.0
+ * @since 3.2
  */
 class DefaultWebClientProvider implements WebClientProvider {
 

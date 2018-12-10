@@ -22,7 +22,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 
 /**
  * @author Christoph Strobl
- * @since 4.0
+ * @since 3.2
  * @see ElasticsearchConfigurationSupport
  */
 public abstract class AbstractElasticsearchConfiguration extends ElasticsearchConfigurationSupport {
