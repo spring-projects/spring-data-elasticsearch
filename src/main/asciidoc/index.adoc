@@ -2,8 +2,6 @@
 BioMed Central Development Team
 :revnumber: {version}
 :revdate: {localdate}
-:toc:
-:toc-placement!:
 :spring-data-commons-docs: ../../../../spring-data-commons/src/main/asciidoc
 
 (C) 2013-2015 The original author(s).
