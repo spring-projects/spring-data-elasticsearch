@@ -20,8 +20,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive.*;
 
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
 
@@ -38,12 +40,14 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockDelegatingElasticsearchHostProvider;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.util.StreamUtils;
 
 /**
  * @author Christoph Strobl
@@ -570,6 +574,53 @@ public class ReactiveElasticsearchClientUnitTests {
 		client.search(new SearchRequest("twitter")) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
+	}
+
+	// --> SCROLL
+
+	@Test // DATAES-510
+	public void scrollShouldReadAll() throws IOException {
+
+		byte[] start = StreamUtils.copyToByteArray(Receive.fromPath("search-ok-scroll").getInputStream());
+		byte[] next = StreamUtils.copyToByteArray(Receive.fromPath("scroll_ok").getInputStream());
+		byte[] end = StreamUtils.copyToByteArray(Receive.fromPath("scroll_no_more_results").getInputStream());
+		byte[] cleanup = StreamUtils.copyToByteArray(Receive.fromPath("scroll_clean").getInputStream());
+
+		hostProvider.when(HOST) //
+				.receive(Receive::json) //
+				.receive(response -> Mockito.when(response.body(any())).thenReturn(Mono.just(start), Mono.just(next),
+						Mono.just(end), Mono.just(cleanup)));
+
+		client.scroll(new SearchRequest("twitter")) //
+				.as(StepVerifier::create) //
+				.expectNextCount(4) //
+				.verifyComplete();
+
+		hostProvider.when(HOST).receive(response -> {
+			verify(response, times(4)).body(any());
+		});
+	}
+
+	@Test // DATAES-510
+	public void scrollShouldCleanUpResourcesOnError() throws IOException {
+
+		byte[] start = StreamUtils.copyToByteArray(Receive.fromPath("search-ok-scroll").getInputStream());
+		byte[] error = StreamUtils.copyToByteArray(Receive.fromPath("scroll_error").getInputStream());
+		byte[] cleanup = StreamUtils.copyToByteArray(Receive.fromPath("scroll_clean").getInputStream());
+
+		hostProvider.when(HOST) //
+				.receive(Receive::json) //
+				.receive(response -> Mockito.when(response.body(any())).thenReturn(Mono.just(start), Mono.just(error),
+						Mono.just(cleanup)));
+
+		client.scroll(new SearchRequest("twitter")) //
+				.as(StepVerifier::create) //
+				.expectNextCount(2) //
+				.verifyError();
+
+		hostProvider.when(HOST).receive(response -> {
+			verify(response, times(3)).body(any());
+		});
 	}
 
 }
