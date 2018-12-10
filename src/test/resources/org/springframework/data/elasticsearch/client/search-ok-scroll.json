@@ -1,0 +1,39 @@
+{
+  "took": 52,
+  "timed_out": false,
+  "_scroll_id": "DnF1ZXJ5VGhlbkZldGNoBQAAAAAAAAAHFndhSE1uNUlLUXhXb1ZvQTNqOHNrMWcAAAAAAAAABhZ3YUhNbjVJS1F4V29Wb0EzajhzazFnAAAAAAAAAAgWd2FITW41SUtReFdvVm9BM2o4c2sxZwAAAAAAAAAJFndhSE1uNUlLUXhXb1ZvQTNqOHNrMWcAAAAAAAAAChZ3YUhNbjVJS1F4V29Wb0EzajhzazFn",
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 100,
+    "max_score": 0.2876821,
+    "hits": [
+      {
+        "_index": "twitter",
+        "_type": "doc",
+        "_id": "2",
+        "_score": 0.2876821,
+        "_source": {
+          "user": "kimchy",
+          "post_date": "2009-11-15T14:12:12",
+          "message": "Another tweet, will it be indexed?"
+        }
+      },
+      {
+        "_index": "twitter",
+        "_type": "doc",
+        "_id": "1",
+        "_score": 0.2876821,
+        "_source": {
+          "user": "kimchy",
+          "post_date": "2009-11-15T13:12:00",
+          "message": "Trying out Elasticsearch, so far so good?"
+        }
+      }
+    ]
+  }
+}

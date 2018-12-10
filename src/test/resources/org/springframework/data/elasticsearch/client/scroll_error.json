@@ -1,0 +1,77 @@
+{
+  "error": {
+    "caused_by": {
+      "reason": "No search context found for id [1]",
+      "type": "search_context_missing_exception"
+    },
+    "failed_shards": [
+      {
+        "index": null,
+        "reason": {
+          "reason": "No search context found for id [1]",
+          "type": "search_context_missing_exception"
+        },
+        "shard": -1
+      },
+      {
+        "index": null,
+        "reason": {
+          "reason": "No search context found for id [2]",
+          "type": "search_context_missing_exception"
+        },
+        "shard": -1
+      },
+      {
+        "index": null,
+        "reason": {
+          "reason": "No search context found for id [3]",
+          "type": "search_context_missing_exception"
+        },
+        "shard": -1
+      },
+      {
+        "index": null,
+        "reason": {
+          "reason": "No search context found for id [4]",
+          "type": "search_context_missing_exception"
+        },
+        "shard": -1
+      },
+      {
+        "index": null,
+        "reason": {
+          "reason": "No search context found for id [5]",
+          "type": "search_context_missing_exception"
+        },
+        "shard": -1
+      }
+    ],
+    "grouped": true,
+    "phase": "query",
+    "reason": "all shards failed",
+    "root_cause": [
+      {
+        "reason": "No search context found for id [1]",
+        "type": "search_context_missing_exception"
+      },
+      {
+        "reason": "No search context found for id [2]",
+        "type": "search_context_missing_exception"
+      },
+      {
+        "reason": "No search context found for id [3]",
+        "type": "search_context_missing_exception"
+      },
+      {
+        "reason": "No search context found for id [4]",
+        "type": "search_context_missing_exception"
+      },
+      {
+        "reason": "No search context found for id [5]",
+        "type": "search_context_missing_exception"
+      }
+    ],
+    "type": "search_phase_execution_exception"
+  },
+  "status": 404
+}
