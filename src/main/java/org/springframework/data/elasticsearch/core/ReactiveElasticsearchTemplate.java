@@ -253,6 +253,16 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				searchSourceBuilder.fetchSource(query.getSourceFilter().getIncludes(), query.getSourceFilter().getExcludes());
 			}
 
+			sort(query, entity).forEach(searchSourceBuilder::sort);
+
+			if (query.getMinScore() > 0) {
+				searchSourceBuilder.minScore(query.getMinScore());
+			}
+
+			if (query.getIndicesOptions() != null) {
+				request.indicesOptions(query.getIndicesOptions());
+			}
+
 			if (query.getPageable().isPaged()) {
 
 				long offset = query.getPageable().getOffset();
@@ -262,25 +272,15 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 				searchSourceBuilder.from((int) offset);
 				searchSourceBuilder.size(query.getPageable().getPageSize());
+
+				request.source(searchSourceBuilder);
+				return doFind(prepareSearchRequest(request));
+
 			} else {
 
-				searchSourceBuilder.from(0);
-				searchSourceBuilder.size(10000); // this is the index.max_result_window default value
+				request.source(searchSourceBuilder);
+				return doScan(prepareSearchRequest(request));
 			}
-
-			if (query.getIndicesOptions() != null) {
-				request.indicesOptions(query.getIndicesOptions());
-			}
-
-			sort(query, entity).forEach(searchSourceBuilder::sort);
-
-			if (query.getMinScore() > 0) {
-				searchSourceBuilder.minScore(query.getMinScore());
-			}
-
-			request.source(searchSourceBuilder);
-
-			return doFind(prepareSearchRequest(request));
 		});
 	}
 
@@ -514,6 +514,21 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		}
 
 		return Flux.from(execute(client -> client.search(request)));
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link SearchRequest} ready to be executed.
+	 * @return a {@link Flux} emitting the result of the operation.
+	 */
+	protected Flux<SearchHit> doScan(SearchRequest request) {
+
+		if (QUERY_LOGGER.isDebugEnabled()) {
+			QUERY_LOGGER.debug("Executing doScan: {}", request);
+		}
+
+		return Flux.from(execute(client -> client.scroll(request)));
 	}
 
 	/**

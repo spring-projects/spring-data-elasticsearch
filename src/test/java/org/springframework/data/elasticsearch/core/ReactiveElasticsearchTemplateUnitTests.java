@@ -92,20 +92,20 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(RefreshPolicy.WAIT_UNTIL);
 	}
 
-	@Test // DATAES-504
+	@Test // DATAES-504, DATAES-518
 	public void findShouldFallBackToDefaultIndexOptionsIfNotSet() {
 
 		ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
 		when(client.search(captor.capture())).thenReturn(Flux.empty());
 
-		template.find(new CriteriaQuery(new Criteria("*")), SampleEntity.class) //
+		template.find(new CriteriaQuery(new Criteria("*")).setPageable(PageRequest.of(0, 10)), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
 		assertThat(captor.getValue().indicesOptions()).isEqualTo(DEFAULT_INDICES_OPTIONS);
 	}
 
-	@Test // DATAES-504
+	@Test // DATAES-504, DATAES-518
 	public void findShouldApplyIndexOptionsIfSet() {
 
 		ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
@@ -113,7 +113,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 		template.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
 
-		template.find(new CriteriaQuery(new Criteria("*")), SampleEntity.class) //
+		template.find(new CriteriaQuery(new Criteria("*")).setPageable(PageRequest.of(0, 10)), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -135,19 +135,18 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		assertThat(captor.getValue().source().size()).isEqualTo(50);
 	}
 
-	@Test // DATAES-504
-	public void findShouldApplyDefaultMaxIfPaginationNotSet() {
+	@Test // DATAES-504, DATAES-518
+	public void findShouldUseScrollIfPaginationNotSet() {
 
 		ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
-		when(client.search(captor.capture())).thenReturn(Flux.empty());
+		when(client.scroll(captor.capture())).thenReturn(Flux.empty());
 
 
 		template.find(new CriteriaQuery(new Criteria("*")).setPageable(Pageable.unpaged()), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(captor.getValue().source().from()).isEqualTo(0);
-		assertThat(captor.getValue().source().size()).isEqualTo(10000);
+		verify(client).scroll(any());
 	}
 
 	@Test // DATAES-504
