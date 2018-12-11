@@ -1,6 +1,18 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.0.M1 (2018-12-11)
+----------------------------------------
+* DATAES-515 - Override Elasticsearch's JarHell for tests.
+* DATAES-514 - Simplify reference documentation setup.
+* DATAES-513 - Release 3.2 M1 (Moore).
+* DATAES-508 - Set up Travis-ci build.
+* DATAES-503 - Missing copy_to property in @Field Annotation.
+* DATAES-492 - Missing normalizer property in @Field and @InnerField Annotation.
+* DATAES-445 - Usage example of scan and scroll is misleading.
+* DATAES-407 - Add support for Java High Level REST Client.
+
+
 Changes in version 3.1.3.RELEASE (2018-11-27)
 ---------------------------------------------
 * DATAES-503 - Missing copy_to property in @Field Annotation.
