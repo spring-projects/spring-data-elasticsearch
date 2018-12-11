@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 
 import org.elasticsearch.index.query.QueryBuilders;
 import org.reactivestreams.Publisher;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
@@ -205,7 +206,10 @@ public interface ReactiveElasticsearchOperations {
 	Mono<Boolean> exists(String id, Class<?> entityType, @Nullable String index, @Nullable String type);
 
 	/**
-	 * Search the index for entities matching the given {@link Query query}.
+	 * Search the index for entities matching the given {@link Query query}. <br />
+	 * {@link Pageable#isUnpaged() Unpaged} queries may overrule elasticsearch server defaults for page size by either
+	 * delegating to the scroll API or using a max {@link org.elasticsearch.search.builder.SearchSourceBuilder#size(int)
+	 * size}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
@@ -217,7 +221,10 @@ public interface ReactiveElasticsearchOperations {
 	}
 
 	/**
-	 * Search the index for entities matching the given {@link Query query}.
+	 * Search the index for entities matching the given {@link Query query}. <br />
+	 * {@link Pageable#isUnpaged() Unpaged} queries may overrule elasticsearch server defaults for page size by either *
+	 * delegating to the scroll API or using a max {@link org.elasticsearch.search.builder.SearchSourceBuilder#size(int) *
+	 * size}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType The entity type for mapping the query. Must not be {@literal null}.

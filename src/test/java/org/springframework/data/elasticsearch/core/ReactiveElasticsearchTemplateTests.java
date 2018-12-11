@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -39,6 +40,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchVersion;
 import org.springframework.data.elasticsearch.ElasticsearchVersionRule;
 import org.springframework.data.elasticsearch.TestUtils;
@@ -351,6 +355,40 @@ public class ReactiveElasticsearchTemplateTests {
 		template.find(query, SampleEntity.class, Message.class) //
 				.as(StepVerifier::create) //
 				.expectNext(new Message(sampleEntity3.getMessage())) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-518
+	public void findShouldApplyPagingCorrectly() {
+
+		List<SampleEntity> source = IntStream.range(0, 100).mapToObj(it -> randomEntity("entity - " + it))
+				.collect(Collectors.toList());
+
+		index(source.toArray(new SampleEntity[0]));
+
+		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("entity")) //
+				.addSort(Sort.by("message"))//
+				.setPageable(PageRequest.of(0, 20));
+
+		template.find(query, SampleEntity.class).as(StepVerifier::create) //
+				.expectNextCount(20) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-518
+	public void findWithoutPagingShouldReadAll() {
+
+		List<SampleEntity> source = IntStream.range(0, 100).mapToObj(it -> randomEntity("entity - " + it))
+				.collect(Collectors.toList());
+
+		index(source.toArray(new SampleEntity[0]));
+
+		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("entity")) //
+				.addSort(Sort.by("message"))//
+				.setPageable(Pageable.unpaged());
+
+		template.find(query, SampleEntity.class).as(StepVerifier::create) //
+				.expectNextCount(100) //
 				.verifyComplete();
 	}
 
