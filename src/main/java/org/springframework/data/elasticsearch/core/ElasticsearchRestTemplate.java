@@ -797,7 +797,7 @@ public class ElasticsearchRestTemplate
 		Long scrollTimeInMillis = deleteQuery.getScrollTimeInMillis() != null ? deleteQuery.getScrollTimeInMillis()
 				: 10000l;
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery()).withIndices(indexName)
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withFilter(deleteQuery.getQuery()).withQuery(deleteQuery.getQuery()).withIndices(indexName)
 				.withTypes(typeName).withPageable(PageRequest.of(0, pageSize)).build();
 
 		SearchResultMapper onlyIdResultMapper = new SearchResultMapper() {
