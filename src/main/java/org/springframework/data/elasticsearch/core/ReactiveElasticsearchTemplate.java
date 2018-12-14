@@ -50,6 +50,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity;
@@ -241,7 +242,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 			SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 			searchSourceBuilder.query(mappedQuery(query, entity));
-			searchSourceBuilder.version(entity.hasVersionProperty()); // This has been true by default before
+			searchSourceBuilder.version(entity.hasVersionProperty());
 			searchSourceBuilder.trackScores(query.getTrackScores());
 
 			QueryBuilder postFilterQuery = mappedFilterQuery(query, entity);
@@ -263,15 +264,17 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				request.indicesOptions(query.getIndicesOptions());
 			}
 
-			if (query.getPageable().isPaged()) {
+			Pageable pageable = query.getPageable();
 
-				long offset = query.getPageable().getOffset();
+			if (pageable.isPaged()) {
+
+				long offset = pageable.getOffset();
 				if (offset > Integer.MAX_VALUE) {
 					throw new IllegalArgumentException(String.format("Offset must not be more than %s", Integer.MAX_VALUE));
 				}
 
 				searchSourceBuilder.from((int) offset);
-				searchSourceBuilder.size(query.getPageable().getPageSize());
+				searchSourceBuilder.size(pageable.getPageSize());
 
 				request.source(searchSourceBuilder);
 				return doFind(prepareSearchRequest(request));
