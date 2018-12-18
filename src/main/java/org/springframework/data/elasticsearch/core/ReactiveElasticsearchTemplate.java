@@ -52,6 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity;
 import org.springframework.data.elasticsearch.core.EntityOperations.Entity;
@@ -62,6 +63,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
@@ -69,7 +71,6 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
 
 /**
  * @author Christoph Strobl
@@ -141,7 +142,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			IndexCoordinates indexCoordinates = operations.determineIndex(entity, index, type);
 
 			IndexRequest request = id != null
-					? new IndexRequest(indexCoordinates.getIndexName(), indexCoordinates.getTypeName(), id.toString())
+					? new IndexRequest(indexCoordinates.getIndexName(), indexCoordinates.getTypeName(), convertId(id))
 					: new IndexRequest(indexCoordinates.getIndexName(), indexCoordinates.getTypeName());
 
 			try {
@@ -163,7 +164,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 				Object parentId = entity.getParentId();
 				if (parentId != null) {
-					request.parent(parentId.toString());
+					request.parent(convertId(parentId));
 				}
 			}
 
@@ -307,7 +308,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Entity<?> elasticsearchEntity = operations.forEntity(entity);
 
-		return Mono.defer(() -> doDeleteById(entity, ObjectUtils.nullSafeToString(elasticsearchEntity.getId()),
+		return Mono.defer(() -> doDeleteById(entity, convertId(elasticsearchEntity.getId()),
 				elasticsearchEntity.getPersistentEntity(), index, type));
 	}
 
@@ -382,6 +383,15 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 */
 	public void setIndicesOptions(@Nullable IndicesOptions indicesOptions) {
 		this.indicesOptions = indicesOptions;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#getElasticsearchConverter()
+	 */
+	@Override
+	public ElasticsearchConverter getElasticsearchConverter() {
+		return converter;
 	}
 
 	// Customization Hooks
@@ -491,7 +501,9 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @return a {@link Mono} emitting the result of the operation.
 	 */
 	protected Mono<GetResult> doFindById(GetRequest request) {
-		return Mono.from(execute(client -> client.get(request)));
+
+		return Mono.from(execute(client -> client.get(request))) //
+				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
 	}
 
 	/**
@@ -501,7 +513,9 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @return a {@link Mono} emitting the result of the operation.
 	 */
 	protected Mono<Boolean> doExists(GetRequest request) {
-		return Mono.from(execute(client -> client.exists(request)));
+
+		return Mono.from(execute(client -> client.exists(request))) //
+				.onErrorReturn(NoSuchIndexException.class, false);
 	}
 
 	/**
@@ -516,7 +530,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			QUERY_LOGGER.debug("Executing doFind: {}", request);
 		}
 
-		return Flux.from(execute(client -> client.search(request)));
+		return Flux.from(execute(client -> client.search(request))) //
+				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
 	}
 
 	/**
@@ -531,7 +546,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			QUERY_LOGGER.debug("Executing doScan: {}", request);
 		}
 
-		return Flux.from(execute(client -> client.scroll(request)));
+		return Flux.from(execute(client -> client.scroll(request))) //
+				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
 	}
 
 	/**
@@ -551,7 +567,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 					}
 
 					return Mono.just(it.getId());
-				});
+				}) //
+				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
 	}
 
 	/**
@@ -561,7 +578,9 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @return a {@link Mono} emitting the result of the operation.
 	 */
 	protected Mono<BulkByScrollResponse> doDeleteBy(DeleteByQueryRequest request) {
-		return Mono.from(execute(client -> client.deleteBy(request)));
+
+		return Mono.from(execute(client -> client.deleteBy(request))) //
+				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
 	}
 
 	// private helpers
@@ -621,7 +640,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(((CriteriaQuery) query).getCriteria());
 		} else if (query instanceof StringQuery) {
 			elasticsearchQuery = new WrapperQueryBuilder(((StringQuery) query).getSource());
-		} else {
+		} else if (query instanceof NativeSearchQuery) {
+			elasticsearchQuery = ((NativeSearchQuery) query).getQuery();
+		}
+
+		else {
 			throw new IllegalArgumentException(String.format("Unknown query type '%s'.", query.getClass()));
 		}
 

@@ -31,6 +31,7 @@ include::{spring-data-commons-docs}/repositories.adoc[]
 include::reference/elasticsearch-clients.adoc[]
 include::reference/data-elasticsearch.adoc[]
 include::reference/reactive-elasticsearch-operations.adoc[]
+include::reference/reactive-elasticsearch-repositories.adoc[]
 include::reference/elasticsearch-misc.adoc[]
 :leveloffset: -1
 

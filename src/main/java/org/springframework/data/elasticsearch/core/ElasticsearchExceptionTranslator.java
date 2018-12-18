@@ -22,6 +22,8 @@ import org.elasticsearch.ElasticsearchException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.elasticsearch.NoSuchIndexException;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author Christoph Strobl
@@ -33,15 +35,22 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 
 		if (ex instanceof ElasticsearchException) {
-			// TODO: exception translation
-			ElasticsearchException elasticsearchExption = (ElasticsearchException) ex;
-//			elasticsearchExption.get
+
+			ElasticsearchException elasticsearchException = (ElasticsearchException) ex;
+
+			if (!indexAvailable(elasticsearchException)) {
+				return new NoSuchIndexException(elasticsearchException.getMetadata("es.index").toString(), ex);
+			}
 		}
 
-		if(ex.getCause() instanceof ConnectException) {
+		if (ex.getCause() instanceof ConnectException) {
 			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
 
 		return null;
+	}
+
+	private boolean indexAvailable(ElasticsearchException ex) {
+		return !CollectionUtils.contains(ex.getMetadata("es.index_uuid").iterator(), "_na_");
 	}
 }

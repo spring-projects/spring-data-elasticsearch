@@ -36,7 +36,6 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.util.Assert;
 
 /**
@@ -112,7 +111,8 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
 				NamedQueries namedQueries) {
 
-			ElasticsearchQueryMethod queryMethod = new ElasticsearchQueryMethod(method, metadata, factory);
+			ElasticsearchQueryMethod queryMethod = new ElasticsearchQueryMethod(method, metadata, factory,
+					elasticsearchOperations.getElasticsearchConverter().getMappingContext());
 			String namedQueryName = queryMethod.getNamedQueryName();
 
 			if (namedQueries.hasQuery(namedQueryName)) {

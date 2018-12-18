@@ -545,7 +545,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 			return Mono.justOrEmpty(responseType
 					.cast(ReflectionUtils.invokeMethod(fromXContent, responseType, createParser(mediaType, content))));
 
-		} catch (Exception errorParseFailure) {
+		} catch (Throwable errorParseFailure) { // cause elasticsearch also uses AssertionError
 
 			try {
 				return Mono.error(BytesRestResponse.errorFromXContent(createParser(mediaType, content)));

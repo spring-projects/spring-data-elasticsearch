@@ -178,6 +178,14 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-504
+	public void findByIdShouldCompleteWhenIndexDoesNotExist() {
+
+		template.findById("foo", SampleEntity.class, "no-such-index") //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-504
 	public void findByIdShouldReturnEntity() {
 
 		SampleEntity sampleEntity = randomEntity("some message");
@@ -246,6 +254,15 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-504
+	public void existsShouldReturnFalseWhenIndexDoesNotExist() {
+
+		template.exists("foo", SampleEntity.class, "no-such-index") //
+				.as(StepVerifier::create) //
+				.expectNext(false) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-504
 	public void existsShouldReturnTrueWhenFound() {
 
 		SampleEntity sampleEntity = randomEntity("some message");
@@ -266,6 +283,14 @@ public class ReactiveElasticsearchTemplateTests {
 		template.exists("foo", SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNext(false) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-504
+	public void findShouldCompleteWhenIndexDoesNotExist() {
+
+		template.find(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class, "no-such-index") //
+				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
 
@@ -393,6 +418,15 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-504
+	public void countShouldReturnZeroWhenIndexDoesNotExist() {
+
+		template.count(SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.expectNext(0L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-504
 	public void countShouldReturnCountAllWhenGivenNoQuery() {
 
 		index(randomEntity("test message"), randomEntity("test test"), randomEntity("some message"));
@@ -413,6 +447,14 @@ public class ReactiveElasticsearchTemplateTests {
 		template.count(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-504
+	public void deleteByIdShouldCompleteWhenIndexDoesNotExist() {
+
+		template.deleteById("does-not-exists", SampleEntity.class, "no-such-index") //
+				.as(StepVerifier::create)//
 				.verifyComplete();
 	}
 
@@ -459,6 +501,18 @@ public class ReactiveElasticsearchTemplateTests {
 
 		template.delete(sampleEntity) //
 				.as(StepVerifier::create)//
+				.verifyComplete();
+	}
+
+	@Test // DATAES-504
+	@ElasticsearchVersion(asOf = "6.5.0")
+	public void deleteByQueryShouldReturnZeroWhenIndexDoesNotExist() {
+
+		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
+
+		template.deleteBy(query, SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.expectNext(0L) //
 				.verifyComplete();
 	}
 
