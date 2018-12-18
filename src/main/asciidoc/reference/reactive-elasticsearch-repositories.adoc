@@ -1,0 +1,130 @@
+[[elasticsearch.reactive.repositories]]
+= Reactive Elasticsearch Repositories
+
+Reactive Elasticsearch repository support builds on the core repository support explained in <<repositories>> utilizing
+operations provided via <<elasticsearch.reactive.operations>> executed by a <<elasticsearch.clients.reactive>>.
+
+Spring Data Elasticsearchs reactive repository support uses https://projectreactor.io/[Project Reactor] as its reactive
+composition library of choice.
+
+There are 3 main interfaces to be used:
+
+* `ReactiveRepository`
+* `ReactiveCrudRepository`
+* `ReactiveSortingRepository`
+
+[[elasticsearch.reactive.repositories.usage]]
+== Usage
+
+To access domain objects stored in a Elasticsearch using a `Repository`, just create an interface for it.
+Before you can actually go on and do that you will need an entity.
+
+.Sample `Person` entity
+====
+[source,java]
+----
+public class Person {
+
+  @Id
+  private String id;
+  private String firstname;
+  private String lastname;
+  private Address address;
+
+  // … getters and setters omitted
+}
+----
+====
+
+NOTE: Please note that the `id` property needs to be of type `String`.
+
+.Basic repository interface to persist Person entities
+====
+[source]
+----
+public interface ReactivePersonRepository extends ReactiveSortingRepository<Person, String> {
+
+  Flux<Person> findByFirstname(String firstname);                                   <1>
+
+  Flux<Person> findByFirstname(Publisher<String> firstname);                        <2>
+
+  Flux<Person> findByFirstnameOrderByLastname(String firstname);                    <3>
+
+  Flux<Person> findByFirstname(String firstname, Sort sort);                        <4>
+
+  Flux<Person> findByFirstname(String firstname, Pageable page);                    <5>
+
+  Mono<Person> findByFirstnameAndLastname(String firstname, String lastname);       <6>
+
+  Mono<Person> findFirstByLastname(String lastname);                                <7>
+
+  @Query("{ \"bool\" : { \"must\" : { \"term\" : { \"lastname\" : \"?0\" } } } }")
+  Flux<Person> findByLastname(String lastname);                                     <8>
+
+  Mono<Long> countByFirstname(String firstname)                                     <9>
+
+  Mono<Boolean> existsByFirstname(String firstname)                                 <10>
+
+  Mono<Long> deleteByFirstname(String firstname)                                    <11>
+}
+----
+<1> The method shows a query for all people with the given `lastname`.
+<2> Finder method awaiting input from `Publisher` to bind parameter value for `firstname`.
+<3> Finder method ordering matching documents by `lastname`.
+<4> Finder method ordering matching documents by the expression defined via the `Sort` parameter.
+<5> Use `Pageable` to pass offset and sorting parameters to the database.
+<6> Finder method concating criteria using `And` / `Or` keywords.
+<7> Find the first matching entity.
+<8> The method shows a query for all people with the given `lastname` looked up by running the annotated `@Query` with given
+parameters.
+<9> Count all entities with matching `firstname`.
+<10> Check if at least one entity with matching `firstname` exists.
+<11> Delete all entites with matching `firstname`.
+====
+
+[[elasticsearch.reactive.repositories.configuration]]
+== Configuration
+
+For Java configuration, use the `@EnableReactiveElasticsearchRepositories` annotation. If no base package is configured,
+the infrastructure scans the package of the annotated configuration class.
+
+The following listing shows how to use Java configuration for a repository:
+
+.Java configuration for repositories
+====
+[source,java]
+----
+@Configuration
+@EnableReactiveElasticsearchRepositories
+public class Config extends AbstractReactiveElasticsearchConfiguration {
+
+  @Override
+  public ReactiveElasticsearchClient reactiveElasticsearchClient() {
+    return ReactiveRestClients.create(ClientConfiguration.localhost());
+  }
+}
+----
+====
+
+Because the repository from the previous example extends `ReactiveSortingRepository`, all CRUD operations are available
+as well as methods for sorted access to the entities. Working with the repository instance is a matter of dependency
+injecting it into a client, as the following example shows:
+
+.Sorted access to Person entities
+====
+[source,java]
+----
+public class PersonRepositoryTests {
+
+  @Autowired ReactivePersonRepository repository;
+
+  @Test
+  public void sortsElementsCorrectly() {
+
+    Flux<Person> persons = repository.findAll(Sort.by(new Order(ASC, "lastname")));
+
+    // ...
+  }
+}
+----
+====

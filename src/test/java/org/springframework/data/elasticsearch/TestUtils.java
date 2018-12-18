@@ -17,14 +17,16 @@ package org.springframework.data.elasticsearch;
 
 import lombok.SneakyThrows;
 
-import java.io.IOException;
 import java.time.Duration;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
@@ -84,6 +86,18 @@ public final class TestUtils {
 		}
 	}
 
+	@SneakyThrows
+	public static boolean isEmptyIndex(String indexName) {
+
+		try (RestHighLevelClient client = restHighLevelClient()) {
+
+			return 0L == client
+					.search(new SearchRequest(indexName)
+							.source(SearchSourceBuilder.searchSource().query(QueryBuilders.matchAllQuery())), RequestOptions.DEFAULT)
+					.getHits().getTotalHits();
+		}
+	}
+
 	public static OfType documentWithId(String id) {
 		return new DocumentLookup(id);
 	}
@@ -106,19 +120,16 @@ public final class TestUtils {
 		}
 
 		@Override
+		@SneakyThrows
 		public boolean existsIn(String index) {
 
 			GetRequest request = new GetRequest(index).id(id);
 			if (StringUtils.hasText(type)) {
 				request = request.type(type);
 			}
-			try {
-				return restHighLevelClient().get(request, RequestOptions.DEFAULT).isExists();
-			} catch (IOException e) {
-				e.printStackTrace();
+			try (RestHighLevelClient client = restHighLevelClient()) {
+				return client.get(request, RequestOptions.DEFAULT).isExists();
 			}
-
-			return false;
 		}
 
 		@Override

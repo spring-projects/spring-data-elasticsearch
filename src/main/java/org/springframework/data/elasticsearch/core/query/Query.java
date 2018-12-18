@@ -15,10 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -31,11 +34,23 @@ import org.springframework.data.domain.Sort;
  * @author Mark Paluch
  * @author Alen Turkovic
  * @author Sascha Woo
+ * @author Christoph Strobl
  */
 public interface Query {
 
 	int DEFAULT_PAGE_SIZE = 10;
 	Pageable DEFAULT_PAGE = PageRequest.of(0, DEFAULT_PAGE_SIZE);
+
+	/**
+	 * Get get a {@link Query} that matches all documents in the index.
+	 *
+	 * @return new instance of {@link Query}.
+	 * @since 3.2
+	 * @see QueryBuilders#matchAllQuery()
+	 */
+	static Query findAll() {
+		return new StringQuery(QueryBuilders.matchAllQuery().toString());
+	}
 
 	/**
 	 * restrict result to entries on given page. Corresponds to the 'start' and 'rows' parameter in elasticsearch

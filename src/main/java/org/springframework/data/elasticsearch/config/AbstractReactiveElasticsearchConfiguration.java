@@ -47,7 +47,7 @@ public abstract class AbstractReactiveElasticsearchConfiguration extends Elastic
 	 * @return never {@literal null}.
 	 */
 	@Bean
-	public ReactiveElasticsearchOperations reactiveElasticsearchOperations() {
+	public ReactiveElasticsearchOperations reactiveElasticsearchTemplate() {
 
 		ReactiveElasticsearchTemplate template = new ReactiveElasticsearchTemplate(reactiveElasticsearchClient(),
 				elasticsearchConverter());

@@ -100,14 +100,24 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 	@Override
 	public String getIndexName() {
-		Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
-		return expression.getValue(context, String.class);
+
+		if(indexName != null) {
+			Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
+			return expression.getValue(context, String.class);
+		}
+
+		return getTypeInformation().getType().getSimpleName();
 	}
 
 	@Override
 	public String getIndexType() {
-		Expression expression = parser.parseExpression(indexType, ParserContext.TEMPLATE_EXPRESSION);
-		return expression.getValue(context, String.class);
+
+		if(indexType != null) {
+			Expression expression = parser.parseExpression(indexType, ParserContext.TEMPLATE_EXPRESSION);
+			return expression.getValue(context, String.class);
+		}
+
+		return "";
 	}
 
 	@Override

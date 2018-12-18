@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.springframework.data.elasticsearch.ElasticsearchException;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -134,6 +135,16 @@ public class ReactiveElasticsearchClientTests {
 				}) //
 				.verifyComplete();
 	}
+
+	@Test // DATAES-519
+	public void getOnNonExistingIndexShouldThrowException() {
+
+		client.get(new GetRequest(INDEX_I, TYPE_I, "nonono"))
+				.as(StepVerifier::create)
+				.expectError(ElasticsearchStatusException.class)
+				.verify();
+	}
+
 
 	@Test // DATAES-488
 	public void getShouldFetchDocumentById() {

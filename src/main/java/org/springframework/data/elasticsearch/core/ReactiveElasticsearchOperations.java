@@ -22,6 +22,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.lang.Nullable;
@@ -450,6 +451,13 @@ public interface ReactiveElasticsearchOperations {
 	 * @return a {@link Mono} emitting the number of the removed documents.
 	 */
 	Mono<Long> deleteBy(Query query, Class<?> entityType, @Nullable String index, @Nullable String type);
+
+	/**
+	 * Get the {@link ElasticsearchConverter} used.
+	 *
+	 * @return never {@literal null}
+	 */
+	ElasticsearchConverter getElasticsearchConverter();
 
 	/**
 	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on

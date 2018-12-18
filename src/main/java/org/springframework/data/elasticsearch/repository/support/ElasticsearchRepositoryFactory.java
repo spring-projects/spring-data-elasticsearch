@@ -102,7 +102,8 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
 				NamedQueries namedQueries) {
 
-			ElasticsearchQueryMethod queryMethod = new ElasticsearchQueryMethod(method, metadata, factory);
+			ElasticsearchQueryMethod queryMethod = new ElasticsearchQueryMethod(method, metadata, factory,
+					elasticsearchOperations.getElasticsearchConverter().getMappingContext());
 			String namedQueryName = queryMethod.getNamedQueryName();
 
 			if (namedQueries.hasQuery(namedQueryName)) {

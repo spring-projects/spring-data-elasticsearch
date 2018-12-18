@@ -19,9 +19,15 @@ import java.lang.reflect.Method;
 
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 /**
  * ElasticsearchQueryMethod
@@ -30,14 +36,23 @@ import org.springframework.data.repository.query.QueryMethod;
  * @author Mohsin Husen
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
 	private final Query queryAnnotation;
+	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
+	private @Nullable ElasticsearchEntityMetadata<?> metadata;
 
-	public ElasticsearchQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory) {
+	public ElasticsearchQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
+			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
+
 		super(method, metadata, factory);
+
+		Assert.notNull(mappingContext, "MappingContext must not be null!");
+
 		this.queryAnnotation = method.getAnnotation(Query.class);
+		this.mappingContext = mappingContext;
 	}
 
 	public boolean hasAnnotatedQuery() {
@@ -46,5 +61,43 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 
 	public String getAnnotatedQuery() {
 		return (String) AnnotationUtils.getValue(queryAnnotation, "value");
+	}
+
+	/**
+	 * @return the {@link ElasticsearchEntityMetadata} for the query methods {@link #getReturnedObjectType() return type}.
+	 * @since 3.2
+	 */
+	public ElasticsearchEntityMetadata<?> getEntityInformation() {
+
+		if (metadata == null) {
+
+			Class<?> returnedObjectType = getReturnedObjectType();
+			Class<?> domainClass = getDomainClass();
+
+			if (ClassUtils.isPrimitiveOrWrapper(returnedObjectType)) {
+
+				this.metadata = new SimpleElasticsearchEntityMetadata<>((Class<Object>) domainClass,
+						mappingContext.getRequiredPersistentEntity(domainClass));
+
+			} else {
+
+				ElasticsearchPersistentEntity<?> returnedEntity = mappingContext.getPersistentEntity(returnedObjectType);
+				ElasticsearchPersistentEntity<?> managedEntity = mappingContext.getRequiredPersistentEntity(domainClass);
+				returnedEntity = returnedEntity == null || returnedEntity.getType().isInterface() ? managedEntity
+						: returnedEntity;
+				ElasticsearchPersistentEntity<?> collectionEntity = domainClass.isAssignableFrom(returnedObjectType)
+						? returnedEntity
+						: managedEntity;
+
+				this.metadata = new SimpleElasticsearchEntityMetadata<>((Class<Object>) returnedEntity.getType(),
+						collectionEntity);
+			}
+		}
+
+		return this.metadata;
+	}
+
+	protected MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> getMappingContext() {
+		return mappingContext;
 	}
 }
