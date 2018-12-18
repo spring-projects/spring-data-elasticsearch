@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import static org.springframework.data.querydsl.QuerydslUtils.*;
 
 import java.lang.reflect.Method;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -36,7 +35,6 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.util.Assert;
 
 /**
@@ -48,6 +46,7 @@ import org.springframework.util.Assert;
  * @author Gad Akuka
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Sascha Woo
  */
 public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
@@ -69,7 +68,6 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	@Override
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected Object getTargetRepository(RepositoryInformation metadata) {
 		return getTargetRepositoryViaReflection(metadata, getEntityInformation(metadata.getDomainType()),
 				elasticsearchOperations);
@@ -80,16 +78,8 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 		if (isQueryDslRepository(metadata.getRepositoryInterface())) {
 			throw new IllegalArgumentException("QueryDsl Support has not been implemented yet.");
 		}
-		if (Integer.class.isAssignableFrom(metadata.getIdType()) || Long.class.isAssignableFrom(metadata.getIdType())
-				|| Double.class.isAssignableFrom(metadata.getIdType())) {
-			return NumberKeyedRepository.class;
-		} else if (metadata.getIdType() == String.class) {
-			return SimpleElasticsearchRepository.class;
-		} else if (metadata.getIdType() == UUID.class) {
-			return UUIDElasticsearchRepository.class;
-		} else {
-			throw new IllegalArgumentException("Unsupported ID type " + metadata.getIdType());
-		}
+
+		return SimpleElasticsearchRepository.class;
 	}
 
 	private static boolean isQueryDslRepository(Class<?> repositoryInterface) {

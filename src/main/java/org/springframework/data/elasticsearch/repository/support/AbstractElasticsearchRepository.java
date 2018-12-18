@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repository.support;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
-import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -56,8 +55,9 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Michael Wirth
+ * @author Sascha Woo
  */
-public abstract class AbstractElasticsearchRepository<T, ID extends Serializable>
+public abstract class AbstractElasticsearchRepository<T, ID>
 		implements ElasticsearchRepository<T, ID> {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(AbstractElasticsearchRepository.class);
