@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import org.elasticsearch.index.VersionType;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
@@ -32,6 +33,7 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Ivan Greene
  */
 public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEntityInformation<T, ID>
 		implements ElasticsearchEntityInformation<T, ID> {
@@ -39,12 +41,13 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 	private final ElasticsearchPersistentEntity<T> entityMetadata;
 	private final String indexName;
 	private final String type;
+	private final VersionType versionType;
 
 	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity) {
-		this(entity, entity.getIndexName(), entity.getIndexType());
+		this(entity, entity.getIndexName(), entity.getIndexType(), entity.getVersionType());
 	}
 
-	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity, String indexName, String type) {
+	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity, String indexName, String type, VersionType versionType) {
 		super(entity);
 
 		Assert.notNull(indexName, "IndexName must not be null!");
@@ -53,6 +56,7 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 		this.entityMetadata = entity;
 		this.indexName = indexName;
 		this.type = type;
+		this.versionType = versionType;
 	}
 
 	@Override
@@ -79,6 +83,11 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 		} catch (Exception e) {
 			throw new IllegalStateException("failed to load version field", e);
 		}
+	}
+
+	@Override
+	public VersionType getVersionType() {
+		return versionType;
 	}
 
 	@Override

@@ -53,6 +53,7 @@ import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.entities.Book;
+import org.springframework.data.elasticsearch.entities.GTEVersionEntity;
 import org.springframework.data.elasticsearch.entities.HetroEntity1;
 import org.springframework.data.elasticsearch.entities.HetroEntity2;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
@@ -80,6 +81,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
  * @author Jean-Baptiste Nizet
  * @author Zetang Zeng
  * @author Peter Nowak
+ * @author Ivan Greene
  */
 
 @Ignore
@@ -1812,6 +1814,60 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.getTotalElements(), is(equalTo(2L)));
 		assertThat(sampleEntities.getContent().get(0).get("userId"), is(person1.get("userId")));
 		assertThat(sampleEntities.getContent().get(1).get("userId"), is(person2.get("userId")));
+	}
+
+	/*
+	DATAES-523
+	 */
+	@Test
+	public void shouldIndexGteEntityWithVersionType() {
+		// given
+		String documentId = randomNumeric(5);
+		GTEVersionEntity entity = GTEVersionEntity.builder().id(documentId)
+				.name("FooBar")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQueryBuilder indexQueryBuilder = new IndexQueryBuilder().withId(documentId)
+				.withIndexName(INDEX_NAME).withType(TYPE_NAME)
+				.withVersion(entity.getVersion())
+				.withObject(entity);
+
+		Exception ex = null;
+
+		try {
+			elasticsearchTemplate.index(indexQueryBuilder.build());
+		} catch (Exception e) {
+			ex = e;
+		}
+		assertNull(ex);
+		elasticsearchTemplate.refresh(INDEX_NAME);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME).withQuery(matchAllQuery()).build();
+		// when
+		Page<GTEVersionEntity> entities = elasticsearchTemplate.queryForPage(searchQuery, GTEVersionEntity.class);
+		// then
+		assertThat(entities, is(notNullValue()));
+		assertThat(entities.getTotalElements(), greaterThanOrEqualTo(1L));
+
+		// reindex with same version
+		try {
+			elasticsearchTemplate.index(indexQueryBuilder.build());
+		} catch (Exception e) {
+			ex = e;
+		}
+		assertNull(ex);
+		elasticsearchTemplate.refresh(INDEX_NAME);
+
+		// reindex with version one below
+		try {
+			elasticsearchTemplate.index(indexQueryBuilder.withVersion(entity.getVersion() - 1).build());
+		} catch (Exception e) {
+			ex = e;
+		}
+		assertNotNull(ex);
+		String message = ex.getMessage().toLowerCase();
+		assertTrue("Exception is version conflict", message.contains("version") && message.contains("conflict"));
 	}
 
 	@Test

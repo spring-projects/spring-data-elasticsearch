@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.elasticsearch.client.Requests.refreshRequest;
-import static org.elasticsearch.index.VersionType.EXTERNAL;
 import static org.elasticsearch.index.query.QueryBuilders.moreLikeThisQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wrapperQuery;
 import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMapping;
@@ -67,6 +66,7 @@ import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -131,6 +131,7 @@ import org.springframework.util.StringUtils;
  * @author Don Wellington
  * @author Zetang Zeng
  * @author Peter Nowak
+ * @author Ivan Greene
  */
 public class ElasticsearchRestTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -1343,7 +1344,8 @@ public class ElasticsearchRestTemplate
 			}
 			if (query.getVersion() != null) {
 				indexRequest.version(query.getVersion());
-				indexRequest.versionType(EXTERNAL);
+				VersionType versionType = retrieveVersionTypeFromPersistentEntity(query.getObject().getClass());
+				indexRequest.versionType(versionType);
 			}
 
 			if (query.getParentId() != null) {
@@ -1518,6 +1520,13 @@ public class ElasticsearchRestTemplate
 			return new String[] { getPersistentEntityFor(clazz).getIndexType() };
 		}
 		return null;
+	}
+
+	private VersionType retrieveVersionTypeFromPersistentEntity(Class clazz) {
+		if (clazz != null) {
+			return getPersistentEntityFor(clazz).getVersionType();
+		}
+		return VersionType.EXTERNAL;
 	}
 
 	private List<String> extractIds(SearchResponse response) {
