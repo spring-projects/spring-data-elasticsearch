@@ -18,8 +18,8 @@ package org.springframework.data.elasticsearch.core.mapping;
 import static org.springframework.util.StringUtils.*;
 
 import java.util.Locale;
-import java.util.Optional;
 
+import org.elasticsearch.index.VersionType;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -43,6 +43,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Ivan Greene
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
@@ -60,6 +61,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private String parentType;
 	private ElasticsearchPersistentProperty parentIdProperty;
 	private String settingPath;
+	private VersionType versionType;
 	private boolean createIndexAndMapping;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
@@ -79,6 +81,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.replicas = document.replicas();
 			this.refreshInterval = document.refreshInterval();
 			this.indexStoreType = document.indexStoreType();
+			this.versionType = document.versionType();
 			this.createIndexAndMapping = document.createIndex();
 		}
 		if (clazz.isAnnotationPresent(Setting.class)) {
@@ -138,6 +141,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public ElasticsearchPersistentProperty getParentIdProperty() {
 		return parentIdProperty;
+	}
+
+	@Override
+	public VersionType getVersionType() {
+		return versionType;
 	}
 
 	@Override

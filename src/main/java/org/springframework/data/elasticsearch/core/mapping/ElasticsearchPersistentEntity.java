@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import org.elasticsearch.index.VersionType;
 import org.springframework.data.mapping.PersistentEntity;
 
 /**
@@ -23,6 +24,7 @@ import org.springframework.data.mapping.PersistentEntity;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Ivan Greene
  */
 public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, ElasticsearchPersistentProperty> {
 
@@ -47,6 +49,8 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	ElasticsearchPersistentProperty getParentIdProperty();
 
 	String settingPath();
+
+	VersionType getVersionType();
 
 	boolean isCreateIndexAndMapping();
 }

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import org.elasticsearch.index.VersionType;
 import org.springframework.data.repository.core.EntityInformation;
 
 /**
@@ -23,6 +24,7 @@ import org.springframework.data.repository.core.EntityInformation;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Christoph Strobl
+ * @author Ivan Greene
  */
 public interface ElasticsearchEntityInformation<T, ID> extends EntityInformation<T, ID> {
 
@@ -33,6 +35,8 @@ public interface ElasticsearchEntityInformation<T, ID> extends EntityInformation
 	String getType();
 
 	Long getVersion(T entity);
+
+	VersionType getVersionType();
 
 	String getParentId(T entity);
 }
