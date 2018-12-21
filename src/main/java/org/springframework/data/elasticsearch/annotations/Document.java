@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.annotations;
 
 import java.lang.annotation.*;
 
+import org.elasticsearch.index.VersionType;
 import org.springframework.data.annotation.Persistent;
 
 /**
@@ -25,6 +26,7 @@ import org.springframework.data.annotation.Persistent;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mason Chan
+ * @author Ivan Greene
  */
 
 @Persistent
@@ -48,4 +50,6 @@ public @interface Document {
 	String indexStoreType() default "fs";
 
 	boolean createIndex() default true;
+
+	VersionType versionType() default VersionType.EXTERNAL;
 }
