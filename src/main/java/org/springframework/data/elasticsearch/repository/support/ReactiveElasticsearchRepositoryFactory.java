@@ -47,6 +47,7 @@ import org.springframework.util.Assert;
  * instances.
  *
  * @author Christoph Strobl
+ * @author Ivan Greene
  * @since 3.2
  */
 public class ReactiveElasticsearchRepositoryFactory extends ReactiveRepositoryFactorySupport {
@@ -116,7 +117,7 @@ public class ReactiveElasticsearchRepositoryFactory extends ReactiveRepositoryFa
 		ElasticsearchPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainClass);
 
 		return new MappingElasticsearchEntityInformation<>((ElasticsearchPersistentEntity<T>) entity, entity.getIndexName(),
-				entity.getIndexType());
+				entity.getIndexType(), entity.getVersionType());
 	}
 
 	/**
