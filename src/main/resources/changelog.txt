@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.1.18.RELEASE (2019-01-10)
+----------------------------------------------
+* DATAES-524 - Update copyright years to 2019.
+* DATAES-505 - Release 2.1.18 (Ingalls SR18).
+
+
 Changes in version 3.2.0.M1 (2018-12-11)
 ----------------------------------------
 * DATAES-515 - Override Elasticsearch's JarHell for tests.
