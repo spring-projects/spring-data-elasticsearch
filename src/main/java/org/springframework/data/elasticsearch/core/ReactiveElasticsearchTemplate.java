@@ -142,7 +142,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			IndexCoordinates indexCoordinates = operations.determineIndex(entity, index, type);
 
 			IndexRequest request = id != null
-					? new IndexRequest(indexCoordinates.getIndexName(), indexCoordinates.getTypeName(), convertId(id))
+					? new IndexRequest(indexCoordinates.getIndexName(), indexCoordinates.getTypeName(), converter.convertId(id))
 					: new IndexRequest(indexCoordinates.getIndexName(), indexCoordinates.getTypeName());
 
 			try {
@@ -164,7 +164,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 				Object parentId = entity.getParentId();
 				if (parentId != null) {
-					request.parent(convertId(parentId));
+					request.parent(converter.convertId(parentId));
 				}
 			}
 
@@ -308,7 +308,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Entity<?> elasticsearchEntity = operations.forEntity(entity);
 
-		return Mono.defer(() -> doDeleteById(entity, convertId(elasticsearchEntity.getId()),
+		return Mono.defer(() -> doDeleteById(entity, converter.convertId(elasticsearchEntity.getId()),
 				elasticsearchEntity.getPersistentEntity(), index, type));
 	}
 

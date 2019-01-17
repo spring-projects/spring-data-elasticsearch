@@ -20,7 +20,6 @@ import reactor.core.publisher.Mono;
 
 import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -41,16 +40,14 @@ import org.springframework.data.repository.query.ResultProcessor;
  */
 abstract class AbstractReactiveElasticsearchRepositoryQuery implements RepositoryQuery {
 
-	private ReactiveElasticsearchQueryMethod queryMethod;
-	private ReactiveElasticsearchOperations elasticsearchOperations;
-	private EntityInstantiators instantiators;
+	private final ReactiveElasticsearchQueryMethod queryMethod;
+	private final ReactiveElasticsearchOperations elasticsearchOperations;
 
 	AbstractReactiveElasticsearchRepositoryQuery(ReactiveElasticsearchQueryMethod queryMethod,
 			ReactiveElasticsearchOperations elasticsearchOperations) {
 
 		this.queryMethod = queryMethod;
 		this.elasticsearchOperations = elasticsearchOperations;
-		this.instantiators = new EntityInstantiators();
 	}
 
 	/*
@@ -87,7 +84,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 		String indexTypeName = queryMethod.getEntityInformation().getIndexTypeName();
 
 		ReactiveElasticsearchQueryExecution execution = getExecution(parameterAccessor,
-				new ResultProcessingConverter(processor, elasticsearchOperations, instantiators));
+				new ResultProcessingConverter(processor, elasticsearchOperations));
 
 		return execution.execute(query, processor.getReturnedType().getDomainType(), indexName, indexTypeName, typeToRead);
 	}

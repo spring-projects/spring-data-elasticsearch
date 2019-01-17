@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import java.io.Serializable;
-
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.Repository;
@@ -33,7 +31,7 @@ import org.springframework.util.Assert;
  * @since 3.2
  * @see org.springframework.data.repository.reactive.ReactiveSortingRepository
  */
-public class ReactiveElasticsearchRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
+public class ReactiveElasticsearchRepositoryFactoryBean<T extends Repository<S, ID>, S, ID>
 		extends RepositoryFactoryBeanSupport<T, S, ID> {
 
 	private @Nullable ReactiveElasticsearchOperations operations;

@@ -29,6 +29,7 @@ import org.springframework.data.elasticsearch.repository.support.ElasticsearchRe
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
 import org.springframework.data.repository.config.XmlRepositoryConfigurationSource;
+import org.springframework.data.repository.core.RepositoryMetadata;
 import org.w3c.dom.Element;
 
 /**
@@ -39,6 +40,7 @@ import org.w3c.dom.Element;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurationExtensionSupport {
 
@@ -88,7 +90,7 @@ public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurat
 	 */
 	@Override
 	protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
-		return Collections.<Class<? extends Annotation>> singleton(Document.class);
+		return Collections.singleton(Document.class);
 	}
 
 	/*
@@ -97,6 +99,15 @@ public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurat
 	*/
 	@Override
 	protected Collection<Class<?>> getIdentifyingTypes() {
-		return Arrays.<Class<?>> asList(ElasticsearchRepository.class, ElasticsearchCrudRepository.class);
+		return Arrays.asList(ElasticsearchRepository.class, ElasticsearchCrudRepository.class);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#useRepositoryConfiguration(org.springframework.data.repository.core.RepositoryMetadata)
+	 */
+	@Override
+	protected boolean useRepositoryConfiguration(RepositoryMetadata metadata) {
+		return !metadata.isReactiveRepository();
 	}
 }

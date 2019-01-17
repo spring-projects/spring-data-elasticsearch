@@ -24,7 +24,7 @@ import org.springframework.data.repository.config.RepositoryConfigurationExtensi
  * @author Christoph Strobl
  * @since 3.2
  */
-public class ReactiveElasticsearchRepositoriesRegistrar extends RepositoryBeanDefinitionRegistrarSupport {
+class ReactiveElasticsearchRepositoriesRegistrar extends RepositoryBeanDefinitionRegistrarSupport {
 
 	/*
 	 * (non-Javadoc)

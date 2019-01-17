@@ -460,23 +460,6 @@ public interface ReactiveElasticsearchOperations {
 	ElasticsearchConverter getElasticsearchConverter();
 
 	/**
-	 * Convert a given id to its {@link String} representation taking potentially registered
-	 * {@link org.springframework.core.convert.converter.Converter Converters} into account.
-	 *
-	 * @param id must not be {@literal null}.
-	 * @return never {@literal null}.
-	 */
-	default String convertId(Object id) {
-
-		Assert.notNull(id, "Id must not be null!");
-		if (!getElasticsearchConverter().getConversionService().canConvert(id.getClass(), String.class)) {
-			return id.toString();
-		}
-
-		return getElasticsearchConverter().getConversionService().convert(id, String.class);
-	}
-
-	/**
 	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on
 	 * {@link ReactiveElasticsearchClient}.
 	 *

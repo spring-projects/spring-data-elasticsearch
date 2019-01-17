@@ -180,6 +180,6 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	}
 
 	private String convertId(Object id) {
-		return elasticsearchOperations.convertId(id);
+		return elasticsearchOperations.getElasticsearchConverter().convertId(id);
 	}
 }

@@ -62,7 +62,6 @@ public interface ReactiveElasticsearchQueryExecution {
 
 		private final @NonNull ResultProcessor processor;
 		private final @NonNull ReactiveElasticsearchOperations operations;
-		private final @NonNull EntityInstantiators instantiators;
 
 		/*
 		 * (non-Javadoc)
@@ -76,10 +75,6 @@ public interface ReactiveElasticsearchQueryExecution {
 			if (ClassUtils.isPrimitiveOrWrapper(returnedType.getReturnedType())) {
 				return source;
 			}
-
-			// TODO
-			// Converter<Object, Object> converter = new DtoInstantiatingConverter(returnedType.getReturnedType(),
-			// operations.getElasticsearchConverter().getMappingContext(), instantiators);
 
 			return processor.processResult(source, it -> it);
 		}
