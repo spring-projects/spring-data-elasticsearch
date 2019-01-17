@@ -38,6 +38,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.PageRequest;
@@ -86,7 +87,9 @@ public class ReactiveElasticsearchTemplateTests {
 		restTemplate.putMapping(SampleEntity.class);
 		restTemplate.refresh(SampleEntity.class);
 
-		template = new ReactiveElasticsearchTemplate(TestUtils.reactiveClient());
+		template = new ReactiveElasticsearchTemplate(TestUtils.reactiveClient(), restTemplate.getElasticsearchConverter(),
+				new DefaultResultMapper(new ElasticsearchEntityMapper(
+						restTemplate.getElasticsearchConverter().getMappingContext(), new DefaultConversionService())));
 	}
 
 	@Test // DATAES-504

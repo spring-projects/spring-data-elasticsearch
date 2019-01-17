@@ -16,11 +16,15 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
 import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -34,6 +38,16 @@ import org.springframework.util.StringUtils;
 public interface ResultsMapper extends SearchResultMapper, GetResultMapper, MultiGetResultMapper {
 
 	EntityMapper getEntityMapper();
+
+	/**
+	 * Get the configured {@link ProjectionFactory}. <br />
+	 * <strong>NOTE</strong> Should be overwritten in implementation to make use of the type cache.
+	 *
+	 * @since 3.2
+	 */
+	default ProjectionFactory getProjectionFactory() {
+		return new SpelAwareProxyProjectionFactory();
+	}
 
 	@Nullable
 	default <T> T mapEntity(String source, Class<T> clazz) {
@@ -58,19 +72,28 @@ public interface ResultsMapper extends SearchResultMapper, GetResultMapper, Mult
 	 * @since 3.2
 	 */
 	@Nullable
-	default <T> T mapEntity(GetResult getResult, Class<T> type) {
+	default <T> T mapGetResult(GetResult getResult, Class<T> type) {
 
 		if (getResult.isSourceEmpty()) {
 			return null;
 		}
 
-		String sourceString = getResult.sourceAsString();
-
-		if (sourceString.startsWith("{\"id\":null,")) {
-			sourceString = sourceString.replaceFirst("\"id\":null", "\"id\":\"" + getResult.getId() + "\"");
+		Map<String, Object> source = getResult.getSource();
+		if (!source.containsKey("id") || source.get("id") == null) {
+			source.put("id", getResult.getId());
 		}
 
-		return mapEntity(sourceString, type);
+		Object mappedResult = getEntityMapper().readObject(source, type);
+
+		if (mappedResult == null) {
+			return (T) mappedResult;
+		}
+
+		if (type.isInterface() || !ClassUtils.isAssignableValue(type, mappedResult)) {
+			return getProjectionFactory().createProjection(type, mappedResult);
+		}
+
+		return (T) mappedResult;
 	}
 
 	/**
@@ -83,18 +106,27 @@ public interface ResultsMapper extends SearchResultMapper, GetResultMapper, Mult
 	 * @since 3.2
 	 */
 	@Nullable
-	default <T> T mapEntity(SearchHit searchHit, Class<T> type) {
+	default <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
 
 		if (!searchHit.hasSource()) {
 			return null;
 		}
 
-		String sourceString = searchHit.getSourceAsString();
-
-		if (sourceString.startsWith("{\"id\":null,")) {
-			sourceString = sourceString.replaceFirst("\"id\":null", "\"id\":\"" + searchHit.getId() + "\"");
+		Map<String, Object> source = searchHit.getSourceAsMap();
+		if (!source.containsKey("id") || source.get("id") == null) {
+			source.put("id", searchHit.getId());
 		}
 
-		return mapEntity(sourceString, type);
+		Object mappedResult = getEntityMapper().readObject(source, type);
+
+		if (mappedResult == null) {
+			return (T) mappedResult;
+		}
+
+		if (type.isInterface()) {
+			return getProjectionFactory().createProjection(type, mappedResult);
+		}
+
+		return (T) mappedResult;
 	}
 }

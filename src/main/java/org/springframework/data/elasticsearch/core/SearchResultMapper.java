@@ -16,14 +16,29 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.search.SearchHit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Artur Konczak
  * @author Petar Tahchiev
+ * @author Christoph Strobl
  */
 public interface SearchResultMapper {
 
 	<T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable);
+
+	/**
+	 * Map a single {@link SearchHit} to the given {@link Class type}.
+	 *
+	 * @param searchHit must not be {@literal null}.
+	 * @param type must not be {@literal null}.
+	 * @param <T>
+	 * @return can be {@literal null}.
+	 * @since 3.2
+	 */
+	@Nullable
+	<T> T mapSearchHit(SearchHit searchHit, Class<T> type);
 }

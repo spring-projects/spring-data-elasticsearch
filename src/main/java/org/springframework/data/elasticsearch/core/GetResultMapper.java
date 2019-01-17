@@ -16,12 +16,27 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.index.get.GetResult;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Artur Konczak
  * @author Mohsin Husen
+ * @author Christoph Strobl
  */
 public interface GetResultMapper {
 
 	<T> T mapResult(GetResponse response, Class<T> clazz);
+
+	/**
+	 * Map a single {@link GetResult} to the given {@link Class type}.
+	 *
+	 * @param getResult must not be {@literal null}.
+	 * @param type must not be {@literal null}.
+	 * @param <T>
+	 * @return can be {@literal null}.
+	 * @since 3.2
+	 */
+	@Nullable
+	<T> T mapGetResult(GetResult getResult, Class<T> type);
 }

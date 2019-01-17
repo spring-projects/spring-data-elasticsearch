@@ -817,6 +817,11 @@ public class ElasticsearchTemplateTests {
 				}
 				return new AggregatedPageImpl<>((List<T>) values);
 			}
+
+			@Override
+			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
+				return null;
+			}
 		});
 		// then
 		assertThat(page, is(notNullValue()));
@@ -955,6 +960,11 @@ public class ElasticsearchTemplateTests {
 				return new AggregatedPageImpl<T>((List<T>) result, response.getScrollId());
 			}
 			return new AggregatedPageImpl<T>(Collections.EMPTY_LIST, response.getScrollId());
+		}
+
+		@Override
+		public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
+			return null;
 		}
 	};
 
@@ -1356,6 +1366,11 @@ public class ElasticsearchTemplateTests {
 				}
 				return null;
 			}
+
+			@Override
+			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
+				return null;
+			}
 		});
 
 		assertThat(sampleEntities.getContent().get(0).getHighlightedMessage(), is(highlightedMessage));
@@ -1410,6 +1425,11 @@ public class ElasticsearchTemplateTests {
 				}
 				return null;
 			}
+
+			@Override
+			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
+				return null;
+			}
 		});
 	}
 
@@ -1451,6 +1471,11 @@ public class ElasticsearchTemplateTests {
 				}
 				return null;
 			}
+
+			@Override
+			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
+				return null;
+			}
 		});
 	}
 
@@ -1489,6 +1514,11 @@ public class ElasticsearchTemplateTests {
 					assertNotNull(highlightFieldMessage);
 					assertThat(highlightFieldMessage.fragments()[0].toString(), is(highlightedMessage));
 				}
+				return null;
+			}
+
+			@Override
+			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
 				return null;
 			}
 		});
@@ -1602,6 +1632,11 @@ public class ElasticsearchTemplateTests {
 					values.add(sampleEntity);
 				}
 				return new AggregatedPageImpl<>((List<T>) values);
+			}
+
+			@Override
+			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
+				return null;
 			}
 		});
 		assertThat(page, is(notNullValue()));
@@ -1810,6 +1845,11 @@ public class ElasticsearchTemplateTests {
 				if (chunk.size() > 0) {
 					return new AggregatedPageImpl<>((List<T>) chunk);
 				}
+				return null;
+			}
+
+			@Override
+			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
 				return null;
 			}
 		});
@@ -2371,6 +2411,11 @@ public class ElasticsearchTemplateTests {
 					values.add(new ResultAggregator(id, firstName, lastName));
 				}
 				return new AggregatedPageImpl<>((List<T>) values);
+			}
+
+			@Override
+			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
+				return null;
 			}
 		});
 
