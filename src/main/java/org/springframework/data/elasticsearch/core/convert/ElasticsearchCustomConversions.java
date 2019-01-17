@@ -15,15 +15,43 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.convert.ReadingConverter;
+import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchSimpleTypes;
+import org.springframework.util.NumberUtils;
 
 /**
+ * Elasticsearch specific {@link CustomConversions}.
+ *
  * @author Christoph Strobl
  * @since 3.2
  */
 public class ElasticsearchCustomConversions extends CustomConversions {
+
+	private static final StoreConversions STORE_CONVERSIONS;
+	private static final List<Object> STORE_CONVERTERS;
+
+	static {
+
+		List<Object> converters = new ArrayList<>();
+		converters.addAll(GeoConverters.getConvertersToRegister());
+		converters.add(StringToUUIDConverter.INSTANCE);
+		converters.add(UUIDToStringConverter.INSTANCE);
+		converters.add(BigDecimalToDoubleConverter.INSTANCE);
+		converters.add(DoubleToBigDecimalConverter.INSTANCE);
+
+		STORE_CONVERTERS = Collections.unmodifiableList(converters);
+		STORE_CONVERSIONS = StoreConversions.of(ElasticsearchSimpleTypes.HOLDER, STORE_CONVERTERS);
+	}
 
 	/**
 	 * Creates a new {@link CustomConversions} instance registering the given converters.
@@ -31,6 +59,50 @@ public class ElasticsearchCustomConversions extends CustomConversions {
 	 * @param converters must not be {@literal null}.
 	 */
 	public ElasticsearchCustomConversions(Collection<?> converters) {
-		super(StoreConversions.NONE, converters);
+		super(STORE_CONVERSIONS, converters);
+	}
+
+	@ReadingConverter
+	enum StringToUUIDConverter implements Converter<String, UUID> {
+
+		INSTANCE;
+
+		@Override
+		public UUID convert(String source) {
+			return UUID.fromString(source);
+		}
+	}
+
+	@WritingConverter
+	enum UUIDToStringConverter implements Converter<UUID, String> {
+
+		INSTANCE;
+
+		@Override
+		public String convert(UUID source) {
+			return source.toString();
+		}
+	}
+
+	@ReadingConverter
+	enum DoubleToBigDecimalConverter implements Converter<Double, BigDecimal> {
+
+		INSTANCE;
+
+		@Override
+		public BigDecimal convert(Double source) {
+			return NumberUtils.convertNumberToTargetClass(source, BigDecimal.class);
+		}
+	}
+
+	@WritingConverter
+	enum BigDecimalToDoubleConverter implements Converter<BigDecimal, Double> {
+
+		INSTANCE;
+
+		@Override
+		public Double convert(BigDecimal source) {
+			return NumberUtils.convertNumberToTargetClass(source, Double.class);
+		}
 	}
 }

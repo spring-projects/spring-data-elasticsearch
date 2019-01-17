@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * @author Artur Konczak
@@ -36,6 +37,16 @@ public class CustomEntityMapper implements EntityMapper {
 	@Override
 	public <T> T mapToObject(String source, Class<T> clazz) throws IOException {
 		//mapping text to Object
+		return null;
+	}
+
+	@Override
+	public Map<String, Object> mapObject(Object source) {
+		return null;
+	}
+
+	@Override
+	public <T> T readObject(Map<String, Object> source, Class<T> targetType) {
 		return null;
 	}
 }

@@ -29,6 +29,7 @@ include::{spring-data-commons-docs}/repositories.adoc[]
 
 :leveloffset: +1
 include::reference/elasticsearch-clients.adoc[]
+include::reference/elasticsearch-object-mapping.adoc[]
 include::reference/data-elasticsearch.adoc[]
 include::reference/reactive-elasticsearch-operations.adoc[]
 include::reference/reactive-elasticsearch-repositories.adoc[]

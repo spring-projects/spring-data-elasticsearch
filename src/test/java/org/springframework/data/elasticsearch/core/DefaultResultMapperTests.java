@@ -15,14 +15,20 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static java.util.Arrays.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.util.ArrayIterator;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
@@ -36,8 +42,12 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -46,11 +56,7 @@ import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMa
 import org.springframework.data.elasticsearch.entities.Car;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import com.fasterxml.jackson.databind.util.ArrayIterator;
 
 /**
  * @author Artur Konczak
@@ -58,24 +64,43 @@ import static org.mockito.Mockito.*;
  * @author Chris White
  * @author Mark Paluch
  * @author Ilkang Na
+ * @author Christoph Strobl
  */
+@RunWith(Parameterized.class)
 public class DefaultResultMapperTests {
 
 	private DefaultResultMapper resultMapper;
+	private SimpleElasticsearchMappingContext context;
+	private EntityMapper entityMapper;
 
-	@Mock
-	private SearchResponse response;
+	@Mock private SearchResponse response;
+
+	public DefaultResultMapperTests(SimpleElasticsearchMappingContext context, EntityMapper entityMapper) {
+
+		this.context = context;
+		this.entityMapper = entityMapper;
+	}
+
+	@Parameters
+	public static Collection<Object[]> data() {
+
+		SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
+
+		return Arrays.asList(new Object[] { context, new DefaultEntityMapper(context) },
+				new Object[] { context, new ElasticsearchEntityMapper(context, new DefaultConversionService()) });
+	}
 
 	@Before
 	public void init() {
+
 		MockitoAnnotations.initMocks(this);
-		resultMapper = new DefaultResultMapper(new SimpleElasticsearchMappingContext());
+		resultMapper = new DefaultResultMapper(context, entityMapper);
 	}
 
 	@Test
 	public void shouldMapAggregationsToPage() {
-		//Given
-		SearchHit[] hits = {createCarHit("Ford", "Grat"), createCarHit("BMW", "Arrow")};
+		// Given
+		SearchHit[] hits = { createCarHit("Ford", "Grat"), createCarHit("BMW", "Arrow") };
 		SearchHits searchHits = mock(SearchHits.class);
 		when(searchHits.getTotalHits()).thenReturn(2L);
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
@@ -84,10 +109,10 @@ public class DefaultResultMapperTests {
 		Aggregations aggregations = new Aggregations(asList(createCarAggregation()));
 		when(response.getAggregations()).thenReturn(aggregations);
 
-		//When
+		// When
 		AggregatedPage<Car> page = (AggregatedPage<Car>) resultMapper.mapResults(response, Car.class, Pageable.unpaged());
 
-		//Then
+		// Then
 		page.hasFacets();
 		assertThat(page.hasAggregations(), is(true));
 		assertThat(page.getAggregation("Diesel").getName(), is("Diesel"));
@@ -95,17 +120,17 @@ public class DefaultResultMapperTests {
 
 	@Test
 	public void shouldMapSearchRequestToPage() {
-		//Given
-		SearchHit[] hits = {createCarHit("Ford", "Grat"), createCarHit("BMW", "Arrow")};
+		// Given
+		SearchHit[] hits = { createCarHit("Ford", "Grat"), createCarHit("BMW", "Arrow") };
 		SearchHits searchHits = mock(SearchHits.class);
 		when(searchHits.getTotalHits()).thenReturn(2L);
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
-		//When
+		// When
 		Page<Car> page = resultMapper.mapResults(response, Car.class, Pageable.unpaged());
 
-		//Then
+		// Then
 		assertThat(page.hasContent(), is(true));
 		assertThat(page.getTotalElements(), is(2L));
 		assertThat(page.getContent().get(0).getName(), is("Ford"));
@@ -113,17 +138,17 @@ public class DefaultResultMapperTests {
 
 	@Test
 	public void shouldMapPartialSearchRequestToObject() {
-		//Given
-		SearchHit[] hits = {createCarPartialHit("Ford", "Grat"), createCarPartialHit("BMW", "Arrow")};
+		// Given
+		SearchHit[] hits = { createCarPartialHit("Ford", "Grat"), createCarPartialHit("BMW", "Arrow") };
 		SearchHits searchHits = mock(SearchHits.class);
 		when(searchHits.getTotalHits()).thenReturn(2L);
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
-		//When
+		// When
 		Page<Car> page = resultMapper.mapResults(response, Car.class, Pageable.unpaged());
 
-		//Then
+		// Then
 		assertThat(page.hasContent(), is(true));
 		assertThat(page.getTotalElements(), is(2L));
 		assertThat(page.getContent().get(0).getName(), is("Ford"));
@@ -131,14 +156,14 @@ public class DefaultResultMapperTests {
 
 	@Test
 	public void shouldMapGetRequestToObject() {
-		//Given
+		// Given
 		GetResponse response = mock(GetResponse.class);
 		when(response.getSourceAsString()).thenReturn(createJsonCar("Ford", "Grat"));
 
-		//When
+		// When
 		Car result = resultMapper.mapResult(response, Car.class);
 
-		//Then
+		// Then
 		assertThat(result, notNullValue());
 		assertThat(result.getModel(), is("Grat"));
 		assertThat(result.getName(), is("Ford"));

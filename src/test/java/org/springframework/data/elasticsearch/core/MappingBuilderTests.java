@@ -101,7 +101,7 @@ public class MappingBuilderTests {
 		assertThat(xContentBuilderToString(xContentBuilder), is(expected));
 	}
 
-	@Test
+	@Test // DATAES-530
 	public void shouldAddStockPriceDocumentToIndex() throws IOException {
 		// Given
 
@@ -112,8 +112,9 @@ public class MappingBuilderTests {
 		String symbol = "AU";
 		double price = 2.34;
 		String id = "abc";
+
 		elasticsearchTemplate
-				.index(buildIndex(StockPrice.builder().id(id).symbol(symbol).price(new BigDecimal(price)).build()));
+				.index(buildIndex(StockPrice.builder().id(id).symbol(symbol).price(BigDecimal.valueOf(price)).build()));
 		elasticsearchTemplate.refresh(StockPrice.class);
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
@@ -122,7 +123,7 @@ public class MappingBuilderTests {
 		assertThat(result.size(), is(1));
 		StockPrice entry = result.get(0);
 		assertThat(entry.getSymbol(), is(symbol));
-		assertThat(entry.getPrice(), is(new BigDecimal(price)));
+		assertThat(entry.getPrice(), is(BigDecimal.valueOf(price)));
 	}
 
 	@Test

@@ -50,7 +50,7 @@ public abstract class AbstractReactiveElasticsearchConfiguration extends Elastic
 	public ReactiveElasticsearchOperations reactiveElasticsearchTemplate() {
 
 		ReactiveElasticsearchTemplate template = new ReactiveElasticsearchTemplate(reactiveElasticsearchClient(),
-				elasticsearchConverter());
+				elasticsearchConverter(), resultsMapper());
 		template.setIndicesOptions(indicesOptions());
 		template.setRefreshPolicy(refreshPolicy());
 
