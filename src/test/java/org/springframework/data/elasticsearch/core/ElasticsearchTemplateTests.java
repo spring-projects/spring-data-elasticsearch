@@ -79,6 +79,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
  * @author Sascha Woo
  * @author Jean-Baptiste Nizet
  * @author Zetang Zeng
+ * @author Peter Nowak
  */
 
 @Ignore
@@ -2348,6 +2349,18 @@ public class ElasticsearchTemplateTests {
 				"      emailAnalyzer:\n" +
 				"        type: custom\n" +
 				"        tokenizer: uax_url_email\n"));
+	}
+
+	@Test // DATAES-531
+	public void shouldReturnMappingForGivenEntityClass() {
+		// when
+		boolean created = elasticsearchTemplate.createIndex(SampleEntity.class);
+		elasticsearchTemplate.putMapping(SampleEntity.class);
+		final Map mapping = elasticsearchTemplate.getMapping(SampleEntity.class);
+		// then
+		assertThat(created, is(true));
+		assertThat(mapping, notNullValue());
+		assertThat(((Map) ((Map) mapping.get("properties")).get("message")).get("type"), Matchers.<Object>is("text"));
 	}
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {

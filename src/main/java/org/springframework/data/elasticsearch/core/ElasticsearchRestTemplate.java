@@ -130,6 +130,7 @@ import org.springframework.util.StringUtils;
  * @author Ted Liang
  * @author Don Wellington
  * @author Zetang Zeng
+ * @author Peter Nowak
  */
 public class ElasticsearchRestTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -252,13 +253,13 @@ public class ElasticsearchRestTemplate
 
 	@Override
 	public Map getMapping(String indexName, String type) {
-		Assert.notNull(indexName, "No index defined for putMapping()");
-		Assert.notNull(type, "No type defined for putMapping()");
+		Assert.notNull(indexName, "No index defined for getMapping()");
+		Assert.notNull(type, "No type defined for getMapping()");
 		Map mappings = null;
 		RestClient restClient = client.getLowLevelClient();
 		try {
 			Response response = restClient.performRequest("GET", "/" + indexName + "/_mapping/" + type);
-			mappings = convertMappingResponse(EntityUtils.toString(response.getEntity()));
+			mappings = convertMappingResponse(EntityUtils.toString(response.getEntity()), type);
 		} catch (Exception e) {
 			throw new ElasticsearchException(
 					"Error while getting mapping for indexName : " + indexName + " type : " + type + " ", e);
@@ -271,14 +272,14 @@ public class ElasticsearchRestTemplate
 		return getMapping(getPersistentEntityFor(clazz).getIndexName(), getPersistentEntityFor(clazz).getIndexType());
 	}
 
-	private Map<String, Object> convertMappingResponse(String mappingResponse) {
+	private Map<String, Object> convertMappingResponse(String mappingResponse, String type) {
 		ObjectMapper mapper = new ObjectMapper();
 
 		try {
 			Map result = null;
 			JsonNode node = mapper.readTree(mappingResponse);
 
-			node = node.findValue("settings");
+			node = node.findValue("mappings").findValue(type);
 			result = mapper.readValue(mapper.writeValueAsString(node), HashMap.class);
 
 			return result;
