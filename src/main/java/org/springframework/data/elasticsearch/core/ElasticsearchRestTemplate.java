@@ -978,6 +978,12 @@ public class ElasticsearchRestTemplate
 		Assert.notNull(searchQuery.getTypes(), "No type define for Query");
 		Assert.notNull(searchQuery.getPageable(), "Query.pageable is required for scan & scroll");
 
+		if (searchQuery.getQuery() != null) {
+			request.source().query(searchQuery.getQuery());
+		} else {
+			request.source().query(QueryBuilders.matchAllQuery());
+		}
+
 		if (searchQuery.getFilter() != null) {
 			request.source().postFilter(searchQuery.getFilter());
 		}
