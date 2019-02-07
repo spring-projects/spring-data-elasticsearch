@@ -88,12 +88,11 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		this.mappingContext = mappingContext;
 	}
 
-	static EntityMapper initEntityMapper(
+	private static EntityMapper initEntityMapper(
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
 
 		Assert.notNull(mappingContext, "MappingContext must not be null!");
 		return new DefaultEntityMapper(mappingContext);
-
 	}
 
 	@Override

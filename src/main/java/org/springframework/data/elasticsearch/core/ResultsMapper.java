@@ -86,14 +86,14 @@ public interface ResultsMapper extends SearchResultMapper, GetResultMapper, Mult
 		Object mappedResult = getEntityMapper().readObject(source, type);
 
 		if (mappedResult == null) {
-			return (T) mappedResult;
+			return (T) null;
 		}
 
 		if (type.isInterface() || !ClassUtils.isAssignableValue(type, mappedResult)) {
 			return getProjectionFactory().createProjection(type, mappedResult);
 		}
 
-		return (T) mappedResult;
+		return type.cast(mappedResult);
 	}
 
 	/**
@@ -120,13 +120,13 @@ public interface ResultsMapper extends SearchResultMapper, GetResultMapper, Mult
 		Object mappedResult = getEntityMapper().readObject(source, type);
 
 		if (mappedResult == null) {
-			return (T) mappedResult;
+			return null;
 		}
 
 		if (type.isInterface()) {
 			return getProjectionFactory().createProjection(type, mappedResult);
 		}
 
-		return (T) mappedResult;
+		return type.cast(mappedResult);
 	}
 }

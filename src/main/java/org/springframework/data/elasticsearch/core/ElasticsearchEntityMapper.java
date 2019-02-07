@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import lombok.RequiredArgsConstructor;
+
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
@@ -34,7 +36,6 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomCo
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchTypeMapper;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
-import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -76,7 +77,49 @@ public class ElasticsearchEntityMapper implements
 
 		this.mappingContext = mappingContext;
 		this.conversionService = conversionService != null ? conversionService : new DefaultConversionService();
-		this.typeMapper = ElasticsearchTypeMapper.defaultTypeMapper(mappingContext);
+		this.typeMapper = ElasticsearchTypeMapper.create(mappingContext);
+	}
+
+	// --> GETTERS / SETTERS
+
+	@Override
+	public MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> getMappingContext() {
+		return mappingContext;
+	}
+
+	@Override
+	public ConversionService getConversionService() {
+		return conversionService;
+	}
+
+	/**
+	 * Set the {@link CustomConversions} to be applied during the mapping process. <br />
+	 * Conversions are registered after {@link #afterPropertiesSet() bean initialization}.
+	 *
+	 * @param conversions must not be {@literal null}.
+	 */
+	public void setConversions(CustomConversions conversions) {
+		this.conversions = conversions;
+	}
+
+	/**
+	 * Set the {@link ElasticsearchTypeMapper} to use for reading / writing type hints.
+	 *
+	 * @param typeMapper must not be {@literal null}.
+	 */
+	public void setTypeMapper(ElasticsearchTypeMapper typeMapper) {
+		this.typeMapper = typeMapper;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+	 */
+	@Override
+	public void afterPropertiesSet() {
+
+		DateFormatterRegistrar.addDateConverters(conversionService);
+		conversions.registerConvertersIn(conversionService);
 	}
 
 	// --> READ
@@ -86,12 +129,14 @@ public class ElasticsearchEntityMapper implements
 		return read(targetType, source);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	@Nullable
 	public <R> R read(Class<R> type, Map<String, Object> source) {
 		return doRead(source, ClassTypeInformation.from((Class<R>) ClassUtils.getUserClass(type)));
 	}
 
+	@SuppressWarnings("unchecked")
 	@Nullable
 	protected <R> R doRead(Map<String, Object> source, TypeInformation<R> typeHint) {
 
@@ -113,6 +158,7 @@ public class ElasticsearchEntityMapper implements
 		return readEntity(entity, source);
 	}
 
+	@SuppressWarnings("unchecked")
 	protected <R> R readEntity(ElasticsearchPersistentEntity<?> entity, Map<String, Object> source) {
 
 		ElasticsearchPersistentEntity<?> targetEntity = computeClosestEntity(entity, source);
@@ -125,11 +171,8 @@ public class ElasticsearchEntityMapper implements
 		R instance = (R) instantiator.createInstance(targetEntity,
 				new PersistentEntityParameterValueProvider<>(targetEntity, propertyValueProvider, null));
 
-		if (targetEntity.requiresPropertyPopulation()) {
-			return readProperties(targetEntity, instance, propertyValueProvider);
-		}
-
-		return instance;
+		return targetEntity.requiresPropertyPopulation() ? readProperties(targetEntity, instance, propertyValueProvider)
+				: instance;
 	}
 
 	protected <R> R readProperties(ElasticsearchPersistentEntity<?> entity, R instance,
@@ -153,6 +196,7 @@ public class ElasticsearchEntityMapper implements
 		return accessor.getBean();
 	}
 
+	@SuppressWarnings("unchecked")
 	protected <R> R readValue(@Nullable Object source, ElasticsearchPersistentProperty property,
 			TypeInformation<R> targetType) {
 
@@ -160,20 +204,19 @@ public class ElasticsearchEntityMapper implements
 			return null;
 		}
 
-		Class<?> rawType = targetType.getType();
+		Class<R> rawType = targetType.getType();
 		if (conversions.hasCustomReadTarget(source.getClass(), rawType)) {
-			return (R) conversionService.convert(source, rawType);
+			return rawType.cast(conversionService.convert(source, rawType));
 		} else if (source instanceof List) {
 			return readCollectionValue((List) source, property, targetType);
 		} else if (source instanceof Map) {
 			return readMapValue((Map<String, Object>) source, property, targetType);
-		} else if (Enum.class.isAssignableFrom(rawType)) {
-			return (R) Enum.valueOf((Class<Enum>) rawType, source.toString());
 		}
 
 		return (R) readSimpleValue(source, targetType);
 	}
 
+	@SuppressWarnings("unchecked")
 	private <R> R readMapValue(@Nullable Map<String, Object> source, ElasticsearchPersistentProperty property,
 			TypeInformation<R> targetType) {
 
@@ -186,10 +229,10 @@ public class ElasticsearchEntityMapper implements
 			return readEntity(targetEntity, source);
 		}
 
-		Map<String, Object> target = new LinkedHashMap();
+		Map<String, Object> target = new LinkedHashMap<>();
 		for (Entry<String, Object> entry : source.entrySet()) {
 
-			if (conversions.isSimpleType(entry.getValue().getClass())) {
+			if (isSimpleType(entry.getValue())) {
 				target.put(entry.getKey(),
 						readSimpleValue(entry.getValue(), targetType.isMap() ? targetType.getComponentType() : targetType));
 			} else {
@@ -211,13 +254,13 @@ public class ElasticsearchEntityMapper implements
 				} else {
 					target.put(entry.getKey(), readEntity(targetEntity, (Map) entry.getValue()));
 				}
-
 			}
 		}
 
 		return (R) target;
 	}
 
+	@SuppressWarnings("unchecked")
 	private <R> R readCollectionValue(@Nullable List<?> source, ElasticsearchPersistentProperty property,
 			TypeInformation<R> targetType) {
 
@@ -225,12 +268,11 @@ public class ElasticsearchEntityMapper implements
 			return null;
 		}
 
-		List<?> sourceList = source;
-		Collection target = createCollectionForValue(targetType, sourceList.size());
+		Collection<Object> target = createCollectionForValue(targetType, source.size());
 
-		for (Object value : sourceList) {
+		for (Object value : source) {
 
-			if (conversions.isSimpleType(value.getClass())) {
+			if (isSimpleType(value)) {
 				target.add(
 						readSimpleValue(value, targetType.getComponentType() != null ? targetType.getComponentType() : targetType));
 			} else {
@@ -246,23 +288,24 @@ public class ElasticsearchEntityMapper implements
 		return (R) target;
 	}
 
-	protected Object readSimpleValue(@Nullable Object value, TypeInformation<?> targetType) {
+	@SuppressWarnings("unchecked")
+	private Object readSimpleValue(@Nullable Object value, TypeInformation<?> targetType) {
 
-		if (value == null) {
-			return null;
-		}
+		Class<?> target = targetType.getType();
 
-		if (ClassTypeInformation.OBJECT.equals(targetType)
-				|| (targetType != null && value.getClass().equals(targetType.getActualType()))) {
+		if (value == null || target == null || ClassUtils.isAssignableValue(target, value)) {
 			return value;
 		}
 
-		if (conversionService.canConvert(value.getClass(), targetType.getType())) {
-			return conversionService.convert(value, targetType.getType());
+		if (conversions.hasCustomReadTarget(value.getClass(), target)) {
+			return conversionService.convert(value, target);
 		}
 
-		throw new MappingException(
-				String.format("Unable to map %s of type %s to %s", value, value.getClass(), targetType.getType()));
+		if (Enum.class.isAssignableFrom(target)) {
+			return Enum.valueOf((Class<Enum>) target, value.toString());
+		}
+
+		return conversionService.convert(value, target);
 	}
 
 	// --> WRITE
@@ -275,6 +318,7 @@ public class ElasticsearchEntityMapper implements
 		return target;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void write(@Nullable Object source, Map<String, Object> sink) {
 
@@ -284,12 +328,12 @@ public class ElasticsearchEntityMapper implements
 
 		if (source instanceof Map) {
 
-			sink.putAll((Map) source);
+			sink.putAll((Map<String, Object>) source);
 			return;
 		}
 
 		Class<?> entityType = ClassUtils.getUserClass(source.getClass());
-		TypeInformation<? extends Object> type = ClassTypeInformation.from(entityType);
+		TypeInformation<?> type = ClassTypeInformation.from(entityType);
 
 		if (requiresTypeHint(type, source.getClass(), null)) {
 			typeMapper.writeType(source.getClass(), sink);
@@ -337,6 +381,7 @@ public class ElasticsearchEntityMapper implements
 		if (requiresTypeHint(entity.getTypeInformation(), source.getClass(), containingStructure)) {
 			typeMapper.writeType(source.getClass(), sink);
 		}
+
 		writeProperties(entity, accessor, sink);
 	}
 
@@ -355,7 +400,7 @@ public class ElasticsearchEntityMapper implements
 				continue;
 			}
 
-			if (!conversions.isSimpleType(value.getClass())) {
+			if (!isSimpleType(value)) {
 				writeProperty(property, value, sink);
 			} else {
 				sink.put(property.getFieldName(), getWriteSimpleValue(value));
@@ -393,15 +438,20 @@ public class ElasticsearchEntityMapper implements
 
 	protected Object getWriteSimpleValue(Object value) {
 
-		Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(value.getClass());
-
-		if (!customWriteTarget.isPresent()) {
-			return Enum.class.isAssignableFrom(value.getClass()) ? ((Enum<?>) value).name() : value;
+		if (value == null) {
+			return null;
 		}
 
-		return conversionService.convert(value, customWriteTarget.get());
+		Optional<Class<?>> customTarget = conversions.getCustomWriteTarget(value.getClass());
+
+		if (customTarget.isPresent()) {
+			return conversionService.convert(value, customTarget.get());
+		}
+
+		return Enum.class.isAssignableFrom(value.getClass()) ? ((Enum<?>) value).name() : value;
 	}
 
+	@SuppressWarnings("unchecked")
 	protected Object getWriteComplexValue(ElasticsearchPersistentProperty property, TypeInformation<?> typeHint,
 			Object value) {
 
@@ -412,7 +462,7 @@ public class ElasticsearchEntityMapper implements
 			return writeMapValue((Map<String, Object>) value, property, typeHint);
 		}
 
-		if (property.isEntity() || !conversions.isSimpleType(value.getClass())) {
+		if (property.isEntity() || !isSimpleType(value)) {
 			return writeEntity(value, property, typeHint);
 		}
 
@@ -433,7 +483,7 @@ public class ElasticsearchEntityMapper implements
 		Streamable<Entry<String, Object>> mapSource = Streamable.of(value.entrySet());
 
 		if (!typeHint.getActualType().getType().equals(Object.class)
-				&& conversions.isSimpleType(typeHint.getMapValueType().getType())) {
+				&& isSimpleType(typeHint.getMapValueType().getType())) {
 			mapSource.forEach(it -> target.put(it.getKey(), getWriteSimpleValue(it.getValue())));
 		} else {
 
@@ -442,7 +492,7 @@ public class ElasticsearchEntityMapper implements
 				Object converted = null;
 				if (it.getValue() != null) {
 
-					if (conversions.isSimpleType(it.getValue().getClass())) {
+					if (isSimpleType(it.getValue())) {
 						converted = getWriteSimpleValue(it.getValue());
 					} else {
 						converted = getWriteComplexValue(property, ClassTypeInformation.from(it.getValue().getClass()),
@@ -451,7 +501,6 @@ public class ElasticsearchEntityMapper implements
 				}
 
 				target.put(it.getKey(), converted);
-
 			});
 		}
 
@@ -461,23 +510,21 @@ public class ElasticsearchEntityMapper implements
 	private Object writeCollectionValue(Object value, ElasticsearchPersistentProperty property,
 			TypeInformation<?> typeHint) {
 
-		Streamable collectionSource = value instanceof Iterable ? Streamable.of((Iterable) value)
+		Streamable<?> collectionSource = value instanceof Iterable ? Streamable.of((Iterable<?>) value)
 				: Streamable.of(ObjectUtils.toObjectArray(value));
 
 		List<Object> target = new ArrayList<>();
-		if (!typeHint.getActualType().getType().equals(Object.class)
-				&& conversions.isSimpleType(typeHint.getActualType().getType())) {
-
+		if (!typeHint.getActualType().getType().equals(Object.class) && isSimpleType(typeHint.getActualType().getType())) {
 			collectionSource.map(this::getWriteSimpleValue).forEach(target::add);
 		} else {
 
-			Streamable.of((Iterable) value).map(it -> {
+			collectionSource.map(it -> {
 
 				if (it == null) {
 					return null;
 				}
 
-				if (conversions.isSimpleType(it.getClass())) {
+				if (isSimpleType(it)) {
 					return getWriteSimpleValue(it);
 				}
 
@@ -486,48 +533,6 @@ public class ElasticsearchEntityMapper implements
 
 		}
 		return target;
-	}
-
-	// --> GETTERS / SETTERS
-
-	@Override
-	public MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> getMappingContext() {
-		return mappingContext;
-	}
-
-	@Override
-	public ConversionService getConversionService() {
-		return conversionService;
-	}
-
-	/**
-	 * Set the {@link CustomConversions} to be applied during the mapping process. <br />
-	 * Conversions are registered after {@link #afterPropertiesSet() bean initialization}.
-	 *
-	 * @param conversions must not be {@literal null}.
-	 */
-	public void setConversions(CustomConversions conversions) {
-		this.conversions = conversions;
-	}
-
-	/**
-	 * Set the {@link ElasticsearchTypeMapper} to use for reading / writing type hints.
-	 *
-	 * @param typeMapper must not be {@literal null}.
-	 */
-	public void setTypeMapper(ElasticsearchTypeMapper typeMapper) {
-		this.typeMapper = typeMapper;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-	 */
-	@Override
-	public void afterPropertiesSet() {
-
-		DateFormatterRegistrar.addDateConverters(conversionService);
-		conversions.registerConvertersIn(conversionService);
 	}
 
 	// --> LEGACY
@@ -549,21 +554,23 @@ public class ElasticsearchEntityMapper implements
 	// --> PRIVATE HELPERS
 
 	private boolean requiresTypeHint(TypeInformation<?> type, Class<?> actualType,
-			@Nullable TypeInformation<?> containingStructure) {
+			@Nullable TypeInformation<?> container) {
 
-		if (containingStructure != null) {
+		if (container != null) {
 
-			if (containingStructure.isCollectionLike()) {
-				if (containingStructure.getActualType().equals(type) && type.getType().equals(actualType)) {
+			if (container.isCollectionLike()) {
+				if (type.equals(container.getActualType()) && type.getType().equals(actualType)) {
 					return false;
 				}
 			}
-			if (containingStructure.isMap()) {
-				if (containingStructure.getMapValueType().equals(type) && type.getType().equals(actualType)) {
+
+			if (container.isMap()) {
+				if (type.equals(container.getMapValueType()) && type.getType().equals(actualType)) {
 					return false;
 				}
 			}
-			if (containingStructure.equals(type) && type.getType().equals(actualType)) {
+
+			if (container.equals(type) && type.getType().equals(actualType)) {
 				return false;
 			}
 		}
@@ -574,7 +581,7 @@ public class ElasticsearchEntityMapper implements
 
 	/**
 	 * Compute the type to use by checking the given entity against the store type;
-	 * 
+	 *
 	 * @param entity
 	 * @param source
 	 * @return
@@ -600,12 +607,12 @@ public class ElasticsearchEntityMapper implements
 	private ElasticsearchPersistentEntity<?> computeGenericValueTypeForRead(ElasticsearchPersistentProperty property,
 			Object value) {
 
-		return property.getTypeInformation().getActualType().equals(ClassTypeInformation.OBJECT)
+		return ClassTypeInformation.OBJECT.equals(property.getTypeInformation().getActualType())
 				? mappingContext.getRequiredPersistentEntity(value.getClass())
 				: mappingContext.getRequiredPersistentEntity(property.getTypeInformation().getActualType());
 	}
 
-	private Collection<?> createCollectionForValue(TypeInformation<?> collectionTypeInformation, int size) {
+	private Collection<Object> createCollectionForValue(TypeInformation<?> collectionTypeInformation, int size) {
 
 		Class<?> collectionType = collectionTypeInformation.isSubTypeOf(Collection.class) //
 				? collectionTypeInformation.getType() //
@@ -618,19 +625,24 @@ public class ElasticsearchEntityMapper implements
 		return collectionTypeInformation.getType().isArray() //
 				? new ArrayList<>(size) //
 				: CollectionFactory.createCollection(collectionType, componentType.getType(), size);
+	}
 
+	private boolean isSimpleType(Object value) {
+		return isSimpleType(value.getClass());
+	}
+
+	private boolean isSimpleType(Class<?> type) {
+		return conversions.isSimpleType(type);
 	}
 
 	// --> OHTER STUFF
 
+	@RequiredArgsConstructor
 	class ElasticsearchPropertyValueProvider implements PropertyValueProvider<ElasticsearchPersistentProperty> {
 
 		final MapValueAccessor mapValueAccessor;
 
-		public ElasticsearchPropertyValueProvider(MapValueAccessor mapValueAccessor) {
-			this.mapValueAccessor = mapValueAccessor;
-		}
-
+		@SuppressWarnings("unchecked")
 		@Override
 		public <T> T getPropertyValue(ElasticsearchPersistentProperty property) {
 			return (T) readValue(mapValueAccessor.get(property), property, property.getTypeInformation());
@@ -670,13 +682,14 @@ public class ElasticsearchEntityMapper implements
 			return result;
 		}
 
+		@SuppressWarnings("unchecked")
 		private Map<String, Object> getAsMap(Object result) {
 
 			if (result instanceof Map) {
 				return (Map) result;
 			}
 
-			throw new IllegalArgumentException(String.format("%s is no Map.", result));
+			throw new IllegalArgumentException(String.format("%s is not a Map.", result));
 		}
 	}
 

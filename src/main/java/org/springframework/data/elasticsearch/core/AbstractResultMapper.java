@@ -28,14 +28,20 @@ public abstract class AbstractResultMapper implements ResultsMapper {
 	private final EntityMapper entityMapper;
 	private final ProjectionFactory projectionFactory;
 
+	/**
+	 * Create a new {@link AbstractResultMapper}.
+	 *
+	 * @param entityMapper must not be {@literal null}.
+	 */
 	public AbstractResultMapper(EntityMapper entityMapper) {
 		this(entityMapper, new SpelAwareProxyProjectionFactory());
 	}
 
 	/**
+	 * Create a new {@link AbstractResultMapper}.
 	 *
-	 * @param entityMapper
-	 * @param projectionFactory
+	 * @param entityMapper must not be {@literal null}.
+	 * @param projectionFactory must not be {@literal null}.
 	 * @since 3.2
 	 */
 	public AbstractResultMapper(EntityMapper entityMapper, ProjectionFactory projectionFactory) {
@@ -47,6 +53,10 @@ public abstract class AbstractResultMapper implements ResultsMapper {
 		this.projectionFactory = projectionFactory;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ResultsMapper#getEntityMapper()
+	 */
 	@Override
 	public EntityMapper getEntityMapper() {
 		return this.entityMapper;
@@ -58,6 +68,6 @@ public abstract class AbstractResultMapper implements ResultsMapper {
 	 */
 	@Override
 	public ProjectionFactory getProjectionFactory() {
-		return projectionFactory;
+		return this.projectionFactory;
 	}
 }

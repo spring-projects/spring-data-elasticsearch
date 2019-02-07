@@ -72,15 +72,14 @@ public class ElasticsearchConfigurationSupport {
 	}
 
 	/**
-	 * Returns the {@link EntityMapper} used for mapping source &lt;&gt; DomainType. <br />
+	 * Returns the {@link EntityMapper} used for mapping between the source and domain type. <br />
 	 * <strong>Hint</strong>: you can use {@link org.springframework.data.elasticsearch.core.ElasticsearchEntityMapper} as
 	 * an alternative to the {@link DefaultEntityMapper}.
 	 *
-	 * <pre>{@code
+	 * <pre class="code">
 	 * ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
-	 * 			new DefaultConversionService());
+	 * 		new DefaultConversionService());
 	 * entityMapper.setConversions(elasticsearchCustomConversions());
-	 * }
 	 * </pre>
 	 *
 	 * @return never {@literal null}.

@@ -43,6 +43,7 @@ public class ElasticsearchCustomConversions extends CustomConversions {
 	static {
 
 		List<Object> converters = new ArrayList<>();
+
 		converters.addAll(GeoConverters.getConvertersToRegister());
 		converters.add(StringToUUIDConverter.INSTANCE);
 		converters.add(UUIDToStringConverter.INSTANCE);
@@ -62,6 +63,9 @@ public class ElasticsearchCustomConversions extends CustomConversions {
 		super(STORE_CONVERSIONS, converters);
 	}
 
+	/**
+	 * {@link Converter} to read a {@link UUID} from its {@link String} representation.
+	 */
 	@ReadingConverter
 	enum StringToUUIDConverter implements Converter<String, UUID> {
 
@@ -73,6 +77,9 @@ public class ElasticsearchCustomConversions extends CustomConversions {
 		}
 	}
 
+	/**
+	 * {@link Converter} to write a {@link UUID} to its {@link String} representation.
+	 */
 	@WritingConverter
 	enum UUIDToStringConverter implements Converter<UUID, String> {
 
@@ -84,6 +91,9 @@ public class ElasticsearchCustomConversions extends CustomConversions {
 		}
 	}
 
+	/**
+	 * {@link Converter} to read a {@link BigDecimal} from a {@link Double} value.
+	 */
 	@ReadingConverter
 	enum DoubleToBigDecimalConverter implements Converter<Double, BigDecimal> {
 
@@ -95,6 +105,9 @@ public class ElasticsearchCustomConversions extends CustomConversions {
 		}
 	}
 
+	/**
+	 * {@link Converter} to write a {@link BigDecimal} to a {@link Double} value.
+	 */
 	@WritingConverter
 	enum BigDecimalToDoubleConverter implements Converter<BigDecimal, Double> {
 

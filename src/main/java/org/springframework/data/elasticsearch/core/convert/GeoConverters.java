@@ -35,14 +35,17 @@ import org.springframework.util.NumberUtils;
  */
 class GeoConverters {
 
-	static Collection<? extends Object> getConvertersToRegister() {
+	static Collection<Object> getConvertersToRegister() {
 
 		return Arrays.asList(PointToMapConverter.INSTANCE, MapToPointConverter.INSTANCE, GeoPointToMapConverter.INSTANCE,
 				MapToGeoPointConverter.INSTANCE);
 	}
 
+	/**
+	 * {@link Converter} to write a {@link Point} to {@link Map} using {@code lat/long} properties.
+	 */
 	@WritingConverter
-	enum PointToMapConverter implements Converter<Point, Map> {
+	enum PointToMapConverter implements Converter<Point, Map<String, Object>> {
 
 		INSTANCE;
 
@@ -56,8 +59,11 @@ class GeoConverters {
 		}
 	}
 
+	/**
+	 * {@link Converter} to write a {@link GeoPoint} to {@link Map} using {@code lat/long} properties.
+	 */
 	@WritingConverter
-	enum GeoPointToMapConverter implements Converter<GeoPoint, Map> {
+	enum GeoPointToMapConverter implements Converter<GeoPoint, Map<String, Object>> {
 
 		INSTANCE;
 
@@ -70,8 +76,11 @@ class GeoConverters {
 		}
 	}
 
+	/**
+	 * {@link Converter} to read a {@link Point} from {@link Map} using {@code lat/long} properties.
+	 */
 	@ReadingConverter
-	enum MapToPointConverter implements Converter<Map, Point> {
+	enum MapToPointConverter implements Converter<Map<String, Object>, Point> {
 
 		INSTANCE;
 
@@ -84,8 +93,11 @@ class GeoConverters {
 		}
 	}
 
+	/**
+	 * {@link Converter} to read a {@link GeoPoint} from {@link Map} using {@code lat/long} properties.
+	 */
 	@ReadingConverter
-	enum MapToGeoPointConverter implements Converter<Map, GeoPoint> {
+	enum MapToGeoPointConverter implements Converter<Map<String, Object>, GeoPoint> {
 
 		INSTANCE;
 

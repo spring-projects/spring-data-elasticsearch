@@ -15,6 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.apache.commons.lang.RandomStringUtils.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -62,11 +68,6 @@ import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.entities.SampleMappingEntity;
 import org.springframework.data.elasticsearch.entities.UseServerConfigurationEntity;
 import org.springframework.data.util.CloseableIterator;
-import static org.apache.commons.lang.RandomStringUtils.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 /**
  * Base for testing rest/transport templates
@@ -808,7 +809,7 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
 				.withTypes(TYPE_NAME).withFields("message").build();
 		// when
-		Page<String> page = elasticsearchTemplate.queryForPage(searchQuery, String.class, new SearchResultMapper() {
+		Page<String> page = elasticsearchTemplate.queryForPage(searchQuery, String.class, new SearchResultMapperAdapter() {
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<String> values = new ArrayList<>();
@@ -816,11 +817,6 @@ public class ElasticsearchTemplateTests {
 					values.add((String) searchHit.getSourceAsMap().get("message"));
 				}
 				return new AggregatedPageImpl<>((List<T>) values);
-			}
-
-			@Override
-			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
-				return null;
 			}
 		});
 		// then
@@ -941,10 +937,10 @@ public class ElasticsearchTemplateTests {
 	}
 
 
-	final SearchResultMapper searchResultMapper = new SearchResultMapper() {
+	final SearchResultMapper searchResultMapper = new SearchResultMapperAdapter() {
 		@Override
 		public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-			List<SampleEntity> result = new ArrayList<SampleEntity>();
+			List<SampleEntity> result = new ArrayList<>();
 			for (SearchHit searchHit : response.getHits()) {
 				if (response.getHits().getHits().length <= 0) {
 					return new AggregatedPageImpl<T>(Collections.EMPTY_LIST, response.getScrollId());
@@ -959,12 +955,7 @@ public class ElasticsearchTemplateTests {
 			if (result.size() > 0) {
 				return new AggregatedPageImpl<T>((List<T>) result, response.getScrollId());
 			}
-			return new AggregatedPageImpl<T>(Collections.EMPTY_LIST, response.getScrollId());
-		}
-
-		@Override
-		public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
-			return null;
+			return new AggregatedPageImpl<T>(Collections.emptyList(), response.getScrollId());
 		}
 	};
 
@@ -1347,7 +1338,8 @@ public class ElasticsearchTemplateTests {
 				.withHighlightFields(message.toArray(new HighlightBuilder.Field[message.size()]))
 				.build();
 
-		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapper() {
+		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class,
+				new SearchResultMapperAdapter() {
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<SampleEntity> chunk = new ArrayList<>();
@@ -1364,11 +1356,6 @@ public class ElasticsearchTemplateTests {
 				if (chunk.size() > 0) {
 					return new AggregatedPageImpl<>((List<T>) chunk);
 				}
-				return null;
-			}
-
-			@Override
-			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
 				return null;
 			}
 		});
@@ -1409,7 +1396,7 @@ public class ElasticsearchTemplateTests {
 				.build();
 
 		// when
-		elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapper() {
+		elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapperAdapter() {
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				for (SearchHit searchHit : response.getHits()) {
@@ -1423,11 +1410,6 @@ public class ElasticsearchTemplateTests {
 					assertThat(highlightFieldType.fragments()[0].toString(), is(highlightedType));
 					assertThat(highlightFieldMessage.fragments()[0].toString(), is(highlightedMessage));
 				}
-				return null;
-			}
-
-			@Override
-			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
 				return null;
 			}
 		});
@@ -1458,7 +1440,7 @@ public class ElasticsearchTemplateTests {
 				.withHighlightFields(new HighlightBuilder.Field("message"))
 				.build();
 		// when
-		elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapper() {
+		elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapperAdapter() {
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				for (SearchHit searchHit : response.getHits()) {
@@ -1469,11 +1451,6 @@ public class ElasticsearchTemplateTests {
 					assertNotNull(highlightFieldMessage);
 					assertThat(highlightFieldMessage.fragments()[0].toString(), is(highlightedMessage));
 				}
-				return null;
-			}
-
-			@Override
-			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
 				return null;
 			}
 		});
@@ -1621,7 +1598,8 @@ public class ElasticsearchTemplateTests {
 				.withTypes(TYPE_NAME)
 				.build();
 		// then
-		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class, new SearchResultMapper() {
+		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class,
+				new SearchResultMapperAdapter() {
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<SampleEntity> values = new ArrayList<>();
@@ -1632,11 +1610,6 @@ public class ElasticsearchTemplateTests {
 					values.add(sampleEntity);
 				}
 				return new AggregatedPageImpl<>((List<T>) values);
-			}
-
-			@Override
-			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
-				return null;
 			}
 		});
 		assertThat(page, is(notNullValue()));
@@ -1826,7 +1799,8 @@ public class ElasticsearchTemplateTests {
 		// then
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices(INDEX_NAME)
 				.withTypes(TYPE_NAME).withQuery(matchAllQuery()).build();
-		Page<Map> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, Map.class, new SearchResultMapper() {
+		Page<Map> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, Map.class,
+				new SearchResultMapperAdapter() {
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<Map> chunk = new ArrayList<>();
@@ -1845,11 +1819,6 @@ public class ElasticsearchTemplateTests {
 				if (chunk.size() > 0) {
 					return new AggregatedPageImpl<>((List<T>) chunk);
 				}
-				return null;
-			}
-
-			@Override
-			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
 				return null;
 			}
 		});
@@ -2400,7 +2369,8 @@ public class ElasticsearchTemplateTests {
 		// When
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withTypes("hetro").withIndices(INDEX_1_NAME, INDEX_2_NAME).build();
-		Page<ResultAggregator> page = elasticsearchTemplate.queryForPage(searchQuery, ResultAggregator.class, new SearchResultMapper() {
+		Page<ResultAggregator> page = elasticsearchTemplate.queryForPage(searchQuery, ResultAggregator.class,
+				new SearchResultMapperAdapter() {
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<ResultAggregator> values = new ArrayList<>();
@@ -2411,11 +2381,6 @@ public class ElasticsearchTemplateTests {
 					values.add(new ResultAggregator(id, firstName, lastName));
 				}
 				return new AggregatedPageImpl<>((List<T>) values);
-			}
-
-			@Override
-			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
-				return null;
 			}
 		});
 
