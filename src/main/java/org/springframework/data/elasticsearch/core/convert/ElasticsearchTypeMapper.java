@@ -15,17 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import java.util.Collections;
 import java.util.Map;
 
-import org.springframework.data.convert.SimpleTypeInformationMapper;
-import org.springframework.data.convert.TypeAliasAccessor;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
-import org.springframework.data.mapping.Alias;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.lang.Nullable;
 
 /**
  * Elasticsearch specific {@link TypeMapper} definition.
@@ -48,45 +43,15 @@ public interface ElasticsearchTypeMapper extends TypeMapper<Map<String, Object>>
 		return readType(source) != null;
 	}
 
-	static ElasticsearchTypeMapper defaultTypeMapper(
-			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
-		return new ElasticsearchDefaultTypeMapper(DEFAULT_TYPE_KEY, new MapTypeAliasAccessor(DEFAULT_TYPE_KEY),
-				mappingContext, Collections.singletonList(new SimpleTypeInformationMapper()));
-	}
-
 	/**
-	 * {@link TypeAliasAccessor} to store aliases in a {@link Map}.
+	 * Creates a new default {@link ElasticsearchTypeMapper}.
 	 *
-	 * @author Christoph Strobl
+	 * @param mappingContext the mapping context.
+	 * @return a new default {@link ElasticsearchTypeMapper}.
+	 * @see DefaultElasticsearchTypeMapper
 	 */
-	final class MapTypeAliasAccessor implements TypeAliasAccessor<Map<String, Object>> {
-
-		private final @Nullable String typeKey;
-
-		public MapTypeAliasAccessor(@Nullable String typeKey) {
-			this.typeKey = typeKey;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.convert.TypeAliasAccessor#readAliasFrom(java.lang.Object)
-		 */
-		public Alias readAliasFrom(Map<String, Object> source) {
-			return Alias.ofNullable(source.get(typeKey));
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.convert.TypeAliasAccessor#writeTypeTo(java.lang.Object, java.lang.Object)
-		 */
-		public void writeTypeTo(Map<String, Object> sink, Object alias) {
-
-			if (typeKey == null) {
-				return;
-			}
-
-			sink.put(typeKey, alias);
-		}
+	static ElasticsearchTypeMapper create(
+			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
+		return new DefaultElasticsearchTypeMapper(DEFAULT_TYPE_KEY, mappingContext);
 	}
-
 }

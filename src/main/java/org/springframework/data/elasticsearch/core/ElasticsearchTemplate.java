@@ -755,7 +755,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery()).withIndices(indexName)
 				.withTypes(typeName).withPageable(PageRequest.of(0, pageSize)).build();
 
-		SearchResultMapper onlyIdResultMapper = new SearchResultMapper() {
+		SearchResultMapper onlyIdResultMapper = new SearchResultMapperAdapter() {
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<String> result = new ArrayList<String>();
@@ -766,12 +766,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 				if (result.size() > 0) {
 					return new AggregatedPageImpl<T>((List<T>) result, response.getScrollId());
 				}
-				return new AggregatedPageImpl<T>(Collections.EMPTY_LIST, response.getScrollId());
-			}
-
-			@Override
-			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
-				return null;
+				return new AggregatedPageImpl<T>(Collections.emptyList(), response.getScrollId());
 			}
 		};
 

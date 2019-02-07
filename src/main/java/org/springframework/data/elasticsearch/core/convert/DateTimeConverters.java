@@ -30,7 +30,6 @@ import org.springframework.core.convert.converter.Converter;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  */
-
 public final class DateTimeConverters {
 
 	private static DateTimeFormatter formatter = ISODateTimeFormat.dateTime().withZone(DateTimeZone.UTC);

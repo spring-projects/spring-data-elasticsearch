@@ -66,13 +66,26 @@ for `Converter` registration.
 <3> Optionally set `CustomConversions` if applicable.
 ====
 
+[[elasticsearch.mapping.meta-model.annotations]]
+=== Mapping Annotation Overview
+
+The `ElasticsearchEntityMapper` can use metadata to drive the mapping of objects to documents. The following annotations are available:
+
+* `@Id`: Applied at the field level to mark the field used for identity purpose.
+* `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database. You can specify the index name and index type where the document will be stored.
+* `@Transient`: By default all private fields are mapped to the document, this annotation excludes the field where it is applied from being stored in the database
+* `@PersistenceConstructor`: Marks a given constructor - even a package protected one - to use when instantiating the object from the database. Constructor arguments are mapped by name to the key values in the retrieved Document.
+* `@Field`: Applied at the field level and described the name of the field as it will be represented in the Elasticsearch document thus allowing the name to be different than the fieldname of the class.
+
+The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic.
+
 [[elasticsearch.mapping.meta-model.rules]]
 === Mapping Rules
 
 ==== Type Hints
 
-Mapping uses _type hints_ embedded in the document sent to the server to allow generic type mapping. Those type hints are
-represented as `_class` attributes within the document on the server and will be written for each aggregate root.
+Mapping uses _type hints_ embedded in the document sent to the server to allow generic type mapping.
+Those type hints are represented as `_class` attributes within the document and are written for each aggregate root.
 
 .Type Hints
 ====
@@ -123,8 +136,7 @@ public class Person {
 <1> The configured alias is used when writing the entity.
 ====
 
-NOTE: Type hints will not be written for nested Objects unless the properties type is `Object`, an interface or the
-actual value type does not match the properties declaration.
+NOTE: Type hints will not be written for nested Objects unless the properties type is `Object`, an interface or the actual value type does not match the properties declaration.
 
 ==== Geospatial Types
 
@@ -152,8 +164,7 @@ public class Address {
 
 ==== Collections
 
-For values inside Collections apply the same mapping rules as for aggregate roots when it comes to _type hints_
-and <<elasticsearch.mapping.meta-model.conversions>>.
+For values inside Collections apply the same mapping rules as for aggregate roots when it comes to _type hints_ and <<elasticsearch.mapping.meta-model.conversions>>.
 
 .Collections
 ====
@@ -179,8 +190,7 @@ public class Person {
 
 ==== Maps
 
-For values inside Maps apply the same mapping rules as for aggregate roots when it comes to _type hints_
-and <<elasticsearch.mapping.meta-model.conversions>>.
+For values inside Maps apply the same mapping rules as for aggregate roots when it comes to _type hints_ and <<elasticsearch.mapping.meta-model.conversions>>.
 However the Map key needs to a String to be processed by Elasticsearch.
 
 .Collections
@@ -214,8 +224,7 @@ public class Person {
 [[elasticsearch.mapping.meta-model.conversions]]
 === Custom Conversions
 
-Looking at the `Configuration` from the <<elasticsearch.mapping.meta-model, previous section>> `ElasticsearchCustomConversions`
-allows to register specific rules for mapping domain and simple types.
+Looking at the `Configuration` from the <<elasticsearch.mapping.meta-model, previous section>> `ElasticsearchCustomConversions` allows registering specific rules for mapping domain and simple types.
 
 .Meta Model Object Mapping Configuration
 ====

@@ -25,16 +25,7 @@ import static org.springframework.util.StringUtils.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.ActionFuture;
@@ -875,7 +866,7 @@ public class ElasticsearchRestTemplate
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery()).withIndices(indexName)
 				.withTypes(typeName).withPageable(PageRequest.of(0, pageSize)).build();
 
-		SearchResultMapper onlyIdResultMapper = new SearchResultMapper() {
+		SearchResultMapper onlyIdResultMapper = new SearchResultMapperAdapter() {
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<String> result = new ArrayList<String>();
@@ -884,14 +875,9 @@ public class ElasticsearchRestTemplate
 					result.add(id);
 				}
 				if (result.size() > 0) {
-					return new AggregatedPageImpl<T>((List<T>) result, response.getScrollId());
+					return new AggregatedPageImpl<>((List<T>) result, response.getScrollId());
 				}
-				return new AggregatedPageImpl<T>(Collections.EMPTY_LIST, response.getScrollId());
-			}
-
-			@Override
-			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
-				return null;
+				return new AggregatedPageImpl<>(Collections.emptyList(), response.getScrollId());
 			}
 		};
 
@@ -1449,7 +1435,7 @@ public class ElasticsearchRestTemplate
 	/**
 	 * It takes two steps to create a List<AliasMetadata> from the elasticsearch http response because the aliases field
 	 * is actually a Map by alias name, but the alias name is on the AliasMetadata.
-	 * 
+	 *
 	 * @param aliasResponse
 	 * @return
 	 */
