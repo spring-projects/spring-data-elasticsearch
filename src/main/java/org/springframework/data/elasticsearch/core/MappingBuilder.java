@@ -24,6 +24,7 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.elasticsearch.annotations.CompletionContext;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -53,6 +54,7 @@ import static org.springframework.util.StringUtils.*;
  * @author Mark Paluch
  * @author Sascha Woo
  * @author Nordine Bittich
+ * @author Robert Gruendler
  */
 class MappingBuilder {
 
@@ -67,10 +69,14 @@ class MappingBuilder {
 	public static final String FIELD_PROPERTIES = "properties";
 	public static final String FIELD_PARENT = "_parent";
 	public static final String FIELD_COPY_TO = "copy_to";
+	public static final String FIELD_CONTEXT_NAME = "name";
+	public static final String FIELD_CONTEXT_TYPE = "type";
+	public static final String FIELD_CONTEXT_PRECISION = "precision";
 
 	public static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
 	public static final String COMPLETION_PRESERVE_POSITION_INCREMENTS = "preserve_position_increments";
 	public static final String COMPLETION_MAX_INPUT_LENGTH = "max_input_length";
+	public static final String COMPLETION_CONTEXTS = "contexts";
 
 	public static final String TYPE_VALUE_KEYWORD = "keyword";
 	public static final String TYPE_VALUE_GEO_POINT = "geo_point";
@@ -79,6 +85,7 @@ class MappingBuilder {
 	public static final String TYPE_VALUE_GEO_HASH_PRECISION = "geohash_precision";
 
 	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = SimpleTypeHolder.DEFAULT;
+	private XContentBuilder xContentBuilder;
 
 	static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName, String parentType) throws IOException {
 
@@ -212,6 +219,20 @@ class MappingBuilder {
 			if (!StringUtils.isEmpty(annotation.analyzer())) {
 				xContentBuilder.field(FIELD_INDEX_ANALYZER, annotation.analyzer());
 			}
+			if (annotation.contexts().length > 0) {
+				xContentBuilder.startArray(COMPLETION_CONTEXTS);
+				for (CompletionContext context : annotation.contexts()) {
+					xContentBuilder.startObject();
+					xContentBuilder.field(FIELD_CONTEXT_NAME, context.name());
+					xContentBuilder.field(FIELD_CONTEXT_TYPE, context.type().name().toLowerCase());
+					if (context.precision().length() > 0) {
+						xContentBuilder.field(FIELD_CONTEXT_PRECISION, context.precision());
+					}
+					xContentBuilder.endObject();
+				}
+				xContentBuilder.endArray();
+			}
+
 		}
 		xContentBuilder.endObject();
 	}
