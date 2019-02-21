@@ -2,19 +2,25 @@ package org.springframework.data.elasticsearch.core.completion;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.List;
+import java.util.Map;
+
 /**
- * Based on the reference doc - http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-suggesters-completion.html
+ * Based on the reference doc -
+ * http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-suggesters-completion.html
  *
  * @author Mewes Kochheim
+ * @author Robert Gruendler
  */
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 public class Completion {
 
 	private String[] input;
+	private Map<String, List<String>> contexts;
 	private Integer weight;
 
 	private Completion() {
-		//required by mapper to instantiate object
+		// required by mapper to instantiate object
 	}
 
 	public Completion(String[] input) {
@@ -36,4 +42,13 @@ public class Completion {
 	public void setWeight(Integer weight) {
 		this.weight = weight;
 	}
+
+	public Map<String, List<String>> getContexts() {
+		return contexts;
+	}
+
+	public void setContexts(Map<String, List<String>> contexts) {
+		this.contexts = contexts;
+	}
+
 }
