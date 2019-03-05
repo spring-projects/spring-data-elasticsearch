@@ -277,7 +277,7 @@ public class SimpleElasticsearchRepositoryTests {
 
 	@Test // DATAES-363
 	public void shouldReturnFalseGivenDocumentWithIdDoesNotExist() {
-		
+
 		// given
 		String documentId = randomNumeric(5);
 
