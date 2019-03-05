@@ -80,6 +80,7 @@ import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientLogger;
@@ -434,8 +435,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	private static GetResult getResponseToGetResult(GetResponse response) {
 
-		return new GetResult(response.getIndex(), response.getType(), response.getId(), response.getVersion(),
-				response.isExists(), response.getSourceAsBytesRef(), response.getFields());
+		return new GetResult(response.getIndex(), response.getType(), response.getId(), response.getSeqNo(),
+				response.getPrimaryTerm(), response.getVersion(), response.isExists(), response.getSourceAsBytesRef(),
+				response.getFields());
 	}
 
 	// -->
