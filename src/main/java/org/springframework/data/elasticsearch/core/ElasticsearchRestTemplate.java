@@ -132,6 +132,7 @@ import org.springframework.util.StringUtils;
  * @author Zetang Zeng
  * @author Peter Nowak
  * @author Ivan Greene
+ * @author Adrian Gonzalez
  */
 public class ElasticsearchRestTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -1413,7 +1414,8 @@ public class ElasticsearchRestTemplate
 		Assert.notNull(query.getIndexName(), "No index defined for Alias");
 		Assert.notNull(query.getAliasName(), "No alias defined");
 		IndicesAliasesRequest request = new IndicesAliasesRequest();
-		AliasActions aliasAction = new AliasActions(AliasActions.Type.REMOVE);
+		AliasActions aliasAction = new AliasActions(AliasActions.Type.REMOVE)
+				.alias(query.getAliasName()).index(query.getIndexName());
 		request.addAliasAction(aliasAction);
 		try {
 			return client.indices().updateAliases(request).isAcknowledged();
@@ -1453,20 +1455,23 @@ public class ElasticsearchRestTemplate
 			JsonNode node = mapper.readTree(aliasResponse);
 
 			Iterator<String> names = node.fieldNames();
-			String name = names.next();
-			node = node.findValue("aliases");
-
-			Map<String, AliasData> aliasData = mapper.readValue(mapper.writeValueAsString(node),
-					new TypeReference<Map<String, AliasData>>() {});
-
-			Iterable<Map.Entry<String, AliasData>> aliasIter = aliasData.entrySet();
 			List<AliasMetaData> aliasMetaDataList = new ArrayList<AliasMetaData>();
+			if (names.hasNext()) {
+				String name = names.next();
+				node = node.findValue("aliases");
 
-			for (Map.Entry<String, AliasData> aliasentry : aliasIter) {
-				AliasData data = aliasentry.getValue();
-				aliasMetaDataList.add(AliasMetaData.newAliasMetaDataBuilder(aliasentry.getKey()).filter(data.getFilter())
-						.routing(data.getRouting()).searchRouting(data.getSearch_routing()).indexRouting(data.getIndex_routing())
-						.build());
+				Map<String, AliasData> aliasData = mapper.readValue(mapper.writeValueAsString(node),
+						new TypeReference<Map<String, AliasData>>() {
+						});
+
+				Iterable<Map.Entry<String, AliasData>> aliasIter = aliasData.entrySet();
+
+				for (Map.Entry<String, AliasData> aliasentry : aliasIter) {
+					AliasData data = aliasentry.getValue();
+					aliasMetaDataList.add(AliasMetaData.newAliasMetaDataBuilder(aliasentry.getKey()).filter(data.getFilter())
+							.routing(data.getRouting()).searchRouting(data.getSearch_routing()).indexRouting(data.getIndex_routing())
+							.build());
+				}
 			}
 			return aliasMetaDataList;
 		} catch (IOException e) {
