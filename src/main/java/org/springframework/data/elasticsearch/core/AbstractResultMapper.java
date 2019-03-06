@@ -15,24 +15,59 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.util.Assert;
 
 /**
  * @author Artur Konczak
+ * @author Christoph Strobl
  */
 public abstract class AbstractResultMapper implements ResultsMapper {
 
-	private EntityMapper entityMapper;
+	private final EntityMapper entityMapper;
+	private final ProjectionFactory projectionFactory;
 
+	/**
+	 * Create a new {@link AbstractResultMapper}.
+	 *
+	 * @param entityMapper must not be {@literal null}.
+	 */
 	public AbstractResultMapper(EntityMapper entityMapper) {
-
-		Assert.notNull(entityMapper, "EntityMapper must not be null!");
-
-		this.entityMapper = entityMapper;
+		this(entityMapper, new SpelAwareProxyProjectionFactory());
 	}
 
+	/**
+	 * Create a new {@link AbstractResultMapper}.
+	 *
+	 * @param entityMapper must not be {@literal null}.
+	 * @param projectionFactory must not be {@literal null}.
+	 * @since 3.2
+	 */
+	public AbstractResultMapper(EntityMapper entityMapper, ProjectionFactory projectionFactory) {
+
+		Assert.notNull(entityMapper, "EntityMapper must not be null!");
+		Assert.notNull(projectionFactory, "ProjectionFactory must not be null!");
+
+		this.entityMapper = entityMapper;
+		this.projectionFactory = projectionFactory;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ResultsMapper#getEntityMapper()
+	 */
 	@Override
 	public EntityMapper getEntityMapper() {
 		return this.entityMapper;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ResultsMapper#getProjectionFactory()
+	 */
+	@Override
+	public ProjectionFactory getProjectionFactory() {
+		return this.projectionFactory;
 	}
 }

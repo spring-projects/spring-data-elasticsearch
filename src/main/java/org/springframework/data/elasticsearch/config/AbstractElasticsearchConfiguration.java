@@ -43,6 +43,6 @@ public abstract class AbstractElasticsearchConfiguration extends ElasticsearchCo
 	 */
 	@Bean
 	public ElasticsearchOperations elasticsearchOperations() {
-		return new ElasticsearchRestTemplate(elasticsearchClient(), elasticsearchConverter());
+		return new ElasticsearchRestTemplate(elasticsearchClient(), elasticsearchConverter(), resultsMapper());
 	}
 }

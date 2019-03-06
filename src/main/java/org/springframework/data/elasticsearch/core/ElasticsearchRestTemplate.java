@@ -15,12 +15,11 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.elasticsearch.client.Requests.refreshRequest;
-import static org.elasticsearch.index.query.QueryBuilders.moreLikeThisQuery;
-import static org.elasticsearch.index.query.QueryBuilders.wrapperQuery;
-import static org.springframework.data.elasticsearch.core.MappingBuilder.buildMapping;
+import static org.elasticsearch.client.Requests.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
 import static org.springframework.util.CollectionUtils.isEmpty;
-import static org.springframework.util.StringUtils.hasText;
+import static org.springframework.util.StringUtils.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -105,11 +104,11 @@ import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMa
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.util.StringUtils;
 
 /**
  * ElasticsearchRestTemplate
@@ -132,6 +131,7 @@ import org.springframework.util.StringUtils;
  * @author Zetang Zeng
  * @author Peter Nowak
  * @author Ivan Greene
+ * @author Christoph Strobl
  * @author Adrian Gonzalez
  */
 public class ElasticsearchRestTemplate
@@ -346,7 +346,8 @@ public class ElasticsearchRestTemplate
 		return queryForPage(queries, clazz, resultsMapper);
 	}
 
-	private <T> List<Page<T>> doMultiSearch(List<SearchQuery> queries, Class<T> clazz, MultiSearchRequest request, SearchResultMapper resultsMapper) {
+	private <T> List<Page<T>> doMultiSearch(List<SearchQuery> queries, Class<T> clazz, MultiSearchRequest request,
+			SearchResultMapper resultsMapper) {
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
 		List<Page<T>> res = new ArrayList<>(queries.size());
 		int c = 0;
@@ -356,7 +357,8 @@ public class ElasticsearchRestTemplate
 		return res;
 	}
 
-	private List<Page<?>> doMultiSearch(List<SearchQuery> queries, List<Class<?>> classes, MultiSearchRequest request, SearchResultMapper resultsMapper) {
+	private List<Page<?>> doMultiSearch(List<SearchQuery> queries, List<Class<?>> classes, MultiSearchRequest request,
+			SearchResultMapper resultsMapper) {
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
 		List<Page<?>> res = new ArrayList<>(queries.size());
 		int c = 0;
@@ -727,8 +729,7 @@ public class ElasticsearchRestTemplate
 	private UpdateRequest prepareUpdate(UpdateQuery query) {
 		String indexName = hasText(query.getIndexName()) ? query.getIndexName()
 				: getPersistentEntityFor(query.getClazz()).getIndexName();
-		String type = hasText(query.getType()) ? query.getType()
-				: getPersistentEntityFor(query.getClazz()).getIndexType();
+		String type = hasText(query.getType()) ? query.getType() : getPersistentEntityFor(query.getClazz()).getIndexType();
 		Assert.notNull(indexName, "No index defined for Query");
 		Assert.notNull(type, "No type define for Query");
 		Assert.notNull(query.getId(), "No Id define for Query");
@@ -868,7 +869,7 @@ public class ElasticsearchRestTemplate
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery()).withIndices(indexName)
 				.withTypes(typeName).withPageable(PageRequest.of(0, pageSize)).build();
 
-		SearchResultMapper onlyIdResultMapper = new SearchResultMapper() {
+		SearchResultMapper onlyIdResultMapper = new SearchResultMapperAdapter() {
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 				List<String> result = new ArrayList<String>();
@@ -877,9 +878,9 @@ public class ElasticsearchRestTemplate
 					result.add(id);
 				}
 				if (result.size() > 0) {
-					return new AggregatedPageImpl<T>((List<T>) result, response.getScrollId());
+					return new AggregatedPageImpl<>((List<T>) result, response.getScrollId());
 				}
-				return new AggregatedPageImpl<T>(Collections.EMPTY_LIST, response.getScrollId());
+				return new AggregatedPageImpl<>(Collections.emptyList(), response.getScrollId());
 			}
 		};
 
@@ -1133,7 +1134,7 @@ public class ElasticsearchRestTemplate
 			if (highlightBuilder == null) {
 				highlightBuilder = new HighlightBuilder();
 			}
-			if(searchQuery.getHighlightFields() != null) {
+			if (searchQuery.getHighlightFields() != null) {
 				for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
 					highlightBuilder.field(highlightField);
 				}
@@ -1327,7 +1328,8 @@ public class ElasticsearchRestTemplate
 			String indexName = StringUtils.isEmpty(query.getIndexName())
 					? retrieveIndexNameFromPersistentEntity(query.getObject().getClass())[0]
 					: query.getIndexName();
-			String type = StringUtils.isEmpty(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
+			String type = StringUtils.isEmpty(query.getType())
+					? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
 					: query.getType();
 
 			IndexRequest indexRequest = null;
@@ -1444,7 +1446,7 @@ public class ElasticsearchRestTemplate
 	/**
 	 * It takes two steps to create a List<AliasMetadata> from the elasticsearch http response because the aliases field
 	 * is actually a Map by alias name, but the alias name is on the AliasMetadata.
-	 * 
+	 *
 	 * @param aliasResponse
 	 * @return
 	 */

@@ -43,12 +43,13 @@ import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMa
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
-import org.springframework.util.StringUtils;
 
 /**
  * @author Artur Konczak
@@ -59,24 +60,20 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  * @author Ilkang Na
  * @author Sascha Woo
+ * @author Christoph Strobl
  */
 public class DefaultResultMapper extends AbstractResultMapper {
 
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
-
 	private final ConversionService conversionService = new DefaultConversionService();
 
 	public DefaultResultMapper() {
 		this(new SimpleElasticsearchMappingContext());
 	}
 
-	public DefaultResultMapper(MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
-		
-		super(new DefaultEntityMapper(mappingContext));
-		
-		Assert.notNull(mappingContext, "MappingContext must not be null!");
-		
-		this.mappingContext = mappingContext;
+	public DefaultResultMapper(
+			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
+		this(mappingContext, initEntityMapper(mappingContext));
 	}
 
 	public DefaultResultMapper(EntityMapper entityMapper) {
@@ -85,18 +82,22 @@ public class DefaultResultMapper extends AbstractResultMapper {
 
 	public DefaultResultMapper(
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext,
-			EntityMapper entityMapper) {
-		
-		super(entityMapper);
-		
-		Assert.notNull(mappingContext, "MappingContext must not be null!");
-		
+			@Nullable EntityMapper entityMapper) {
+
+		super(entityMapper != null ? entityMapper : initEntityMapper(mappingContext));
 		this.mappingContext = mappingContext;
+	}
+
+	private static EntityMapper initEntityMapper(
+			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
+
+		Assert.notNull(mappingContext, "MappingContext must not be null!");
+		return new DefaultEntityMapper(mappingContext);
 	}
 
 	@Override
 	public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-		
+
 		long totalHits = response.getHits().getTotalHits();
 		float maxScore = response.getHits().getMaxScore();
 
@@ -113,7 +114,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 				setPersistentEntityId(result, hit.getId(), clazz);
 				setPersistentEntityVersion(result, hit.getVersion(), clazz);
 				setPersistentEntityScore(result, hit.getScore(), clazz);
-				
+
 				populateScriptFields(result, hit);
 				results.add(result);
 			}
@@ -200,14 +201,14 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	}
 
 	private <T> void setPersistentEntityId(T result, String id, Class<T> clazz) {
-		
+
 		if (clazz.isAnnotationPresent(Document.class)) {
-			
+
 			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(clazz);
 			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
 
-			PersistentPropertyAccessor<T> accessor = new ConvertingPropertyAccessor<>(persistentEntity.getPropertyAccessor(result),
-					conversionService);
+			PersistentPropertyAccessor<T> accessor = new ConvertingPropertyAccessor<>(
+					persistentEntity.getPropertyAccessor(result), conversionService);
 
 			// Only deal with String because ES generated Ids are strings !
 			if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
@@ -217,9 +218,9 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	}
 
 	private <T> void setPersistentEntityVersion(T result, long version, Class<T> clazz) {
-		
+
 		if (clazz.isAnnotationPresent(Document.class)) {
-			
+
 			ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(clazz);
 			ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
 

@@ -50,6 +50,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
@@ -90,18 +91,24 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	private final EntityOperations operations;
 
 	private @Nullable RefreshPolicy refreshPolicy = RefreshPolicy.IMMEDIATE;
-	private @Nullable IndicesOptions indicesOptions = IndicesOptions.strictExpandOpenAndForbidClosed();
+	private @Nullable IndicesOptions indicesOptions = IndicesOptions.strictExpandOpenAndForbidClosedIgnoreThrottled();
 
 	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client) {
 		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()));
 	}
 
 	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client, ElasticsearchConverter converter) {
+		this(client, converter, new DefaultResultMapper(converter.getMappingContext()));
+	}
+
+	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client, ElasticsearchConverter converter,
+			ResultsMapper resultsMapper) {
 
 		this.client = client;
 		this.converter = converter;
 		this.mappingContext = converter.getMappingContext();
-		this.resultMapper = new DefaultResultMapper(converter.getMappingContext());
+
+		this.resultMapper = resultsMapper;
 		this.exceptionTranslator = new ElasticsearchExceptionTranslator();
 		this.operations = new EntityOperations(this.mappingContext);
 	}
@@ -183,7 +190,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		Assert.notNull(id, "Id must not be null!");
 
 		return doFindById(id, getPersistentEntity(entityType), index, type)
-				.map(it -> resultMapper.mapEntity(it, entityType));
+				.map(it -> resultMapper.mapGetResult(it, entityType));
 	}
 
 	private Mono<GetResult> doFindById(String id, ElasticsearchPersistentEntity<?> entity, @Nullable String index,
@@ -199,6 +206,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exists(String, Class, String, String)
 	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exists(String, Class, String, String)
 	 */
 	@Override
@@ -229,7 +237,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			Class<T> resultType) {
 
 		return doFind(query, getPersistentEntity(entityType), index, type)
-				.map(it -> resultMapper.mapEntity(it, resultType));
+				.map(it -> resultMapper.mapSearchHit(it, resultType));
 	}
 
 	private Flux<SearchHit> doFind(Query query, ElasticsearchPersistentEntity<?> entity, @Nullable String index,

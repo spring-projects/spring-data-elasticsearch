@@ -17,12 +17,15 @@ package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.elasticsearch.core.geo.CustomGeoModule;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.util.Assert;
 
@@ -40,6 +43,7 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
  * @author Artur Konczak
  * @author Petar Tahchiev
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class DefaultEntityMapper implements EntityMapper {
 
@@ -52,14 +56,14 @@ public class DefaultEntityMapper implements EntityMapper {
 	 */
 	public DefaultEntityMapper(
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context) {
-		
+
 		Assert.notNull(context, "MappingContext must not be null!");
 
 		objectMapper = new ObjectMapper();
-		
+
 		objectMapper.registerModule(new SpringDataElasticsearchModule(context));
 		objectMapper.registerModule(new CustomGeoModule());
-		
+
 		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 	}
@@ -75,11 +79,39 @@ public class DefaultEntityMapper implements EntityMapper {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.EntityMapper#mapObject(java.lang.Object)
+	 */
+	@Override
+	public Map<String, Object> mapObject(Object source) {
+
+		try {
+			return objectMapper.readValue(mapToString(source), HashMap.class);
+		} catch (IOException e) {
+			throw new MappingException(e.getMessage(), e);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.core.EntityMapper#mapToObject(java.lang.String, java.lang.Class)
 	 */
 	@Override
 	public <T> T mapToObject(String source, Class<T> clazz) throws IOException {
 		return objectMapper.readValue(source, clazz);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.EntityMapper#readObject(java.util.Map, java.lang.Class)
+	 */
+	@Override
+	public <T> T readObject (Map<String, Object> source, Class<T> targetType) {
+
+		try {
+			return mapToObject(mapToString(source), targetType);
+		} catch (IOException e) {
+			throw new MappingException(e.getMessage(), e);
+		}
 	}
 
 	/**
@@ -101,7 +133,7 @@ public class DefaultEntityMapper implements EntityMapper {
 				MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context) {
 
 			Assert.notNull(context, "MappingContext must not be null!");
-			
+
 			setSerializerModifier(new SpringDataSerializerModifier(context));
 		}
 
