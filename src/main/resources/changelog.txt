@@ -1,6 +1,22 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.0.M2 (2019-03-07)
+----------------------------------------
+* DATAES-537 - Upgrade to Elasticsearch 6.6.
+* DATAES-531 - ElasticsearchRestTemplate.getMapping always returns null.
+* DATAES-526 - Introduce Concourse CI.
+* DATAES-525 - ElasticsearchRestRemplate bulk delete by ID removes all objects from index.
+* DATAES-524 - Update copyright years to 2019.
+* DATAES-523 - Allow specifying version type for index API.
+* DATAES-521 - Remove specific repository implementations for UUID und Numbers as id type.
+* DATAES-519 - Add support for reactive repositories.
+* DATAES-518 - Use scroll for unpaged find operations in ReactiveElasticsearchTemplate.
+* DATAES-517 - Release 3.2 M2 (Moore).
+* DATAES-510 - Add support for reactive scrolling.
+* DATAES-500 - queryForList(CriteriaQuery query, Class<T> clazz) can't query all data.
+
+
 Changes in version 3.1.5.RELEASE (2019-02-13)
 ---------------------------------------------
 * DATAES-529 - Release 3.1.5 (Lovelace SR5).
