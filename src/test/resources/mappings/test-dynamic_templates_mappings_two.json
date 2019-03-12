@@ -1,0 +1,22 @@
+{
+  "dynamic_templates": [
+    {
+      "with_custom_analyzer": {
+        "mapping": {
+          "type": "string",
+          "analyzer": "standard_lowercase_asciifolding"
+        },
+        "path_match": "names.*"
+      }
+    },
+    {
+      "participantA1_with_custom_analyzer": {
+        "mapping": {
+          "type": "string",
+          "analyzer": "standard_lowercase_asciifolding"
+        },
+        "path_match": "participantA1.*"
+      }
+    }
+  ]
+}
