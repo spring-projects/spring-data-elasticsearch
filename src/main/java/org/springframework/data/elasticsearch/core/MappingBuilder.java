@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static org.elasticsearch.common.xcontent.XContentFactory.*;
 import static org.springframework.util.StringUtils.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +33,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.CompletionContext;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
@@ -45,6 +47,9 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -57,6 +62,7 @@ import org.springframework.util.StringUtils;
  * @author Sascha Woo
  * @author Nordine Bittich
  * @author Robert Gruendler
+ * @author Petr Kukral
  */
 class MappingBuilder {
 
@@ -74,6 +80,7 @@ class MappingBuilder {
 	public static final String FIELD_CONTEXT_NAME = "name";
 	public static final String FIELD_CONTEXT_TYPE = "type";
 	public static final String FIELD_CONTEXT_PRECISION = "precision";
+	public static final String FIELD_DYNAMIC_TEMPLATES = "dynamic_templates";
 
 	public static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
 	public static final String COMPLETION_PRESERVE_POSITION_INCREMENTS = "preserve_position_increments";
@@ -91,6 +98,10 @@ class MappingBuilder {
 	static XContentBuilder buildMapping(Class<?> clazz, String indexType, String idFieldName, String parentType) throws IOException {
 
 		XContentBuilder mapping = jsonBuilder().startObject().startObject(indexType);
+
+		// Dynamic templates
+		addDynamicTemplatesMapping(mapping, clazz);
+
 		// Parent
 		if (hasText(parentType)) {
 			mapping.startObject(FIELD_PARENT).field(FIELD_TYPE, parentType).endObject();
@@ -352,6 +363,28 @@ class MappingBuilder {
 		}
 		if (copyTo != null && copyTo.length > 0) {
 			builder.field(FIELD_COPY_TO, copyTo);
+		}
+	}
+
+	/**
+	 * Apply mapping for dynamic templates.
+	 *
+	 * @throws IOException
+	 */
+	private static void addDynamicTemplatesMapping(XContentBuilder builder, Class<?> clazz) throws IOException {
+		if (clazz.isAnnotationPresent(DynamicTemplates.class)){
+			String mappingPath = ((DynamicTemplates) clazz.getAnnotation(DynamicTemplates.class)).mappingPath();
+			if (hasText(mappingPath)) {
+				String jsonString = ElasticsearchTemplate.readFileFromClasspath(mappingPath);
+				if (hasText(jsonString)) {
+					ObjectMapper objectMapper = new ObjectMapper();
+					JsonNode jsonNode = objectMapper.readTree(jsonString).get("dynamic_templates");
+					if (jsonNode != null && jsonNode.isArray()){
+						String json = objectMapper.writeValueAsString(jsonNode);
+						builder.rawField(FIELD_DYNAMIC_TEMPLATES, new ByteArrayInputStream(json.getBytes()), XContentType.JSON);
+					}
+				}
+			}
 		}
 	}
 
