@@ -26,19 +26,22 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.builder.SampleInheritedEntityBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.entities.Book;
 import org.springframework.data.elasticsearch.entities.CopyToEntity;
+import org.springframework.data.elasticsearch.entities.FieldNamedEntity;
 import org.springframework.data.elasticsearch.entities.GeoEntity;
 import org.springframework.data.elasticsearch.entities.Group;
 import org.springframework.data.elasticsearch.entities.MinimalEntity;
@@ -59,6 +62,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Nordine Bittich
  * @author Don Wellington
  * @author Sascha Woo
+ * @author Ivan Greene
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -275,5 +279,29 @@ public class MappingBuilderTests {
 		List<String> copyToValue = Arrays.asList("name");
 		assertThat(fieldFirstName.get("copy_to"), equalTo(copyToValue));
 		assertThat(fieldLastName.get("copy_to"), equalTo(copyToValue));
+	}
+
+	@Test // DATAES-323
+	public void shouldUseJsonPropertyName() {
+		// Given
+		elasticsearchTemplate.deleteIndex(FieldNamedEntity.class);
+		elasticsearchTemplate.createIndex(FieldNamedEntity.class);
+		elasticsearchTemplate.putMapping(FieldNamedEntity.class);
+
+		// When
+		Map mapping = elasticsearchTemplate.getMapping(FieldNamedEntity.class);
+		Map properties = (Map) mapping.get("properties");
+
+		// Then
+		Set<String> propertyNames = new HashSet<>(Arrays.asList("noJsonName", "snake_name", "noAnnotation"));
+		assertEquals(propertyNames, properties.keySet());
+
+		Map<String, Object> fieldMapping = new HashMap<>();
+		fieldMapping.put("index", false);
+		fieldMapping.put("type", "text");
+
+		assertEquals(fieldMapping, properties.get("noJsonName"));
+		assertEquals(fieldMapping, properties.get("snake_name"));
+		assertEquals(fieldMapping, properties.get("noAnnotation"));
 	}
 }

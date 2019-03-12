@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.core.ResolvableType;
@@ -63,6 +64,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Nordine Bittich
  * @author Robert Gruendler
  * @author Petr Kukral
+ * @author Ivan Greene
  */
 class MappingBuilder {
 
@@ -144,7 +146,7 @@ class MappingBuilder {
 				if (!StringUtils.isEmpty(mappingPath)) {
 					ClassPathResource mappings = new ClassPathResource(mappingPath);
 					if (mappings.exists()) {
-						xContentBuilder.rawField(field.getName(), mappings.getInputStream(), XContentType.JSON);
+						xContentBuilder.rawField(getFieldName(field), mappings.getInputStream(), XContentType.JSON);
 						continue;
 					}
 				}
@@ -159,7 +161,7 @@ class MappingBuilder {
 					continue;
 				}
 				boolean nestedOrObject = isNestedOrObjectField(field);
-				mapEntity(xContentBuilder, getFieldType(field), false, "", field.getName(), nestedOrObject, singleField.type(), field.getAnnotation(Field.class));
+				mapEntity(xContentBuilder, getFieldType(field), false, "", getFieldName(field), nestedOrObject, singleField.type(), field.getAnnotation(Field.class));
 				if (nestedOrObject) {
 					continue;
 				}
@@ -213,13 +215,13 @@ class MappingBuilder {
 	}
 
 	private static void applyGeoPointFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field) throws IOException {
-		xContentBuilder.startObject(field.getName());
+		xContentBuilder.startObject(getFieldName(field));
 		xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_GEO_POINT);
 		xContentBuilder.endObject();
 	}
 
 	private static void applyCompletionFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field, CompletionField annotation) throws IOException {
-		xContentBuilder.startObject(field.getName());
+		xContentBuilder.startObject(getFieldName(field));
 		xContentBuilder.field(FIELD_TYPE, TYPE_VALUE_COMPLETION);
 		if (annotation != null) {
 			xContentBuilder.field(COMPLETION_MAX_INPUT_LENGTH, annotation.maxInputLength());
@@ -251,7 +253,7 @@ class MappingBuilder {
 
 	private static void applyDefaultIdFieldMapping(XContentBuilder xContentBuilder, java.lang.reflect.Field field)
 			throws IOException {
-		xContentBuilder.startObject(field.getName())
+		xContentBuilder.startObject(getFieldName(field))
 				.field(FIELD_TYPE, TYPE_VALUE_KEYWORD)
 				.field(FIELD_INDEX, true);
 		xContentBuilder.endObject();
@@ -263,7 +265,7 @@ class MappingBuilder {
 	 * @throws IOException
 	 */
 	private static void addSingleFieldMapping(XContentBuilder builder, java.lang.reflect.Field field, Field annotation, boolean nestedOrObjectField) throws IOException {
-		builder.startObject(field.getName());
+		builder.startObject(getFieldName(field));
 		addFieldMappingParameters(builder, annotation, nestedOrObjectField);
 		builder.endObject();
 	}
@@ -280,7 +282,7 @@ class MappingBuilder {
 		boolean nestedOrObjectField) throws IOException {
 
 		// main field
-		builder.startObject(field.getName());
+		builder.startObject(getFieldName(field));
 		addFieldMappingParameters(builder, annotation.mainField(), nestedOrObjectField);
 
 		// inner fields
@@ -430,7 +432,7 @@ class MappingBuilder {
 	private static boolean isInIgnoreFields(java.lang.reflect.Field field, Field parentFieldAnnotation) {
 		if (null != parentFieldAnnotation) {
 			String[] ignoreFields = parentFieldAnnotation.ignoreFields();
-			return Arrays.asList(ignoreFields).contains(field.getName());
+			return Arrays.asList(ignoreFields).contains(getFieldName(field));
 		}
 		return false;
 	}
@@ -446,5 +448,13 @@ class MappingBuilder {
 
 	private static boolean isCompletionField(java.lang.reflect.Field field) {
 		return field.getType() == Completion.class;
+	}
+
+	private static String getFieldName(java.lang.reflect.Field field) {
+		JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
+		if (jsonProperty != null && !isEmpty(jsonProperty.value())) {
+			return jsonProperty.value();
+		}
+		return field.getName();
 	}
 }
