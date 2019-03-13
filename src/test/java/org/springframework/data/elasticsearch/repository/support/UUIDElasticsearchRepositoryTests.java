@@ -15,12 +15,17 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
@@ -35,9 +41,6 @@ import org.springframework.data.elasticsearch.entities.SampleEntityUUIDKeyed;
 import org.springframework.data.elasticsearch.repositories.sample.SampleUUIDKeyedElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 /**
  * @author Gad Akuka
@@ -116,7 +119,7 @@ public class UUIDElasticsearchRepositoryTests {
 		Optional<SampleEntityUUIDKeyed> entityFromElasticSearch = repository.findById(documentId);
 		// then
 		assertThat(entityFromElasticSearch.isPresent(), is(true));
-		assertThat(sampleEntityUUIDKeyed, is((equalTo(sampleEntityUUIDKeyed))));
+		assertThat(sampleEntityUUIDKeyed, is(equalTo(sampleEntityUUIDKeyed)));
 	}
 
 	@Test
@@ -186,7 +189,7 @@ public class UUIDElasticsearchRepositoryTests {
 		sampleEntityUUIDKeyed.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntityUUIDKeyed);
 		// when
-		Page<SampleEntityUUIDKeyed> page = repository.search(termQuery("message", "world"), new PageRequest(0, 50));
+		Page<SampleEntityUUIDKeyed> page = repository.search(termQuery("message", "world"), PageRequest.of(0, 50));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getNumberOfElements(), is(greaterThanOrEqualTo(1)));
@@ -242,7 +245,8 @@ public class UUIDElasticsearchRepositoryTests {
 		// when
 		repository.saveAll(sampleEntities);
 		// then
-		Page<SampleEntityUUIDKeyed> entities = repository.search(termQuery("id", documentId.toString()), new PageRequest(0, 50));
+		Page<SampleEntityUUIDKeyed> entities = repository.search(termQuery("id", documentId.toString()),
+				PageRequest.of(0, 50));
 		assertNotNull(entities);
 	}
 
@@ -265,7 +269,7 @@ public class UUIDElasticsearchRepositoryTests {
 
 	@Test // DATAES-363
 	public void shouldReturnFalseGivenDocumentWithIdDoesNotExist() {
-		
+
 		// given
 		UUID documentId = UUID.randomUUID();
 
@@ -479,8 +483,7 @@ public class UUIDElasticsearchRepositoryTests {
 		sampleEntityUUIDKeyed2.setMessage("hello");
 		repository.save(sampleEntityUUIDKeyed2);
 		// when
-		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository
-				.findAll(new Sort(new Sort.Order(Sort.Direction.ASC, "message")));
+		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.findAll(Sort.by(Order.asc("message")));
 		// then
 		assertThat(sampleEntities, is(notNullValue()));
 	}
@@ -499,7 +502,7 @@ public class UUIDElasticsearchRepositoryTests {
 
 		// when
 		Page<SampleEntityUUIDKeyed> results = repository.searchSimilar(sampleEntities.get(0), new String[] { "message" },
-				new PageRequest(0, 5));
+				PageRequest.of(0, 5));
 
 		// then
 		assertThat(results.getTotalElements(), is(greaterThanOrEqualTo(1L)));

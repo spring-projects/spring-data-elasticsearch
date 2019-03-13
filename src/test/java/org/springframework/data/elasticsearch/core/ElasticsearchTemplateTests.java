@@ -55,6 +55,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
@@ -688,7 +689,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 
-		StringQuery stringQuery = new StringQuery(matchAllQuery().toString(), new PageRequest(0, 10));
+		StringQuery stringQuery = new StringQuery(matchAllQuery().toString(), PageRequest.of(0, 10));
 		// when
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(stringQuery, SampleEntity.class);
 
@@ -712,8 +713,8 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 
-		StringQuery stringQuery = new StringQuery(matchAllQuery().toString(), new PageRequest(0, 10), new Sort(
-				new Sort.Order(Sort.Direction.ASC, "message")));
+		StringQuery stringQuery = new StringQuery(matchAllQuery().toString(), PageRequest.of(0, 10), Sort.by(
+				Order.asc("message")));
 		// when
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(stringQuery, SampleEntity.class);
 		// then
@@ -902,7 +903,7 @@ public class ElasticsearchTemplateTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 		criteriaQuery.addIndices(INDEX_NAME);
 		criteriaQuery.addTypes(TYPE_NAME);
-		criteriaQuery.setPageable(new PageRequest(0, 10));
+		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
 		ScrolledPage<SampleEntity> scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.startScroll( 1000, criteriaQuery, SampleEntity.class);
 		List<SampleEntity> sampleEntities = new ArrayList<>();
@@ -924,7 +925,7 @@ public class ElasticsearchTemplateTests {
 		// then
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
-				.withTypes(TYPE_NAME).withPageable(new PageRequest(0, 10)).build();
+				.withTypes(TYPE_NAME).withPageable(PageRequest.of(0, 10)).build();
 
 		ScrolledPage<SampleEntity> scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class);
 		List<SampleEntity> sampleEntities = new ArrayList<>();
@@ -975,7 +976,7 @@ public class ElasticsearchTemplateTests {
 		criteriaQuery.addIndices(INDEX_NAME);
 		criteriaQuery.addTypes(TYPE_NAME);
 		criteriaQuery.addFields("message");
-		criteriaQuery.setPageable(new PageRequest(0, 10));
+		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
 		Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, criteriaQuery, SampleEntity.class, searchResultMapper);
 		String scrollId = ((ScrolledPage<?>)scroll).getScrollId();
@@ -1006,7 +1007,7 @@ public class ElasticsearchTemplateTests {
 				.withTypes(TYPE_NAME)
 				.withFields("message")
 				.withQuery(matchAllQuery())
-				.withPageable(new PageRequest(0, 10))
+				.withPageable(PageRequest.of(0, 10))
 				.build();
 
 		Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class, searchResultMapper);
@@ -1036,7 +1037,7 @@ public class ElasticsearchTemplateTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 		criteriaQuery.addIndices(INDEX_NAME);
 		criteriaQuery.addTypes(TYPE_NAME);
-		criteriaQuery.setPageable(new PageRequest(0, 10));
+		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
 		Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, criteriaQuery, SampleEntity.class, searchResultMapper);
 		String scrollId = ((ScrolledPage) scroll).getScrollId();
@@ -1060,7 +1061,7 @@ public class ElasticsearchTemplateTests {
 		// then
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
-				.withTypes(TYPE_NAME).withPageable(new PageRequest(0, 10)).build();
+				.withTypes(TYPE_NAME).withPageable(PageRequest.of(0, 10)).build();
 
 		Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class,searchResultMapper);
 		String scrollId = ((ScrolledPage) scroll).getScrollId();
@@ -1087,7 +1088,7 @@ public class ElasticsearchTemplateTests {
 		// then
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
-		criteriaQuery.setPageable(new PageRequest(0, 10));
+		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
 		Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, criteriaQuery, SampleEntity.class);
 		String scrollId = ((ScrolledPage) scroll).getScrollId();
@@ -1114,7 +1115,7 @@ public class ElasticsearchTemplateTests {
 		// then
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withPageable(new PageRequest(0, 10)).build();
+				.withPageable(PageRequest.of(0, 10)).build();
 
 		Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class);
 		String scrollId = ((ScrolledPage) scroll).getScrollId();
@@ -1143,7 +1144,7 @@ public class ElasticsearchTemplateTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 		criteriaQuery.addIndices(INDEX_NAME);
 		criteriaQuery.addTypes(TYPE_NAME);
-		criteriaQuery.setPageable(new PageRequest(0, 10));
+		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
 		CloseableIterator<SampleEntity> stream = elasticsearchTemplate.stream(criteriaQuery, SampleEntity.class);
 		List<SampleEntity> sampleEntities = new ArrayList<>();
@@ -1640,7 +1641,7 @@ public class ElasticsearchTemplateTests {
 				.withQuery(termQuery("message", "message"))
 				.withIndices(INDEX_NAME)
 				.withTypes(TYPE_NAME)
-				.withPageable(new PageRequest(0, 100))
+				.withPageable(PageRequest.of(0, 100))
 				.build();
 		// then
 		List<String> ids = elasticsearchTemplate.queryForIds(searchQuery);

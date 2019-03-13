@@ -24,14 +24,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repositories.custom.SampleCustomMethodRepository;
@@ -39,8 +37,6 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * @author Rizwan Idrees
@@ -65,7 +61,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		sampleEntity.setMessage("some message");
 		repository.save(sampleEntity);
 		// when
-		Page<SampleEntity> page = repository.findByType("test", new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByType("test", PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(greaterThanOrEqualTo(1L)));
@@ -81,7 +77,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		sampleEntity.setMessage("some message");
 		repository.save(sampleEntity);
 		// when
-		Page<SampleEntity> page = repository.findByTypeNot("test", new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByTypeNot("test", PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -98,7 +94,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		sampleEntity.setMessage(searchTerm);
 		repository.save(sampleEntity);
 		// when
-		Page<SampleEntity> page = repository.findByMessage(searchTerm.toLowerCase(), new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByMessage(searchTerm.toLowerCase(), PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(greaterThanOrEqualTo(1L)));
@@ -124,7 +120,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity2);
 
 		// when
-		Page<SampleEntity> page = repository.findByRateLessThan(10, new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByRateLessThan(10, PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -142,7 +138,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByRateBefore(10, new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByRateBefore(10, PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -160,7 +156,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByRateAfter(10, new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByRateAfter(10, PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -178,7 +174,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByMessageLike("fo", new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByMessageLike("fo", PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -196,7 +192,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByMessageStartingWith("fo", new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByMessageStartingWith("fo", PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -214,7 +210,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByMessageEndingWith("o", new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByMessageEndingWith("o", PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -232,7 +228,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByMessageContaining("fo", new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByMessageContaining("fo", PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -259,7 +255,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		List<String> ids = Arrays.asList(documentId, documentId2);
 
 		// when
-		Page<SampleEntity> page = repository.findByIdIn(ids, new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByIdIn(ids, PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(2L)));
@@ -286,7 +282,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		List<String> ids = Arrays.asList(documentId);
 
 		// when
-		Page<SampleEntity> page = repository.findByIdNotIn(ids, new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByIdNotIn(ids, PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -313,7 +309,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		sampleEntity2.setAvailable(false);
 		repository.save(sampleEntity2);
 		// when
-		Page<SampleEntity> page = repository.findByAvailableTrue(new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByAvailableTrue(PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -339,7 +335,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		sampleEntity2.setAvailable(false);
 		repository.save(sampleEntity2);
 		// when
-		Page<SampleEntity> page = repository.findByAvailableFalse(new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByAvailableFalse(PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -375,7 +371,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity3);
 
 		// when
-		Page<SampleEntity> page = repository.findByMessageOrderByTypeAsc("foo", new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByMessageOrderByTypeAsc("foo", PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -401,7 +397,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		sampleEntity2.setAvailable(false);
 		repository.save(sampleEntity2);
 		// when
-		Page<SampleEntity> page = repository.findByAvailable(false, new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByAvailable(false, PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -419,7 +415,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 			repository.save(sampleEntity);
 		}
 		// when
-		Page<SampleEntity> pageResult = repository.findByMessage("message", new PageRequest(0, 23));
+		Page<SampleEntity> pageResult = repository.findByMessage("message", PageRequest.of(0, 23));
 		// then
 		assertThat(pageResult.getTotalElements(), is(equalTo(30L)));
 		assertThat(pageResult.getContent().size(), is(equalTo(23)));
@@ -450,7 +446,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity3);
 		// when
 		Page<SampleEntity> pageResult = repository.findByMessageContaining("a",
-				new PageRequest(0, 23, new Sort(new Sort.Order(Sort.Direction.DESC, "message"))));
+				PageRequest.of(0, 23, Sort.by(Order.desc("message"))));
 		// then
 		assertThat(pageResult.getContent().isEmpty(), is(false));
 		assertThat(pageResult.getContent().get(0).getMessage(), is(sampleEntity3.getMessage()));
@@ -500,7 +496,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByLocation(new GeoPoint(45.7806d, 3.0875d), new PageRequest(0, 10));
+		Page<SampleEntity> page = repository.findByLocation(new GeoPoint(45.7806d, 3.0875d), PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -531,7 +527,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 		// when
 		Page<SampleEntity> page = repository.findByLocationAndMessage(new GeoPoint(45.7806d, 3.0875d), "foo",
-				new PageRequest(0, 10));
+				PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -552,7 +548,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 		// when
 		Page<SampleEntity> page = repository.findByLocationWithin(new GeoPoint(45.7806d, 3.0875d), "2km",
-				new PageRequest(0, 10));
+				PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -573,7 +569,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 		// when
 		Page<SampleEntity> page = repository.findByLocationWithin(new Point(45.7806d, 3.0875d),
-				new Distance(2, Metrics.KILOMETERS), new PageRequest(0, 10));
+				new Distance(2, Metrics.KILOMETERS), PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -603,14 +599,14 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity2);
 
 		// when
-		Page<SampleEntity> pageAll = repository.findAll(new PageRequest(0, 10));
+		Page<SampleEntity> pageAll = repository.findAll(PageRequest.of(0, 10));
 		// then
 		assertThat(pageAll, is(notNullValue()));
 		assertThat(pageAll.getTotalElements(), is(equalTo(2L)));
 
 		// when
 		Page<SampleEntity> page = repository.findByLocationNear(new Box(new Point(46d, 3d), new Point(45d, 4d)),
-				new PageRequest(0, 10));
+				PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));
@@ -631,7 +627,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 		// when
 		Page<SampleEntity> page = repository.findByLocationNear(new Point(45.7806d, 3.0875d),
-				new Distance(2, Metrics.KILOMETERS), new PageRequest(0, 10));
+				new Distance(2, Metrics.KILOMETERS), PageRequest.of(0, 10));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getTotalElements(), is(equalTo(1L)));

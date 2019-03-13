@@ -15,10 +15,16 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import static org.apache.commons.lang.RandomStringUtils.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+
 import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.common.util.CollectionUtils;
 import org.junit.Before;
@@ -36,11 +42,6 @@ import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repositories.sample.SampleElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import static org.apache.commons.lang.RandomStringUtils.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.domain.Sort.Direction.*;
 
 /**
  * @author Rizwan Idrees
@@ -130,7 +131,7 @@ public class SimpleElasticsearchRepositoryTests {
 		Optional<SampleEntity> entityFromElasticSearch = repository.findById(documentId);
 		// then
 		assertThat(entityFromElasticSearch.isPresent(), is(true));
-		assertThat(sampleEntity, is((equalTo(sampleEntity))));
+		assertThat(sampleEntity, is(equalTo(sampleEntity)));
 	}
 
 	@Test
@@ -200,7 +201,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntity);
 		// when
-		Page<SampleEntity> page = repository.search(termQuery("message", "world"), new PageRequest(0, 50));
+		Page<SampleEntity> page = repository.search(termQuery("message", "world"), PageRequest.of(0, 50));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getNumberOfElements(), is(greaterThanOrEqualTo(1)));
@@ -254,7 +255,7 @@ public class SimpleElasticsearchRepositoryTests {
 		// when
 		repository.saveAll(sampleEntities);
 		// then
-		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), new PageRequest(0, 50));
+		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
 		assertNotNull(entities);
 	}
 
@@ -504,7 +505,7 @@ public class SimpleElasticsearchRepositoryTests {
 		// when
 		repository.index(sampleEntity);
 		// then
-		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), new PageRequest(0, 50));
+		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
 		assertThat(entities.getTotalElements(), equalTo(1L));
 	}
 
@@ -523,7 +524,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity2.setMessage("hello");
 		repository.save(sampleEntity2);
 		// when
-		Iterable<SampleEntity> sampleEntities = repository.findAll(new Sort(new Order(ASC, "message")));
+		Iterable<SampleEntity> sampleEntities = repository.findAll(Sort.by(Order.asc("message")));
 		// then
 		assertThat(sampleEntities, is(notNullValue()));
 	}
@@ -542,7 +543,7 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// when
 		Page<SampleEntity> results = repository.searchSimilar(sampleEntities.get(0), new String[] { "message" },
-				new PageRequest(0, 5));
+				PageRequest.of(0, 5));
 
 		// then
 		assertThat(results.getTotalElements(), is(greaterThanOrEqualTo(1L)));
