@@ -15,12 +15,17 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.elasticsearch.common.xcontent.XContentFactory.*;
+import static org.springframework.util.StringUtils.*;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
@@ -39,9 +44,6 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.StringUtils;
-
-import static org.elasticsearch.common.xcontent.XContentFactory.*;
-import static org.springframework.util.StringUtils.*;
 
 /**
  * @author Rizwan Idrees
@@ -85,9 +87,8 @@ class MappingBuilder {
 	public static final String TYPE_VALUE_GEO_HASH_PRECISION = "geohash_precision";
 
 	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = SimpleTypeHolder.DEFAULT;
-	private XContentBuilder xContentBuilder;
 
-	static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName, String parentType) throws IOException {
+	static XContentBuilder buildMapping(Class<?> clazz, String indexType, String idFieldName, String parentType) throws IOException {
 
 		XContentBuilder mapping = jsonBuilder().startObject().startObject(indexType);
 		// Parent
@@ -103,7 +104,7 @@ class MappingBuilder {
 		return xContentBuilder.endObject().endObject().endObject();
 	}
 
-	private static void mapEntity(XContentBuilder xContentBuilder, Class clazz, boolean isRootObject, String idFieldName,
+	private static void mapEntity(XContentBuilder xContentBuilder, Class<?> clazz, boolean isRootObject, String idFieldName,
 								  String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType, Field fieldAnnotation) throws IOException {
 
 		java.lang.reflect.Field[] fields = retrieveFields(clazz);
@@ -132,7 +133,7 @@ class MappingBuilder {
 				if (!StringUtils.isEmpty(mappingPath)) {
 					ClassPathResource mappings = new ClassPathResource(mappingPath);
 					if (mappings.exists()) {
-						xContentBuilder.rawField(field.getName(), mappings.getInputStream());
+						xContentBuilder.rawField(field.getName(), mappings.getInputStream(), XContentType.JSON);
 						continue;
 					}
 				}
@@ -178,12 +179,12 @@ class MappingBuilder {
 		}
 	}
 
-	private static java.lang.reflect.Field[] retrieveFields(Class clazz) {
+	private static java.lang.reflect.Field[] retrieveFields(Class<?> clazz) {
 		// Create list of fields.
 		List<java.lang.reflect.Field> fields = new ArrayList<>();
 
 		// Keep backing up the inheritance hierarchy.
-		Class targetClass = clazz;
+		Class<?> targetClass = clazz;
 		do {
 			fields.addAll(Arrays.asList(targetClass.getDeclaredFields()));
 			targetClass = targetClass.getSuperclass();
@@ -355,7 +356,7 @@ class MappingBuilder {
 	}
 
 	protected static boolean isEntity(java.lang.reflect.Field field) {
-		TypeInformation typeInformation = ClassTypeInformation.from(field.getType());
+		TypeInformation<?> typeInformation = ClassTypeInformation.from(field.getType());
 		Class<?> clazz = getFieldType(field);
 		boolean isComplexType = !SIMPLE_TYPE_HOLDER.isSimpleType(clazz);
 		return isComplexType && !Map.class.isAssignableFrom(typeInformation.getType());
