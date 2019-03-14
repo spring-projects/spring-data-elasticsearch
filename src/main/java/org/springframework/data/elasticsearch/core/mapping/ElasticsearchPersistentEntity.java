@@ -33,6 +33,10 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 
 	String getIndexName();
 
+	boolean hasIndexNameProperty();
+
+	ElasticsearchPersistentProperty getIndexNameProperty();
+
 	String getIndexType();
 
 	short getShards();

@@ -25,6 +25,7 @@ import org.springframework.data.mapping.PersistentProperty;
  * @author Mohsin Husen
  * @author Sascha Woo
  * @author Oliver Gierke
+ * @author Ivan Greene
  */
 public interface ElasticsearchPersistentProperty extends PersistentProperty<ElasticsearchPersistentProperty> {
 
@@ -53,6 +54,14 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 * @since 3.1
 	 */
 	boolean isParentProperty();
+
+	/**
+	 * Returns whether the current property is the index name property of the owning
+	 * {@link ElasticsearchPersistentEntity}.
+	 *
+	 * @return
+	 */
+	boolean isIndexNameProperty();
 
 	public enum PropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
 

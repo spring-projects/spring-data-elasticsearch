@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
  * @author Mohsin Husen
  * @author Kevin Leturc
  * @author Zetang Zeng
+ * @author Ivan Greene
  */
 public interface ElasticsearchOperations {
 
@@ -82,6 +83,15 @@ public interface ElasticsearchOperations {
 	 * @param <T>
 	 */
 	<T> boolean putMapping(Class<T> clazz);
+
+	/**
+	 * Create mapping for a class in the given index
+	 *
+	 * @param indexName
+	 * @param clazz
+	 * @param <T>
+	 */
+	<T> boolean putMapping(String indexName, Class<T> clazz);
 
 	/**
 	 * Create mapping for a given indexName and type

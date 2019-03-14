@@ -21,8 +21,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -42,6 +44,8 @@ import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.data.elasticsearch.repository.IndexedCrudRepository;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -56,9 +60,10 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Michael Wirth
  * @author Sascha Woo
+ * @author Ivan Greene
  */
 public abstract class AbstractElasticsearchRepository<T, ID>
-		implements ElasticsearchRepository<T, ID> {
+		implements ElasticsearchRepository<T, ID>, IndexedCrudRepository<T, ID> {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(AbstractElasticsearchRepository.class);
 	protected ElasticsearchOperations elasticsearchOperations;
@@ -106,23 +111,41 @@ public abstract class AbstractElasticsearchRepository<T, ID>
 
 	@Override
 	public Optional<T> findById(ID id) {
+		return findById(entityInformation.getIndexName(), id);
+	}
+
+	@Override
+	public Optional<T> findById(String indexName, ID id) {
 		GetQuery query = new GetQuery();
 		query.setId(stringIdRepresentation(id));
+		query.setIndexName(indexName);
 		return Optional.ofNullable(elasticsearchOperations.queryForObject(query, getEntityClass()));
 	}
 
 	@Override
 	public Iterable<T> findAll() {
-		int itemCount = (int) this.count();
+		return findAll(entityInformation.getIndexName());
+	}
+
+	@Override
+	public Iterable<T> findAll(String indexName) {
+		int itemCount = (int) this.count(indexName);
 		if (itemCount == 0) {
-			return new PageImpl<>(Collections.<T> emptyList());
+			return new PageImpl<>(Collections.emptyList());
 		}
-		return this.findAll(PageRequest.of(0, Math.max(1, itemCount)));
+		return this.findAll(indexName, PageRequest.of(0, Math.max(1, itemCount)));
 	}
 
 	@Override
 	public Page<T> findAll(Pageable pageable) {
 		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withPageable(pageable).build();
+		return elasticsearchOperations.queryForPage(query, getEntityClass());
+	}
+
+	public Page<T> findAll(String indexName, Pageable pageable) {
+		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withPageable(pageable)
+				.withIndices(indexName)
+				.build();
 		return elasticsearchOperations.queryForPage(query, getEntityClass());
 	}
 
@@ -139,14 +162,28 @@ public abstract class AbstractElasticsearchRepository<T, ID>
 
 	@Override
 	public Iterable<T> findAllById(Iterable<ID> ids) {
+		return findAllById(entityInformation.getIndexName(), ids);
+	}
+
+	@Override
+	public Iterable<T> findAllById(String indexName, Iterable<ID> ids) {
 		Assert.notNull(ids, "ids can't be null.");
-		SearchQuery query = new NativeSearchQueryBuilder().withIds(stringIdsRepresentation(ids)).build();
+		SearchQuery query = new NativeSearchQueryBuilder().withIds(stringIdsRepresentation(ids))
+				.withIndices(indexName)
+				.build();
 		return elasticsearchOperations.multiGet(query, getEntityClass());
 	}
 
 	@Override
 	public long count() {
-		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		return count(entityInformation.getIndexName());
+	}
+
+	@Override
+	public long count(String indexName) {
+		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withIndices(indexName)
+				.build();
 		return elasticsearchOperations.count(query, getEntityClass());
 	}
 
@@ -154,7 +191,7 @@ public abstract class AbstractElasticsearchRepository<T, ID>
 	public <S extends T> S save(S entity) {
 		Assert.notNull(entity, "Cannot save 'null' entity.");
 		elasticsearchOperations.index(createIndexQuery(entity));
-		elasticsearchOperations.refresh(entityInformation.getIndexName());
+		elasticsearchOperations.refresh(entityInformation.getIndexName(entity));
 		return entity;
 	}
 
@@ -162,11 +199,13 @@ public abstract class AbstractElasticsearchRepository<T, ID>
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
 		Assert.notEmpty(entities, "Cannot insert empty List.");
 		List<IndexQuery> queries = new ArrayList<>();
+		Set<String> indices = new HashSet<>();
 		for (S s : entities) {
 			queries.add(createIndexQuery(s));
+			indices.add(entityInformation.getIndexName(s));
 		}
 		elasticsearchOperations.bulkIndex(queries);
-		elasticsearchOperations.refresh(entityInformation.getIndexName());
+		indices.forEach(elasticsearchOperations::refresh);
 		return entities;
 	}
 
@@ -179,17 +218,24 @@ public abstract class AbstractElasticsearchRepository<T, ID>
 	public <S extends T> Iterable<S> saveAll(Iterable<S> entities) {
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
 		List<IndexQuery> queries = new ArrayList<>();
+		Set<String> indices = new HashSet<>();
 		for (S s : entities) {
 			queries.add(createIndexQuery(s));
+			indices.add(entityInformation.getIndexName(s));
 		}
 		elasticsearchOperations.bulkIndex(queries);
-		elasticsearchOperations.refresh(entityInformation.getIndexName());
+		indices.forEach(elasticsearchOperations::refresh);
 		return entities;
 	}
 
 	@Override
 	public boolean existsById(ID id) {
 		return findById(id).isPresent();
+	}
+
+	@Override
+	public boolean existsById(String indexName, ID id) {
+		return findById(indexName, id).isPresent();
 	}
 
 	@Override
@@ -220,6 +266,7 @@ public abstract class AbstractElasticsearchRepository<T, ID>
 		Assert.notNull(pageable, "'pageable' cannot be 'null'");
 		MoreLikeThisQuery query = new MoreLikeThisQuery();
 		query.setId(stringIdRepresentation(extractIdFromBean(entity)));
+		query.setIndexName(entityInformation.getIndexName(entity));
 		query.setPageable(pageable);
 		if (fields != null) {
 			query.addFields(fields);
@@ -229,17 +276,22 @@ public abstract class AbstractElasticsearchRepository<T, ID>
 
 	@Override
 	public void deleteById(ID id) {
+		deleteById(entityInformation.getIndexName(), id);
+	}
+
+	@Override
+	public void deleteById(String indexName, ID id) {
+		Assert.notNull(indexName, "Cannot delete with 'null' index name.");
 		Assert.notNull(id, "Cannot delete entity with id 'null'.");
-		elasticsearchOperations.delete(entityInformation.getIndexName(), entityInformation.getType(),
+		elasticsearchOperations.delete(indexName, entityInformation.getType(),
 				stringIdRepresentation(id));
-		elasticsearchOperations.refresh(entityInformation.getIndexName());
+		elasticsearchOperations.refresh(indexName);
 	}
 
 	@Override
 	public void delete(T entity) {
 		Assert.notNull(entity, "Cannot delete 'null' entity.");
-		deleteById(extractIdFromBean(entity));
-		elasticsearchOperations.refresh(entityInformation.getIndexName());
+		deleteById(entityInformation.getIndexName(entity), extractIdFromBean(entity));
 	}
 
 	@Override
@@ -252,15 +304,21 @@ public abstract class AbstractElasticsearchRepository<T, ID>
 
 	@Override
 	public void deleteAll() {
+		deleteAll(entityInformation.getIndexName());
+	}
+
+	@Override
+	public void deleteAll(String indexName) {
 		DeleteQuery deleteQuery = new DeleteQuery();
 		deleteQuery.setQuery(matchAllQuery());
+		deleteQuery.setIndex(indexName);
 		elasticsearchOperations.delete(deleteQuery, getEntityClass());
 		elasticsearchOperations.refresh(entityInformation.getIndexName());
 	}
 
 	@Override
 	public void refresh() {
-		elasticsearchOperations.refresh(getEntityClass());
+		elasticsearchOperations.refresh(entityInformation.getIndexName());
 	}
 
 	private IndexQuery createIndexQuery(T entity) {
@@ -269,6 +327,7 @@ public abstract class AbstractElasticsearchRepository<T, ID>
 		query.setId(stringIdRepresentation(extractIdFromBean(entity)));
 		query.setVersion(extractVersionFromBean(entity));
 		query.setParentId(extractParentIdFromBean(entity));
+		query.setIndexName(entityInformation.getIndexName(entity));
 		return query;
 	}
 

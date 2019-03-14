@@ -37,7 +37,6 @@ import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
 
 /**
  * Elasticsearch specific {@link org.springframework.data.mapping.PersistentEntity} implementation holding
@@ -65,6 +64,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private String parentType;
 	private ElasticsearchPersistentProperty parentIdProperty;
 	private ElasticsearchPersistentProperty scoreProperty;
+	private ElasticsearchPersistentProperty indexNameProperty;
 	private String settingPath;
 	private VersionType versionType;
 	private boolean createIndexAndMapping;
@@ -77,8 +77,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		Class<T> clazz = typeInformation.getType();
 		if (clazz.isAnnotationPresent(Document.class)) {
 			Document document = clazz.getAnnotation(Document.class);
-			Assert.hasText(document.indexName(),
-					" Unknown indexName. Make sure the indexName is defined. e.g @Document(indexName=\"foo\")");
 			this.indexName = document.indexName();
 			this.indexType = hasText(document.type()) ? document.type() : clazz.getSimpleName().toLowerCase(Locale.ENGLISH);
 			this.useServerConfiguration = document.useServerConfiguration();
@@ -104,12 +102,29 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public String getIndexName() {
 
-		if(indexName != null) {
-			Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
-			return expression.getValue(context, String.class);
+		if (!hasText(indexName)) {
+			if (hasIndexNameProperty()) {
+				throw new UnsupportedOperationException(
+						String.format("The index name for %s is not statically available. If you are " +
+								"expecting a constant index name, make sure it is declared on the class, " +
+								"e.g @Document(indexName=\"foo\"). However, this declaration should typically " +
+								"not be used in conjunction with @IndexName.", getTypeInformation().getType().getSimpleName()));
+			}
+			return getTypeInformation().getType().getSimpleName();
 		}
 
-		return getTypeInformation().getType().getSimpleName();
+		Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
+		return expression.getValue(context, String.class);
+	}
+
+	@Override
+	public ElasticsearchPersistentProperty getIndexNameProperty() {
+		return indexNameProperty;
+	}
+
+	@Override
+	public boolean hasIndexNameProperty() {
+		return indexNameProperty != null;
 	}
 
 	@Override
@@ -170,7 +185,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 	@Override
 	public boolean isCreateIndexAndMapping() {
-		return createIndexAndMapping;
+		return createIndexAndMapping && !hasIndexNameProperty();
 	}
 
 	@Override
@@ -192,9 +207,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			ElasticsearchPersistentProperty parentProperty = this.parentIdProperty;
 
 			if (parentProperty != null) {
-				throw new MappingException(
-						String.format("Attempt to add parent property %s but already have property %s registered "
-								+ "as parent property. Check your mapping configuration!", property.getField(), parentProperty.getField()));
+				duplicateProperty("parent", property, parentProperty);
 			}
 
 			Parent parentAnnotation = property.findAnnotation(Parent.class);
@@ -207,13 +220,27 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			ElasticsearchPersistentProperty scoreProperty = this.scoreProperty;
 
 			if (scoreProperty != null) {
-				throw new MappingException(
-						String.format("Attempt to add score property %s but already have property %s registered "
-								+ "as score property. Check your mapping configuration!", property.getField(), scoreProperty.getField()));
+				duplicateProperty("score", property, scoreProperty);
 			}
 
 			this.scoreProperty = property;
 		}
+
+		if (property.isIndexNameProperty()) {
+			ElasticsearchPersistentProperty indexNameProperty = this.indexNameProperty;
+
+			if (indexNameProperty != null) {
+				duplicateProperty("index name", property, indexNameProperty);
+			}
+
+			this.indexNameProperty = property;
+		}
+	}
+
+	private void duplicateProperty(String name, ElasticsearchPersistentProperty newer, ElasticsearchPersistentProperty older) {
+		throw new MappingException(
+				String.format("Attempt to add %s property %s but already have property %s registered "
+						+ "as %1$s property. Check your mapping configuration!", name, newer.getField(), older.getField()));
 	}
 	
 	/* 

@@ -202,6 +202,11 @@ public class ElasticsearchRestTemplate
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz) {
+		return putMapping(getPersistentEntityFor(clazz).getIndexName(), clazz);
+	}
+
+	@Override
+	public <T> boolean putMapping(String indexName, Class<T> clazz) {
 		if (clazz.isAnnotationPresent(Mapping.class)) {
 			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
 			if (hasText(mappingPath)) {
@@ -224,7 +229,7 @@ public class ElasticsearchRestTemplate
 		} catch (Exception e) {
 			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
 		}
-		return putMapping(clazz, xContentBuilder);
+		return putMapping(indexName, persistentEntity.getIndexType(), xContentBuilder);
 	}
 
 	@Override
@@ -303,7 +308,9 @@ public class ElasticsearchRestTemplate
 	@Override
 	public <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper) {
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
-		GetRequest request = new GetRequest(persistentEntity.getIndexName(), persistentEntity.getIndexType(),
+		String indexName = query.getIndexName() == null ? persistentEntity.getIndexName()
+				: query.getIndexName();
+		GetRequest request = new GetRequest(indexName, persistentEntity.getIndexType(),
 				query.getId());
 		GetResponse response;
 		try {

@@ -27,6 +27,7 @@ import org.springframework.util.Assert;
 
 /**
  * @author Christoph Strobl
+ * @author Ivan Greene
  * @since 3.2
  */
 public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveElasticsearchRepository<T, ID> {
@@ -55,7 +56,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public <S extends T> Mono<S> save(S entity) {
 
 		Assert.notNull(entity, "Entity must not be null!");
-		return elasticsearchOperations.save(entity, entityInformation.getIndexName(), entityInformation.getType());
+		return elasticsearchOperations.save(entity, entityInformation.getIndexName(entity), entityInformation.getType());
 	}
 
 	@Override
@@ -152,7 +153,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public Mono<Void> delete(T entity) {
 
 		Assert.notNull(entity, "Entity must not be null!");
-		return elasticsearchOperations.delete(entity, entityInformation.getIndexName(), entityInformation.getType()) //
+		return elasticsearchOperations.delete(entity, entityInformation.getIndexName(entity), entityInformation.getType()) //
 				.then();
 	}
 

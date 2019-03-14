@@ -38,6 +38,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Ivan Greene
  * @since 3.2
  */
 @RequiredArgsConstructor
@@ -98,7 +99,7 @@ class EntityOperations {
 	 * @see ElasticsearchPersistentEntity#getIndexType()
 	 */
 	IndexCoordinates determineIndex(Entity<?> entity, @Nullable String index, @Nullable String type) {
-		return determineIndex(entity.getPersistentEntity(), index, type);
+		return new IndexCoordinates(indexName(entity, entity.getPersistentEntity(), index), typeName(entity.getPersistentEntity(), type));
 	}
 
 	/**
@@ -116,14 +117,17 @@ class EntityOperations {
 	 */
 	IndexCoordinates determineIndex(ElasticsearchPersistentEntity<?> persistentEntity, @Nullable String index,
 			@Nullable String type) {
-		return new IndexCoordinates(indexName(persistentEntity, index), typeName(persistentEntity, type));
+		return new IndexCoordinates(indexName(null, persistentEntity, index), typeName(persistentEntity, type));
 	}
 
-	private static String indexName(@Nullable ElasticsearchPersistentEntity<?> entity, @Nullable String index) {
+	private static String indexName(@Nullable Entity<?> entity, @Nullable ElasticsearchPersistentEntity<?> persistentEntity, @Nullable String index) {
 
 		if (StringUtils.isEmpty(index)) {
-			Assert.notNull(entity, "Cannot determine index name");
-			return entity.getIndexName();
+			if (entity == null || !entity.hasInstanceIndexName()) {
+				Assert.notNull(persistentEntity, "Cannot determine index name");
+				return persistentEntity.getIndexName();
+			}
+			return entity.getInstanceIndexName();
 		}
 
 		return index;
@@ -170,6 +174,25 @@ class EntityOperations {
 		 */
 		@Nullable
 		Object getVersion();
+
+		/**
+		 * Returns whether the entity has a non-static index name, i.e. if it contains an index name property.
+		 *
+		 * @return
+		 */
+		default boolean hasInstanceIndexName() {
+			return false;
+		}
+
+		/**
+		 * Returns the index name if the entity has an instance specific index name, {@literal null} otherwise.
+		 *
+		 * @return
+		 */
+		@Nullable
+		default String getInstanceIndexName() {
+			return null;
+		}
 
 		/**
 		 * Returns the underlying bean.
@@ -459,7 +482,25 @@ class EntityOperations {
 			return propertyAccessor.getProperty(entity.getRequiredVersionProperty());
 		}
 
-		/* 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#hasInstanceIndexName()
+		 */
+		@Override
+		public boolean hasInstanceIndexName() {
+			return entity.hasIndexNameProperty();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#getInstanceIndexName()
+		 */
+		@Override
+		public String getInstanceIndexName() {
+			return (String) propertyAccessor.getProperty(entity.getIndexNameProperty());
+		}
+
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#getBean()
 		 */

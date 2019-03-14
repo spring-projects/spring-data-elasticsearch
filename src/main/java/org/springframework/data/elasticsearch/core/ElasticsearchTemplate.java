@@ -193,6 +193,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz) {
+		return putMapping(getPersistentEntityFor(clazz).getIndexName(), clazz);
+	}
+
+	@Override
+	public <T> boolean putMapping(String indexName, Class<T> clazz) {
 		if (clazz.isAnnotationPresent(Mapping.class)) {
 			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
 			if (!StringUtils.isEmpty(mappingPath)) {
@@ -215,7 +220,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		} catch (Exception e) {
 			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
 		}
-		return putMapping(clazz, xContentBuilder);
+		return putMapping(indexName, persistentEntity.getIndexType(), xContentBuilder);
 	}
 
 	@Override
@@ -272,8 +277,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	@Override
 	public <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper) {
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
+		String indexName = query.getIndexName() == null ? persistentEntity.getIndexName()
+				: query.getIndexName();
 		GetResponse response = client
-				.prepareGet(persistentEntity.getIndexName(), persistentEntity.getIndexType(), query.getId()).execute()
+				.prepareGet(indexName, persistentEntity.getIndexType(), query.getId()).execute()
 				.actionGet();
 
 		T entity = mapper.mapResult(response, clazz);

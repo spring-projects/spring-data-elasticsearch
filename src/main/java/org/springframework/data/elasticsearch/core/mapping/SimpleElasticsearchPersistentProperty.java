@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.data.elasticsearch.annotations.IndexName;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.mapping.Association;
@@ -35,6 +36,7 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
  * @author Mark Paluch
  * @author Sascha Woo
  * @author Oliver Gierke
+ * @author Ivan Greene
  */
 public class SimpleElasticsearchPersistentProperty extends
 		AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements ElasticsearchPersistentProperty {
@@ -44,6 +46,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	private final boolean isScore;
 	private final boolean isParent;
 	private final boolean isId;
+	private final boolean isIndexName;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
 			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
@@ -53,6 +56,7 @@ public class SimpleElasticsearchPersistentProperty extends
 		this.isId = super.isIdProperty() || SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName());
 		this.isScore = isAnnotationPresent(Score.class);
 		this.isParent = isAnnotationPresent(Parent.class);
+		this.isIndexName = isAnnotationPresent(IndexName.class);
 
 		if (isVersionProperty() && getType() != Long.class) {
 			throw new MappingException(String.format("Version property %s must be of type Long!", property.getName()));
@@ -65,6 +69,10 @@ public class SimpleElasticsearchPersistentProperty extends
 
 		if (isParent && getType() != String.class) {
 			throw new MappingException(String.format("Parent property %s must be of type String!", property.getName()));
+		}
+
+		if (isIndexName && getType() != String.class) {
+			throw new MappingException(String.format("Index name property %s must be of type String!", property.getName()));
 		}
 	}
 
@@ -120,5 +128,10 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Override
 	public boolean isParentProperty() {
 		return isParent;
+	}
+
+	@Override
+	public boolean isIndexNameProperty() {
+		return isIndexName;
 	}
 }

@@ -62,6 +62,7 @@ import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.entities.Book;
+import org.springframework.data.elasticsearch.entities.DynamicIndexEntity;
 import org.springframework.data.elasticsearch.entities.GTEVersionEntity;
 import org.springframework.data.elasticsearch.entities.HetroEntity1;
 import org.springframework.data.elasticsearch.entities.HetroEntity2;
@@ -2596,6 +2597,32 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.size(), is(equalTo(2)));
 		assertThat(sampleEntities.stream().map(SampleEntity::getMessage).collect(Collectors.toList()),
 				not(contains(notFindableMessage)));
+	}
+
+	// DATAES-544
+	@Test(expected = UnsupportedOperationException.class)
+	public void shouldNotPutMappingForDynamicIndexEntity() {
+		elasticsearchTemplate.putMapping(DynamicIndexEntity.class);
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void shouldNotDeleteIndexForDynamicIndexEntity() {
+		elasticsearchTemplate.deleteIndex(DynamicIndexEntity.class);
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void shouldNotCreateIndexForDynamicIndexEntity() {
+		elasticsearchTemplate.createIndex(DynamicIndexEntity.class);
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void shouldNotRefreshForDynamicIndexEntity() {
+		elasticsearchTemplate.refresh(DynamicIndexEntity.class);
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void shouldNotIndexExistsForDynamicIndexEntity() {
+		elasticsearchTemplate.indexExists(DynamicIndexEntity.class);
 	}
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {

@@ -116,8 +116,7 @@ public class ReactiveElasticsearchRepositoryFactory extends ReactiveRepositoryFa
 
 		ElasticsearchPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainClass);
 
-		return new MappingElasticsearchEntityInformation<>((ElasticsearchPersistentEntity<T>) entity, entity.getIndexName(),
-				entity.getIndexType(), entity.getVersionType());
+		return new MappingElasticsearchEntityInformation<>((ElasticsearchPersistentEntity<T>) entity);
 	}
 
 	/**

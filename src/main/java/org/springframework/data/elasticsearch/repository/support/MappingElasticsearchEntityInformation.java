@@ -44,13 +44,12 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 	private final VersionType versionType;
 
 	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity) {
-		this(entity, entity.getIndexName(), entity.getIndexType(), entity.getVersionType());
+		this(entity, entity.hasIndexNameProperty() ? null : entity.getIndexName(), entity.getIndexType(), entity.getVersionType());
 	}
 
 	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity, String indexName, String type, VersionType versionType) {
 		super(entity);
 
-		Assert.notNull(indexName, "IndexName must not be null!");
 		Assert.notNull(type, "IndexType must not be null!");
 
 		this.entityMetadata = entity;
@@ -65,7 +64,20 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 	}
 
 	@Override
+	public String getIndexName(T entity) {
+		if (indexName != null) {
+			return indexName;
+		}
+		ElasticsearchPersistentProperty indexNameProperty = entityMetadata.getIndexNameProperty();
+		return (String) entityMetadata.getPropertyAccessor(entity).getProperty(indexNameProperty);
+	}
+
+	@Override
 	public String getIndexName() {
+		if (indexName == null) {
+			// This will throw UnsupportedOperationException if index name is unavailable statically
+			return entityMetadata.getIndexName();
+		}
 		return indexName;
 	}
 
