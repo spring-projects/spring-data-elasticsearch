@@ -281,7 +281,7 @@ A list of supported keywords for Elasticsearch is shown below.
 [source,java]
 ----
 public interface BookRepository extends ElasticsearchRepository<Book, String> {
-    @Query("{"bool" : {"must" : {"field" : {"name" : "?0"}}}}")
+    @Query("{\"bool\" : {\"must\" : {\"field\" : {\"name\" : \"?0\"}}}}")
     Page<Book> findByName(String name,Pageable pageable);
 }                
 ----
