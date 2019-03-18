@@ -125,6 +125,7 @@ import org.springframework.util.StringUtils;
  * @author Zetang Zeng
  * @author Ivan Greene
  * @author Christoph Strobl
+ * @author Lorenzo Spinelli
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
@@ -755,13 +756,33 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery()).withIndices(indexName)
 				.withTypes(typeName).withPageable(PageRequest.of(0, pageSize)).build();
 
-		SearchResultMapper onlyIdResultMapper = new SearchResultMapperAdapter() {
+		class DeleteEntry {
+
+			private String id;
+			private String indexName;
+
+			public String getId() {
+				return id;
+			}
+
+			public String getIndexName() {
+				return indexName;
+			}
+
+			public DeleteEntry(String id, String indexName) {
+				this.id = id;
+				this.indexName = indexName;
+			}
+		}
+
+		SearchResultMapper onlyIdAndIndexNameResultMapper = new SearchResultMapperAdapter() {
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-				List<String> result = new ArrayList<String>();
+				List<DeleteEntry> result = new ArrayList<DeleteEntry>();
 				for (SearchHit searchHit : response.getHits().getHits()) {
 					String id = searchHit.getId();
-					result.add(id);
+					String indexName = searchHit.getIndex();
+					result.add(new DeleteEntry(id, indexName));
 				}
 				if (result.size() > 0) {
 					return new AggregatedPageImpl<T>((List<T>) result, response.getScrollId());
@@ -770,18 +791,19 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 			}
 		};
 
-		Page<String> scrolledResult = startScroll(scrollTimeInMillis, searchQuery, String.class, onlyIdResultMapper);
+		Page<DeleteEntry> scrolledResult = startScroll(scrollTimeInMillis, searchQuery, DeleteEntry.class,
+				onlyIdAndIndexNameResultMapper);
 		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-		List<String> ids = new ArrayList<String>();
+		List<DeleteEntry> documentsToDelete = new ArrayList<DeleteEntry>();
 
 		do {
-			ids.addAll(scrolledResult.getContent());
+			documentsToDelete.addAll(scrolledResult.getContent());
 			scrolledResult = continueScroll(((ScrolledPage<T>) scrolledResult).getScrollId(), scrollTimeInMillis,
-					String.class, onlyIdResultMapper);
+					DeleteEntry.class, onlyIdAndIndexNameResultMapper);
 		} while (scrolledResult.getContent().size() != 0);
 
-		for (String id : ids) {
-			bulkRequestBuilder.add(client.prepareDelete(indexName, typeName, id));
+		for (DeleteEntry entry : documentsToDelete) {
+			bulkRequestBuilder.add(client.prepareDelete(entry.getIndexName(), typeName, entry.getId()));
 		}
 
 		if (bulkRequestBuilder.numberOfActions() > 0) {
