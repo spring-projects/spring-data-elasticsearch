@@ -5,18 +5,18 @@ Spring Data implementation for ElasticSearch
 
 Spring Data makes it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services as well as provide improved support for relational database technologies.
 
-The Spring Data Elasticsearch project provides integration with the [elasticsearch](http://www.elasticsearch.org/) search engine.
+The Spring Data Elasticsearch project provides integration with the [elasticsearch](https://www.elastic.co/) search engine.
 
 Guide
 ------------
 
-* [Reference Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/)
-* [API Documentation](http://docs.spring.io/spring-data/elasticsearch/docs/current/api/)
-* [Spring Data Project](http://projects.spring.io/spring-data)
+* [Reference Documentation](https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/)
+* [API Documentation](https://docs.spring.io/spring-data/elasticsearch/docs/current/api/)
+* [Spring Data Project](https://projects.spring.io/spring-data)
 * [Sample Test Application](https://github.com/BioMedCentralLtd/spring-data-elasticsearch-sample-application)
 * [Issues](https://jira.springsource.org/browse/DATAES)
 * [Spring Data Elasticsearch Google Group](https://groups.google.com/d/forum/spring-data-elasticsearch-devs)
-* [Questions](http://stackoverflow.com/questions/tagged/spring-data-elasticsearch)
+* [Questions](https://stackoverflow.com/questions/tagged/spring-data-elasticsearch)
 
 
 Quick Start
@@ -48,7 +48,7 @@ the appropriate dependency version.
 <repository>
   <id>spring-libs-snapshot</id>
   <name>Spring Snapshot Repository</name>
-  <url>http://repo.spring.io/libs-snapshot</url>
+  <url>https://repo.spring.io/libs-snapshot</url>
 </repository>
 ```
 
@@ -269,8 +269,8 @@ Using Node Client
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
-       xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch.xsd
-		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+       xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch https://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <elasticsearch:node-client id="client" local="true"/>
 
@@ -288,8 +288,8 @@ Using Transport Client
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
-       xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch.xsd
-		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+       xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch https://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <elasticsearch:repositories base-package="com.xyz.acme"/>
 
@@ -313,8 +313,8 @@ Here are some ways for you to get involved in the community:
 
 * Get involved with the Spring community on Stack OverFlow.  Please help out on the [forum](https://stackoverflow.com/questions/tagged/spring-data-elasticsearch) by responding to questions and joining the debate.
 * Create [JIRA](https://jira.spring.io/browse/DATAES/) tickets for bugs and new features and comment and vote on the ones that you are interested in.  
-* Github is for social coding: if you want to write code, we encourage contributions through pull requests from [forks of this repository](http://help.github.com/forking/). If you want to contribute code this way, please reference a JIRA ticket as well covering the specific issue you are addressing.
-* Watch for upcoming articles on Spring by [subscribing](http://www.springsource.org/node/feed) to springframework.org
+* Github is for social coding: if you want to write code, we encourage contributions through pull requests from [forks of this repository](https://help.github.com/forking/). If you want to contribute code this way, please reference a JIRA ticket as well covering the specific issue you are addressing.
+* Watch for upcoming articles on Spring by [subscribing](https://www.springsource.org/node/feed) to springframework.org
 
 Before we accept a non-trivial patch or pull request we will need you to [sign the Contributor License Agreement](https://cla.pivotal.io/sign/spring). Signing the contributor’s agreement does not grant anyone commit rights to the main repository, but it does mean that we can accept your contributions, and you will get an author credit if we do. If you forget to do so, you'll be reminded when you submit a pull request. Active contributors might be asked to join the core team, and given the ability to merge pull requests.
 

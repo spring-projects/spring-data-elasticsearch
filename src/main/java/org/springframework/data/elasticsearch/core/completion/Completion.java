@@ -7,7 +7,7 @@ import java.util.Map;
 
 /**
  * Based on the reference doc -
- * http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-suggesters-completion.html
+ * https://www.elastic.co/guide/en/elasticsearch/reference/current/search-suggesters-completion.html
  *
  * @author Mewes Kochheim
  * @author Robert Gruendler

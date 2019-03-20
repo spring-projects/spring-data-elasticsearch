@@ -16,5 +16,5 @@ The Spring Data Elasticsearch project applies core Spring concepts to the develo
 [preface]
 == Requirements
 
-Requires http://www.elasticsearch.org/download/[Elasticsearch] 0.20.2 and above or optional dependency or not even that if you are using Embedded Node Client
+Requires https://www.elastic.co/downloads/elasticsearch[Elasticsearch] 0.20.2 and above or optional dependency or not even that if you are using Embedded Node Client
 
