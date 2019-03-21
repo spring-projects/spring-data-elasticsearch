@@ -22,9 +22,9 @@ Using the `repositories` element looks up Spring Data repositories as described 
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
 xsi:schemaLocation="http://www.springframework.org/schema/beans
-http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+https://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 http://www.springframework.org/schema/data/elasticsearch
-http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd">
+https://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd">
 
     <elasticsearch:repositories base-package="com.acme.repositories" />
     
@@ -43,9 +43,9 @@ Using the `Transport Client` or `Node Client` element registers an instance of `
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
 xsi:schemaLocation="http://www.springframework.org/schema/beans
-http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+https://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 http://www.springframework.org/schema/data/elasticsearch
-http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd">
+https://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd">
 
     <elasticsearch:transport-client id="client" cluster-nodes="localhost:9300,someip:9300" />
     
@@ -62,9 +62,9 @@ http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
 xsi:schemaLocation="http://www.springframework.org/schema/beans
-http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+https://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 http://www.springframework.org/schema/data/elasticsearch
-http://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd">
+https://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch-1.0.xsd">
 
     <elasticsearch:node-client id="client" local="true"" />
     
