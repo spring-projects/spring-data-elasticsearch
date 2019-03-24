@@ -87,6 +87,18 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 		assertThat(((StringQuery) query).getSource()).isEqualTo(reference.getSource());
 	}
 
+    @Test // DATAES-552
+    public void shouldReplaceLotsOfParametersCorrectly() throws Exception{
+        ReactiveElasticsearchStringQuery elasticsearchStringQuery = createQueryForMethod("findWithQuiteSomeParameters", String.class, String.class,
+                String.class, String.class, String.class, String.class, String.class, String.class, String.class, String.class,
+                String.class, String.class);
+        StubParameterAccessor accesor = new StubParameterAccessor("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l");
+        org.springframework.data.elasticsearch.core.query.Query query = elasticsearchStringQuery.createQuery(accesor);
+        StringQuery reference = new StringQuery("name:(a, b, c, d, e, f, g, h, i, j, k, l)");
+        assertThat(query).isInstanceOf(StringQuery.class);
+        assertThat(((StringQuery) query).getSource()).isEqualTo(reference.getSource());
+    }
+
 	private ReactiveElasticsearchStringQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -104,5 +116,9 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 
 		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '?#{[0]}' } } } }")
 		Flux<Person> findByNameWithExpression(String param0);
+
+		@Query(value = "name:(?0, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)")
+		Person findWithQuiteSomeParameters(String arg0, String arg1, String arg2, String arg3, String arg4,
+												String arg5, String arg6, String arg7, String arg8, String arg9, String arg10, String arg11);
 	}
 }

@@ -26,6 +26,7 @@ import org.springframework.util.ObjectUtils;
 
 /**
  * @author Christoph Strobl
+ * @author Taylor Ono
  * @since 3.2
  */
 public class ReactiveElasticsearchStringQuery extends AbstractReactiveElasticsearchRepositoryQuery {
@@ -60,8 +61,9 @@ public class ReactiveElasticsearchStringQuery extends AbstractReactiveElasticsea
 		String result = input;
 		while (matcher.find()) {
 			String group = matcher.group();
+			group = "\\" + group;
 			int index = Integer.parseInt(matcher.group(1));
-			result = result.replace(group, getParameterWithIndex(accessor, index));
+			result = result.replaceFirst(group, getParameterWithIndex(accessor, index));
 		}
 		return result;
 	}
