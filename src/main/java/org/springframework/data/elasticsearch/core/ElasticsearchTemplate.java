@@ -756,29 +756,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery()).withIndices(indexName)
 				.withTypes(typeName).withPageable(PageRequest.of(0, pageSize)).build();
 
-		class DeleteEntry {
-
-			private String id;
-			private String indexName;
-
-			public String getId() {
-				return id;
-			}
-
-			public String getIndexName() {
-				return indexName;
-			}
-
-			public DeleteEntry(String id, String indexName) {
-				this.id = id;
-				this.indexName = indexName;
-			}
-		}
-
-		SearchResultMapper onlyIdAndIndexNameResultMapper = new SearchResultMapperAdapter() {
+		SearchResultMapper deleteEntryResultMapper = new SearchResultMapperAdapter() {
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-				List<DeleteEntry> result = new ArrayList<DeleteEntry>();
+				List<DeleteEntry> result = new ArrayList<>();
 				for (SearchHit searchHit : response.getHits().getHits()) {
 					String id = searchHit.getId();
 					String indexName = searchHit.getIndex();
@@ -792,14 +773,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		};
 
 		Page<DeleteEntry> scrolledResult = startScroll(scrollTimeInMillis, searchQuery, DeleteEntry.class,
-				onlyIdAndIndexNameResultMapper);
+				deleteEntryResultMapper);
 		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-		List<DeleteEntry> documentsToDelete = new ArrayList<DeleteEntry>();
+		List<DeleteEntry> documentsToDelete = new ArrayList<>();
 
 		do {
 			documentsToDelete.addAll(scrolledResult.getContent());
 			scrolledResult = continueScroll(((ScrolledPage<T>) scrolledResult).getScrollId(), scrollTimeInMillis,
-					DeleteEntry.class, onlyIdAndIndexNameResultMapper);
+					DeleteEntry.class, deleteEntryResultMapper);
 		} while (scrolledResult.getContent().size() != 0);
 
 		for (DeleteEntry entry : documentsToDelete) {
