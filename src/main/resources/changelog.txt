@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.0.14.RELEASE (2019-04-01)
+----------------------------------------------
+* DATAES-528 - Release 3.0.14 (Kay SR14).
+* DATAES-523 - Allow specifying version type for index API.
+* DATAES-500 - queryForList(CriteriaQuery query, Class<T> clazz) can't query all data.
+
+
 Changes in version 2.1.20.RELEASE (2019-04-01)
 ----------------------------------------------
 * DATAES-554 - Release 2.1.20 (Ingalls SR20).
