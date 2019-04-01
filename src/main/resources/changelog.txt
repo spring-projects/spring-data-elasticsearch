@@ -1,6 +1,14 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.6.RELEASE (2019-04-01)
+---------------------------------------------
+* DATAES-538 - Release 3.1.6 (Lovelace SR6).
+* DATAES-536 - Add support for context suggestion.
+* DATAES-535 - Add mapping annotation @DynamicTemplates.
+* DATAES-523 - Allow specifying version type for index API.
+
+
 Changes in version 3.0.14.RELEASE (2019-04-01)
 ----------------------------------------------
 * DATAES-528 - Release 3.0.14 (Kay SR14).
