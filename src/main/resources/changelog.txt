@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.1.20.RELEASE (2019-04-01)
+----------------------------------------------
+* DATAES-554 - Release 2.1.20 (Ingalls SR20).
+
+
 Changes in version 2.1.19.RELEASE (2019-04-01)
 ----------------------------------------------
 * DATAES-527 - Release 2.1.19 (Ingalls SR19).
