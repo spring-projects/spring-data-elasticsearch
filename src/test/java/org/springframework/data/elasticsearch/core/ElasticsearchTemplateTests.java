@@ -52,7 +52,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.query.*;
-import org.springframework.data.elasticsearch.entities.Book;
 import org.springframework.data.elasticsearch.entities.GTEVersionEntity;
 import org.springframework.data.elasticsearch.entities.HetroEntity1;
 import org.springframework.data.elasticsearch.entities.HetroEntity2;
@@ -398,6 +397,86 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		assertThat(sampleEntities.getTotalElements(), equalTo(0L));
+	}
+
+	@Test // DATAES-547
+	public void shouldDeleteAcrossIndex() {
+
+		// given
+		SampleEntity sampleEntity = SampleEntity.builder() //
+				.message("foo") //
+				.version(System.currentTimeMillis()) //
+				.build();
+
+		IndexQuery idxQuery1 = new IndexQueryBuilder().withIndexName(INDEX_1_NAME).withId(randomNumeric(5))
+				.withObject(sampleEntity).build();
+
+		elasticsearchTemplate.index(idxQuery1);
+		elasticsearchTemplate.refresh(INDEX_1_NAME);
+
+		IndexQuery idxQuery2 = new IndexQueryBuilder().withIndexName(INDEX_2_NAME).withId(randomNumeric(5))
+				.withObject(sampleEntity).build();
+
+		elasticsearchTemplate.index(idxQuery2);
+		elasticsearchTemplate.refresh(INDEX_2_NAME);
+
+		// when
+		DeleteQuery deleteQuery = new DeleteQuery();
+		deleteQuery.setQuery(termQuery("message", "foo"));
+		deleteQuery.setType("test-type");
+		deleteQuery.setIndex("test-index-*");
+
+		elasticsearchTemplate.delete(deleteQuery);
+
+		elasticsearchTemplate.refresh(INDEX_1_NAME);
+		elasticsearchTemplate.refresh(INDEX_2_NAME);
+
+		// then
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("message", "foo"))
+				.withIndices(INDEX_1_NAME, INDEX_2_NAME) //
+				.build();
+
+		assertThat(elasticsearchTemplate.count(searchQuery), equalTo(0L));
+	}
+
+	@Test // DATAES-547
+	public void shouldDeleteAcrossIndexWhenNoMatchingDataPresent() {
+
+		// given
+		SampleEntity sampleEntity = SampleEntity.builder() //
+				.message("positive") //
+				.version(System.currentTimeMillis()) //
+				.build();
+
+		IndexQuery idxQuery1 = new IndexQueryBuilder().withIndexName(INDEX_1_NAME).withId(randomNumeric(5))
+				.withObject(sampleEntity).build();
+
+		elasticsearchTemplate.index(idxQuery1);
+		elasticsearchTemplate.refresh(INDEX_1_NAME);
+
+		IndexQuery idxQuery2 = new IndexQueryBuilder().withIndexName(INDEX_2_NAME).withId(randomNumeric(5))
+				.withObject(sampleEntity).build();
+
+		elasticsearchTemplate.index(idxQuery2);
+		elasticsearchTemplate.refresh(INDEX_2_NAME);
+
+		// when
+		DeleteQuery deleteQuery = new DeleteQuery();
+		deleteQuery.setQuery(termQuery("message", "negative"));
+		deleteQuery.setType("test-type");
+		deleteQuery.setIndex("test-index-*");
+
+		elasticsearchTemplate.delete(deleteQuery);
+
+		elasticsearchTemplate.refresh(INDEX_1_NAME);
+		elasticsearchTemplate.refresh(INDEX_2_NAME);
+
+		// then
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("message", "positive"))
+				.withIndices(INDEX_1_NAME, INDEX_2_NAME) //
+				.build();
+
+		assertThat(elasticsearchTemplate.count(searchQuery), equalTo(2L));
 	}
 
 	@Test
