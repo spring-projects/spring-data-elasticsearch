@@ -52,6 +52,8 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -514,6 +516,62 @@ public class ReactiveElasticsearchTemplateTests {
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
 
 		template.deleteBy(query, SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.expectNext(0L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-547
+	@ElasticsearchVersion(asOf = "6.5.0")
+	public void shouldDeleteAcrossIndex() {
+
+		String indexPrefix = "rx-template-test-index";
+		String thisIndex = indexPrefix + "-this";
+		String thatIndex = indexPrefix + "-that";
+
+		template.save(randomEntity("test"), thisIndex) //
+				.then(template.save(randomEntity("test"), thatIndex)) //
+				.then() //
+				.as(StepVerifier::create)//
+				.verifyComplete();
+
+		restTemplate.refresh(thisIndex);
+		restTemplate.refresh(thatIndex);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder() //
+				.withQuery(termQuery("message", "test")) //
+				.withIndices(indexPrefix + "*") //
+				.build();
+
+		template.deleteBy(searchQuery, SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.expectNext(2L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-547
+	@ElasticsearchVersion(asOf = "6.5.0")
+	public void shouldDeleteAcrossIndexWhenNoMatchingDataPresent() {
+
+		String indexPrefix = "rx-template-test-index";
+		String thisIndex = indexPrefix + "-this";
+		String thatIndex = indexPrefix + "-that";
+
+		template.save(randomEntity("positive"), thisIndex) //
+				.then(template.save(randomEntity("positive"), thatIndex)) //
+				.then() //
+				.as(StepVerifier::create)//
+				.verifyComplete();
+
+		restTemplate.refresh(thisIndex);
+		restTemplate.refresh(thatIndex);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder() //
+				.withQuery(termQuery("message", "negative")) //
+				.withIndices(indexPrefix + "*") //
+				.build();
+
+		template.deleteBy(searchQuery, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
 				.verifyComplete();

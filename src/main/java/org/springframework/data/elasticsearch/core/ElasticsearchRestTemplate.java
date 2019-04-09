@@ -869,35 +869,27 @@ public class ElasticsearchRestTemplate
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery()).withIndices(indexName)
 				.withTypes(typeName).withPageable(PageRequest.of(0, pageSize)).build();
 
-		SearchResultMapper deleteentryResultMapper = new SearchResultMapperAdapter() {
+		SearchResultMapper deleteEntryResultMapper = new SearchResultMapperAdapter() {
+
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-				List<DeleteEntry> result = new ArrayList<>();
-				for (SearchHit searchHit : response.getHits().getHits()) {
-					String id = searchHit.getId();
-					String indexName = searchHit.getIndex();
-					result.add(new DeleteEntry(id, indexName));
-				}
-				if (result.size() > 0) {
-					return new AggregatedPageImpl<>((List<T>) result, response.getScrollId());
-				}
-				return new AggregatedPageImpl<>(Collections.emptyList(), response.getScrollId());
+				return new AggregatedPageImpl<>((List<T>) Arrays.asList(response.getHits().getHits()), response.getScrollId());
 			}
 		};
 
-		Page<DeleteEntry> scrolledResult = startScroll(scrollTimeInMillis, searchQuery, DeleteEntry.class,
-				deleteentryResultMapper);
+		Page<SearchHit> scrolledResult = startScroll(scrollTimeInMillis, searchQuery, SearchHit.class,
+				deleteEntryResultMapper);
 		BulkRequest request = new BulkRequest();
-		List<DeleteEntry> documentsToDelete = new ArrayList<>();
+		List<SearchHit> documentsToDelete = new ArrayList<>();
 
 		do {
 			documentsToDelete.addAll(scrolledResult.getContent());
 			scrolledResult = continueScroll(((ScrolledPage<T>) scrolledResult).getScrollId(), scrollTimeInMillis,
-					DeleteEntry.class, deleteentryResultMapper);
+					SearchHit.class, deleteEntryResultMapper);
 		} while (scrolledResult.getContent().size() != 0);
 
-		for (DeleteEntry entry : documentsToDelete) {
-			request.add(new DeleteRequest(entry.getIndexName(), typeName, entry.getId()));
+		for (SearchHit entry : documentsToDelete) {
+			request.add(new DeleteRequest(entry.getIndex(), typeName, entry.getId()));
 		}
 
 		if (request.numberOfActions() > 0) {

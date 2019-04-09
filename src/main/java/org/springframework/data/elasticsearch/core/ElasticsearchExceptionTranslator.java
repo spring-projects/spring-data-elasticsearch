@@ -17,13 +17,17 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.net.ConnectException;
+import java.util.List;
 
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.ElasticsearchStatusException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Strobl
@@ -39,7 +43,8 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 			ElasticsearchException elasticsearchException = (ElasticsearchException) ex;
 
 			if (!indexAvailable(elasticsearchException)) {
-				return new NoSuchIndexException(elasticsearchException.getMetadata("es.index").toString(), ex);
+				return new NoSuchIndexException(ObjectUtils.nullSafeToString(elasticsearchException.getMetadata("es.index")),
+						ex);
 			}
 		}
 
@@ -51,6 +56,13 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 	}
 
 	private boolean indexAvailable(ElasticsearchException ex) {
-		return !CollectionUtils.contains(ex.getMetadata("es.index_uuid").iterator(), "_na_");
+
+		List<String> metadata = ex.getMetadata("es.index_uuid");
+		if (metadata == null) {
+			if (ex instanceof ElasticsearchStatusException) {
+				return StringUtils.hasText(ObjectUtils.nullSafeToString(((ElasticsearchStatusException) ex).getIndex()));
+			}
+		}
+		return !CollectionUtils.contains(metadata.iterator(), "_na_");
 	}
 }
