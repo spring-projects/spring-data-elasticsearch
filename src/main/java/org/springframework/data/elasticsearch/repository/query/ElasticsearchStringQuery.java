@@ -19,12 +19,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.util.Assert;
+import org.springframework.util.NumberUtils;
 
 /**
  * ElasticsearchStringQuery
@@ -83,13 +83,14 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	}
 
 	private String replacePlaceholders(String input, ParametersParameterAccessor accessor) {
+
 		Matcher matcher = PARAMETER_PLACEHOLDER.matcher(input);
 		String result = input;
 		while (matcher.find()) {
-			String group = matcher.group();
-			group = "\\" + group;
-			int index = Integer.parseInt(matcher.group(1));
-			result = result.replaceFirst(group, getParameterWithIndex(accessor, index));
+
+			String placeholder = Pattern.quote(matcher.group()) + "(?!\\d+)";
+			int index = NumberUtils.parseNumber(matcher.group(1), Integer.class);
+			result = result.replaceAll(placeholder, getParameterWithIndex(accessor, index));
 		}
 		return result;
 	}

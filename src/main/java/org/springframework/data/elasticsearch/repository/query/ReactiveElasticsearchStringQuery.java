@@ -22,6 +22,7 @@ import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperatio
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -60,10 +61,10 @@ public class ReactiveElasticsearchStringQuery extends AbstractReactiveElasticsea
 		Matcher matcher = PARAMETER_PLACEHOLDER.matcher(input);
 		String result = input;
 		while (matcher.find()) {
-			String group = matcher.group();
-			group = "\\" + group;
-			int index = Integer.parseInt(matcher.group(1));
-			result = result.replaceFirst(group, getParameterWithIndex(accessor, index));
+
+			String placeholder = Pattern.quote(matcher.group()) + "(?!\\d+)";
+			int index = NumberUtils.parseNumber(matcher.group(1), Integer.class);
+			result = result.replaceAll(placeholder, getParameterWithIndex(accessor, index));
 		}
 		return result;
 	}

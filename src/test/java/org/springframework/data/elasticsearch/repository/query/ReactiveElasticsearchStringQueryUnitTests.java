@@ -21,6 +21,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -35,7 +36,6 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.entities.Person;
-import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
@@ -90,25 +90,52 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 	@Test // DATAES-552
 	public void shouldReplaceLotsOfParametersCorrectly() throws Exception {
 
-		ReactiveElasticsearchStringQuery elasticsearchStringQuery = createQueryForMethod("findWithQuiteSomeParameters",
-				String.class, String.class, String.class, String.class, String.class, String.class, String.class, String.class,
-				String.class, String.class, String.class, String.class);
-		StubParameterAccessor accesor = new StubParameterAccessor("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k",
-				"l");
-		org.springframework.data.elasticsearch.core.query.Query query = elasticsearchStringQuery.createQuery(accesor);
-		StringQuery reference = new StringQuery("name:(a, b, c, d, e, f, g, h, i, j, k, l)");
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findWithQuiteSomeParameters", "zero",
+				"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven");
+
 		assertThat(query).isInstanceOf(StringQuery.class);
-		assertThat(((StringQuery) query).getSource()).isEqualTo(reference.getSource());
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("name:(zero, one, two, three, four, five, six, seven, eight, nine, ten, eleven)");
+	}
+
+	@Test // DATAES-552
+	public void shouldReplaceRepeatedParametersCorrectly() throws Exception {
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findWithRepeatedPlaceholder", "zero",
+				"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven");
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("name:(zero, eleven, one, two, three, four, five, six, seven, eight, nine, ten, eleven, zero, one)");
+	}
+
+	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, String... args)
+			throws NoSuchMethodException {
+
+		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(size -> new Class[size]);
+		ReactiveElasticsearchQueryMethod queryMethod = getQueryMethod(methodName, argTypes);
+		ReactiveElasticsearchStringQuery elasticsearchStringQuery = queryForMethod(queryMethod);
+		
+		return elasticsearchStringQuery.createQuery(new ElasticsearchParametersParameterAccessor(queryMethod, args));
+	}
+
+	private ReactiveElasticsearchStringQuery queryForMethod(ReactiveElasticsearchQueryMethod queryMethod) {
+		return new ReactiveElasticsearchStringQuery(queryMethod, operations, PARSER,
+				QueryMethodEvaluationContextProvider.DEFAULT);
+	}
+
+	private ReactiveElasticsearchQueryMethod getQueryMethod(String name, Class<?>... parameters)
+			throws NoSuchMethodException {
+
+		Method method = SampleRepository.class.getMethod(name, parameters);
+		return new ReactiveElasticsearchQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
+				new SpelAwareProxyProjectionFactory(), converter.getMappingContext());
 	}
 
 	private ReactiveElasticsearchStringQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
-		Method method = SampleRepository.class.getMethod(name, parameters);
-		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-		ReactiveElasticsearchQueryMethod queryMethod = new ReactiveElasticsearchQueryMethod(method,
-				new DefaultRepositoryMetadata(SampleRepository.class), factory, converter.getMappingContext());
-		return new ReactiveElasticsearchStringQuery(queryMethod, operations, PARSER,
-				QueryMethodEvaluationContextProvider.DEFAULT);
+		ReactiveElasticsearchQueryMethod queryMethod = getQueryMethod(name, parameters);
+		return queryForMethod(queryMethod);
 	}
 
 	private interface SampleRepository extends Repository<Person, String> {
@@ -121,6 +148,10 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 
 		@Query(value = "name:(?0, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)")
 		Person findWithQuiteSomeParameters(String arg0, String arg1, String arg2, String arg3, String arg4, String arg5,
+				String arg6, String arg7, String arg8, String arg9, String arg10, String arg11);
+
+		@Query(value = "name:(?0, ?11, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?0, ?1)")
+		Person findWithRepeatedPlaceholder(String arg0, String arg1, String arg2, String arg3, String arg4, String arg5,
 				String arg6, String arg7, String arg8, String arg9, String arg10, String arg11);
 	}
 }
