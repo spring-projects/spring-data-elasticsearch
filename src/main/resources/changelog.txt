@@ -1,6 +1,18 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.0.M3 (2019-04-11)
+----------------------------------------
+* DATAES-558 - Upgrade Elastic Search version to 6.6.2.
+* DATAES-552 - @Query annotation fail when passing in over 10 parameters.
+* DATAES-547 - ElasticSearchTemplate.delete(DeleteQuery, Class) does not delete documents.
+* DATAES-545 - Move off deprecations in Spring Data Commons.
+* DATAES-542 - Release 3.2 M3 (Moore).
+* DATAES-536 - Add support for context suggestion.
+* DATAES-535 - Add mapping annotation @DynamicTemplates.
+* DATAES-530 - Add alternative to Jackson ObjectMapper for result mapping.
+
+
 Changes in version 3.1.6.RELEASE (2019-04-01)
 ---------------------------------------------
 * DATAES-538 - Release 3.1.6 (Lovelace SR6).
