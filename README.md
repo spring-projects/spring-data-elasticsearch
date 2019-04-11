@@ -68,6 +68,7 @@ A default implementation of ElasticsearchRepository, aligning to the generic Rep
 The ElasticsearchCrudRepository extends PagingAndSortingRepository
 
 ```java
+    @NoRepositoryBean
     public interface ElasticsearchCrudRepository<T, ID extends Serializable> extends ElasticsearchRepository<T, ID>, PagingAndSortingRepository<T, ID> {
     }
 ```
