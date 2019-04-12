@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
@@ -56,6 +58,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * {@link ElasticsearchPersistentEntity metadata}.
  *
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public class ElasticsearchEntityMapper implements
@@ -65,6 +68,8 @@ public class ElasticsearchEntityMapper implements
 
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	private final GenericConversionService conversionService;
+	private final ObjectReader objectReader;
+	private final ObjectWriter objectWriter;
 
 	private CustomConversions conversions = new ElasticsearchCustomConversions(Collections.emptyList());
 	private EntityInstantiators instantiators = new EntityInstantiators();
@@ -78,6 +83,10 @@ public class ElasticsearchEntityMapper implements
 		this.mappingContext = mappingContext;
 		this.conversionService = conversionService != null ? conversionService : new DefaultConversionService();
 		this.typeMapper = ElasticsearchTypeMapper.create(mappingContext);
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectReader = objectMapper.readerFor(HashMap.class);
+		objectWriter = objectMapper.writer();
 	}
 
 	// --> GETTERS / SETTERS
@@ -543,12 +552,12 @@ public class ElasticsearchEntityMapper implements
 		Map<String, Object> sink = new LinkedHashMap<>();
 		write(source, sink);
 
-		return new ObjectMapper().writeValueAsString(sink);
+		return objectWriter.writeValueAsString(sink);
 	}
 
 	@Override
 	public <T> T mapToObject(String source, Class<T> clazz) throws IOException {
-		return read(clazz, new ObjectMapper().readerFor(HashMap.class).readValue(source));
+		return read(clazz, objectReader.readValue(source));
 	}
 
 	// --> PRIVATE HELPERS
