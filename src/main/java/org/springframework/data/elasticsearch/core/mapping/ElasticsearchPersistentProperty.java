@@ -25,9 +25,15 @@ import org.springframework.data.mapping.PersistentProperty;
  * @author Mohsin Husen
  * @author Sascha Woo
  * @author Oliver Gierke
+ * @author Peter-Josef Meisch
  */
 public interface ElasticsearchPersistentProperty extends PersistentProperty<ElasticsearchPersistentProperty> {
 
+	/**
+	 * Returns the name to be used to store the property in the document.
+	 * 
+	 * @return
+	 */
 	String getFieldName();
 
 	/**
