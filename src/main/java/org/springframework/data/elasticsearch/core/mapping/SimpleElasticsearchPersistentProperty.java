@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.mapping.Association;
@@ -26,6 +27,7 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.util.StringUtils;
 
 /**
  * Elasticsearch specific {@link org.springframework.data.mapping.PersistentProperty} implementation processing
@@ -35,6 +37,7 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
  * @author Mark Paluch
  * @author Sascha Woo
  * @author Oliver Gierke
+ * @author Peter-Josef Meisch
  */
 public class SimpleElasticsearchPersistentProperty extends
 		AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements ElasticsearchPersistentProperty {
@@ -44,12 +47,14 @@ public class SimpleElasticsearchPersistentProperty extends
 	private final boolean isScore;
 	private final boolean isParent;
 	private final boolean isId;
+	private final String annotatedFieldName;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
 			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
 
 		super(property, owner, simpleTypeHolder);
 
+		this.annotatedFieldName = getAnnotatedFieldName();
 		this.isId = super.isIdProperty() || SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName());
 		this.isScore = isAnnotationPresent(Score.class);
 		this.isParent = isAnnotationPresent(Parent.class);
@@ -68,13 +73,24 @@ public class SimpleElasticsearchPersistentProperty extends
 		}
 	}
 
+	private String getAnnotatedFieldName() {
+
+		if (isAnnotationPresent(Field.class)) {
+
+			String name = findAnnotation(Field.class).name();
+			return StringUtils.hasText(name) ? name : null;
+		}
+
+		return null;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty#getFieldName()
 	 */
 	@Override
 	public String getFieldName() {
-		return getProperty().getName();
+		return annotatedFieldName == null ? getProperty().getName() : annotatedFieldName;
 	}
 
 	/*
@@ -104,7 +120,7 @@ public class SimpleElasticsearchPersistentProperty extends
 		return isScore;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.model.AbstractPersistentProperty#isImmutable()
 	 */
