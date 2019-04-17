@@ -85,6 +85,20 @@ public class ElasticsearchConfigurationSupportUnitTests {
 		assertThat(context.getBean(ElasticsearchRestTemplate.class)).isNotNull();
 	}
 
+	@Test // DATAES-563
+	public void restConfigContainsElasticsearchOperationsByName() {
+
+		AbstractApplicationContext context = new AnnotationConfigApplicationContext(RestConfig.class);
+		assertThat(context.getBean("elasticsearchOperations")).isNotNull();
+	}
+
+	@Test // DATAES-563
+	public void restConfigContainsElasticsearchTemplateByName() {
+
+		AbstractApplicationContext context = new AnnotationConfigApplicationContext(RestConfig.class);
+		assertThat(context.getBean("elasticsearchTemplate")).isNotNull();
+	}
+
 	@Test // DATAES-504
 	public void reactiveConfigContainsReactiveElasticsearchTemplate() {
 
