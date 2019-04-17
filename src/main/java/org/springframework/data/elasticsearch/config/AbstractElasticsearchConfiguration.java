@@ -22,6 +22,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 
 /**
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  * @see ElasticsearchConfigurationSupport
  */
@@ -41,7 +42,7 @@ public abstract class AbstractElasticsearchConfiguration extends ElasticsearchCo
 	 *
 	 * @return never {@literal null}.
 	 */
-	@Bean
+	@Bean(name = {"elasticsearchOperations", "elasticsearchTemplate"})
 	public ElasticsearchOperations elasticsearchOperations() {
 		return new ElasticsearchRestTemplate(elasticsearchClient(), elasticsearchConverter(), resultsMapper());
 	}
