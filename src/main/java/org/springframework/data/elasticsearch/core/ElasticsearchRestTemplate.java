@@ -945,6 +945,11 @@ public class ElasticsearchRestTemplate
 		if (!isEmpty(query.getFields())) {
 			searchSourceBuilder.fetchSource(toArray(query.getFields()), null);
 		}
+
+		if (query.getSort() != null) {
+			prepareSort(query, searchSourceBuilder);
+		}
+
 		request.source(searchSourceBuilder);
 		return request;
 	}
@@ -991,6 +996,12 @@ public class ElasticsearchRestTemplate
 			request.source().postFilter(searchQuery.getFilter());
 		}
 		request.source().version(true);
+
+		if (!isEmpty(searchQuery.getElasticsearchSorts())) {
+			for (SortBuilder sort : searchQuery.getElasticsearchSorts()) {
+				request.source().sort(sort);
+			}
+		}
 
 		try {
 			return client.search(request);
@@ -1304,16 +1315,7 @@ public class ElasticsearchRestTemplate
 		}
 
 		if (query.getSort() != null) {
-			for (Sort.Order order : query.getSort()) {
-				FieldSortBuilder sort = SortBuilders.fieldSort(order.getProperty())
-						.order(order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC);
-				if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
-					sort.missing("_first");
-				} else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
-					sort.missing("_last");
-				}
-				sourceBuilder.sort(sort);
-			}
+			prepareSort(query, sourceBuilder);
 		}
 
 		if (query.getMinScore() > 0) {
@@ -1321,6 +1323,19 @@ public class ElasticsearchRestTemplate
 		}
 		request.source(sourceBuilder);
 		return request;
+	}
+
+	private void prepareSort(Query query, SearchSourceBuilder sourceBuilder) {
+		for (Sort.Order order : query.getSort()) {
+			FieldSortBuilder sort = SortBuilders.fieldSort(order.getProperty())
+					.order(order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC);
+			if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
+				sort.missing("_first");
+			} else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
+				sort.missing("_last");
+			}
+			sourceBuilder.sort(sort);
+		}
 	}
 
 	private IndexRequest prepareIndex(IndexQuery query) {

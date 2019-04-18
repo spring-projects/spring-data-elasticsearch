@@ -825,6 +825,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		if (!isEmpty(query.getFields())) {
 			requestBuilder.setFetchSource(toArray(query.getFields()), null);
 		}
+
+		if (query.getSort() != null) {
+			prepareSort(query, requestBuilder);
+		}
+
 		return requestBuilder;
 	}
 
@@ -857,6 +862,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 		if (searchQuery.getFilter() != null) {
 			requestBuilder.setPostFilter(searchQuery.getFilter());
+		}
+
+		if (!isEmpty(searchQuery.getElasticsearchSorts())) {
+			for (SortBuilder sort : searchQuery.getElasticsearchSorts()) {
+				requestBuilder.addSort(sort);
+			}
 		}
 
 		return getSearchResponse(requestBuilder.setQuery(searchQuery.getQuery()));
@@ -1110,35 +1121,39 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		}
 
 		if (query.getSort() != null) {
-			for (Sort.Order order : query.getSort()) {
-				SortOrder sortOrder = order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC;
-
-				if (FIELD_SCORE.equals(order.getProperty())) {
-					ScoreSortBuilder sort = SortBuilders //
-							.scoreSort() //
-							.order(sortOrder);
-
-					searchRequestBuilder.addSort(sort);
-				} else {
-					FieldSortBuilder sort = SortBuilders //
-							.fieldSort(order.getProperty()) //
-							.order(sortOrder);
-
-					if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
-						sort.missing("_first");
-					} else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
-						sort.missing("_last");
-					}
-
-					searchRequestBuilder.addSort(sort);
-				}
-			}
+			prepareSort(query, searchRequestBuilder);
 		}
 
 		if (query.getMinScore() > 0) {
 			searchRequestBuilder.setMinScore(query.getMinScore());
 		}
 		return searchRequestBuilder;
+	}
+
+	private void prepareSort(Query query, SearchRequestBuilder searchRequestBuilder) {
+		for (Sort.Order order : query.getSort()) {
+			SortOrder sortOrder = order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC;
+
+			if (FIELD_SCORE.equals(order.getProperty())) {
+				ScoreSortBuilder sort = SortBuilders //
+					.scoreSort() //
+					.order(sortOrder);
+
+				searchRequestBuilder.addSort(sort);
+			} else {
+				FieldSortBuilder sort = SortBuilders //
+					.fieldSort(order.getProperty()) //
+					.order(sortOrder);
+
+				if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
+					sort.missing("_first");
+				} else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
+					sort.missing("_last");
+				}
+
+				searchRequestBuilder.addSort(sort);
+			}
+		}
 	}
 
 	private IndexRequestBuilder prepareIndex(IndexQuery query) {
