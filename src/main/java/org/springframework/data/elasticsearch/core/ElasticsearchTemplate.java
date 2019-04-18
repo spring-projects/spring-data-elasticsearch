@@ -125,6 +125,7 @@ import org.springframework.util.StringUtils;
  * @author Zetang Zeng
  * @author Ivan Greene
  * @author Christoph Strobl
+ * @author Dmitriy Yakovlev
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
@@ -814,6 +815,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 		if (query.getPageable().isPaged()) {
 			requestBuilder.setSize(query.getPageable().getPageSize());
+		}
+
+		if (query.getSourceFilter() != null) {
+			SourceFilter sourceFilter = query.getSourceFilter();
+			requestBuilder.setFetchSource(sourceFilter.getIncludes(), sourceFilter.getExcludes());
 		}
 
 		if (!isEmpty(query.getFields())) {

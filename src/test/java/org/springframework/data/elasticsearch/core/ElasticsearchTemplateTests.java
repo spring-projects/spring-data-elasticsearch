@@ -88,6 +88,7 @@ import org.springframework.data.util.CloseableIterator;
  * @author Zetang Zeng
  * @author Peter Nowak
  * @author Ivan Greene
+ * @author Dmitriy Yakovlev
  */
 
 @Ignore
@@ -2685,6 +2686,37 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.stream().map(SampleEntity::getMessage).collect(Collectors.toList()),
 				not(contains(notFindableMessage)));
 	}
+
+	@Test // DATAES-565
+	public void shouldRespectSourceFilterWithScanAndScrollForGivenSearchQuery() {
+		//given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 3);
+		// when
+		elasticsearchTemplate.bulkIndex(entities);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+		// then
+
+		SourceFilter sourceFilter = new FetchSourceFilter(new String[]{"id"}, new String[]{});
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
+				.withTypes(TYPE_NAME).withPageable(PageRequest.of(0, 10))
+				.withSourceFilter(sourceFilter)
+				.build();
+
+		ScrolledPage<SampleEntity> scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class);
+		List<SampleEntity> sampleEntities = new ArrayList<>();
+		while (scroll.hasContent()) {
+			sampleEntities.addAll(scroll.getContent());
+			scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.continueScroll(scroll.getScrollId() , 1000, SampleEntity.class);
+		}
+		elasticsearchTemplate.clearScroll(scroll.getScrollId());
+		assertThat(sampleEntities.size(), is(equalTo(3)));
+		assertThat(sampleEntities.stream().map(SampleEntity::getId).collect(Collectors.toList()),
+				everyItem(notNullValue()));
+		assertThat(sampleEntities.stream().map(SampleEntity::getMessage).collect(Collectors.toList()),
+				everyItem(nullValue()));
+	}
+
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
 		return new IndexQueryBuilder()
