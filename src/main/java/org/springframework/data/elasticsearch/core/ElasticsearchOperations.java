@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
  * @author Mohsin Husen
  * @author Kevin Leturc
  * @author Zetang Zeng
+ * @author Dmitriy Yakovlev
  */
 public interface ElasticsearchOperations {
 
@@ -544,7 +545,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz The class of entity to retrieve.
 	 * @return The scan id for input query.
 	 */
-	<T> Page<T> startScroll(long scrollTimeInMillis, SearchQuery query, Class<T> clazz);
+	<T> ScrolledPage<T> startScroll(long scrollTimeInMillis, SearchQuery query, Class<T> clazz);
 
 	/**
 	 * Returns scrolled page for given query
@@ -555,7 +556,7 @@ public interface ElasticsearchOperations {
 	 * @param mapper Custom impl to map result to entities
 	 * @return The scan id for input query.
 	 */
-	<T> Page<T> startScroll(long scrollTimeInMillis, SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
+	<T> ScrolledPage<T> startScroll(long scrollTimeInMillis, SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
 	 * Returns scrolled page for given query
@@ -566,7 +567,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz The class of entity to retrieve.
 	 * @return The scan id for input query.
 	 */
-	<T> Page<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz);
+	<T> ScrolledPage<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz);
 
 	/**
 	 * Returns scrolled page for given query
@@ -577,11 +578,11 @@ public interface ElasticsearchOperations {
 	 * @param mapper Custom impl to map result to entities
 	 * @return The scan id for input query.
 	 */
-	<T> Page<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz, SearchResultMapper mapper);
+	<T> ScrolledPage<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz, SearchResultMapper mapper);
 
 
-	<T> Page<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz);
-	<T> Page<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz, SearchResultMapper mapper);
+	<T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz);
+	<T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz, SearchResultMapper mapper);
 	/**
 	 * Clears the search contexts associated with specified scroll ids.
 	 *

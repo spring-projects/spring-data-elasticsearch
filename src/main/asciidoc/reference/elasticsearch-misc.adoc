@@ -40,13 +40,13 @@ SearchQuery searchQuery = new NativeSearchQueryBuilder()
     .withPageable(PageRequest.of(0, 10))
     .build();
 
-Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class);
+ScrolledPage<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class);
 
-String scrollId = ((ScrolledPage) scroll).getScrollId();
+String scrollId = scroll.getScrollId();
 List<SampleEntity> sampleEntities = new ArrayList<>();
 while (scroll.hasContent()) {
     sampleEntities.addAll(scroll.getContent());
-    scrollId = ((ScrolledPage) scroll).getScrollId();
+    scrollId = scroll.getScrollId();
     scroll = elasticsearchTemplate.continueScroll(scrollId, 1000, SampleEntity.class);
 }
 elasticsearchTemplate.clearScroll(scrollId);
