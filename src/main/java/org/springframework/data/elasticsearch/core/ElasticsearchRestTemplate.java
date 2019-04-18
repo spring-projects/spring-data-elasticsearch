@@ -133,6 +133,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Ivan Greene
  * @author Christoph Strobl
  * @author Lorenzo Spinelli
+ * @author Dmitriy Yakovlev
  */
 public class ElasticsearchRestTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -934,6 +935,11 @@ public class ElasticsearchRestTemplate
 
 		if (query.getPageable().isPaged()) {
 			searchSourceBuilder.size(query.getPageable().getPageSize());
+		}
+
+		if (query.getSourceFilter() != null) {
+			SourceFilter sourceFilter = query.getSourceFilter();
+			searchSourceBuilder.fetchSource(sourceFilter.getIncludes(), sourceFilter.getExcludes());
 		}
 
 		if (!isEmpty(query.getFields())) {
