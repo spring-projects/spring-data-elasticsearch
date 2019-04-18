@@ -2717,6 +2717,96 @@ public class ElasticsearchTemplateTests {
 				everyItem(nullValue()));
 	}
 
+	@Test //DATAES-457
+	public void shouldSortResultsGivenSortCriteriaWithScanAndScroll() {
+		// given
+		List<IndexQuery> indexQueries = new ArrayList<>();
+		// first document
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("abc").rate(10)
+			.version(System.currentTimeMillis()).build();
+
+		// second document
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("xyz").rate(5)
+			.version(System.currentTimeMillis()).build();
+
+		// third document
+		String documentId3 = randomNumeric(5);
+		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3).message("xyz").rate(10)
+			.version(System.currentTimeMillis()).build();
+
+		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+
+		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+			.withSort(new FieldSortBuilder("rate").order(SortOrder.ASC))
+			.withSort(new FieldSortBuilder("message").order(SortOrder.DESC)).withPageable(PageRequest.of(0, 10))
+			.build();
+		// when
+		ScrolledPage<SampleEntity> scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate
+			.startScroll(1000, searchQuery, SampleEntity.class);
+		List<SampleEntity> sampleEntities = new ArrayList<>();
+		while (scroll.hasContent()) {
+			sampleEntities.addAll(scroll.getContent());
+			scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate
+				.continueScroll(scroll.getScrollId(), 1000, SampleEntity.class);
+		}
+		// then
+		assertThat(sampleEntities.size(), equalTo(3));
+		assertThat(sampleEntities.get(0).getRate(), is(sampleEntity2.getRate()));
+		assertThat(sampleEntities.get(1).getRate(), is(sampleEntity3.getRate()));
+		assertThat(sampleEntities.get(1).getMessage(), is(sampleEntity3.getMessage()));
+		assertThat(sampleEntities.get(2).getRate(), is(sampleEntity1.getRate()));
+		assertThat(sampleEntities.get(2).getMessage(), is(sampleEntity1.getMessage()));
+	}
+
+	@Test //DATAES-457
+	public void shouldSortResultsGivenSortCriteriaFromPageableWithScanAndScroll() {
+		// given
+		List<IndexQuery> indexQueries = new ArrayList<>();
+		// first document
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("abc").rate(10)
+			.version(System.currentTimeMillis()).build();
+
+		// second document
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("xyz").rate(5)
+			.version(System.currentTimeMillis()).build();
+
+		// third document
+		String documentId3 = randomNumeric(5);
+		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3).message("xyz").rate(10)
+			.version(System.currentTimeMillis()).build();
+
+		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+
+		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withPageable(
+			PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "rate").and(Sort.by(Sort.Direction.DESC, "message"))))
+			.build();
+		// when
+		ScrolledPage<SampleEntity> scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate
+			.startScroll(1000, searchQuery, SampleEntity.class);
+		List<SampleEntity> sampleEntities = new ArrayList<>();
+		while (scroll.hasContent()) {
+			sampleEntities.addAll(scroll.getContent());
+			scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate
+				.continueScroll(scroll.getScrollId(), 1000, SampleEntity.class);
+		}
+		// then
+		assertThat(sampleEntities.size(), equalTo(3));
+		assertThat(sampleEntities.get(0).getRate(), is(sampleEntity2.getRate()));
+		assertThat(sampleEntities.get(1).getRate(), is(sampleEntity3.getRate()));
+		assertThat(sampleEntities.get(1).getMessage(), is(sampleEntity3.getMessage()));
+		assertThat(sampleEntities.get(2).getRate(), is(sampleEntity1.getRate()));
+		assertThat(sampleEntities.get(2).getMessage(), is(sampleEntity1.getMessage()));
+	}
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
 		return new IndexQueryBuilder()
