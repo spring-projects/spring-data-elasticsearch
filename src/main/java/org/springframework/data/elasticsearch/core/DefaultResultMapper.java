@@ -61,6 +61,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * @author Ilkang Na
  * @author Sascha Woo
  * @author Christoph Strobl
+ * @author Dmitriy Yakovlev
  */
 public class DefaultResultMapper extends AbstractResultMapper {
 
@@ -105,8 +106,9 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		for (SearchHit hit : response.getHits()) {
 			if (hit != null) {
 				T result = null;
-				if (!StringUtils.isEmpty(hit.getSourceAsString())) {
-					result = mapEntity(hit.getSourceAsString(), clazz);
+				String hitSourceAsString = hit.getSourceAsString();
+				if (!StringUtils.isEmpty(hitSourceAsString)) {
+					result = mapEntity(hitSourceAsString, clazz);
 				} else {
 					result = mapEntity(hit.getFields().values(), clazz);
 				}
