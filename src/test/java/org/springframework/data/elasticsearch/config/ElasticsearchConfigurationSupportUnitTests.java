@@ -24,6 +24,7 @@ import java.util.Collections;
 import org.apache.commons.lang.ClassUtils;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
+
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,7 +40,10 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 
 /**
+ * Unit tests for {@link ElasticsearchConfigurationSupport}.
+ *
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  */
 public class ElasticsearchConfigurationSupportUnitTests {
 
@@ -86,16 +90,11 @@ public class ElasticsearchConfigurationSupportUnitTests {
 	}
 
 	@Test // DATAES-563
-	public void restConfigContainsElasticsearchOperationsByName() {
+	public void restConfigContainsElasticsearchOperationsByNameAndAlias() {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(RestConfig.class);
+
 		assertThat(context.getBean("elasticsearchOperations")).isNotNull();
-	}
-
-	@Test // DATAES-563
-	public void restConfigContainsElasticsearchTemplateByName() {
-
-		AbstractApplicationContext context = new AnnotationConfigApplicationContext(RestConfig.class);
 		assertThat(context.getBean("elasticsearchTemplate")).isNotNull();
 	}
 

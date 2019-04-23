@@ -22,6 +22,7 @@ import static org.mockito.Mockito.*;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.repositories.existing.index.CreateIndexFalseRepository;
@@ -30,6 +31,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
+ * Tests for {@link AbstractElasticsearchConfiguration}.
+ *
  * @author Peter-Josef Meisch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
