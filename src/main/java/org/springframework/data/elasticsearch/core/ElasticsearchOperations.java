@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.springframework.data.domain.Page;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
@@ -46,6 +47,7 @@ import org.springframework.lang.Nullable;
  * @author Zetang Zeng
  * @author Dmitriy Yakovlev
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  */
 public interface ElasticsearchOperations {
 
@@ -668,7 +670,14 @@ public interface ElasticsearchOperations {
 	 */
 	<T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz);
 
-	ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz);
+	/**
+	 * Returns a required {@link ElasticsearchPersistentEntity} for the given {@link Class}. Will throw
+	 * {@link IllegalArgumentException} for types that are not annotated with {@link Document} or considered simple ones.
+	 * 
+	 * @param @param type must not be {@literal null}.
+	 * @return the required {@link ElasticsearchPersistentEntity}
+	 */
+	ElasticsearchPersistentEntity<?> getPersistentEntityFor(Class<?> type);
 
 	/**
 	 * @return Converter in use

@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 
 /**
@@ -28,7 +27,7 @@ public class UpdateQuery {
 	private UpdateRequest updateRequest;
 	private String indexName;
 	private String type;
-	private Class clazz;
+	private Class<?> clazz;
 	private boolean doUpsert;
 
 	public String getId() {
@@ -63,11 +62,11 @@ public class UpdateQuery {
 		this.type = type;
 	}
 
-	public Class getClazz() {
+	public Class<?> getClazz() {
 		return clazz;
 	}
 
-	public void setClazz(Class clazz) {
+	public void setClazz(Class<?> clazz) {
 		this.clazz = clazz;
 	}
 

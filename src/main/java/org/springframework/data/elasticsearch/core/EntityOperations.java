@@ -20,8 +20,11 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.elasticsearch.common.collect.MapBuilder;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -31,6 +34,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -102,6 +106,35 @@ class EntityOperations {
 	}
 
 	/**
+	 * Determine index name from the given entity type.
+	 *
+	 * @param entityType the entity type to determine the index name.
+	 * @return the index name
+	 * @see ElasticsearchPersistentEntity#getIndexName()
+	 */
+	String determineIndexName(Class<?> entityType) {
+		ElasticsearchPersistentEntity<?> entity = getPersistentEntity(entityType);
+		Assert.notNull(entity, "Cannot determine index name");
+		return entity.getIndexName();
+	}
+
+	/**
+	 * Determine index name and type name from entity type with {@code index} and {@code type} overrides. Allows using
+	 * preferred values for index and type if provided, otherwise fall back to index and type defined on entity level.
+	 *
+	 * @param entityType the entity type to determine the index name. Can be {@literal null} if {@code index} and
+	 *          {@literal type} are provided.
+	 * @param index index name override can be {@literal null}.
+	 * @param type index type override can be {@literal null}.
+	 * @return the {@link IndexCoordinates} containing index name and index type.
+	 * @see ElasticsearchPersistentEntity#getIndexName()
+	 * @see ElasticsearchPersistentEntity#getIndexType()
+	 */
+	IndexCoordinates determineIndex(Class<?> entityType, @Nullable String index, @Nullable String type) {
+		return determineIndex(getPersistentEntity(entityType), index, type);
+	}
+
+	/**
 	 * Determine index name and type name from {@link ElasticsearchPersistentEntity} with {@code index} and {@code type}
 	 * overrides. Allows using preferred values for index and type if provided, otherwise fall back to index and type
 	 * defined on entity level.
@@ -117,6 +150,89 @@ class EntityOperations {
 	IndexCoordinates determineIndex(ElasticsearchPersistentEntity<?> persistentEntity, @Nullable String index,
 			@Nullable String type) {
 		return new IndexCoordinates(indexName(persistentEntity, index), typeName(persistentEntity, type));
+	}
+
+	/**
+	 * Determine index name and type name from {@link ElasticsearchPersistentEntity} with {@code indicies} and
+	 * {@code types} overrides. Allows using preferred values for index and type if provided, otherwise fall back to index
+	 * and type defined on entity level.
+	 *
+	 * @param entityType the entity type to determine the index name. Can be {@literal null} if {@code indicies} and
+	 *          {@literal types} are provided.
+	 * @param indicies index names override can be {@literal null}.
+	 * @param types index types override can be {@literal null}.
+	 * @return the {@link MultiIndexCoordinates} containing index names and index types.
+	 * @see ElasticsearchPersistentEntity#getIndexName()
+	 * @see ElasticsearchPersistentEntity#getIndexType()
+	 */
+	MultiIndexCoordinates determineIndexes(Class<?> entityType, @Nullable List<String> indicies,
+			@Nullable List<String> types) {
+		return determineIndexes(getPersistentEntity(entityType), indicies, types);
+	}
+
+	/**
+	 * Determine index name and type name from {@link ElasticsearchPersistentEntity} with {@code indicies} and
+	 * {@code types} overrides. Allows using preferred values for index and type if provided, otherwise fall back to index
+	 * and type defined on entity level.
+	 *
+	 * @param persistentEntity the entity to determine the index name. Can be {@literal null} if {@code indicies} and
+	 *          {@literal types} are provided.
+	 * @param indicies index names override can be {@literal null}.
+	 * @param types index types override can be {@literal null}.
+	 * @return the {@link MultiIndexCoordinates} containing index names and index types.
+	 * @see ElasticsearchPersistentEntity#getIndexName()
+	 * @see ElasticsearchPersistentEntity#getIndexType()
+	 */
+	MultiIndexCoordinates determineIndexes(ElasticsearchPersistentEntity<?> persistentEntity,
+			@Nullable List<String> indicies, @Nullable List<String> types) {
+
+		String[] indexNames = null;
+		if (!CollectionUtils.isEmpty(indicies)) {
+			indexNames = indicies.toArray(new String[indicies.size()]);
+		} else {
+			String indexName = indexName(persistentEntity, null);
+			if (indexName != null) {
+				indexNames = new String[] { indexName };
+			}
+		}
+
+		String[] typeNames = null;
+		if (!CollectionUtils.isEmpty(types)) {
+			typeNames = types.toArray(new String[types.size()]);
+		} else {
+			String typeName = typeName(persistentEntity, null);
+			if (typeName != null) {
+				typeNames = new String[] { typeName };
+			}
+		}
+
+		return new MultiIndexCoordinates(indexNames, typeNames);
+	}
+
+	/**
+	 * Gets the index settings from the specified entity type.
+	 * 
+	 * @param entityType the entity type to determine the index settings.
+	 * @return default settings
+	 */
+	Map<String, String> getIndexSettings(Class<?> entityType) {
+		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntity(entityType);
+		Assert.notNull(persistentEntity, "Cannot determine index default settings");
+
+		if (persistentEntity.isUseServerConfiguration())
+			return new HashMap<>();
+
+		return new MapBuilder<String, String>() //
+				.put("index.number_of_shards", String.valueOf(persistentEntity.getShards())) //
+				.put("index.number_of_replicas", String.valueOf(persistentEntity.getReplicas())) //
+				.put("index.refresh_interval", persistentEntity.getRefreshInterval()) //
+				.put("index.store.type", persistentEntity.getIndexStoreType()) //
+				.map();
+	}
+
+	@Nullable
+	ElasticsearchPersistentEntity<?> getPersistentEntity(@Nullable Class<?> entityType) {
+		return entityType != null ? context.getPersistentEntity(entityType) : null;
 	}
 
 	private static String indexName(@Nullable ElasticsearchPersistentEntity<?> entity, @Nullable String index) {
@@ -624,5 +740,32 @@ class EntityOperations {
 
 		private final String indexName;
 		private final String typeName;
+	}
+
+	/**
+	 * Value object encapsulating index names and index types.
+	 */
+	@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
+	@Getter
+	static class MultiIndexCoordinates {
+
+		public MultiIndexCoordinates(List<String> indexNames, List<String> typeNames) {
+
+			String indicies[] = null;
+			String types[] = null;
+
+			if (!CollectionUtils.isEmpty(indexNames)) {
+				indicies = indexNames.toArray(new String[indexNames.size()]);
+			}
+			if (!CollectionUtils.isEmpty(typeNames)) {
+				types = typeNames.toArray(new String[typeNames.size()]);
+			}
+
+			this.indexNames = indicies;
+			this.typeNames = types;
+		}
+
+		private final String[] indexNames;
+		private final String[] typeNames;
 	}
 }
