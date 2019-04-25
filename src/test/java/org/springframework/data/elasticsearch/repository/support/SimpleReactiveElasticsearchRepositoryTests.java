@@ -31,7 +31,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
@@ -75,8 +75,8 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 
 	@Autowired ReactiveSampleEntityRepository repository;
 
-	@After
-	public void tearDown() {
+	@Before
+	public void setUp() {
 		TestUtils.deleteIndex(INDEX);
 	}
 
