@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.elasticsearch.client.Requests.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
 import static org.springframework.util.CollectionUtils.*;
 
 import java.io.BufferedReader;
@@ -205,18 +204,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 				LOGGER.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
 			}
 		}
-		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
-		XContentBuilder xContentBuilder = null;
 		try {
-
-			ElasticsearchPersistentProperty property = persistentEntity.getRequiredIdProperty();
-
-			xContentBuilder = buildMapping(clazz, persistentEntity.getIndexType(), property.getFieldName(),
-					persistentEntity.getParentType());
+			MappingBuilder mappingBuilder = new MappingBuilder(elasticsearchConverter);
+			return putMapping(clazz, mappingBuilder.buildMapping(clazz));
 		} catch (Exception e) {
 			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
 		}
-		return putMapping(clazz, xContentBuilder);
 	}
 
 	@Override

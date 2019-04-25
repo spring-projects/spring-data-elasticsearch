@@ -90,8 +90,8 @@ import org.springframework.data.util.CloseableIterator;
  * @author Peter Nowak
  * @author Ivan Greene
  * @author Dmitriy Yakovlev
+ * @author Peter-Josef Meisch
  */
-
 @Ignore
 public class ElasticsearchTemplateTests {
 
@@ -128,6 +128,8 @@ public class ElasticsearchTemplateTests {
 	@Before
 	public void before() {
 
+		deleteIndices();
+
 		elasticsearchTemplate.createIndex(SampleEntity.class);
 		elasticsearchTemplate.putMapping(SampleEntity.class);
 
@@ -137,7 +139,10 @@ public class ElasticsearchTemplateTests {
 
 	@After
 	public void after() {
+		deleteIndices();
+	}
 
+	private void deleteIndices() {
 		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.deleteIndex(SampleEntityUUIDKeyed.class);
 		elasticsearchTemplate.deleteIndex(UseServerConfigurationEntity.class);

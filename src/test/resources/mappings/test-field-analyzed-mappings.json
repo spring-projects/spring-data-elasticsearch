@@ -1,0 +1,4 @@
+{
+  "type": "string",
+  "analyzer": "standard_lowercase_asciifolding"
+}

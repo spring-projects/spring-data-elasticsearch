@@ -21,7 +21,6 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -29,25 +28,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.json.JSONException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.builder.SampleInheritedEntityBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.entities.Book;
-import org.springframework.data.elasticsearch.entities.CopyToEntity;
-import org.springframework.data.elasticsearch.entities.GeoEntity;
-import org.springframework.data.elasticsearch.entities.Group;
-import org.springframework.data.elasticsearch.entities.MinimalEntity;
-import org.springframework.data.elasticsearch.entities.NormalizerEntity;
-import org.springframework.data.elasticsearch.entities.SampleInheritedEntity;
-import org.springframework.data.elasticsearch.entities.SampleTransientEntity;
-import org.springframework.data.elasticsearch.entities.SimpleRecursiveEntity;
-import org.springframework.data.elasticsearch.entities.StockPrice;
-import org.springframework.data.elasticsearch.entities.User;
+import org.springframework.data.elasticsearch.entities.*;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -59,18 +48,13 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Nordine Bittich
  * @author Don Wellington
  * @author Sascha Woo
+ * @author Peter-Josef Meisch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
-public class MappingBuilderTests {
+public class MappingBuilderTests extends MappingContextBaseTests {
 
 	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
-
-	private String xContentBuilderToString(XContentBuilder builder) {
-		builder.close();
-		ByteArrayOutputStream bos = (ByteArrayOutputStream) builder.getOutputStream();
-		return bos.toString();
-	}
 
 	@Test
 	public void shouldNotFailOnCircularReference() {
@@ -81,24 +65,25 @@ public class MappingBuilderTests {
 	}
 
 	@Test
-	public void testInfiniteLoopAvoidance() throws IOException {
+	public void testInfiniteLoopAvoidance() throws IOException, JSONException {
 		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\""
 				+ "type\":\"text\",\"index\":false," + "\"analyzer\":\"standard\"}}}}";
 
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class, "mapping", "id", null);
-		assertThat(xContentBuilderToString(xContentBuilder), is(expected));
+		String mapping = getMappingBuilder().buildMapping(SampleTransientEntity.class);
+
+		JSONAssert.assertEquals(expected, mapping, false);
 	}
 
 	@Test
-	public void shouldUseValueFromAnnotationType() throws IOException {
+	public void shouldUseValueFromAnnotationType() throws IOException, JSONException {
 		// Given
-		final String expected = "{\"mapping\":{\"properties\":{\"price\":{\"store\":false,\"type\":\"double\"}}}}";
+		final String expected = "{\"price\":{\"properties\":{\"price\":{\"store\":false,\"type\":\"double\"}}}}";
 
 		// When
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(StockPrice.class, "mapping", "id", null);
+		String mapping = getMappingBuilder().buildMapping(StockPrice.class);
 
 		// Then
-		assertThat(xContentBuilderToString(xContentBuilder), is(expected));
+		JSONAssert.assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-530
@@ -127,23 +112,26 @@ public class MappingBuilderTests {
 	}
 
 	@Test
-	public void shouldCreateMappingForSpecifiedParentType() throws IOException {
+	public void shouldCreateMappingForSpecifiedParentType() throws IOException, JSONException {
 		final String expected = "{\"mapping\":{\"_parent\":{\"type\":\"parentType\"},\"properties\":{}}}";
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(MinimalEntity.class, "mapping", "id", "parentType");
-		assertThat(xContentBuilderToString(xContentBuilder), is(expected));
+
+		String mapping = getMappingBuilder().buildMapping(MinimalChildEntity.class);
+
+		JSONAssert.assertEquals(expected, mapping, false);
 	}
 
 	/*
 	 * DATAES-76
 	 */
 	@Test
-	public void shouldBuildMappingWithSuperclass() throws IOException {
+	public void shouldBuildMappingWithSuperclass() throws IOException, JSONException {
 		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\""
 				+ "type\":\"text\",\"index\":false,\"analyzer\":\"standard\"}" + ",\"createdDate\":{\"store\":false,"
 				+ "\"type\":\"date\",\"index\":false}}}}";
 
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleInheritedEntity.class, "mapping", "id", null);
-		assertThat(xContentBuilderToString(xContentBuilder), is(expected));
+		String mapping = getMappingBuilder().buildMapping(SampleInheritedEntity.class);
+
+		JSONAssert.assertEquals(expected, mapping, false);
 	}
 
 	/*
@@ -174,19 +162,18 @@ public class MappingBuilderTests {
 	}
 
 	@Test
-	public void shouldBuildMappingsForGeoPoint() throws IOException {
+	public void shouldBuildMappingsForGeoPoint() throws IOException, JSONException {
 		// given
+		String expected = "{\"geo-test-index\": {\"properties\": {" + "\"pointA\":{\"type\":\"geo_point\"},"
+				+ "\"pointB\":{\"type\":\"geo_point\"}," + "\"pointC\":{\"type\":\"geo_point\"},"
+				+ "\"pointD\":{\"type\":\"geo_point\"}" + "}}}";
 
 		// when
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(GeoEntity.class, "mapping", "id", null);
+		String mapping;
+		mapping = getMappingBuilder().buildMapping(GeoEntity.class);
 
 		// then
-		final String result = xContentBuilderToString(xContentBuilder);
-
-		assertThat(result, containsString("\"pointA\":{\"type\":\"geo_point\""));
-		assertThat(result, containsString("\"pointB\":{\"type\":\"geo_point\""));
-		assertThat(result, containsString("\"pointC\":{\"type\":\"geo_point\""));
-		assertThat(result, containsString("\"pointD\":{\"type\":\"geo_point\""));
+		JSONAssert.assertEquals(expected, mapping, false);
 	}
 
 	/**
@@ -275,5 +262,104 @@ public class MappingBuilderTests {
 		List<String> copyToValue = Arrays.asList("name");
 		assertThat(fieldFirstName.get("copy_to"), equalTo(copyToValue));
 		assertThat(fieldLastName.get("copy_to"), equalTo(copyToValue));
+	}
+
+	@Test // DATAES-568
+	public void shouldUseFieldNameOnId() throws IOException, JSONException {
+		// given
+		final String expected = "{\"fieldname-type\":{\"properties\":{"
+				+ "\"id-property\":{\"type\":\"keyword\",\"index\":true}" + "}}}";
+
+		// when
+		String mapping = getMappingBuilder().buildMapping(FieldNameEntity.IdEntity.class);
+
+		// then
+		JSONAssert.assertEquals(expected, mapping, false);
+	}
+
+	@Test // DATAES-568
+	public void shouldUseFieldNameOnText() throws IOException, JSONException {
+		// given
+		final String expected = "{\"fieldname-type\":{\"properties\":{"
+				+ "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
+				+ "\"text-property\":{\"store\":false,\"type\":\"text\"}" + "}}}";
+
+		// when
+		String mapping = getMappingBuilder().buildMapping(FieldNameEntity.TextEntity.class);
+
+		// then
+		JSONAssert.assertEquals(expected, mapping, false);
+	}
+
+	@Test // DATAES-568
+	public void shouldUseFieldNameOnMapping() throws IOException, JSONException {
+		// given
+		final String expected = "{\"fieldname-type\":{\"properties\":{"
+				+ "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
+				+ "\"mapping-property\":{\"type\":\"string\",\"analyzer\":\"standard_lowercase_asciifolding\"}" + "}}}";
+
+		// when
+		String mapping = getMappingBuilder().buildMapping(FieldNameEntity.MappingEntity.class);
+
+		// then
+		JSONAssert.assertEquals(expected, mapping, false);
+	}
+
+	@Test // DATAES-568
+	public void shouldUseFieldNameOnGeoPoint() throws IOException, JSONException {
+		// given
+		final String expected = "{\"fieldname-type\":{\"properties\":{"
+				+ "\"id-property\":{\"type\":\"keyword\",\"index\":true}," + "\"geopoint-property\":{\"type\":\"geo_point\"}"
+				+ "}}}";
+
+		// when
+		String mapping = getMappingBuilder().buildMapping(FieldNameEntity.GeoPointEntity.class);
+
+		// then
+		JSONAssert.assertEquals(expected, mapping, false);
+	}
+
+	@Test // DATAES-568
+	public void shouldUseFieldNameOnCircularEntity() throws IOException, JSONException {
+		// given
+		final String expected = "{\"fieldname-type\":{\"properties\":{"
+				+ "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
+				+ "\"circular-property\":{\"type\":\"object\",\"properties\":{\"id-property\":{\"store\":false}}}" + "}}}";
+
+		// when
+		String mapping = getMappingBuilder().buildMapping(FieldNameEntity.CircularEntity.class);
+
+		// then
+		JSONAssert.assertEquals(expected, mapping, false);
+	}
+
+	@Test // DATAES-568
+	public void shouldUseFieldNameOnCompletion() throws IOException, JSONException {
+		// given
+		final String expected = "{\"fieldname-type\":{\"properties\":{"
+				+ "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
+				+ "\"completion-property\":{\"type\":\"completion\",\"max_input_length\":100,\"preserve_position_increments\":true,\"preserve_separators\":true,\"search_analyzer\":\"simple\",\"analyzer\":\"simple\"},\"completion-property\":{\"store\":false}"
+				+ "}}}";
+
+		// when
+		String mapping = getMappingBuilder().buildMapping(FieldNameEntity.CompletionEntity.class);
+
+		// then
+		JSONAssert.assertEquals(expected, mapping, false);
+	}
+
+	@Test // DATAES-568
+	public void shouldUseFieldNameOnMultiField() throws IOException, JSONException {
+		// given
+		final String expected = "{\"fieldname-type\":{\"properties\":{"
+				+ "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
+				+ "\"multifield-property\":{\"store\":false,\"type\":\"text\",\"analyzer\":\"whitespace\",\"fields\":{\"prefix\":{\"store\":false,\"type\":\"text\",\"analyzer\":\"stop\",\"search_analyzer\":\"standard\"}}}"
+				+ "}}}";
+
+		// when
+		String mapping = getMappingBuilder().buildMapping(FieldNameEntity.MultiFieldEntity.class);
+
+		// then
+		JSONAssert.assertEquals(expected, mapping, false);
 	}
 }

@@ -227,6 +227,13 @@
 			</exclusions>
 		</dependency>
 
+		<dependency>
+			<groupId>org.skyscreamer</groupId>
+			<artifactId>jsonassert</artifactId>
+			<version>1.5.0</version>
+			<scope>test</scope>
+		</dependency>
+
 		<!-- Upgrade xbean to 4.5 to prevent incompatibilities due to ASM versions -->
 		<dependency>
 			<groupId>org.apache.xbean</groupId>
