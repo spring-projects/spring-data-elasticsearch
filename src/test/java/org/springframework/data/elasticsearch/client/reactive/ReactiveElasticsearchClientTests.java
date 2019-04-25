@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.springframework.data.elasticsearch.ElasticsearchException;
+import lombok.SneakyThrows;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -31,6 +31,7 @@ import java.util.stream.IntStream;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.MultiGetRequest;
@@ -139,12 +140,9 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-519
 	public void getOnNonExistingIndexShouldThrowException() {
 
-		client.get(new GetRequest(INDEX_I, TYPE_I, "nonono"))
-				.as(StepVerifier::create)
-				.expectError(ElasticsearchStatusException.class)
-				.verify();
+		client.get(new GetRequest(INDEX_I, TYPE_I, "nonono")).as(StepVerifier::create)
+				.expectError(ElasticsearchStatusException.class).verify();
 	}
-
 
 	@Test // DATAES-488
 	public void getShouldFetchDocumentById() {
@@ -502,10 +500,167 @@ public class ReactiveElasticsearchClientTests {
 		request = request.scroll(TimeValue.timeValueMinutes(1));
 
 		client.scroll(HttpHeaders.EMPTY, request) //
-				.take(73)
-				.as(StepVerifier::create) //
+				.take(73).as(StepVerifier::create) //
 				.expectNextCount(73) //
 				.verifyComplete();
+	}
+
+	@Test // DATAES-569
+	public void indexExistsShouldReturnTrueIfSo() throws IOException {
+
+		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+
+		client.indices().existsIndex(request -> request.indices(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.expectNext(true) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-569
+	public void indexExistsShouldReturnFalseIfNot() throws IOException {
+
+		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+
+		client.indices().existsIndex(request -> request.indices(INDEX_II)) //
+				.as(StepVerifier::create) //
+				.expectNext(false) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-569
+	public void createIndex() throws IOException {
+
+		client.indices().createIndex(request -> request.index(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		syncClient.indices().exists(new GetIndexRequest().indices(INDEX_II), RequestOptions.DEFAULT);
+	}
+
+	@Test // DATAES-569
+	public void createExistingIndexErrors() throws IOException {
+
+		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+
+		client.indices().createIndex(request -> request.index(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.verifyError(ElasticsearchStatusException.class);
+	}
+
+	@Test // DATAES-569
+	public void deleteExistingIndex() throws IOException {
+
+		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+
+		client.indices().deleteIndex(request -> request.indices(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		assertThat(syncClient.indices().exists(new GetIndexRequest().indices(INDEX_I), RequestOptions.DEFAULT)).isFalse();
+	}
+
+	@Test // DATAES-569
+	public void deleteNonExistingIndexErrors() {
+
+		client.indices().deleteIndex(request -> request.indices(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.verifyError(ElasticsearchStatusException.class);
+	}
+
+	@Test // DATAES-569
+	public void openExistingIndex() throws IOException {
+
+		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+
+		client.indices().openIndex(request -> request.indices(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-569
+	public void openNonExistingIndex() {
+
+		client.indices().openIndex(request -> request.indices(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.verifyError(ElasticsearchStatusException.class);
+	}
+
+	@Test // DATAES-569
+	public void closeExistingIndex() throws IOException {
+
+		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+
+		client.indices().openIndex(request -> request.indices(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-569
+	public void closeNonExistingIndex() {
+
+		client.indices().closeIndex(request -> request.indices(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.verifyError(ElasticsearchStatusException.class);
+	}
+
+	@Test // DATAES-569
+	public void refreshIndex() throws IOException {
+
+		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+
+		client.indices().refreshIndex(request -> request.indices(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-569
+	public void refreshNonExistingIndex() {
+
+		client.indices().refreshIndex(request -> request.indices(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.verifyError(ElasticsearchStatusException.class);
+	}
+
+	@Test // DATAES-569
+	public void updateMapping() throws IOException {
+
+		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+
+		Map<String, Object> jsonMap = Collections.singletonMap("properties",
+				Collections.singletonMap("message", Collections.singletonMap("type", "text")));
+
+		client.indices().updateMapping(request -> request.indices(INDEX_I).type(TYPE_I).source(jsonMap)) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-569
+	public void updateMappingNonExistingIndex() {
+
+		Map<String, Object> jsonMap = Collections.singletonMap("properties",
+				Collections.singletonMap("message", Collections.singletonMap("type", "text")));
+
+		client.indices().updateMapping(request -> request.indices(INDEX_I).type(TYPE_I).source(jsonMap)) //
+				.as(StepVerifier::create) //
+				.verifyError(ElasticsearchStatusException.class);
+	}
+
+	@Test // DATAES-569
+	public void flushIndex() throws IOException {
+
+		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+
+		client.indices().flushIndex(request -> request.indices(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-569
+	public void flushNonExistingIndex() {
+
+		client.indices().flushIndex(request -> request.indices(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	AddToIndexOfType addSourceDocument() {
@@ -525,13 +680,9 @@ public class ReactiveElasticsearchClientTests {
 				.create(true);
 	}
 
+	@SneakyThrows
 	String doIndex(Map source, String index, String type) {
-
-		try {
-			return syncClient.index(indexRequest(source, index, type)).getId();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		return syncClient.index(indexRequest(source, index, type), RequestOptions.DEFAULT).getId();
 	}
 
 	interface AddToIndexOfType extends AddToIndex {

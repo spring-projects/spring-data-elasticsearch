@@ -48,6 +48,16 @@ import org.apache.http.util.EntityUtils;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
+import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.flush.FlushRequest;
+import org.elasticsearch.action.admin.indices.flush.FlushResponse;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
+import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
+import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
@@ -63,6 +73,7 @@ import org.elasticsearch.action.search.ClearScrollResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Request;
@@ -80,13 +91,13 @@ import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.reactivestreams.Publisher;
-
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientLogger;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
 import org.springframework.data.elasticsearch.client.reactive.HostProvider.Verification;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices;
 import org.springframework.data.elasticsearch.client.util.RequestConverters;
 import org.springframework.data.util.Lazy;
 import org.springframework.http.HttpHeaders;
@@ -115,7 +126,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  * @see ClientConfiguration
  * @see ReactiveRestClients
  */
-public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearchClient {
+public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearchClient, Indices {
 
 	private final HostProvider hostProvider;
 
@@ -281,6 +292,15 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#indices()
+	 */
+	@Override
+	public Indices indices() {
+		return this;
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.update.UpdateRequest)
 	 */
 	@Override
@@ -401,6 +421,97 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		return sendRequest(deleteRequest, RequestCreator.deleteByQuery(), BulkByScrollResponse.class, headers) //
 				.publishNext();
+	}
+
+	// --> INDICES
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#existsIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.get.GetIndexRequest)
+	 */
+	@Override
+	public Mono<Boolean> existsIndex(HttpHeaders headers, GetIndexRequest request) {
+
+		return sendRequest(request, RequestCreator.indexExists(), RawActionResponse.class, headers) //
+				.map(response -> response.statusCode().is2xxSuccessful()) //
+				.next();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#deleteIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest)
+	 */
+	@Override
+	public Mono<Void> deleteIndex(HttpHeaders headers, DeleteIndexRequest request) {
+
+		return sendRequest(request, RequestCreator.indexDelete(), AcknowledgedResponse.class, headers) //
+				.then();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#createIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.create.CreateIndexRequest)
+	 */
+	@Override
+	public Mono<Void> createIndex(HttpHeaders headers, CreateIndexRequest createIndexRequest) {
+
+		return sendRequest(createIndexRequest, RequestCreator.indexCreate(), AcknowledgedResponse.class, headers) //
+				.then();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#openIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.open.OpenIndexRequest)
+	 */
+	@Override
+	public Mono<Void> openIndex(HttpHeaders headers, OpenIndexRequest request) {
+
+		return sendRequest(request, RequestCreator.indexOpen(), AcknowledgedResponse.class, headers) //
+				.then();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#closeIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.close.CloseIndexRequest)
+	 */
+	@Override
+	public Mono<Void> closeIndex(HttpHeaders headers, CloseIndexRequest closeIndexRequest) {
+
+		return sendRequest(closeIndexRequest, RequestCreator.indexClose(), AcknowledgedResponse.class, headers) //
+				.then();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#refreshIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.refresh.RefreshRequest)
+	 */
+	@Override
+	public Mono<Void> refreshIndex(HttpHeaders headers, RefreshRequest refreshRequest) {
+
+		return sendRequest(refreshRequest, RequestCreator.indexRefresh(), RefreshResponse.class, headers) //
+				.then();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#updateMapping(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest)
+	 */
+	@Override
+	public Mono<Void> updateMapping(HttpHeaders headers, PutMappingRequest putMappingRequest) {
+
+		return sendRequest(putMappingRequest, RequestCreator.putMapping(), AcknowledgedResponse.class, headers) //
+				.then();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#flushIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.flush.FlushRequest)
+	 */
+	@Override
+	public Mono<Void> flushIndex(HttpHeaders headers, FlushRequest flushRequest) {
+
+		return sendRequest(flushRequest, RequestCreator.flushIndex(), FlushResponse.class, headers) //
+				.then();
 	}
 
 	/*
@@ -630,6 +741,41 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				}
 			};
 		}
+
+		// --> INDICES
+
+		static Function<GetIndexRequest, Request> indexExists() {
+			return RequestConverters::indexExists;
+		}
+
+		static Function<DeleteIndexRequest, Request> indexDelete() {
+			return RequestConverters::indexDelete;
+		}
+
+		static Function<CreateIndexRequest, Request> indexCreate() {
+			return RequestConverters::indexCreate;
+		}
+
+		static Function<OpenIndexRequest, Request> indexOpen() {
+			return RequestConverters::indexOpen;
+		}
+
+		static Function<CloseIndexRequest, Request> indexClose() {
+			return RequestConverters::indexClose;
+		}
+
+		static Function<RefreshRequest, Request> indexRefresh() {
+			return RequestConverters::indexRefresh;
+		}
+
+		static Function<PutMappingRequest, Request> putMapping() {
+			return RequestConverters::putMapping;
+		}
+
+		static Function<FlushRequest, Request> flushIndex() {
+			return RequestConverters::flushIndex;
+		}
+
 	}
 
 	/**

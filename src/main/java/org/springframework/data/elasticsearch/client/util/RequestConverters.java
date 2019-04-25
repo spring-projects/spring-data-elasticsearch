@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.client.util;
 
 import java.io.ByteArrayOutputStream;
@@ -35,6 +34,14 @@ import org.elasticsearch.action.admin.cluster.storedscripts.DeleteStoredScriptRe
 import org.elasticsearch.action.admin.cluster.storedscripts.GetStoredScriptRequest;
 import org.elasticsearch.action.admin.cluster.storedscripts.PutStoredScriptRequest;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
+import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.flush.FlushRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
+import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.explain.ExplainRequest;
@@ -82,7 +89,8 @@ import org.springframework.http.HttpMethod;
 
 /**
  * <p>
- * Original implementation source {@link org.elasticsearch.client.RequestConverters} by {@literal Elasticsearch}
+ * Original implementation source {@link org.elasticsearch.client.RequestConverters} and
+ * {@link org.elasticsearch.client.IndicesRequestConverters} by {@literal Elasticsearch}
  * (<a href="https://www.elastic.co">https://www.elastic.co</a>) licensed under the Apache License, Version 2.0.
  * </p>
  * Modified for usage with {@link ReactiveElasticsearchClient}.
@@ -600,6 +608,125 @@ public class RequestConverters {
 		Params params = new Params(request);
 		params.withTimeout(deleteStoredScriptRequest.timeout());
 		params.withMasterTimeout(deleteStoredScriptRequest.masterNodeTimeout());
+		return request;
+	}
+
+	// --> INDICES
+
+	public static Request getIndex(GetIndexRequest getIndexRequest) {
+		String[] indices = getIndexRequest.indices() == null ? Strings.EMPTY_ARRAY : getIndexRequest.indices();
+
+		String endpoint = endpoint(indices);
+		Request request = new Request(HttpMethod.GET.name(), endpoint);
+
+		Params params = new Params(request);
+		params.withIndicesOptions(getIndexRequest.indicesOptions());
+		params.withLocal(getIndexRequest.local());
+		params.withIncludeDefaults(getIndexRequest.includeDefaults());
+		params.withHuman(getIndexRequest.humanReadable());
+		params.withMasterTimeout(getIndexRequest.masterNodeTimeout());
+
+		return request;
+	}
+
+	public static Request indexDelete(DeleteIndexRequest deleteIndexRequest) {
+		String endpoint = RequestConverters.endpoint(deleteIndexRequest.indices());
+		Request request = new Request(HttpMethod.DELETE.name(), endpoint);
+
+		RequestConverters.Params parameters = new RequestConverters.Params(request);
+		parameters.withTimeout(deleteIndexRequest.timeout());
+		parameters.withMasterTimeout(deleteIndexRequest.masterNodeTimeout());
+		parameters.withIndicesOptions(deleteIndexRequest.indicesOptions());
+		return request;
+	}
+
+	public static Request indexExists(GetIndexRequest getIndexRequest) {
+		// this can be called with no indices as argument by transport client, not via REST though
+		if (getIndexRequest.indices() == null || getIndexRequest.indices().length == 0) {
+			throw new IllegalArgumentException("indices are mandatory");
+		}
+		String endpoint = endpoint(getIndexRequest.indices(), "");
+		Request request = new Request(HttpMethod.HEAD.name(), endpoint);
+
+		Params params = new Params(request);
+		params.withLocal(getIndexRequest.local());
+		params.withHuman(getIndexRequest.humanReadable());
+		params.withIndicesOptions(getIndexRequest.indicesOptions());
+		params.withIncludeDefaults(getIndexRequest.includeDefaults());
+		return request;
+	}
+
+	public static Request indexOpen(OpenIndexRequest openIndexRequest) {
+		String endpoint = RequestConverters.endpoint(openIndexRequest.indices(), "_open");
+		Request request = new Request(HttpMethod.POST.name(), endpoint);
+
+		Params parameters = new Params(request);
+		parameters.withTimeout(openIndexRequest.timeout());
+		parameters.withMasterTimeout(openIndexRequest.masterNodeTimeout());
+		parameters.withWaitForActiveShards(openIndexRequest.waitForActiveShards(), ActiveShardCount.NONE);
+		parameters.withIndicesOptions(openIndexRequest.indicesOptions());
+		return request;
+	}
+
+	public static Request indexClose(CloseIndexRequest closeIndexRequest) {
+		String endpoint = RequestConverters.endpoint(closeIndexRequest.indices(), "_close");
+		Request request = new Request(HttpMethod.POST.name(), endpoint);
+
+		Params parameters = new Params(request);
+		parameters.withTimeout(closeIndexRequest.timeout());
+		parameters.withMasterTimeout(closeIndexRequest.masterNodeTimeout());
+		parameters.withIndicesOptions(closeIndexRequest.indicesOptions());
+		return request;
+	}
+
+	public static Request indexCreate(CreateIndexRequest createIndexRequest) {
+		String endpoint = RequestConverters.endpoint(createIndexRequest.indices());
+		Request request = new Request(HttpMethod.PUT.name(), endpoint);
+
+		Params parameters = new Params(request);
+		parameters.withTimeout(createIndexRequest.timeout());
+		parameters.withMasterTimeout(createIndexRequest.masterNodeTimeout());
+		parameters.withWaitForActiveShards(createIndexRequest.waitForActiveShards(), ActiveShardCount.DEFAULT);
+
+		request.setEntity(createEntity(createIndexRequest, RequestConverters.REQUEST_BODY_CONTENT_TYPE));
+		return request;
+	}
+
+	public static Request indexRefresh(RefreshRequest refreshRequest) {
+
+		String[] indices = refreshRequest.indices() == null ? Strings.EMPTY_ARRAY : refreshRequest.indices();
+		Request request = new Request(HttpMethod.POST.name(), RequestConverters.endpoint(indices, "_refresh"));
+
+		Params parameters = new Params(request);
+		parameters.withIndicesOptions(refreshRequest.indicesOptions());
+		return request;
+	}
+
+	public static Request putMapping(PutMappingRequest putMappingRequest) {
+		// The concreteIndex is an internal concept, not applicable to requests made over the REST API.
+		if (putMappingRequest.getConcreteIndex() != null) {
+			throw new IllegalArgumentException("concreteIndex cannot be set on PutMapping requests made over the REST API");
+		}
+
+		Request request = new Request(HttpMethod.PUT.name(),
+				RequestConverters.endpoint(putMappingRequest.indices(), "_mapping", putMappingRequest.type()));
+
+		RequestConverters.Params parameters = new RequestConverters.Params(request);
+		parameters.withTimeout(putMappingRequest.timeout());
+		parameters.withMasterTimeout(putMappingRequest.masterNodeTimeout());
+
+		request.setEntity(RequestConverters.createEntity(putMappingRequest, RequestConverters.REQUEST_BODY_CONTENT_TYPE));
+		return request;
+	}
+
+	public static Request flushIndex(FlushRequest flushRequest) {
+		String[] indices = flushRequest.indices() == null ? Strings.EMPTY_ARRAY : flushRequest.indices();
+		Request request = new Request(HttpMethod.POST.name(), RequestConverters.endpoint(indices, "_flush"));
+
+		RequestConverters.Params parameters = new RequestConverters.Params(request);
+		parameters.withIndicesOptions(flushRequest.indicesOptions());
+		parameters.putParam("wait_if_ongoing", Boolean.toString(flushRequest.waitIfOngoing()));
+		parameters.putParam("force", Boolean.toString(flushRequest.force()));
 		return request;
 	}
 
