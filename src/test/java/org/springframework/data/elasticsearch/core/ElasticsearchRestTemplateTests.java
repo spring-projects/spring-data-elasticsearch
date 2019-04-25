@@ -50,8 +50,8 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 		// when
 		IndexRequest indexRequest = new IndexRequest();
 		indexRequest.source("{}", XContentType.JSON);
-		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5))
-				.withClass(SampleEntity.class).withIndexRequest(indexRequest).build();
+		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5)).withClass(SampleEntity.class)
+				.withIndexRequest(indexRequest).build();
 		elasticsearchTemplate.update(updateQuery);
 	}
 }
