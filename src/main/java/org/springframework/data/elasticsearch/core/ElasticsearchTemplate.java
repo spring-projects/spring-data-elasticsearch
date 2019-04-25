@@ -24,7 +24,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -68,6 +67,8 @@ import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.DeleteByQueryAction;
+import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -84,7 +85,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
@@ -92,7 +92,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
-import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
@@ -750,41 +749,20 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 				: getPersistentEntityFor(clazz).getIndexName();
 		String typeName = !StringUtils.isEmpty(deleteQuery.getType()) ? deleteQuery.getType()
 				: getPersistentEntityFor(clazz).getIndexType();
-		Integer pageSize = deleteQuery.getPageSize() != null ? deleteQuery.getPageSize() : 1000;
-		Long scrollTimeInMillis = deleteQuery.getScrollTimeInMillis() != null ? deleteQuery.getScrollTimeInMillis()
-				: 10000l;
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery()).withIndices(indexName)
-				.withTypes(typeName).withPageable(PageRequest.of(0, pageSize)).build();
+		DeleteByQueryRequestBuilder requestBuilder = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE) //
+				.source(indexName) //
+				.filter(deleteQuery.getQuery()) //
+				.abortOnVersionConflict(false) //
+				.refresh(true);
 
-		SearchResultMapper deleteEntryResultMapper = new SearchResultMapperAdapter() {
+		SearchRequestBuilder source = requestBuilder.source() //
+				.setTypes(typeName);
 
-			@Override
-			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-				return new AggregatedPageImpl<>((List<T>) Arrays.asList(response.getHits().getHits()), response.getScrollId());
-			}
-		};
+		if (deleteQuery.getScrollTimeInMillis() != null)
+			source.setScroll(TimeValue.timeValueMillis(deleteQuery.getScrollTimeInMillis()));
 
-		ScrolledPage<SearchHit> scrolledResult = startScroll(scrollTimeInMillis, searchQuery, SearchHit.class,
-				deleteEntryResultMapper);
-		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-		List<SearchHit> documentsToDelete = new ArrayList<>();
-
-		do {
-			documentsToDelete.addAll(scrolledResult.getContent());
-			scrolledResult = continueScroll(scrolledResult.getScrollId(), scrollTimeInMillis,
-					SearchHit.class, deleteEntryResultMapper);
-		} while (scrolledResult.getContent().size() != 0);
-
-		for (SearchHit entry : documentsToDelete) {
-			bulkRequestBuilder.add(client.prepareDelete(entry.getIndex(), typeName, entry.getId()));
-		}
-
-		if (bulkRequestBuilder.numberOfActions() > 0) {
-			bulkRequestBuilder.execute().actionGet();
-		}
-
-		clearScroll(scrolledResult.getScrollId());
+		requestBuilder.get();
 	}
 
 	@Override
@@ -1136,14 +1114,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 			if (FIELD_SCORE.equals(order.getProperty())) {
 				ScoreSortBuilder sort = SortBuilders //
-					.scoreSort() //
-					.order(sortOrder);
+						.scoreSort() //
+						.order(sortOrder);
 
 				searchRequestBuilder.addSort(sort);
 			} else {
 				FieldSortBuilder sort = SortBuilders //
-					.fieldSort(order.getProperty()) //
-					.order(sortOrder);
+						.fieldSort(order.getProperty()) //
+						.order(sortOrder);
 
 				if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
 					sort.missing("_first");
