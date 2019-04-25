@@ -93,7 +93,7 @@ public abstract class ClientLogger {
 	public static void logRawResponse(String logId, HttpStatus statusCode) {
 
 		if (isEnabled()) {
-			WIRE_LOGGER.trace("[{}] Received raw response: ", logId, statusCode);
+			WIRE_LOGGER.trace("[{}] Received raw response: {}", logId, statusCode);
 		}
 	}
 
