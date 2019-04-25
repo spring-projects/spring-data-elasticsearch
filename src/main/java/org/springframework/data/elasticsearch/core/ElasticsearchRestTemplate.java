@@ -24,7 +24,15 @@ import static org.springframework.util.StringUtils.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.Set;
 
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.ActionFuture;
@@ -52,6 +60,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
@@ -69,6 +78,7 @@ import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -85,7 +95,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
@@ -93,7 +102,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
-import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.client.support.AliasData;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
@@ -863,47 +871,24 @@ public class ElasticsearchRestTemplate
 				: getPersistentEntityFor(clazz).getIndexName();
 		String typeName = hasText(deleteQuery.getType()) ? deleteQuery.getType()
 				: getPersistentEntityFor(clazz).getIndexType();
-		Integer pageSize = deleteQuery.getPageSize() != null ? deleteQuery.getPageSize() : 1000;
-		Long scrollTimeInMillis = deleteQuery.getScrollTimeInMillis() != null ? deleteQuery.getScrollTimeInMillis()
-				: 10000l;
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery()).withIndices(indexName)
-				.withTypes(typeName).withPageable(PageRequest.of(0, pageSize)).build();
+		DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(indexName) //
+				.setDocTypes(typeName) //
+				.setQuery(deleteQuery.getQuery()) //
+				.setAbortOnVersionConflict(false) //
+				.setRefresh(true);
 
-		SearchResultMapper deleteEntryResultMapper = new SearchResultMapperAdapter() {
+		if (deleteQuery.getPageSize() != null)
+			deleteByQueryRequest.setBatchSize(deleteQuery.getPageSize());
 
-			@Override
-			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-				return new AggregatedPageImpl<>((List<T>) Arrays.asList(response.getHits().getHits()), response.getScrollId());
-			}
-		};
+		if (deleteQuery.getScrollTimeInMillis() != null)
+			deleteByQueryRequest.setScroll(TimeValue.timeValueMillis(deleteQuery.getScrollTimeInMillis()));
 
-		ScrolledPage<SearchHit> scrolledResult = startScroll(scrollTimeInMillis, searchQuery, SearchHit.class,
-				deleteEntryResultMapper);
-		BulkRequest request = new BulkRequest();
-		List<SearchHit> documentsToDelete = new ArrayList<>();
-
-		do {
-			documentsToDelete.addAll(scrolledResult.getContent());
-			scrolledResult = continueScroll(scrolledResult.getScrollId(), scrollTimeInMillis,
-					SearchHit.class, deleteEntryResultMapper);
-		} while (scrolledResult.getContent().size() != 0);
-
-		for (SearchHit entry : documentsToDelete) {
-			request.add(new DeleteRequest(entry.getIndex(), typeName, entry.getId()));
+		try {
+			client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw new ElasticsearchException("Error for delete request: " + deleteByQueryRequest.toString(), e);
 		}
-
-		if (request.numberOfActions() > 0) {
-			BulkResponse response;
-			try {
-				response = client.bulk(request);
-				checkForBulkUpdateFailure(response);
-			} catch (IOException e) {
-				throw new ElasticsearchException("Error while deleting bulk: " + request.toString(), e);
-			}
-		}
-
-		clearScroll(scrolledResult.getScrollId());
 	}
 
 	@Override
@@ -1475,7 +1460,8 @@ public class ElasticsearchRestTemplate
 			node = node.findValue("aliases");
 
 			Map<String, AliasData> aliasData = mapper.readValue(mapper.writeValueAsString(node),
-					new TypeReference<Map<String, AliasData>>() {});
+					new TypeReference<Map<String, AliasData>>() {
+					});
 
 			Iterable<Map.Entry<String, AliasData>> aliasIter = aliasData.entrySet();
 			List<AliasMetaData> aliasMetaDataList = new ArrayList<AliasMetaData>();
