@@ -47,6 +47,7 @@ import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -60,7 +61,22 @@ import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.ScriptField;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.core.query.SourceFilter;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQueryBuilder;
 import org.springframework.data.elasticsearch.entities.Book;
 import org.springframework.data.elasticsearch.entities.GTEVersionEntity;
 import org.springframework.data.elasticsearch.entities.HetroEntity1;
@@ -94,9 +110,10 @@ import org.springframework.data.util.CloseableIterator;
 @Ignore
 public class ElasticsearchTemplateTests {
 
-	private static final String INDEX_NAME = "test-index-sample";
+	private static final String INDEX_NAME_SAMPLE_ENTITY = "test-index-sample";
 	private static final String INDEX_1_NAME = "test-index-1";
 	private static final String INDEX_2_NAME = "test-index-2";
+	private static final String INDEX_3_NAME = "test-index-3";
 	private static final String TYPE_NAME = "test-type";
 
 	@Autowired
@@ -105,18 +122,24 @@ public class ElasticsearchTemplateTests {
 	@Before
 	public void before() {
 
-		elasticsearchTemplate.deleteIndex(SampleEntity.class);
 		elasticsearchTemplate.createIndex(SampleEntity.class);
 		elasticsearchTemplate.putMapping(SampleEntity.class);
 
-		elasticsearchTemplate.deleteIndex(SampleEntityUUIDKeyed.class);
 		elasticsearchTemplate.createIndex(SampleEntityUUIDKeyed.class);
 		elasticsearchTemplate.putMapping(SampleEntityUUIDKeyed.class);
+	}
+	
+	@After
+	public void after() {
 
+		elasticsearchTemplate.deleteIndex(SampleEntity.class);
+		elasticsearchTemplate.deleteIndex(SampleEntityUUIDKeyed.class);
+		elasticsearchTemplate.deleteIndex(UseServerConfigurationEntity.class);
+		elasticsearchTemplate.deleteIndex(SampleMappingEntity.class);
+		elasticsearchTemplate.deleteIndex(Book.class);
 		elasticsearchTemplate.deleteIndex(INDEX_1_NAME);
 		elasticsearchTemplate.deleteIndex(INDEX_2_NAME);
-		elasticsearchTemplate.deleteIndex(UseServerConfigurationEntity.class);
-		elasticsearchTemplate.refresh(SampleEntity.class);
+		elasticsearchTemplate.deleteIndex(INDEX_3_NAME);
 	}
 
 	/*
@@ -364,7 +387,7 @@ public class ElasticsearchTemplateTests {
 
 		elasticsearchTemplate.index(indexQuery);
 		// when
-		elasticsearchTemplate.delete(INDEX_NAME, TYPE_NAME, documentId);
+		elasticsearchTemplate.delete(INDEX_NAME_SAMPLE_ENTITY, TYPE_NAME, documentId);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 		// then
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
@@ -896,7 +919,7 @@ public class ElasticsearchTemplateTests {
 
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class);
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.withTypes(TYPE_NAME).withFields("message").build();
 		// when
 		Page<String> page = elasticsearchTemplate.queryForPage(searchQuery, String.class, new SearchResultMapperAdapter() {
@@ -931,7 +954,7 @@ public class ElasticsearchTemplateTests {
 		FetchSourceFilterBuilder sourceFilter = new FetchSourceFilterBuilder();
 		sourceFilter.withIncludes("message");
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.withTypes(TYPE_NAME).withSourceFilter(sourceFilter.build()).build();
 		// when
 		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
@@ -990,7 +1013,7 @@ public class ElasticsearchTemplateTests {
 		// then
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
-		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addIndices(INDEX_NAME_SAMPLE_ENTITY);
 		criteriaQuery.addTypes(TYPE_NAME);
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
@@ -1013,7 +1036,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class);
 		// then
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.withTypes(TYPE_NAME).withPageable(PageRequest.of(0, 10)).build();
 
 		ScrolledPage<SampleEntity> scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class);
@@ -1062,7 +1085,7 @@ public class ElasticsearchTemplateTests {
 		// then
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
-		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addIndices(INDEX_NAME_SAMPLE_ENTITY);
 		criteriaQuery.addTypes(TYPE_NAME);
 		criteriaQuery.addFields("message");
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
@@ -1092,7 +1115,7 @@ public class ElasticsearchTemplateTests {
 		// then
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withIndices(INDEX_NAME)
+				.withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.withTypes(TYPE_NAME)
 				.withFields("message")
 				.withQuery(matchAllQuery())
@@ -1124,7 +1147,7 @@ public class ElasticsearchTemplateTests {
 		// then
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
-		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addIndices(INDEX_NAME_SAMPLE_ENTITY);
 		criteriaQuery.addTypes(TYPE_NAME);
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
@@ -1149,7 +1172,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class);
 		// then
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.withTypes(TYPE_NAME).withPageable(PageRequest.of(0, 10)).build();
 
 		Page<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class,searchResultMapper);
@@ -1231,7 +1254,7 @@ public class ElasticsearchTemplateTests {
 		// then
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
-		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addIndices(INDEX_NAME_SAMPLE_ENTITY);
 		criteriaQuery.addTypes(TYPE_NAME);
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
@@ -1660,10 +1683,10 @@ public class ElasticsearchTemplateTests {
 		// when
 		DeleteQuery deleteQuery = new DeleteQuery();
 		deleteQuery.setQuery(termQuery("id", documentId));
-		deleteQuery.setIndex(INDEX_NAME);
+		deleteQuery.setIndex(INDEX_NAME_SAMPLE_ENTITY);
 		deleteQuery.setType(TYPE_NAME);
 		elasticsearchTemplate.delete(deleteQuery);
-		elasticsearchTemplate.refresh(INDEX_NAME);
+		elasticsearchTemplate.refresh(INDEX_NAME_SAMPLE_ENTITY);
 		// then
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
@@ -1678,13 +1701,13 @@ public class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = new IndexQuery();
 		indexQuery.setId("2333343434");
 		indexQuery.setSource(documentSource);
-		indexQuery.setIndexName(INDEX_NAME);
+		indexQuery.setIndexName(INDEX_NAME_SAMPLE_ENTITY);
 		indexQuery.setType(TYPE_NAME);
 		// when
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", indexQuery.getId()))
-				.withIndices(INDEX_NAME)
+				.withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.withTypes(TYPE_NAME)
 				.build();
 		// then
@@ -1712,7 +1735,7 @@ public class ElasticsearchTemplateTests {
 		// given
 		IndexQuery indexQuery = new IndexQuery();
 		indexQuery.setId("2333343434");
-		indexQuery.setIndexName(INDEX_NAME);
+		indexQuery.setIndexName(INDEX_NAME_SAMPLE_ENTITY);
 		indexQuery.setType(TYPE_NAME);
 
 		//when
@@ -1728,7 +1751,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class);
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(termQuery("message", "message"))
-				.withIndices(INDEX_NAME)
+				.withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.withTypes(TYPE_NAME)
 				.withPageable(PageRequest.of(0, 100))
 				.build();
@@ -1756,7 +1779,7 @@ public class ElasticsearchTemplateTests {
 						.must(wildcardQuery("message", "*a*"))
 						.should(wildcardQuery("message", "*b*"))
 				)
-				.withIndices(INDEX_NAME)
+				.withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.withTypes(TYPE_NAME)
 				.withMinScore(2.0F)
 				.build();
@@ -1869,13 +1892,13 @@ public class ElasticsearchTemplateTests {
 		IndexQuery indexQuery1 = new IndexQuery();
 		indexQuery1.setId("1");
 		indexQuery1.setObject(person1);
-		indexQuery1.setIndexName(INDEX_NAME);
+		indexQuery1.setIndexName(INDEX_NAME_SAMPLE_ENTITY);
 		indexQuery1.setType(TYPE_NAME);
 
 		IndexQuery indexQuery2 = new IndexQuery();
 		indexQuery2.setId("2");
 		indexQuery2.setObject(person2);
-		indexQuery2.setIndexName(INDEX_NAME);
+		indexQuery2.setIndexName(INDEX_NAME_SAMPLE_ENTITY);
 		indexQuery2.setType(TYPE_NAME);
 
 		List<IndexQuery> indexQueries = new ArrayList<>();
@@ -1884,10 +1907,10 @@ public class ElasticsearchTemplateTests {
 
 		//when
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(INDEX_NAME);
+		elasticsearchTemplate.refresh(INDEX_NAME_SAMPLE_ENTITY);
 
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices(INDEX_NAME)
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.withTypes(TYPE_NAME).withQuery(matchAllQuery()).build();
 		Page<Map> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, Map.class,
 				new SearchResultMapperAdapter() {
@@ -1929,7 +1952,7 @@ public class ElasticsearchTemplateTests {
 				.version(System.currentTimeMillis()).build();
 
 		IndexQueryBuilder indexQueryBuilder = new IndexQueryBuilder().withId(documentId)
-				.withIndexName(INDEX_NAME).withType(TYPE_NAME)
+				.withIndexName(INDEX_NAME_SAMPLE_ENTITY).withType(TYPE_NAME)
 				.withVersion(entity.getVersion())
 				.withObject(entity);
 
@@ -1941,9 +1964,9 @@ public class ElasticsearchTemplateTests {
 			ex = e;
 		}
 		assertNull(ex);
-		elasticsearchTemplate.refresh(INDEX_NAME);
+		elasticsearchTemplate.refresh(INDEX_NAME_SAMPLE_ENTITY);
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices(INDEX_NAME)
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.withTypes(TYPE_NAME).withQuery(matchAllQuery()).build();
 		// when
 		Page<GTEVersionEntity> entities = elasticsearchTemplate.queryForPage(searchQuery, GTEVersionEntity.class);
@@ -1958,7 +1981,7 @@ public class ElasticsearchTemplateTests {
 			ex = e;
 		}
 		assertNull(ex);
-		elasticsearchTemplate.refresh(INDEX_NAME);
+		elasticsearchTemplate.refresh(INDEX_NAME_SAMPLE_ENTITY);
 
 		// reindex with version one below
 		try {
@@ -1980,13 +2003,13 @@ public class ElasticsearchTemplateTests {
 				.version(System.currentTimeMillis()).build();
 
 		IndexQuery indexQuery = new IndexQueryBuilder().withId(documentId)
-				.withIndexName(INDEX_NAME).withType(TYPE_NAME)
+				.withIndexName(INDEX_NAME_SAMPLE_ENTITY).withType(TYPE_NAME)
 				.withObject(sampleEntity).build();
 
 		elasticsearchTemplate.index(indexQuery);
-		elasticsearchTemplate.refresh(INDEX_NAME);
+		elasticsearchTemplate.refresh(INDEX_NAME_SAMPLE_ENTITY);
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices(INDEX_NAME)
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.withTypes(TYPE_NAME).withQuery(matchAllQuery()).build();
 		// when
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
@@ -2009,7 +2032,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
-		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addIndices(INDEX_NAME_SAMPLE_ENTITY);
 		// when
 		long count = elasticsearchTemplate.count(criteriaQuery);
 		// then
@@ -2031,7 +2054,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class);
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(matchAllQuery())
-				.withIndices(INDEX_NAME)
+				.withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.build();
 		// when
 		long count = elasticsearchTemplate.count(searchQuery);
@@ -2053,7 +2076,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
-		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addIndices(INDEX_NAME_SAMPLE_ENTITY);
 		criteriaQuery.addTypes("test-type");
 		// when
 		long count = elasticsearchTemplate.count(criteriaQuery);
@@ -2076,7 +2099,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class);
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(matchAllQuery())
-				.withIndices(INDEX_NAME)
+				.withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.withTypes("test-type")
 				.build();
 		// when
@@ -2176,11 +2199,11 @@ public class ElasticsearchTemplateTests {
 	@Test
 	public void shouldCreatedIndexWithSpecifiedIndexName() {
 		// given
-		elasticsearchTemplate.deleteIndex("test-index");
+		elasticsearchTemplate.deleteIndex(INDEX_3_NAME);
 		// when
-		elasticsearchTemplate.createIndex("test-index");
+		elasticsearchTemplate.createIndex(INDEX_3_NAME);
 		// then
-		assertThat(elasticsearchTemplate.indexExists("test-index"), is(true));
+		assertThat(elasticsearchTemplate.indexExists(INDEX_3_NAME), is(true));
 	}
 
 	/*
@@ -2193,9 +2216,9 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.refresh(SampleEntity.class);
 
 		// when
-		elasticsearchTemplate.deleteIndex("test-index");
+		elasticsearchTemplate.deleteIndex(INDEX_3_NAME);
 		// then
-		assertThat(elasticsearchTemplate.indexExists("test-index"), is(false));
+		assertThat(elasticsearchTemplate.indexExists(INDEX_3_NAME), is(false));
 	}
 
 	/*
@@ -2334,14 +2357,14 @@ public class ElasticsearchTemplateTests {
 				"        }\n" +
 				"}";
 
-		elasticsearchTemplate.deleteIndex("test-index");
+		elasticsearchTemplate.deleteIndex(INDEX_3_NAME);
 		// when
-		elasticsearchTemplate.createIndex("test-index", settings);
+		elasticsearchTemplate.createIndex(INDEX_3_NAME, settings);
 		// then
-		Map map = elasticsearchTemplate.getSetting("test-index");
+		Map map = elasticsearchTemplate.getSetting(INDEX_3_NAME);
 		boolean hasAnalyzer = map.containsKey("index.analysis.analyzer.emailAnalyzer.tokenizer");
 		String emailAnalyzer = (String) map.get("index.analysis.analyzer.emailAnalyzer.tokenizer");
-		assertThat(elasticsearchTemplate.indexExists("test-index"), is(true));
+		assertThat(elasticsearchTemplate.indexExists(INDEX_3_NAME), is(true));
 		assertThat(hasAnalyzer, is(true));
 		assertThat(emailAnalyzer, is("uax_url_email"));
 	}
@@ -2356,7 +2379,7 @@ public class ElasticsearchTemplateTests {
 
 		// then
 		Map map = elasticsearchTemplate.getSetting(SampleEntity.class);
-		assertThat(elasticsearchTemplate.indexExists("test-index"), is(true));
+		assertThat(elasticsearchTemplate.indexExists(SampleEntity.class), is(true));
 		assertThat(map.containsKey("index.refresh_interval"), is(true));
 		assertThat(map.containsKey("index.number_of_replicas"), is(true));
 		assertThat(map.containsKey("index.number_of_shards"), is(true));
@@ -2395,7 +2418,7 @@ public class ElasticsearchTemplateTests {
 
 		// then
 		Map map = elasticsearchTemplate.getSetting(SampleEntity.class);
-		assertThat(elasticsearchTemplate.indexExists(INDEX_NAME), is(true));
+		assertThat(elasticsearchTemplate.indexExists(INDEX_NAME_SAMPLE_ENTITY), is(true));
 		assertThat(map.containsKey("index.number_of_replicas"), is(true));
 		assertThat(map.containsKey("index.number_of_shards"), is(true));
 		assertThat((String) map.get("index.number_of_replicas"), is("0"));
@@ -2630,7 +2653,7 @@ public class ElasticsearchTemplateTests {
 
 		// when
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("message"));
-		criteriaQuery.addIndices(INDEX_NAME);
+		criteriaQuery.addIndices(INDEX_NAME_SAMPLE_ENTITY);
 		criteriaQuery.addTypes(TYPE_NAME);
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
@@ -2669,7 +2692,7 @@ public class ElasticsearchTemplateTests {
 
 		// when
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchQuery("message", "message"))
-				.withIndices(INDEX_NAME).withTypes(TYPE_NAME).withPageable(PageRequest.of(0, 10)).build();
+				.withIndices(INDEX_NAME_SAMPLE_ENTITY).withTypes(TYPE_NAME).withPageable(PageRequest.of(0, 10)).build();
 
 		ScrolledPage<SampleEntity> scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.startScroll(1000,
 				searchQuery, SampleEntity.class);
@@ -2698,7 +2721,7 @@ public class ElasticsearchTemplateTests {
 
 		SourceFilter sourceFilter = new FetchSourceFilter(new String[]{"id"}, new String[]{});
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME)
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(INDEX_NAME_SAMPLE_ENTITY)
 				.withTypes(TYPE_NAME).withPageable(PageRequest.of(0, 10))
 				.withSourceFilter(sourceFilter)
 				.build();
