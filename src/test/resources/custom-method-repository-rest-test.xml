@@ -5,7 +5,14 @@
        xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch https://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch.xsd
 		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
 
-    <import resource="elasticsearch-rest-template-test.xml"/>
+    <import resource="infrastructure.xml"/>
+
+    <bean name="elasticsearchTemplate"
+          class="org.springframework.data.elasticsearch.repositories.CustomMethodRepositoryRestTests$CleanupOnStartElasticsearchTemplate">
+        <constructor-arg name="client" ref="restClient"/>
+    </bean>
+
+    <elasticsearch:rest-client id="restClient"/>
 
     <elasticsearch:repositories
             base-package="org.springframework.data.elasticsearch.repositories.custom"/>

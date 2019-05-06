@@ -15,8 +15,10 @@
  */
 package org.springframework.data.elasticsearch.repositories;
 
+import org.elasticsearch.client.Client;
 import org.junit.Before;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
@@ -24,13 +26,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 /**
- * 
  * @author Don Wellington
- *
+ * @author Mark Paluch
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:custom-method-repository-test.xml")
 public class CustomMethodRepositoryTests extends CustomMethodRepositoryBaseTests {
+
 	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
 	@Before
@@ -39,5 +41,19 @@ public class CustomMethodRepositoryTests extends CustomMethodRepositoryBaseTests
 		elasticsearchTemplate.createIndex(SampleEntity.class);
 		elasticsearchTemplate.putMapping(SampleEntity.class);
 		elasticsearchTemplate.refresh(SampleEntity.class);
+	}
+
+	/**
+	 * Workaround because {@link SampleEntity} is used like everywhere and there's little chance to find the place where
+	 * the mapping is altered so that it becomes incompatible with the one created on repository startup.
+	 * <p>
+	 * TODO: Remove me once the cause is fixed! See: https://jira.spring.io/browse/DATAES-576
+	 */
+	static class CleanupOnStartElasticsearchTemplate extends ElasticsearchTemplate {
+
+		public CleanupOnStartElasticsearchTemplate(Client client) {
+			super(client);
+			deleteIndex(SampleEntity.class);
+		}
 	}
 }

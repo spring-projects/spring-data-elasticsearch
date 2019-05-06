@@ -8,10 +8,9 @@
     <import resource="infrastructure.xml"/>
 
     <bean name="elasticsearchTemplate"
-          class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
+          class="org.springframework.data.elasticsearch.repositories.CustomMethodRepositoryTests$CleanupOnStartElasticsearchTemplate">
         <constructor-arg name="client" ref="client"/>
     </bean>
-
 
     <elasticsearch:repositories
             base-package="org.springframework.data.elasticsearch.repositories.custom"/>

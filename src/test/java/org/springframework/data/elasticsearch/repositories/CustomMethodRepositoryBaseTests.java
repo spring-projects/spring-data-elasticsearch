@@ -30,6 +30,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repositories.custom.SampleCustomMethodRepository;
@@ -46,7 +47,6 @@ import org.springframework.data.geo.Point;
  * @author Christoph Strobl
  * @author Don Wellington
  */
-
 public abstract class CustomMethodRepositoryBaseTests {
 
 	@Autowired private SampleCustomMethodRepository repository;
