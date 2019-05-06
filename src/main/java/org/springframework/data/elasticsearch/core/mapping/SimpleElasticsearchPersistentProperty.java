@@ -27,6 +27,7 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -47,7 +48,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	private final boolean isScore;
 	private final boolean isParent;
 	private final boolean isId;
-	private final String annotatedFieldName;
+	private final @Nullable String annotatedFieldName;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
 			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
@@ -59,20 +60,21 @@ public class SimpleElasticsearchPersistentProperty extends
 		this.isScore = isAnnotationPresent(Score.class);
 		this.isParent = isAnnotationPresent(Parent.class);
 
-		if (isVersionProperty() && getType() != Long.class) {
+		if (isVersionProperty() && !getType().equals(Long.class)) {
 			throw new MappingException(String.format("Version property %s must be of type Long!", property.getName()));
 		}
 
-		if (isScore && !Arrays.asList(Float.TYPE, Float.class).contains(getType())) {
+		if (isScore && !getType().equals(Float.TYPE) && !getType().equals(Float.class)) {
 			throw new MappingException(
 					String.format("Score property %s must be either of type float or Float!", property.getName()));
 		}
 
-		if (isParent && getType() != String.class) {
+		if (isParent && !getType().equals(String.class)) {
 			throw new MappingException(String.format("Parent property %s must be of type String!", property.getName()));
 		}
 	}
 
+	@Nullable
 	private String getAnnotatedFieldName() {
 
 		if (isAnnotationPresent(Field.class)) {

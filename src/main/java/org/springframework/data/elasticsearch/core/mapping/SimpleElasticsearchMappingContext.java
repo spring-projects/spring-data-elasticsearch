@@ -22,6 +22,7 @@ import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 
 /**
  * SimpleElasticsearchMappingContext
@@ -30,10 +31,11 @@ import org.springframework.data.util.TypeInformation;
  * @author Mohsin Husen
  * @author Mark Paluch
  */
-public class SimpleElasticsearchMappingContext extends
-		AbstractMappingContext<SimpleElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> implements ApplicationContextAware {
+public class SimpleElasticsearchMappingContext
+		extends AbstractMappingContext<SimpleElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty>
+		implements ApplicationContextAware {
 
-	private ApplicationContext context;
+	private @Nullable ApplicationContext context;
 
 	@Override
 	protected <T> SimpleElasticsearchPersistentEntity<?> createPersistentEntity(TypeInformation<T> typeInformation) {

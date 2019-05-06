@@ -55,21 +55,22 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private final StandardEvaluationContext context;
 	private final SpelExpressionParser parser;
 
-	private String indexName;
-	private String indexType;
+	private @Nullable String indexName;
+	private @Nullable String indexType;
 	private boolean useServerConfiguration;
 	private short shards;
 	private short replicas;
-	private String refreshInterval;
-	private String indexStoreType;
-	private String parentType;
-	private ElasticsearchPersistentProperty parentIdProperty;
-	private ElasticsearchPersistentProperty scoreProperty;
-	private String settingPath;
+	private @Nullable String refreshInterval;
+	private @Nullable String indexStoreType;
+	private @Nullable String parentType;
+	private @Nullable ElasticsearchPersistentProperty parentIdProperty;
+	private @Nullable ElasticsearchPersistentProperty scoreProperty;
+	private @Nullable String settingPath;
 	private VersionType versionType;
 	private boolean createIndexAndMapping;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
+
 		super(typeInformation);
 		this.context = new StandardEvaluationContext();
 		this.parser = new SpelExpressionParser();
@@ -104,7 +105,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public String getIndexName() {
 
-		if(indexName != null) {
+		if (indexName != null) {
 			Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
 			return expression.getValue(context, String.class);
 		}
@@ -115,7 +116,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public String getIndexType() {
 
-		if(indexType != null) {
+		if (indexType != null) {
 			Expression expression = parser.parseExpression(indexType, ParserContext.TEMPLATE_EXPRESSION);
 			return expression.getValue(context, String.class);
 		}
@@ -192,9 +193,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			ElasticsearchPersistentProperty parentProperty = this.parentIdProperty;
 
 			if (parentProperty != null) {
-				throw new MappingException(
-						String.format("Attempt to add parent property %s but already have property %s registered "
-								+ "as parent property. Check your mapping configuration!", property.getField(), parentProperty.getField()));
+				throw new MappingException(String.format(
+						"Attempt to add parent property %s but already have property %s registered "
+								+ "as parent property. Check your mapping configuration!",
+						property.getField(), parentProperty.getField()));
 			}
 
 			Parent parentAnnotation = property.findAnnotation(Parent.class);
@@ -203,26 +205,27 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		}
 
 		if (property.isScoreProperty()) {
-			
+
 			ElasticsearchPersistentProperty scoreProperty = this.scoreProperty;
 
 			if (scoreProperty != null) {
-				throw new MappingException(
-						String.format("Attempt to add score property %s but already have property %s registered "
-								+ "as score property. Check your mapping configuration!", property.getField(), scoreProperty.getField()));
+				throw new MappingException(String.format(
+						"Attempt to add score property %s but already have property %s registered "
+								+ "as score property. Check your mapping configuration!",
+						property.getField(), scoreProperty.getField()));
 			}
 
 			this.scoreProperty = property;
 		}
 	}
-	
-	/* 
+
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#setPersistentPropertyAccessorFactory(org.springframework.data.mapping.model.PersistentPropertyAccessorFactory)
 	 */
 	@Override
 	public void setPersistentPropertyAccessorFactory(PersistentPropertyAccessorFactory factory) {
-		
+
 		// Do nothing to avoid the usage of ClassGeneratingPropertyAccessorFactory for now
 		// DATACMNS-1322 switches to proper immutability behavior which Spring Data Elasticsearch
 		// cannot yet implement

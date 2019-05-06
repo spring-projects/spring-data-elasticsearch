@@ -27,16 +27,25 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.annotations.CompletionContext;
+import org.springframework.data.elasticsearch.annotations.CompletionField;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.PropertyHandler;
-import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
@@ -61,34 +70,33 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 class MappingBuilder {
 
-	public static final String FIELD_DATA = "fielddata";
-	public static final String FIELD_STORE = "store";
-	public static final String FIELD_TYPE = "type";
-	public static final String FIELD_INDEX = "index";
-	public static final String FIELD_FORMAT = "format";
-	public static final String FIELD_SEARCH_ANALYZER = "search_analyzer";
-	public static final String FIELD_INDEX_ANALYZER = "analyzer";
-	public static final String FIELD_NORMALIZER = "normalizer";
-	public static final String FIELD_PROPERTIES = "properties";
-	public static final String FIELD_PARENT = "_parent";
-	public static final String FIELD_COPY_TO = "copy_to";
-	public static final String FIELD_CONTEXT_NAME = "name";
-	public static final String FIELD_CONTEXT_TYPE = "type";
-	public static final String FIELD_CONTEXT_PRECISION = "precision";
-	public static final String FIELD_DYNAMIC_TEMPLATES = "dynamic_templates";
+	private static final String FIELD_DATA = "fielddata";
+	private static final String FIELD_STORE = "store";
+	private static final String FIELD_TYPE = "type";
+	private static final String FIELD_INDEX = "index";
+	private static final String FIELD_FORMAT = "format";
+	private static final String FIELD_SEARCH_ANALYZER = "search_analyzer";
+	private static final String FIELD_INDEX_ANALYZER = "analyzer";
+	private static final String FIELD_NORMALIZER = "normalizer";
+	private static final String FIELD_PROPERTIES = "properties";
+	private static final String FIELD_PARENT = "_parent";
+	private static final String FIELD_COPY_TO = "copy_to";
+	private static final String FIELD_CONTEXT_NAME = "name";
+	private static final String FIELD_CONTEXT_TYPE = "type";
+	private static final String FIELD_CONTEXT_PRECISION = "precision";
+	private static final String FIELD_DYNAMIC_TEMPLATES = "dynamic_templates";
 
-	public static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
-	public static final String COMPLETION_PRESERVE_POSITION_INCREMENTS = "preserve_position_increments";
-	public static final String COMPLETION_MAX_INPUT_LENGTH = "max_input_length";
-	public static final String COMPLETION_CONTEXTS = "contexts";
+	private static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
+	private static final String COMPLETION_PRESERVE_POSITION_INCREMENTS = "preserve_position_increments";
+	private static final String COMPLETION_MAX_INPUT_LENGTH = "max_input_length";
+	private static final String COMPLETION_CONTEXTS = "contexts";
 
-	public static final String TYPE_VALUE_KEYWORD = "keyword";
-	public static final String TYPE_VALUE_GEO_POINT = "geo_point";
-	public static final String TYPE_VALUE_COMPLETION = "completion";
-	public static final String TYPE_VALUE_GEO_HASH_PREFIX = "geohash_prefix";
-	public static final String TYPE_VALUE_GEO_HASH_PRECISION = "geohash_precision";
+	private static final String TYPE_VALUE_KEYWORD = "keyword";
+	private static final String TYPE_VALUE_GEO_POINT = "geo_point";
+	private static final String TYPE_VALUE_COMPLETION = "completion";
+
 	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
-	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = SimpleTypeHolder.DEFAULT;
+
 	private final ElasticsearchConverter elasticsearchConverter;
 
 	MappingBuilder(ElasticsearchConverter elasticsearchConverter) {
@@ -101,7 +109,7 @@ class MappingBuilder {
 	 * @return JSON string
 	 * @throws IOException
 	 */
-	String buildMapping(Class<?> clazz) throws IOException {
+	String buildPropertyMapping(Class<?> clazz) throws IOException {
 
 		ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext()
 				.getRequiredPersistentEntity(clazz);
@@ -157,62 +165,7 @@ class MappingBuilder {
 						return;
 					}
 
-					if (property.isAnnotationPresent(Mapping.class)) {
-
-						String mappingPath = property.getRequiredAnnotation(Mapping.class).mappingPath();
-						if (!StringUtils.isEmpty(mappingPath)) {
-
-							ClassPathResource mappings = new ClassPathResource(mappingPath);
-							if (mappings.exists()) {
-								builder.rawField(property.getFieldName(), mappings.getInputStream(), XContentType.JSON);
-								return;
-							}
-						}
-					}
-
-					boolean isGeoPointProperty = isGeoPointProperty(property);
-					boolean isCompletionProperty = isCompletionProperty(property);
-					boolean isNestedOrObjectProperty = isNestedOrObjectProperty(property);
-
-					Field fieldAnnotation = property.findAnnotation(Field.class);
-					if (!isGeoPointProperty && !isCompletionProperty && property.isEntity() && hasRelevantAnnotation(property)) {
-
-						if (fieldAnnotation == null) {
-							return;
-						}
-
-						Iterator<? extends TypeInformation<?>> iterator = property.getPersistentEntityTypes().iterator();
-						ElasticsearchPersistentEntity<?> persistentEntity = iterator.hasNext()
-								? elasticsearchConverter.getMappingContext().getPersistentEntity(iterator.next())
-								: null;
-
-						mapEntity(builder, persistentEntity, false, property.getFieldName(), isNestedOrObjectProperty,
-								fieldAnnotation.type(), fieldAnnotation);
-
-						if (isNestedOrObjectProperty) {
-							return;
-						}
-					}
-
-					MultiField multiField = property.findAnnotation(MultiField.class);
-
-					if (isGeoPointProperty) {
-						applyGeoPointFieldMapping(builder, property);
-						return;
-					}
-
-					if (isCompletionProperty) {
-						CompletionField completionField = property.findAnnotation(CompletionField.class);
-						applyCompletionFieldMapping(builder, property, completionField);
-					}
-
-					if (isRootObject && fieldAnnotation != null && property.isIdProperty()) {
-						applyDefaultIdFieldMapping(builder, property);
-					} else if (multiField != null) {
-						addMultiFieldMapping(builder, property, multiField, isNestedOrObjectProperty);
-					} else if (fieldAnnotation != null) {
-						addSingleFieldMapping(builder, property, fieldAnnotation, isNestedOrObjectProperty);
-					}
+					buildPropertyMapping(builder, isRootObject, property);
 				} catch (IOException e) {
 					logger.warn("error mapping property with name {}", property.getName(), e);
 				}
@@ -221,6 +174,67 @@ class MappingBuilder {
 
 		if (writeNestedProperties) {
 			builder.endObject().endObject();
+		}
+	}
+
+	private void buildPropertyMapping(XContentBuilder builder, boolean isRootObject,
+			ElasticsearchPersistentProperty property) throws IOException {
+
+		if (property.isAnnotationPresent(Mapping.class)) {
+
+			String mappingPath = property.getRequiredAnnotation(Mapping.class).mappingPath();
+			if (!StringUtils.isEmpty(mappingPath)) {
+
+				ClassPathResource mappings = new ClassPathResource(mappingPath);
+				if (mappings.exists()) {
+					builder.rawField(property.getFieldName(), mappings.getInputStream(), XContentType.JSON);
+					return;
+				}
+			}
+		}
+
+		boolean isGeoPointProperty = isGeoPointProperty(property);
+		boolean isCompletionProperty = isCompletionProperty(property);
+		boolean isNestedOrObjectProperty = isNestedOrObjectProperty(property);
+
+		Field fieldAnnotation = property.findAnnotation(Field.class);
+		if (!isGeoPointProperty && !isCompletionProperty && property.isEntity() && hasRelevantAnnotation(property)) {
+
+			if (fieldAnnotation == null) {
+				return;
+			}
+
+			Iterator<? extends TypeInformation<?>> iterator = property.getPersistentEntityTypes().iterator();
+			ElasticsearchPersistentEntity<?> persistentEntity = iterator.hasNext()
+					? elasticsearchConverter.getMappingContext().getPersistentEntity(iterator.next())
+					: null;
+
+			mapEntity(builder, persistentEntity, false, property.getFieldName(), isNestedOrObjectProperty,
+					fieldAnnotation.type(), fieldAnnotation);
+
+			if (isNestedOrObjectProperty) {
+				return;
+			}
+		}
+
+		MultiField multiField = property.findAnnotation(MultiField.class);
+
+		if (isGeoPointProperty) {
+			applyGeoPointFieldMapping(builder, property);
+			return;
+		}
+
+		if (isCompletionProperty) {
+			CompletionField completionField = property.findAnnotation(CompletionField.class);
+			applyCompletionFieldMapping(builder, property, completionField);
+		}
+
+		if (isRootObject && fieldAnnotation != null && property.isIdProperty()) {
+			applyDefaultIdFieldMapping(builder, property);
+		} else if (multiField != null) {
+			addMultiFieldMapping(builder, property, multiField, isNestedOrObjectProperty);
+		} else if (fieldAnnotation != null) {
+			addSingleFieldMapping(builder, property, fieldAnnotation, isNestedOrObjectProperty);
 		}
 	}
 
@@ -321,6 +335,7 @@ class MappingBuilder {
 
 	private void addFieldMappingParameters(XContentBuilder builder, Object annotation, boolean nestedOrObjectField)
 			throws IOException {
+
 		boolean index = true;
 		boolean store = false;
 		boolean fielddata = false;

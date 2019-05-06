@@ -89,6 +89,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -224,7 +225,7 @@ public class ElasticsearchRestTemplate
 		}
 		try {
 			MappingBuilder mappingBuilder = new MappingBuilder(elasticsearchConverter);
-			return putMapping(clazz, mappingBuilder.buildMapping(clazz));
+			return putMapping(clazz, mappingBuilder.buildPropertyMapping(clazz));
 		} catch (Exception e) {
 			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
 		}
@@ -497,8 +498,7 @@ public class ElasticsearchRestTemplate
 	@Override
 	public <T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz) {
 		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
-		return doStream(scrollTimeInMillis, startScroll(scrollTimeInMillis, query, clazz), clazz,
-				resultsMapper);
+		return doStream(scrollTimeInMillis, startScroll(scrollTimeInMillis, query, clazz), clazz, resultsMapper);
 	}
 
 	@Override
@@ -509,8 +509,7 @@ public class ElasticsearchRestTemplate
 	@Override
 	public <T> CloseableIterator<T> stream(SearchQuery query, final Class<T> clazz, final SearchResultMapper mapper) {
 		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
-		return doStream(scrollTimeInMillis, startScroll(scrollTimeInMillis, query, clazz, mapper), clazz,
-				mapper);
+		return doStream(scrollTimeInMillis, startScroll(scrollTimeInMillis, query, clazz, mapper), clazz, mapper);
 	}
 
 	private <T> CloseableIterator<T> doStream(final long scrollTimeInMillis, final ScrolledPage<T> page,
@@ -1453,8 +1452,7 @@ public class ElasticsearchRestTemplate
 			node = node.findValue("aliases");
 
 			Map<String, AliasData> aliasData = mapper.readValue(mapper.writeValueAsString(node),
-					new TypeReference<Map<String, AliasData>>() {
-					});
+					new TypeReference<Map<String, AliasData>>() {});
 
 			Iterable<Map.Entry<String, AliasData>> aliasIter = aliasData.entrySet();
 			List<AliasMetaData> aliasMetaDataList = new ArrayList<AliasMetaData>();

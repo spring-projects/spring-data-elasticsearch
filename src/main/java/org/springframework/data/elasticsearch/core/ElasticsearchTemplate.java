@@ -206,7 +206,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		}
 		try {
 			MappingBuilder mappingBuilder = new MappingBuilder(elasticsearchConverter);
-			return putMapping(clazz, mappingBuilder.buildMapping(clazz));
+			return putMapping(clazz, mappingBuilder.buildPropertyMapping(clazz));
 		} catch (Exception e) {
 			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
 		}

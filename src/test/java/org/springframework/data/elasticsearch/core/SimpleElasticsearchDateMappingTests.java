@@ -15,10 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 
-import org.junit.Assert;
 import org.junit.Test;
+
 import org.springframework.data.elasticsearch.entities.SampleDateMappingEntity;
 
 /**
@@ -34,11 +36,11 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 			+ "\"defaultFormatDate\":{\"store\":false,\"type\":\"date\"},\"basicFormatDate\":{\"store\":false,\""
 			+ "type\":\"date\",\"format\":\"basic_date\"}}}}";
 
-	@Test
+	@Test // DATAES-568
 	public void testCorrectDateMappings() throws IOException {
 
-		String mapping = getMappingBuilder().buildMapping(SampleDateMappingEntity.class);
+		String mapping = getMappingBuilder().buildPropertyMapping(SampleDateMappingEntity.class);
 
-		Assert.assertEquals(EXPECTED_MAPPING, mapping);
+		assertEquals(EXPECTED_MAPPING, mapping);
 	}
 }
