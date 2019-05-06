@@ -74,7 +74,7 @@ import org.springframework.data.util.CloseableIterator;
 
 /**
  * Base for testing rest/transport templates
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Franck Marchand
@@ -460,7 +460,7 @@ public class ElasticsearchTemplateTests {
 
 		// when
 		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(termQuery("message", "foo"));
+		deleteQuery.setQuery(typeQuery(TYPE_NAME));
 		deleteQuery.setType(TYPE_NAME);
 		deleteQuery.setIndex("test-index-*");
 

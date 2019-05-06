@@ -34,10 +34,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.annotation.Id;
@@ -82,7 +84,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@Before
 	public void setUp() {
 
-		TestUtils.deleteIndex(DEFAULT_INDEX, ALTERNATE_INDEX);
+		deleteIndices();
 
 		restTemplate = new ElasticsearchRestTemplate(TestUtils.restHighLevelClient());
 		restTemplate.createIndex(SampleEntity.class);
@@ -92,6 +94,15 @@ public class ReactiveElasticsearchTemplateTests {
 		template = new ReactiveElasticsearchTemplate(TestUtils.reactiveClient(), restTemplate.getElasticsearchConverter(),
 				new DefaultResultMapper(new ElasticsearchEntityMapper(
 						restTemplate.getElasticsearchConverter().getMappingContext(), new DefaultConversionService())));
+	}
+
+	@After
+	public void tearDown() {
+		deleteIndices();
+	}
+
+	private void deleteIndices() {
+		TestUtils.deleteIndex(DEFAULT_INDEX, ALTERNATE_INDEX, "rx-template-test-index-this", "rx-template-test-index-that");
 	}
 
 	@Test // DATAES-504
@@ -547,6 +558,8 @@ public class ReactiveElasticsearchTemplateTests {
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
 				.verifyComplete();
+
+		TestUtils.deleteIndex(thisIndex, thatIndex);
 	}
 
 	@Test // DATAES-547
@@ -575,6 +588,8 @@ public class ReactiveElasticsearchTemplateTests {
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
 				.verifyComplete();
+
+		TestUtils.deleteIndex(thisIndex, thatIndex);
 	}
 
 	@Test // DATAES-504
