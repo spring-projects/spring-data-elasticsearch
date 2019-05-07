@@ -42,7 +42,9 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -51,6 +53,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.data.elasticsearch.ElasticsearchVersion;
 import org.springframework.data.elasticsearch.ElasticsearchVersionRule;
 import org.springframework.data.elasticsearch.TestUtils;
@@ -96,6 +99,8 @@ public class ReactiveElasticsearchClientTests {
 
 		syncClient = TestUtils.restHighLevelClient();
 		client = TestUtils.reactiveClient();
+
+		TestUtils.deleteIndex(INDEX_I, INDEX_II);
 	}
 
 	@After
@@ -140,8 +145,10 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-519
 	public void getOnNonExistingIndexShouldThrowException() {
 
-		client.get(new GetRequest(INDEX_I, TYPE_I, "nonono")).as(StepVerifier::create)
-				.expectError(ElasticsearchStatusException.class).verify();
+		client.get(new GetRequest(INDEX_I, TYPE_I, "nonono")) //
+				.as(StepVerifier::create) //
+				.expectError(ElasticsearchStatusException.class) //
+				.verify();
 	}
 
 	@Test // DATAES-488
@@ -231,13 +238,9 @@ public class ReactiveElasticsearchClientTests {
 				.add(INDEX_I, TYPE_I, id2); //
 
 		client.multiGet(request) //
+				.map(GetResult::getId) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(it -> {
-					assertThat(it.getId()).isEqualTo(id1);
-				}) //
-				.consumeNextWith(it -> {
-					assertThat(it.getId()).isEqualTo(id2);
-				}) //
+				.expectNext(id1, id2) //
 				.verifyComplete();
 	}
 
@@ -263,13 +266,9 @@ public class ReactiveElasticsearchClientTests {
 				.add(INDEX_II, TYPE_II, id2);
 
 		client.multiGet(request) //
+				.map(GetResult::getId) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(it -> {
-					assertThat(it.getId()).isEqualTo(id1);
-				}) //
-				.consumeNextWith(it -> {
-					assertThat(it.getId()).isEqualTo(id2);
-				}) //
+				.expectNext(id1, id2) //
 				.verifyComplete();
 	}
 
@@ -320,10 +319,7 @@ public class ReactiveElasticsearchClientTests {
 
 		client.index(request) //
 				.as(StepVerifier::create) //
-				.consumeErrorWith(error -> {
-					assertThat(error).isInstanceOf(ElasticsearchStatusException.class);
-				}) //
-				.verify();
+				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-488
@@ -372,10 +368,7 @@ public class ReactiveElasticsearchClientTests {
 
 		client.update(request) //
 				.as(StepVerifier::create) //
-				.consumeErrorWith(error -> {
-					assertThat(error).isInstanceOf(ElasticsearchStatusException.class);
-				}) //
-				.verify();
+				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-488
@@ -447,11 +440,9 @@ public class ReactiveElasticsearchClientTests {
 				.setQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("_id", id)));
 
 		client.deleteBy(request) //
+				.map(BulkByScrollResponse::getDeleted) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(it -> {
-
-					assertThat(it.getDeleted()).isEqualTo(1);
-				}) //
+				.expectNext(1L) //
 				.verifyComplete();
 	}
 
@@ -466,10 +457,9 @@ public class ReactiveElasticsearchClientTests {
 				.setQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("_id", "it-was-not-me")));
 
 		client.deleteBy(request) //
+				.map(BulkByScrollResponse::getDeleted) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(it -> {
-					assertThat(it.getDeleted()).isEqualTo(0);
-				}) //
+				.expectNext(0L)//
 				.verifyComplete();
 	}
 
@@ -500,7 +490,8 @@ public class ReactiveElasticsearchClientTests {
 		request = request.scroll(TimeValue.timeValueMinutes(1));
 
 		client.scroll(HttpHeaders.EMPTY, request) //
-				.take(73).as(StepVerifier::create) //
+				.take(73) //
+				.as(StepVerifier::create) //
 				.expectNextCount(73) //
 				.verifyComplete();
 	}
@@ -534,7 +525,7 @@ public class ReactiveElasticsearchClientTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		syncClient.indices().exists(new GetIndexRequest().indices(INDEX_II), RequestOptions.DEFAULT);
+		assertThat(syncClient.indices().exists(new GetIndexRequest().indices(INDEX_I), RequestOptions.DEFAULT)).isTrue();
 	}
 
 	@Test // DATAES-569
@@ -663,15 +654,15 @@ public class ReactiveElasticsearchClientTests {
 				.verifyError(ElasticsearchStatusException.class);
 	}
 
-	AddToIndexOfType addSourceDocument() {
+	private AddToIndexOfType addSourceDocument() {
 		return add(DOC_SOURCE);
 	}
 
-	AddToIndexOfType add(Map source) {
+	private AddToIndexOfType add(Map<String, ? extends Object> source) {
 		return new AddDocument(source);
 	}
 
-	IndexRequest indexRequest(Map source, String index, String type) {
+	private IndexRequest indexRequest(Map source, String index, String type) {
 
 		return new IndexRequest(index, type) //
 				.id(UUID.randomUUID().toString()) //
@@ -681,7 +672,7 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@SneakyThrows
-	String doIndex(Map source, String index, String type) {
+	private String doIndex(Map<?, ?> source, String index, String type) {
 		return syncClient.index(indexRequest(source, index, type), RequestOptions.DEFAULT).getId();
 	}
 
@@ -695,10 +686,10 @@ public class ReactiveElasticsearchClientTests {
 
 	class AddDocument implements AddToIndexOfType {
 
-		Map source;
+		Map<String, ? extends Object> source;
 		@Nullable String type;
 
-		AddDocument(Map source) {
+		AddDocument(Map<String, ? extends Object> source) {
 			this.source = source;
 		}
 
@@ -711,7 +702,7 @@ public class ReactiveElasticsearchClientTests {
 
 		@Override
 		public String to(String index) {
-			return doIndex(new LinkedHashMap(source), index, type);
+			return doIndex(new LinkedHashMap<>(source), index, type);
 		}
 	}
 

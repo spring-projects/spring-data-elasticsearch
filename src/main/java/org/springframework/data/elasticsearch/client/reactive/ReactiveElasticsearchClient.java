@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
-import org.elasticsearch.action.admin.indices.flush.FlushRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -26,6 +25,7 @@ import java.util.function.Consumer;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.flush.FlushRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
@@ -45,6 +45,7 @@ import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
+
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.http.HttpHeaders;
@@ -247,8 +248,8 @@ public interface ReactiveElasticsearchClient {
 
 	/**
 	 * Gain access to index related commands.
-	 * 
-	 * @return
+	 *
+	 * @return access to index related commands.
 	 */
 	Indices indices();
 
@@ -788,8 +789,8 @@ public interface ReactiveElasticsearchClient {
 		 * @param consumer never {@literal null}.
 		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
 		 *         does not exist.
-		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-flush.html"> Indices
-		 *      Flush API on elastic.co</a>
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-flush.html"> Indices Flush
+		 *      API on elastic.co</a>
 		 */
 		default Mono<Void> flushIndex(Consumer<FlushRequest> consumer) {
 
@@ -804,8 +805,8 @@ public interface ReactiveElasticsearchClient {
 		 * @param flushRequest must not be {@literal null}.
 		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
 		 *         does not exist.
-		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-flush.html"> Indices
-		 *      Flush API on elastic.co</a>
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-flush.html"> Indices Flush
+		 *      API on elastic.co</a>
 		 */
 		default Mono<Void> flushIndex(FlushRequest flushRequest) {
 			return flushIndex(HttpHeaders.EMPTY, flushRequest);
@@ -818,8 +819,8 @@ public interface ReactiveElasticsearchClient {
 		 * @param flushRequest must not be {@literal null}.
 		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
 		 *         does not exist.
-		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-flush.html"> Indices
-		 *      Flush API on elastic.co</a>
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-flush.html"> Indices Flush
+		 *      API on elastic.co</a>
 		 */
 		Mono<Void> flushIndex(HttpHeaders headers, FlushRequest flushRequest);
 	}

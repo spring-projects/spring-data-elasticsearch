@@ -94,6 +94,8 @@ import org.springframework.http.HttpMethod;
  * (<a href="https://www.elastic.co">https://www.elastic.co</a>) licensed under the Apache License, Version 2.0.
  * </p>
  * Modified for usage with {@link ReactiveElasticsearchClient}.
+ * <p>
+ * Only intended for internal use.
  *
  * @since 3.2
  */
