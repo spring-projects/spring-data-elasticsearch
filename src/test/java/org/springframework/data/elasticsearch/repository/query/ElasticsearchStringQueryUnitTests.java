@@ -17,27 +17,43 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.data.elasticsearch.entities.Person;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 
 /**
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ElasticsearchStringQueryUnitTests {
@@ -91,6 +107,56 @@ public class ElasticsearchStringQueryUnitTests {
 				new SpelAwareProxyProjectionFactory(), converter.getMappingContext());
 	}
 
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 * @author Artur Konczak
+	 */
+
+	@Document(indexName = "test-index-person-query-unittest", type = "user", shards = 1, replicas = 0, refreshInterval = "-1")
+	static class Person {
+
+		@Id private String id;
+
+		private String name;
+
+		@Field(type = FieldType.Nested) private List<Car> car;
+
+		@Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public List<Car> getCar() {
+			return car;
+		}
+
+		public void setCar(List<Car> car) {
+			this.car = car;
+		}
+
+		public List<Book> getBooks() {
+			return books;
+		}
+
+		public void setBooks(List<Book> books) {
+			this.books = books;
+		}
+	}
+
 	private interface SampleRepository extends Repository<Person, String> {
 
 		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '?0' } } } }")
@@ -100,4 +166,85 @@ public class ElasticsearchStringQueryUnitTests {
 		Person findWithRepeatedPlaceholder(String arg0, String arg1, String arg2, String arg3, String arg4, String arg5,
 				String arg6, String arg7, String arg8, String arg9, String arg10, String arg11);
 	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 * @author Nordine Bittich
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-book-query-unittest", type = "book", shards = 1, replicas = 0, refreshInterval = "-1")
+	static class Book {
+
+		@Id private String id;
+		private String name;
+		@Field(type = FieldType.Object) private Author author;
+		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
+						searchAnalyzer = "standard") }) private String description;
+	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 * @author Artur Konczak
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	static class Car {
+
+		private String name;
+		private String model;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getModel() {
+			return model;
+		}
+
+		public void setModel(String model) {
+			this.model = model;
+		}
+	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 */
+	static class Author {
+
+		private String id;
+		private String name;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
+
 }

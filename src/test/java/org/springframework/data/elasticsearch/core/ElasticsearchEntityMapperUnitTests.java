@@ -17,10 +17,14 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,19 +47,22 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.elasticsearch.entities.Car;
-import org.springframework.data.elasticsearch.entities.GeoEntity;
+import org.springframework.data.geo.Box;
+import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
 
 /**
  * @author Christoph Strobl
  */
 public class ElasticsearchEntityMapperUnitTests {
 
-	static final String JSON_STRING = "{\"_class\":\"org.springframework.data.elasticsearch.entities.Car\",\"name\":\"Grat\",\"model\":\"Ford\"}";
+	static final String JSON_STRING = "{\"_class\":\"org.springframework.data.elasticsearch.core.ElasticsearchEntityMapperUnitTests$Car\",\"name\":\"Grat\",\"model\":\"Ford\"}";
 	static final String CAR_MODEL = "Ford";
 	static final String CAR_NAME = "Grat";
 	ElasticsearchEntityMapper entityMapper;
@@ -674,4 +681,66 @@ public class ElasticsearchEntityMapperUnitTests {
 			return new ShotGun(source.get("model").toString());
 		}
 	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 * @author Artur Konczak
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	static class Car {
+
+		private String name;
+		private String model;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getModel() {
+			return model;
+		}
+
+		public void setModel(String model) {
+			this.model = model;
+		}
+	}
+
+	/**
+	 * @author Artur Konczak
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-geo-core-entity-mapper", type = "geo-test-index", shards = 1, replicas = 0,
+			refreshInterval = "-1")
+	static class GeoEntity {
+
+		@Id private String id;
+
+		// geo shape - Spring Data
+		private Box box;
+		private Circle circle;
+		private Polygon polygon;
+
+		// geo point - Custom implementation + Spring Data
+		@GeoPointField private Point pointA;
+
+		private GeoPoint pointB;
+
+		@GeoPointField private String pointC;
+
+		@GeoPointField private double[] pointD;
+	}
+
 }

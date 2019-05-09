@@ -16,48 +16,58 @@
 
 package org.springframework.data.elasticsearch.core;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
+import static org.skyscreamer.jsonassert.JSONAssert.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.IOException;
+import java.lang.Boolean;
+import java.lang.Integer;
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.assertj.core.data.Percentage;
 import org.json.JSONException;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Parent;
-import org.springframework.data.elasticsearch.builder.SampleInheritedEntityBuilder;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.entities.Book;
-import org.springframework.data.elasticsearch.entities.CopyToEntity;
-import org.springframework.data.elasticsearch.entities.GeoEntity;
-import org.springframework.data.elasticsearch.entities.Group;
-import org.springframework.data.elasticsearch.entities.NormalizerEntity;
-import org.springframework.data.elasticsearch.entities.SampleInheritedEntity;
-import org.springframework.data.elasticsearch.entities.SampleTransientEntity;
-import org.springframework.data.elasticsearch.entities.SimpleRecursiveEntity;
-import org.springframework.data.elasticsearch.entities.StockPrice;
-import org.springframework.data.elasticsearch.entities.User;
+import org.springframework.data.geo.Box;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -77,9 +87,23 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
+	@Before
+	public void before() {
+
+		elasticsearchTemplate.deleteIndex(StockPrice.class);
+		elasticsearchTemplate.deleteIndex(SimpleRecursiveEntity.class);
+		elasticsearchTemplate.deleteIndex(StockPrice.class);
+		elasticsearchTemplate.deleteIndex(SampleInheritedEntity.class);
+		elasticsearchTemplate.deleteIndex(User.class);
+		elasticsearchTemplate.deleteIndex(Group.class);
+		elasticsearchTemplate.deleteIndex(Book.class);
+		elasticsearchTemplate.deleteIndex(NormalizerEntity.class);
+		elasticsearchTemplate.deleteIndex(CopyToEntity.class);
+	}
+
 	@Test
 	public void shouldNotFailOnCircularReference() {
-		elasticsearchTemplate.deleteIndex(SimpleRecursiveEntity.class);
+
 		elasticsearchTemplate.createIndex(SimpleRecursiveEntity.class);
 		elasticsearchTemplate.putMapping(SimpleRecursiveEntity.class);
 		elasticsearchTemplate.refresh(SimpleRecursiveEntity.class);
@@ -115,7 +139,6 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		// Given
 
 		// When
-		elasticsearchTemplate.deleteIndex(StockPrice.class);
 		elasticsearchTemplate.createIndex(StockPrice.class);
 		elasticsearchTemplate.putMapping(StockPrice.class);
 		String symbol = "AU";
@@ -128,11 +151,12 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		List<StockPrice> result = elasticsearchTemplate.queryForList(searchQuery, StockPrice.class);
+
 		// Then
-		assertThat(result.size(), is(1));
+		assertThat(result).hasSize(1);
 		StockPrice entry = result.get(0);
-		assertThat(entry.getSymbol(), is(symbol));
-		assertThat(entry.getPrice(), is(BigDecimal.valueOf(price)));
+		assertThat(entry.getSymbol()).isEqualTo(symbol);
+		assertThat(entry.getPrice()).isCloseTo(BigDecimal.valueOf(price), Percentage.withPercentage(0.01));
 	}
 
 	@Test // DATAES-568
@@ -160,10 +184,9 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@Test // DATAES-76
 	public void shouldAddSampleInheritedEntityDocumentToIndex() {
 
-		// Given
+		// given
 
-		// When
-		elasticsearchTemplate.deleteIndex(SampleInheritedEntity.class);
+		// when
 		elasticsearchTemplate.createIndex(SampleInheritedEntity.class);
 		elasticsearchTemplate.putMapping(SampleInheritedEntity.class);
 		Date createdDate = new Date();
@@ -175,12 +198,13 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		List<SampleInheritedEntity> result = elasticsearchTemplate.queryForList(searchQuery, SampleInheritedEntity.class);
-		// Then
-		assertThat(result.size(), is(1));
+
+		// then
+		assertThat(result).hasSize(1);
 
 		SampleInheritedEntity entry = result.get(0);
-		assertThat(entry.getCreatedDate(), is(createdDate));
-		assertThat(entry.getMessage(), is(message));
+		assertThat(entry.getCreatedDate()).isEqualTo(createdDate);
+		assertThat(entry.getMessage()).isEqualTo(message);
 	}
 
 	@Test // DATAES-568
@@ -207,6 +231,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		elasticsearchTemplate.putMapping(User.class);
 		elasticsearchTemplate.createIndex(Group.class);
 		elasticsearchTemplate.putMapping(Group.class);
+
 		// when
 
 		// then
@@ -218,7 +243,9 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		// given
 		elasticsearchTemplate.createIndex(Book.class);
 		elasticsearchTemplate.putMapping(Book.class);
+
 		// when
+
 		// then
 	}
 
@@ -226,7 +253,6 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldUseBothAnalyzer() {
 
 		// given
-		elasticsearchTemplate.deleteIndex(Book.class);
 		elasticsearchTemplate.createIndex(Book.class);
 		elasticsearchTemplate.putMapping(Book.class);
 
@@ -236,19 +262,18 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		Map prefixDescription = (Map) ((Map) descriptionMapping.get("fields")).get("prefix");
 
 		// then
-		assertThat(prefixDescription.size(), is(3));
-		assertThat(prefixDescription.get("type"), equalTo("text"));
-		assertThat(prefixDescription.get("analyzer"), equalTo("stop"));
-		assertThat(prefixDescription.get("search_analyzer"), equalTo("standard"));
-		assertThat(descriptionMapping.get("type"), equalTo("text"));
-		assertThat(descriptionMapping.get("analyzer"), equalTo("whitespace"));
+		assertThat(prefixDescription).hasSize(3);
+		assertThat(prefixDescription.get("type")).isEqualTo("text");
+		assertThat(prefixDescription.get("analyzer")).isEqualTo("stop");
+		assertThat(prefixDescription.get("search_analyzer")).isEqualTo("standard");
+		assertThat(descriptionMapping.get("type")).isEqualTo("text");
+		assertThat(descriptionMapping.get("analyzer")).isEqualTo("whitespace");
 	}
 
 	@Test // DATAES-492
 	public void shouldUseKeywordNormalizer() {
 
 		// given
-		elasticsearchTemplate.deleteIndex(NormalizerEntity.class);
 		elasticsearchTemplate.createIndex(NormalizerEntity.class);
 		elasticsearchTemplate.putMapping(NormalizerEntity.class);
 
@@ -259,17 +284,16 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		Map fieldDescriptionLowerCase = (Map) ((Map) ((Map) properties.get("description")).get("fields")).get("lower_case");
 
 		// then
-		assertThat(fieldName.get("type"), equalTo("keyword"));
-		assertThat(fieldName.get("normalizer"), equalTo("lower_case_normalizer"));
-		assertThat(fieldDescriptionLowerCase.get("type"), equalTo("keyword"));
-		assertThat(fieldDescriptionLowerCase.get("normalizer"), equalTo("lower_case_normalizer"));
+		assertThat(fieldName.get("type")).isEqualTo("keyword");
+		assertThat(fieldName.get("normalizer")).isEqualTo("lower_case_normalizer");
+		assertThat(fieldDescriptionLowerCase.get("type")).isEqualTo("keyword");
+		assertThat(fieldDescriptionLowerCase.get("normalizer")).isEqualTo("lower_case_normalizer");
 	}
 
 	@Test // DATAES-503
 	public void shouldUseCopyTo() {
 
 		// given
-		elasticsearchTemplate.deleteIndex(CopyToEntity.class);
 		elasticsearchTemplate.createIndex(CopyToEntity.class);
 		elasticsearchTemplate.putMapping(CopyToEntity.class);
 
@@ -281,8 +305,8 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		// then
 		List<String> copyToValue = Collections.singletonList("name");
-		assertThat(fieldFirstName.get("copy_to"), equalTo(copyToValue));
-		assertThat(fieldLastName.get("copy_to"), equalTo(copyToValue));
+		assertThat(fieldFirstName.get("copy_to")).isEqualTo(copyToValue);
+		assertThat(fieldLastName.get("copy_to")).isEqualTo(copyToValue);
 	}
 
 	@Test // DATAES-568
@@ -455,7 +479,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	/**
 	 * MinimalChildEntity
 	 *
-	 * @author Peter-josef Meisch
+	 * @author Peter-Josef Meisch
 	 */
 	@Document(indexName = "test-index-minimal", type = "mapping")
 	static class MinimalChildEntity {
@@ -464,4 +488,303 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		@Parent(type = "parentType") private String parentId;
 	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 * @author Nordine Bittich
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-book-mapping-builder", type = "book", shards = 1, replicas = 0, refreshInterval = "-1")
+	static class Book {
+
+		@Id private String id;
+		private String name;
+		@Field(type = FieldType.Object) private Author author;
+		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
+						searchAnalyzer = "standard") }) private String description;
+	}
+
+	/**
+	 * @author Stuart Stevenson
+	 * @author Mohsin Husen
+	 */
+	@Document(indexName = "test-index-simple-recursive-mapping-builder", type = "circular-object", shards = 1, replicas = 0,
+			refreshInterval = "-1")
+	static class SimpleRecursiveEntity {
+
+		@Id private String id;
+		@Field(type = FieldType.Object, ignoreFields = { "circularObject" }) private SimpleRecursiveEntity circularObject;
+	}
+
+	/**
+	 * @author Sascha Woo
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-copy-to-mapping-builder", type = "test", shards = 1, replicas = 0, refreshInterval = "-1")
+	static class CopyToEntity {
+
+		@Id private String id;
+
+		@Field(type = FieldType.Keyword, copyTo = "name") private String firstName;
+
+		@Field(type = FieldType.Keyword, copyTo = "name") private String lastName;
+
+		@Field(type = FieldType.Keyword) private String name;
+	}
+
+	/**
+	 * @author Sascha Woo
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-normalizer-mapping-builder", type = "test", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Setting(settingPath = "/settings/test-normalizer.json")
+	static class NormalizerEntity {
+
+		@Id private String id;
+
+		@Field(type = FieldType.Keyword, normalizer = "lower_case_normalizer") private String name;
+
+		@MultiField(mainField = @Field(type = FieldType.Text), otherFields = { @InnerField(suffix = "lower_case",
+				type = FieldType.Keyword, normalizer = "lower_case_normalizer") }) private String description;
+	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 */
+	static class Author {
+
+		private String id;
+		private String name;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
+
+	/**
+	 * @author Kevin Leturc
+	 */
+	@Document(indexName = "test-index-sample-inherited-mapping-builder", type = "mapping", shards = 1, replicas = 0,
+			refreshInterval = "-1")
+	static class SampleInheritedEntity extends AbstractInheritedEntity {
+
+		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
+
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(String message) {
+			this.message = message;
+		}
+	}
+
+	/**
+	 * @author Kevin Leturc
+	 */
+	static class SampleInheritedEntityBuilder {
+
+		private SampleInheritedEntity result;
+
+		public SampleInheritedEntityBuilder(String id) {
+			result = new SampleInheritedEntity();
+			result.setId(id);
+		}
+
+		public SampleInheritedEntityBuilder createdDate(Date createdDate) {
+			result.setCreatedDate(createdDate);
+			return this;
+		}
+
+		public SampleInheritedEntityBuilder message(String message) {
+			result.setMessage(message);
+			return this;
+		}
+
+		public SampleInheritedEntity build() {
+			return result;
+		}
+
+		public IndexQuery buildIndex() {
+			IndexQuery indexQuery = new IndexQuery();
+			indexQuery.setId(result.getId());
+			indexQuery.setObject(result);
+			return indexQuery;
+		}
+	}
+
+	/**
+	 * @author Artur Konczak
+	 * @author Mohsin Husen
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-stock-mapping-builder", type = "price", shards = 1, replicas = 0, refreshInterval = "-1")
+	static class StockPrice {
+
+		@Id private String id;
+
+		private String symbol;
+
+		@Field(type = FieldType.Double) private BigDecimal price;
+	}
+
+	/**
+	 * @author Kevin Letur
+	 */
+	static class AbstractInheritedEntity {
+
+		@Id private String id;
+
+		@Field(type = FieldType.Date, index = false) private Date createdDate;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public Date getCreatedDate() {
+			return createdDate;
+		}
+
+		public void setCreatedDate(Date createdDate) {
+			this.createdDate = createdDate;
+		}
+	}
+
+	/**
+	 * @author Jakub Vavrik
+	 */
+	@Document(indexName = "test-index-recursive-mapping-mapping-builder", type = "mapping", shards = 1, replicas = 0,
+			refreshInterval = "-1")
+	static class SampleTransientEntity {
+
+		@Id private String id;
+
+		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
+
+		@Transient private SampleTransientEntity.NestedEntity nested;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(String message) {
+			this.message = message;
+		}
+
+		static class NestedEntity {
+
+			@Field private static SampleTransientEntity.NestedEntity someField = new SampleTransientEntity.NestedEntity();
+			@Field private Boolean something;
+
+			public SampleTransientEntity.NestedEntity getSomeField() {
+				return someField;
+			}
+
+			public void setSomeField(SampleTransientEntity.NestedEntity someField) {
+				this.someField = someField;
+			}
+
+			public Boolean getSomething() {
+				return something;
+			}
+
+			public void setSomething(Boolean something) {
+				this.something = something;
+			}
+		}
+	}
+
+	/**
+	 * @author Artur Konczak
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-geo-mapping-builder", type = "geo-test-index", shards = 1, replicas = 0, refreshInterval = "-1")
+	static class GeoEntity {
+
+		@Id private String id;
+
+		// geo shape - Spring Data
+		private Box box;
+		private Circle circle;
+		private Polygon polygon;
+
+		// geo point - Custom implementation + Spring Data
+		@GeoPointField private Point pointA;
+
+		private GeoPoint pointB;
+
+		@GeoPointField private String pointC;
+
+		@GeoPointField private double[] pointD;
+	}
+
+	/**
+	 * Created by akonczak on 21/08/2016.
+	 */
+	@Document(indexName = "test-index-user-mapping-builder", type = "user")
+	static class User {
+		@Id private String id;
+
+		@Field(type = FieldType.Nested, ignoreFields = { "users" }) private Set<Group> groups = new HashSet<>();
+	}
+
+	/**
+	 * Created by akonczak on 21/08/2016.
+	 */
+	@Document(indexName = "test-index-group-mapping-builder", type = "group")
+	static class Group {
+
+		@Id String id;
+
+		@Field(type = FieldType.Nested, ignoreFields = { "groups" }) private Set<User> users = new HashSet<>();
+	}
+
 }

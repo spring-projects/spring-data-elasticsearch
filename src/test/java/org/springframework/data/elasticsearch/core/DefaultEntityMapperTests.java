@@ -17,23 +17,34 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.IOException;
 import java.util.Locale;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.elasticsearch.entities.Car;
-import org.springframework.data.elasticsearch.entities.GeoEntity;
+import org.springframework.data.geo.Box;
+import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
 
 /**
  * @author Artur Konczak
  * @author Mohsin Husen
  * @author Oliver Gierke
+ * @author Peter-Josef Meisch
  */
 public class DefaultEntityMapperTests {
 
@@ -49,62 +60,64 @@ public class DefaultEntityMapperTests {
 
 	@Test
 	public void shouldMapObjectToJsonString() throws IOException {
-		//Given
 
-		//When
+		// given
+
+		// when
 		String jsonResult = entityMapper.mapToString(Car.builder().model(CAR_MODEL).name(CAR_NAME).build());
 
-		//Then
+		// then
 		assertThat(jsonResult).isEqualTo(JSON_STRING);
 	}
 
 	@Test
 	public void shouldMapJsonStringToObject() throws IOException {
-		//Given
 
-		//When
+		// given
+
+		// when
 		Car result = entityMapper.mapToObject(JSON_STRING, Car.class);
 
-		//Then
+		// then
 		assertThat(result.getName()).isEqualTo(CAR_NAME);
 		assertThat(result.getModel()).isEqualTo(CAR_MODEL);
 	}
 
 	@Test
 	public void shouldMapGeoPointElasticsearchNames() throws IOException {
-		//given
+		// given
 		final Point point = new Point(10, 20);
 		final String pointAsString = point.getX() + "," + point.getY();
-		final double[] pointAsArray = {point.getX(), point.getY()};
-		final GeoEntity geoEntity = GeoEntity.builder()
-				.pointA(point).pointB(GeoPoint.fromPoint(point)).pointC(pointAsString).pointD(pointAsArray)
-				.build();
-		//when
+		final double[] pointAsArray = { point.getX(), point.getY() };
+		final GeoEntity geoEntity = GeoEntity.builder().pointA(point).pointB(GeoPoint.fromPoint(point))
+				.pointC(pointAsString).pointD(pointAsArray).build();
+		// when
 		String jsonResult = entityMapper.mapToString(geoEntity);
 
-		//then
+		// then
 		assertThat(jsonResult).contains(pointTemplate("pointA", point));
 		assertThat(jsonResult).contains(pointTemplate("pointB", point));
 		assertThat(jsonResult).contains(String.format(Locale.ENGLISH, "\"%s\":\"%s\"", "pointC", pointAsString));
-		assertThat(jsonResult).contains(String.format(Locale.ENGLISH, "\"%s\":[%.1f,%.1f]", "pointD", pointAsArray[0], pointAsArray[1]));
+		assertThat(jsonResult)
+				.contains(String.format(Locale.ENGLISH, "\"%s\":[%.1f,%.1f]", "pointD", pointAsArray[0], pointAsArray[1]));
 	}
-	
+
 	@Test // DATAES-464
 	public void ignoresReadOnlyProperties() throws IOException {
-		
+
 		// given
 		Sample sample = new Sample();
 		sample.readOnly = "readOnly";
 		sample.property = "property";
 		sample.transientProperty = "transient";
 		sample.annotatedTransientProperty = "transient";
-		
+
 		// when
 		String result = entityMapper.mapToString(sample);
-		
+
 		// then
 		assertThat(result).contains("\"property\"");
-		
+
 		assertThat(result).doesNotContain("readOnly");
 		assertThat(result).doesNotContain("transientProperty");
 		assertThat(result).doesNotContain("annotatedTransientProperty");
@@ -113,13 +126,74 @@ public class DefaultEntityMapperTests {
 	private String pointTemplate(String name, Point point) {
 		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
 	}
-	
+
 	public static class Sample {
-		
-		
+
 		public @ReadOnlyProperty String readOnly;
 		public @Transient String annotatedTransientProperty;
 		public transient String transientProperty;
 		public String property;
 	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 * @author Artur Konczak
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	static class Car {
+
+		private String name;
+		private String model;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getModel() {
+			return model;
+		}
+
+		public void setModel(String model) {
+			this.model = model;
+		}
+	}
+
+	/**
+	 * @author Artur Konczak
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-geo-core-default-entity-mapper", type = "geo-test-index", shards = 1, replicas = 0,
+			refreshInterval = "-1")
+	static class GeoEntity {
+
+		@Id private String id;
+
+		// geo shape - Spring Data
+		private Box box;
+		private Circle circle;
+		private Polygon polygon;
+
+		// geo point - Custom implementation + Spring Data
+		@GeoPointField private Point pointA;
+
+		private GeoPoint pointB;
+
+		@GeoPointField private String pointC;
+
+		@GeoPointField private double[] pointD;
+	}
+
 }

@@ -15,9 +15,19 @@
  */
 package org.springframework.data.elasticsearch.repositories.cdi;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.webbeans.cditest.CdiTestContainer;
@@ -26,12 +36,18 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.springframework.data.elasticsearch.entities.Product;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 
 /**
  * @author Mohsin Husen
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  */
 public class CdiRepositoryTests {
 
@@ -63,12 +79,13 @@ public class CdiRepositoryTests {
 		personRepository = client.getSamplePersonRepository();
 		repository.deleteAll();
 		qualifiedProductRepository = client.getQualifiedProductRepository();
+		qualifiedProductRepository.deleteAll();
 	}
 
 	@Test
 	public void testCdiRepository() {
 
-		assertNotNull(repository);
+		assertThat(repository).isNotNull();
 
 		Product bean = new Product();
 		bean.setId("id-1");
@@ -76,33 +93,30 @@ public class CdiRepositoryTests {
 
 		repository.save(bean);
 
-		assertTrue(repository.existsById(bean.getId()));
+		assertThat(repository.existsById(bean.getId())).isTrue();
 
 		Optional<Product> retrieved = repository.findById(bean.getId());
 
-		assertTrue(retrieved.isPresent());
+		assertThat(retrieved).isPresent();
 		retrieved.ifPresent(product -> {
-			assertEquals(bean.getId(), product.getId());
-			assertEquals(bean.getName(), product.getName());
+			assertThat(bean.getId()).isEqualTo(product.getId());
+			assertThat(bean.getName()).isEqualTo(product.getName());
 		});
 
-		assertEquals(1, repository.count());
+		assertThat(repository.count()).isEqualTo(1);
 
-		assertTrue(repository.existsById(bean.getId()));
+		assertThat(repository.existsById(bean.getId())).isTrue();
 
 		repository.delete(bean);
 
-		assertEquals(0, repository.count());
+		assertThat(repository.count()).isEqualTo(0);
 		retrieved = repository.findById(bean.getId());
-		assertFalse(retrieved.isPresent());
+		assertThat(retrieved).isNotPresent();
 	}
 
-	/**
-	 * @see DATAES-234
-	 */
-	@Test
+	@Test // DATAES-234
 	public void testQualifiedCdiRepository() {
-		assertNotNull(qualifiedProductRepository);
+		assertThat(qualifiedProductRepository).isNotNull();
 
 		Product bean = new Product();
 		bean.setId("id-1");
@@ -110,32 +124,226 @@ public class CdiRepositoryTests {
 
 		qualifiedProductRepository.save(bean);
 
-		assertTrue(qualifiedProductRepository.existsById(bean.getId()));
+		assertThat(qualifiedProductRepository.existsById(bean.getId())).isTrue();
 
 		Optional<Product> retrieved = qualifiedProductRepository.findById(bean.getId());
 
-		assertTrue(retrieved.isPresent());
+		assertThat(retrieved).isPresent();
 		retrieved.ifPresent(product -> {
-			assertEquals(bean.getId(), product.getId());
-			assertEquals(bean.getName(), product.getName());
+			assertThat(bean.getId()).isEqualTo(product.getId());
+			assertThat(bean.getName()).isEqualTo(product.getName());
 		});
 
-		assertEquals(1, qualifiedProductRepository.count());
+		assertThat(qualifiedProductRepository.count()).isEqualTo(1);
 
-		assertTrue(qualifiedProductRepository.existsById(bean.getId()));
+		assertThat(qualifiedProductRepository.existsById(bean.getId())).isTrue();
 
 		qualifiedProductRepository.delete(bean);
 
-		assertEquals(0, qualifiedProductRepository.count());
+		assertThat(qualifiedProductRepository.count()).isEqualTo(0);
 		retrieved = qualifiedProductRepository.findById(bean.getId());
-		assertFalse(retrieved.isPresent());
+		assertThat(retrieved).isNotPresent();
+	}
+
+	@Test // DATAES-113
+	public void returnOneFromCustomImpl() {
+
+		assertThat(personRepository.returnOne()).isEqualTo(1);
 	}
 
 	/**
-	 * @see DATAES-113
+	 * @author Mohsin Husen
+	 * @author Artur Konczak
 	 */
-	@Test
-	public void returnOneFromCustomImpl() {
-		assertThat(personRepository.returnOne(), is(1));
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-product-cdi-repository", type = "test-product-type", shards = 1, replicas = 0,
+			refreshInterval = "-1")
+	static class Product {
+
+		@Id private String id;
+
+		private List<String> title;
+
+		private String name;
+
+		private String description;
+
+		private String text;
+
+		private List<String> categories;
+
+		private Float weight;
+
+		@Field(type = FieldType.Float) private Float price;
+
+		private Integer popularity;
+
+		private boolean available;
+
+		private String location;
+
+		private Date lastModified;
+
+		@Override
+		public int hashCode() {
+			return id.hashCode();
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			Product other = (Product) obj;
+			if (id == null) {
+				if (other.id != null) {
+					return false;
+				}
+			} else if (!id.equals(other.id)) {
+				return false;
+			}
+			return true;
+		}
 	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 * @author Artur Konczak
+	 */
+
+	@Document(indexName = "test-index-person-cdi-repository", type = "user", shards = 1, replicas = 0, refreshInterval = "-1")
+	static class Person {
+
+		@Id private String id;
+
+		private String name;
+
+		@Field(type = FieldType.Nested) private List<Car> car;
+
+		@Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public List<Car> getCar() {
+			return car;
+		}
+
+		public void setCar(List<Car> car) {
+			this.car = car;
+		}
+
+		public List<Book> getBooks() {
+			return books;
+		}
+
+		public void setBooks(List<Book> books) {
+			this.books = books;
+		}
+	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 * @author Nordine Bittich
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-book-cdi-repository", type = "book", shards = 1, replicas = 0, refreshInterval = "-1")
+	static class Book {
+
+		@Id private String id;
+		private String name;
+		@Field(type = FieldType.Object) private Author author;
+		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
+						searchAnalyzer = "standard") }) private String description;
+	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 * @author Artur Konczak
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	static class Car {
+
+		private String name;
+		private String model;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getModel() {
+			return model;
+		}
+
+		public void setModel(String model) {
+			this.model = model;
+		}
+	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 */
+	static class Author {
+
+		private String id;
+		private String name;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
+
 }

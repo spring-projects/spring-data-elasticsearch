@@ -12,6 +12,8 @@
         <constructor-arg name="client" ref="client"/>
     </bean>
 
-    <elasticsearch:repositories base-package="org.springframework.data.elasticsearch.repositories.nondocument"/>
+    <elasticsearch:repositories
+            base-package="org.springframework.data.elasticsearch.repositories.nondocument"
+            consider-nested-repositories="true"/>
 
 </beans>

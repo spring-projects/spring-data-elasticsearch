@@ -13,6 +13,7 @@
     </bean>
 
     <elasticsearch:repositories
-            base-package="org.springframework.data.elasticsearch.repositories.setting"/>
+            base-package="org.springframework.data.elasticsearch.repositories.setting.dynamic"
+            consider-nested-repositories="true"/>
 
 </beans>

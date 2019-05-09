@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repositories.cdi;
 
-import org.springframework.data.elasticsearch.entities.Product;
 import org.springframework.data.repository.CrudRepository;
 
 /**
@@ -24,6 +23,6 @@ import org.springframework.data.repository.CrudRepository;
  */
 @PersonDB
 @OtherQualifier
-public interface QualifiedProductRepository extends CrudRepository<Product, String> {
+public interface QualifiedProductRepository extends CrudRepository<CdiRepositoryTests.Product, String> {
 
 }

@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repositories.cdi;
 
 import java.util.Optional;
 
-import org.springframework.data.elasticsearch.entities.Product;
 import org.springframework.data.repository.CrudRepository;
 
 /**
@@ -26,7 +25,7 @@ import org.springframework.data.repository.CrudRepository;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-public interface CdiProductRepository extends CrudRepository<Product, String> {
+public interface CdiProductRepository extends CrudRepository<CdiRepositoryTests.Product, String> {
 
-	Optional<Product> findById(String id);
+	Optional<CdiRepositoryTests.Product> findById(String id);
 }

@@ -13,6 +13,6 @@
     </bean>
 
     <elasticsearch:repositories
-            base-package="org.springframework.data.elasticsearch.repository.complex"/>
+            base-package="org.springframework.data.elasticsearch.repositories.complex.custommethod.autowiring"/>
 
 </beans>

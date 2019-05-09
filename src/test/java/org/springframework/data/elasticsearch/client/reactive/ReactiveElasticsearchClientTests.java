@@ -53,7 +53,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.data.elasticsearch.ElasticsearchVersion;
 import org.springframework.data.elasticsearch.ElasticsearchVersionRule;
 import org.springframework.data.elasticsearch.TestUtils;

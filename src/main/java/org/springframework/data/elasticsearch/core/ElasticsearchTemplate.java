@@ -124,6 +124,7 @@ import org.springframework.util.StringUtils;
  * @author Ivan Greene
  * @author Christoph Strobl
  * @author Dmitriy Yakovlev
+ * @author Peter-Josef Meisch
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
@@ -234,10 +235,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public Map getMapping(String indexName, String type) {
+	public Map<String, Object> getMapping(String indexName, String type) {
 		Assert.notNull(indexName, "No index defined for putMapping()");
 		Assert.notNull(type, "No type defined for putMapping()");
-		Map mappings = null;
+		Map<String, Object> mappings = null;
 		try {
 			mappings = client.admin().indices().getMappings(new GetMappingsRequest().indices(indexName).types(type))
 					.actionGet().getMappings().get(indexName).get(type).getSourceAsMap();
@@ -249,7 +250,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public <T> Map getMapping(Class<T> clazz) {
+	public <T> Map<String, Object> getMapping(Class<T> clazz) {
 		return getMapping(getPersistentEntityFor(clazz).getIndexName(), getPersistentEntityFor(clazz).getIndexType());
 	}
 
@@ -1034,10 +1035,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		return createIndex(getPersistentEntityFor(clazz).getIndexName(), settings);
 	}
 
-	private <T> Map getDefaultSettings(ElasticsearchPersistentEntity<T> persistentEntity) {
+	private <T> Map<String, String> getDefaultSettings(ElasticsearchPersistentEntity<T> persistentEntity) {
 
 		if (persistentEntity.isUseServerConfiguration())
-			return new HashMap();
+			return new HashMap<>();
 
 		return new MapBuilder<String, String>().put("index.number_of_shards", String.valueOf(persistentEntity.getShards()))
 				.put("index.number_of_replicas", String.valueOf(persistentEntity.getReplicas()))
@@ -1046,12 +1047,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public <T> Map getSetting(Class<T> clazz) {
+	public <T> Map<String, Object> getSetting(Class<T> clazz) {
 		return getSetting(getPersistentEntityFor(clazz).getIndexName());
 	}
 
 	@Override
-	public Map getSetting(String indexName) {
+	public Map<String, Object> getSetting(String indexName) {
 		Assert.notNull(indexName, "No index defined for getSettings");
 		Settings settings = client.admin().indices().getSettings(new GetSettingsRequest()).actionGet().getIndexToSettings()
 				.get(indexName);

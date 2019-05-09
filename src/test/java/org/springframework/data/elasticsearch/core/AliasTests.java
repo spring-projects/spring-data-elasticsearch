@@ -16,10 +16,19 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.apache.commons.lang.RandomStringUtils.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.lang.Double;
+import java.lang.Long;
+import java.lang.Object;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,19 +38,27 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.Score;
+import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.AliasBuilder;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.entities.SampleEntity;
+import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * @author Mohsin Husen
  * @author Ilkang Na
+ * @author Peter-Josef Meisch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -51,16 +68,18 @@ public class AliasTests {
 	private static final String INDEX_NAME_2 = "test-alias-index-2";
 	private static final String TYPE_NAME = "test-alias-type";
 
-	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
-
-	@Before
-	public void before() {
-		Map<String, Object> settings = new HashMap<>();
+	private static Map<String, Object> settings = new HashMap<>();
+	static {
 		settings.put("index.refresh_interval", "-1");
 		settings.put("index.number_of_replicas", "0");
 		settings.put("index.number_of_shards", "2");
 		settings.put("index.store.type", "fs");
+	}
+
+	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+
+	@Before
+	public void before() {
 
 		elasticsearchTemplate.deleteIndex(INDEX_NAME_1);
 		elasticsearchTemplate.createIndex(INDEX_NAME_1, settings);
@@ -69,143 +88,146 @@ public class AliasTests {
 		elasticsearchTemplate.deleteIndex(INDEX_NAME_2);
 		elasticsearchTemplate.createIndex(INDEX_NAME_2, settings);
 		elasticsearchTemplate.refresh(INDEX_NAME_2);
+
+		IndexInitializer.init(elasticsearchTemplate, SampleEntity.class);
 	}
 
 	@Test
 	public void shouldAddAlias() {
+
 		// given
 		String aliasName = "test-alias";
-		AliasQuery aliasQuery = new AliasBuilder()
-				.withIndexName(INDEX_NAME_1)
-				.withAliasName(aliasName).build();
+		AliasQuery aliasQuery = new AliasBuilder().withIndexName(INDEX_NAME_1).withAliasName(aliasName).build();
+
 		// when
 		elasticsearchTemplate.addAlias(aliasQuery);
+
 		// then
 		List<AliasMetaData> aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME_1);
-		assertThat(aliases, is(notNullValue()));
-		assertThat(aliases.get(0).alias(), is(aliasName));
+		assertThat(aliases).isNotNull();
+		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
 	}
 
 	@Test
 	public void shouldRemoveAlias() {
+
 		// given
 		String indexName = INDEX_NAME_1;
 		String aliasName = "test-alias";
-		AliasQuery aliasQuery = new AliasBuilder()
-				.withIndexName(indexName)
-				.withAliasName(aliasName).build();
+		AliasQuery aliasQuery = new AliasBuilder().withIndexName(indexName).withAliasName(aliasName).build();
+
 		// when
 		elasticsearchTemplate.addAlias(aliasQuery);
 		List<AliasMetaData> aliases = elasticsearchTemplate.queryForAlias(indexName);
-		assertThat(aliases, is(notNullValue()));
-		assertThat(aliases.get(0).alias(), is(aliasName));
+		assertThat(aliases).isNotNull();
+		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
+
 		// then
 		elasticsearchTemplate.removeAlias(aliasQuery);
 		aliases = elasticsearchTemplate.queryForAlias(indexName);
-		assertThat(aliases, anyOf(is(nullValue()), hasSize(0)));
+		assertThat(aliases).isEmpty();
 	}
 
-	/*
-	DATAES-70
-	*/
-	@Test
+	@Test // DATAES-70
 	public void shouldAddAliasWithGivenRoutingValue() {
-		//given
-		String indexName = INDEX_NAME_1;
+
+		// given
 		String alias = "test-alias";
 
-		AliasQuery aliasQuery = new AliasBuilder()
-				.withIndexName(indexName)
-				.withAliasName(alias)
-				.withRouting("0").build();
+		AliasQuery aliasQuery = new AliasBuilder().withIndexName(INDEX_NAME_1).withAliasName(alias).withRouting("0")
+				.build();
 
-		//when
+		// when
 		elasticsearchTemplate.addAlias(aliasQuery);
 
 		String documentId = randomNumeric(5);
-		SampleEntity sampleEntity = SampleEntity.builder().id(documentId)
-				.message("some message")
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
-		IndexQuery indexQuery = new IndexQueryBuilder()
-				.withIndexName(alias)
-				.withId(sampleEntity.getId())
-				.withType(TYPE_NAME)
-				.withObject(sampleEntity)
-				.build();
+		IndexQuery indexQuery = new IndexQueryBuilder().withIndexName(alias).withId(sampleEntity.getId())
+				.withType(TYPE_NAME).withObject(sampleEntity).build();
 
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(INDEX_NAME_1);
 
-		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withIndices(alias).withTypes(TYPE_NAME).build();
+		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withIndices(alias)
+				.withTypes(TYPE_NAME).build();
 		long count = elasticsearchTemplate.count(query);
-		//then
-		List<AliasMetaData> aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME_1);
-		assertThat(aliases, is(notNullValue()));
-		assertThat(aliases.get(0).alias(), is(alias));
-		assertThat(aliases.get(0).searchRouting(), is("0"));
-		assertThat(aliases.get(0).indexRouting(), is("0"));
-		assertThat(count, is(1L));
 
-		//cleanup
+		// then
+		List<AliasMetaData> aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME_1);
+		assertThat(aliases).isNotNull();
+		final AliasMetaData aliasMetaData = aliases.get(0);
+		assertThat(aliasMetaData.alias()).isEqualTo(alias);
+		assertThat(aliasMetaData.searchRouting()).isEqualTo("0");
+		assertThat(aliasMetaData.indexRouting()).isEqualTo("0");
+		assertThat(count).isEqualTo(1);
+
+		// cleanup
 		elasticsearchTemplate.removeAlias(aliasQuery);
-		elasticsearchTemplate.deleteIndex(SampleEntity.class);
-		elasticsearchTemplate.createIndex(SampleEntity.class);
-		elasticsearchTemplate.putMapping(SampleEntity.class);
-		elasticsearchTemplate.refresh(SampleEntity.class);
 	}
 
-	/*
-	DATAES-70
-	*/
-	@Test
+	@Test // DATAES-70
 	public void shouldAddAliasForVariousRoutingValues() {
-		//given
+
+		// given
 		String alias1 = "test-alias-1";
 		String alias2 = "test-alias-2";
 
-		AliasQuery aliasQuery1 = new AliasBuilder()
-				.withIndexName(INDEX_NAME_1)
-				.withAliasName(alias1)
-				.withIndexRouting("0").build();
+		AliasQuery aliasQuery1 = new AliasBuilder().withIndexName(INDEX_NAME_1).withAliasName(alias1).withIndexRouting("0")
+				.build();
 
-		AliasQuery aliasQuery2 = new AliasBuilder()
-				.withIndexName(INDEX_NAME_2)
-				.withAliasName(alias2)
-				.withSearchRouting("1").build();
+		AliasQuery aliasQuery2 = new AliasBuilder().withIndexName(INDEX_NAME_2).withAliasName(alias2).withSearchRouting("1")
+				.build();
 
-		//when
+		// when
 		elasticsearchTemplate.addAlias(aliasQuery1);
 		elasticsearchTemplate.addAlias(aliasQuery2);
 
 		String documentId = randomNumeric(5);
-		SampleEntity sampleEntity = SampleEntity.builder().id(documentId)
-				.message("some message")
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
-		IndexQuery indexQuery = new IndexQueryBuilder()
-				.withIndexName(alias1)
-				.withType(TYPE_NAME)
-				.withId(sampleEntity.getId())
-				.withObject(sampleEntity).build();
+		IndexQuery indexQuery = new IndexQueryBuilder().withIndexName(alias1).withType(TYPE_NAME)
+				.withId(sampleEntity.getId()).withObject(sampleEntity).build();
 
 		elasticsearchTemplate.index(indexQuery);
 
-
 		// then
 		List<AliasMetaData> responseAlias1 = elasticsearchTemplate.queryForAlias(INDEX_NAME_1);
-		assertThat(responseAlias1, is(notNullValue()));
-		assertThat(responseAlias1.get(0).alias(), is(alias1));
-		assertThat(responseAlias1.get(0).indexRouting(), is("0"));
+		assertThat(responseAlias1).isNotNull();
+		final AliasMetaData aliasMetaData1 = responseAlias1.get(0);
+		assertThat(aliasMetaData1.alias()).isEqualTo(alias1);
+		assertThat(aliasMetaData1.indexRouting()).isEqualTo("0");
 
 		List<AliasMetaData> responseAlias2 = elasticsearchTemplate.queryForAlias(INDEX_NAME_2);
-		assertThat(responseAlias2, is(notNullValue()));
-		assertThat(responseAlias2.get(0).alias(), is(alias2));
-		assertThat(responseAlias2.get(0).searchRouting(), is("1"));
+		assertThat(responseAlias2).isNotNull();
+		final AliasMetaData aliasMetaData2 = responseAlias2.get(0);
+		assertThat(aliasMetaData2.alias()).isEqualTo(alias2);
+		assertThat(aliasMetaData2.searchRouting()).isEqualTo("1");
 
-		//cleanup
+		// cleanup
 		elasticsearchTemplate.removeAlias(aliasQuery1);
 		elasticsearchTemplate.removeAlias(aliasQuery2);
+	}
+
+	@Builder
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Document(indexName = "test-index-sample-core-alias", type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
+	static class SampleEntity {
+
+		@Id private String id;
+		@Field(type = Text, store = true, fielddata = true) private String type;
+		@Field(type = Text, store = true, fielddata = true) private String message;
+		private int rate;
+		@ScriptedField private Double scriptedRate;
+		private boolean available;
+		private String highlightedMessage;
+		private GeoPoint location;
+		@Version private Long version;
+		@Score private float score;
 	}
 }
