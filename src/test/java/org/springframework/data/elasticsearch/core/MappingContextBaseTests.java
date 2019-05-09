@@ -15,9 +15,6 @@
 
 package org.springframework.data.elasticsearch.core;
 
-import java.util.Collection;
-import java.util.Collections;
-
 import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
@@ -37,13 +34,8 @@ abstract class MappingContextBaseTests {
 
 	private SimpleElasticsearchMappingContext setupMappingContext() {
 
-		SimpleElasticsearchMappingContext mappingContext = new ElasticsearchConfigurationSupport() {
-			@Override
-			protected Collection<String> getMappingBasePackages() {
-				return Collections.singletonList("org.springframework.data.elasticsearch.entities.mapping");
-			}
-		}.elasticsearchMappingContext();
-
+		SimpleElasticsearchMappingContext mappingContext = new ElasticsearchConfigurationSupport() {}
+				.elasticsearchMappingContext();
 		mappingContext.initialize();
 		return mappingContext;
 	}

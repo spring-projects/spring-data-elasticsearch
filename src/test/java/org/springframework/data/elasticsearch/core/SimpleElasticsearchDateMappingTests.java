@@ -16,12 +16,17 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.junit.Assert.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import java.io.IOException;
+import java.util.Date;
 
 import org.junit.Test;
-
-import org.springframework.data.elasticsearch.entities.SampleDateMappingEntity;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 /**
  * @author Jakub Vavrik
@@ -42,5 +47,64 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleDateMappingEntity.class);
 
 		assertEquals(EXPECTED_MAPPING, mapping);
+	}
+
+	/**
+	 * @author Jakub Vavrik
+	 */
+	@Document(indexName = "test-index-date-mapping-core", type = "mapping", shards = 1, replicas = 0,
+			refreshInterval = "-1")
+	static class SampleDateMappingEntity {
+
+		@Id private String id;
+
+		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
+
+		@Field(type = Date, format = DateFormat.custom,
+				pattern = "dd.MM.yyyy hh:mm") private java.util.Date customFormatDate;
+
+		@Field(type = FieldType.Date) private Date defaultFormatDate;
+
+		@Field(type = FieldType.Date, format = DateFormat.basic_date) private Date basicFormatDate;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(String message) {
+			this.message = message;
+		}
+
+		public Date getCustomFormatDate() {
+			return customFormatDate;
+		}
+
+		public void setCustomFormatDate(Date customFormatDate) {
+			this.customFormatDate = customFormatDate;
+		}
+
+		public Date getDefaultFormatDate() {
+			return defaultFormatDate;
+		}
+
+		public void setDefaultFormatDate(Date defaultFormatDate) {
+			this.defaultFormatDate = defaultFormatDate;
+		}
+
+		public Date getBasicFormatDate() {
+			return basicFormatDate;
+		}
+
+		public void setBasicFormatDate(Date basicFormatDate) {
+			this.basicFormatDate = basicFormatDate;
+		}
 	}
 }

@@ -16,7 +16,22 @@
 package org.springframework.data.elasticsearch.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.junit.Test;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.Score;
+import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -32,7 +47,6 @@ import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +59,6 @@ import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.config.AbstractReactiveElasticsearchConfiguration;
-import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -70,7 +83,7 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 		}
 	}
 
-	static final String INDEX = "test-index-sample";
+	static final String INDEX = "test-index-sample-simple-reactive";
 	static final String TYPE = "test-type";
 
 	@Autowired ReactiveSampleEntityRepository repository;
@@ -488,5 +501,39 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 		Mono<Boolean> existsAllByMessage(String message);
 
 		Mono<Long> deleteAllByMessage(String message);
+	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 * @author Chris White
+	 * @author Sascha Woo
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@ToString
+	@Builder
+	@Document(indexName = INDEX, type = TYPE, shards = 1, replicas = 0, refreshInterval = "-1")
+	static class SampleEntity {
+
+		@Id
+		private String id;
+		@Field(type = Text, store = true, fielddata = true)
+		private String type;
+		@Field(type = Text, store = true, fielddata = true)
+		private String message;
+		private int rate;
+		@ScriptedField
+		private Double scriptedRate;
+		private boolean available;
+		private String highlightedMessage;
+		private GeoPoint location;
+		@Version
+		private Long version;
+		@Score
+		private float score;
+
 	}
 }

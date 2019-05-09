@@ -17,9 +17,6 @@ package org.springframework.data.elasticsearch.client;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.util.List;
-
-import org.elasticsearch.common.transport.TransportAddress;
 import org.junit.Test;
 
 /**
@@ -85,6 +82,6 @@ public class ClusterNodesUnitTests {
 	public void rejectsUnresolvableHost() {
 
 		assertThatExceptionOfType(IllegalArgumentException.class) //
-				.isThrownBy(() -> ClusterNodes.of("mylocalhost:80"));
+				.isThrownBy(() -> ClusterNodes.of("mylocalhost.invalid.:80"));
 	}
 }

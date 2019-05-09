@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
  * @author Kevin Leturc
  * @author Zetang Zeng
  * @author Dmitriy Yakovlev
+ * @author Peter-Josef Meisch
  */
 public interface ElasticsearchOperations {
 
@@ -108,7 +109,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @param <T>
 	 */
-	<T> Map getMapping(Class<T> clazz);
+	<T> Map<String, Object> getMapping(Class<T> clazz);
 
 	/**
 	 * Get mapping for a given indexName and type
@@ -116,21 +117,21 @@ public interface ElasticsearchOperations {
 	 * @param indexName
 	 * @param type
 	 */
-	Map getMapping(String indexName, String type);
+	Map<String, Object> getMapping(String indexName, String type);
 
 	/**
 	 * Get settings for a given indexName
 	 *
 	 * @param indexName
 	 */
-	Map getSetting(String indexName);
+	Map<String, Object> getSetting(String indexName);
 
 	/**
 	 * Get settings for a given class
 	 *
 	 * @param clazz
 	 */
-	<T> Map getSetting(Class<T> clazz);
+	<T> Map<String, Object> getSetting(Class<T> clazz);
 
 
 	/**

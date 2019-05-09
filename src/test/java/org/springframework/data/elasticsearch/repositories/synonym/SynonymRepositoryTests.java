@@ -15,8 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repositories.synonym;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
@@ -25,9 +24,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.entities.SynonymEntity;
+import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
+import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -35,29 +39,26 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * SynonymRepositoryTests
  *
  * @author Artur Konczak
+ * @author Peter-Josef Meisch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:synonym-test.xml")
 public class SynonymRepositoryTests {
 
-	@Autowired
-	private SynonymRepository repository;
+	@Autowired private SynonymRepository repository;
 
-	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
 	@Before
 	public void before() {
-		elasticsearchTemplate.deleteIndex(SynonymEntity.class);
-		elasticsearchTemplate.createIndex(SynonymEntity.class);
-		elasticsearchTemplate.putMapping(SynonymEntity.class);
-		elasticsearchTemplate.refresh(SynonymEntity.class);
-	}
 
+		IndexInitializer.init(elasticsearchTemplate, SynonymEntity.class);
+	}
 
 	@Test
 	public void shouldDo() {
-		//given
+
+		// given
 		SynonymEntity entry1 = new SynonymEntity();
 		entry1.setText("Elizabeth is the english queen");
 		SynonymEntity entry2 = new SynonymEntity();
@@ -65,13 +66,50 @@ public class SynonymRepositoryTests {
 
 		repository.save(entry1);
 		repository.save(entry2);
-		//when
 
-		//then
-		assertThat(repository.count(),is(2L));
+		// when
 
-		List<SynonymEntity> synonymEntities = elasticsearchTemplate.queryForList(new NativeSearchQueryBuilder().withQuery(QueryBuilders.termQuery("text", "british")).build(), SynonymEntity.class);
-		assertThat(synonymEntities.size(), is(1));
+		// then
+		assertThat(repository.count()).isEqualTo(2L);
+
+		List<SynonymEntity> synonymEntities = elasticsearchTemplate.queryForList(
+				new NativeSearchQueryBuilder().withQuery(QueryBuilders.termQuery("text", "british")).build(),
+				SynonymEntity.class);
+		assertThat(synonymEntities).hasSize(1);
 	}
 
+	/**
+	 * @author Mohsin Husen
+	 */
+	@Document(indexName = "test-index-synonym", type = "synonym-type")
+	@Setting(settingPath = "/synonyms/settings.json")
+	@Mapping(mappingPath = "/synonyms/mappings.json")
+	static class SynonymEntity {
+
+		@Id private String id;
+		private String text;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getText() {
+			return text;
+		}
+
+		public void setText(String text) {
+			this.text = text;
+		}
+	}
+
+	/**
+	 * SynonymRepository
+	 *
+	 * @author Artur Konczak
+	 */
+	interface SynonymRepository extends ElasticsearchCrudRepository<SynonymEntity, String> {}
 }

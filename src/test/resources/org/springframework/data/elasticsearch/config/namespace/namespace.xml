@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+       xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch https://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <elasticsearch:node-client id="client" local="true"
+                               cluster-name="#{T(java.util.UUID).randomUUID().toString()}" http-enabled="false"
+                               path-data="target/elasticsearchTestData" path-home="src/test/resources/test-home-dir"/>
+
+    <bean name="elasticsearchTemplate"
+          class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
+        <constructor-arg name="client" ref="client"/>
+    </bean>
+
+    <elasticsearch:transport-client id="transportClient"/>
+
+    <elasticsearch:repositories
+            base-package="org.springframework.data.elasticsearch.config.namespace"
+            consider-nested-repositories="true" />
+    
+    <elasticsearch:rest-client id="restClient"/>
+
+</beans>

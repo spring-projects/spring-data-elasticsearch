@@ -15,13 +15,12 @@
  */
 package org.springframework.data.elasticsearch.repositories.cdi;
 
-import org.springframework.data.elasticsearch.entities.Person;
 import org.springframework.data.repository.Repository;
 
 /**
  * @author Mark Paluch
  * @see DATAES-113
  */
-public interface SamplePersonRepository extends Repository<Person, Long>, SamplePersonRepositoryCustom {
+public interface SamplePersonRepository extends Repository<CdiRepositoryTests.Person, Long>, SamplePersonRepositoryCustom {
 
 }

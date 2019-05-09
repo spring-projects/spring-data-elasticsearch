@@ -8,13 +8,14 @@
     <import resource="infrastructure.xml"/>
 
     <bean name="elasticsearchTemplate"
-          class="org.springframework.data.elasticsearch.repositories.CustomMethodRepositoryRestTests$CleanupOnStartElasticsearchTemplate">
+          class="org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate">
         <constructor-arg name="client" ref="restClient"/>
     </bean>
 
     <elasticsearch:rest-client id="restClient"/>
 
     <elasticsearch:repositories
-            base-package="org.springframework.data.elasticsearch.repositories.custom"/>
+            base-package="org.springframework.data.elasticsearch.repositories.custommethod"
+            consider-nested-repositories="true"/>
 
 </beans>

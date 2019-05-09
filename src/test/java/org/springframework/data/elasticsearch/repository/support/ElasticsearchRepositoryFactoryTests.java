@@ -41,14 +41,14 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
 @RunWith(MockitoJUnitRunner.class)
 public class ElasticsearchRepositoryFactoryTests {
 
-	@Mock
-	private ElasticsearchOperations operations;
+	@Mock private ElasticsearchOperations operations;
 	private ElasticsearchConverter converter;
 	private ElasticsearchRepositoryFactory factory;
 	MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext = new SimpleElasticsearchMappingContext();
 
 	@Before
 	public void before() {
+
 		converter = new MappingElasticsearchConverter(mappingContext);
 		when(operations.getElasticsearchConverter()).thenReturn(converter);
 		factory = new ElasticsearchRepositoryFactory(operations);
@@ -56,6 +56,7 @@ public class ElasticsearchRepositoryFactoryTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldThrowExceptionGivenQueryDslRepository() {
+
 		// given
 		RepositoryMetadata metadata = new DefaultRepositoryMetadata(QuerydslPredicateExecutor.class);
 		// when

@@ -17,20 +17,33 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.elasticsearch.entities.Person;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
@@ -42,6 +55,7 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
  */
 public class ReactiveElasticsearchQueryMethodUnitTests {
 
+	public static final String INDEX_NAME = "test-index-person-reactive-repository-query";
 	SimpleElasticsearchMappingContext mappingContext;
 
 	@Before
@@ -56,7 +70,7 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 		ElasticsearchEntityMetadata<?> metadata = queryMethod.getEntityInformation();
 
 		assertThat(metadata.getJavaType()).isAssignableFrom(Person.class);
-		assertThat(metadata.getIndexName()).isEqualTo("test-index-person");
+		assertThat(metadata.getIndexName()).isEqualTo(INDEX_NAME);
 		assertThat(metadata.getIndexTypeName()).isEqualTo("user");
 	}
 
@@ -124,6 +138,138 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 	interface NonReactiveRepository extends Repository<Person, Long> {
 
 		List<Person> method();
+	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 * @author Artur Konczak
+	 */
+
+	@Document(indexName = INDEX_NAME, type = "user", shards = 1, replicas = 0,
+			refreshInterval = "-1")
+	static class Person {
+
+		@Id private String id;
+
+		private String name;
+
+		@Field(type = FieldType.Nested) private List<Car> car;
+
+		@Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public List<Car> getCar() {
+			return car;
+		}
+
+		public void setCar(List<Car> car) {
+			this.car = car;
+		}
+
+		public List<Book> getBooks() {
+			return books;
+		}
+
+		public void setBooks(List<Book> books) {
+			this.books = books;
+		}
+	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 * @author Nordine Bittich
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-book-reactive-repository-query", type = "book", shards = 1, replicas = 0,
+			refreshInterval = "-1")
+	static class Book {
+
+		@Id private String id;
+		private String name;
+		@Field(type = FieldType.Object) private Author author;
+		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
+						searchAnalyzer = "standard") }) private String description;
+	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 * @author Artur Konczak
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	static class Car {
+
+		private String name;
+		private String model;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getModel() {
+			return model;
+		}
+
+		public void setModel(String model) {
+			this.model = model;
+		}
+	}
+
+	/**
+	 * @author Rizwan Idrees
+	 * @author Mohsin Husen
+	 */
+	static class Author {
+
+		private String id;
+		private String name;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 
 }

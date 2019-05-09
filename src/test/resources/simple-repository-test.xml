@@ -14,6 +14,7 @@
 
 
     <elasticsearch:repositories
-            base-package="org.springframework.data.elasticsearch.repositories.sample"/>
+            base-package="org.springframework.data.elasticsearch.repository.support.simple"
+            consider-nested-repositories="true"/>
 
 </beans>

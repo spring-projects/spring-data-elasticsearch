@@ -15,17 +15,20 @@
  */
 package org.springframework.data.elasticsearch.immutable;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Optional;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -34,6 +37,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Oliver Gierke
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:immutable-repository-test.xml")
@@ -50,27 +54,46 @@ public class ImmutableElasticsearchRepositoryTests {
 		operations.refresh(ImmutableEntity.class);
 	}
 
-	/**
-	 * @see DATAES-281
-	 */
-	@Test
-	@Ignore("fix me - UnsupportedOperation")
+	@Test // DATAES-281
 	public void shouldSaveAndFindImmutableDocument() {
 
 		// when
 		ImmutableEntity entity = repository.save(new ImmutableEntity("test name"));
-		assertThat(entity.getId(), is(notNullValue()));
+		assertThat(entity.getId()).isNotNull();
 
 		// then
 		Optional<ImmutableEntity> entityFromElasticSearch = repository.findById(entity.getId());
 
-		assertThat(entityFromElasticSearch.isPresent(), is(true));
+		assertThat(entityFromElasticSearch).isPresent();
 
 		entityFromElasticSearch.ifPresent(immutableEntity -> {
 
-			assertThat(immutableEntity.getName(), is("test name"));
-			assertThat(immutableEntity.getId(), is(entity.getId()));
+			assertThat(immutableEntity.getName()).isEqualTo("test name");
+			assertThat(immutableEntity.getId()).isEqualTo(entity.getId());
 		});
-
 	}
+
+	/**
+	 * @author Young Gu
+	 * @author Oliver Gierke
+	 */
+	@Document(indexName = "test-index-immutable")
+	@NoArgsConstructor(force = true)
+	@Getter
+	static class ImmutableEntity {
+		private final String id, name;
+
+		public ImmutableEntity(String name) {
+
+			this.id = null;
+			this.name = name;
+		}
+	}
+
+	/**
+	 * @author Young Gu
+	 * @author Oliver Gierke
+	 */
+	public interface ImmutableElasticsearchRepository extends CrudRepository<ImmutableEntity, String> {}
+
 }

@@ -24,7 +24,6 @@ import java.util.Collections;
 import org.apache.commons.lang.ClassUtils;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
-
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

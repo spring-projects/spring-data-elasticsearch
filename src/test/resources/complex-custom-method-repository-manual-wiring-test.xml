@@ -13,10 +13,10 @@
     </bean>
 
     <elasticsearch:repositories
-            base-package="org.springframework.data.elasticsearch.repository.complex"/>
+            base-package="org.springframework.data.elasticsearch.repositories.complex.custommethod.manualwiring"/>
 
     <bean id="complexElasticsearchRepositoryManualWiringImpl"
-          class="org.springframework.data.elasticsearch.repository.complex.ComplexElasticsearchRepositoryManualWiringImpl">
+          class="org.springframework.data.elasticsearch.repositories.complex.custommethod.manualwiring.ComplexElasticsearchRepositoryManualWiringImpl">
         <property name="template" ref="elasticsearchTemplate"/>
     </bean>
 
