@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.7.RELEASE (2019-05-10)
+---------------------------------------------
+* DATAES-557 - Release 3.1.7 (Lovelace SR7).
+* DATAES-552 - @Query annotation fail when passing in over 10 parameters.
+* DATAES-547 - ElasticSearchTemplate.delete(DeleteQuery, Class) does not delete documents.
+
+
 Changes in version 3.2.0.M3 (2019-04-11)
 ----------------------------------------
 * DATAES-558 - Upgrade Elastic Search version to 6.6.2.
