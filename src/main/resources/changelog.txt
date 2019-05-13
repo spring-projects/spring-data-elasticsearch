@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.8.RELEASE (2019-05-13)
+---------------------------------------------
+* DATAES-577 - Release 3.1.8 (Lovelace SR8).
+
+
 Changes in version 3.2.0.M4 (2019-05-13)
 ----------------------------------------
 * DATAES-576 - ElasticsearchTransportTemplateTests.shouldDeleteAcrossIndex(…) consistently fails.
