@@ -1,6 +1,25 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.0.M4 (2019-05-13)
+----------------------------------------
+* DATAES-576 - ElasticsearchTransportTemplateTests.shouldDeleteAcrossIndex(…) consistently fails.
+* DATAES-575 - Upgrade to Elasticsearch 6.7.2.
+* DATAES-572 - Indices created in ElasticsearchTemplateTests are retained after tests.
+* DATAES-570 - Use Delete By Query API for delete by query operations.
+* DATAES-569 - Add index operations to reactive Elasticsearch client.
+* DATAES-568 - MappingBuilder must use the @Field annotation's name attribute.
+* DATAES-566 - Double  SearchHit source to string conversion in DefaultResultMapper.
+* DATAES-565 - ElasticsearchTemplate.prepareScroll() doesn't respect SourceFilter from the Query.
+* DATAES-564 - Release 3.2 M4 (Moore).
+* DATAES-563 - Add "elasticsearchTemplate" bean alias for ElasticsearchTemplate.
+* DATAES-562 - Custom name attribute for @Field mapping in ElasticsearchEntityMapper.
+* DATAES-561 - Reuse ObjectMapper in ElasticsearchEntityMapper.
+* DATAES-546 - Documentation code snippet for "using @Query Annotation" does not compile.
+* DATAES-459 - ElasticsearchTemplate does not provide the scroll ID with startScroll.
+* DATAES-457 - ElasticsearchTemplate.prepareScroll() does not add sorting.
+
+
 Changes in version 2.1.21.RELEASE (2019-05-10)
 ----------------------------------------------
 * DATAES-555 - Release 2.1.21 (Ingalls SR21).
