@@ -98,6 +98,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.utils.ElasticsearchCloseableIterator;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -447,61 +448,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	private <T> CloseableIterator<T> doStream(final long scrollTimeInMillis, final ScrolledPage<T> page,
 			final Class<T> clazz, final SearchResultMapper mapper) {
-		return new CloseableIterator<T>() {
-
-			/** As we couldn't retrieve single result with scroll, store current hits. */
-			private volatile Iterator<T> currentHits = page.iterator();
-
-			/** The scroll id. */
-			private volatile String scrollId = page.getScrollId();
-
-			/** If stream is finished (ie: cluster returns no results. */
-			private volatile boolean finished = !currentHits.hasNext();
-
-			@Override
-			public void close() {
-				try {
-					// Clear scroll on cluster only in case of error (cause elasticsearch auto clear scroll when it's done)
-					if (!finished && scrollId != null && currentHits != null && currentHits.hasNext()) {
-						clearScroll(scrollId);
-					}
-				} finally {
-					currentHits = null;
-					scrollId = null;
-				}
-			}
-
-			@Override
-			public boolean hasNext() {
-				// Test if stream is finished
-				if (finished) {
-					return false;
-				}
-				// Test if it remains hits
-				if (currentHits == null || !currentHits.hasNext()) {
-					// Do a new request
-					final ScrolledPage<T> scroll = continueScroll(scrollId, scrollTimeInMillis, clazz, mapper);
-					// Save hits and scroll id
-					currentHits = scroll.iterator();
-					finished = !currentHits.hasNext();
-					scrollId = scroll.getScrollId();
-				}
-				return currentHits.hasNext();
-			}
-
-			@Override
-			public T next() {
-				if (hasNext()) {
-					return currentHits.next();
-				}
-				throw new NoSuchElementException();
-			}
-
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException("remove");
-			}
-		};
+		return new ElasticsearchCloseableIterator<>(this, page, scrollTimeInMillis, clazz, mapper);
 	}
 
 	@Override
@@ -546,7 +493,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		if (elasticsearchQuery != null) {
 			countRequestBuilder.setQuery(elasticsearchQuery);
 		}
-		return countRequestBuilder.execute().actionGet().getHits().getTotalHits();
+		return countRequestBuilder.execute().actionGet().getHits().getTotalHits().value;
 	}
 
 	private long doCount(SearchRequestBuilder searchRequestBuilder, QueryBuilder elasticsearchQuery,
@@ -559,7 +506,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		if (elasticsearchFilter != null) {
 			searchRequestBuilder.setPostFilter(elasticsearchFilter);
 		}
-		return searchRequestBuilder.execute().actionGet().getHits().getTotalHits();
+		return searchRequestBuilder.execute().actionGet().getHits().getTotalHits().value;
 	}
 
 	private <T> SearchRequestBuilder prepareCount(Query query, Class<T> clazz) {
@@ -1161,9 +1108,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 				indexRequestBuilder.setVersionType(versionType);
 			}
 
-			if (query.getParentId() != null) {
-				indexRequestBuilder.setParent(query.getParentId());
-			}
+			// TODO find alternative
+			//if (query.getParentId() != null) {
+			//	indexRequestBuilder.setParent(query.getParentId());
+			//}
 
 			return indexRequestBuilder;
 		} catch (IOException e) {

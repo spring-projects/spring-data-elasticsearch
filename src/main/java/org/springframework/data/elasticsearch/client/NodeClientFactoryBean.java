@@ -58,7 +58,7 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 
 		public TestNode(Settings preparedSettings, Collection<Class<? extends Plugin>> classpathPlugins) {
 
-			super(InternalSettingsPreparer.prepareEnvironment(preparedSettings, null), classpathPlugins, false);
+			super(InternalSettingsPreparer.prepareEnvironment(preparedSettings, null, null, null), classpathPlugins, false);
 		}
 
 		protected void registerDerivedNodeNameWithLogger(String nodeName) {

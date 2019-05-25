@@ -29,18 +29,18 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Set;
 
-import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -59,18 +59,14 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.Requests;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.*;
+import org.elasticsearch.client.indices.GetMappingsRequest;
+import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.DeprecationHandler;
-import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
@@ -102,7 +98,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
-import org.springframework.data.elasticsearch.core.client.support.AliasData;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
@@ -110,13 +105,10 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.utils.ElasticsearchCloseableIterator;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * ElasticsearchRestTemplate
@@ -142,6 +134,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Christoph Strobl
  * @author Lorenzo Spinelli
  * @author Dmitriy Yakovlev
+ * @author Simon Schneider
  */
 public class ElasticsearchRestTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -204,7 +197,7 @@ public class ElasticsearchRestTemplate
 	public boolean createIndex(String indexName) {
 		Assert.notNull(indexName, "No index defined for Query");
 		try {
-			return client.indices().create(Requests.createIndexRequest(indexName)).isAcknowledged();
+			return client.indices().create(Requests.createIndexRequest(indexName), RequestOptions.DEFAULT).isAcknowledged();
 		} catch (Exception e) {
 			throw new ElasticsearchException("Failed to create index " + indexName, e);
 		}
@@ -250,7 +243,7 @@ public class ElasticsearchRestTemplate
 			request.source((XContentBuilder) mapping);
 		}
 		try {
-			return client.indices().putMapping(request).isAcknowledged();
+			return client.indices().putMapping(request, RequestOptions.DEFAULT).isAcknowledged();
 		} catch (IOException e) {
 			throw new ElasticsearchException("Failed to put mapping for " + indexName, e);
 		}
@@ -259,15 +252,14 @@ public class ElasticsearchRestTemplate
 	@Override
 	public Map getMapping(String indexName, String type) {
 		Assert.notNull(indexName, "No index defined for getMapping()");
-		Assert.notNull(type, "No type defined for getMapping()");
 		Map mappings = null;
-		RestClient restClient = client.getLowLevelClient();
 		try {
-			Response response = restClient.performRequest("GET", "/" + indexName + "/_mapping/" + type);
-			mappings = convertMappingResponse(EntityUtils.toString(response.getEntity()), type);
+			GetMappingsResponse response = client.indices().getMapping(new GetMappingsRequest().indices(indexName), RequestOptions.DEFAULT);
+			mappings = new HashMap();
+			mappings.put(type, response.mappings().get(indexName));
 		} catch (Exception e) {
 			throw new ElasticsearchException(
-					"Error while getting mapping for indexName : " + indexName + " type : " + type + " ", e);
+					"Error while getting mapping for indexName : " + indexName + " ", e);
 		}
 		return mappings;
 	}
@@ -275,23 +267,6 @@ public class ElasticsearchRestTemplate
 	@Override
 	public <T> Map getMapping(Class<T> clazz) {
 		return getMapping(getPersistentEntityFor(clazz).getIndexName(), getPersistentEntityFor(clazz).getIndexType());
-	}
-
-	private Map<String, Object> convertMappingResponse(String mappingResponse, String type) {
-		ObjectMapper mapper = new ObjectMapper();
-
-		try {
-			Map result = null;
-			JsonNode node = mapper.readTree(mappingResponse);
-
-			node = node.findValue("mappings").findValue(type);
-			result = mapper.readValue(mapper.writeValueAsString(node), HashMap.class);
-
-			return result;
-		} catch (IOException e) {
-			throw new ElasticsearchException("Could not map alias response : " + mappingResponse, e);
-		}
-
 	}
 
 	@Override
@@ -311,7 +286,7 @@ public class ElasticsearchRestTemplate
 				query.getId());
 		GetResponse response;
 		try {
-			response = client.get(request);
+			response = client.get(request, RequestOptions.DEFAULT);
 			T entity = mapper.mapResult(response, clazz);
 			return entity;
 		} catch (IOException e) {
@@ -375,7 +350,7 @@ public class ElasticsearchRestTemplate
 	private MultiSearchResponse.Item[] getMultiSearchResult(MultiSearchRequest request) {
 		MultiSearchResponse response;
 		try {
-			response = client.multiSearch(request);
+			response = client.multiSearch(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request: " + request.toString(), e);
 		}
@@ -438,7 +413,7 @@ public class ElasticsearchRestTemplate
 		}
 		SearchResponse response;
 		try {
-			response = client.search(request);
+			response = client.search(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request: " + request.toString(), e);
 		}
@@ -470,7 +445,7 @@ public class ElasticsearchRestTemplate
 
 		SearchResponse response;
 		try {
-			response = client.search(request);
+			response = client.search(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request: " + request.toString(), e);
 		}
@@ -488,7 +463,7 @@ public class ElasticsearchRestTemplate
 		request.source().query((wrapperQuery(query.getSource())));
 		SearchResponse response;
 		try {
-			response = client.search(request);
+			response = client.search(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request: " + request.toString(), e);
 		}
@@ -514,61 +489,7 @@ public class ElasticsearchRestTemplate
 
 	private <T> CloseableIterator<T> doStream(final long scrollTimeInMillis, final ScrolledPage<T> page,
 			final Class<T> clazz, final SearchResultMapper mapper) {
-		return new CloseableIterator<T>() {
-
-			/** As we couldn't retrieve single result with scroll, store current hits. */
-			private volatile Iterator<T> currentHits = page.iterator();
-
-			/** The scroll id. */
-			private volatile String scrollId = page.getScrollId();
-
-			/** If stream is finished (ie: cluster returns no results. */
-			private volatile boolean finished = !currentHits.hasNext();
-
-			@Override
-			public void close() {
-				try {
-					// Clear scroll on cluster only in case of error (cause elasticsearch auto clear scroll when it's done)
-					if (!finished && scrollId != null && currentHits != null && currentHits.hasNext()) {
-						clearScroll(scrollId);
-					}
-				} finally {
-					currentHits = null;
-					scrollId = null;
-				}
-			}
-
-			@Override
-			public boolean hasNext() {
-				// Test if stream is finished
-				if (finished) {
-					return false;
-				}
-				// Test if it remains hits
-				if (currentHits == null || !currentHits.hasNext()) {
-					// Do a new request
-					final ScrolledPage<T> scroll = continueScroll(scrollId, scrollTimeInMillis, clazz, mapper);
-					// Save hits and scroll id
-					currentHits = scroll.iterator();
-					finished = !currentHits.hasNext();
-					scrollId = scroll.getScrollId();
-				}
-				return currentHits.hasNext();
-			}
-
-			@Override
-			public T next() {
-				if (hasNext()) {
-					return currentHits.next();
-				}
-				throw new NoSuchElementException();
-			}
-
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException("remove");
-			}
-		};
+		return new ElasticsearchCloseableIterator<T>(this, page, scrollTimeInMillis, clazz, mapper);
 	}
 
 	@Override
@@ -616,7 +537,7 @@ public class ElasticsearchRestTemplate
 		countRequest.source(sourceBuilder);
 
 		try {
-			return client.search(countRequest).getHits().getTotalHits();
+			return client.search(countRequest, RequestOptions.DEFAULT).getHits().getTotalHits().value;
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while searching for request: " + countRequest.toString(), e);
 		}
@@ -633,11 +554,11 @@ public class ElasticsearchRestTemplate
 		}
 		SearchResponse response;
 		try {
-			response = client.search(searchRequest);
+			response = client.search(searchRequest, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request: " + searchRequest.toString(), e);
 		}
-		return response.getHits().getTotalHits();
+		return response.getHits().getTotalHits().value;
 	}
 
 	private <T> SearchRequest prepareCount(Query query, Class<T> clazz) {
@@ -690,7 +611,7 @@ public class ElasticsearchRestTemplate
 			request.add(item);
 		}
 		try {
-			return client.multiGet(request);
+			return client.multiGet(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while multiget for request: " + request.toString(), e);
 		}
@@ -706,7 +627,7 @@ public class ElasticsearchRestTemplate
 		String documentId;
 		IndexRequest request = prepareIndex(query);
 		try {
-			documentId = client.index(request).getId();
+			documentId = client.index(request, RequestOptions.DEFAULT).getId();
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while index for request: " + request.toString(), e);
 		}
@@ -721,7 +642,7 @@ public class ElasticsearchRestTemplate
 	public UpdateResponse update(UpdateQuery query) {
 		UpdateRequest request = prepareUpdate(query);
 		try {
-			return client.update(request);
+			return client.update(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while update for request: " + request.toString(), e);
 		}
@@ -760,7 +681,7 @@ public class ElasticsearchRestTemplate
 			bulkRequest.add(prepareIndex(query));
 		}
 		try {
-			checkForBulkUpdateFailure(client.bulk(bulkRequest));
+			checkForBulkUpdateFailure(client.bulk(bulkRequest, RequestOptions.DEFAULT));
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while bulk for request: " + bulkRequest.toString(), e);
 		}
@@ -773,7 +694,7 @@ public class ElasticsearchRestTemplate
 			bulkRequest.add(prepareUpdate(query));
 		}
 		try {
-			checkForBulkUpdateFailure(client.bulk(bulkRequest));
+			checkForBulkUpdateFailure(client.bulk(bulkRequest, RequestOptions.DEFAULT));
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while bulk for request: " + bulkRequest.toString(), e);
 		}
@@ -803,20 +724,19 @@ public class ElasticsearchRestTemplate
 		GetIndexRequest request = new GetIndexRequest();
 		request.indices(indexName);
 		try {
-			return client.indices().exists(request);
+			return client.indices().exists(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while for indexExists request: " + request.toString(), e);
 		}
 	}
 
 	@Override
-	public boolean typeExists(String index, String type) {
-		RestClient restClient = client.getLowLevelClient();
+	public boolean typeExists(String index, String _) {
 		try {
-			Response response = restClient.performRequest("HEAD", index + "/_mapping/" + type);
-			return (response.getStatusLine().getStatusCode() == 200);
+			GetMappingsResponse response = client.indices().getMapping(new GetMappingsRequest().indices(index), RequestOptions.DEFAULT);
+			return response.mappings().containsKey(index);
 		} catch (Exception e) {
-			throw new ElasticsearchException("Error while checking type exists for index: " + index + " type : " + type + " ",
+			throw new ElasticsearchException("Error while checking type exists for index: " + index + " ",
 					e);
 		}
 	}
@@ -832,7 +752,7 @@ public class ElasticsearchRestTemplate
 		if (indexExists(indexName)) {
 			DeleteIndexRequest request = new DeleteIndexRequest(indexName);
 			try {
-				return client.indices().delete(request).isAcknowledged();
+				return client.indices().delete(request, RequestOptions.DEFAULT).isAcknowledged();
 			} catch (IOException e) {
 				throw new ElasticsearchException("Error while deleting index request: " + request.toString(), e);
 			}
@@ -844,7 +764,7 @@ public class ElasticsearchRestTemplate
 	public String delete(String indexName, String type, String id) {
 		DeleteRequest request = new DeleteRequest(indexName, type, id);
 		try {
-			return client.delete(request).getId();
+			return client.delete(request, RequestOptions.DEFAULT).getId();
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while deleting item request: " + request.toString(), e);
 		}
@@ -952,7 +872,7 @@ public class ElasticsearchRestTemplate
 		request.source().version(true);
 
 		try {
-			return client.search(request);
+			return client.search(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request with scroll: " + request.toString(), e);
 		}
@@ -981,7 +901,7 @@ public class ElasticsearchRestTemplate
 		}
 
 		try {
-			return client.search(request);
+			return client.search(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request with scroll: " + request.toString(), e);
 		}
@@ -1010,24 +930,19 @@ public class ElasticsearchRestTemplate
 	}
 
 	public <T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz) {
-		SearchScrollRequest request = new SearchScrollRequest(scrollId);
-		request.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
-		SearchResponse response;
-		try {
-			response = client.searchScroll(request);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error for search request with scroll: " + request.toString(), e);
-		}
-		return resultsMapper.mapResults(response, clazz, Pageable.unpaged());
+		return continueScroll(scrollId, scrollTimeInMillis, clazz, null);
 	}
 
 	public <T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz,
 			SearchResultMapper mapper) {
+		if (mapper == null) {
+			mapper = resultsMapper;
+		}
 		SearchScrollRequest request = new SearchScrollRequest(scrollId);
 		request.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
 		SearchResponse response;
 		try {
-			response = client.searchScroll(request);
+			response = client.searchScroll(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request with scroll: " + request.toString(), e);
 		}
@@ -1040,7 +955,7 @@ public class ElasticsearchRestTemplate
 		request.addScrollId(scrollId);
 		try {
 			// TODO: Something useful with the response.
-			ClearScrollResponse response = client.clearScroll(request);
+			ClearScrollResponse response = client.clearScroll(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request with scroll: " + request.toString(), e);
 		}
@@ -1092,7 +1007,7 @@ public class ElasticsearchRestTemplate
 		prepareSearch(searchRequest, searchQuery);
 
 		try {
-			return client.search(searchRequest);
+			return client.search(searchRequest, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request with scroll: " + searchRequest.toString(), e);
 		}
@@ -1184,7 +1099,7 @@ public class ElasticsearchRestTemplate
 			request.settings((XContentBuilder) settings);
 		}
 		try {
-			return client.indices().create(request).isAcknowledged();
+			return client.indices().create(request, RequestOptions.DEFAULT).isAcknowledged();
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for creating index: " + request.toString(), e);
 		}
@@ -1214,37 +1129,21 @@ public class ElasticsearchRestTemplate
 	@Override // TODO change interface to return Settings.
 	public Map getSetting(String indexName) {
 		Assert.notNull(indexName, "No index defined for getSettings");
-		ObjectMapper objMapper = new ObjectMapper();
 		Map settings = null;
-		RestClient restClient = client.getLowLevelClient();
 		try {
-			Response response = restClient.performRequest("GET", "/" + indexName + "/_settings");
-			settings = convertSettingResponse(EntityUtils.toString(response.getEntity()), indexName);
-
+			GetSettingsResponse response = client.indices().getSettings(new GetSettingsRequest().indices(indexName), RequestOptions.DEFAULT);
+			settings = new HashMap();
+			Settings indexSettings = response.getIndexToSettings().get(indexName);
+			if(indexSettings == null){
+				return settings;
+			}
+			for (String settingName : indexSettings.keySet()){
+				settings.put(settingName, indexSettings.get(settingName));
+			}
 		} catch (Exception e) {
 			throw new ElasticsearchException("Error while getting settings for indexName : " + indexName, e);
 		}
 		return settings;
-	}
-
-	private Map<String, String> convertSettingResponse(String settingResponse, String indexName) {
-		ObjectMapper mapper = new ObjectMapper();
-
-		try {
-			Settings settings = Settings.fromXContent(XContentType.JSON.xContent().createParser(NamedXContentRegistry.EMPTY,
-					DeprecationHandler.THROW_UNSUPPORTED_OPERATION, settingResponse));
-			String prefix = indexName + ".settings.";
-			// Backwards compatibility. TODO Change to return Settings object.
-			Map<String, String> result = new HashMap<String, String>();
-			Set<String> keySet = settings.keySet();
-			for (String key : keySet) {
-				result.put(key.substring(prefix.length()), settings.get(key));
-			}
-			return result;
-		} catch (IOException e) {
-			throw new ElasticsearchException("Could not map alias response : " + settingResponse, e);
-		}
-
 	}
 
 	private <T> SearchRequest prepareSearch(Query query, Class<T> clazz) {
@@ -1349,9 +1248,10 @@ public class ElasticsearchRestTemplate
 				indexRequest.versionType(versionType);
 			}
 
-			if (query.getParentId() != null) {
+			// TODO find alternative
+			/*if (query.getParentId() != null) {
 				indexRequest.parent(query.getParentId());
-			}
+			}*/
 
 			return indexRequest;
 		} catch (IOException e) {
@@ -1364,7 +1264,7 @@ public class ElasticsearchRestTemplate
 		Assert.notNull(indexName, "No index defined for refresh()");
 		try {
 			// TODO: Do something with the response.
-			client.indices().refresh(refreshRequest(indexName));
+			client.indices().refresh(refreshRequest(indexName), RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("failed to refresh index: " + indexName, e);
 		}
@@ -1397,7 +1297,7 @@ public class ElasticsearchRestTemplate
 		IndicesAliasesRequest request = new IndicesAliasesRequest();
 		request.addAliasAction(aliasAction);
 		try {
-			return client.indices().updateAliases(request).isAcknowledged();
+			return client.indices().updateAliases(request, RequestOptions.DEFAULT).isAcknowledged();
 		} catch (IOException e) {
 			throw new ElasticsearchException("failed to update aliases with request: " + request, e);
 		}
@@ -1411,7 +1311,7 @@ public class ElasticsearchRestTemplate
 		AliasActions aliasAction = new AliasActions(AliasActions.Type.REMOVE);
 		request.addAliasAction(aliasAction);
 		try {
-			return client.indices().updateAliases(request).isAcknowledged();
+			return client.indices().updateAliases(request, RequestOptions.DEFAULT).isAcknowledged();
 		} catch (IOException e) {
 			throw new ElasticsearchException("failed to update aliases with request: " + request, e);
 		}
@@ -1419,55 +1319,15 @@ public class ElasticsearchRestTemplate
 
 	@Override
 	public List<AliasMetaData> queryForAlias(String indexName) {
-		List<AliasMetaData> aliases = null;
-		RestClient restClient = client.getLowLevelClient();
-		Response response;
-		String aliasResponse;
-
+		GetAliasesResponse response;
 		try {
-			response = restClient.performRequest("GET", "/" + indexName + "/_alias/*");
-			aliasResponse = EntityUtils.toString(response.getEntity());
+			response = client.indices().getAlias(new GetAliasesRequest().indices(indexName), RequestOptions.DEFAULT);
 		} catch (Exception e) {
 			throw new ElasticsearchException("Error while getting mapping for indexName : " + indexName, e);
 		}
-
-		return convertAliasResponse(aliasResponse);
+		return new ArrayList<>(response.getAliases().get(indexName));
 	}
 
-	/**
-	 * It takes two steps to create a List<AliasMetadata> from the elasticsearch http response because the aliases field
-	 * is actually a Map by alias name, but the alias name is on the AliasMetadata.
-	 *
-	 * @param aliasResponse
-	 * @return
-	 */
-	List<AliasMetaData> convertAliasResponse(String aliasResponse) {
-		ObjectMapper mapper = new ObjectMapper();
-
-		try {
-			JsonNode node = mapper.readTree(aliasResponse);
-
-			Iterator<String> names = node.fieldNames();
-			String name = names.next();
-			node = node.findValue("aliases");
-
-			Map<String, AliasData> aliasData = mapper.readValue(mapper.writeValueAsString(node),
-					new TypeReference<Map<String, AliasData>>() {});
-
-			Iterable<Map.Entry<String, AliasData>> aliasIter = aliasData.entrySet();
-			List<AliasMetaData> aliasMetaDataList = new ArrayList<AliasMetaData>();
-
-			for (Map.Entry<String, AliasData> aliasentry : aliasIter) {
-				AliasData data = aliasentry.getValue();
-				aliasMetaDataList.add(AliasMetaData.newAliasMetaDataBuilder(aliasentry.getKey()).filter(data.getFilter())
-						.routing(data.getRouting()).searchRouting(data.getSearch_routing()).indexRouting(data.getIndex_routing())
-						.build());
-			}
-			return aliasMetaDataList;
-		} catch (IOException e) {
-			throw new ElasticsearchException("Could not map alias response : " + aliasResponse, e);
-		}
-	}
 
 	@Override
 	public ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz) {
@@ -1597,7 +1457,7 @@ public class ElasticsearchRestTemplate
 		searchRequest.source(sourceBuilder);
 
 		try {
-			return client.search(searchRequest);
+			return client.search(searchRequest, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Could not execute search request : " + searchRequest.toString(), e);
 		}
@@ -1606,4 +1466,5 @@ public class ElasticsearchRestTemplate
 	public SearchResponse suggest(SuggestBuilder suggestion, Class clazz) {
 		return suggest(suggestion, retrieveIndexNameFromPersistentEntity(clazz));
 	}
+
 }

@@ -94,7 +94,7 @@ public final class TestUtils {
 			return 0L == client
 					.search(new SearchRequest(indexName)
 							.source(SearchSourceBuilder.searchSource().query(QueryBuilders.matchAllQuery())), RequestOptions.DEFAULT)
-					.getHits().getTotalHits();
+					.getHits().getTotalHits().value;
 		}
 	}
 

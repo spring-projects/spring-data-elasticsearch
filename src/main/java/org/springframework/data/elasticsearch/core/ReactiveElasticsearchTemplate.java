@@ -167,13 +167,14 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				}
 			}
 
-			if (entity.hasParent()) {
+			// TODO find alternative
+			/*if (entity.hasParent()) {
 
 				Object parentId = entity.getParentId();
 				if (parentId != null) {
 					request.parent(converter.convertId(parentId));
 				}
-			}
+			}*/
 
 			request = prepareIndexRequest(value, request);
 			return doIndex(request);

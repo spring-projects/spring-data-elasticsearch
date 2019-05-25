@@ -135,8 +135,6 @@ public class ReactiveElasticsearchClientTests {
 
 		client.info().as(StepVerifier::create) //
 				.consumeNextWith(it -> {
-
-					assertThat(it.isAvailable()).isTrue();
 					assertThat(it.getVersion()).isGreaterThanOrEqualTo(Version.CURRENT);
 				}) //
 				.verifyComplete();

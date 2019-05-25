@@ -99,7 +99,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	@Override
 	public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 
-		long totalHits = response.getHits().getTotalHits();
+		long totalHits = response.getHits().getTotalHits().value;
 		float maxScore = response.getHits().getMaxScore();
 
 		List<T> results = new ArrayList<>();
