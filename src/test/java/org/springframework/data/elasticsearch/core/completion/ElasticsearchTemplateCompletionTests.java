@@ -32,6 +32,8 @@ import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.entities.NonDocumentEntity;
@@ -57,7 +59,7 @@ import static org.junit.Assert.assertEquals;
 public class ElasticsearchTemplateCompletionTests {
 
 	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	private ElasticsearchRestTemplate elasticsearchTemplate;
 
 	private void loadCompletionObjectEntities() {
 		elasticsearchTemplate.deleteIndex(CompletionEntity.class);

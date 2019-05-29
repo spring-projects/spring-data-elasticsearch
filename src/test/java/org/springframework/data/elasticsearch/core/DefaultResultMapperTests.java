@@ -23,6 +23,7 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.util.ArrayIterator;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
@@ -77,7 +78,7 @@ public class DefaultResultMapperTests {
 		//Given
 		SearchHit[] hits = {createCarHit("Ford", "Grat"), createCarHit("BMW", "Arrow")};
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.getTotalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(new TotalHits(2L, TotalHits.Relation.GREATER_THAN_OR_EQUAL_TO));
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
@@ -98,7 +99,7 @@ public class DefaultResultMapperTests {
 		//Given
 		SearchHit[] hits = {createCarHit("Ford", "Grat"), createCarHit("BMW", "Arrow")};
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.getTotalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(new TotalHits(2L, TotalHits.Relation.GREATER_THAN_OR_EQUAL_TO));
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
@@ -116,7 +117,7 @@ public class DefaultResultMapperTests {
 		//Given
 		SearchHit[] hits = {createCarPartialHit("Ford", "Grat"), createCarPartialHit("BMW", "Arrow")};
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.getTotalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(new TotalHits(2L, TotalHits.Relation.GREATER_THAN_OR_EQUAL_TO));
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
@@ -209,7 +210,7 @@ public class DefaultResultMapperTests {
 		when(hit2.getVersion()).thenReturn(5678L);
 
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.getTotalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(new TotalHits(2L, TotalHits.Relation.GREATER_THAN_OR_EQUAL_TO));
 		when(searchHits.iterator()).thenReturn(Arrays.asList(hit1, hit2).iterator());
 
 		SearchResponse searchResponse = mock(SearchResponse.class);

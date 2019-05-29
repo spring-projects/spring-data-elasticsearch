@@ -32,7 +32,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class ElasticsearchTemplateCustomMapperTests {
 
 	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	private ElasticsearchRestTemplate elasticsearchTemplate;
 
 	@Autowired
 	private EntityMapper entityMapper;

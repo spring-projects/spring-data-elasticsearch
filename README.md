@@ -3,12 +3,12 @@ Spring Data Elasticsearch 4.0
 
 :warning: This is a development branch - Do not use in production! :warning:
 
-Spring Data implementation for [ElasticSearch 6.5](http://www.elasticsearch.org/)
+Spring Data implementation for [ElasticSearch 7.x](http://www.elasticsearch.org/)
 
 Planned Features in 4.0
 -----------------------
  
-* Elasticsearch 6.5 compatibility
+* Elasticsearch 7.x compatibility
 * Reactive EleasticsearchClient implementation based on WebClient
 * Reactive ElasticsearchTemplate and ElasticsearchRepository
 * Spring Exception Translator implementation
@@ -61,7 +61,7 @@ the appropriate dependency version.
 
 | spring data elasticsearch | elasticsearch |
 |:-------------------------:|:-------------:|
-| 4.0.x                     | 6.5.0         |
+| 4.0.x                     | 7.1.0         |
 | 3.1.x                     | 6.2.2         |
 | 3.0.x                     | 5.5.0         |
 | 2.1.x                     | 2.4.0         |
@@ -156,7 +156,7 @@ Indexing multiple Document(bulk index) using Elasticsearch Template
 
 ```java
         @Autowired
-        private ElasticsearchTemplate elasticsearchTemplate;
+        private ElasticsearchOperations elasticsearchTemplate;
 
         List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
         //first document
@@ -185,7 +185,7 @@ Searching entities using Elasticsearch Template
 
 ```java
         @Autowired
-        private ElasticsearchTemplate elasticsearchTemplate;
+        private ElasticsearchOperations elasticsearchTemplate;
 
         SearchQuery searchQuery = new NativeSearchQueryBuilder()
         .withQuery(queryString(documentId).field("id"))

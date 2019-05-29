@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.Before;
@@ -36,6 +37,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -60,7 +63,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class NestedObjectTests {
 
 	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	private ElasticsearchOperations elasticsearchTemplate;
 
 
 	@Before
@@ -165,10 +168,10 @@ public class NestedObjectTests {
 		elasticsearchTemplate.bulkIndex(indexQueries);
 		// then
 
-		final Map mapping = elasticsearchTemplate.getMapping(PersonMultipleLevelNested.class);
+		final MappingMetaData mapping = elasticsearchTemplate.getMapping(PersonMultipleLevelNested.class);
 
 		assertThat(mapping, is(notNullValue()));
-		final Map propertyMap = (Map) mapping.get("properties");
+		final Map propertyMap = (Map) mapping.getSourceAsMap().get("properties");
 		assertThat(propertyMap, is(notNullValue()));
 		final Map bestCarsAttributes = (Map) propertyMap.get("bestCars");
 		assertThat(bestCarsAttributes.get("include_in_parent"), is(notNullValue()));

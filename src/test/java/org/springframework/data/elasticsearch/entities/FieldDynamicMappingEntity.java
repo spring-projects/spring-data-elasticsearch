@@ -24,7 +24,7 @@ import org.springframework.data.elasticsearch.annotations.Mapping;
  *
  * @author Ted Liang
  */
-@Document(indexName = "test-index-field-dynamic-mapping", type = "test-field-mapping-type")
+@Document(indexName = "test-index-field-dynamic-mapping")
 public class FieldDynamicMappingEntity {
 
 	@Id

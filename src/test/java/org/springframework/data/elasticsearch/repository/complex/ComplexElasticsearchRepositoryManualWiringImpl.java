@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.complex;
 
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 
 /**
@@ -23,7 +24,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
  */
 public class ComplexElasticsearchRepositoryManualWiringImpl implements ComplexElasticsearchRepositoryCustom {
 
-	private ElasticsearchTemplate template;
+	private ElasticsearchOperations template;
 
 	@Override
 	public String doSomethingSpecial() {
@@ -31,7 +32,7 @@ public class ComplexElasticsearchRepositoryManualWiringImpl implements ComplexEl
 		return "3+3=6";
 	}
 
-	public void setTemplate(ElasticsearchTemplate template) {
+	public void setTemplate(ElasticsearchOperations template) {
 		this.template = template;
 	}
 }

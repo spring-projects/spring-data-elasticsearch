@@ -25,7 +25,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 /**
  * @author Jakub Vavrik
  */
-@Document(indexName = "test-index-recursive-mapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-recursive-mapping", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleTransientEntity {
 
 	@Id

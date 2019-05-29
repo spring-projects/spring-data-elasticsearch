@@ -26,7 +26,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
  * @author Mohsin Husen
  */
 
-@Document(indexName = "test-index-double-keyed-entity", type = "double-keyed-entity", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-double-keyed-entity", shards = 1, replicas = 0, refreshInterval = "-1")
 public class DoubleIDEntity {
 
 	@Id

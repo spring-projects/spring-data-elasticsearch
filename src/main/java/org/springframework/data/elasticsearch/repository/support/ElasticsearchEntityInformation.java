@@ -30,8 +30,6 @@ public interface ElasticsearchEntityInformation<T, ID> extends EntityInformation
 
 	String getIndexName();
 
-	String getType();
-
 	Long getVersion(T entity);
 
 	String getParentId(T entity);

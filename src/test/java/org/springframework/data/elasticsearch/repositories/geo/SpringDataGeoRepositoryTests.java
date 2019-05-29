@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.entities.GeoEntity;
@@ -40,7 +41,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration("classpath:/repository-spring-data-geo-support.xml")
 public class SpringDataGeoRepositoryTests {
 
-	@Autowired ElasticsearchTemplate template;
+	@Autowired
+	ElasticsearchOperations template;
 
 	@Autowired SpringDataGeoRepository repository;
 

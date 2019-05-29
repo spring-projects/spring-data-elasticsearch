@@ -27,7 +27,6 @@ public class IndexQueryBuilder {
 	private Object object;
 	private Long version;
 	private String indexName;
-	private String type;
 	private String source;
 	private String parentId;
 
@@ -51,11 +50,6 @@ public class IndexQueryBuilder {
 		return this;
 	}
 
-	public IndexQueryBuilder withType(String type) {
-		this.type = type;
-		return this;
-	}
-
 	public IndexQueryBuilder withSource(String source) {
 		this.source = source;
 		return this;
@@ -70,7 +64,6 @@ public class IndexQueryBuilder {
 		IndexQuery indexQuery = new IndexQuery();
 		indexQuery.setId(id);
 		indexQuery.setIndexName(indexName);
-		indexQuery.setType(type);
 		indexQuery.setObject(object);
 		indexQuery.setParentId(parentId);
 		indexQuery.setSource(source);

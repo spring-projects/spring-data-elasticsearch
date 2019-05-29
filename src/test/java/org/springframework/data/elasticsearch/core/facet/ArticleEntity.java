@@ -30,7 +30,7 @@ import org.springframework.data.elasticsearch.annotations.*;
  * @author Artur Konczak
  * @author Mohsin Husen
  */
-@Document(indexName = "test-index-articles", type = "article", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-articles", shards = 1, replicas = 0, refreshInterval = "-1")
 public class ArticleEntity {
 
 	@Id

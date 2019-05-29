@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,7 +50,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class LogEntityTests {
 
 	@Autowired
-	private ElasticsearchTemplate template;
+	private ElasticsearchOperations template;
 
 	@Before
 	public void before() throws ParseException {
@@ -92,7 +93,7 @@ public class LogEntityTests {
 	/*
 	DATAES-66
 	*/
-	@Test(expected = SearchPhaseExecutionException.class)
+	@Test(expected = ElasticsearchStatusException.class)
 	public void shouldThrowExceptionWhenInvalidIPGivenForSearchQuery() {
 		//when
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()

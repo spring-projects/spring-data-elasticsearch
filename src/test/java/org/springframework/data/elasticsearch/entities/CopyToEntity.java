@@ -34,7 +34,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(indexName = "test-copy-to", type = "test", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-copy-to", shards = 1, replicas = 0, refreshInterval = "-1")
 public class CopyToEntity {
 
 	@Id private String id;

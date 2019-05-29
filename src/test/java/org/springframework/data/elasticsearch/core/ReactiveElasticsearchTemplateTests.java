@@ -21,6 +21,7 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.junit.*;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -33,9 +34,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.annotation.Id;
@@ -83,6 +81,11 @@ public class ReactiveElasticsearchTemplateTests {
 		restTemplate.refresh(SampleEntity.class);
 
 		template = new ReactiveElasticsearchTemplate(TestUtils.reactiveClient());
+	}
+
+	@AfterClass
+	public static void tearDown() {
+		TestUtils.deleteIndex(DEFAULT_INDEX, ALTERNATE_INDEX);
 	}
 
 	@Test // DATAES-504
@@ -161,7 +164,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		Map<String, Object> map = new LinkedHashMap<>(Collections.singletonMap("foo", "bar"));
 
-		template.save(map, ALTERNATE_INDEX, "singleton-map") //
+		template.save(map, ALTERNATE_INDEX) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 					assertThat(map).containsKey("id");
@@ -396,7 +399,7 @@ public class ReactiveElasticsearchTemplateTests {
 		SampleEntity sampleEntity = randomEntity("test message");
 		index(sampleEntity);
 
-		template.deleteById(sampleEntity.getId(), DEFAULT_INDEX, "test-type") //
+		template.deleteById(sampleEntity.getId(), DEFAULT_INDEX) //
 				.as(StepVerifier::create)//
 				.expectNext(sampleEntity.getId()) //
 				.verifyComplete();
@@ -453,7 +456,7 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Data
-	@Document(indexName = "marvel", type = "characters")
+	@Document(indexName = "marvel")
 	static class Person {
 
 		private @Id String id;
@@ -483,7 +486,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
 
-		return new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity)
+		return new IndexQueryBuilder().withIndexName(DEFAULT_INDEX).withId(sampleEntity.getId()).withObject(sampleEntity)
 				.withVersion(sampleEntity.getVersion()).build();
 	}
 

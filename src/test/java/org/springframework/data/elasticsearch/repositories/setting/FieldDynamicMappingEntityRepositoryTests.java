@@ -20,10 +20,12 @@ import static org.junit.Assert.*;
 
 import java.util.Map;
 
+import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.entities.FieldDynamicMappingEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -42,7 +44,7 @@ public class FieldDynamicMappingEntityRepositoryTests {
 	private FieldDynamicMappingEntityRepository repository;
 
 	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	private ElasticsearchOperations elasticsearchTemplate;
 
 	@Before
 	public void before() {
@@ -60,10 +62,10 @@ public class FieldDynamicMappingEntityRepositoryTests {
 		//given
 
 		//then
-		Map mapping = elasticsearchTemplate.getMapping(FieldDynamicMappingEntity.class);
+		MappingMetaData mapping = elasticsearchTemplate.getMapping(FieldDynamicMappingEntity.class);
 		assertThat(mapping, is(notNullValue()));
 
-		Map properties = (Map) mapping.get("properties");
+		Map properties = (Map) mapping.getSourceAsMap().get("properties");
 		assertThat(properties, is(notNullValue()));
 
 		assertThat(properties.containsKey("file"), is(true));

@@ -24,6 +24,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.entities.SpELEntity;
@@ -43,7 +44,7 @@ public class SpELEntityTests {
 
 	@Autowired private SpELRepository repository;
 
-	@Autowired private ElasticsearchTemplate template;
+	@Autowired private ElasticsearchOperations template;
 
 	@Before
 	public void init() {
@@ -77,7 +78,6 @@ public class SpELEntityTests {
 		// Then
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(QueryBuilders.matchAllQuery());
 		nativeSearchQuery.addIndices("abz-entity");
-		nativeSearchQuery.addTypes("myType");
 		long count = template.count(nativeSearchQuery);
 		assertThat(count, is(1L));
 	}

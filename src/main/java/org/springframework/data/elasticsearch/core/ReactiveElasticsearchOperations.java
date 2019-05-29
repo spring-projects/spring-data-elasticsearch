@@ -88,46 +88,15 @@ public interface ReactiveElasticsearchOperations {
 	}
 
 	/**
-	 * Index the entity in the given {@literal index}. If the index is {@literal null} or empty the index name provided
-	 * via entity metadata is used.
-	 *
-	 * @param entity must not be {@literal null}.
-	 * @param index the name of the target index. Can be {@literal null}.
-	 * @param <T>
-	 * @return a {@link Mono} emitting the saved entity.
-	 */
-	default <T> Mono<T> save(T entity, @Nullable String index) {
-		return save(entity, index, null);
-	}
-
-	/**
-	 * Index the entity, once available, under the given {@literal type} in the given {@literal index}. If the
-	 * {@literal index} is {@literal null} or empty the index name provided via entity metadata is used. Same for the
-	 * {@literal type}.
-	 *
-	 * @param entityPublisher must not be {@literal null}.
-	 * @param index the name of the target index. Can be {@literal null}.
-	 * @param type the name of the type within the index. Can be {@literal null}.
-	 * @param <T>
-	 * @return a {@link Mono} emitting the saved entity.
-	 */
-	default <T> Mono<T> save(Mono<? extends T> entityPublisher, @Nullable String index, @Nullable String type) {
-
-		Assert.notNull(entityPublisher, "EntityPublisher must not be null!");
-		return entityPublisher.flatMap(it -> save(it, index, type));
-	}
-
-	/**
 	 * Index the entity under the given {@literal type} in the given {@literal index}. If the {@literal index} is
 	 * {@literal null} or empty the index name provided via entity metadata is used. Same for the {@literal type}.
 	 *
 	 * @param entity must not be {@literal null}.
 	 * @param index the name of the target index. Can be {@literal null}.
-	 * @param type the name of the type within the index. Can be {@literal null}.
 	 * @param <T>
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
-	<T> Mono<T> save(T entity, @Nullable String index, @Nullable String type);
+	<T> Mono<T> save(T entity, @Nullable String index);
 
 	/**
 	 * Find the document with the given {@literal id} mapped onto the given {@literal entityType}.
@@ -144,29 +113,13 @@ public interface ReactiveElasticsearchOperations {
 	/**
 	 * Fetch the entity with given {@literal id}.
 	 *
-	 * @param id the {@literal _id} of the document to fetch.
-	 * @param entityType the domain type used for mapping the document.
-	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
-	 *          {@literal null}.
-	 * @param <T>
-	 * @return {@link Mono#empty()} if not found.
-	 */
-	default <T> Mono<T> findById(String id, Class<T> entityType, @Nullable String index) {
-		return findById(id, entityType, index, null);
-	}
-
-	/**
-	 * Fetch the entity with given {@literal id}.
-	 *
 	 * @param id must not be {@literal null}.
 	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
-	 *          {@literal null}.
-	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
 	 *          {@literal null}.
 	 * @param <T>
 	 * @return the {@link Mono} emitting the entity or signalling completion if none found.
 	 */
-	<T> Mono<T> findById(String id, Class<T> entityType, @Nullable String index, @Nullable String type);
+	<T> Mono<T> findById(String id, Class<T> entityType, @Nullable String index);
 
 	/**
 	 * Check if an entity with given {@literal id} exists.
@@ -179,18 +132,6 @@ public interface ReactiveElasticsearchOperations {
 		return exists(id, entityType, null);
 	}
 
-	/**
-	 * Check if an entity with given {@literal id} exists.
-	 *
-	 * @param id the {@literal _id} of the document to look for.
-	 * @param entityType the domain type used.
-	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
-	 *          {@literal null}.
-	 * @return a {@link Mono} emitting {@literal true} if a matching document exists, {@literal false} otherwise.
-	 */
-	default Mono<Boolean> exists(String id, Class<?> entityType, @Nullable String index) {
-		return exists(id, entityType, index, null);
-	}
 
 	/**
 	 * Check if an entity with given {@literal id} exists.
@@ -198,11 +139,9 @@ public interface ReactiveElasticsearchOperations {
 	 * @param id the {@literal _id} of the document to look for.
 	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
 	 *          {@literal null}.
-	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
-	 *          {@literal null}.
 	 * @return a {@link Mono} emitting {@literal true} if a matching document exists, {@literal false} otherwise.
 	 */
-	Mono<Boolean> exists(String id, Class<?> entityType, @Nullable String index, @Nullable String type);
+	Mono<Boolean> exists(String id, Class<?> entityType, @Nullable String index);
 
 	/**
 	 * Search the index for entities matching the given {@link Query query}.
@@ -226,7 +165,7 @@ public interface ReactiveElasticsearchOperations {
 	 * @return a {@link Flux} emitting matching entities one by one.
 	 */
 	default <T> Flux<T> find(Query query, Class<?> entityType, Class<T> returnType) {
-		return find(query, entityType, null, null, returnType);
+		return find(query, entityType, null, returnType);
 	}
 
 	/**
@@ -238,8 +177,9 @@ public interface ReactiveElasticsearchOperations {
 	 * @return a {@link Flux} emitting matching entities one by one.
 	 */
 	default <T> Flux<T> find(Query query, Class<T> entityType, @Nullable String index) {
-		return find(query, entityType, index, null);
+		return find(query, entityType, index, entityType);
 	}
+
 
 	/**
 	 * Search the index for entities matching the given {@link Query query}.
@@ -247,31 +187,12 @@ public interface ReactiveElasticsearchOperations {
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
-	 *          {@literal null}.
-	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
-	 *          {@literal null}.
-	 * @param <T>
-	 * @returnm a {@link Flux} emitting matching entities one by one.
-	 */
-	default <T> Flux<T> find(Query query, Class<T> entityType, @Nullable String index, @Nullable String type) {
-		return find(query, entityType, index, type, entityType);
-	}
-
-	/**
-	 * Search the index for entities matching the given {@link Query query}.
-	 *
-	 * @param query must not be {@literal null}.
-	 * @param entityType must not be {@literal null}.
-	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
-	 *          {@literal null}.
-	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
 	 *          {@literal null}.
 	 * @param resultType the projection result type.
 	 * @param <T>
 	 * @return a {@link Flux} emitting matching entities one by one.
 	 */
-	<T> Flux<T> find(Query query, Class<?> entityType, @Nullable String index, @Nullable String type,
-			Class<T> resultType);
+	<T> Flux<T> find(Query query, Class<?> entityType, @Nullable String index, Class<T> resultType);
 
 	/**
 	 * Count the number of documents matching the given {@link Query}.
@@ -303,22 +224,7 @@ public interface ReactiveElasticsearchOperations {
 	 *          {@literal null}.
 	 * @return a {@link Mono} emitting the nr of matching documents.
 	 */
-	default Mono<Long> count(Query query, Class<?> entityType, @Nullable String index) {
-		return count(query, entityType, index, null);
-	}
-
-	/**
-	 * Count the number of documents matching the given {@link Query}.
-	 *
-	 * @param query must not be {@literal null}.
-	 * @param entityType must not be {@literal null}.
-	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
-	 *          {@literal null}.
-	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
-	 *          {@literal null}.
-	 * @return a {@link Mono} emitting the nr of matching documents.
-	 */
-	Mono<Long> count(Query query, Class<?> entityType, @Nullable String index, @Nullable String type);
+	Mono<Long> count(Query query, Class<?> entityType, @Nullable String index);
 
 	/**
 	 * Delete the given entity extracting index and type from entity metadata.
@@ -338,36 +244,20 @@ public interface ReactiveElasticsearchOperations {
 	 *          {@literal null}.
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	default Mono<String> delete(Object entity, @Nullable String index) {
-		return delete(entity, index, null);
-	}
-
-	/**
-	 * Delete the given entity extracting index and type from entity metadata.
-	 *
-	 * @param entity must not be {@literal null}.
-	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
-	 *          {@literal null}.
-	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
-	 *          {@literal null}.
-	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
-	 */
-	Mono<String> delete(Object entity, @Nullable String index, @Nullable String type);
+	Mono<String> delete(Object entity, @Nullable String index);
 
 	/**
 	 * Delete the entity with given {@literal id}.
 	 *
 	 * @param id must not be {@literal null}.
 	 * @param index the name of the target index.
-	 * @param type the name of the target type.
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	default Mono<String> deleteById(String id, String index, String type) {
+	default Mono<String> deleteById(String id, String index) {
 
 		Assert.notNull(index, "Index must not be null!");
-		Assert.notNull(type, "Type must not be null!");
 
-		return deleteById(id, Object.class, index, type);
+		return deleteById(id, Object.class, index);
 	}
 
 	/**
@@ -381,18 +271,6 @@ public interface ReactiveElasticsearchOperations {
 		return deleteById(id, entityType, null);
 	}
 
-	/**
-	 * Delete the entity with given {@literal id} extracting index and type from entity metadata.
-	 *
-	 * @param id must not be {@literal null}.
-	 * @param entityType must not be {@literal null}.
-	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
-	 *          {@literal null}.
-	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
-	 */
-	default Mono<String> deleteById(String id, Class<?> entityType, @Nullable String index) {
-		return deleteById(id, entityType, index, null);
-	}
 
 	/**
 	 * Delete the entity with given {@literal id} extracting index and type from entity metadata.
@@ -401,11 +279,9 @@ public interface ReactiveElasticsearchOperations {
 	 * @param entityType must not be {@literal null}.
 	 * @param index the name of the target index. Overwrites document metadata from {@literal entityType} if not
 	 *          {@literal null}.
-	 * @param type the name of the target type. Overwrites document metadata from {@literal entityType} if not
-	 *          {@literal null}.
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	Mono<String> deleteById(String id, Class<?> entityType, @Nullable String index, @Nullable String type);
+	Mono<String> deleteById(String id, Class<?> entityType, @Nullable String index);
 
 	/**
 	 * Delete the documents matching the given {@link Query} extracting index and type from entity metadata.

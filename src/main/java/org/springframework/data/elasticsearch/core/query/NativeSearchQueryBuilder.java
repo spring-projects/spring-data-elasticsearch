@@ -51,7 +51,6 @@ public class NativeSearchQueryBuilder {
 	private HighlightBuilder.Field[] highlightFields;
 	private Pageable pageable = Pageable.unpaged();
 	private String[] indices;
-	private String[] types;
 	private String[] fields;
 	private SourceFilter sourceFilter;
 	private List<IndexBoost> indicesBoost;
@@ -117,11 +116,6 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withTypes(String... types) {
-		this.types = types;
-		return this;
-	}
-
 	public NativeSearchQueryBuilder withFields(String... fields) {
 		this.fields = fields;
 		return this;
@@ -176,10 +170,6 @@ public class NativeSearchQueryBuilder {
 
 		if (indices != null) {
 			nativeSearchQuery.addIndices(indices);
-		}
-
-		if (types != null) {
-			nativeSearchQuery.addTypes(types);
 		}
 
 		if (fields != null) {

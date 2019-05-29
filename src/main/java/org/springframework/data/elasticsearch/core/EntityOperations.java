@@ -38,6 +38,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Simon Schneider
  * @since 4.0
  */
 @RequiredArgsConstructor
@@ -92,13 +93,11 @@ class EntityOperations {
 	 * @param entity the entity to determine the index name. Can be {@literal null} if {@code index} and {@literal type}
 	 *          are provided.
 	 * @param index index name override can be {@literal null}.
-	 * @param type index type override can be {@literal null}.
 	 * @return the {@link IndexCoordinates} containing index name and index type.
 	 * @see ElasticsearchPersistentEntity#getIndexName()
-	 * @see ElasticsearchPersistentEntity#getIndexType()
 	 */
-	IndexCoordinates determineIndex(Entity<?> entity, @Nullable String index, @Nullable String type) {
-		return determineIndex(entity.getPersistentEntity(), index, type);
+	String determineIndex(Entity<?> entity, @Nullable String index) {
+		return determineIndex(entity.getPersistentEntity(), index);
 	}
 
 	/**
@@ -109,14 +108,11 @@ class EntityOperations {
 	 * @param persistentEntity the entity to determine the index name. Can be {@literal null} if {@code index} and
 	 *          {@literal type} are provided.
 	 * @param index index name override can be {@literal null}.
-	 * @param type index type override can be {@literal null}.
 	 * @return the {@link IndexCoordinates} containing index name and index type.
 	 * @see ElasticsearchPersistentEntity#getIndexName()
-	 * @see ElasticsearchPersistentEntity#getIndexType()
 	 */
-	IndexCoordinates determineIndex(ElasticsearchPersistentEntity<?> persistentEntity, @Nullable String index,
-			@Nullable String type) {
-		return new IndexCoordinates(indexName(persistentEntity, index), typeName(persistentEntity, type));
+	String determineIndex(ElasticsearchPersistentEntity<?> persistentEntity, @Nullable String index) {
+		return indexName(persistentEntity, index);
 	}
 
 	private static String indexName(@Nullable ElasticsearchPersistentEntity<?> entity, @Nullable String index) {
@@ -127,16 +123,6 @@ class EntityOperations {
 		}
 
 		return index;
-	}
-
-	private static String typeName(@Nullable ElasticsearchPersistentEntity<?> entity, @Nullable String type) {
-
-		if (StringUtils.isEmpty(type)) {
-			Assert.notNull(entity, "Cannot determine index type");
-			return entity.getIndexType();
-		}
-
-		return type;
 	}
 
 	/**
@@ -616,12 +602,13 @@ class EntityOperations {
 
 	/**
 	 * Value object encapsulating index name and index type.
+	 * @Deprecated use indexName instead, since types do not exist in Elasticsearch 7.x
 	 */
 	@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 	@Getter
+	@Deprecated
 	static class IndexCoordinates {
 
 		private final String indexName;
-		private final String typeName;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
-import static org.springframework.util.StringUtils.*;
-
-import java.util.Locale;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -28,7 +24,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
 import org.springframework.data.util.TypeInformation;
@@ -47,6 +42,7 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Mark Paluch
  * @author Sascha Woo
+ * @author Simon Schneider
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
@@ -55,7 +51,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private final SpelExpressionParser parser;
 
 	private String indexName;
-	private String indexType;
 	private boolean useServerConfiguration;
 	private short shards;
 	private short replicas;
@@ -78,7 +73,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			Assert.hasText(document.indexName(),
 					" Unknown indexName. Make sure the indexName is defined. e.g @Document(indexName=\"foo\")");
 			this.indexName = document.indexName();
-			this.indexType = hasText(document.type()) ? document.type() : clazz.getSimpleName().toLowerCase(Locale.ENGLISH);
 			this.useServerConfiguration = document.useServerConfiguration();
 			this.shards = document.shards();
 			this.replicas = document.replicas();
@@ -101,12 +95,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public String getIndexName() {
 		Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
-		return expression.getValue(context, String.class);
-	}
-
-	@Override
-	public String getIndexType() {
-		Expression expression = parser.parseExpression(indexType, ParserContext.TEMPLATE_EXPRESSION);
 		return expression.getValue(context, String.class);
 	}
 

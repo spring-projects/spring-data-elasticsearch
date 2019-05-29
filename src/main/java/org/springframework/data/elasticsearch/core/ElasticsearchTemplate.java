@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,17 +21,13 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.core.MappingBuilder.*;
 import static org.springframework.util.CollectionUtils.*;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.ActionFuture;
@@ -56,7 +52,9 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.settings.Settings;
@@ -80,7 +78,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -112,6 +109,8 @@ import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.utils.ClassPathFileUtils;
+import org.springframework.data.elasticsearch.utils.ElasticsearchStreamIterator;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -134,7 +133,9 @@ import org.springframework.util.StringUtils;
  * @author Sascha Woo
  * @author Ted Liang
  * @author Jean-Baptiste Nizet
+ * @author Simon Schneider
  */
+@Deprecated
 public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
 	private static final Logger QUERY_LOGGER = LoggerFactory.getLogger("org.springframework.data.elasticsearch.core.QUERY");
@@ -145,6 +146,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	private ElasticsearchConverter elasticsearchConverter;
 	private ResultsMapper resultsMapper;
 	private String searchTimeout;
+
 
 	public ElasticsearchTemplate(Client client) {
 		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()));
@@ -205,7 +207,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		if (clazz.isAnnotationPresent(Mapping.class)) {
 			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
 			if (!StringUtils.isEmpty(mappingPath)) {
-				String mappings = readFileFromClasspath(mappingPath);
+				String mappings = ClassPathFileUtils.readFileFromClasspath(mappingPath);
 				if (!StringUtils.isEmpty(mappings)) {
 					return putMapping(clazz, mappings);
 				}
@@ -219,7 +221,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 			ElasticsearchPersistentProperty property = persistentEntity.getRequiredIdProperty();
 
-			xContentBuilder = buildMapping(clazz, persistentEntity.getIndexType(),
+			xContentBuilder = buildMapping(clazz,
 					property.getFieldName(), persistentEntity.getParentType());
 		} catch (Exception e) {
 			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
@@ -229,15 +231,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz, Object mapping) {
-		return putMapping(getPersistentEntityFor(clazz).getIndexName(), getPersistentEntityFor(clazz).getIndexType(),
-				mapping);
+		return putMapping(getPersistentEntityFor(clazz).getIndexName(), mapping);
 	}
 
 	@Override
-	public boolean putMapping(String indexName, String type, Object mapping) {
+	public boolean putMapping(String indexName, Object mapping) {
 		Assert.notNull(indexName, "No index defined for putMapping()");
-		Assert.notNull(type, "No type defined for putMapping()");
-		PutMappingRequestBuilder requestBuilder = client.admin().indices().preparePutMapping(indexName).setType(type);
+		PutMappingRequestBuilder requestBuilder = client.admin().indices().preparePutMapping(indexName);
 		if (mapping instanceof String) {
 			requestBuilder.setSource(String.valueOf(mapping), XContentType.JSON);
 		} else if (mapping instanceof Map) {
@@ -249,23 +249,20 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public Map getMapping(String indexName, String type) {
+	public MappingMetaData getMapping(String indexName) {
 		Assert.notNull(indexName, "No index defined for putMapping()");
-		Assert.notNull(type, "No type defined for putMapping()");
-		Map mappings = null;
 		try {
-			mappings = client.admin().indices().getMappings(new GetMappingsRequest().indices(indexName).types(type))
-					.actionGet().getMappings().get(indexName).get(type).getSourceAsMap();
+			return client.admin().indices().getMappings(new GetMappingsRequest().indices(indexName))
+					.actionGet().getMappings().get(indexName).get("_default_");
 		} catch (Exception e) {
 			throw new ElasticsearchException(
-					"Error while getting mapping for indexName : " + indexName + " type : " + type + " " + e.getMessage());
+					"Error while getting mapping for indexName : " + indexName + " type : _default_ " + e.getMessage());
 		}
-		return mappings;
 	}
 
 	@Override
-	public <T> Map getMapping(Class<T> clazz) {
-		return getMapping(getPersistentEntityFor(clazz).getIndexName(), getPersistentEntityFor(clazz).getIndexType());
+	public <T> MappingMetaData getMapping(Class<T> clazz) {
+		return getMapping(getPersistentEntityFor(clazz).getIndexName());
 	}
 
 	@Override
@@ -282,7 +279,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	public <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper) {
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
 		GetResponse response = client
-				.prepareGet(persistentEntity.getIndexName(), persistentEntity.getIndexType(), query.getId()).execute()
+				.prepareGet(persistentEntity.getIndexName(), "_default_", query.getId()).execute()
 				.actionGet();
 
 		T entity = mapper.mapResult(response, clazz);
@@ -398,61 +395,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	private <T> CloseableIterator<T> doStream(final long scrollTimeInMillis, final ScrolledPage<T> page, final Class<T> clazz, final SearchResultMapper mapper) {
-		return new CloseableIterator<T>() {
-
-			/** As we couldn't retrieve single result with scroll, store current hits. */
-			private volatile Iterator<T> currentHits = page.iterator();
-
-			/** The scroll id. */
-			private volatile String scrollId = page.getScrollId();
-
-			/** If stream is finished (ie: cluster returns no results. */
-			private volatile boolean finished = !currentHits.hasNext();
-
-			@Override
-			public void close() {
-				try {
-					// Clear scroll on cluster only in case of error (cause elasticsearch auto clear scroll when it's done)
-					if (!finished && scrollId != null && currentHits != null && currentHits.hasNext()) {
-						clearScroll(scrollId);
-					}
-				} finally {
-					currentHits = null;
-					scrollId = null;
-				}
-			}
-
-			@Override
-			public boolean hasNext() {
-				// Test if stream is finished
-				if (finished) {
-					return false;
-				}
-				// Test if it remains hits
-				if (currentHits == null || !currentHits.hasNext()) {
-					// Do a new request
-					final ScrolledPage<T> scroll = (ScrolledPage<T>) continueScroll(scrollId, scrollTimeInMillis, clazz, mapper);
-					// Save hits and scroll id
-					currentHits = scroll.iterator();
-					finished = !currentHits.hasNext();
-					scrollId = scroll.getScrollId();
-				}
-				return currentHits.hasNext();
-			}
-
-			@Override
-			public T next() {
-				if (hasNext()) {
-					return currentHits.next();
-				}
-				throw new NoSuchElementException();
-			}
-
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException("remove");
-			}
-		};
+		return new ElasticsearchStreamIterator<>(this, page, scrollTimeInMillis, clazz, mapper);
 	}
 
 	@Override
@@ -497,7 +440,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		if (elasticsearchQuery != null) {
 			countRequestBuilder.setQuery(elasticsearchQuery);
 		}
-		return countRequestBuilder.execute().actionGet().getHits().getTotalHits();
+		return countRequestBuilder.execute().actionGet().getHits().getTotalHits().value;
 	}
 
 	private long doCount(SearchRequestBuilder searchRequestBuilder, QueryBuilder elasticsearchQuery,
@@ -510,23 +453,18 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		if (elasticsearchFilter != null) {
 			searchRequestBuilder.setPostFilter(elasticsearchFilter);
 		}
-		return searchRequestBuilder.execute().actionGet().getHits().getTotalHits();
+		return searchRequestBuilder.execute().actionGet().getHits().getTotalHits().value;
 	}
 
 	private <T> SearchRequestBuilder prepareCount(Query query, Class<T> clazz) {
 		String indexName[] = !isEmpty(query.getIndices())
 				? query.getIndices().toArray(new String[query.getIndices().size()])
 				: retrieveIndexNameFromPersistentEntity(clazz);
-		String types[] = !isEmpty(query.getTypes()) ? query.getTypes().toArray(new String[query.getTypes().size()])
-				: retrieveTypeFromPersistentEntity(clazz);
 
 		Assert.notNull(indexName, "No index defined for Query");
 
 		SearchRequestBuilder countRequestBuilder = client.prepareSearch(indexName);
 
-		if (types != null) {
-			countRequestBuilder.setTypes(types);
-		}
 		countRequestBuilder.setSize(0);
 		return countRequestBuilder;
 	}
@@ -540,11 +478,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 		String indexName = !isEmpty(searchQuery.getIndices()) ? searchQuery.getIndices().get(0)
 				: getPersistentEntityFor(clazz).getIndexName();
-		String type = !isEmpty(searchQuery.getTypes()) ? searchQuery.getTypes().get(0)
-				: getPersistentEntityFor(clazz).getIndexType();
 
 		Assert.notNull(indexName, "No index defined for Query");
-		Assert.notNull(type, "No type define for Query");
 		Assert.notEmpty(searchQuery.getIds(), "No Id define for Query");
 
 		MultiGetRequestBuilder builder = client.prepareMultiGet();
@@ -555,7 +490,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 		for (String id : searchQuery.getIds()) {
 
-			MultiGetRequest.Item item = new MultiGetRequest.Item(indexName, type, id);
+			MultiGetRequest.Item item = new MultiGetRequest.Item(indexName, id);
 
 			if (searchQuery.getRoute() != null) {
 				item = item.routing(searchQuery.getRoute());
@@ -589,13 +524,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	private UpdateRequestBuilder prepareUpdate(UpdateQuery query) {
 		String indexName = !StringUtils.isEmpty(query.getIndexName()) ? query.getIndexName()
 				: getPersistentEntityFor(query.getClazz()).getIndexName();
-		String type = !StringUtils.isEmpty(query.getType()) ? query.getType()
-				: getPersistentEntityFor(query.getClazz()).getIndexType();
 		Assert.notNull(indexName, "No index defined for Query");
-		Assert.notNull(type, "No type define for Query");
 		Assert.notNull(query.getId(), "No Id define for Query");
 		Assert.notNull(query.getUpdateRequest(), "No IndexRequest define for Query");
-		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
+		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, "_default_", query.getId());
 		updateRequestBuilder.setRouting(query.getUpdateRequest().routing());
 
 		if (query.getUpdateRequest().script() == null) {
@@ -656,12 +588,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public boolean typeExists(String index, String type) {
-		return client.admin().cluster().prepareState().execute().actionGet().getState().metaData().index(index)
-				.getMappings().containsKey(type);
-	}
-
-	@Override
 	public <T> boolean deleteIndex(Class<T> clazz) {
 		return deleteIndex(getPersistentEntityFor(clazz).getIndexName());
 	}
@@ -676,14 +602,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public String delete(String indexName, String type, String id) {
-		return client.prepareDelete(indexName, type, id).execute().actionGet().getId();
+	public String delete(String indexName, String id) {
+		return client.prepareDelete(indexName, "_default_", id).execute().actionGet().getId();
 	}
 
 	@Override
 	public <T> String delete(Class<T> clazz, String id) {
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
-		return delete(persistentEntity.getIndexName(), persistentEntity.getIndexType(), id);
+		return delete(persistentEntity.getIndexName(), id);
 	}
 
 	@Override
@@ -691,14 +617,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 		String indexName = !StringUtils.isEmpty(deleteQuery.getIndex()) ? deleteQuery.getIndex()
 				: getPersistentEntityFor(clazz).getIndexName();
-		String typeName = !StringUtils.isEmpty(deleteQuery.getType()) ? deleteQuery.getType()
-				: getPersistentEntityFor(clazz).getIndexType();
 		Integer pageSize = deleteQuery.getPageSize() != null ? deleteQuery.getPageSize() : 1000;
 		Long scrollTimeInMillis = deleteQuery.getScrollTimeInMillis() != null ? deleteQuery.getScrollTimeInMillis()
 				: 10000l;
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(deleteQuery.getQuery()).withIndices(indexName)
-				.withTypes(typeName).withPageable(PageRequest.of(0, pageSize)).build();
+				.withPageable(PageRequest.of(0, pageSize)).build();
 
 		SearchResultMapper onlyIdResultMapper = new SearchResultMapper() {
 			@Override
@@ -725,7 +649,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		} while(scrolledResult.getContent().size() != 0);
 
 		for (String id : ids) {
-			bulkRequestBuilder.add(client.prepareDelete(indexName, typeName, id));
+			bulkRequestBuilder.add(client.prepareDelete(indexName, "_default_", id));
 		}
 
 		if (bulkRequestBuilder.numberOfActions() > 0) {
@@ -738,7 +662,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	@Override
 	public void delete(DeleteQuery deleteQuery) {
 		Assert.notNull(deleteQuery.getIndex(), "No index defined for Query");
-		Assert.notNull(deleteQuery.getType(), "No type define for Query");
 		delete(deleteQuery, null);
 	}
 
@@ -758,7 +681,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	private SearchRequestBuilder prepareScroll(Query query, long scrollTimeInMillis) {
 		SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(query.getIndices()))
-				.setTypes(toArray(query.getTypes()))
 				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis))
 				.setFrom(0)
 				.setVersion(true);
@@ -775,7 +697,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	private SearchResponse doScroll(SearchRequestBuilder requestBuilder, CriteriaQuery criteriaQuery) {
 		Assert.notNull(criteriaQuery.getIndices(), "No index defined for Query");
-		Assert.notNull(criteriaQuery.getTypes(), "No type define for Query");
 		Assert.notNull(criteriaQuery.getPageable(), "Query.pageable is required for scan & scroll");
 
 		QueryBuilder elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
@@ -797,7 +718,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	private SearchResponse doScroll(SearchRequestBuilder requestBuilder, SearchQuery searchQuery) {
 		Assert.notNull(searchQuery.getIndices(), "No index defined for Query");
-		Assert.notNull(searchQuery.getTypes(), "No type define for Query");
 		Assert.notNull(searchQuery.getPageable(), "Query.pageable is required for scan & scroll");
 
 		if (searchQuery.getFilter() != null) {
@@ -849,14 +769,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 		ElasticsearchPersistentEntity persistentEntity = getPersistentEntityFor(clazz);
 		String indexName = !StringUtils.isEmpty(query.getIndexName()) ? query.getIndexName() : persistentEntity.getIndexName();
-		String type = !StringUtils.isEmpty(query.getType()) ? query.getType() : persistentEntity.getIndexType();
 
 		Assert.notNull(indexName, "No 'indexName' defined for MoreLikeThisQuery");
-		Assert.notNull(type, "No 'type' defined for MoreLikeThisQuery");
 		Assert.notNull(query.getId(), "No document id defined for MoreLikeThisQuery");
 
 
-		MoreLikeThisQueryBuilder moreLikeThisQueryBuilder = moreLikeThisQuery(toArray(new MoreLikeThisQueryBuilder.Item(indexName, type, query.getId())));
+		MoreLikeThisQueryBuilder moreLikeThisQueryBuilder = moreLikeThisQuery(toArray(new MoreLikeThisQueryBuilder.Item(indexName, query.getId())));
 
 		if (query.getMinTermFreq() != null) {
 			moreLikeThisQueryBuilder.minTermFreq(query.getMinTermFreq());
@@ -959,7 +877,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		if (clazz.isAnnotationPresent(Setting.class)) {
 			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
 			if (!StringUtils.isEmpty(settingPath)) {
-				String settings = readFileFromClasspath(settingPath);
+				String settings = ClassPathFileUtils.readFileFromClasspath(settingPath);
 				if (!StringUtils.isEmpty(settings)) {
 					return createIndex(getPersistentEntityFor(clazz).getIndexName(), settings);
 				}
@@ -1000,16 +918,15 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public <T> Map getSetting(Class<T> clazz) {
-		return getSetting(getPersistentEntityFor(clazz).getIndexName());
+	public <T> Settings getSettings(Class<T> clazz) {
+		return getSettings(getPersistentEntityFor(clazz).getIndexName());
 	}
 
 	@Override
-	public Map getSetting(String indexName) {
+	public Settings getSettings(String indexName) {
 		Assert.notNull(indexName, "No index defined for getSettings");
-		Settings settings = client.admin().indices().getSettings(new GetSettingsRequest()).actionGet()
+		return client.admin().indices().getSettings(new GetSettingsRequest()).actionGet()
 				.getIndexToSettings().get(indexName);
-		return settings.keySet().stream().collect(Collectors.toMap((key)->key, (key)->settings.get(key)));
 	}
 
 	private <T> SearchRequestBuilder prepareSearch(Query query, Class<T> clazz) {
@@ -1019,12 +936,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	private SearchRequestBuilder prepareSearch(Query query) {
 		Assert.notNull(query.getIndices(), "No index defined for Query");
-		Assert.notNull(query.getTypes(), "No type defined for Query");
 
 		int startRecord = 0;
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(toArray(query.getIndices()))
 				.setSearchType(query.getSearchType())
-				.setTypes(toArray(query.getTypes()))
 				.setVersion(true)
 				.setTrackScores(query.getTrackScores());
 
@@ -1084,8 +999,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 			String indexName = StringUtils.isEmpty(query.getIndexName())
 					? retrieveIndexNameFromPersistentEntity(query.getObject().getClass())[0]
 					: query.getIndexName();
-			String type = StringUtils.isEmpty(query.getType()) ? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
-					: query.getType();
 
 			IndexRequestBuilder indexRequestBuilder = null;
 
@@ -1093,14 +1006,14 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 				String id = StringUtils.isEmpty(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();
 				// If we have a query id and a document id, do not ask ES to generate one.
 				if (id != null) {
-					indexRequestBuilder = client.prepareIndex(indexName, type, id);
+					indexRequestBuilder = client.prepareIndex(indexName, "_default_", id);
 				} else {
-					indexRequestBuilder = client.prepareIndex(indexName, type);
+					indexRequestBuilder = client.prepareIndex(indexName, "_default_");
 				}
 				indexRequestBuilder.setSource(resultsMapper.getEntityMapper().mapToString(query.getObject()),
 						Requests.INDEX_CONTENT_TYPE);
 			} else if (query.getSource() != null) {
-				indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource(),
+				indexRequestBuilder = client.prepareIndex(indexName, "_default_", query.getId()).setSource(query.getSource(),
 						Requests.INDEX_CONTENT_TYPE);
 			} else {
 				throw new ElasticsearchException(
@@ -1111,9 +1024,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 				indexRequestBuilder.setVersionType(EXTERNAL);
 			}
 
-			if (query.getParentId() != null) {
+			// TODO find solution
+			/*if (query.getParentId() != null) {
 				indexRequestBuilder.setParent(query.getParentId());
-			}
+			}*/
 
 			return indexRequestBuilder;
 		} catch (IOException e) {
@@ -1202,21 +1116,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		if (query.getIndices().isEmpty()) {
 			query.addIndices(retrieveIndexNameFromPersistentEntity(clazz));
 		}
-		if (query.getTypes().isEmpty()) {
-			query.addTypes(retrieveTypeFromPersistentEntity(clazz));
-		}
 	}
 
 	private String[] retrieveIndexNameFromPersistentEntity(Class clazz) {
 		if (clazz != null) {
 			return new String[] { getPersistentEntityFor(clazz).getIndexName() };
-		}
-		return null;
-	}
-
-	private String[] retrieveTypeFromPersistentEntity(Class clazz) {
-		if (clazz != null) {
-			return new String[] { getPersistentEntityFor(clazz).getIndexType() };
 		}
 		return null;
 	}
@@ -1251,36 +1155,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		return resultsMapper;
 	}
 
-	public static String readFileFromClasspath(String url) {
-		StringBuilder stringBuilder = new StringBuilder();
-
-		BufferedReader bufferedReader = null;
-
-		try {
-			ClassPathResource classPathResource = new ClassPathResource(url);
-			InputStreamReader inputStreamReader = new InputStreamReader(classPathResource.getInputStream());
-			bufferedReader = new BufferedReader(inputStreamReader);
-			String line;
-
-			String lineSeparator = System.getProperty("line.separator");
-			while ((line = bufferedReader.readLine()) != null) {
-				stringBuilder.append(line).append(lineSeparator);
-			}
-		} catch (Exception e) {
-			LOGGER.debug(String.format("Failed to load file from url: %s: %s", url, e.getMessage()));
-			return null;
-		} finally {
-			if (bufferedReader != null)
-				try {
-					bufferedReader.close();
-				} catch (IOException e) {
-					LOGGER.debug(String.format("Unable to close buffered reader.. %s", e.getMessage()));
-				}
-		}
-
-		return stringBuilder.toString();
-	}
-
 	public SearchResponse suggest(SuggestBuilder suggestion, String... indices) {
 		return client.prepareSearch(indices).suggest(suggestion).get();
 	}
@@ -1288,4 +1162,5 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	public SearchResponse suggest(SuggestBuilder suggestion, Class clazz) {
 		return suggest(suggestion, retrieveIndexNameFromPersistentEntity(clazz));
 	}
+
 }

@@ -11,7 +11,7 @@ Filter Builder improves query speed.
 ====
 [source,java]
 ----
-private ElasticsearchTemplate elasticsearchTemplate;
+private ElasticsearchOperations elasticsearchTemplate;
 
 SearchQuery searchQuery = new NativeSearchQueryBuilder()
     .withQuery(matchAllQuery())

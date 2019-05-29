@@ -2,6 +2,7 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.apache.commons.lang.RandomStringUtils.*;
 
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
@@ -17,7 +18,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTests {
 
-	@Test(expected = DocumentMissingException.class)
+	@Test(expected = ElasticsearchStatusException.class)
 	public void shouldThrowExceptionIfDocumentDoesNotExistWhileDoingPartialUpdate() {
 		// when
 		IndexRequest indexRequest = new IndexRequest();

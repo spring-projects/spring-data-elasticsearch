@@ -19,8 +19,13 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 
-import org.elasticsearch.node.NodeValidationException;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.Node;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.BeansException;
@@ -29,9 +34,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.elasticsearch.Utils;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repositories.sample.SampleElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -63,8 +67,12 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 	static class Config {
 
 		@Bean
-		public ElasticsearchOperations elasticsearchTemplate() throws NodeValidationException {
-			return new ElasticsearchTemplate(Utils.getNodeClient());
+		public ElasticsearchOperations elasticsearchTemplate() {
+			return new ElasticsearchRestTemplate(
+					new RestHighLevelClient(
+							RestClient.builder(new HttpHost("localhost", 9200))
+					)
+			);
 		}
 	}
 

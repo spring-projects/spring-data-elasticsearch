@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
@@ -53,7 +54,7 @@ public class UUIDElasticsearchRepositoryTests {
 
 	@Autowired private SampleUUIDKeyedElasticsearchRepository repository;
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations elasticsearchTemplate;
 
 	@Before
 	public void before() {
@@ -186,7 +187,7 @@ public class UUIDElasticsearchRepositoryTests {
 		sampleEntityUUIDKeyed.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntityUUIDKeyed);
 		// when
-		Page<SampleEntityUUIDKeyed> page = repository.search(termQuery("message", "world"), new PageRequest(0, 50));
+		Page<SampleEntityUUIDKeyed> page = repository.search(termQuery("message", "world"), PageRequest.of(0, 50));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getNumberOfElements(), is(greaterThanOrEqualTo(1)));
@@ -242,7 +243,7 @@ public class UUIDElasticsearchRepositoryTests {
 		// when
 		repository.saveAll(sampleEntities);
 		// then
-		Page<SampleEntityUUIDKeyed> entities = repository.search(termQuery("id", documentId.toString()), new PageRequest(0, 50));
+		Page<SampleEntityUUIDKeyed> entities = repository.search(termQuery("id", documentId.toString()), PageRequest.of(0, 50));
 		assertNotNull(entities);
 	}
 
@@ -370,36 +371,6 @@ public class UUIDElasticsearchRepositoryTests {
 	}
 
 	@Test
-	public void shouldDeleteByType() {
-		// given
-		UUID documentId = UUID.randomUUID();
-		SampleEntityUUIDKeyed sampleEntityUUIDKeyed1 = new SampleEntityUUIDKeyed();
-		sampleEntityUUIDKeyed1.setId(documentId);
-		sampleEntityUUIDKeyed1.setType("book");
-		sampleEntityUUIDKeyed1.setVersion(System.currentTimeMillis());
-
-		documentId = UUID.randomUUID();
-		SampleEntityUUIDKeyed sampleEntityUUIDKeyed2 = new SampleEntityUUIDKeyed();
-		sampleEntityUUIDKeyed2.setId(documentId);
-		sampleEntityUUIDKeyed2.setType("article");
-		sampleEntityUUIDKeyed2.setVersion(System.currentTimeMillis());
-
-		documentId = UUID.randomUUID();
-		SampleEntityUUIDKeyed sampleEntityUUIDKeyed3 = new SampleEntityUUIDKeyed();
-		sampleEntityUUIDKeyed3.setId(documentId);
-		sampleEntityUUIDKeyed3.setType("image");
-		sampleEntityUUIDKeyed3.setVersion(System.currentTimeMillis());
-		repository.saveAll(Arrays.asList(sampleEntityUUIDKeyed1, sampleEntityUUIDKeyed2, sampleEntityUUIDKeyed3));
-		// when
-		repository.deleteByType("article");
-		repository.refresh();
-		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements(), equalTo(2L));
-	}
-
-	@Test
 	public void shouldDeleteEntity() {
 		// given
 		UUID documentId = UUID.randomUUID();
@@ -480,7 +451,7 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.save(sampleEntityUUIDKeyed2);
 		// when
 		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository
-				.findAll(new Sort(new Sort.Order(Sort.Direction.ASC, "message")));
+				.findAll(Sort.by(new Sort.Order(Sort.Direction.ASC, "message")));
 		// then
 		assertThat(sampleEntities, is(notNullValue()));
 	}
@@ -499,7 +470,7 @@ public class UUIDElasticsearchRepositoryTests {
 
 		// when
 		Page<SampleEntityUUIDKeyed> results = repository.searchSimilar(sampleEntities.get(0), new String[] { "message" },
-				new PageRequest(0, 5));
+				PageRequest.of(0, 5));
 
 		// then
 		assertThat(results.getTotalElements(), is(greaterThanOrEqualTo(1L)));

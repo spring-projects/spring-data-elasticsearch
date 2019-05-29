@@ -29,6 +29,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
@@ -55,7 +56,7 @@ public class SimpleElasticsearchRepositoryTests {
 
 	@Autowired private SampleElasticsearchRepository repository;
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations elasticsearchTemplate;
 
 	@Before
 	public void before() {
@@ -200,7 +201,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntity);
 		// when
-		Page<SampleEntity> page = repository.search(termQuery("message", "world"), new PageRequest(0, 50));
+		Page<SampleEntity> page = repository.search(termQuery("message", "world"), PageRequest.of(0, 50));
 		// then
 		assertThat(page, is(notNullValue()));
 		assertThat(page.getNumberOfElements(), is(greaterThanOrEqualTo(1)));
@@ -254,7 +255,7 @@ public class SimpleElasticsearchRepositoryTests {
 		// when
 		repository.saveAll(sampleEntities);
 		// then
-		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), new PageRequest(0, 50));
+		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
 		assertNotNull(entities);
 	}
 
@@ -400,36 +401,6 @@ public class SimpleElasticsearchRepositoryTests {
 	}
 
 	@Test
-	public void shouldDeleteByType() {
-		// given
-		String documentId = randomNumeric(5);
-		SampleEntity sampleEntity1 = new SampleEntity();
-		sampleEntity1.setId(documentId);
-		sampleEntity1.setType("book");
-		sampleEntity1.setVersion(System.currentTimeMillis());
-
-		documentId = randomNumeric(5);
-		SampleEntity sampleEntity2 = new SampleEntity();
-		sampleEntity2.setId(documentId);
-		sampleEntity2.setType("article");
-		sampleEntity2.setVersion(System.currentTimeMillis());
-
-		documentId = randomNumeric(5);
-		SampleEntity sampleEntity3 = new SampleEntity();
-		sampleEntity3.setId(documentId);
-		sampleEntity3.setType("image");
-		sampleEntity3.setVersion(System.currentTimeMillis());
-		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
-		// when
-		repository.deleteByType("article");
-		repository.refresh();
-		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements(), equalTo(2L));
-	}
-
-	@Test
 	public void shouldDeleteEntity() {
 		// given
 		String documentId = randomNumeric(5);
@@ -504,7 +475,7 @@ public class SimpleElasticsearchRepositoryTests {
 		// when
 		repository.index(sampleEntity);
 		// then
-		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), new PageRequest(0, 50));
+		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
 		assertThat(entities.getTotalElements(), equalTo(1L));
 	}
 
@@ -523,7 +494,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity2.setMessage("hello");
 		repository.save(sampleEntity2);
 		// when
-		Iterable<SampleEntity> sampleEntities = repository.findAll(new Sort(new Order(ASC, "message")));
+		Iterable<SampleEntity> sampleEntities = repository.findAll(Sort.by(new Order(ASC, "message")));
 		// then
 		assertThat(sampleEntities, is(notNullValue()));
 	}
@@ -542,7 +513,7 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// when
 		Page<SampleEntity> results = repository.searchSimilar(sampleEntities.get(0), new String[] { "message" },
-				new PageRequest(0, 5));
+				PageRequest.of(0, 5));
 
 		// then
 		assertThat(results.getTotalElements(), is(greaterThanOrEqualTo(1L)));

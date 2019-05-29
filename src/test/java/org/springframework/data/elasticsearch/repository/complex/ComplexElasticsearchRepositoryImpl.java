@@ -1,6 +1,7 @@
 package org.springframework.data.elasticsearch.repository.complex;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 
 /**
@@ -9,7 +10,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 public class ComplexElasticsearchRepositoryImpl implements ComplexElasticsearchRepositoryCustom {
 
 	@Autowired
-	private ElasticsearchTemplate template;
+	private ElasticsearchOperations template;
 
 	@Override
 	public String doSomethingSpecial() {

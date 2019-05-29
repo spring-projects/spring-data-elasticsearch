@@ -26,6 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.entities.Author;
 import org.springframework.data.elasticsearch.entities.Book;
@@ -44,7 +45,7 @@ public class InnerObjectTests {
 
 	@Autowired private SampleElasticSearchBookRepository bookRepository;
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchRestTemplate elasticsearchTemplate;
 
 	@Before
 	public void before() {

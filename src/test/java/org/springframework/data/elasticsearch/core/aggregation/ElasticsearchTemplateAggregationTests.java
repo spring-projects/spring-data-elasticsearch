@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ResultsExtractor;
 import org.springframework.data.elasticsearch.core.facet.ArticleEntity;
@@ -61,7 +62,7 @@ public class ElasticsearchTemplateAggregationTests {
 	public static final int YEAR_2001 = 2001;
 	public static final int YEAR_2000 = 2000;
 	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	private ElasticsearchOperations elasticsearchTemplate;
 
 	@Before
 	public void before() {
@@ -88,7 +89,7 @@ public class ElasticsearchTemplateAggregationTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(matchAllQuery())
 				.withSearchType(SearchType.DEFAULT)
-				.withIndices("test-index-articles").withTypes("article")
+				.withIndices("test-index-articles")
 				.addAggregation(terms("subjects").field("subject"))
 				.build();
 		// when

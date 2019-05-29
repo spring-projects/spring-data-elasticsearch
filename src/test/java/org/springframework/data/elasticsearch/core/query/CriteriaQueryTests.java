@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -43,7 +44,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class CriteriaQueryTests {
 
 	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	private ElasticsearchOperations elasticsearchTemplate;
 
 	@Before
 	public void before() {

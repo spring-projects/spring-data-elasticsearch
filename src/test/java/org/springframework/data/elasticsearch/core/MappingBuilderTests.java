@@ -20,6 +20,7 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
+import static org.hamcrest.number.IsCloseTo.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,11 +30,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.builder.SampleInheritedEntityBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
@@ -64,7 +65,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class MappingBuilderTests {
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations elasticsearchTemplate;
 
 	private String xContentBuilderToString(XContentBuilder builder) {
 		builder.close();
@@ -82,20 +83,20 @@ public class MappingBuilderTests {
 
 	@Test
 	public void testInfiniteLoopAvoidance() throws IOException {
-		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\""
-				+ "type\":\"text\",\"index\":false," + "\"analyzer\":\"standard\"}}}}";
+		final String expected = "{\"properties\":{\"message\":{\"store\":true,\""
+				+ "type\":\"text\",\"index\":false," + "\"analyzer\":\"standard\"}}}";
 
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class, "mapping", "id", null);
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleTransientEntity.class,  "id", null);
 		assertThat(xContentBuilderToString(xContentBuilder), is(expected));
 	}
 
 	@Test
 	public void shouldUseValueFromAnnotationType() throws IOException {
 		// Given
-		final String expected = "{\"mapping\":{\"properties\":{\"price\":{\"store\":false,\"type\":\"double\"}}}}";
+		final String expected = "{\"properties\":{\"price\":{\"store\":false,\"type\":\"double\"}}}";
 
 		// When
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(StockPrice.class, "mapping", "id", null);
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(StockPrice.class,  "id", null);
 
 		// Then
 		assertThat(xContentBuilderToString(xContentBuilder), is(expected));
@@ -122,13 +123,13 @@ public class MappingBuilderTests {
 		assertThat(result.size(), is(1));
 		StockPrice entry = result.get(0);
 		assertThat(entry.getSymbol(), is(symbol));
-		assertThat(entry.getPrice(), is(new BigDecimal(price)));
+		assertThat(entry.getPrice().doubleValue(), closeTo(new BigDecimal(price).doubleValue(), 0.001));
 	}
 
 	@Test
 	public void shouldCreateMappingForSpecifiedParentType() throws IOException {
-		final String expected = "{\"mapping\":{\"_parent\":{\"type\":\"parentType\"},\"properties\":{}}}";
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(MinimalEntity.class, "mapping", "id", "parentType");
+		final String expected = "{\"_parent\":{\"type\":\"parentType\"},\"properties\":{}}";
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(MinimalEntity.class,  "id", "parentType");
 		assertThat(xContentBuilderToString(xContentBuilder), is(expected));
 	}
 
@@ -137,11 +138,11 @@ public class MappingBuilderTests {
 	 */
 	@Test
 	public void shouldBuildMappingWithSuperclass() throws IOException {
-		final String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\""
+		final String expected = "{\"properties\":{\"message\":{\"store\":true,\""
 				+ "type\":\"text\",\"index\":false,\"analyzer\":\"standard\"}" + ",\"createdDate\":{\"store\":false,"
-				+ "\"type\":\"date\",\"index\":false}}}}";
+				+ "\"type\":\"date\",\"index\":false}}}";
 
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleInheritedEntity.class, "mapping", "id", null);
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleInheritedEntity.class,  "id", null);
 		assertThat(xContentBuilderToString(xContentBuilder), is(expected));
 	}
 
@@ -177,7 +178,7 @@ public class MappingBuilderTests {
 		// given
 
 		// when
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(GeoEntity.class, "mapping", "id", null);
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(GeoEntity.class,  "id", null);
 
 		// then
 		final String result = xContentBuilderToString(xContentBuilder);
@@ -222,8 +223,8 @@ public class MappingBuilderTests {
 		elasticsearchTemplate.putMapping(Book.class);
 
 		// when
-		Map mapping = elasticsearchTemplate.getMapping(Book.class);
-		Map descriptionMapping = (Map) ((Map) mapping.get("properties")).get("description");
+		MappingMetaData mapping = elasticsearchTemplate.getMapping(Book.class);
+		Map descriptionMapping = (Map) ((Map) mapping.getSourceAsMap().get("properties")).get("description");
 		Map prefixDescription = (Map) ((Map) descriptionMapping.get("fields")).get("prefix");
 
 		// then
@@ -244,8 +245,8 @@ public class MappingBuilderTests {
 		elasticsearchTemplate.putMapping(NormalizerEntity.class);
 
 		// when
-		Map mapping = elasticsearchTemplate.getMapping(NormalizerEntity.class);
-		Map properties = (Map) mapping.get("properties");
+		MappingMetaData mapping = elasticsearchTemplate.getMapping(NormalizerEntity.class);
+		Map properties = (Map) mapping.getSourceAsMap().get("properties");
 		Map fieldName = (Map) properties.get("name");
 		Map fieldDescriptionLowerCase = (Map) ((Map) ((Map) properties.get("description")).get("fields")).get("lower_case");
 
@@ -265,8 +266,8 @@ public class MappingBuilderTests {
 		elasticsearchTemplate.putMapping(CopyToEntity.class);
 
 		// when
-		Map mapping = elasticsearchTemplate.getMapping(CopyToEntity.class);
-		Map properties = (Map) mapping.get("properties");
+		MappingMetaData mapping = elasticsearchTemplate.getMapping(CopyToEntity.class);
+		Map properties = (Map) mapping.getSourceAsMap().get("properties");
 		Map fieldFirstName = (Map) properties.get("firstName");
 		Map fieldLastName = (Map) properties.get("lastName");
 

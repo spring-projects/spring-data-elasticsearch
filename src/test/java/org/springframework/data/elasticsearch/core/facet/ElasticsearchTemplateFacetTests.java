@@ -20,6 +20,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.FacetedPage;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
@@ -64,7 +66,7 @@ public class ElasticsearchTemplateFacetTests {
 	private static final int YEAR_2000 = 2000;
 	private static final String PUBLISHED_YEARS = "publishedYears";
 	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	private ElasticsearchRestTemplate elasticsearchTemplate;
 
 	@Before
 	public void before() {

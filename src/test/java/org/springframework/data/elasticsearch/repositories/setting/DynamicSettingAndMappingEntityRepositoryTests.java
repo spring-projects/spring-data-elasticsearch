@@ -22,11 +22,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
@@ -48,7 +51,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 	private DynamicSettingAndMappingEntityRepository repository;
 
 	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	private ElasticsearchOperations elasticsearchTemplate;
 
 	@Before
 	public void before() {
@@ -68,10 +71,10 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 
 		// then
 		assertThat(elasticsearchTemplate.indexExists(DynamicSettingAndMappingEntity.class), is(true));
-		Map map = elasticsearchTemplate.getSetting(DynamicSettingAndMappingEntity.class);
-		assertThat(map.containsKey("index.number_of_replicas"), is(true));
-		assertThat(map.containsKey("index.number_of_shards"), is(true));
-		assertThat(map.containsKey("index.analysis.analyzer.emailAnalyzer.tokenizer"), is(true));
+		Settings map = elasticsearchTemplate.getSettings(DynamicSettingAndMappingEntity.class);
+		assertThat(map.keySet().contains("index.number_of_replicas"), is(true));
+		assertThat(map.keySet().contains("index.number_of_shards"), is(true));
+		assertThat(map.keySet().contains("index.analysis.analyzer.emailAnalyzer.tokenizer"), is(true));
 		assertThat((String) map.get("index.number_of_replicas"), is("0"));
 		assertThat((String) map.get("index.number_of_shards"), is("1"));
 		assertThat((String) map.get("index.analysis.analyzer.emailAnalyzer.tokenizer"), is("uax_url_email"));
@@ -112,13 +115,13 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 	}
 
 	@Test
-	public void shouldGetMappingForGivenIndexAndType() {
+	public void shouldGetMappingForGivenIndex() {
 		//given
 		//delete , create and apply mapping in before method
 		//when
-		Map mapping = elasticsearchTemplate.getMapping(DynamicSettingAndMappingEntity.class);
+		MappingMetaData mapping = elasticsearchTemplate.getMapping(DynamicSettingAndMappingEntity.class);
 		//then
-		Map properties = (Map) mapping.get("properties");
+		Map properties = (Map) mapping.getSourceAsMap().get("properties");
 		assertThat(mapping, is(notNullValue()));
 		assertThat(properties, is(notNullValue()));
 		assertThat(((String) ((Map) properties.get("email")).get("type")), is("text"));
@@ -133,17 +136,15 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		elasticsearchTemplate.refresh(DynamicSettingAndMappingEntity.class);
 		//when
 		String mappings = "{\n" +
-				"    \"test-setting-type\" : {\n" +
 				"        \"properties\" : {\n" +
 				"            \"email\" : {\"type\" : \"text\", \"analyzer\" : \"emailAnalyzer\" }\n" +
 				"        }\n" +
-				"    }\n" +
 				"}";
 		elasticsearchTemplate.putMapping(DynamicSettingAndMappingEntity.class, mappings);
 		elasticsearchTemplate.refresh(DynamicSettingAndMappingEntity.class);
 		//then
-		Map mapping = elasticsearchTemplate.getMapping(DynamicSettingAndMappingEntity.class);
-		Map properties = (Map) mapping.get("properties");
+		MappingMetaData mapping = elasticsearchTemplate.getMapping(DynamicSettingAndMappingEntity.class);
+		Map properties = (Map) mapping.getSourceAsMap().get("properties");
 		assertThat(mapping, is(notNullValue()));
 		assertThat(properties, is(notNullValue()));
 		assertThat(((String) ((Map) properties.get("email")).get("type")), is("text"));
@@ -158,8 +159,8 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		//given
 
 		//then
-		Map mapping = elasticsearchTemplate.getMapping(DynamicSettingAndMappingEntity.class);
-		Map properties = (Map) mapping.get("properties");
+		MappingMetaData mapping = elasticsearchTemplate.getMapping(DynamicSettingAndMappingEntity.class);
+		Map properties = (Map) mapping.getSourceAsMap().get("properties");
 		assertThat(mapping, is(notNullValue()));
 		assertThat(properties, is(notNullValue()));
 		assertThat(((String) ((Map) properties.get("email")).get("type")), is("text"));

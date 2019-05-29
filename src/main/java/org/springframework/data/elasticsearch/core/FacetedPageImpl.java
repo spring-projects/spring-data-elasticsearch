@@ -15,6 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,8 +27,8 @@ import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.range.Range;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStats;
-import org.elasticsearch.search.aggregations.metrics.sum.Sum;
+import org.elasticsearch.search.aggregations.metrics.ExtendedStats;
+import org.elasticsearch.search.aggregations.metrics.Sum;
 import org.joda.time.DateTime;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -158,9 +161,9 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 		for (Histogram.Bucket h : agg.getBuckets()) {
 			ExtendedStats hStats = h.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
 			if (hStats != null) {
-				intervals.add(new IntervalUnit(((DateTime) h.getKey()).getMillis(), h.getDocCount(), h.getDocCount(), hStats.getSum(), hStats.getAvg(), hStats.getMin(), hStats.getMax()));
+				intervals.add(new IntervalUnit(((ZonedDateTime) h.getKey()).toInstant().toEpochMilli(), h.getDocCount(), h.getDocCount(), hStats.getSum(), hStats.getAvg(), hStats.getMin(), hStats.getMax()));
 			} else {
-				intervals.add(new IntervalUnit(((DateTime) h.getKey()).getMillis(), h.getDocCount(), h.getDocCount(), 0, 0, 0, 0));
+				intervals.add(new IntervalUnit(((ZonedDateTime) h.getKey()).toInstant().toEpochMilli(), h.getDocCount(), h.getDocCount(), 0, 0, 0, 0));
 			}
 		}
 		addFacet(new HistogramResult(agg.getName(), intervals));

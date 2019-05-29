@@ -28,7 +28,6 @@ public class IndexQuery {
 	private Object object;
 	private Long version;
 	private String indexName;
-	private String type;
 	private String source;
 	private String parentId;
 
@@ -64,13 +63,6 @@ public class IndexQuery {
 		this.indexName = indexName;
 	}
 
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
-	}
 
 	public String getSource() {
 		return source;

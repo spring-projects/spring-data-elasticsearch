@@ -38,21 +38,18 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 
 	private final ElasticsearchPersistentEntity<T> entityMetadata;
 	private final String indexName;
-	private final String type;
 
 	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity) {
-		this(entity, entity.getIndexName(), entity.getIndexType());
+		this(entity, entity.getIndexName());
 	}
 
-	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity, String indexName, String type) {
+	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity, String indexName) {
 		super(entity);
 
 		Assert.notNull(indexName, "IndexName must not be null!");
-		Assert.notNull(type, "IndexType must not be null!");
 
 		this.entityMetadata = entity;
 		this.indexName = indexName;
-		this.type = type;
 	}
 
 	@Override
@@ -63,11 +60,6 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 	@Override
 	public String getIndexName() {
 		return indexName;
-	}
-
-	@Override
-	public String getType() {
-		return type;
 	}
 
 	@Override

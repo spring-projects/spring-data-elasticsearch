@@ -31,14 +31,14 @@ import org.springframework.data.elasticsearch.entities.SampleDateMappingEntity;
  */
 public class SimpleElasticsearchDateMappingTests {
 
-	private static final String EXPECTED_MAPPING = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true," +
+	private static final String EXPECTED_MAPPING = "{\"properties\":{\"message\":{\"store\":true," +
 			"\"type\":\"text\",\"index\":false,\"analyzer\":\"standard\"},\"customFormatDate\":{\"store\":false,\"type\":\"date\",\"format\":\"dd.MM.yyyy hh:mm\"}," +
 			"\"defaultFormatDate\":{\"store\":false,\"type\":\"date\"},\"basicFormatDate\":{\"store\":false,\"" +
-			"type\":\"date\",\"format\":\"basic_date\"}}}}";
+			"type\":\"date\",\"format\":\"basic_date\"}}}";
 
 	@Test
-	public void testCorrectDateMappings() throws NoSuchFieldException, IntrospectionException, IOException {
-		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleDateMappingEntity.class, "mapping", "id", null);
+	public void testCorrectDateMappings() throws IOException {
+		XContentBuilder xContentBuilder = MappingBuilder.buildMapping(SampleDateMappingEntity.class,  "id", null);
 		xContentBuilder.close();
 		ByteArrayOutputStream bos = (ByteArrayOutputStream) xContentBuilder.getOutputStream();
 		String result = bos.toString();

@@ -25,7 +25,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
  * @author Abdul Waheed
  * @author Mohsin Husen
  */
-@Document(indexName = "test-index-2", type = "hetro", replicas = 0, shards = 1)
+@Document(indexName = "test-index-2", replicas = 0, shards = 1)
 public class HetroEntity2 {
 
 	@Id

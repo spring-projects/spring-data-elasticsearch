@@ -26,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.entities.IntegerIDEntity;
 import org.springframework.data.elasticsearch.repositories.integer.IntegerIDRepository;
@@ -44,7 +45,7 @@ public class IntegerIDRepositoryTests {
 
 	@Autowired private IntegerIDRepository repository;
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations elasticsearchTemplate;
 
 	@Before
 	public void before() {

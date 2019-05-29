@@ -80,9 +80,9 @@ class MappingBuilder {
 
 	private static SimpleTypeHolder SIMPLE_TYPE_HOLDER = SimpleTypeHolder.DEFAULT;
 
-	static XContentBuilder buildMapping(Class clazz, String indexType, String idFieldName, String parentType) throws IOException {
+	static XContentBuilder buildMapping(Class clazz, String idFieldName, String parentType) throws IOException {
 
-		XContentBuilder mapping = jsonBuilder().startObject().startObject(indexType);
+		XContentBuilder mapping = jsonBuilder().startObject();
 		// Parent
 		if (hasText(parentType)) {
 			mapping.startObject(FIELD_PARENT).field(FIELD_TYPE, parentType).endObject();
@@ -93,7 +93,7 @@ class MappingBuilder {
 
 		mapEntity(xContentBuilder, clazz, true, idFieldName, "", false, FieldType.Auto, null);
 
-		return xContentBuilder.endObject().endObject().endObject();
+		return xContentBuilder.endObject().endObject();
 	}
 
 	private static void mapEntity(XContentBuilder xContentBuilder, Class clazz, boolean isRootObject, String idFieldName,

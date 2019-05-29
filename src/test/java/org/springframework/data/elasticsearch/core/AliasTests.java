@@ -49,10 +49,9 @@ public class AliasTests {
 
 	private static final String INDEX_NAME_1 = "test-alias-index-1";
 	private static final String INDEX_NAME_2 = "test-alias-index-2";
-	private static final String TYPE_NAME = "test-alias-type";
 
 	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	private ElasticsearchOperations elasticsearchTemplate;
 
 	@Before
 	public void before() {
@@ -130,7 +129,6 @@ public class AliasTests {
 		IndexQuery indexQuery = new IndexQueryBuilder()
 				.withIndexName(alias)
 				.withId(sampleEntity.getId())
-				.withType(TYPE_NAME)
 				.withObject(sampleEntity)
 				.build();
 
@@ -138,7 +136,7 @@ public class AliasTests {
 		elasticsearchTemplate.refresh(INDEX_NAME_1);
 
 		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withIndices(alias).withTypes(TYPE_NAME).build();
+				.withIndices(alias).build();
 		long count = elasticsearchTemplate.count(query);
 		//then
 		List<AliasMetaData> aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME_1);
@@ -186,7 +184,6 @@ public class AliasTests {
 
 		IndexQuery indexQuery = new IndexQueryBuilder()
 				.withIndexName(alias1)
-				.withType(TYPE_NAME)
 				.withId(sampleEntity.getId())
 				.withObject(sampleEntity).build();
 

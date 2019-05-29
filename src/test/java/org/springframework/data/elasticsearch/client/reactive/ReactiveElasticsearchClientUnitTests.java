@@ -175,7 +175,7 @@ public class ReactiveElasticsearchClientUnitTests {
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.GET);
 		URI uri = hostProvider.when(HOST).captureUri();
-		assertThat(uri.getRawPath()).isEqualTo("/twitter/_all/1");
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_doc/1");
 	}
 
 	@Test // DATAES-488
@@ -311,7 +311,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		verify(hostProvider.client(HOST)).method(HttpMethod.HEAD);
 
 		URI uri = hostProvider.when(HOST).captureUri();
-		assertThat(uri.getRawPath()).isEqualTo("/twitter/_all/1");
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_doc/1");
 	}
 
 	@Test // DATAES-488
@@ -355,7 +355,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		});
 
 		URI uri = hostProvider.when(HOST).captureUri();
-		assertThat(uri.getRawPath()).isEqualTo("/twitter/10/_create");
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_doc/10/_create");
 	}
 
 	@Test // DATAES-488
@@ -374,7 +374,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		});
 
 		URI uri = hostProvider.when(HOST).captureUri();
-		assertThat(uri.getRawPath()).isEqualTo("/twitter/10");
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_doc/10");
 	}
 
 	@Test // DATAES-488
@@ -419,7 +419,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		hostProvider.when(HOST) //
 				.receiveUpdateOk();
 
-		client.update(new UpdateRequest("twitter", "doc", "1").doc(Collections.singletonMap("user", "cstrobl"))).then() //
+		client.update(new UpdateRequest("twitter", "1").doc(Collections.singletonMap("user", "cstrobl"))).then() //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -429,7 +429,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		});
 
 		URI uri = hostProvider.when(HOST).captureUri();
-		assertThat(uri.getRawPath()).isEqualTo("/twitter/doc/1/_update");
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_doc/1/_update");
 	}
 
 	@Test // DATAES-488
@@ -456,7 +456,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		hostProvider.when(HOST) //
 				.updateFail();
 
-		client.update(new UpdateRequest("twitter", "doc", "1").doc(Collections.singletonMap("user", "cstrobl")))
+		client.update(new UpdateRequest("twitter", "1").doc(Collections.singletonMap("user", "cstrobl")))
 				.as(StepVerifier::create) //
 				.expectError(ElasticsearchStatusException.class) //
 				.verify();
@@ -470,13 +470,13 @@ public class ReactiveElasticsearchClientUnitTests {
 		hostProvider.when(HOST) //
 				.receiveDeleteOk();
 
-		client.delete(new DeleteRequest("twitter", "doc", "1")).then() //
+		client.delete(new DeleteRequest("twitter", "1")).then() //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.DELETE);
 		URI uri = hostProvider.when(HOST).captureUri();
-		assertThat(uri.getRawPath()).isEqualTo("/twitter/doc/1");
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_doc/1");
 	}
 
 	@Test // DATAES-488
@@ -485,7 +485,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		hostProvider.when(HOST) //
 				.receiveDeleteOk();
 
-		client.delete(new DeleteRequest("twitter", "doc", "1")) //
+		client.delete(new DeleteRequest("twitter", "1")) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(deleteResponse -> {
 

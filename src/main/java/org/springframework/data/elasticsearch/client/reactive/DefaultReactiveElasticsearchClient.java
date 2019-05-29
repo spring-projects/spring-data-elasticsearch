@@ -339,8 +339,11 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	private static GetResult getResponseToGetResult(GetResponse response) {
 
-		return new GetResult(response.getIndex(), response.getType(), response.getId(), response.getVersion(),
-				response.isExists(), response.getSourceAsBytesRef(), response.getFields());
+		return new GetResult(response.getIndex(), "_default_",
+				response.getId(), response.getSeqNo(),
+				response.getPrimaryTerm(), response.getVersion(),
+				response.isExists(), response.getSourceAsBytesRef(),
+				response.getFields());
 	}
 
 	// -->

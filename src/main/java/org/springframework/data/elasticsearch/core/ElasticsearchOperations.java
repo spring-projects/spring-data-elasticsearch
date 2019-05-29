@@ -16,9 +16,10 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.Nullable;
+import org.elasticsearch.common.settings.Settings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -27,7 +28,6 @@ import org.springframework.data.util.CloseableIterator;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * ElasticsearchOperations
@@ -83,13 +83,12 @@ public interface ElasticsearchOperations {
 	<T> boolean putMapping(Class<T> clazz);
 
 	/**
-	 * Create mapping for a given indexName and type
+	 * Create mapping for a given indexName
 	 *
 	 * @param indexName
-	 * @param type
 	 * @param mappings
 	 */
-	boolean putMapping(String indexName, String type, Object mappings);
+	boolean putMapping(String indexName, Object mappings);
 
 	/**
 	 * Create mapping for a class
@@ -106,29 +105,30 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @param <T>
 	 */
-	<T> Map getMapping(Class<T> clazz);
+	<T> MappingMetaData getMapping(Class<T> clazz);
 
 	/**
-	 * Get mapping for a given indexName and type
+	 * Get mapping for a given indexName
 	 *
 	 * @param indexName
-	 * @param type
 	 */
-	Map getMapping(String indexName, String type);
+	MappingMetaData getMapping(String indexName);
 
 	/**
 	 * Get settings for a given indexName
 	 *
-	 * @param indexName
-	 */
-	Map getSetting(String indexName);
+     * @param indexName
+     * @return
+     */
+	Settings getSettings(String indexName);
 
 	/**
 	 * Get settings for a given class
 	 *
 	 * @param clazz
+	 * @return
 	 */
-	<T> Map getSetting(Class<T> clazz);
+	<T> Settings getSettings(Class<T> clazz);
 
 
 	/**
@@ -378,11 +378,10 @@ public interface ElasticsearchOperations {
 	 * Delete the one object with provided id
 	 *
 	 * @param indexName
-	 * @param type
 	 * @param id
 	 * @return documentId of the document deleted
 	 */
-	String delete(String indexName, String type, String id);
+	String delete(String indexName, String id);
 
 
 	/**
@@ -450,14 +449,6 @@ public interface ElasticsearchOperations {
 	 */
 	boolean indexExists(String indexName);
 
-	/**
-	 * check if type is exists in an index
-	 *
-	 * @param index
-	 * @param type
-	 * @return
-	 */
-	boolean typeExists(String index, String type);
 
 	/**
 	 * refresh the index

@@ -28,7 +28,7 @@ import org.springframework.data.elasticsearch.annotations.Parent;
  * @author Philipp Jardas
  * @author Mohsin Husen
  */
-@Document(indexName = ParentEntity.INDEX, type = ParentEntity.PARENT_TYPE, shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = ParentEntity.INDEX, shards = 1, replicas = 0, refreshInterval = "-1")
 public class ParentEntity {
 
 	public static final String INDEX = "parent-child";
@@ -61,7 +61,7 @@ public class ParentEntity {
 		return new ToStringCreator(this).append("id", id).append("name", name).toString();
 	}
 
-	@Document(indexName = INDEX, type = CHILD_TYPE, shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = INDEX, shards = 1, replicas = 0, refreshInterval = "-1")
 	public static class ChildEntity {
 
 		@Id

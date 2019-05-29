@@ -23,7 +23,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
  *
  * @author Philipp Jardas
  */
-@Document(indexName = "test-index-minimal", type = "type")
+@Document(indexName = "test-index-minimal")
 public class MinimalEntity {
 
 	@Id

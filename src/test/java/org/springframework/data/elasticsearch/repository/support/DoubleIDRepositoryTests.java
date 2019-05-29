@@ -26,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.entities.DoubleIDEntity;
 import org.springframework.data.elasticsearch.repositories.doubleid.DoubleIDRepository;
@@ -44,7 +45,7 @@ public class DoubleIDRepositoryTests {
 
 	@Autowired private DoubleIDRepository repository;
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations elasticsearchTemplate;
 
 	@Before
 	public void before() {

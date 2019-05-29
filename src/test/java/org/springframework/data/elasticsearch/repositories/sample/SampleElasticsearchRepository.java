@@ -33,6 +33,4 @@ public interface SampleElasticsearchRepository extends ElasticsearchRepository<S
 
 	List<SampleEntity> deleteByMessage(String message);
 
-	void deleteByType(String type);
-
 }

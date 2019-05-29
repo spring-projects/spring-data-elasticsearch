@@ -6,7 +6,7 @@
     <import resource="infrastructure.xml"/>
 
     <bean name="elasticsearchTemplate"
-          class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
+          class="org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate">
         <constructor-arg name="client" ref="client"/>
     </bean>
 

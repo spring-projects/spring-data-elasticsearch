@@ -37,7 +37,7 @@ import org.springframework.data.elasticsearch.annotations.Setting;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(indexName = "test-index-normalizer", type = "test", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-normalizer", shards = 1, replicas = 0, refreshInterval = "-1")
 @Setting(settingPath = "/settings/test-normalizer.json")
 public class NormalizerEntity {
 

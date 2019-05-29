@@ -42,7 +42,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(indexName = "test-index-uuid-keyed", type = "test-type-uuid-keyed", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-uuid-keyed", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleEntityUUIDKeyed {
 
 	@Id

@@ -33,6 +33,4 @@ public interface SampleUUIDKeyedElasticsearchRepository extends ElasticsearchRep
 
 	List<SampleEntityUUIDKeyed> deleteByMessage(String message);
 
-	void deleteByType(String type);
-
 }

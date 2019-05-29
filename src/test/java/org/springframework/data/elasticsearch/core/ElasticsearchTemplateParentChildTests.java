@@ -52,7 +52,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class ElasticsearchTemplateParentChildTests {
 
 	@Autowired
-	private ElasticsearchTemplate elasticsearchTemplate;
+	private ElasticsearchOperations elasticsearchTemplate;
 
 	@Before
 	public void before() {

@@ -19,33 +19,36 @@ import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 
-import org.elasticsearch.client.Client;
-import org.elasticsearch.node.NodeValidationException;
-import org.springframework.data.elasticsearch.Utils;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 
 /**
  * @author Mohsin Husen
+ * @author Simon Schneider
  */
 @ApplicationScoped
 class ElasticsearchTemplateProducer {
 
 	@Produces
-	public Client createNodeClient() throws NodeValidationException {
-		return Utils.getNodeClient();
+	public RestHighLevelClient createRestHighLevelClient() {
+		return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200)));
 	}
 
+
 	@Produces
-	public ElasticsearchOperations createElasticsearchTemplate(Client client) {
-		return new ElasticsearchTemplate(client);
+	public ElasticsearchOperations createElasticsearchTemplate(RestHighLevelClient client) {
+		return new ElasticsearchRestTemplate(client);
 	}
 
 	@Produces
 	@OtherQualifier
 	@PersonDB
-	public ElasticsearchOperations createQualifiedElasticsearchTemplate(Client client) {
-		return new ElasticsearchTemplate(client);
+	public ElasticsearchOperations createQualifiedElasticsearchTemplate(RestHighLevelClient client) {
+		return new ElasticsearchRestTemplate(client);
 	}
 
 	@PreDestroy

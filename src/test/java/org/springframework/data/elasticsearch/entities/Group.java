@@ -26,7 +26,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 /**
  * Created by akonczak on 21/08/2016.
  */
-@Document(indexName = "test-index-group", type = "group")
+@Document(indexName = "test-index-group")
 public class Group {
 
 	@Id

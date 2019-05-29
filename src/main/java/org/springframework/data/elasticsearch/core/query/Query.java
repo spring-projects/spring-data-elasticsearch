@@ -80,20 +80,6 @@ public interface Query {
 	void addIndices(String... indices);
 
 	/**
-	 * Add types to be searched
-	 *
-	 * @param types
-	 */
-	void addTypes(String... types);
-
-	/**
-	 * Get types to be searched
-	 *
-	 * @return
-	 */
-	List<String> getTypes();
-
-	/**
 	 * Add fields to be added as part of search request
 	 *
 	 * @param fields

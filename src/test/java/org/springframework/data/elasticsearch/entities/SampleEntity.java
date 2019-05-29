@@ -44,7 +44,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 @AllArgsConstructor
 @ToString
 @Builder
-@Document(indexName = "test-index-sample", type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "test-index-sample", shards = 1, replicas = 0, refreshInterval = "-1")
 public class SampleEntity {
 
 	@Id

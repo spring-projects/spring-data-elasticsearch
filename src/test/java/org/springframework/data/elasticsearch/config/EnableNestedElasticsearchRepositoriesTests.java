@@ -17,15 +17,16 @@ package org.springframework.data.elasticsearch.config;
 
 import static org.junit.Assert.*;
 
-import org.elasticsearch.node.NodeValidationException;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.elasticsearch.Utils;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.entities.SampleEntity;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.repository.Repository;
@@ -45,8 +46,12 @@ public class EnableNestedElasticsearchRepositoriesTests {
 	static class Config {
 
 		@Bean
-		public ElasticsearchOperations elasticsearchTemplate() throws NodeValidationException {
-			return new ElasticsearchTemplate(Utils.getNodeClient());
+		public ElasticsearchOperations elasticsearchTemplate() {
+			return new ElasticsearchRestTemplate(
+					new RestHighLevelClient(
+							RestClient.builder(new HttpHost("localhost", 9200))
+					)
+			);
 		}
 	}
 
