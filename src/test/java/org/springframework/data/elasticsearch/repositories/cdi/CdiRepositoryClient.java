@@ -49,7 +49,7 @@ class CdiRepositoryClient {
 	public QualifiedProductRepository getQualifiedProductRepository() {
 		return qualifiedProductRepository;
 	}
-   
+
 	@Inject
 	public void setQualifiedProductRepository(
 			@PersonDB @OtherQualifier QualifiedProductRepository qualifiedProductRepository) {

@@ -499,7 +499,8 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-book-mapping-builder", type = "book", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-book-mapping-builder", type = "book", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class Book {
 
 		@Id private String id;
@@ -515,8 +516,8 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	 * @author Stuart Stevenson
 	 * @author Mohsin Husen
 	 */
-	@Document(indexName = "test-index-simple-recursive-mapping-builder", type = "circular-object", shards = 1, replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-simple-recursive-mapping-builder", type = "circular-object", shards = 1,
+			replicas = 0, refreshInterval = "-1")
 	static class SimpleRecursiveEntity {
 
 		@Id private String id;
@@ -551,7 +552,8 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-normalizer-mapping-builder", type = "test", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-normalizer-mapping-builder", type = "test", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	@Setting(settingPath = "/settings/test-normalizer.json")
 	static class NormalizerEntity {
 
@@ -650,7 +652,8 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-stock-mapping-builder", type = "price", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-stock-mapping-builder", type = "price", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class StockPrice {
 
 		@Id private String id;
@@ -746,7 +749,8 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-geo-mapping-builder", type = "geo-test-index", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-geo-mapping-builder", type = "geo-test-index", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class GeoEntity {
 
 		@Id private String id;

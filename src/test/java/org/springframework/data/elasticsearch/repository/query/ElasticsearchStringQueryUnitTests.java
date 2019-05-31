@@ -113,7 +113,8 @@ public class ElasticsearchStringQueryUnitTests {
 	 * @author Artur Konczak
 	 */
 
-	@Document(indexName = "test-index-person-query-unittest", type = "user", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-person-query-unittest", type = "user", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class Person {
 
 		@Id private String id;
@@ -177,7 +178,8 @@ public class ElasticsearchStringQueryUnitTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-book-query-unittest", type = "book", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-book-query-unittest", type = "book", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class Book {
 
 		@Id private String id;

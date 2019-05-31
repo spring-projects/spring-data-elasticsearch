@@ -38,8 +38,8 @@ public class DateTimeConvertersTests {
 	@Test
 	public void testJodaDateTimeConverter() {
 		DateTime dateTime = new DateTime(2013, 1, 24, 6, 35, 0, DateTimeZone.UTC);
-		Assert
-				.assertEquals("2013-01-24T06:35:00.000Z", DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(dateTime));
+		Assert.assertEquals("2013-01-24T06:35:00.000Z",
+				DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(dateTime));
 	}
 
 	@Test

@@ -8,8 +8,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
  */
 public class ComplexElasticsearchRepositoryImpl implements ComplexElasticsearchRepositoryCustom {
 
-	@Autowired
-	private ElasticsearchTemplate template;
+	@Autowired private ElasticsearchTemplate template;
 
 	@Override
 	public String doSomethingSpecial() {

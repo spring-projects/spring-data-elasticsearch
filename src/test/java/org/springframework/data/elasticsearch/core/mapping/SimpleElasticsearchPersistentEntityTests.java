@@ -66,7 +66,7 @@ public class SimpleElasticsearchPersistentEntityTests {
 		// when
 		entity.addPersistentProperty(persistentProperty2);
 	}
-	
+
 	@Test // DATAES-462
 	public void rejectsMultipleScoreProperties() {
 
@@ -123,9 +123,9 @@ public class SimpleElasticsearchPersistentEntityTests {
 	}
 
 	// DATAES-462
-	
+
 	static class TwoScoreProperties {
-		
+
 		@Score float first;
 		@Score float second;
 	}

@@ -25,18 +25,18 @@ import java.util.Map;
 public class CustomEntityMapper implements EntityMapper {
 
 	public CustomEntityMapper() {
-		//custom configuration/implementation (e.g. FasterXML/jackson)
+		// custom configuration/implementation (e.g. FasterXML/jackson)
 	}
 
 	@Override
 	public String mapToString(Object object) throws IOException {
-		//mapping Object to text
+		// mapping Object to text
 		return null;
 	}
 
 	@Override
 	public <T> T mapToObject(String source, Class<T> clazz) throws IOException {
-		//mapping text to Object
+		// mapping text to Object
 		return null;
 	}
 

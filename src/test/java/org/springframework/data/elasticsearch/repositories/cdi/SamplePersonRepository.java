@@ -21,6 +21,7 @@ import org.springframework.data.repository.Repository;
  * @author Mark Paluch
  * @see DATAES-113
  */
-public interface SamplePersonRepository extends Repository<CdiRepositoryTests.Person, Long>, SamplePersonRepositoryCustom {
+public interface SamplePersonRepository
+		extends Repository<CdiRepositoryTests.Person, Long>, SamplePersonRepositoryCustom {
 
 }

@@ -75,7 +75,8 @@ public class EnableNestedElasticsearchRepositoriesTests {
 
 	@Data
 	@Builder
-	@Document(indexName = "test-index-sample-config-nested", type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-config-nested", type = "test-type", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;

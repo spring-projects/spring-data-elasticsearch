@@ -88,11 +88,9 @@ public class FieldDynamicMappingEntityRepositoryTests {
 	@Document(indexName = "test-index-field-dynamic-mapping", type = "test-field-mapping-type")
 	static class FieldDynamicMappingEntity {
 
-		@Id
-		private String id;
+		@Id private String id;
 
-		@Mapping(mappingPath = "/mappings/test-field-mappings.json")
-		private byte[] file;
+		@Mapping(mappingPath = "/mappings/test-field-mappings.json") private byte[] file;
 
 		public String getId() {
 			return id;
@@ -114,6 +112,7 @@ public class FieldDynamicMappingEntityRepositoryTests {
 	/**
 	 * @author Ted Liang
 	 */
-	public interface FieldDynamicMappingEntityRepository extends ElasticsearchCrudRepository<FieldDynamicMappingEntity, String> { }
+	public interface FieldDynamicMappingEntityRepository
+			extends ElasticsearchCrudRepository<FieldDynamicMappingEntity, String> {}
 
 }

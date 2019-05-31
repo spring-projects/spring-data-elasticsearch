@@ -15,14 +15,15 @@
  */
 package org.springframework.data.elasticsearch.core.aggregation;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
 
 import org.junit.Test;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
-
-import java.util.Arrays;
 
 /**
  * @author Remco Zigterman

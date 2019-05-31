@@ -146,8 +146,7 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 	 * @author Artur Konczak
 	 */
 
-	@Document(indexName = INDEX_NAME, type = "user", shards = 1, replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = INDEX_NAME, type = "user", shards = 1, replicas = 0, refreshInterval = "-1")
 	static class Person {
 
 		@Id private String id;

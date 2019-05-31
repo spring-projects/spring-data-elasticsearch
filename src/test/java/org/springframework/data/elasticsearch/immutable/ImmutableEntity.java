@@ -29,9 +29,9 @@ import org.springframework.data.elasticsearch.annotations.Document;
 @Getter
 public class ImmutableEntity {
 	private final String id, name;
-	
+
 	public ImmutableEntity(String name) {
-		
+
 		this.id = null;
 		this.name = name;
 	}

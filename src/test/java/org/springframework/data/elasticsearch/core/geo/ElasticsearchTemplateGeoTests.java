@@ -51,9 +51,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Mohsin Husen
  * @author Franck Marchand
  * @author Artur Konczak
- * @author Peter-Josef Meisch
- *
- * Basic info: latitude - horizontal lines (equator = 0.0, values -90.0 to 90.0) longitude -
+ * @author Peter-Josef Meisch Basic info: latitude - horizontal lines (equator = 0.0, values -90.0 to 90.0) longitude -
  *         vertical lines (Greenwich = 0.0, values -180 to 180) London [lat,lon] = [51.50985,-0.118082] - geohash =
  *         gcpvj3448 Bouding Box for London = (bbox=-0.489,51.28,0.236,51.686) bbox = left,bottom,right,top bbox = min
  *         Longitude , min Latitude , max Longitude , max Latitude
@@ -93,8 +91,7 @@ public class ElasticsearchTemplateGeoTests {
 				.id("1").name("Artur Konczak") //
 				.locationAsString(latLonString) //
 				.locationAsArray(lonLatArray) //
-				.locationAsGeoHash(geohash)
-				.build();
+				.locationAsGeoHash(geohash).build();
 		LocationMarkerEntity location2 = LocationMarkerEntity.builder() //
 				.id("2").name("Mohsin Husen") //
 				.locationAsString(geohash.substring(0, 8)) //
@@ -421,8 +418,8 @@ public class ElasticsearchTemplateGeoTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-location-marker-core-geo", type = "geo-annotation-point-type", shards = 1, replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-location-marker-core-geo", type = "geo-annotation-point-type", shards = 1,
+			replicas = 0, refreshInterval = "-1")
 	static class LocationMarkerEntity {
 
 		@Id private String id;

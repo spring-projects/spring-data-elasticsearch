@@ -30,7 +30,6 @@ import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
  */
 public class CustomResultMapper implements ResultsMapper {
 
-
 	private EntityMapper entityMapper;
 
 	public CustomResultMapper(EntityMapper entityMapper) {
@@ -44,12 +43,12 @@ public class CustomResultMapper implements ResultsMapper {
 
 	@Override
 	public <T> T mapResult(GetResponse response, Class<T> clazz) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null; // To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null; // To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override

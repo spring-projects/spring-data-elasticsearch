@@ -246,8 +246,7 @@ public class UUIDElasticsearchRepositoryTests {
 
 		// when
 		List<UUID> docIds = Arrays.asList(documentId, documentId2);
-		List<SampleEntityUUIDKeyed> sampleEntities = (List<SampleEntityUUIDKeyed>) repository
-				.findAllById(docIds);
+		List<SampleEntityUUIDKeyed> sampleEntities = (List<SampleEntityUUIDKeyed>) repository.findAllById(docIds);
 
 		// then
 		assertThat(sampleEntities).isNotNull().hasSize(2);

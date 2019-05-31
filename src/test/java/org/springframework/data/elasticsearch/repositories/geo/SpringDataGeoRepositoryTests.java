@@ -103,7 +103,8 @@ public class SpringDataGeoRepositoryTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-geo-repository", type = "geo-test-index", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-geo-repository", type = "geo-test-index", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class GeoEntity {
 
 		@Id private String id;
