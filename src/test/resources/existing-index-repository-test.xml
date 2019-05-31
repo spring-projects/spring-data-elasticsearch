@@ -12,7 +12,6 @@
         <constructor-arg name="client" ref="client"/>
     </bean>
 
-
     <elasticsearch:repositories
             base-package="org.springframework.data.elasticsearch.repositories.existing.index"
             consider-nested-repositories="true" />

@@ -24,7 +24,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,6 +38,7 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.Id;
@@ -210,11 +210,11 @@ public class ElasticsearchEntityMapperUnitTests {
 	@Test // DATAES-530
 	public void shouldMapGeoPointElasticsearchNames() throws IOException {
 		// given
-		final Point point = new Point(10, 20);
-		final String pointAsString = point.getX() + "," + point.getY();
-		final double[] pointAsArray = { point.getX(), point.getY() };
-		final GeoEntity geoEntity = GeoEntity.builder().pointA(point).pointB(GeoPoint.fromPoint(point))
-				.pointC(pointAsString).pointD(pointAsArray).build();
+		Point point = new Point(10, 20);
+		String pointAsString = point.getX() + "," + point.getY();
+		double[] pointAsArray = { point.getX(), point.getY() };
+		GeoEntity geoEntity = GeoEntity.builder().pointA(point).pointB(GeoPoint.fromPoint(point)).pointC(pointAsString)
+				.pointD(pointAsArray).build();
 		// when
 		String jsonResult = entityMapper.mapToString(geoEntity);
 
@@ -682,13 +682,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Artur Konczak
-	 */
-	@Setter
-	@Getter
+	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
@@ -696,29 +690,9 @@ public class ElasticsearchEntityMapperUnitTests {
 
 		private String name;
 		private String model;
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public String getModel() {
-			return model;
-		}
-
-		public void setModel(String model) {
-			this.model = model;
-		}
 	}
 
-	/**
-	 * @author Artur Konczak
-	 */
-	@Setter
-	@Getter
+	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder

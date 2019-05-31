@@ -18,12 +18,8 @@ package org.springframework.data.elasticsearch.config.nested;
 import static org.junit.Assert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
 
 import java.lang.Double;
 import java.lang.Long;
@@ -31,6 +27,7 @@ import java.lang.Long;
 import org.elasticsearch.node.NodeValidationException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -71,22 +68,12 @@ public class EnableNestedElasticsearchRepositoriesTests {
 
 	@Autowired(required = false) private SampleRepository nestedRepository;
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Chris White
-	 * @author Sascha Woo
-	 */
 	@Test
 	public void hasNestedRepository() {
 		assertNotNull(nestedRepository);
 	}
 
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@ToString
+	@Data
 	@Builder
 	@Document(indexName = "test-index-sample-config-nested", type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {

@@ -21,9 +21,10 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.data.annotation.Id;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
@@ -48,7 +49,6 @@ public class FieldDynamicMappingEntityRepositoryTests {
 
 	@Before
 	public void before() {
-
 		IndexInitializer.init(elasticsearchTemplate, FieldDynamicMappingEntity.class);
 	}
 

@@ -48,7 +48,6 @@ public class SpELEntityTests {
 
 	@Before
 	public void before() {
-
 		IndexInitializer.init(template, SpELEntity.class);
 	}
 

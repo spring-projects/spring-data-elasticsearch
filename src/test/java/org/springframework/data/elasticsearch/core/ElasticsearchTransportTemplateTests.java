@@ -18,28 +18,17 @@ package org.springframework.data.elasticsearch.core;
 import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-
-import java.lang.Double;
-import java.lang.Long;
+import lombok.Data;
 
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.Score;
-import org.springframework.data.elasticsearch.annotations.ScriptedField;
-import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQueryBuilder;
 import org.springframework.test.context.ContextConfiguration;
@@ -62,30 +51,12 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		elasticsearchTemplate.update(updateQuery);
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Chris White
-	 * @author Sascha Woo
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@ToString
-	@Builder
-	@Document(indexName = "test-index-sample-core-transport-template", type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Data
+	@Document(indexName = "test-index-sample-core-transport-template", type = "test-type", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;
 		@Field(type = Text, store = true, fielddata = true) private String type;
-		@Field(type = Text, store = true, fielddata = true) private String message;
-		private int rate;
-		@ScriptedField private Double scriptedRate;
-		private boolean available;
-		private String highlightedMessage;
-		private GeoPoint location;
-		@Version private Long version;
-		@Score private float score;
 	}
 }

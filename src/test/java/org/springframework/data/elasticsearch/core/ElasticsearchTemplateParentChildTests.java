@@ -105,7 +105,7 @@ public class ElasticsearchTemplateParentChildTests {
 		XContentBuilder builder;
 		builder = jsonBuilder().startObject().field("name", newChildName).endObject();
 		updateRequest.doc(builder);
-		final UpdateResponse response = update(updateRequest);
+		UpdateResponse response = update(updateRequest);
 
 		assertThat(response.getShardInfo().getSuccessful()).isEqualTo(1);
 	}
@@ -170,7 +170,7 @@ public class ElasticsearchTemplateParentChildTests {
 
 	private UpdateResponse update(UpdateRequest updateRequest) {
 
-		final UpdateQuery update = new UpdateQuery();
+		UpdateQuery update = new UpdateQuery();
 		update.setId(updateRequest.id());
 		update.setType(updateRequest.type());
 		update.setIndexName(updateRequest.index());

@@ -51,7 +51,6 @@ public class IntegerIDRepositoryTests {
 
 	@Before
 	public void before() {
-
 		IndexInitializer.init(elasticsearchTemplate, IntegerIDEntity.class);
 	}
 

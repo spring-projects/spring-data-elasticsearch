@@ -21,6 +21,8 @@ import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
 
+import lombok.Data;
+
 import java.lang.Integer;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +34,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -58,14 +61,14 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class ElasticsearchTemplateAggregationTests {
 
-	public static final String RIZWAN_IDREES = "Rizwan Idrees";
-	public static final String MOHSIN_HUSEN = "Mohsin Husen";
-	public static final String JONATHAN_YAN = "Jonathan Yan";
-	public static final String ARTUR_KONCZAK = "Artur Konczak";
-	public static final int YEAR_2002 = 2002;
-	public static final int YEAR_2001 = 2001;
-	public static final int YEAR_2000 = 2000;
-	public static final String INDEX_NAME = "test-index-articles-core-aggregation";
+	static final String RIZWAN_IDREES = "Rizwan Idrees";
+	static final String MOHSIN_HUSEN = "Mohsin Husen";
+	static final String JONATHAN_YAN = "Jonathan Yan";
+	static final String ARTUR_KONCZAK = "Artur Konczak";
+	static final int YEAR_2002 = 2002;
+	static final int YEAR_2001 = 2001;
+	static final int YEAR_2000 = 2000;
+	static final String INDEX_NAME = "test-index-articles-core-aggregation";
 
 	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
@@ -128,7 +131,9 @@ public class ElasticsearchTemplateAggregationTests {
 	 * @author Artur Konczak
 	 * @author Mohsin Husen
 	 */
-	@Document(indexName = "test-index-articles-core-aggregation", type = "article", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Data
+	@Document(indexName = "test-index-articles-core-aggregation", type = "article", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class ArticleEntity {
 
 		@Id private String id;
@@ -151,54 +156,6 @@ public class ElasticsearchTemplateAggregationTests {
 
 		public ArticleEntity(String id) {
 			this.id = id;
-		}
-
-		public void setId(String id) {
-			this.id = id;
-		}
-
-		public String getId() {
-			return id;
-		}
-
-		public String getTitle() {
-			return title;
-		}
-
-		public void setTitle(String title) {
-			this.title = title;
-		}
-
-		public String getSubject() {
-			return subject;
-		}
-
-		public void setSubject(String subject) {
-			this.subject = subject;
-		}
-
-		public List<String> getAuthors() {
-			return authors;
-		}
-
-		public void setAuthors(List<String> authors) {
-			this.authors = authors;
-		}
-
-		public List<Integer> getPublishedYears() {
-			return publishedYears;
-		}
-
-		public void setPublishedYears(List<Integer> publishedYears) {
-			this.publishedYears = publishedYears;
-		}
-
-		public int getScore() {
-			return score;
-		}
-
-		public void setScore(int score) {
-			this.score = score;
 		}
 	}
 

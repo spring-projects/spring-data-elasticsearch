@@ -24,7 +24,7 @@ import org.springframework.data.mapping.MappingException;
 
 /**
  * Unit tests for {@link SimpleElasticsearchPersistentProperty}.
- * 
+ *
  * @author Oliver Gierke
  * @author Peter-Josef Meisch
  */
@@ -43,8 +43,9 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 	@Test // DATAES-562
 	public void fieldAnnotationWithNameSetsFieldname() {
 
-		final SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(FieldNameProperty.class);
-		final ElasticsearchPersistentProperty persistentProperty = persistentEntity.getPersistentProperty("fieldProperty");
+		SimpleElasticsearchPersistentEntity<?> persistentEntity = context
+				.getRequiredPersistentEntity(FieldNameProperty.class);
+		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getPersistentProperty("fieldProperty");
 
 		assertThat(persistentProperty).isNotNull();
 		assertThat(persistentProperty.getFieldName()).isEqualTo("by-name");
@@ -53,8 +54,9 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 	@Test // DATAES-562
 	public void fieldAnnotationWithValueSetsFieldname() {
 
-		final SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(FieldValueProperty.class);
-		final ElasticsearchPersistentProperty persistentProperty = persistentEntity.getPersistentProperty("fieldProperty");
+		SimpleElasticsearchPersistentEntity<?> persistentEntity = context
+				.getRequiredPersistentEntity(FieldValueProperty.class);
+		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getPersistentProperty("fieldProperty");
 
 		assertThat(persistentProperty).isNotNull();
 		assertThat(persistentProperty.getFieldName()).isEqualTo("by-value");

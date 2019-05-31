@@ -17,12 +17,15 @@ package org.springframework.data.elasticsearch.repositories.synonym;
 
 import static org.assertj.core.api.Assertions.*;
 
+import lombok.Data;
+
 import java.util.List;
 
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -51,7 +54,6 @@ public class SynonymRepositoryTests {
 
 	@Before
 	public void before() {
-
 		IndexInitializer.init(elasticsearchTemplate, SynonymEntity.class);
 	}
 
@@ -81,6 +83,7 @@ public class SynonymRepositoryTests {
 	/**
 	 * @author Mohsin Husen
 	 */
+	@Data
 	@Document(indexName = "test-index-synonym", type = "synonym-type")
 	@Setting(settingPath = "/synonyms/settings.json")
 	@Mapping(mappingPath = "/synonyms/mappings.json")
@@ -88,22 +91,6 @@ public class SynonymRepositoryTests {
 
 		@Id private String id;
 		private String text;
-
-		public String getId() {
-			return id;
-		}
-
-		public void setId(String id) {
-			this.id = id;
-		}
-
-		public String getText() {
-			return text;
-		}
-
-		public void setText(String text) {
-			this.text = text;
-		}
 	}
 
 	/**

@@ -59,7 +59,6 @@ public class SpringDataGeoRepositoryTests {
 
 	@Before
 	public void init() {
-
 		IndexInitializer.init(template, GeoEntity.class);
 	}
 
@@ -67,7 +66,7 @@ public class SpringDataGeoRepositoryTests {
 	public void shouldSaveAndLoadGeoPoints() {
 
 		// given
-		final Point point = new Point(15, 25);
+		Point point = new Point(15, 25);
 		GeoEntity entity = GeoEntity.builder().pointA(point).pointB(new GeoPoint(point.getX(), point.getY()))
 				.pointC(toGeoString(point)).pointD(toGeoArray(point)).build();
 

@@ -19,16 +19,12 @@ import static org.elasticsearch.client.Requests.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.util.CollectionUtils.*;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.ActionFuture;
@@ -79,10 +75,10 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -182,6 +178,35 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
+	public boolean addAlias(AliasQuery query) {
+		Assert.notNull(query.getIndexName(), "No index defined for Alias");
+		Assert.notNull(query.getAliasName(), "No alias defined");
+		IndicesAliasesRequest.AliasActions aliasAction = IndicesAliasesRequest.AliasActions.add()
+				.alias(query.getAliasName()).index(query.getIndexName());
+
+		if (query.getFilterBuilder() != null) {
+			aliasAction.filter(query.getFilterBuilder());
+		} else if (query.getFilter() != null) {
+			aliasAction.filter(query.getFilter());
+		} else if (!StringUtils.isEmpty(query.getRouting())) {
+			aliasAction.routing(query.getRouting());
+		} else if (!StringUtils.isEmpty(query.getSearchRouting())) {
+			aliasAction.searchRouting(query.getSearchRouting());
+		} else if (!StringUtils.isEmpty(query.getIndexRouting())) {
+			aliasAction.indexRouting(query.getIndexRouting());
+		}
+		return client.admin().indices().prepareAliases().addAliasAction(aliasAction).execute().actionGet().isAcknowledged();
+	}
+
+	@Override
+	public boolean removeAlias(AliasQuery query) {
+		Assert.notNull(query.getIndexName(), "No index defined for Alias");
+		Assert.notNull(query.getAliasName(), "No alias defined");
+		return client.admin().indices().prepareAliases().removeAlias(query.getIndexName(), query.getAliasName()).execute()
+				.actionGet().isAcknowledged();
+	}
+
+	@Override
 	public <T> boolean createIndex(Class<T> clazz) {
 		return createIndexIfNotCreated(clazz);
 	}
@@ -197,7 +222,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		if (clazz.isAnnotationPresent(Mapping.class)) {
 			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
 			if (!StringUtils.isEmpty(mappingPath)) {
-				String mappings = readFileFromClasspath(mappingPath);
+				String mappings = ResourceUtil.readFileFromClasspath(mappingPath);
 				if (!StringUtils.isEmpty(mappings)) {
 					return putMapping(clazz, mappings);
 				}
@@ -429,9 +454,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	@Override
 	public <T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz) {
-		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
-		return doStream(scrollTimeInMillis, startScroll(scrollTimeInMillis, query, clazz), clazz,
-				resultsMapper);
+		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
+		return doStream(scrollTimeInMillis, startScroll(scrollTimeInMillis, query, clazz), clazz, resultsMapper);
 	}
 
 	@Override
@@ -440,69 +464,15 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public <T> CloseableIterator<T> stream(SearchQuery query, final Class<T> clazz, final SearchResultMapper mapper) {
-		final long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
-		return doStream(scrollTimeInMillis, startScroll(scrollTimeInMillis, query, clazz, mapper), clazz,
-				mapper);
+	public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
+		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
+		return doStream(scrollTimeInMillis, startScroll(scrollTimeInMillis, query, clazz, mapper), clazz, mapper);
 	}
 
-	private <T> CloseableIterator<T> doStream(final long scrollTimeInMillis, final ScrolledPage<T> page,
-			final Class<T> clazz, final SearchResultMapper mapper) {
-		return new CloseableIterator<T>() {
-
-			/** As we couldn't retrieve single result with scroll, store current hits. */
-			private volatile Iterator<T> currentHits = page.iterator();
-
-			/** The scroll id. */
-			private volatile String scrollId = page.getScrollId();
-
-			/** If stream is finished (ie: cluster returns no results. */
-			private volatile boolean finished = !currentHits.hasNext();
-
-			@Override
-			public void close() {
-				try {
-					// Clear scroll on cluster only in case of error (cause elasticsearch auto clear scroll when it's done)
-					if (!finished && scrollId != null && currentHits != null && currentHits.hasNext()) {
-						clearScroll(scrollId);
-					}
-				} finally {
-					currentHits = null;
-					scrollId = null;
-				}
-			}
-
-			@Override
-			public boolean hasNext() {
-				// Test if stream is finished
-				if (finished) {
-					return false;
-				}
-				// Test if it remains hits
-				if (currentHits == null || !currentHits.hasNext()) {
-					// Do a new request
-					final ScrolledPage<T> scroll = continueScroll(scrollId, scrollTimeInMillis, clazz, mapper);
-					// Save hits and scroll id
-					currentHits = scroll.iterator();
-					finished = !currentHits.hasNext();
-					scrollId = scroll.getScrollId();
-				}
-				return currentHits.hasNext();
-			}
-
-			@Override
-			public T next() {
-				if (hasNext()) {
-					return currentHits.next();
-				}
-				throw new NoSuchElementException();
-			}
-
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException("remove");
-			}
-		};
+	private <T> CloseableIterator<T> doStream(long scrollTimeInMillis, ScrolledPage<T> page, Class<T> clazz,
+			SearchResultMapper mapper) {
+		return StreamQueries.streamResults(page, scrollId -> continueScroll(scrollId, scrollTimeInMillis, clazz, mapper),
+				this::clearScroll);
 	}
 
 	@Override
@@ -582,7 +552,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz) {
+	public <T> List<T> multiGet(SearchQuery searchQuery, Class<T> clazz) {
 		return resultsMapper.mapResults(getMultiResponse(searchQuery, clazz), clazz);
 	}
 
@@ -617,7 +587,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz, MultiGetResultMapper getResultMapper) {
+	public <T> List<T> multiGet(SearchQuery searchQuery, Class<T> clazz, MultiGetResultMapper getResultMapper) {
 		return getResultMapper.mapResults(getMultiResponse(searchQuery, clazz), clazz);
 	}
 
@@ -1006,7 +976,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		if (clazz.isAnnotationPresent(Setting.class)) {
 			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
 			if (!StringUtils.isEmpty(settingPath)) {
-				String settings = readFileFromClasspath(settingPath);
+				String settings = ResourceUtil.readFileFromClasspath(settingPath);
 				if (!StringUtils.isEmpty(settings)) {
 					return createIndex(getPersistentEntityFor(clazz).getIndexName(), settings);
 				}
@@ -1184,35 +1154,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public Boolean addAlias(AliasQuery query) {
-		Assert.notNull(query.getIndexName(), "No index defined for Alias");
-		Assert.notNull(query.getAliasName(), "No alias defined");
-		final IndicesAliasesRequest.AliasActions aliasAction = IndicesAliasesRequest.AliasActions.add()
-				.alias(query.getAliasName()).index(query.getIndexName());
-
-		if (query.getFilterBuilder() != null) {
-			aliasAction.filter(query.getFilterBuilder());
-		} else if (query.getFilter() != null) {
-			aliasAction.filter(query.getFilter());
-		} else if (!StringUtils.isEmpty(query.getRouting())) {
-			aliasAction.routing(query.getRouting());
-		} else if (!StringUtils.isEmpty(query.getSearchRouting())) {
-			aliasAction.searchRouting(query.getSearchRouting());
-		} else if (!StringUtils.isEmpty(query.getIndexRouting())) {
-			aliasAction.indexRouting(query.getIndexRouting());
-		}
-		return client.admin().indices().prepareAliases().addAliasAction(aliasAction).execute().actionGet().isAcknowledged();
-	}
-
-	@Override
-	public Boolean removeAlias(AliasQuery query) {
-		Assert.notNull(query.getIndexName(), "No index defined for Alias");
-		Assert.notNull(query.getAliasName(), "No alias defined");
-		return client.admin().indices().prepareAliases().removeAlias(query.getIndexName(), query.getAliasName()).execute()
-				.actionGet().isAcknowledged();
-	}
-
-	@Override
 	public List<AliasMetaData> queryForAlias(String indexName) {
 		return client.admin().indices().getAliases(new GetAliasesRequest().indices(indexName)).actionGet().getAliases()
 				.get(indexName);
@@ -1309,34 +1250,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		return resultsMapper;
 	}
 
+	@Deprecated
 	public static String readFileFromClasspath(String url) {
-		StringBuilder stringBuilder = new StringBuilder();
-
-		BufferedReader bufferedReader = null;
-
-		try {
-			ClassPathResource classPathResource = new ClassPathResource(url);
-			InputStreamReader inputStreamReader = new InputStreamReader(classPathResource.getInputStream());
-			bufferedReader = new BufferedReader(inputStreamReader);
-			String line;
-
-			String lineSeparator = System.getProperty("line.separator");
-			while ((line = bufferedReader.readLine()) != null) {
-				stringBuilder.append(line).append(lineSeparator);
-			}
-		} catch (Exception e) {
-			LOGGER.debug(String.format("Failed to load file from url: %s: %s", url, e.getMessage()));
-			return null;
-		} finally {
-			if (bufferedReader != null)
-				try {
-					bufferedReader.close();
-				} catch (IOException e) {
-					LOGGER.debug(String.format("Unable to close buffered reader.. %s", e.getMessage()));
-				}
-		}
-
-		return stringBuilder.toString();
+		return ResourceUtil.readFileFromClasspath(url);
 	}
 
 	public SearchResponse suggest(SuggestBuilder suggestion, String... indices) {

@@ -52,7 +52,6 @@ public class DoubleIDRepositoryTests {
 
 	@Before
 	public void before() {
-
 		IndexInitializer.init(elasticsearchTemplate, DoubleIDEntity.class);
 	}
 

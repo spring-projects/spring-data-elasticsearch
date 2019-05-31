@@ -59,7 +59,7 @@ public class ElasticsearchVersionRule implements TestRule {
 	}
 
 	@Override
-	public Statement apply(final Statement base, Description description) {
+	public Statement apply(Statement base, Description description) {
 
 		return new Statement() {
 

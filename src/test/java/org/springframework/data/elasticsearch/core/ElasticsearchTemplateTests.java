@@ -23,10 +23,9 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 import java.lang.Double;
 import java.lang.Integer;
@@ -44,8 +43,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.assertj.core.util.Lists;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
@@ -65,6 +62,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -259,7 +257,7 @@ public class ElasticsearchTemplateTests {
 
 		// when
 		SearchQuery query = new NativeSearchQueryBuilder().withIds(Arrays.asList(documentId, documentId2)).build();
-		LinkedList<SampleEntity> sampleEntities = elasticsearchTemplate.multiGet(query, SampleEntity.class);
+		List<SampleEntity> sampleEntities = elasticsearchTemplate.multiGet(query, SampleEntity.class);
 
 		// then
 		assertThat(sampleEntities).hasSize(2);
@@ -289,7 +287,7 @@ public class ElasticsearchTemplateTests {
 		// when
 		SearchQuery query = new NativeSearchQueryBuilder().withIds(Arrays.asList(documentId, documentId2))
 				.withFields("message", "type").build();
-		LinkedList<SampleEntity> sampleEntities = elasticsearchTemplate.multiGet(query, SampleEntity.class,
+		List<SampleEntity> sampleEntities = elasticsearchTemplate.multiGet(query, SampleEntity.class,
 				new MultiGetResultMapper() {
 					@Override
 					public <T> LinkedList<T> mapResults(MultiGetResponse responses, Class<T> clazz) {
@@ -893,7 +891,7 @@ public class ElasticsearchTemplateTests {
 		// when
 		boolean created = elasticsearchTemplate.createIndex(SampleEntity.class);
 		elasticsearchTemplate.putMapping(SampleEntity.class);
-		final Map setting = elasticsearchTemplate.getSetting(SampleEntity.class);
+		Map setting = elasticsearchTemplate.getSetting(SampleEntity.class);
 
 		// then
 		assertThat(created).isTrue();
@@ -1470,7 +1468,7 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(SampleEntity.class);
 
-		final List<HighlightBuilder.Field> message = new HighlightBuilder().field("message").fields();
+		List<HighlightBuilder.Field> message = new HighlightBuilder().field("message").fields();
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("message", "test"))
 				.withHighlightFields(message.toArray(new HighlightBuilder.Field[message.size()])).build();
 
@@ -1878,7 +1876,7 @@ public class ElasticsearchTemplateTests {
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(2);
 
-		final List<SampleEntity> content = sampleEntities.getContent();
+		List<SampleEntity> content = sampleEntities.getContent();
 		assertThat(content.get(0).getId()).isNotNull();
 		assertThat(content.get(1).getId()).isNotNull();
 	}
@@ -1949,7 +1947,7 @@ public class ElasticsearchTemplateTests {
 				});
 
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(2);
-		final List<Map> content = sampleEntities.getContent();
+		List<Map> content = sampleEntities.getContent();
 		assertThat(content.get(0).get("userId")).isEqualTo(person1.get("userId"));
 		assertThat(content.get(1).get("userId")).isEqualTo(person2.get("userId"));
 	}
@@ -2456,7 +2454,7 @@ public class ElasticsearchTemplateTests {
 
 		// then
 		assertThat(created).isTrue();
-		final Map setting = elasticsearchTemplate.getSetting(UseServerConfigurationEntity.class);
+		Map setting = elasticsearchTemplate.getSetting(UseServerConfigurationEntity.class);
 		assertThat(setting.get("index.number_of_shards")).isEqualTo("5");
 		assertThat(setting.get("index.number_of_replicas")).isEqualTo("1");
 	}
@@ -2471,9 +2469,8 @@ public class ElasticsearchTemplateTests {
 		String content = ElasticsearchTemplate.readFileFromClasspath(settingsFile);
 
 		// then
-		assertThat(content).isEqualTo(
-				"index:\n" + "  number_of_shards: 1\n" + "  number_of_replicas: 0\n" + "  analysis:\n" + "    analyzer:\n"
-						+ "      emailAnalyzer:\n" + "        type: custom\n" + "        tokenizer: uax_url_email\n");
+		assertThat(content).isEqualTo("index:\n" + "  number_of_shards: 1\n" + "  number_of_replicas: 0\n" + "  analysis:\n"
+				+ "    analyzer:\n" + "      emailAnalyzer:\n" + "        type: custom\n" + "        tokenizer: uax_url_email");
 	}
 
 	@Test // DATAES-531
@@ -2484,7 +2481,7 @@ public class ElasticsearchTemplateTests {
 		// when
 		boolean created = elasticsearchTemplate.createIndex(SampleEntity.class);
 		elasticsearchTemplate.putMapping(SampleEntity.class);
-		final Map<String, Object> mapping = elasticsearchTemplate.getMapping(SampleEntity.class);
+		Map<String, Object> mapping = elasticsearchTemplate.getMapping(SampleEntity.class);
 
 		// then
 		assertThat(created).isTrue();
@@ -2717,13 +2714,11 @@ public class ElasticsearchTemplateTests {
 				.withSort(new FieldSortBuilder("message").order(SortOrder.DESC)).withPageable(PageRequest.of(0, 10)).build();
 
 		// when
-		ScrolledPage<SampleEntity> scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.startScroll(1000,
-				searchQuery, SampleEntity.class);
+		ScrolledPage<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class);
 		List<SampleEntity> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.continueScroll(scroll.getScrollId(), 1000,
-					SampleEntity.class);
+			scroll = elasticsearchTemplate.continueScroll(scroll.getScrollId(), 1000, SampleEntity.class);
 		}
 
 		// then
@@ -2766,13 +2761,11 @@ public class ElasticsearchTemplateTests {
 				.build();
 
 		// when
-		ScrolledPage<SampleEntity> scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.startScroll(1000,
-				searchQuery, SampleEntity.class);
+		ScrolledPage<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class);
 		List<SampleEntity> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = (ScrolledPage<SampleEntity>) elasticsearchTemplate.continueScroll(scroll.getScrollId(), 1000,
-					SampleEntity.class);
+			scroll = elasticsearchTemplate.continueScroll(scroll.getScrollId(), 1000, SampleEntity.class);
 		}
 
 		// then
@@ -2811,17 +2804,10 @@ public class ElasticsearchTemplateTests {
 		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Chris White
-	 * @author Sascha Woo
-	 */
-	@Setter
-	@Getter
+	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor
-	@ToString
+	@EqualsAndHashCode(exclude = "score")
 	@Builder
 	@Document(indexName = INDEX_NAME_SAMPLE_ENTITY, type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
@@ -2837,49 +2823,6 @@ public class ElasticsearchTemplateTests {
 		private GeoPoint location;
 		@Version private Long version;
 		@Score private float score;
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o)
-				return true;
-			if (o == null || getClass() != o.getClass())
-				return false;
-
-			SampleEntity that = (SampleEntity) o;
-
-			if (available != that.available)
-				return false;
-			if (rate != that.rate)
-				return false;
-			if (highlightedMessage != null ? !highlightedMessage.equals(that.highlightedMessage)
-					: that.highlightedMessage != null)
-				return false;
-			if (id != null ? !id.equals(that.id) : that.id != null)
-				return false;
-			if (location != null ? !location.equals(that.location) : that.location != null)
-				return false;
-			if (message != null ? !message.equals(that.message) : that.message != null)
-				return false;
-			if (type != null ? !type.equals(that.type) : that.type != null)
-				return false;
-			if (version != null ? !version.equals(that.version) : that.version != null)
-				return false;
-
-			return true;
-		}
-
-		@Override
-		public int hashCode() {
-			int result = id != null ? id.hashCode() : 0;
-			result = 31 * result + (type != null ? type.hashCode() : 0);
-			result = 31 * result + (message != null ? message.hashCode() : 0);
-			result = 31 * result + rate;
-			result = 31 * result + (available ? 1 : 0);
-			result = 31 * result + (highlightedMessage != null ? highlightedMessage.hashCode() : 0);
-			result = 31 * result + (location != null ? location.hashCode() : 0);
-			result = 31 * result + (version != null ? version.hashCode() : 0);
-			return result;
-		}
 	}
 
 	/**
@@ -2887,14 +2830,12 @@ public class ElasticsearchTemplateTests {
 	 * @author Rizwan Idrees
 	 * @author Mohsin Husen
 	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
+	@Data
 	@AllArgsConstructor
 	@Builder
 	@Document(indexName = "test-index-uuid-keyed-core-template", type = "test-type-uuid-keyed", shards = 1, replicas = 0,
 			refreshInterval = "-1")
-	static class SampleEntityUUIDKeyed {
+	private static class SampleEntityUUIDKeyed {
 
 		@Id private UUID id;
 		private String type;
@@ -2908,60 +2849,12 @@ public class ElasticsearchTemplateTests {
 
 		@Version private Long version;
 
-		@Override
-		public boolean equals(Object o) {
-			if (this == o)
-				return true;
-			if (o == null || getClass() != o.getClass())
-				return false;
-
-			SampleEntityUUIDKeyed that = (SampleEntityUUIDKeyed) o;
-
-			if (available != that.available)
-				return false;
-			if (rate != that.rate)
-				return false;
-			if (highlightedMessage != null ? !highlightedMessage.equals(that.highlightedMessage)
-					: that.highlightedMessage != null)
-				return false;
-			if (id != null ? !id.equals(that.id) : that.id != null)
-				return false;
-			if (location != null ? !location.equals(that.location) : that.location != null)
-				return false;
-			if (message != null ? !message.equals(that.message) : that.message != null)
-				return false;
-			if (type != null ? !type.equals(that.type) : that.type != null)
-				return false;
-			if (version != null ? !version.equals(that.version) : that.version != null)
-				return false;
-
-			return true;
-		}
-
-		@Override
-		public int hashCode() {
-			int result = id != null ? id.hashCode() : 0;
-			result = 31 * result + (type != null ? type.hashCode() : 0);
-			result = 31 * result + (message != null ? message.hashCode() : 0);
-			result = 31 * result + rate;
-			result = 31 * result + (available ? 1 : 0);
-			result = 31 * result + (highlightedMessage != null ? highlightedMessage.hashCode() : 0);
-			result = 31 * result + (location != null ? location.hashCode() : 0);
-			result = 31 * result + (version != null ? version.hashCode() : 0);
-			return result;
-		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Nordine Bittich
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
+	@Data
 	@Builder
+	@AllArgsConstructor
+	@NoArgsConstructor
 	@Document(indexName = "test-index-book-core-template", type = "book", shards = 1, replicas = 0,
 			refreshInterval = "-1")
 	static class Book {
@@ -2975,44 +2868,20 @@ public class ElasticsearchTemplateTests {
 						searchAnalyzer = "standard") }) private String description;
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 */
+	@Data
 	static class Author {
 
 		private String id;
 		private String name;
-
-		public String getId() {
-			return id;
-		}
-
-		public void setId(String id) {
-			this.id = id;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
 	}
 
-	/**
-	 * @author Ivan Greene
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@ToString
+	@Data
 	@Builder
+	@AllArgsConstructor
+	@NoArgsConstructor
 	@Document(indexName = "test-index-version-core-template", type = "test-type", shards = 1, replicas = 0,
 			refreshInterval = "-1", versionType = VersionType.EXTERNAL_GTE)
-	static class GTEVersionEntity {
+	private static class GTEVersionEntity {
 
 		@Version private Long version;
 
@@ -3021,10 +2890,7 @@ public class ElasticsearchTemplateTests {
 		private String name;
 	}
 
-	/**
-	 * @author Abdul Waheed
-	 * @author Mohsin Husen
-	 */
+	@Data
 	@Document(indexName = "test-index-hetro1-core-template", type = "hetro", replicas = 0, shards = 1)
 	static class HetroEntity1 {
 
@@ -3032,59 +2898,14 @@ public class ElasticsearchTemplateTests {
 		private String firstName;
 		@Version private Long version;
 
-		public HetroEntity1(String id, String firstName) {
+		HetroEntity1(String id, String firstName) {
 			this.id = id;
 			this.firstName = firstName;
 			this.version = System.currentTimeMillis();
 		}
-
-		public String getId() {
-			return id;
-		}
-
-		public void setId(String id) {
-			this.id = id;
-		}
-
-		public String getFirstName() {
-			return firstName;
-		}
-
-		public void setFirstName(String firstName) {
-			this.firstName = firstName;
-		}
-
-		public Long getVersion() {
-			return version;
-		}
-
-		public void setVersion(Long version) {
-			this.version = version;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (!(obj instanceof SampleEntity)) {
-				return false;
-			}
-			if (this == obj) {
-				return true;
-			}
-			HetroEntity1 rhs = (HetroEntity1) obj;
-			return new EqualsBuilder().append(this.id, rhs.id).append(this.firstName, rhs.firstName)
-					.append(this.version, rhs.version).isEquals();
-		}
-
-		@Override
-		public int hashCode() {
-			return new HashCodeBuilder().append(id).append(firstName).append(version).toHashCode();
-		}
 	}
 
-	/**
-	 * @author Abdul Waheed
-	 * @author Mohsin Husen
-	 */
+	@Data
 	@Document(indexName = "test-index-hetro2-core-template", type = "hetro", replicas = 0, shards = 1)
 	static class HetroEntity2 {
 
@@ -3092,101 +2913,30 @@ public class ElasticsearchTemplateTests {
 		private String lastName;
 		@Version private Long version;
 
-		public HetroEntity2(String id, String lastName) {
+		HetroEntity2(String id, String lastName) {
 			this.id = id;
 			this.lastName = lastName;
 			this.version = System.currentTimeMillis();
 		}
-
-		public String getId() {
-			return id;
-		}
-
-		public void setId(String id) {
-			this.id = id;
-		}
-
-		public String getLastName() {
-			return lastName;
-		}
-
-		public void setLastName(String lastName) {
-			this.lastName = lastName;
-		}
-
-		public Long getVersion() {
-			return version;
-		}
-
-		public void setVersion(Long version) {
-			this.version = version;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (!(obj instanceof SampleEntity)) {
-				return false;
-			}
-			if (this == obj) {
-				return true;
-			}
-			HetroEntity2 rhs = (HetroEntity2) obj;
-			return new EqualsBuilder().append(this.id, rhs.id).append(this.lastName, rhs.lastName)
-					.append(this.version, rhs.version).isEquals();
-		}
-
-		@Override
-		public int hashCode() {
-			return new HashCodeBuilder().append(id).append(lastName).append(version).toHashCode();
-		}
 	}
 
-	/**
-	 * Created by akonczak on 12/12/2015.
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
+	@Data
 	@Document(indexName = "test-index-server-configuration", type = "test-type", useServerConfiguration = true,
 			shards = 10, replicas = 10, refreshInterval = "-1")
-	static class UseServerConfigurationEntity {
+	private static class UseServerConfigurationEntity {
 
 		@Id private String id;
-
 		private String val;
 
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 */
+	@Data
 	@Document(indexName = "test-index-sample-mapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
 	static class SampleMappingEntity {
 
 		@Id private String id;
 
 		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
-
-		private SampleMappingEntity.NestedEntity nested;
-
-		public String getId() {
-			return id;
-		}
-
-		public void setId(String id) {
-			this.id = id;
-		}
-
-		public String getMessage() {
-			return message;
-		}
-
-		public void setMessage(String message) {
-			this.message = message;
-		}
 
 		static class NestedEntity {
 

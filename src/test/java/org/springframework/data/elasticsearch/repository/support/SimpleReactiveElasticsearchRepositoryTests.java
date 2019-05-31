@@ -20,22 +20,15 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-import org.junit.Test;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.Score;
-import org.springframework.data.elasticsearch.annotations.ScriptedField;
-import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.lang.Boolean;
+import java.lang.Long;
+import java.lang.Object;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -47,16 +40,23 @@ import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.TestUtils;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.config.AbstractReactiveElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
@@ -509,31 +509,20 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 	 * @author Chris White
 	 * @author Sascha Woo
 	 */
-	@Setter
-	@Getter
+	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor
-	@ToString
 	@Builder
 	@Document(indexName = INDEX, type = TYPE, shards = 1, replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 
-		@Id
-		private String id;
-		@Field(type = Text, store = true, fielddata = true)
-		private String type;
-		@Field(type = Text, store = true, fielddata = true)
-		private String message;
+		@Id private String id;
+		@Field(type = Text, store = true, fielddata = true) private String type;
+		@Field(type = Text, store = true, fielddata = true) private String message;
 		private int rate;
-		@ScriptedField
-		private Double scriptedRate;
 		private boolean available;
-		private String highlightedMessage;
-		private GeoPoint location;
-		@Version
-		private Long version;
-		@Score
-		private float score;
+		@Version private Long version;
+		@Score private float score;
 
 	}
 }

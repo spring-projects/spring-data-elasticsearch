@@ -15,13 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+
+import lombok.Data;
 
 import java.io.IOException;
 import java.util.Date;
 
 import org.junit.Test;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -46,12 +49,13 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleDateMappingEntity.class);
 
-		assertEquals(EXPECTED_MAPPING, mapping);
+		assertThat(mapping).isEqualTo(EXPECTED_MAPPING);
 	}
 
 	/**
 	 * @author Jakub Vavrik
 	 */
+	@Data
 	@Document(indexName = "test-index-date-mapping-core", type = "mapping", shards = 1, replicas = 0,
 			refreshInterval = "-1")
 	static class SampleDateMappingEntity {
@@ -66,45 +70,5 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 		@Field(type = FieldType.Date) private Date defaultFormatDate;
 
 		@Field(type = FieldType.Date, format = DateFormat.basic_date) private Date basicFormatDate;
-
-		public String getId() {
-			return id;
-		}
-
-		public void setId(String id) {
-			this.id = id;
-		}
-
-		public String getMessage() {
-			return message;
-		}
-
-		public void setMessage(String message) {
-			this.message = message;
-		}
-
-		public Date getCustomFormatDate() {
-			return customFormatDate;
-		}
-
-		public void setCustomFormatDate(Date customFormatDate) {
-			this.customFormatDate = customFormatDate;
-		}
-
-		public Date getDefaultFormatDate() {
-			return defaultFormatDate;
-		}
-
-		public void setDefaultFormatDate(Date defaultFormatDate) {
-			this.defaultFormatDate = defaultFormatDate;
-		}
-
-		public Date getBasicFormatDate() {
-			return basicFormatDate;
-		}
-
-		public void setBasicFormatDate(Date basicFormatDate) {
-			this.basicFormatDate = basicFormatDate;
-		}
 	}
 }

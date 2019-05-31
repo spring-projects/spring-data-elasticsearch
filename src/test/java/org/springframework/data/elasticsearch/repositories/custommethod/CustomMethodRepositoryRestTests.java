@@ -36,7 +36,6 @@ public class CustomMethodRepositoryRestTests extends CustomMethodRepositoryBaseT
 
 	@Before
 	public void before() {
-
 		IndexInitializer.init(elasticsearchTemplate, SampleEntity.class);
 	}
 }

@@ -19,9 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.util.Collection;
 import java.util.Date;
@@ -36,6 +35,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -155,8 +155,7 @@ public class CdiRepositoryTests {
 	 * @author Mohsin Husen
 	 * @author Artur Konczak
 	 */
-	@Setter
-	@Getter
+	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
@@ -187,42 +186,11 @@ public class CdiRepositoryTests {
 		private String location;
 
 		private Date lastModified;
-
-		@Override
-		public int hashCode() {
-			return id.hashCode();
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (obj == null) {
-				return false;
-			}
-			if (getClass() != obj.getClass()) {
-				return false;
-			}
-			Product other = (Product) obj;
-			if (id == null) {
-				if (other.id != null) {
-					return false;
-				}
-			} else if (!id.equals(other.id)) {
-				return false;
-			}
-			return true;
-		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Artur Konczak
-	 */
-
-	@Document(indexName = "test-index-person-cdi-repository", type = "user", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Data
+	@Document(indexName = "test-index-person-cdi-repository", type = "user", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class Person {
 
 		@Id private String id;
@@ -233,50 +201,14 @@ public class CdiRepositoryTests {
 
 		@Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
 
-		public String getId() {
-			return id;
-		}
-
-		public void setId(String id) {
-			this.id = id;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public List<Car> getCar() {
-			return car;
-		}
-
-		public void setCar(List<Car> car) {
-			this.car = car;
-		}
-
-		public List<Book> getBooks() {
-			return books;
-		}
-
-		public void setBooks(List<Book> books) {
-			this.books = books;
-		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Nordine Bittich
-	 */
-	@Setter
-	@Getter
+	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-book-cdi-repository", type = "book", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-book-cdi-repository", type = "book", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class Book {
 
 		@Id private String id;
@@ -288,13 +220,7 @@ public class CdiRepositoryTests {
 						searchAnalyzer = "standard") }) private String description;
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Artur Konczak
-	 */
-	@Setter
-	@Getter
+	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
@@ -302,48 +228,13 @@ public class CdiRepositoryTests {
 
 		private String name;
 		private String model;
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public String getModel() {
-			return model;
-		}
-
-		public void setModel(String model) {
-			this.model = model;
-		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 */
+	@Data
 	static class Author {
 
 		private String id;
 		private String name;
-
-		public String getId() {
-			return id;
-		}
-
-		public void setId(String id) {
-			this.id = id;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
 	}
 
 }

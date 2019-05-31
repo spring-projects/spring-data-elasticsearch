@@ -55,7 +55,6 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 
 	@Before
 	public void before() {
-
 		IndexInitializer.init(elasticsearchTemplate, DynamicSettingAndMappingEntity.class);
 	}
 

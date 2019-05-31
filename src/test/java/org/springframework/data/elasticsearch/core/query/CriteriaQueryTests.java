@@ -26,7 +26,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.lang.Double;
 import java.lang.Long;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +33,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -41,9 +41,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
-import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -805,18 +803,14 @@ public class CriteriaQueryTests {
 	@Getter
 	@NoArgsConstructor
 	@AllArgsConstructor
-	@Document(indexName = "test-index-sample-core-query", type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-core-query", type = "test-type", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;
-		@org.springframework.data.elasticsearch.annotations.Field(type = Text, store = true,
-				fielddata = true) private String type;
+		@Field(type = Text, store = true, fielddata = true) private String type;
 		@Field(type = Text, store = true, fielddata = true) private String message;
 		private int rate;
-		@ScriptedField private Double scriptedRate;
-		private boolean available;
-		private String highlightedMessage;
-		private GeoPoint location;
 		@Version private Long version;
 		@Score private float score;
 	}

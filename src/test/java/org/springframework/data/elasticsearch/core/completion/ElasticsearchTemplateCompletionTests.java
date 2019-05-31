@@ -131,7 +131,7 @@ public class ElasticsearchTemplateCompletionTests {
 				Fuzziness.AUTO);
 
 		// when
-		final SearchResponse suggestResponse = elasticsearchTemplate.suggest(
+		SearchResponse suggestResponse = elasticsearchTemplate.suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder), CompletionEntity.class);
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
@@ -151,7 +151,7 @@ public class ElasticsearchTemplateCompletionTests {
 				Fuzziness.AUTO);
 
 		// when
-		final SearchResponse suggestResponse = elasticsearchTemplate.suggest(
+		SearchResponse suggestResponse = elasticsearchTemplate.suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder), CompletionEntity.class);
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
@@ -171,7 +171,7 @@ public class ElasticsearchTemplateCompletionTests {
 				Fuzziness.AUTO);
 
 		// when
-		final SearchResponse suggestResponse = elasticsearchTemplate.suggest(
+		SearchResponse suggestResponse = elasticsearchTemplate.suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
 				AnnotatedCompletionEntity.class);
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");

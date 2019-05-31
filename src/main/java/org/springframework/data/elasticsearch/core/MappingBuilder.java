@@ -418,7 +418,7 @@ class MappingBuilder {
 			String mappingPath = entity.getRequiredAnnotation(DynamicTemplates.class).mappingPath();
 			if (hasText(mappingPath)) {
 
-				String jsonString = ElasticsearchTemplate.readFileFromClasspath(mappingPath);
+				String jsonString = ResourceUtil.readFileFromClasspath(mappingPath);
 				if (hasText(jsonString)) {
 
 					ObjectMapper objectMapper = new ObjectMapper();

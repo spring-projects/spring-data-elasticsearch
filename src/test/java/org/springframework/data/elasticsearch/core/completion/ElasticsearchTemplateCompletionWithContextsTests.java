@@ -112,7 +112,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		Map<String, List<? extends ToXContent>> contextMap = new HashMap<>();
 		List<CategoryQueryContext> contexts = new ArrayList<>(1);
 
-		final CategoryQueryContext.Builder builder = CategoryQueryContext.builder();
+		CategoryQueryContext.Builder builder = CategoryQueryContext.builder();
 		builder.setCategory("mongo");
 		CategoryQueryContext queryContext = builder.build();
 		contexts.add(queryContext);
@@ -121,7 +121,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		((CompletionSuggestionBuilder) completionSuggestionFuzzyBuilder).contexts(contextMap);
 
 		// when
-		final SearchResponse suggestResponse = elasticsearchTemplate.suggest(
+		SearchResponse suggestResponse = elasticsearchTemplate.suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
 				ContextCompletionEntity.class);
 		assertThat(suggestResponse.getSuggest()).isNotNull();
@@ -144,7 +144,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		Map<String, List<? extends ToXContent>> contextMap = new HashMap<>();
 		List<CategoryQueryContext> contexts = new ArrayList<>(1);
 
-		final CategoryQueryContext.Builder builder = CategoryQueryContext.builder();
+		CategoryQueryContext.Builder builder = CategoryQueryContext.builder();
 		builder.setCategory("elastic");
 		CategoryQueryContext queryContext = builder.build();
 		contexts.add(queryContext);
@@ -153,7 +153,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		((CompletionSuggestionBuilder) completionSuggestionFuzzyBuilder).contexts(contextMap);
 
 		// when
-		final SearchResponse suggestResponse = elasticsearchTemplate.suggest(
+		SearchResponse suggestResponse = elasticsearchTemplate.suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
 				ContextCompletionEntity.class);
 		assertThat(suggestResponse.getSuggest()).isNotNull();
@@ -176,7 +176,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		Map<String, List<? extends ToXContent>> contextMap = new HashMap<>();
 		List<CategoryQueryContext> contexts = new ArrayList<>(1);
 
-		final CategoryQueryContext.Builder builder = CategoryQueryContext.builder();
+		CategoryQueryContext.Builder builder = CategoryQueryContext.builder();
 		builder.setCategory("kotlin");
 		CategoryQueryContext queryContext = builder.build();
 		contexts.add(queryContext);
@@ -185,7 +185,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		((CompletionSuggestionBuilder) completionSuggestionFuzzyBuilder).contexts(contextMap);
 
 		// when
-		final SearchResponse suggestResponse = elasticsearchTemplate.suggest(
+		SearchResponse suggestResponse = elasticsearchTemplate.suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
 				ContextCompletionEntity.class);
 		assertThat(suggestResponse.getSuggest()).isNotNull();

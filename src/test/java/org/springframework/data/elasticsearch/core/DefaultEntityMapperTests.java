@@ -19,15 +19,15 @@ import static org.assertj.core.api.Assertions.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.io.IOException;
 import java.util.Locale;
 
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.annotation.Transient;
@@ -35,10 +35,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.geo.Box;
-import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
-import org.springframework.data.geo.Polygon;
 
 /**
  * @author Artur Konczak
@@ -64,7 +61,7 @@ public class DefaultEntityMapperTests {
 		// given
 
 		// when
-		String jsonResult = entityMapper.mapToString(Car.builder().model(CAR_MODEL).name(CAR_NAME).build());
+		String jsonResult = entityMapper.mapToString(new Car(CAR_NAME, CAR_MODEL));
 
 		// then
 		assertThat(jsonResult).isEqualTo(JSON_STRING);
@@ -86,11 +83,11 @@ public class DefaultEntityMapperTests {
 	@Test
 	public void shouldMapGeoPointElasticsearchNames() throws IOException {
 		// given
-		final Point point = new Point(10, 20);
-		final String pointAsString = point.getX() + "," + point.getY();
-		final double[] pointAsArray = { point.getX(), point.getY() };
-		final GeoEntity geoEntity = GeoEntity.builder().pointA(point).pointB(GeoPoint.fromPoint(point))
-				.pointC(pointAsString).pointD(pointAsArray).build();
+		Point point = new Point(10, 20);
+		String pointAsString = point.getX() + "," + point.getY();
+		double[] pointAsArray = { point.getX(), point.getY() };
+		GeoEntity geoEntity = GeoEntity.builder().pointA(point).pointB(GeoPoint.fromPoint(point)).pointC(pointAsString)
+				.pointD(pointAsArray).build();
 		// when
 		String jsonResult = entityMapper.mapToString(geoEntity);
 
@@ -135,43 +132,16 @@ public class DefaultEntityMapperTests {
 		public String property;
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Artur Konczak
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
+	@Data
 	@AllArgsConstructor
-	@Builder
+	@NoArgsConstructor
 	static class Car {
 
 		private String name;
 		private String model;
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public String getModel() {
-			return model;
-		}
-
-		public void setModel(String model) {
-			this.model = model;
-		}
 	}
 
-	/**
-	 * @author Artur Konczak
-	 */
-	@Setter
-	@Getter
+	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
@@ -180,11 +150,6 @@ public class DefaultEntityMapperTests {
 	static class GeoEntity {
 
 		@Id private String id;
-
-		// geo shape - Spring Data
-		private Box box;
-		private Circle circle;
-		private Polygon polygon;
 
 		// geo point - Custom implementation + Spring Data
 		@GeoPointField private Point pointA;

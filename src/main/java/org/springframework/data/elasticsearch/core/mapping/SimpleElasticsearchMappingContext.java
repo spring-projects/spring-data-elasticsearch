@@ -39,7 +39,7 @@ public class SimpleElasticsearchMappingContext
 
 	@Override
 	protected <T> SimpleElasticsearchPersistentEntity<?> createPersistentEntity(TypeInformation<T> typeInformation) {
-		final SimpleElasticsearchPersistentEntity<T> persistentEntity = new SimpleElasticsearchPersistentEntity<>(
+		SimpleElasticsearchPersistentEntity<T> persistentEntity = new SimpleElasticsearchPersistentEntity<>(
 				typeInformation);
 		if (context != null) {
 			persistentEntity.setApplicationContext(context);

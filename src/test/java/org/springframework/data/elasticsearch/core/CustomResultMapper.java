@@ -15,11 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.util.LinkedList;
+import java.util.List;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchResponse;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 
@@ -52,7 +53,7 @@ public class CustomResultMapper implements ResultsMapper {
 	}
 
 	@Override
-	public <T> LinkedList<T> mapResults(MultiGetResponse responses, Class<T> clazz) {
+	public <T> List<T> mapResults(MultiGetResponse responses, Class<T> clazz) {
 		return null;
 	}
 }

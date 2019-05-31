@@ -21,12 +21,9 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
-import java.lang.Double;
 import java.lang.Long;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +32,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.junit.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -46,8 +44,6 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Query;
-import org.springframework.data.elasticsearch.annotations.Score;
-import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -1256,31 +1252,21 @@ public abstract class CustomMethodRepositoryBaseTests {
 		return entities;
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Chris White
-	 * @author Sascha Woo
-	 */
-	@Setter
-	@Getter
+	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor
-	@ToString
 	@Builder
-	@Document(indexName = "test-index-sample-repositories-custo-method", type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-repositories-custo-method", type = "test-type", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;
 		@Field(type = Text, store = true, fielddata = true) private String type;
 		@Field(type = Text, store = true, fielddata = true) private String message;
 		private int rate;
-		@ScriptedField private Double scriptedRate;
 		private boolean available;
-		private String highlightedMessage;
 		private GeoPoint location;
 		@Version private Long version;
-		@Score private float score;
 	}
 
 	/**

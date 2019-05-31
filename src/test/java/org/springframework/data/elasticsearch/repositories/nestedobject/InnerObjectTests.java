@@ -60,7 +60,6 @@ public class InnerObjectTests {
 
 	@Before
 	public void before() {
-
 		IndexInitializer.init(elasticsearchTemplate, Book.class);
 	}
 

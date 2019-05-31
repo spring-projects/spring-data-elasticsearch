@@ -22,11 +22,9 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-import java.lang.Double;
 import java.lang.Long;
 import java.lang.Object;
 import java.util.HashMap;
@@ -37,14 +35,12 @@ import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.Score;
-import org.springframework.data.elasticsearch.annotations.ScriptedField;
-import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.AliasBuilder;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -89,7 +85,7 @@ public class AliasTests {
 		elasticsearchTemplate.createIndex(INDEX_NAME_2, settings);
 		elasticsearchTemplate.refresh(INDEX_NAME_2);
 
-		IndexInitializer.init(elasticsearchTemplate, SampleEntity.class);
+		IndexInitializer.init(elasticsearchTemplate, AliasedEntity.class);
 	}
 
 	@Test
@@ -141,11 +137,11 @@ public class AliasTests {
 		elasticsearchTemplate.addAlias(aliasQuery);
 
 		String documentId = randomNumeric(5);
-		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
+		AliasedEntity aliasedEntity = AliasedEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
-		IndexQuery indexQuery = new IndexQueryBuilder().withIndexName(alias).withId(sampleEntity.getId())
-				.withType(TYPE_NAME).withObject(sampleEntity).build();
+		IndexQuery indexQuery = new IndexQueryBuilder().withIndexName(alias).withId(aliasedEntity.getId())
+				.withType(TYPE_NAME).withObject(aliasedEntity).build();
 
 		elasticsearchTemplate.index(indexQuery);
 		elasticsearchTemplate.refresh(INDEX_NAME_1);
@@ -157,7 +153,7 @@ public class AliasTests {
 		// then
 		List<AliasMetaData> aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME_1);
 		assertThat(aliases).isNotNull();
-		final AliasMetaData aliasMetaData = aliases.get(0);
+		AliasMetaData aliasMetaData = aliases.get(0);
 		assertThat(aliasMetaData.alias()).isEqualTo(alias);
 		assertThat(aliasMetaData.searchRouting()).isEqualTo("0");
 		assertThat(aliasMetaData.indexRouting()).isEqualTo("0");
@@ -185,24 +181,24 @@ public class AliasTests {
 		elasticsearchTemplate.addAlias(aliasQuery2);
 
 		String documentId = randomNumeric(5);
-		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
+		AliasedEntity aliasedEntity = AliasedEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
 		IndexQuery indexQuery = new IndexQueryBuilder().withIndexName(alias1).withType(TYPE_NAME)
-				.withId(sampleEntity.getId()).withObject(sampleEntity).build();
+				.withId(aliasedEntity.getId()).withObject(aliasedEntity).build();
 
 		elasticsearchTemplate.index(indexQuery);
 
 		// then
 		List<AliasMetaData> responseAlias1 = elasticsearchTemplate.queryForAlias(INDEX_NAME_1);
 		assertThat(responseAlias1).isNotNull();
-		final AliasMetaData aliasMetaData1 = responseAlias1.get(0);
+		AliasMetaData aliasMetaData1 = responseAlias1.get(0);
 		assertThat(aliasMetaData1.alias()).isEqualTo(alias1);
 		assertThat(aliasMetaData1.indexRouting()).isEqualTo("0");
 
 		List<AliasMetaData> responseAlias2 = elasticsearchTemplate.queryForAlias(INDEX_NAME_2);
 		assertThat(responseAlias2).isNotNull();
-		final AliasMetaData aliasMetaData2 = responseAlias2.get(0);
+		AliasMetaData aliasMetaData2 = responseAlias2.get(0);
 		assertThat(aliasMetaData2.alias()).isEqualTo(alias2);
 		assertThat(aliasMetaData2.searchRouting()).isEqualTo("1");
 
@@ -212,22 +208,15 @@ public class AliasTests {
 	}
 
 	@Builder
-	@Setter
-	@Getter
+	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor
-	@Document(indexName = "test-index-sample-core-alias", type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
-	static class SampleEntity {
+	@Document(indexName = "test-index-sample-core-alias", type = "test-type", shards = 1, replicas = 0,
+			refreshInterval = "-1")
+	static class AliasedEntity {
 
 		@Id private String id;
-		@Field(type = Text, store = true, fielddata = true) private String type;
 		@Field(type = Text, store = true, fielddata = true) private String message;
-		private int rate;
-		@ScriptedField private Double scriptedRate;
-		private boolean available;
-		private String highlightedMessage;
-		private GeoPoint location;
 		@Version private Long version;
-		@Score private float score;
 	}
 }

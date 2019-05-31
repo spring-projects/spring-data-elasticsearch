@@ -19,12 +19,15 @@ package org.springframework.data.elasticsearch.core.facet;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
+import lombok.Data;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -672,7 +675,9 @@ public class ElasticsearchTemplateFacetTests {
 	 * @author Artur Konczak
 	 * @author Mohsin Husen
 	 */
-	@Document(indexName = "test-index-articles-core-facet", type = "article", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Data
+	@Document(indexName = "test-index-articles-core-facet", type = "article", shards = 1, replicas = 0,
+			refreshInterval = "-1")
 	static class ArticleEntity {
 
 		@Id private String id;
@@ -696,54 +701,6 @@ public class ElasticsearchTemplateFacetTests {
 
 		public ArticleEntity(String id) {
 			this.id = id;
-		}
-
-		public void setId(String id) {
-			this.id = id;
-		}
-
-		public String getId() {
-			return id;
-		}
-
-		public String getTitle() {
-			return title;
-		}
-
-		public void setTitle(String title) {
-			this.title = title;
-		}
-
-		public String getSubject() {
-			return subject;
-		}
-
-		public void setSubject(String subject) {
-			this.subject = subject;
-		}
-
-		public List<String> getAuthors() {
-			return authors;
-		}
-
-		public void setAuthors(List<String> authors) {
-			this.authors = authors;
-		}
-
-		public List<Integer> getPublishedYears() {
-			return publishedYears;
-		}
-
-		public void setPublishedYears(List<Integer> publishedYears) {
-			this.publishedYears = publishedYears;
-		}
-
-		public int getScore() {
-			return score;
-		}
-
-		public void setScore(int score) {
-			this.score = score;
 		}
 	}
 

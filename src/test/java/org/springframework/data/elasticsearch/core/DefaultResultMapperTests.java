@@ -20,12 +20,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 import java.lang.Double;
 import java.lang.Long;
@@ -33,7 +30,7 @@ import java.lang.Object;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.elasticsearch.action.get.GetResponse;
@@ -54,6 +51,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -206,7 +204,7 @@ public class DefaultResultMapperTests {
 		when(response.getSourceAsString()).thenReturn("{}");
 		when(response.getVersion()).thenReturn(1234L);
 
-		SampleEntity result = resultMapper.mapResult(response, SampleEntity.class);
+		MappedEntity result = resultMapper.mapResult(response, MappedEntity.class);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getVersion()).isEqualTo(1234);
@@ -229,7 +227,7 @@ public class DefaultResultMapperTests {
 		when(multiResponse.getResponses()).thenReturn(new MultiGetItemResponse[] {
 				new MultiGetItemResponse(response1, null), new MultiGetItemResponse(response2, null) });
 
-		LinkedList<SampleEntity> results = resultMapper.mapResults(multiResponse, SampleEntity.class);
+		List<MappedEntity> results = resultMapper.mapResults(multiResponse, MappedEntity.class);
 
 		assertThat(results).isNotNull().hasSize(2);
 
@@ -255,7 +253,7 @@ public class DefaultResultMapperTests {
 		SearchResponse searchResponse = mock(SearchResponse.class);
 		when(searchResponse.getHits()).thenReturn(searchHits);
 
-		AggregatedPage<SampleEntity> results = resultMapper.mapResults(searchResponse, SampleEntity.class,
+		AggregatedPage<MappedEntity> results = resultMapper.mapResults(searchResponse, MappedEntity.class,
 				mock(Pageable.class));
 
 		assertThat(results).isNotNull();
@@ -288,7 +286,7 @@ public class DefaultResultMapperTests {
 
 	private String createJsonCar(String name, String model) {
 
-		final String q = "\"";
+		String q = "\"";
 		StringBuffer sb = new StringBuffer();
 		sb.append("{").append(q).append("name").append(q).append(":").append(q).append(name).append(q).append(",");
 		sb.append(q).append("model").append(q).append(":").append(q).append(model).append(q).append("}");
@@ -311,52 +309,16 @@ public class DefaultResultMapperTests {
 		private final String id, name;
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Artur Konczak
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
+	@Data
 	static class Car {
 
 		private String name;
 		private String model;
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public String getModel() {
-			return model;
-		}
-
-		public void setModel(String model) {
-			this.model = model;
-		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Chris White
-	 * @author Sascha Woo
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@ToString
-	@Builder
-	@Document(indexName = "test-index-sample-default-result-mapper", type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
-	static class SampleEntity {
+	@Data
+	@Document(indexName = "test-index-sample-default-result-mapper", type = "test-type")
+	static class MappedEntity {
 
 		@Id private String id;
 		@Field(type = Text, store = true, fielddata = true) private String type;
@@ -368,49 +330,6 @@ public class DefaultResultMapperTests {
 		private GeoPoint location;
 		@Version private Long version;
 		@Score private float score;
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o)
-				return true;
-			if (o == null || getClass() != o.getClass())
-				return false;
-
-			SampleEntity that = (SampleEntity) o;
-
-			if (available != that.available)
-				return false;
-			if (rate != that.rate)
-				return false;
-			if (highlightedMessage != null ? !highlightedMessage.equals(that.highlightedMessage)
-					: that.highlightedMessage != null)
-				return false;
-			if (id != null ? !id.equals(that.id) : that.id != null)
-				return false;
-			if (location != null ? !location.equals(that.location) : that.location != null)
-				return false;
-			if (message != null ? !message.equals(that.message) : that.message != null)
-				return false;
-			if (type != null ? !type.equals(that.type) : that.type != null)
-				return false;
-			if (version != null ? !version.equals(that.version) : that.version != null)
-				return false;
-
-			return true;
-		}
-
-		@Override
-		public int hashCode() {
-			int result = id != null ? id.hashCode() : 0;
-			result = 31 * result + (type != null ? type.hashCode() : 0);
-			result = 31 * result + (message != null ? message.hashCode() : 0);
-			result = 31 * result + rate;
-			result = 31 * result + (available ? 1 : 0);
-			result = 31 * result + (highlightedMessage != null ? highlightedMessage.hashCode() : 0);
-			result = 31 * result + (location != null ? location.hashCode() : 0);
-			result = 31 * result + (version != null ? version.hashCode() : 0);
-			return result;
-		}
 	}
 
 }

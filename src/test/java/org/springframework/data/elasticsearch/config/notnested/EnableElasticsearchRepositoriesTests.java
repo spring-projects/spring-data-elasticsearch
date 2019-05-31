@@ -18,12 +18,7 @@ package org.springframework.data.elasticsearch.config.notnested;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
 
 import java.lang.Double;
 import java.lang.Long;
@@ -33,6 +28,7 @@ import org.elasticsearch.node.NodeValidationException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -97,7 +93,6 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 
 	@Before
 	public void before() {
-
 		IndexInitializer.init(elasticsearchTemplate, SampleEntity.class);
 	}
 
@@ -126,18 +121,7 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 		assertThat(nestedRepository).isNull();
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Chris White
-	 * @author Sascha Woo
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@ToString
-	@Builder
+	@Data
 	@Document(indexName = "test-index-sample-config-not-nested", type = "test-type", shards = 1, replicas = 0,
 			refreshInterval = "-1")
 	static class SampleEntity {
@@ -152,20 +136,9 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 		private GeoPoint location;
 		@Version private Long version;
 		@Score private float score;
-
 	}
 
-	/**
-	 * @author Gad Akuka
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 */
-
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
+	@Data
 	@Document(indexName = "test-index-uuid-keyed-config-not-nested", type = "test-type-uuid-keyed", shards = 1,
 			replicas = 0, refreshInterval = "-1")
 	static class SampleEntityUUIDKeyed {
@@ -177,10 +150,7 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 		@ScriptedField private Long scriptedRate;
 		private boolean available;
 		private String highlightedMessage;
-
 		private GeoPoint location;
-
 		@Version private Long version;
-
 	}
 }

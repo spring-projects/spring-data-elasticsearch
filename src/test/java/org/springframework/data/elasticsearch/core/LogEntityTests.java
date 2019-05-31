@@ -19,6 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
+import lombok.Data;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -29,6 +31,7 @@ import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -111,11 +114,8 @@ public class LogEntityTests {
 
 	/**
 	 * Simple type to test facets
-	 *
-	 * @author Artur Konczak
-	 * @author Mohsin Husen
 	 */
-
+	@Data
 	@Document(indexName = "test-index-log-core", type = "test-log-type", shards = 1, replicas = 0, refreshInterval = "-1")
 	static class LogEntity {
 
@@ -137,50 +137,6 @@ public class LogEntityTests {
 			this.id = id;
 		}
 
-		public String getId() {
-			return id;
-		}
-
-		public void setId(String id) {
-			this.id = id;
-		}
-
-		public String getAction() {
-			return action;
-		}
-
-		public String toString() {
-			return new StringBuffer().append("{id:").append(id).append(",action:").append(action).append(",code:")
-					.append(sequenceCode).append(",date:").append(format.format(date)).append("}").toString();
-		}
-
-		public void setAction(String action) {
-			this.action = action;
-		}
-
-		public long getSequenceCode() {
-			return sequenceCode;
-		}
-
-		public void setSequenceCode(long sequenceCode) {
-			this.sequenceCode = sequenceCode;
-		}
-
-		public String getIp() {
-			return ip;
-		}
-
-		public void setIp(String ip) {
-			this.ip = ip;
-		}
-
-		public Date getDate() {
-			return date;
-		}
-
-		public void setDate(Date date) {
-			this.date = date;
-		}
 	}
 
 	/**
@@ -189,7 +145,6 @@ public class LogEntityTests {
 	 * @author Artur Konczak
 	 * @author Mohsin Husen
 	 */
-
 	static class LogEntityBuilder {
 
 		private LogEntity result;
