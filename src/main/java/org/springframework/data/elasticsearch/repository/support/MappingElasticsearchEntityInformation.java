@@ -1,11 +1,11 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,14 +15,10 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.elasticsearch.index.VersionType;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
-import org.springframework.data.mapping.model.BeanWrapper;
-import org.springframework.data.repository.core.support.AbstractEntityInformation;
+import org.springframework.data.repository.core.support.PersistentEntityInformation;
 import org.springframework.util.Assert;
 
 /**
@@ -34,86 +30,74 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Ryan Henszey
+ * @author Oliver Gierke
+ * @author Mark Paluch
+ * @author Christoph Strobl
+ * @author Ivan Greene
  */
-public class MappingElasticsearchEntityInformation<T, ID extends Serializable> extends AbstractEntityInformation<T, ID>
+public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEntityInformation<T, ID>
 		implements ElasticsearchEntityInformation<T, ID> {
 
-	private static final Logger logger = LoggerFactory.getLogger(MappingElasticsearchEntityInformation.class);
 	private final ElasticsearchPersistentEntity<T> entityMetadata;
 	private final String indexName;
 	private final String type;
-	private Class<?> idClass;
+	private final VersionType versionType;
 
 	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity) {
-		this(entity, null, null);
+		this(entity, entity.getIndexName(), entity.getIndexType(), entity.getVersionType());
 	}
 
-	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity, String indexName, String type) {
-		super(entity.getType());
+	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity, String indexName, String type, VersionType versionType) {
+		super(entity);
+
+		Assert.notNull(indexName, "IndexName must not be null!");
+		Assert.notNull(type, "IndexType must not be null!");
+
 		this.entityMetadata = entity;
 		this.indexName = indexName;
 		this.type = type;
-		this.idClass = entity.getIdProperty().getType();
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public ID getId(T entity) {
-		ElasticsearchPersistentProperty id = entityMetadata.getIdProperty();
-		try {
-			return (ID) BeanWrapper.create(entity, null).getProperty(id);
-		} catch (Exception e) {
-			throw new IllegalStateException("ID could not be resolved", e);
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public Class<ID> getIdType() {
-		return (Class<ID>) idClass;
+		this.versionType = versionType;
 	}
 
 	@Override
 	public String getIdAttribute() {
-		Assert.notNull(entityMetadata.getIdProperty(), "Unable to identify 'id' property in class "
-				+ entityMetadata.getType().getSimpleName()
-				+ ". Make sure the 'id' property is annotated with @Id or named as 'id' or 'documentId' ");
-		return entityMetadata.getIdProperty().getFieldName();
+		return entityMetadata.getRequiredIdProperty().getFieldName();
 	}
 
 	@Override
 	public String getIndexName() {
-		return indexName != null ? indexName : entityMetadata.getIndexName();
+		return indexName;
 	}
 
 	@Override
 	public String getType() {
-		return type != null ? type : entityMetadata.getIndexType();
+		return type;
 	}
 
 	@Override
 	public Long getVersion(T entity) {
+
 		ElasticsearchPersistentProperty versionProperty = entityMetadata.getVersionProperty();
 		try {
-			if (versionProperty != null) {
-				return (Long) BeanWrapper.create(entity, null).getProperty(versionProperty);
-			}
+			return versionProperty != null ? (Long) entityMetadata.getPropertyAccessor(entity).getProperty(versionProperty) : null;
 		} catch (Exception e) {
 			throw new IllegalStateException("failed to load version field", e);
 		}
-		return null;
+	}
+
+	@Override
+	public VersionType getVersionType() {
+		return versionType;
 	}
 
 	@Override
 	public String getParentId(T entity) {
+
 		ElasticsearchPersistentProperty parentProperty = entityMetadata.getParentIdProperty();
 		try {
-			if (parentProperty != null) {
-				return (String) BeanWrapper.create(entity, null).getProperty(parentProperty);
-			}
+			return parentProperty != null ? (String) entityMetadata.getPropertyAccessor(entity).getProperty(parentProperty) : null;
 		} catch (Exception e) {
 			throw new IllegalStateException("failed to load parent ID: " + e, e);
 		}
-		return null;
 	}
 }

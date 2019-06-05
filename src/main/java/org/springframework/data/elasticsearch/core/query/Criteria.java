@@ -1,11 +1,11 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,10 +17,12 @@ package org.springframework.data.elasticsearch.core.query;
 
 import java.util.*;
 
-import org.apache.commons.lang.StringUtils;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.util.Assert;
@@ -35,6 +37,17 @@ import org.springframework.util.Assert;
  */
 public class Criteria {
 
+	@Override
+	public String toString() {
+		return "Criteria{" +
+				"field=" + field.getName() +
+				", boost=" + boost +
+				", negating=" + negating +
+				", queryCriteria=" + ObjectUtils.nullSafeToString(queryCriteria) +
+				", filterCriteria=" + ObjectUtils.nullSafeToString(filterCriteria) +
+				'}';
+	}
+
 	public static final String WILDCARD = "*";
 	public static final String CRITERIA_VALUE_SEPERATOR = " ";
 
@@ -45,11 +58,11 @@ public class Criteria {
 	private float boost = Float.NaN;
 	private boolean negating = false;
 
-	private List<Criteria> criteriaChain = new ArrayList<Criteria>(1);
+	private List<Criteria> criteriaChain = new ArrayList<>(1);
 
-	private Set<CriteriaEntry> queryCriteria = new LinkedHashSet<CriteriaEntry>();
+	private Set<CriteriaEntry> queryCriteria = new LinkedHashSet<>();
 
-	private Set<CriteriaEntry> filterCriteria = new LinkedHashSet<CriteriaEntry>();
+	private Set<CriteriaEntry> filterCriteria = new LinkedHashSet<>();
 
 	public Criteria() {
 	}
@@ -71,7 +84,6 @@ public class Criteria {
 	public Criteria(Field field) {
 		Assert.notNull(field, "Field for criteria must not be null");
 		Assert.hasText(field.getName(), "Field.name for criteria must not be null/empty");
-
 		this.criteriaChain.add(this);
 		this.field = field;
 	}
@@ -304,7 +316,18 @@ public class Criteria {
 	 * @return
 	 */
 	public Criteria lessThanEqual(Object upperBound) {
-		between(null, upperBound);
+		if (upperBound == null) {
+			throw new InvalidDataAccessApiUsageException("UpperBound can't be null");
+		}
+		queryCriteria.add(new CriteriaEntry(OperationKey.LESS_EQUAL, upperBound));
+		return this;
+	}
+
+	public Criteria lessThan(Object upperBound) {
+		if (upperBound == null) {
+			throw new InvalidDataAccessApiUsageException("UpperBound can't be null");
+		}
+		queryCriteria.add(new CriteriaEntry(OperationKey.LESS, upperBound));
 		return this;
 	}
 
@@ -315,7 +338,18 @@ public class Criteria {
 	 * @return
 	 */
 	public Criteria greaterThanEqual(Object lowerBound) {
-		between(lowerBound, null);
+		if (lowerBound == null) {
+			throw new InvalidDataAccessApiUsageException("LowerBound can't be null");
+		}
+		queryCriteria.add(new CriteriaEntry(OperationKey.GREATER_EQUAL, lowerBound));
+		return this;
+	}
+
+	public Criteria greaterThan(Object lowerBound) {
+		if (lowerBound == null) {
+			throw new InvalidDataAccessApiUsageException("LowerBound can't be null");
+		}
+		queryCriteria.add(new CriteriaEntry(OperationKey.GREATER, lowerBound));
 		return this;
 	}
 
@@ -326,12 +360,7 @@ public class Criteria {
 	 * @return
 	 */
 	public Criteria in(Object... values) {
-		if (values.length == 0 || (values.length > 1 && values[1] instanceof Collection)) {
-			throw new InvalidDataAccessApiUsageException("At least one element "
-					+ (values.length > 0 ? ("of argument of type " + values[1].getClass().getName()) : "")
-					+ " has to be present.");
-		}
-		return in(Arrays.asList(values));
+		return in(toCollection(values));
 	}
 
 	/**
@@ -343,6 +372,25 @@ public class Criteria {
 	public Criteria in(Iterable<?> values) {
 		Assert.notNull(values, "Collection of 'in' values must not be null");
 		queryCriteria.add(new CriteriaEntry(OperationKey.IN, values));
+		return this;
+	}
+
+	private List<Object> toCollection(Object... values) {
+		if (values.length == 0 || (values.length > 1 && values[1] instanceof Collection)) {
+			throw new InvalidDataAccessApiUsageException("At least one element "
+					+ (values.length > 0 ? ("of argument of type " + values[1].getClass().getName()) : "")
+					+ " has to be present.");
+		}
+		return Arrays.asList(values);
+	}
+
+	public Criteria notIn(Object... values) {
+		return notIn(toCollection(values));
+	}
+
+	public Criteria notIn(Iterable<?> values) {
+		Assert.notNull(values, "Collection of 'NotIn' values must not be null");
+		queryCriteria.add(new CriteriaEntry(OperationKey.NOT_IN, values));
 		return this;
 	}
 
@@ -390,7 +438,7 @@ public class Criteria {
 	 * @return
 	 */
 	public Criteria within(String geoLocation, String distance) {
-		Assert.isTrue(StringUtils.isNotBlank(geoLocation), "geoLocation value must not be null");
+		Assert.isTrue(!StringUtils.isEmpty(geoLocation), "geoLocation value must not be null");
 		filterCriteria.add(new CriteriaEntry(OperationKey.WITHIN, new Object[]{geoLocation, distance}));
 		return this;
 	}
@@ -407,6 +455,17 @@ public class Criteria {
 		return this;
 	}
 
+	/**
+	 * Creates new CriteriaEntry for {@code location Box bounding box}
+	 *
+	 * @param boundingBox {@link org.springframework.data.elasticsearch.core.geo.GeoBox} bounding box(left top corner + right bottom corner)
+	 * @return Criteria the chaind criteria with the new 'boundingBox' criteria included.
+	 */
+	public Criteria boundedBy(Box boundingBox) {
+		Assert.notNull(boundingBox, "boundingBox value for boundedBy criteria must not be null");
+		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{boundingBox.getFirst(), boundingBox.getSecond()}));
+		return this;
+	}
 
 	/**
 	 * Creates new CriteriaEntry for bounding box created from points
@@ -416,8 +475,8 @@ public class Criteria {
 	 * @return Criteria the chaind criteria with the new 'boundedBy' criteria included.
 	 */
 	public Criteria boundedBy(String topLeftGeohash, String bottomRightGeohash) {
-		Assert.isTrue(StringUtils.isNotBlank(topLeftGeohash), "topLeftGeohash must not be empty");
-		Assert.isTrue(StringUtils.isNotBlank(bottomRightGeohash), "bottomRightGeohash must not be empty");
+		Assert.isTrue(!StringUtils.isEmpty(topLeftGeohash), "topLeftGeohash must not be empty");
+		Assert.isTrue(!StringUtils.isEmpty(bottomRightGeohash), "bottomRightGeohash must not be empty");
 		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{topLeftGeohash, bottomRightGeohash}));
 		return this;
 	}
@@ -436,10 +495,17 @@ public class Criteria {
 		return this;
 	}
 
+	public Criteria boundedBy(Point topLeftPoint, Point bottomRightPoint) {
+		Assert.notNull(topLeftPoint, "topLeftPoint must not be null");
+		Assert.notNull(bottomRightPoint, "bottomRightPoint must not be null");
+		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{GeoPoint.fromPoint(topLeftPoint), GeoPoint.fromPoint(bottomRightPoint)}));
+		return this;
+	}
+
 	private void assertNoBlankInWildcardedQuery(String searchString, boolean leadingWildcard, boolean trailingWildcard) {
-		if (StringUtils.contains(searchString, CRITERIA_VALUE_SEPERATOR)) {
+		if (searchString != null && searchString.contains(CRITERIA_VALUE_SEPERATOR)) {
 			throw new InvalidDataAccessApiUsageException("Cannot constructQuery '" + (leadingWildcard ? "*" : "") + "\""
-					+ searchString + "\"" + (trailingWildcard ? "*" : "") + "'. Use epxression or mulitple clauses instead.");
+					+ searchString + "\"" + (trailingWildcard ? "*" : "") + "'. Use expression or multiple clauses instead.");
 		}
 	}
 
@@ -522,7 +588,7 @@ public class Criteria {
 	}
 
 	public enum OperationKey {
-		EQUALS, CONTAINS, STARTS_WITH, ENDS_WITH, EXPRESSION, BETWEEN, FUZZY, IN, WITHIN, BBOX, NEAR;
+		EQUALS, CONTAINS, STARTS_WITH, ENDS_WITH, EXPRESSION, BETWEEN, FUZZY, IN, NOT_IN, WITHIN, BBOX, NEAR, LESS, LESS_EQUAL, GREATER, GREATER_EQUAL;
 	}
 
 	public static class CriteriaEntry {
@@ -541,6 +607,14 @@ public class Criteria {
 
 		public Object getValue() {
 			return value;
+		}
+
+		@Override
+		public String toString() {
+			return "CriteriaEntry{" +
+					"key=" + key +
+					", value=" + value +
+					'}';
 		}
 	}
 }

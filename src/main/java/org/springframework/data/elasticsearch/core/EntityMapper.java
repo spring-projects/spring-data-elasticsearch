@@ -1,11 +1,11 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,9 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
+import java.util.Map;
+
+import org.springframework.lang.Nullable;
 
 /**
  * DocumentMapper interface, it will allow to customize how we mapping object to json
@@ -23,10 +26,32 @@ import java.io.IOException;
  * @author Artur Konczak
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Christoph Strobl
  */
 public interface EntityMapper {
 
-	public String mapToString(Object object) throws IOException;
+	String mapToString(Object object) throws IOException;
 
-	public <T> T mapToObject(String source, Class<T> clazz) throws IOException;
+	<T> T mapToObject(String source, Class<T> clazz) throws IOException;
+
+	/**
+	 * Map the given {@literal source} to {@link Map}.
+	 *
+	 * @param source must not be {@literal null}.
+	 * @return never {@literal null}
+	 * @since 3.2
+	 */
+	Map<String, Object> mapObject(Object source);
+
+	/**
+	 * Map the given {@link Map} into an instance of the {@literal targetType}.
+	 *
+	 * @param source must not be {@literal null}.
+	 * @param targetType must not be {@literal null}.
+	 * @param <T>
+	 * @return can be {@literal null}.
+	 * @since 3.2
+	 */
+	@Nullable
+	<T> T readObject(Map<String, Object> source, Class<T> targetType);
 }

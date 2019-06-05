@@ -1,0 +1,296 @@
+[[elasticsearch.mapping]]
+= Elasticsearch Object Mapping
+
+Spring Data Elasticsearch allows to choose between two mapping implementations abstracted via the `EntityMapper` interface:
+
+* <<elasticsearch.mapping.jackson2>>
+* <<elasticsearch.mapping.meta-model>>
+
+[[elasticsearch.mapping.jackson2]]
+== Jackson Object Mapping
+
+The Jackson2 based approach (used by default) utilizes a customized `ObjectMapper` instance with spring data specific modules.
+Extensions to the actual mapping need to be customized via Jackson annotations like `@JsonInclude`.
+
+.Jackson2 Object Mapping Configuration
+====
+[source,java]
+----
+@Configuration
+public class Config extends AbstractElasticsearchConfiguration { <1>
+
+  @Override
+  public RestHighLevelClient elasticsearchClient() {
+    return RestClients.create(ClientConfiguration.create("localhost:9200")).rest()
+  }
+}
+----
+<1> `AbstractElasticsearchConfiguration` already defines a Jackson2 based `entityMapper` via `ElasticsearchConfigurationSupport`.
+====
+
+WARNING: `CustomConversions`, `@ReadingConverter` & `@WritingConverter` cannot be applied when using the Jackson based `EntityMapper`.
+
+[[elasticsearch.mapping.meta-model]]
+== Meta Model Object Mapping
+
+The Metamodel based approach uses domain type information for reading/writing from/to Elasticsearch.
+This allows to register `Converter` instances for specific domain type mapping.
+
+.Meta Model Object Mapping Configuration
+====
+[source,java]
+----
+@Configuration
+public class Config extends AbstractElasticsearchConfiguration {
+
+  @Override
+  public RestHighLevelClient elasticsearchClient() {
+    return RestClients.create(ClientConfiguration.create("localhost:9200")).rest()
+  }
+
+  @Bean
+  @Override
+  public EntityMapper entityMapper() { <1>
+
+    ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
+      new DefaultConversionService()); <2>
+  	entityMapper.setConversions(elasticsearchCustomConversions()); <3>
+
+  	return entityMapper;
+  }
+}
+----
+<1> Overwrite the default `EntityMapper` from `ElasticsearchConfigurationSupport` and expose it as bean.
+<2> Use the provided `SimpleElasticsearchMappingContext` to avoid inconsistencies and provide a `GenericConversionService`
+for `Converter` registration.
+<3> Optionally set `CustomConversions` if applicable.
+====
+
+[[elasticsearch.mapping.meta-model.annotations]]
+=== Mapping Annotation Overview
+
+The `ElasticsearchEntityMapper` can use metadata to drive the mapping of objects to documents. The following annotations are available:
+
+* `@Id`: Applied at the field level to mark the field used for identity purpose.
+* `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database. You can specify the index name and index type where the document will be stored.
+* `@Transient`: By default all private fields are mapped to the document, this annotation excludes the field where it is applied from being stored in the database
+* `@PersistenceConstructor`: Marks a given constructor - even a package protected one - to use when instantiating the object from the database. Constructor arguments are mapped by name to the key values in the retrieved Document.
+* `@Field`: Applied at the field level and described the name of the field as it will be represented in the Elasticsearch document thus allowing the name to be different than the fieldname of the class.
+
+The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic.
+
+[[elasticsearch.mapping.meta-model.rules]]
+=== Mapping Rules
+
+==== Type Hints
+
+Mapping uses _type hints_ embedded in the document sent to the server to allow generic type mapping.
+Those type hints are represented as `_class` attributes within the document and are written for each aggregate root.
+
+.Type Hints
+====
+[source,java]
+----
+public class Person { <1>
+
+  @Id String id;
+  String firstname;
+  String lastname;
+}
+----
+[source,json]
+----
+{
+  "_class" : "com.example.Person", <1>
+  "id" : "cb7bef",
+  "firstname" : "Sarah",
+  "lastname" : "Connor"
+}
+----
+<1> By default the domain types class name is used for the type hint.
+====
+
+Type hints can be configured to hold custom information. Use the `@TypeAlias` annotation to do so.
+
+NOTE: Make sure to add types with `@TypeAlias` to the initial entity set (`AbstractElasticsearchConfiguration#getInitialEntitySet`)
+to already have entity information available when first reading data from the store.
+
+.Type Hints with Alias
+====
+[source,java]
+----
+@TypeAlias("human") <1>
+public class Person {
+
+  @Id String id;
+  // ...
+}
+----
+[source,json]
+----
+{
+  "_class" : "human", <1>
+  "id" : ...
+}
+----
+<1> The configured alias is used when writing the entity.
+====
+
+NOTE: Type hints will not be written for nested Objects unless the properties type is `Object`, an interface or the actual value type does not match the properties declaration.
+
+==== Geospatial Types
+
+Geospatial types like `Point` & `GeoPoint` are converted into _lat/lon_ pairs.
+
+.Geospatial types
+====
+[source,java]
+----
+public class Address {
+
+  String city, street;
+  Point location;
+}
+----
+[source,json]
+----
+{
+  "city" : "Los Angeles",
+  "street" : "2800 East Observatory Road",
+  "location" : { "lat" : 34.118347, "lon" : -118.3026284 }
+}
+----
+====
+
+==== Collections
+
+For values inside Collections apply the same mapping rules as for aggregate roots when it comes to _type hints_ and <<elasticsearch.mapping.meta-model.conversions>>.
+
+.Collections
+====
+[source,java]
+----
+public class Person {
+
+  // ...
+
+  List<Person> friends;
+
+}
+----
+[source,json]
+----
+{
+  // ...
+
+  "friends" : [ { "firstname" : "Kyle", "lastname" : "Reese" } ]
+}
+----
+====
+
+==== Maps
+
+For values inside Maps apply the same mapping rules as for aggregate roots when it comes to _type hints_ and <<elasticsearch.mapping.meta-model.conversions>>.
+However the Map key needs to a String to be processed by Elasticsearch.
+
+.Collections
+====
+[source,java]
+----
+public class Person {
+
+  // ...
+
+  Map<String, Address> knownLocations;
+
+}
+----
+[source,json]
+----
+{
+  // ...
+
+  "knownLocations" : {
+    "arrivedAt" : {
+       "city" : "Los Angeles",
+       "street" : "2800 East Observatory Road",
+       "location" : { "lat" : 34.118347, "lon" : -118.3026284 }
+     }
+  }
+}
+----
+====
+
+[[elasticsearch.mapping.meta-model.conversions]]
+=== Custom Conversions
+
+Looking at the `Configuration` from the <<elasticsearch.mapping.meta-model, previous section>> `ElasticsearchCustomConversions` allows registering specific rules for mapping domain and simple types.
+
+.Meta Model Object Mapping Configuration
+====
+[source,java]
+----
+@Configuration
+public class Config extends AbstractElasticsearchConfiguration {
+
+  @Override
+  public RestHighLevelClient elasticsearchClient() {
+    return RestClients.create(ClientConfiguration.create("localhost:9200")).rest()
+  }
+
+  @Bean
+  @Override
+  public EntityMapper entityMapper() {
+
+    ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
+      new DefaultConversionService());
+  	entityMapper.setConversions(elasticsearchCustomConversions()); <1>
+
+  	return entityMapper;
+  }
+
+  @Bean
+  @Override
+  public ElasticsearchCustomConversions elasticsearchCustomConversions() {
+    return new ElasticsearchCustomConversions(Arrays.asList(new AddressToMap(), new MapToAddress())); <2>
+  }
+
+  @WritingConverter <3>
+  static class AddressToMap implements Converter<Address, Map<String, Object>> {
+
+    @Override
+    public Map<String, Object> convert(Address source) {
+
+      LinkedHashMap<String, Object> target = new LinkedHashMap<>();
+      target.put("ciudad", source.getCity());
+      // ...
+
+      return target;
+    }
+  }
+
+  @ReadingConverter <4>
+  static class MapToAddress implements Converter<Map<String, Object>, Address> {
+
+    @Override
+    public Address convert(Map<String, Object> source) {
+
+      // ...
+      return address;
+    }
+  }
+}
+----
+[source,json]
+----
+{
+  "ciudad" : "Los Angeles",
+  "calle" : "2800 East Observatory Road",
+  "localidad" : { "lat" : 34.118347, "lon" : -118.3026284 }
+}
+----
+<1> Register `ElasticsearchCustomConversions` with the `EntityMapper`.
+<2> Add `Converter` implementations.
+<3> Set up the `Converter` used for writing `DomainType` to Elasticsearch.
+<4> Set up the `Converter` used for reading `DomainType` from search result.
+====

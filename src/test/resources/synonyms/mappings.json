@@ -1,11 +1,8 @@
 {
   "synonym-type": {
-    "_all": {
-      "enabled": true
-    },
     "properties": {
       "text": {
-        "type": "string",
+        "type": "text",
         "analyzer": "synonym_analyzer"
       }
     }

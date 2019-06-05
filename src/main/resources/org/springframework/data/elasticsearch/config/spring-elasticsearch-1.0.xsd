@@ -11,7 +11,7 @@
     <xsd:import namespace="http://www.springframework.org/schema/beans"/>
     <xsd:import namespace="http://www.springframework.org/schema/tool"/>
     <xsd:import namespace="http://www.springframework.org/schema/data/repository"
-                schemaLocation="http://www.springframework.org/schema/data/repository/spring-repository.xsd"/>
+                schemaLocation="https://www.springframework.org/schema/data/repository/spring-repository.xsd"/>
 
     <xsd:element name="repositories">
         <xsd:complexType>
@@ -64,6 +64,27 @@
                         <xsd:annotation>
                             <xsd:documentation>
                                 <![CDATA[ to enable or disable http port ]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="path-data" type="xsd:string" default="">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[ path to the data folder for node client ]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="path-home" type="xsd:string" default="">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[ path to the home folder for node client ]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="path-configuration" type="xsd:string" default="">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[ path to configuration file for node client ]]>
                             </xsd:documentation>
                         </xsd:annotation>
                     </xsd:attribute>

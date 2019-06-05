@@ -1,11 +1,11 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,12 +15,9 @@
  */
 package org.springframework.data.elasticsearch.repository;
 
-import java.io.Serializable;
-
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.FacetedPage;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.repository.NoRepositoryBean;
 
@@ -29,17 +26,22 @@ import org.springframework.data.repository.NoRepositoryBean;
  * @param <ID>
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Sascha Woo
  */
 @NoRepositoryBean
-public interface ElasticsearchRepository<T, ID extends Serializable> extends ElasticsearchCrudRepository<T, ID> {
+public interface ElasticsearchRepository<T, ID> extends ElasticsearchCrudRepository<T, ID> {
 
 	<S extends T> S index(S entity);
 
 	Iterable<T> search(QueryBuilder query);
 
-	FacetedPage<T> search(QueryBuilder query, Pageable pageable);
+	Page<T> search(QueryBuilder query, Pageable pageable);
 
-	FacetedPage<T> search(SearchQuery searchQuery);
+	Page<T> search(SearchQuery searchQuery);
 
 	Page<T> searchSimilar(T entity, String[] fields, Pageable pageable);
+
+	void refresh();
+
+	Class<T> getEntityClass();
 }

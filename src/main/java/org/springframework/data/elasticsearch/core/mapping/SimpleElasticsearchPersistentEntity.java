@@ -1,11 +1,11 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ import static org.springframework.util.StringUtils.*;
 
 import java.util.Locale;
 
+import org.elasticsearch.index.VersionType;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -27,12 +28,15 @@ import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
+import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -41,6 +45,9 @@ import org.springframework.util.Assert;
  * @param <T>
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
+ * @author Sascha Woo
+ * @author Ivan Greene
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
@@ -48,17 +55,22 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private final StandardEvaluationContext context;
 	private final SpelExpressionParser parser;
 
-	private String indexName;
-	private String indexType;
+	private @Nullable String indexName;
+	private @Nullable String indexType;
+	private boolean useServerConfiguration;
 	private short shards;
 	private short replicas;
-	private String refreshInterval;
-	private String indexStoreType;
-	private String parentType;
-	private ElasticsearchPersistentProperty parentIdProperty;
-	private String settingPath;
+	private @Nullable String refreshInterval;
+	private @Nullable String indexStoreType;
+	private @Nullable String parentType;
+	private @Nullable ElasticsearchPersistentProperty parentIdProperty;
+	private @Nullable ElasticsearchPersistentProperty scoreProperty;
+	private @Nullable String settingPath;
+	private VersionType versionType;
+	private boolean createIndexAndMapping;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
+
 		super(typeInformation);
 		this.context = new StandardEvaluationContext();
 		this.parser = new SpelExpressionParser();
@@ -68,12 +80,15 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			Document document = clazz.getAnnotation(Document.class);
 			Assert.hasText(document.indexName(),
 					" Unknown indexName. Make sure the indexName is defined. e.g @Document(indexName=\"foo\")");
-			this.indexName = typeInformation.getType().getAnnotation(Document.class).indexName();
+			this.indexName = document.indexName();
 			this.indexType = hasText(document.type()) ? document.type() : clazz.getSimpleName().toLowerCase(Locale.ENGLISH);
-			this.shards = typeInformation.getType().getAnnotation(Document.class).shards();
-			this.replicas = typeInformation.getType().getAnnotation(Document.class).replicas();
-			this.refreshInterval = typeInformation.getType().getAnnotation(Document.class).refreshInterval();
-			this.indexStoreType = typeInformation.getType().getAnnotation(Document.class).indexStoreType();
+			this.useServerConfiguration = document.useServerConfiguration();
+			this.shards = document.shards();
+			this.replicas = document.replicas();
+			this.refreshInterval = document.refreshInterval();
+			this.indexStoreType = document.indexStoreType();
+			this.versionType = document.versionType();
+			this.createIndexAndMapping = document.createIndex();
 		}
 		if (clazz.isAnnotationPresent(Setting.class)) {
 			this.settingPath = typeInformation.getType().getAnnotation(Setting.class).settingPath();
@@ -89,14 +104,24 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 	@Override
 	public String getIndexName() {
-		Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
-		return expression.getValue(context, String.class);
+
+		if (indexName != null) {
+			Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
+			return expression.getValue(context, String.class);
+		}
+
+		return getTypeInformation().getType().getSimpleName();
 	}
 
 	@Override
 	public String getIndexType() {
-		Expression expression = parser.parseExpression(indexType, ParserContext.TEMPLATE_EXPRESSION);
-		return expression.getValue(context, String.class);
+
+		if (indexType != null) {
+			Expression expression = parser.parseExpression(indexType, ParserContext.TEMPLATE_EXPRESSION);
+			return expression.getValue(context, String.class);
+		}
+
+		return "";
 	}
 
 	@Override
@@ -115,6 +140,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
+	public boolean isUseServerConfiguration() {
+		return useServerConfiguration;
+	}
+
+	@Override
 	public String getRefreshInterval() {
 		return refreshInterval;
 	}
@@ -130,27 +160,74 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
+	public VersionType getVersionType() {
+		return versionType;
+	}
+
+	@Override
 	public String settingPath() {
 		return settingPath;
+	}
+
+	@Override
+	public boolean isCreateIndexAndMapping() {
+		return createIndexAndMapping;
+	}
+
+	@Override
+	public boolean hasScoreProperty() {
+		return scoreProperty != null;
+	}
+
+	@Nullable
+	@Override
+	public ElasticsearchPersistentProperty getScoreProperty() {
+		return scoreProperty;
 	}
 
 	@Override
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
 		super.addPersistentProperty(property);
 
-		if (property.getField() != null) {
-			Parent parent = property.getField().getAnnotation(Parent.class);
-			if (parent != null) {
-				Assert.isNull(this.parentIdProperty, "Only one field can hold a @Parent annotation");
-				Assert.isNull(this.parentType, "Only one field can hold a @Parent annotation");
-				Assert.isTrue(property.getType() == String.class, "Parent ID property should be String");
-				this.parentIdProperty = property;
-				this.parentType = parent.type();
+		if (property.isParentProperty()) {
+			ElasticsearchPersistentProperty parentProperty = this.parentIdProperty;
+
+			if (parentProperty != null) {
+				throw new MappingException(String.format(
+						"Attempt to add parent property %s but already have property %s registered "
+								+ "as parent property. Check your mapping configuration!",
+						property.getField(), parentProperty.getField()));
 			}
+
+			Parent parentAnnotation = property.findAnnotation(Parent.class);
+			this.parentIdProperty = property;
+			this.parentType = parentAnnotation.type();
 		}
 
-		if (property.isVersionProperty()) {
-			Assert.isTrue(property.getType() == Long.class, "Version property should be Long");
+		if (property.isScoreProperty()) {
+
+			ElasticsearchPersistentProperty scoreProperty = this.scoreProperty;
+
+			if (scoreProperty != null) {
+				throw new MappingException(String.format(
+						"Attempt to add score property %s but already have property %s registered "
+								+ "as score property. Check your mapping configuration!",
+						property.getField(), scoreProperty.getField()));
+			}
+
+			this.scoreProperty = property;
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#setPersistentPropertyAccessorFactory(org.springframework.data.mapping.model.PersistentPropertyAccessorFactory)
+	 */
+	@Override
+	public void setPersistentPropertyAccessorFactory(PersistentPropertyAccessorFactory factory) {
+
+		// Do nothing to avoid the usage of ClassGeneratingPropertyAccessorFactory for now
+		// DATACMNS-1322 switches to proper immutability behavior which Spring Data Elasticsearch
+		// cannot yet implement
 	}
 }

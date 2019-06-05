@@ -1,0 +1,384 @@
+image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2Fmaster&subject=Moore%20(master)[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/]
+image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2F3.1.x&subject=Lovelace%20(3.1.x)[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/]
+image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2F2.1.x&subject=Ingalls%20(2.1.x)[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/]
+
+
+= Spring Data Elasticsearch
+
+Spring Data implementation for ElasticSearch
+
+Spring Data makes it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services as well as provide improved support for relational database technologies.
+
+The Spring Data Elasticsearch project provides integration with the https://www.elastic.co/[elasticsearch] search engine.
+
+== Guide
+
+* https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/[Reference Documentation]
+* https://docs.spring.io/spring-data/elasticsearch/docs/current/api/[API Documentation]
+* https://projects.spring.io/spring-data[Spring Data Project]
+* https://github.com/BioMedCentralLtd/spring-data-elasticsearch-sample-application[Sample Test Application]
+* https://jira.springsource.org/browse/DATAES[Issues]
+* https://groups.google.com/d/forum/spring-data-elasticsearch-devs[Spring Data Elasticsearch Google Group]
+* https://stackoverflow.com/questions/tagged/spring-data-elasticsearch[Questions]
+
+== Quick Start
+
+Wiki page for https://github.com/spring-projects/spring-data-elasticsearch/wiki/How-to-start-with-spring-data-elasticsearch[Getting Started]
+
+=== Maven configuration
+
+Add the Maven dependency:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.data</groupId>
+    <artifactId>spring-data-elasticsearch</artifactId>
+    <version>x.y.z.RELEASE</version>
+</dependency>
+----
+
+If you'd rather like the latest snapshots of the upcoming major version, use our Maven snapshot repository and declare
+the appropriate dependency version.
+
+[source,xml]
+----
+<dependency>
+  <groupId>org.springframework.data</groupId>
+  <artifactId>spring-data-elasticsearch</artifactId>
+  <version>x.y.z.BUILD-SNAPSHOT</version>
+</dependency>
+
+<repository>
+  <id>spring-libs-snapshot</id>
+  <name>Spring Snapshot Repository</name>
+  <url>https://repo.spring.io/libs-snapshot</url>
+</repository>
+----
+
+[cols="^,^"]
+|===
+|spring data elasticsearch |elasticsearch
+
+|3.2.x |6.5.0
+|3.1.x |6.2.2
+|3.0.x |5.5.0
+|2.1.x |2.4.0
+|2.0.x |2.2.0
+|1.3.x |1.5.2
+|===
+
+=== ElasticsearchRepository
+
+A default implementation of ElasticsearchRepository, aligning to the generic Repository Interfaces, is provided. Spring can do the Repository implementation for you depending on method names in the interface definition.
+
+The ElasticsearchCrudRepository extends PagingAndSortingRepository
+
+[source,java]
+----
+    public interface ElasticsearchCrudRepository<T, ID extends Serializable> extends ElasticsearchRepository<T, ID>, PagingAndSortingRepository<T, ID> {
+    }
+----
+
+Extending ElasticsearchRepository for custom methods
+
+[source,java]
+----
+    public interface BookRepository extends Repository<Book, String> {
+
+        List<Book> findByNameAndPrice(String name, Integer price);
+
+        List<Book> findByNameOrPrice(String name, Integer price);
+
+        Page<Book> findByName(String name,Pageable page);
+
+        Page<Book> findByNameNot(String name,Pageable page);
+
+        Page<Book> findByPriceBetween(int price,Pageable page);
+
+        Page<Book> findByNameLike(String name,Pageable page);
+
+        @Query("{\"bool\" : {\"must\" : {\"term\" : {\"message\" : \"?0\"}}}}")
+        Page<Book> findByMessage(String message, Pageable pageable);
+    }
+----
+
+Indexing a single document with Repository
+
+[source,java]
+----
+        @Autowired
+        private SampleElasticsearchRepository repository;
+
+        String documentId = "123456";
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage("some message");
+
+        repository.save(sampleEntity);
+----
+
+Indexing multiple Document(bulk index) using Repository
+
+[source,java]
+----
+        @Autowired
+        private SampleElasticsearchRepository repository;
+
+        String documentId = "123456";
+        SampleEntity sampleEntity1 = new SampleEntity();
+        sampleEntity1.setId(documentId);
+        sampleEntity1.setMessage("some message");
+
+        String documentId2 = "123457"
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setMessage("test message");
+
+        List<SampleEntity> sampleEntities = Arrays.asList(sampleEntity1, sampleEntity2);
+
+        //bulk index
+        repository.save(sampleEntities);
+----
+
+=== ElasticsearchTemplate
+
+ElasticsearchTemplate is the central support class for elasticsearch operations.
+
+Indexing a single document using Elasticsearch Template
+
+[source,java]
+----
+        String documentId = "123456";
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setMessage("some message");
+        IndexQuery indexQuery = new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity).build();
+        elasticsearchTemplate.index(indexQuery);
+----
+
+Indexing multiple Document(bulk index) using Elasticsearch Template
+
+[source,java]
+----
+        @Autowired
+        private ElasticsearchTemplate elasticsearchTemplate;
+
+        List<IndexQuery> indexQueries = new ArrayList<IndexQuery>();
+        //first document
+        String documentId = "123456";
+        SampleEntity sampleEntity1 = new SampleEntity();
+        sampleEntity1.setId(documentId);
+        sampleEntity1.setMessage("some message");
+
+        IndexQuery indexQuery1 = new IndexQueryBuilder().withId(sampleEntity1.getId()).withObject(sampleEntity1).build();
+        indexQueries.add(indexQuery1);
+
+        //second document
+        String documentId2 = "123457";
+        SampleEntity sampleEntity2 = new SampleEntity();
+        sampleEntity2.setId(documentId2);
+        sampleEntity2.setMessage("some message");
+
+        IndexQuery indexQuery2 = new IndexQueryBuilder().withId(sampleEntity2.getId()).withObject(sampleEntity2).build()
+        indexQueries.add(indexQuery2);
+
+        //bulk index
+        elasticsearchTemplate.bulkIndex(indexQueries);
+----
+
+Searching entities using Elasticsearch Template
+
+[source,java]
+----
+        @Autowired
+        private ElasticsearchTemplate elasticsearchTemplate;
+
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+        .withQuery(queryString(documentId).field("id"))
+        .build();
+        Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
+----
+
+=== Reactive Elasticsearch
+
+The `ReactiveElasticsearchClient` is a non official driver based on `WebClient`.
+It uses the request/response objects provided by the Elasticsearch core project.
+
+[source,java]
+----
+@Configuration
+public class Config {
+
+  @Bean
+  ReactiveElasticsearchClient client() {
+
+    ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+      .connectedTo("localhost:9200", "localhost:9291")
+      .build();
+
+    return ReactiveRestClients.create(clientConfiguration);
+  }
+}
+
+// ...
+
+Mono<IndexResponse> response = client.index(request ->
+
+  request.index("spring-data")
+    .type("elasticsearch")
+    .id(randomID())
+    .source(singletonMap("feature", "reactive-client"))
+    .setRefreshPolicy(IMMEDIATE)
+);
+----
+
+The reactive client response, especially for search operations, is bound to the `from` (offset) &amp; `size` (limit) options of the request.
+
+`ReactiveElasticsearchOperations` is the gateway to executing high level commands against an Elasticsearch cluster using the `ReactiveElasticsearchClient`.
+The easiest way of setting up the `ReactiveElasticsearchTemplate` is via `AbstractReactiveElasticsearchConfiguration`.
+
+[source,java]
+----
+@Configuration
+public class Config extends AbstractReactiveElasticsearchConfiguration {
+
+    @Bean
+    @Override
+    public ReactiveElasticsearchClient reactiveElasticsearchClient() {
+        // ...
+    }
+}
+----
+
+If needed the `ReactiveElasticsearchTemplate` can be configured with default `RefreshPolicy` and `IndicesOptions` that get applied to the related requests by overriding the defaults of `refreshPolicy()` and `indicesOptions()`.
+
+[source,java]
+----
+template.save(new Person("Bruce Banner", 42))
+    .doOnNext(System.out::println)
+    .flatMap(person -> template.findById(person.id, Person.class))
+    .doOnNext(System.out::println)
+    .flatMap(person -> template.delete(person))
+    .doOnNext(System.out::println)
+    .flatMap(id -> template.count(Person.class))
+    .doOnNext(System.out::println)
+    .subscribe();
+----
+
+The above outputs the following sequence on the console.
+
+[source,bash]
+----
+> Person(id=QjWCWWcBXiLAnp77ksfR, name=Bruce Banner, age=42)
+> Person(id=QjWCWWcBXiLAnp77ksfR, name=Bruce Banner, age=42)
+> QjWCWWcBXiLAnp77ksfR
+> 0
+----
+
+=== XML Namespace
+
+You can set up repository scanning via xml configuration, which will happily create your repositories.
+
+Using Node Client
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+       xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch https://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <elasticsearch:node-client id="client" local="true"/>
+
+    <bean name="elasticsearchTemplate" class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
+        <constructor-arg name="client" ref="client"/>
+    </bean>
+
+</beans>
+----
+
+Using Transport Client
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:elasticsearch="http://www.springframework.org/schema/data/elasticsearch"
+       xsi:schemaLocation="http://www.springframework.org/schema/data/elasticsearch https://www.springframework.org/schema/data/elasticsearch/spring-elasticsearch.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <elasticsearch:repositories base-package="com.xyz.acme"/>
+
+    <elasticsearch:transport-client id="client" cluster-nodes="ip:9300,ip:9300" cluster-name="elasticsearch" />
+
+    <bean name="elasticsearchTemplate" class="org.springframework.data.elasticsearch.core.ElasticsearchTemplate">
+        <constructor-arg name="client" ref="client"/>
+    </bean>
+
+</beans>
+----
+
+== Help Pages
+
+* https://github.com/spring-projects/spring-data-elasticsearch/wiki/Geo-indexing-and-request[Geo distance and location search]
+* https://github.com/spring-projects/spring-data-elasticsearch/wiki/Custom-ObjectMapper[Custom object mapper]
+
+== Contributing to Spring Data
+
+Here are some ways for you to get involved in the community:
+
+* Get involved with the Spring community on Stack OverFlow. Please help out on the https://stackoverflow.com/questions/tagged/spring-data-elasticsearch[forum] by responding to questions and joining the debate.
+* Create https://jira.spring.io/browse/DATAES/[JIRA] tickets for bugs and new features and comment and vote on the ones that you are interested in.
+* Github is for social coding: if you want to write code, we encourage contributions through pull requests from https://help.github.com/forking/[forks of this repository]. If you want to contribute code this way, please reference a JIRA ticket as well covering the specific issue you are addressing.
+* Watch for upcoming articles on Spring by https://www.springsource.org/node/feed[subscribing] to springframework.org
+
+Before we accept a non-trivial patch or pull request we will need you to https://cla.pivotal.io/sign/spring[sign the Contributor License Agreement]. Signing the contributor’s agreement does not grant anyone commit rights to the main repository, but it does mean that we can accept your contributions, and you will get an author credit if we do. If you forget to do so, you'll be reminded when you submit a pull request. Active contributors might be asked to join the core team, and given the ability to merge pull requests.
+
+Code formatting for https://github.com/spring-projects/spring-data-build/tree/master/etc/ide[Eclipse and Intellij]
+
+https://github.com/spring-projects/spring-data-build/blob/master/CONTRIBUTING.adoc[More information about contributing to Spring Data]
+
+== Running CI tasks locally
+
+Since this pipeline is purely Docker-based, it's easy to:
+
+* Debug what went wrong on your local machine.
+* Test out a a tweak to your `test.sh` script before sending it out.
+* Experiment against a new image before submitting your pull request.
+
+All of these use cases are great reasons to essentially run what the CI server does on your local machine.
+
+IMPORTANT: To do this you must have Docker installed on your machine.
+
+1. `docker run -it --mount type=bind,source="$(pwd)",target=/spring-data-elasticsearch-github adoptopenjdk/openjdk8:latest /bin/bash`
++
+This will launch the Docker image and mount your source code at `spring-data-elasticsearch-github`.
++
+2. `cd spring-data-elasticsearch-github`
++
+Next, run your tests from inside the container:
++
+3. `./mvnw clean dependency:list test -Dsort` (or whatever profile you need to test out)
+
+Since the container is binding to your source, you can make edits from your IDE and continue to run build jobs.
+
+If you need to test the `build.sh` script, do this:
+
+1. `docker run -it --mount type=bind,source="$(pwd)",target=/spring-data-elasticsearch-github adoptopenjdk/openjdk8:latest /bin/bash`
++
+This will launch the Docker image and mount your source code at `spring-data-elasticsearch-github`.
++
+2. `cd spring-data-elasticsearch-github`
++
+Next, try to package everything up from inside the container:
++
+3. `./mvnw -Pci,snapshot -Dmaven.test.skip=true clean deploy`
+
+IMPORTANT: This will attempt to deploy to artifactory, but without credentials, it will fail, leaving you simply with a built artifact.
+
+NOTE: Docker containers can eat up disk space fast! From time to time, run `docker system prune` to clean out old images.
+

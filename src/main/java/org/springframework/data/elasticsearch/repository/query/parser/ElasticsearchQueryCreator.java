@@ -1,11 +1,11 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,8 +28,8 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
@@ -41,6 +41,7 @@ import org.springframework.data.repository.query.parser.PartTree;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Franck Marchand
+ * @author Artur Konczak
  */
 public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuery, CriteriaQuery> {
 
@@ -112,12 +113,14 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 				return criteria.endsWith(parameters.next().toString());
 			case CONTAINING:
 				return criteria.contains(parameters.next().toString());
-			case AFTER:
 			case GREATER_THAN:
+				return criteria.greaterThan(parameters.next());
+			case AFTER:
 			case GREATER_THAN_EQUAL:
 				return criteria.greaterThanEqual(parameters.next());
-			case BEFORE:
 			case LESS_THAN:
+				return criteria.lessThan(parameters.next());
+			case BEFORE:
 			case LESS_THAN_EQUAL:
 				return criteria.lessThanEqual(parameters.next());
 			case BETWEEN:
@@ -125,7 +128,7 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 			case IN:
 				return criteria.in(asArray(parameters.next()));
 			case NOT_IN:
-				return criteria.in(asArray(parameters.next())).not();
+				return criteria.notIn(asArray(parameters.next()));
 			case SIMPLE_PROPERTY:
 			case WITHIN: {
 				Object firstParameter = parameters.next();

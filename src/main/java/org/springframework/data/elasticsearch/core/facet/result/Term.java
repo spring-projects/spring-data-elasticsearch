@@ -1,11 +1,11 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,12 +23,13 @@ package org.springframework.data.elasticsearch.core.facet.result;
  * @author Artur Konczak
  * @author Jonathan Yan
  */
+@Deprecated
 public class Term {
 
 	private String term;
-	private int count;
+	private long count;
 
-	public Term(String term, int count) {
+	public Term(String term, long count) {
 		this.term = term;
 		this.count = count;
 	}
@@ -37,7 +38,7 @@ public class Term {
 		return term;
 	}
 
-	public int getCount() {
+	public long getCount() {
 		return count;
 	}
 }

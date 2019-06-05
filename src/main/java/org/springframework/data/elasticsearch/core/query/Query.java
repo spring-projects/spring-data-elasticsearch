@@ -1,11 +1,11 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,10 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -28,11 +31,26 @@ import org.springframework.data.domain.Sort;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
+ * @author Alen Turkovic
+ * @author Sascha Woo
+ * @author Christoph Strobl
  */
 public interface Query {
 
-	public static final int DEFAULT_PAGE_SIZE = 10;
-	public static final Pageable DEFAULT_PAGE = new PageRequest(0, DEFAULT_PAGE_SIZE);
+	int DEFAULT_PAGE_SIZE = 10;
+	Pageable DEFAULT_PAGE = PageRequest.of(0, DEFAULT_PAGE_SIZE);
+
+	/**
+	 * Get get a {@link Query} that matches all documents in the index.
+	 *
+	 * @return new instance of {@link Query}.
+	 * @since 3.2
+	 * @see QueryBuilders#matchAllQuery()
+	 */
+	static Query findAll() {
+		return new StringQuery(QueryBuilders.matchAllQuery().toString());
+	}
 
 	/**
 	 * restrict result to entries on given page. Corresponds to the 'start' and 'rows' parameter in elasticsearch
@@ -41,13 +59,6 @@ public interface Query {
 	 * @return
 	 */
 	<T extends Query> T setPageable(Pageable pageable);
-
-	/**
-	 * Get filter queries if defined
-	 *
-	 * @return
-	 */
-	// List<FilterQuery> getFilterQueries();
 
 	/**
 	 * Get page settings if defined
@@ -112,11 +123,33 @@ public interface Query {
 	List<String> getFields();
 
 	/**
+	 * Add source filter to be added as part of search request
+	 *
+	 * @param sourceFilter
+	 */
+	void addSourceFilter(SourceFilter sourceFilter);
+
+	/**
+	 * Get SourceFilter to be returned to get include and exclude source fields as part of search request.
+	 *
+	 * @return SourceFilter
+	 */
+	SourceFilter getSourceFilter();
+
+	/**
 	 * Get minimum score
 	 *
 	 * @return
 	 */
 	float getMinScore();
+
+	/**
+	 * Get if scores will be computed and tracked, regardless of whether sorting on a field. Defaults to <tt>false</tt>.
+	 * 
+	 * @return
+	 * @since 3.1
+	 */
+	boolean getTrackScores();
 
 	/**
 	 * Get Ids
@@ -132,11 +165,17 @@ public interface Query {
 	 */
 	String getRoute();
 
-
 	/**
 	 * Type of search
 	 *
 	 * @return
 	 */
 	SearchType getSearchType();
+
+	/**
+	 * Get indices options
+	 *
+	 * @return null if not set
+	 */
+	IndicesOptions getIndicesOptions();
 }

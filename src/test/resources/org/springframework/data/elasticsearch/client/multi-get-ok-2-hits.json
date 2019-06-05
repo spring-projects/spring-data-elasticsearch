@@ -1,0 +1,28 @@
+{
+  "docs": [
+    {
+      "_index": "twitter",
+      "_type": "doc",
+      "_id": "1",
+      "_version": 1,
+      "found": true,
+      "_source": {
+        "user": "kimchy",
+        "post_date": "2009-11-15T13:12:00",
+        "message": "Trying out Elasticsearch, so far so good?"
+      }
+    },
+    {
+      "_index": "twitter",
+      "_type": "doc",
+      "_id": "2",
+      "_version": 1,
+      "found": true,
+      "_source": {
+        "user": "kimchy",
+        "post_date": "2009-11-15T14:12:12",
+        "message": "Another tweet, will it be indexed?"
+      }
+    }
+  ]
+}

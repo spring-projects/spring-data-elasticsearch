@@ -1,0 +1,123 @@
+[[elasticsearch.clients]]
+= Elasticsearch Clients
+
+This chapter illustrates configuration and usage of supported Elasticsearch client implementations.
+
+Spring data Elasticsearch operates upon an Elasticsearch client that is connected to a single Elasticsearch node or a cluster.
+
+WARNING: The well known `TransportClient` is deprecated as of Elasticsearch 7.0.0 and is expected to be removed in Elasticsearch 8.0.
+
+[[elasticsearch.clients.rest]]
+== High Level REST Client
+
+The Java High Level REST Client provides a straight forward replacement for the `TransportClient` as it accepts and returns
+the very same request/response objects and therefore depends on the Elasticsearch core project.
+Asynchronous calls are operated upon a client managed thread pool and require a callback to be notified when the request is done.
+
+.High Level REST Client
+====
+[source,java]
+----
+static class Config {
+
+  @Bean
+  RestHighLevelClient client() {
+
+    ClientConfiguration clientConfiguration = ClientConfiguration.builder() <1>
+      .connectedTo("localhost:9200", "localhost:9201")
+      .build();
+
+    return RestClients.create(clientConfiguration).rest(); <2>
+  }
+}
+
+// ...
+
+IndexRequest request = new IndexRequest("spring-data", "elasticsearch", randomID())
+  .source(singletonMap("feature", "high-level-rest-client"))
+  .setRefreshPolicy(IMMEDIATE);
+
+IndexResponse response = client.index(request);
+----
+<1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enbale SSL.
+<2> Next to the `rest()` client it is also possible to obtain the `lowLevelRest()` client.
+====
+
+[[elasticsearch.clients.reactive]]
+== Reactive Client
+
+The `ReactiveElasticsearchClient` is a non official driver based on `WebClient`.
+It uses the request/response objects provided by the Elasticsearch core project.
+Calls are directly operated on the reactive stack, **not** wrapping async (thread pool bound) responses into reactive types.
+
+.Reactive REST Client
+====
+[source,java]
+----
+static class Config {
+
+  @Bean
+  ReactiveElasticsearchClient client() {
+
+    ClientConfiguration clientConfiguration = ClientConfiguration.builder() <1>
+      .connectedTo("localhost:9200", "localhost:9291")
+      .build();
+
+    return ReactiveRestClients.create(clientConfiguration);
+  }
+}
+
+// ...
+
+Mono<IndexResponse> response = client.index(request ->
+
+  request.index("spring-data")
+    .type("elasticsearch")
+    .id(randomID())
+    .source(singletonMap("feature", "reactive-client"))
+    .setRefreshPolicy(IMMEDIATE);
+);
+----
+<1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enbale SSL.
+====
+
+NOTE: The ReactiveClient response, especially for search operations, is bound to the `from` (offset) & `size` (limit) options of the request.
+
+[[elasticsearch.clients.configuration]]
+== Client Configuration
+
+Client behaviour can be changed via the `ClientConfiguration` that allows to set options for SSL, connect and socket timeouts.
+
+.Client Configuration
+====
+[source,java]
+----
+
+ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+  .connectedTo("localhost:9200", "localhost:9291") <1>
+  .withConnectTimeout(Duration.ofSeconds(5)) <2>
+  .withSocketTimeout(Duration.ofSeconds(3)) <3>
+  .useSsl()
+  . // ... other options
+  .build();
+
+----
+<1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enbale SSL.
+<2> Set the connection timeout. Default is 10 sec.
+<3> Set the socket timeout. Default is 5 sec.
+====
+
+[[elasticsearch.clients.logging]]
+== Client Logging
+
+To see what is actually sent to and received from the server `Request` / `Response` logging on the transport level needs
+to be turned on as outlined in the snippet below.
+
+.Enable transport layer logging
+[source,xml]
+----
+<logger name="org.springframework.data.elasticsearch.client.WIRE" level="trace"/>
+----
+
+NOTE: The above applies to both the `RestHighLevelClient` and `ReactiveElasticsearchClient` when obtained via `RestClients`
+respectively `ReactiveRestClients`.

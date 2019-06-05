@@ -1,11 +1,11 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,12 +24,15 @@ import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.util.Assert;
+import org.springframework.util.NumberUtils;
 
 /**
  * ElasticsearchStringQuery
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Mark Paluch
+ * @author Taylor Ono
  */
 public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQuery {
 
@@ -50,8 +53,8 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		}
 	}
 
-	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod,
-									ElasticsearchOperations elasticsearchOperations, String query) {
+	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
+			String query) {
 		super(queryMethod, elasticsearchOperations);
 		Assert.notNull(query, "Query cannot be empty");
 		this.query = query;
@@ -65,7 +68,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 			stringQuery.setPageable(accessor.getPageable());
 			return elasticsearchOperations.queryForPage(stringQuery, queryMethod.getEntityInformation().getJavaType());
 		} else if (queryMethod.isCollectionQuery()) {
-			if (accessor.getPageable() != null) {
+			if (accessor.getPageable().isPaged()) {
 				stringQuery.setPageable(accessor.getPageable());
 			}
 			return elasticsearchOperations.queryForList(stringQuery, queryMethod.getEntityInformation().getJavaType());
@@ -80,12 +83,14 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	}
 
 	private String replacePlaceholders(String input, ParametersParameterAccessor accessor) {
+
 		Matcher matcher = PARAMETER_PLACEHOLDER.matcher(input);
 		String result = input;
 		while (matcher.find()) {
-			String group = matcher.group();
-			int index = Integer.parseInt(matcher.group(1));
-			result = result.replace(group, getParameterWithIndex(accessor, index));
+
+			String placeholder = Pattern.quote(matcher.group()) + "(?!\\d+)";
+			int index = NumberUtils.parseNumber(matcher.group(1), Integer.class);
+			result = result.replaceAll(placeholder, getParameterWithIndex(accessor, index));
 		}
 		return result;
 	}

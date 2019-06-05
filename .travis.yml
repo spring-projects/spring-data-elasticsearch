@@ -1,0 +1,22 @@
+language: java
+
+jdk:
+  - oraclejdk8
+
+before_install:
+  - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${ES_VERSION}.deb && sudo dpkg -i --force-confnew elasticsearch-${ES_VERSION}.deb && sudo service elasticsearch restart
+  - sleep 10
+
+env:
+  global:
+  - ES_VERSION=6.5.1
+
+addons:
+  apt:
+    packages:
+    - oracle-java8-set-default
+    - oracle-java8-installer
+
+sudo: true
+
+script: "mvn clean dependency:list test -Dsort"

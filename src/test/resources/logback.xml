@@ -7,6 +7,9 @@
         </encoder>
     </appender>
 
+    <logger name="org.springframework.data.elasticsearch.ElasticsearchVersionRule" level="info" />
+	<logger name="org.springframework.data.elasticsearch.client.WIRE" level="info"/>
+
     <root level="error">
         <appender-ref ref="console"/>
     </root>

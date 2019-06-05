@@ -1,11 +1,11 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,37 +13,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.data.elasticsearch.core.facet.request;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
-import org.elasticsearch.search.facet.FacetBuilder;
-import org.elasticsearch.search.facet.FacetBuilders;
-import org.elasticsearch.search.facet.terms.TermsFacet;
-import org.elasticsearch.search.facet.terms.TermsFacetBuilder;
+import org.apache.lucene.util.automaton.RegExp;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.BucketOrder;
+import org.elasticsearch.search.aggregations.bucket.terms.IncludeExclude;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.springframework.data.elasticsearch.core.facet.AbstractFacetRequest;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Term facet
  *
  * @author Artur Konczak
+ * @author Ilkang Na
  */
+@Deprecated
 public class TermFacetRequest extends AbstractFacetRequest {
 
 	private String[] fields;
-	private Object[] excludeTerms;
+	private String[] excludeTerms;
 	private int size = 10;
 	private TermFacetOrder order = TermFacetOrder.descCount;
 	private boolean allTerms = false;
 	private String regex = null;
-	private int regexFlag = 0;
 
 	public TermFacetRequest(String name) {
 		super(name);
 	}
 
 	public void setFields(String... fields) {
+		Assert.isTrue(!ObjectUtils.isEmpty(fields), "Term agg need one field only");
+		Assert.isTrue(fields.length == 1, "Term agg need one field only");
 		this.fields = fields;
 	}
 
@@ -56,7 +62,7 @@ public class TermFacetRequest extends AbstractFacetRequest {
 		this.order = order;
 	}
 
-	public void setExcludeTerms(Object... excludeTerms) {
+	public void setExcludeTerms(String... excludeTerms) {
 		this.excludeTerms = excludeTerms;
 	}
 
@@ -68,41 +74,36 @@ public class TermFacetRequest extends AbstractFacetRequest {
 		this.regex = regex;
 	}
 
-	public void setRegex(String regex, int regexFlag) {
-		this.regex = regex;
-		this.regexFlag = regexFlag;
-	}
-
 	@Override
-	public FacetBuilder getFacet() {
+	public AbstractAggregationBuilder getFacet() {
 		Assert.notEmpty(fields, "Please select at last one field !!!");
-		TermsFacetBuilder builder = FacetBuilders.termsFacet(getName()).fields(fields).size(size);
-		switch (order) {
+		final TermsAggregationBuilder termsBuilder = AggregationBuilders.terms(getName()).field(fields[0]).size(this.size);
 
+		switch (order) {
 			case descTerm:
-				builder.order(TermsFacet.ComparatorType.REVERSE_TERM);
+				termsBuilder.order(BucketOrder.key(false));
 				break;
 			case ascTerm:
-				builder.order(TermsFacet.ComparatorType.TERM);
+				termsBuilder.order(BucketOrder.key(true));
 				break;
-			case ascCount:
-				builder.order(TermsFacet.ComparatorType.REVERSE_COUNT);
+			case descCount:
+				termsBuilder.order(BucketOrder.count(false));
 				break;
 			default:
-				builder.order(TermsFacet.ComparatorType.COUNT);
+				termsBuilder.order(BucketOrder.count(true));
 		}
-		if (ArrayUtils.isNotEmpty(excludeTerms)) {
-			builder.exclude(excludeTerms);
+		if (!ObjectUtils.isEmpty(excludeTerms)) {
+			termsBuilder.includeExclude(new IncludeExclude(null, excludeTerms));
 		}
 
 		if (allTerms) {
-			builder.allTerms(allTerms);
+			termsBuilder.size(Integer.MAX_VALUE);
 		}
 
-		if (StringUtils.isNotBlank(regex)) {
-			builder.regex(regex, regexFlag);
+		if (!StringUtils.isEmpty(regex)) {
+			termsBuilder.includeExclude(new IncludeExclude(new RegExp(regex), null));
 		}
 
-		return builder;
+		return termsBuilder;
 	}
 }

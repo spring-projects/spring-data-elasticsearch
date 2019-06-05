@@ -1,0 +1,19 @@
+{
+  "error": {
+    "index": "twitter",
+    "index_uuid": "C91lAFXcRR6GTpYv6QIJFQ",
+    "reason": "[doc][101]: document missing",
+    "root_cause": [
+      {
+        "index": "twitter",
+        "index_uuid": "C91lAFXcRR6GTpYv6QIJFQ",
+        "reason": "[doc][101]: document missing",
+        "shard": "1",
+        "type": "document_missing_exception"
+      }
+    ],
+    "shard": "1",
+    "type": "document_missing_exception"
+  },
+  "status": 404
+}

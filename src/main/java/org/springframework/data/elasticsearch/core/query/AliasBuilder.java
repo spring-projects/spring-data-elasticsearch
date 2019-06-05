@@ -1,11 +1,11 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.core.query;
 
 import java.util.Map;
 
-import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 
 /**
  * @author Mohsin Husen
@@ -26,7 +26,7 @@ public class AliasBuilder {
 
 	private String indexName;
 	private String aliasName;
-	private FilterBuilder filterBuilder;
+	private QueryBuilder filterBuilder;
 	private Map<String, Object> filter;
 	private String searchRouting;
 	private String indexRouting;
@@ -42,7 +42,7 @@ public class AliasBuilder {
 		return this;
 	}
 
-	public AliasBuilder withFilterBuilder(FilterBuilder filterBuilder) {
+	public AliasBuilder withFilterBuilder(QueryBuilder filterBuilder) {
 		this.filterBuilder = filterBuilder;
 		return this;
 	}
