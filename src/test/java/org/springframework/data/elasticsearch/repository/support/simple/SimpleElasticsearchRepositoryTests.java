@@ -60,6 +60,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Christoph Strobl
  * @author Michael Wirth
  * @author Peter-Josef Meisch
+ * @author Murali Chevuri
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/simple-repository-test.xml")
@@ -568,6 +569,27 @@ public class SimpleElasticsearchRepositoryTests {
 		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
 		assertThat(entities.getTotalElements()).isEqualTo(1L);
 	}
+
+    @Test
+    public void shouldIndexWithoutRefreshEntity() {
+
+        // given
+        String documentId = randomNumeric(5);
+        SampleEntity sampleEntity = new SampleEntity();
+        sampleEntity.setId(documentId);
+        sampleEntity.setVersion(System.currentTimeMillis());
+        sampleEntity.setMessage("some message");
+
+        // when
+        repository.indexWithoutRefresh(sampleEntity);
+
+        // then
+        Page<SampleEntity> entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
+        assertThat(entities.getTotalElements()).isEqualTo(0L);
+        repository.refresh();
+        entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
+        assertThat(entities.getTotalElements()).isEqualTo(1L);
+    }
 
 	@Test
 	public void shouldSortByGivenField() {
