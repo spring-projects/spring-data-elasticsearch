@@ -137,6 +137,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Christoph Strobl
  * @author Lorenzo Spinelli
  * @author Dmitriy Yakovlev
+ * @author Roman Puchkovskiy
  */
 public class ElasticsearchRestTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -212,7 +213,7 @@ public class ElasticsearchRestTemplate
 		IndicesAliasesRequest request = new IndicesAliasesRequest();
 		request.addAliasAction(aliasAction);
 		try {
-			return client.indices().updateAliases(request).isAcknowledged();
+			return client.indices().updateAliases(request, RequestOptions.DEFAULT).isAcknowledged();
 		} catch (IOException e) {
 			throw new ElasticsearchException("failed to update aliases with request: " + request, e);
 		}
@@ -226,7 +227,7 @@ public class ElasticsearchRestTemplate
 		AliasActions aliasAction = new AliasActions(AliasActions.Type.REMOVE);
 		request.addAliasAction(aliasAction);
 		try {
-			return client.indices().updateAliases(request).isAcknowledged();
+			return client.indices().updateAliases(request, RequestOptions.DEFAULT).isAcknowledged();
 		} catch (IOException e) {
 			throw new ElasticsearchException("failed to update aliases with request: " + request, e);
 		}
@@ -241,7 +242,7 @@ public class ElasticsearchRestTemplate
 	public boolean createIndex(String indexName) {
 		Assert.notNull(indexName, "No index defined for Query");
 		try {
-			return client.indices().create(Requests.createIndexRequest(indexName)).isAcknowledged();
+			return client.indices().create(createIndexRequest(indexName), RequestOptions.DEFAULT).isAcknowledged();
 		} catch (Exception e) {
 			throw new ElasticsearchException("Failed to create index " + indexName, e);
 		}
@@ -287,7 +288,7 @@ public class ElasticsearchRestTemplate
 			request.source((XContentBuilder) mapping);
 		}
 		try {
-			return client.indices().putMapping(request).isAcknowledged();
+			return client.indices().putMapping(request, RequestOptions.DEFAULT).isAcknowledged();
 		} catch (IOException e) {
 			throw new ElasticsearchException("Failed to put mapping for " + indexName, e);
 		}
@@ -348,7 +349,7 @@ public class ElasticsearchRestTemplate
 				query.getId());
 		GetResponse response;
 		try {
-			response = client.get(request);
+			response = client.get(request, RequestOptions.DEFAULT);
 			return mapper.mapResult(response, clazz);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while getting for request: " + request.toString(), e);
@@ -411,7 +412,7 @@ public class ElasticsearchRestTemplate
 	private MultiSearchResponse.Item[] getMultiSearchResult(MultiSearchRequest request) {
 		MultiSearchResponse response;
 		try {
-			response = client.multiSearch(request);
+			response = client.multiSearch(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request: " + request.toString(), e);
 		}
@@ -474,7 +475,7 @@ public class ElasticsearchRestTemplate
 		}
 		SearchResponse response;
 		try {
-			response = client.search(request);
+			response = client.search(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request: " + request.toString(), e);
 		}
@@ -506,7 +507,7 @@ public class ElasticsearchRestTemplate
 
 		SearchResponse response;
 		try {
-			response = client.search(request);
+			response = client.search(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request: " + request.toString(), e);
 		}
@@ -524,7 +525,7 @@ public class ElasticsearchRestTemplate
 		request.source().query((wrapperQuery(query.getSource())));
 		SearchResponse response;
 		try {
-			response = client.search(request);
+			response = client.search(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request: " + request.toString(), e);
 		}
@@ -599,7 +600,7 @@ public class ElasticsearchRestTemplate
 		countRequest.source(sourceBuilder);
 
 		try {
-			return client.search(countRequest).getHits().getTotalHits();
+			return client.search(countRequest, RequestOptions.DEFAULT).getHits().getTotalHits();
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while searching for request: " + countRequest.toString(), e);
 		}
@@ -616,7 +617,7 @@ public class ElasticsearchRestTemplate
 		}
 		SearchResponse response;
 		try {
-			response = client.search(searchRequest);
+			response = client.search(searchRequest, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request: " + searchRequest.toString(), e);
 		}
@@ -673,7 +674,7 @@ public class ElasticsearchRestTemplate
 			request.add(item);
 		}
 		try {
-			return client.multiGet(request);
+			return client.multiGet(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while multiget for request: " + request.toString(), e);
 		}
@@ -689,7 +690,7 @@ public class ElasticsearchRestTemplate
 		String documentId;
 		IndexRequest request = prepareIndex(query);
 		try {
-			documentId = client.index(request).getId();
+			documentId = client.index(request, RequestOptions.DEFAULT).getId();
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while index for request: " + request.toString(), e);
 		}
@@ -704,7 +705,7 @@ public class ElasticsearchRestTemplate
 	public UpdateResponse update(UpdateQuery query) {
 		UpdateRequest request = prepareUpdate(query);
 		try {
-			return client.update(request);
+			return client.update(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while update for request: " + request.toString(), e);
 		}
@@ -743,7 +744,7 @@ public class ElasticsearchRestTemplate
 			bulkRequest.add(prepareIndex(query));
 		}
 		try {
-			checkForBulkUpdateFailure(client.bulk(bulkRequest));
+			checkForBulkUpdateFailure(client.bulk(bulkRequest, RequestOptions.DEFAULT));
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while bulk for request: " + bulkRequest.toString(), e);
 		}
@@ -756,7 +757,7 @@ public class ElasticsearchRestTemplate
 			bulkRequest.add(prepareUpdate(query));
 		}
 		try {
-			checkForBulkUpdateFailure(client.bulk(bulkRequest));
+			checkForBulkUpdateFailure(client.bulk(bulkRequest, RequestOptions.DEFAULT));
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while bulk for request: " + bulkRequest.toString(), e);
 		}
@@ -786,7 +787,7 @@ public class ElasticsearchRestTemplate
 		GetIndexRequest request = new GetIndexRequest();
 		request.indices(indexName);
 		try {
-			return client.indices().exists(request);
+			return client.indices().exists(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while for indexExists request: " + request.toString(), e);
 		}
@@ -815,7 +816,7 @@ public class ElasticsearchRestTemplate
 		if (indexExists(indexName)) {
 			DeleteIndexRequest request = new DeleteIndexRequest(indexName);
 			try {
-				return client.indices().delete(request).isAcknowledged();
+				return client.indices().delete(request, RequestOptions.DEFAULT).isAcknowledged();
 			} catch (IOException e) {
 				throw new ElasticsearchException("Error while deleting index request: " + request.toString(), e);
 			}
@@ -827,7 +828,7 @@ public class ElasticsearchRestTemplate
 	public String delete(String indexName, String type, String id) {
 		DeleteRequest request = new DeleteRequest(indexName, type, id);
 		try {
-			return client.delete(request).getId();
+			return client.delete(request, RequestOptions.DEFAULT).getId();
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while deleting item request: " + request.toString(), e);
 		}
@@ -935,7 +936,7 @@ public class ElasticsearchRestTemplate
 		request.source().version(true);
 
 		try {
-			return client.search(request);
+			return client.search(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request with scroll: " + request.toString(), e);
 		}
@@ -964,7 +965,7 @@ public class ElasticsearchRestTemplate
 		}
 
 		try {
-			return client.search(request);
+			return client.search(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request with scroll: " + request.toString(), e);
 		}
@@ -997,7 +998,7 @@ public class ElasticsearchRestTemplate
 		request.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
 		SearchResponse response;
 		try {
-			response = client.searchScroll(request);
+			response = client.searchScroll(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request with scroll: " + request.toString(), e);
 		}
@@ -1010,7 +1011,7 @@ public class ElasticsearchRestTemplate
 		request.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
 		SearchResponse response;
 		try {
-			response = client.searchScroll(request);
+			response = client.searchScroll(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request with scroll: " + request.toString(), e);
 		}
@@ -1023,7 +1024,7 @@ public class ElasticsearchRestTemplate
 		request.addScrollId(scrollId);
 		try {
 			// TODO: Something useful with the response.
-			ClearScrollResponse response = client.clearScroll(request);
+			ClearScrollResponse response = client.clearScroll(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request with scroll: " + request.toString(), e);
 		}
@@ -1075,7 +1076,7 @@ public class ElasticsearchRestTemplate
 		prepareSearch(searchRequest, searchQuery);
 
 		try {
-			return client.search(searchRequest);
+			return client.search(searchRequest, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request with scroll: " + searchRequest.toString(), e);
 		}
@@ -1167,7 +1168,7 @@ public class ElasticsearchRestTemplate
 			request.settings((XContentBuilder) settings);
 		}
 		try {
-			return client.indices().create(request).isAcknowledged();
+			return client.indices().create(request, RequestOptions.DEFAULT).isAcknowledged();
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for creating index: " + request.toString(), e);
 		}
@@ -1347,7 +1348,7 @@ public class ElasticsearchRestTemplate
 		Assert.notNull(indexName, "No index defined for refresh()");
 		try {
 			// TODO: Do something with the response.
-			client.indices().refresh(refreshRequest(indexName));
+			client.indices().refresh(refreshRequest(indexName), RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("failed to refresh index: " + indexName, e);
 		}
@@ -1513,7 +1514,7 @@ public class ElasticsearchRestTemplate
 		searchRequest.source(sourceBuilder);
 
 		try {
-			return client.search(searchRequest);
+			return client.search(searchRequest, RequestOptions.DEFAULT);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Could not execute search request : " + searchRequest.toString(), e);
 		}
