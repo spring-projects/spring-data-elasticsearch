@@ -106,6 +106,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Ivan Greene
  * @author Dmitriy Yakovlev
  * @author Peter-Josef Meisch
+ * @author Farid Azaza
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -328,6 +329,54 @@ public class ElasticsearchTemplateTests {
 		// then
 		assertThat(sampleEntities).isNotNull();
 		assertThat(sampleEntities.getTotalElements()).isGreaterThanOrEqualTo(1);
+	}
+
+	@Test // DATAES-595
+	public void shouldReturnPageUsingLocalPreferenceForGivenSearchQuery() {
+
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		SearchQuery searchQueryWithValidPreference = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withPreference("_local").build();
+
+		// when
+		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQueryWithValidPreference,
+				SampleEntity.class);
+
+		// then
+		assertThat(sampleEntities).isNotNull();
+		assertThat(sampleEntities.getTotalElements()).isGreaterThanOrEqualTo(1);
+	}
+
+	@Test(expected = Exception.class) // DATAES-595
+	public void shouldThrowExceptionWhenInvalidPreferenceForSearchQuery() {
+
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		SearchQuery searchQueryWithInvalidPreference = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withPreference("_only_nodes:oops").build();
+
+		// when
+		elasticsearchTemplate.queryForPage(searchQueryWithInvalidPreference, SampleEntity.class);
+
+		// then Throw IllegalArgumentException in case of ElasticsearchTemplate and ElasticsearchStatusException in case of
+		// ElasticsearchRestTemplate
 	}
 
 	@Test // DATAES-422 - Add support for IndicesOptions in search queries

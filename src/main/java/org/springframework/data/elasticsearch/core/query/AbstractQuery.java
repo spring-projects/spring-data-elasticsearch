@@ -35,6 +35,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Alen Turkovic
  * @author Sascha Woo
+ * @author Farid Azaza
  */
 abstract class AbstractQuery implements Query {
 
@@ -50,6 +51,7 @@ abstract class AbstractQuery implements Query {
 	protected SearchType searchType = SearchType.DFS_QUERY_THEN_FETCH;
 	protected IndicesOptions indicesOptions;
 	protected boolean trackScores;
+	protected String preference;
 
 	@Override
 	public Sort getSort() {
@@ -63,9 +65,9 @@ abstract class AbstractQuery implements Query {
 
 	@Override
 	public final <T extends Query> T setPageable(Pageable pageable) {
-		
+
 		Assert.notNull(pageable, "Pageable must not be null!");
-		
+
 		this.pageable = pageable;
 		return (T) this.addSort(pageable.getSort());
 	}
@@ -182,5 +184,15 @@ abstract class AbstractQuery implements Query {
 	 */
 	public void setTrackScores(boolean trackScores) {
 		this.trackScores = trackScores;
+	}
+
+	@Override
+	public String getPreference() {
+		return preference;
+	}
+
+	@Override
+	public void setPreference(String preference) {
+		this.preference = preference;
 	}
 }

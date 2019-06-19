@@ -138,6 +138,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Lorenzo Spinelli
  * @author Dmitriy Yakovlev
  * @author Roman Puchkovskiy
+ * @author Farid Azaza
  */
 public class ElasticsearchRestTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -1281,6 +1282,10 @@ public class ElasticsearchRestTemplate
 
 		if (query.getMinScore() > 0) {
 			sourceBuilder.minScore(query.getMinScore());
+		}
+
+		if (query.getPreference() != null) {
+			request.preference(query.getPreference());
 		}
 		request.source(sourceBuilder);
 		return request;

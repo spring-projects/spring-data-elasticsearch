@@ -38,6 +38,7 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
  * @author Alen Turkovic
  * @author Sascha Woo
  * @author Jean-Baptiste Nizet
+ * @author Farid Azaza
  */
 public class NativeSearchQueryBuilder {
 
@@ -61,6 +62,7 @@ public class NativeSearchQueryBuilder {
 	private String route;
 	private SearchType searchType;
 	private IndicesOptions indicesOptions;
+	private String preference;
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -167,6 +169,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	public NativeSearchQueryBuilder withPreference(String preference) {
+		this.preference = preference;
+		return this;
+	}
+
 	public NativeSearchQuery build() {
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders,
 				highlightBuilder, highlightFields);
@@ -225,7 +232,9 @@ public class NativeSearchQueryBuilder {
 		if (indicesOptions != null) {
 			nativeSearchQuery.setIndicesOptions(indicesOptions);
 		}
-
+		if (preference != null) {
+			nativeSearchQuery.setPreference(preference);
+		}
 		return nativeSearchQuery;
 	}
 }
