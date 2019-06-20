@@ -56,9 +56,9 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Michael Wirth
  * @author Sascha Woo
+ * @author Murali Chevuri
  */
-public abstract class AbstractElasticsearchRepository<T, ID>
-		implements ElasticsearchRepository<T, ID> {
+public abstract class AbstractElasticsearchRepository<T, ID> implements ElasticsearchRepository<T, ID> {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(AbstractElasticsearchRepository.class);
 	protected ElasticsearchOperations elasticsearchOperations;
@@ -88,7 +88,7 @@ public abstract class AbstractElasticsearchRepository<T, ID>
 				putMapping();
 			}
 		} catch (ElasticsearchException exception) {
-			LOGGER.error("failed to load elasticsearch nodes : " + exception.getDetailedMessage());
+			LOGGER.error("failed to load elasticsearch nodes : {}", exception.getDetailedMessage());
 		}
 	}
 
@@ -173,6 +173,17 @@ public abstract class AbstractElasticsearchRepository<T, ID>
 	@Override
 	public <S extends T> S index(S entity) {
 		return save(entity);
+	}
+
+	/**
+	 * This method might lead to a temporary inconsistent state until
+	 * {@link org.springframework.data.elasticsearch.repository.ElasticsearchRepository#refresh() refresh} is called.
+	 */
+	@Override
+	public <S extends T> S indexWithoutRefresh(S entity) {
+		Assert.notNull(entity, "Cannot save 'null' entity.");
+		elasticsearchOperations.index(createIndexQuery(entity));
+		return entity;
 	}
 
 	@Override

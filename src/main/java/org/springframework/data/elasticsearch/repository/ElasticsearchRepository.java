@@ -27,9 +27,12 @@ import org.springframework.data.repository.NoRepositoryBean;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Sascha Woo
+ * @author Murali Chevuri
  */
 @NoRepositoryBean
 public interface ElasticsearchRepository<T, ID> extends ElasticsearchCrudRepository<T, ID> {
+
+	<S extends T> S indexWithoutRefresh(S entity);
 
 	<S extends T> S index(S entity);
 
