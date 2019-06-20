@@ -35,7 +35,6 @@ import org.elasticsearch.action.ActionRequestValidationException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -570,26 +569,28 @@ public class SimpleElasticsearchRepositoryTests {
 		assertThat(entities.getTotalElements()).isEqualTo(1L);
 	}
 
-    @Test
-    public void shouldIndexWithoutRefreshEntity() {
+	@Test
+	public void shouldIndexWithoutRefreshEntity() {
 
-        // given
-        String documentId = randomNumeric(5);
-        SampleEntity sampleEntity = new SampleEntity();
-        sampleEntity.setId(documentId);
-        sampleEntity.setVersion(System.currentTimeMillis());
-        sampleEntity.setMessage("some message");
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setVersion(System.currentTimeMillis());
+		sampleEntity.setMessage("some message");
 
-        // when
-        repository.indexWithoutRefresh(sampleEntity);
+		// when
+		repository.indexWithoutRefresh(sampleEntity);
 
-        // then
-        Page<SampleEntity> entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
-        assertThat(entities.getTotalElements()).isEqualTo(0L);
-        repository.refresh();
-        entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
-        assertThat(entities.getTotalElements()).isEqualTo(1L);
-    }
+		// then
+		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
+		assertThat(entities.getTotalElements()).isEqualTo(0L);
+
+		repository.refresh();
+
+		entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
+		assertThat(entities.getTotalElements()).isEqualTo(1L);
+	}
 
 	@Test
 	public void shouldSortByGivenField() {

@@ -32,9 +32,14 @@ import org.springframework.data.repository.NoRepositoryBean;
 @NoRepositoryBean
 public interface ElasticsearchRepository<T, ID> extends ElasticsearchCrudRepository<T, ID> {
 
-	<S extends T> S indexWithoutRefresh(S entity);
-
 	<S extends T> S index(S entity);
+
+	/**
+	 * This method is intended to be used when many single inserts must be made that cannot be aggregated to be inserted
+	 * with {@link #saveAll(Iterable)}. This might lead to a temporary inconsistent state until {@link #refresh()} is
+	 * called.
+	 */
+	<S extends T> S indexWithoutRefresh(S entity);
 
 	Iterable<T> search(QueryBuilder query);
 
