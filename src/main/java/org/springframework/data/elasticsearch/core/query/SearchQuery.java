@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
@@ -30,6 +31,7 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Jean-Baptiste Nizet
+ * @author Martin Choraine
  */
 public interface SearchQuery extends Query {
 
@@ -50,6 +52,8 @@ public interface SearchQuery extends Query {
 
 	List<IndexBoost> getIndicesBoost();
 
-    List<ScriptField> getScriptFields();
+	List<ScriptField> getScriptFields();
+
+	CollapseBuilder getCollapseBuilder();
 
 }

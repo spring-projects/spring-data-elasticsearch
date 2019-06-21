@@ -25,6 +25,7 @@ import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +41,7 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
  * @author Alen Turkovic
  * @author Sascha Woo
  * @author Jean-Baptiste Nizet
+ * @author Martin Choraine
  * @author Farid Azaza
  */
 public class NativeSearchQueryBuilder {
@@ -57,6 +59,7 @@ public class NativeSearchQueryBuilder {
 	private String[] types;
 	private String[] fields;
 	private SourceFilter sourceFilter;
+	private CollapseBuilder collapseBuilder;
 	private List<IndexBoost> indicesBoost;
 	private float minScore;
 	private boolean trackScores;
@@ -83,6 +86,11 @@ public class NativeSearchQueryBuilder {
 
 	public NativeSearchQueryBuilder withScriptField(ScriptField scriptField) {
 		this.scriptFields.add(scriptField);
+		return this;
+	}
+
+	public NativeSearchQueryBuilder withCollapse(String collapseField) {
+		this.collapseBuilder = new CollapseBuilder(collapseField);
 		return this;
 	}
 
@@ -205,6 +213,10 @@ public class NativeSearchQueryBuilder {
 
 		if (!isEmpty(scriptFields)) {
 			nativeSearchQuery.setScriptFields(scriptFields);
+		}
+
+		if (collapseBuilder != null) {
+			nativeSearchQuery.setCollapseBuilder(collapseBuilder);
 		}
 
 		if (!isEmpty(facetRequests)) {

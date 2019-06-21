@@ -105,6 +105,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Ivan Greene
  * @author Dmitriy Yakovlev
  * @author Peter-Josef Meisch
+ * @author Martin Choraine
  * @author Farid Azaza
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -2823,6 +2824,36 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.get(1).getMessage()).isEqualTo(sampleEntity3.getMessage());
 		assertThat(sampleEntities.get(2).getRate()).isEqualTo(sampleEntity1.getRate());
 		assertThat(sampleEntities.get(2).getMessage()).isEqualTo(sampleEntity1.getMessage());
+	}
+
+	@Test // DATAES-593
+	public void shouldReturnDocumentWithCollapsedField() {
+
+		// given
+		SampleEntity sampleEntity = SampleEntity.builder().id(randomNumeric(5)).message("message 1").rate(1)
+				.version(System.currentTimeMillis()).build();
+		SampleEntity sampleEntity2 = SampleEntity.builder().id(randomNumeric(5)).message("message 2").rate(2)
+				.version(System.currentTimeMillis()).build();
+		SampleEntity sampleEntit3 = SampleEntity.builder().id(randomNumeric(5)).message("message 1").rate(1)
+				.version(System.currentTimeMillis()).build();
+
+		List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(sampleEntity, sampleEntity2, sampleEntit3));
+
+		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withIndices(INDEX_NAME_SAMPLE_ENTITY).withTypes(TYPE_NAME).withCollapse("rate").build();
+
+		// when
+		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+
+		// then
+		assertThat(page).isNotNull();
+		assertThat(page.getTotalElements()).isEqualTo(3);
+		assertThat(page.getContent()).hasSize(2);
+		assertThat(page.getContent().get(0).getMessage()).isEqualTo("message 1");
+		assertThat(page.getContent().get(1).getMessage()).isEqualTo("message 2");
 	}
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {

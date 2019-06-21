@@ -137,6 +137,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Lorenzo Spinelli
  * @author Dmitriy Yakovlev
  * @author Roman Puchkovskiy
+ * @author Martin Choraine
  * @author Farid Azaza
  */
 public class ElasticsearchRestTemplate
@@ -1099,6 +1100,10 @@ public class ElasticsearchRestTemplate
 			for (ScriptField scriptedField : searchQuery.getScriptFields()) {
 				searchRequest.source().scriptField(scriptedField.fieldName(), scriptedField.script());
 			}
+		}
+
+		if (searchQuery.getCollapseBuilder() != null) {
+			searchRequest.source().collapse(searchQuery.getCollapseBuilder());
 		}
 
 		if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
