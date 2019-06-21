@@ -39,6 +39,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.elasticsearch.ElasticsearchStatusException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -75,6 +76,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Farid Azaza
  * @currentRead Golden Fool - Robin Hobb
  */
 @RunWith(SpringRunner.class)
@@ -387,6 +389,43 @@ public class ReactiveElasticsearchTemplateTests {
 				.as(StepVerifier::create) //
 				.expectNext(sampleEntity3) //
 				.verifyComplete();
+	}
+
+	@Test // DATAES-595
+	public void shouldReturnListUsingLocalPreferenceForGivenCriteria() {
+
+		SampleEntity sampleEntity1 = randomEntity("test message");
+		SampleEntity sampleEntity2 = randomEntity("test test");
+		SampleEntity sampleEntity3 = randomEntity("some message");
+
+		index(sampleEntity1, sampleEntity2, sampleEntity3);
+
+		CriteriaQuery queryWithValidPreference = new CriteriaQuery(
+				new Criteria("message").contains("some").and("message").contains("message"));
+		queryWithValidPreference.setPreference("_local");
+
+		template.find(queryWithValidPreference, SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.expectNext(sampleEntity3) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-595
+	public void shouldThrowElasticsearchStatusExceptionWhenInvalidPreferenceForGivenCriteria() {
+
+		SampleEntity sampleEntity1 = randomEntity("test message");
+		SampleEntity sampleEntity2 = randomEntity("test test");
+		SampleEntity sampleEntity3 = randomEntity("some message");
+
+		index(sampleEntity1, sampleEntity2, sampleEntity3);
+
+		CriteriaQuery queryWithInvalidPreference = new CriteriaQuery(
+				new Criteria("message").contains("some").and("message").contains("message"));
+		queryWithInvalidPreference.setPreference("_only_nodes:oops");
+
+		template.find(queryWithInvalidPreference, SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.expectError(ElasticsearchStatusException.class).verify();
 	}
 
 	@Test // DATAES-504

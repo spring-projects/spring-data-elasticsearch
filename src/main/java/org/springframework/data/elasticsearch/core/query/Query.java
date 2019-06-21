@@ -35,6 +35,7 @@ import org.springframework.data.domain.Sort;
  * @author Alen Turkovic
  * @author Sascha Woo
  * @author Christoph Strobl
+ * @author Farid Azaza
  */
 public interface Query {
 
@@ -178,4 +179,18 @@ public interface Query {
 	 * @return null if not set
 	 */
 	IndicesOptions getIndicesOptions();
+
+	/**
+	 * Get preference
+	 *
+	 * @return
+	 */
+	String getPreference();
+
+	/**
+	 * Add preference filter to be added as part of search request
+	 *
+	 * @param preference
+	 */
+	void setPreference(String preference);
 }

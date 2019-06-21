@@ -121,6 +121,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Dmitriy Yakovlev
  * @author Peter-Josef Meisch
+ * @author Farid Azaza
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
@@ -1068,6 +1069,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 		if (query.getMinScore() > 0) {
 			searchRequestBuilder.setMinScore(query.getMinScore());
+		}
+
+		if (query.getPreference() != null) {
+			searchRequestBuilder.setPreference(query.getPreference());
 		}
 		return searchRequestBuilder;
 	}
