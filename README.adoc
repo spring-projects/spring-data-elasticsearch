@@ -243,6 +243,22 @@ public class Config {
   }
 }
 
+//  If necessary, a BASIC_AUTH (user and password) header can be set with:
+
+@Configuration
+public class ConfigWithAuthentication {
+
+	@Bean
+	public ReactiveElasticsearchClient reactiveElasticsearchClient() {
+		HttpHeaders defaultHeaders = new HttpHeaders();
+		defaultHeaders.setBasicAuth(USER_NAME, USER_PASS);
+		ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+				.connectedTo("localhost:9200", "localhost:9291")
+				.withDefaultHeaders(defaultHeaders).build();
+		return ReactiveRestClients.create(clientConfiguration);
+	}
+}
+
 // ...
 
 Mono<IndexResponse> response = client.index(request ->
