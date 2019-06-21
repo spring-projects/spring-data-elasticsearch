@@ -45,7 +45,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.annotation.Id;

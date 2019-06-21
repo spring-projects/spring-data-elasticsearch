@@ -75,7 +75,6 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -1074,6 +1073,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		if (query.getPreference() != null) {
 			searchRequestBuilder.setPreference(query.getPreference());
 		}
+
 		return searchRequestBuilder;
 	}
 

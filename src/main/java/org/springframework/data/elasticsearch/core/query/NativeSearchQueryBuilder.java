@@ -15,10 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import static org.springframework.util.CollectionUtils.isEmpty;
+import static org.springframework.util.CollectionUtils.*;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -235,6 +237,7 @@ public class NativeSearchQueryBuilder {
 		if (preference != null) {
 			nativeSearchQuery.setPreference(preference);
 		}
+
 		return nativeSearchQuery;
 	}
 }

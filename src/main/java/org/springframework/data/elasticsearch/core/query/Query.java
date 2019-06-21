@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -184,6 +183,7 @@ public interface Query {
 	 * Get preference
 	 *
 	 * @return
+	 * @since 3.2
 	 */
 	String getPreference();
 
@@ -191,6 +191,7 @@ public interface Query {
 	 * Add preference filter to be added as part of search request
 	 *
 	 * @param preference
+	 * @since 3.2
 	 */
 	void setPreference(String preference);
 }

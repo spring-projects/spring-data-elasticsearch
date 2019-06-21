@@ -85,7 +85,6 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -1287,6 +1286,7 @@ public class ElasticsearchRestTemplate
 		if (query.getPreference() != null) {
 			request.preference(query.getPreference());
 		}
+
 		request.source(sourceBuilder);
 		return request;
 	}

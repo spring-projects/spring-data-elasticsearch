@@ -50,7 +50,6 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
