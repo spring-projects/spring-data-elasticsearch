@@ -24,6 +24,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -76,6 +78,7 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  * @author Peter-Josef Meisch
  * @author Farid Azaza
+ * @author Martin Choraine
  * @currentRead Golden Fool - Robin Hobb
  */
 @RunWith(SpringRunner.class)
@@ -666,6 +669,30 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
+	@Test // DATAES-593
+	public void shouldReturnDocumentWithCollapsedField() {
+
+		SampleEntity entity1 = randomEntity("test message");
+		entity1.setRate(1);
+		SampleEntity entity2 = randomEntity("test another message");
+		entity2.setRate(2);
+		SampleEntity entity3 = randomEntity("test message again");
+		entity3.setRate(1);
+		index(entity1, entity2, entity3);
+
+		SearchQuery query = new NativeSearchQueryBuilder()
+				.withIndices(DEFAULT_INDEX)
+				.withQuery(matchAllQuery())
+				.withCollapse("rate")
+				.withPageable(PageRequest.of(0, 25))
+				.build();
+
+		template.find(query, SampleEntity.class)
+				.as(StepVerifier::create)
+				.expectNextCount(2)
+				.verifyComplete();
+	}
+
 	@Data
 	@Document(indexName = "marvel", type = "characters")
 	static class Person {
@@ -733,6 +760,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		@Id private String id;
 		@Field(type = Text, store = true, fielddata = true) private String message;
+		private int rate;
 		@Version private Long version;
 		@Score private float score;
 	}
