@@ -77,6 +77,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Farid Azaza
  * @author Martin Choraine
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations {
@@ -264,8 +265,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				searchSourceBuilder.fetchSource(query.getSourceFilter().getIncludes(), query.getSourceFilter().getExcludes());
 			}
 
-			if (query instanceof NativeSearchQuery && ((NativeSearchQuery) query).getCollapseBuilder() != null) {
-				searchSourceBuilder.collapse(((NativeSearchQuery) query).getCollapseBuilder());
+			if (query instanceof SearchQuery && ((SearchQuery) query).getCollapseBuilder() != null) {
+				searchSourceBuilder.collapse(((SearchQuery) query).getCollapseBuilder());
 			}
 
 			sort(query, entity).forEach(searchSourceBuilder::sort);

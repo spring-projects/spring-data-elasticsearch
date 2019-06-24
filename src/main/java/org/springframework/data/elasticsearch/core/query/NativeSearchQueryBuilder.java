@@ -89,7 +89,7 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withCollapse(String collapseField) {
+	public NativeSearchQueryBuilder withCollapseField(String collapseField) {
 		this.collapseBuilder = new CollapseBuilder(collapseField);
 		return this;
 	}

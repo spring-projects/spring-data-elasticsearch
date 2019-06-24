@@ -24,8 +24,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -680,16 +678,16 @@ public class ReactiveElasticsearchTemplateTests {
 		entity3.setRate(1);
 		index(entity1, entity2, entity3);
 
-		SearchQuery query = new NativeSearchQueryBuilder()
-				.withIndices(DEFAULT_INDEX)
-				.withQuery(matchAllQuery())
-				.withCollapse("rate")
-				.withPageable(PageRequest.of(0, 25))
+		SearchQuery query = new NativeSearchQueryBuilder() //
+				.withIndices(DEFAULT_INDEX) //
+				.withQuery(matchAllQuery()) //
+				.withCollapseField("rate") //
+				.withPageable(PageRequest.of(0, 25)) //
 				.build();
 
-		template.find(query, SampleEntity.class)
-				.as(StepVerifier::create)
-				.expectNextCount(2)
+		template.find(query, SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.expectNextCount(2) //
 				.verifyComplete();
 	}
 
