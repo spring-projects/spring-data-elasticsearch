@@ -120,6 +120,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Dmitriy Yakovlev
  * @author Peter-Josef Meisch
+ * @author Martin Choraine
  * @author Farid Azaza
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
@@ -922,6 +923,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 			}
 		}
 
+		if (searchQuery.getCollapseBuilder() != null) {
+			searchRequest.setCollapse(searchQuery.getCollapseBuilder());
+		}
+
 		if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
 			HighlightBuilder highlightBuilder = searchQuery.getHighlightBuilder();
 			if (highlightBuilder == null) {
@@ -952,6 +957,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 				searchRequest.addAggregation(aggregatedFacet.getFacet());
 			}
 		}
+
 		return searchRequest.setQuery(searchQuery.getQuery());
 	}
 

@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
@@ -33,19 +34,20 @@ import java.util.Arrays;
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Jean-Baptiste Nizet
+ * @author Martin Choraine
  */
 public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
 	private QueryBuilder query;
 	private QueryBuilder filter;
 	private List<SortBuilder> sorts;
-    private final List<ScriptField> scriptFields = new ArrayList<>();
+	private final List<ScriptField> scriptFields = new ArrayList<>();
+	private CollapseBuilder collapseBuilder;
 	private List<FacetRequest> facets;
 	private List<AbstractAggregationBuilder> aggregations;
 	private HighlightBuilder highlightBuilder;
 	private HighlightBuilder.Field[] highlightFields;
 	private List<IndexBoost> indicesBoost;
-
 
 	public NativeSearchQuery(QueryBuilder query) {
 		this.query = query;
@@ -111,6 +113,15 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
         scriptFields.addAll(Arrays.asList(scriptField));
     }
 
+	@Override
+	public CollapseBuilder getCollapseBuilder() {
+		return collapseBuilder;
+	}
+
+	public void setCollapseBuilder(CollapseBuilder collapseBuilder) {
+		this.collapseBuilder = collapseBuilder;
+	}
+
 	public void addFacet(FacetRequest facetRequest) {
 		if (facets == null) {
 			facets = new ArrayList<>();
@@ -131,7 +142,6 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 	public List<AbstractAggregationBuilder> getAggregations() {
 		return aggregations;
 	}
-
 
 	public void addAggregation(AbstractAggregationBuilder aggregationBuilder) {
 		if (aggregations == null) {
