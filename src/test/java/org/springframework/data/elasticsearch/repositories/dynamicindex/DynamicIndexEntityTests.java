@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch;
+package org.springframework.data.elasticsearch.repositories.dynamicindex;
 
 import static org.junit.Assert.*;
 
@@ -24,9 +24,10 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportResource;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.entities.DynamicIndexEntity;
-import org.springframework.data.elasticsearch.repositories.dynamicindex.DynamicIndexRepository;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -34,6 +35,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * DynamicIndexEntityTests
  *
  * @author Sylvain Laurent
+ * @author Peter-Josef Meisch
  */
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -48,6 +50,7 @@ public class DynamicIndexEntityTests {
 
 	@Before
 	public void init() {
+
 		deleteIndexes();
 		template.createIndex("index1");
 		template.createIndex("index2");
@@ -58,8 +61,15 @@ public class DynamicIndexEntityTests {
 		deleteIndexes();
 	}
 
+	private void deleteIndexes() {
+
+		template.deleteIndex("index1");
+		template.deleteIndex("index2");
+	}
+
 	@Test // DATAES-456
 	public void indexNameIsDynamicallyProvided() {
+
 		int initialCallsCount = indexNameProvider.callsCount;
 
 		indexNameProvider.setIndexName("index1");
@@ -69,7 +79,6 @@ public class DynamicIndexEntityTests {
 
 		indexNameProvider.setIndexName("index2");
 		assertEquals(0L, repository.count());
-
 	}
 
 	@ImportResource(value = "classpath:/dynamic-index-repository-test.xml")
@@ -79,13 +88,17 @@ public class DynamicIndexEntityTests {
 		public IndexNameProvider indexNameProvider() {
 			return new IndexNameProvider();
 		}
+
 	}
 
 	static class IndexNameProvider {
+
 		private String indexName;
+
 		int callsCount;
 
 		public String getIndexName() {
+
 			callsCount++;
 			return indexName;
 		}
@@ -93,11 +106,23 @@ public class DynamicIndexEntityTests {
 		public void setIndexName(String indexName) {
 			this.indexName = indexName;
 		}
+
 	}
 
-	private void deleteIndexes() {
-		template.deleteIndex("index1");
-		template.deleteIndex("index2");
+	@Document(indexName = "#{@indexNameProvider.getIndexName()}", createIndex = false)
+	public static class DynamicIndexEntity {
+
+		@Id private String id;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
 	}
+
+	public interface DynamicIndexRepository extends ElasticsearchRepository<DynamicIndexEntity, String> {}
 
 }

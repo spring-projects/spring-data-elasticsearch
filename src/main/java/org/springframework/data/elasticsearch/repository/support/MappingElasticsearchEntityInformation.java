@@ -47,7 +47,8 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 		this(entity, entity.getIndexName(), entity.getIndexType(), entity.getVersionType());
 	}
 
-	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity, String indexName, String type, VersionType versionType) {
+	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity, String indexName, String type,
+			VersionType versionType) {
 		super(entity);
 
 		this.entityMetadata = entity;
@@ -76,7 +77,8 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 
 		ElasticsearchPersistentProperty versionProperty = entityMetadata.getVersionProperty();
 		try {
-			return versionProperty != null ? (Long) entityMetadata.getPropertyAccessor(entity).getProperty(versionProperty) : null;
+			return versionProperty != null ? (Long) entityMetadata.getPropertyAccessor(entity).getProperty(versionProperty)
+					: null;
 		} catch (Exception e) {
 			throw new IllegalStateException("failed to load version field", e);
 		}
@@ -92,7 +94,8 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 
 		ElasticsearchPersistentProperty parentProperty = entityMetadata.getParentIdProperty();
 		try {
-			return parentProperty != null ? (String) entityMetadata.getPropertyAccessor(entity).getProperty(parentProperty) : null;
+			return parentProperty != null ? (String) entityMetadata.getPropertyAccessor(entity).getProperty(parentProperty)
+					: null;
 		} catch (Exception e) {
 			throw new IllegalStateException("failed to load parent ID: " + e, e);
 		}
