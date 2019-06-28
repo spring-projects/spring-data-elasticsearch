@@ -3,11 +3,7 @@
 
 `ReactiveElasticsearchOperations` is the gateway to executing high level commands against an Elasticsearch cluster using the `ReactiveElasticsearchClient`.
 
-The `ReactiveElasticsearchTemplate` is the default implementation of `ReactiveElasticsearchOperations` and offers the following set of features.
-
-* Read/Write mapping support for domain types.
-* A rich query and criteria api.
-* Resource management and Exception translation.
+The `ReactiveElasticsearchTemplate` is the default implementation of `ReactiveElasticsearchOperations`.
 
 [[elasticsearch.reactive.template]]
 == Reactive Elasticsearch Template
@@ -28,11 +24,11 @@ dedicated configuration method hooks for `base package`, the `initial entity set
 @Configuration
 public class Config extends AbstractReactiveElasticsearchConfiguration {
 
-    @Bean <1>
-    @Override
-    public ReactiveElasticsearchClient reactiveElasticsearchClient() {
-        // ...
-    }
+  @Bean <1>
+  @Override
+  public ReactiveElasticsearchClient reactiveElasticsearchClient() {
+      // ...
+  }
 }
 ----
 <1> Configure the client to use. This can be done by `ReactiveRestClients` or directly via `DefaultReactiveElasticsearchClient`.
@@ -51,25 +47,22 @@ However one might want to be more in control over the actual components and use 
 @Configuration
 public class Config {
 
-    @Bean <1>
-    public ReactiveElasticsearchClient reactiveElasticsearchClient() {
-        // ...
-    }
-
-    @Bean <2>
-    public ElasticsearchConverter elasticsearchConverter() {
-        return new MappingElasticsearchConverter(elasticsearchMappingContext());
-    }
-
-    @Bean <3>
-    public SimpleElasticsearchMappingContext elasticsearchMappingContext() {
-        return new SimpleElasticsearchMappingContext();
-    }
-
-    @Bean <4>
-    public ReactiveElasticsearchOperations reactiveElasticsearchOperations() {
-        return new ReactiveElasticsearchTemplate(reactiveElasticsearchClient(), elasticsearchConverter());
-    }
+  @Bean <1>
+  public ReactiveElasticsearchClient reactiveElasticsearchClient() {
+    // ...
+  }
+  @Bean <2>
+  public ElasticsearchConverter elasticsearchConverter() {
+    return new MappingElasticsearchConverter(elasticsearchMappingContext());
+  }
+  @Bean <3>
+  public SimpleElasticsearchMappingContext elasticsearchMappingContext() {
+    return new SimpleElasticsearchMappingContext();
+  }
+  @Bean <4>
+  public ReactiveElasticsearchOperations reactiveElasticsearchOperations() {
+    return new ReactiveElasticsearchTemplate(reactiveElasticsearchClient(), elasticsearchConverter());
+  }
 }
 ----
 <1> Configure the client to use. This can be done by `ReactiveRestClients` or directly via `DefaultReactiveElasticsearchClient`.
@@ -92,25 +85,24 @@ Consider the following:
 @Document(indexName = "marvel", type = "characters")
 public class Person {
 
-    private @Id String id;
-    private String name;
-    private int age;
-
-    // Getter/Setter omitted...
+  private @Id String id;
+  private String name;
+  private int age;
+  // Getter/Setter omitted...
 }
 ----
 
 [source,java]
 ----
-template.save(new Person("Bruce Banner", 42)) <1>
-    .doOnNext(System.out::println)
-    .flatMap(person -> template.findById(person.id, Person.class)) <2>
-    .doOnNext(System.out::println)
-    .flatMap(person -> template.delete(person)) <3>
-    .doOnNext(System.out::println)
-    .flatMap(id -> template.count(Person.class)) <4>
-    .doOnNext(System.out::println)
-    .subscribe(); <5>
+template.save(new Person("Bruce Banner", 42))                    <1>
+  .doOnNext(System.out::println)
+  .flatMap(person -> template.findById(person.id, Person.class)) <2>
+  .doOnNext(System.out::println)
+  .flatMap(person -> template.delete(person))                    <3>
+  .doOnNext(System.out::println)
+  .flatMap(id -> template.count(Person.class))                   <4>
+  .doOnNext(System.out::println)
+  .subscribe(); <5>
 ----
 
 The above outputs the following sequence on the console.

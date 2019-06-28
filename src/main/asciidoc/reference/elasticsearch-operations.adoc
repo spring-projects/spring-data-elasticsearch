@@ -1,0 +1,138 @@
+[[elasticsearch.operations]]
+= Elasticsearch Operations
+
+Spring Data Elasticsearch uses two interfaces to define the operations that can be called against an Elasticsearch index. These are `ElasticsearchOperations` and `ReactiveElasticsearchOperations`. Whereas the first is used with the classic synchronous implementations, the second one uses reactive infrastructure.
+
+The default implementations of the interfaces offer:
+
+* Read/Write mapping support for domain types.
+* A rich query and criteria api.
+* Resource management and Exception translation.
+
+[[elasticsearch.operations.template]]
+== ElasticsearchTemplate
+
+The `ElasticsearchTemplate` is an implementation of the `ElasticsearchOperations` interface using the <<elasticsearch.clients.transport>>.
+
+.ElasticsearchTemplate configuration
+====
+[source,java]
+----
+@Configuration
+public class TransportClientConfig extends ElasticsearchConfigurationSupport {
+
+  @Bean
+  public Client elasticsearchClient() throws UnknownHostException {                 <1>
+    Settings settings = Settings.builder().put("cluster.name", "elasticsearch").build();
+    TransportClient client = new PreBuiltTransportClient(settings);
+    client.addTransportAddress(new TransportAddress(InetAddress.getByName("127.0.0.1"), 9300));
+    return client;
+  }
+
+  @Bean(name = {"elasticsearchOperations", "elasticsearchTemplate"})
+  public ElasticsearchTemplate elasticsearchTemplate() throws UnknownHostException { <2>
+  	return new ElasticsearchTemplate(elasticsearchClient(), entityMapper());
+  }
+
+  // use the ElasticsearchEntityMapper
+  @Bean
+  @Override
+  public EntityMapper entityMapper() {                                               <3>
+    ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
+  	  new DefaultConversionService());
+    entityMapper.setConversions(elasticsearchCustomConversions());
+    return entityMapper;
+  }
+}
+----
+
+<1> Setting up the <<elasticsearch.clients.transport>>.
+<2> Creating the `ElasticsearchTemplate` bean, offering both names, _elasticsearchOperations_ and _elasticsearchTemplate_.
+<3> Using the <<elasticsearch.mapping.meta-model>> ElasticsearchMapper.
+====
+
+[[elasticsearch.operations.resttemplate]]
+== ElasticsearchRestTemplate
+
+The `ElasticsearchRestTemplate` is an implementation of the `ElasticsearchOperations` interface using the <<elasticsearch.clients.rest>>.
+
+.ElasticsearchRestTemplate configuration
+====
+[source,java]
+----
+@Configuration
+public class RestClientConfig extends AbstractElasticsearchConfiguration {
+  @Override
+  public RestHighLevelClient elasticsearchClient() {       <1>
+    return RestClients.create(ClientConfiguration.localhost()).rest();
+  }
+
+  // no special bean creation needed                       <2>
+
+  // use the ElasticsearchEntityMapper
+  @Bean
+  @Override
+  public EntityMapper entityMapper() {                     <3>
+    ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
+        new DefaultConversionService());
+    entityMapper.setConversions(elasticsearchCustomConversions());
+
+    return entityMapper;
+  }
+}
+----
+<1> Setting up the <<elasticsearch.clients.rest>>.
+<2> The base class `AbstractElasticsearchConfiguration` already provides the `elasticsearchTemplate` bean.
+<3> Using the <<elasticsearch.mapping.meta-model>> ElasticsearchMapper.
+
+====
+
+[[elasticsearch.operations.usage]]
+== Usage examples
+
+As both `ElasticsearchTemplate` and `ElasticsearchRestTemplate` implement the `ElasticsearchOperations` interface, the code to use them is not different. The example shows how to use an injected `ElasticsearchOperations` instance in a Spring REST controller. The decision, if this is using the `TransportClient` or the `RestClient` is made by providing the
+ corresponding Bean with one of the configurations shown above.
+
+.ElasticsearchOperations usage
+====
+[source,java]
+----
+@RestController
+@RequestMapping("/")
+public class TestController {
+
+  private  ElasticsearchOperations elasticsearchOperations;
+
+  public TestController(ElasticsearchOperations elasticsearchOperations) { <1>
+    this.elasticsearchOperations = elasticsearchOperations;
+  }
+
+  @PostMapping("/person")
+  public String save(@RequestBody Person person) {                         <2>
+
+    IndexQuery indexQuery = new IndexQueryBuilder()
+      .withId(person.getId().toString())
+      .withObject(person)
+      .build();
+    String documentId = elasticsearchOperations.index(indexQuery);
+    return documentId;
+  }
+
+  @GetMapping("/person/{id}")
+  public Person findById(@PathVariable("id")  Long id) {                   <3>
+    Person person = elasticsearchOperations
+      .queryForObject(GetQuery.getById(id.toString()), Person.class);
+    return person;
+  }
+}
+
+----
+
+<1> Let Spring inject the provided `ElasticsearchOperations` bean in the constructor.
+<2> Store some entity in the Elasticsearch cluster.
+<3> Retrieve the entity with a query by id.
+====
+
+To see the full possibilities of `ElasticsearchOperations` please refer to the API documentation.
+
+include::reactive-elasticsearch-operations.adoc[leveloffset=+1]

@@ -3,14 +3,50 @@
 
 This chapter illustrates configuration and usage of supported Elasticsearch client implementations.
 
-Spring data Elasticsearch operates upon an Elasticsearch client that is connected to a single Elasticsearch node or a cluster.
+Spring data Elasticsearch operates upon an Elasticsearch client that is connected to a single Elasticsearch node or a cluster. Although the Elasticsearch Client can be used to work with the cluster,  applications using Spring Data Elasticsearch normally use the higher level abstractions of <<elasticsearch.operations>> and <<elasticsearch.repositories>>.
 
-WARNING: The well known `TransportClient` is deprecated as of Elasticsearch 7.0.0 and is expected to be removed in Elasticsearch 8.0.
+[[elasticsearch.clients.transport]]
+== Transport Client
+
+WARNING: The well known `TransportClient` is deprecated as of Elasticsearch 7 and will be removed in Elasticsearch 8. (https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/transport-client.html[see the Elasticsearch documentation]). Spring Data Elasticsearch will support the `TransportClient` as long as it is available in the used
+Elasticsearch <<elasticsearch.versions,version>>.
+
+We strongly recommend to use the <<elasticsearch.clients.rest>> instead of the `TransportClient`.
+
+.Transport Client
+====
+[source,java]
+----
+static class Config {
+
+  @Bean
+  Client client() {
+  	Settings settings = Settings.builder()
+  	  .put("cluster.name", "elasticsearch")   <1>
+      .build();
+  	TransportClient client = new PreBuiltTransportClient(settings);
+    client.addTransportAddress(new TransportAddress(InetAddress.getByName("127.0.0.1")
+      , 9300));                               <2>
+    return client;
+  }
+}
+
+// ...
+
+IndexRequest request = new IndexRequest("spring-data", "elasticsearch", randomID())
+ .source(someObject)
+ .setRefreshPolicy(IMMEDIATE);
+
+IndexResponse response = client.index(request);
+----
+<1> The `TransportClient` must be configured with the cluster name.
+<2> The host and port to connect the client to.
+====
 
 [[elasticsearch.clients.rest]]
 == High Level REST Client
 
-The Java High Level REST Client provides a straight forward replacement for the `TransportClient` as it accepts and returns
+The Java High Level REST Client now is the default client of Elasticsearch, it provides a straight forward replacement for the `TransportClient` as it accepts and returns
 the very same request/response objects and therefore depends on the Elasticsearch core project.
 Asynchronous calls are operated upon a client managed thread pool and require a callback to be notified when the request is done.
 
@@ -18,6 +54,7 @@ Asynchronous calls are operated upon a client managed thread pool and require a 
 ====
 [source,java]
 ----
+import org.springframework.beans.factory.annotation.Autowired;@Configuration
 static class Config {
 
   @Bean
@@ -27,9 +64,16 @@ static class Config {
       .connectedTo("localhost:9200", "localhost:9201")
       .build();
 
-    return RestClients.create(clientConfiguration).rest(); <2>
+    return RestClients.create(clientConfiguration).rest();                  <2>
   }
 }
+
+// ...
+
+  @Autowired
+  RestHighLevelClient highLevelClient;
+
+  RestClient lowLevelClient = highLevelClient.lowLevelClient();             <3>
 
 // ...
 
@@ -37,10 +81,11 @@ IndexRequest request = new IndexRequest("spring-data", "elasticsearch", randomID
   .source(singletonMap("feature", "high-level-rest-client"))
   .setRefreshPolicy(IMMEDIATE);
 
-IndexResponse response = client.index(request);
+IndexResponse response = highLevelClient.index(request);
 ----
-<1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enbale SSL.
-<2> Next to the `rest()` client it is also possible to obtain the `lowLevelRest()` client.
+<1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
+<2> Create the RestHighLevelClient.
+<3> It is also possible to obtain the `lowLevelRest()` client.
 ====
 
 [[elasticsearch.clients.reactive]]
@@ -92,19 +137,28 @@ Client behaviour can be changed via the `ClientConfiguration` that allows to set
 ====
 [source,java]
 ----
+// optional if Basic Auhtentication is needed
+HttpHeaders defaultHeaders = new HttpHeaders();
+defaultHeaders.setBasicAuth(USER_NAME, USER_PASS);                      <1>
 
 ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-  .connectedTo("localhost:9200", "localhost:9291") <1>
-  .withConnectTimeout(Duration.ofSeconds(5)) <2>
-  .withSocketTimeout(Duration.ofSeconds(3)) <3>
-  .useSsl()
+  .connectedTo("localhost:9200", "localhost:9291")                      <2>
+  .withConnectTimeout(Duration.ofSeconds(5))                            <3>
+  .withSocketTimeout(Duration.ofSeconds(3))                             <4>
+  .useSsl()                                                             <5>
+  .withDefaultHeaders(defaultHeaders)                                   <6>
+  .withBasicAuth(username, password)                                    <7>
   . // ... other options
   .build();
 
 ----
-<1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enbale SSL.
-<2> Set the connection timeout. Default is 10 sec.
-<3> Set the socket timeout. Default is 5 sec.
+<1> Define default headers, if they need to be customized
+<2> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
+<3> Set the connection timeout. Default is 10 sec.
+<4> Set the socket timeout. Default is 5 sec.
+<5> Optionally enable SSL.
+<6> Optionally set headers.
+<7> Add basic authentication.
 ====
 
 [[elasticsearch.clients.logging]]
@@ -119,5 +173,4 @@ to be turned on as outlined in the snippet below.
 <logger name="org.springframework.data.elasticsearch.client.WIRE" level="trace"/>
 ----
 
-NOTE: The above applies to both the `RestHighLevelClient` and `ReactiveElasticsearchClient` when obtained via `RestClients`
-respectively `ReactiveRestClients`.
+NOTE: The above applies to both the `RestHighLevelClient` and `ReactiveElasticsearchClient` when obtained via `RestClients` respectively `ReactiveRestClients`, is not available for the `TransportClient`.

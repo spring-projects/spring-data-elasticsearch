@@ -1,0 +1,156 @@
+[[elasticsearch.query-methods]]
+= Query methods
+
+[[elasticsearch.query-methods.finders]]
+== Query lookup strategies
+
+The Elasticsearch module supports all basic query building feature as string queries, native search queries, criteria based queries or have it being derived from the method name.
+
+=== Declared queries
+
+Deriving the query from the method name is not always sufficient and/or may result in unreadable method names. In this case one might make either use of `@Query` annotation (see <<elasticsearch.query-methods.at-query>> ).
+
+[[elasticsearch.query-methods.criterions]]
+== Query creation
+
+Generally the query creation mechanism for Elasticsearch works as described in <<repositories.query-methods>>. Here's a short example of what a Elasticsearch query method translates into:
+
+.Query creation from method names
+====
+[source,java]
+----
+interface BookRepository extends Repository<Book, String> {
+  List<Book> findByNameAndPrice(String name, Integer price);
+}
+----
+====
+
+The method name above will be translated into the following Elasticsearch json query
+
+[source]
+----
+{ "bool" :
+    { "must" :
+        [
+            { "field" : {"name" : "?"} },
+            { "field" : {"price" : "?"} }
+        ]
+    }
+}
+----
+
+A list of supported keywords for Elasticsearch is shown below.
+
+[cols="1,2,3", options="header"]
+.Supported keywords inside method names
+|===
+| Keyword
+| Sample
+| Elasticsearch Query String| `And`
+| `findByNameAndPrice`
+| `{"bool" : {"must" : [ {"field" : {"name" : "?"}},
+                                        {"field" : {"price" : "?"}} ]}}`
+
+| `Or`
+| `findByNameOrPrice`
+| `{"bool" : {"should" : [ {"field" : {"name" : "?"}},
+                                        {"field" : {"price" : "?"}} ]}}`
+
+| `Is`
+| `findByName`
+| `{"bool" : {"must" : {"field" : {"name" : "?"}}}}`
+
+| `Not`
+| `findByNameNot`
+| `{"bool" : {"must_not" : {"field" : {"name" : "?"}}}}`
+
+| `Between`
+| `findByPriceBetween`
+| `{"bool" : {"must" : {"range" : {"price" : {"from" :
+                                        ?,"to" : ?,"include_lower" : true,"include_upper" : true}}}}}`
+
+| `LessThanEqual`
+| `findByPriceLessThan`
+| `{"bool" : {"must" : {"range" : {"price" : {"from" :
+                                        null,"to" : ?,"include_lower" : true,"include_upper" :
+                                        true}}}}}`
+
+| `GreaterThanEqual`
+| `findByPriceGreaterThan`
+| `{"bool" : {"must" : {"range" : {"price" : {"from" :
+                                        ?,"to" : null,"include_lower" : true,"include_upper" :
+                                        true}}}}}`
+
+| `Before`
+| `findByPriceBefore`
+| `{"bool" : {"must" : {"range" : {"price" : {"from" :
+                                        null,"to" : ?,"include_lower" : true,"include_upper" :
+                                        true}}}}}`
+
+| `After`
+| `findByPriceAfter`
+| `{"bool" : {"must" : {"range" : {"price" : {"from" :
+                                        ?,"to" : null,"include_lower" : true,"include_upper" :
+                                        true}}}}}`
+
+| `Like`
+| `findByNameLike`
+| `{"bool" : {"must" : {"field" : {"name" : {"query" :
+                                        "?*","analyze_wildcard" : true}}}}}`
+
+| `StartingWith`
+| `findByNameStartingWith`
+| `{"bool" : {"must" : {"field" : {"name" : {"query" :
+                                        "?*","analyze_wildcard" : true}}}}}`
+
+| `EndingWith`
+| `findByNameEndingWith`
+| `{"bool" : {"must" : {"field" : {"name" : {"query" :
+                                        "*?","analyze_wildcard" : true}}}}}`
+
+| `Contains/Containing`
+| `findByNameContaining`
+| `{"bool" : {"must" : {"field" : {"name" : {"query" :
+                                        "*?*","analyze_wildcard" : true}}}}}`
+
+| `In`
+| `findByNameIn(Collection<String>names)`
+| `{"bool" : {"must" : {"bool" : {"should" : [ {"field" :
+                                        {"name" : "?"}}, {"field" : {"name" : "?"}} ]}}}}`
+
+| `NotIn`
+| `findByNameNotIn(Collection<String>names)`
+| `{"bool" : {"must_not" : {"bool" : {"should" : {"field" :
+                                        {"name" : "?"}}}}}}`
+
+| `Near`
+| `findByStoreNear`
+| `Not Supported Yet !`
+
+| `True`
+| `findByAvailableTrue`
+| `{"bool" : {"must" : {"field" : {"available" : true}}}}`
+
+| `False`
+| `findByAvailableFalse`
+| `{"bool" : {"must" : {"field" : {"available" : false}}}}`
+
+| `OrderBy`
+| `findByAvailableTrueOrderByNameDesc`
+| `{"sort" : [{ "name" : {"order" : "desc"} }],"bool" :
+                                        {"must" : {"field" : {"available" : true}}}}`
+|===
+
+[[elasticsearch.query-methods.at-query]]
+== Using @Query Annotation
+
+.Declare query at the method using the `@Query` annotation.
+====
+[source,java]
+----
+interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @Query("{\"bool\" : {\"must\" : {\"field\" : {\"name\" : \"?0\"}}}}")
+    Page<Book> findByName(String name,Pageable pageable);
+}
+----
+====

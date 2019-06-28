@@ -14,12 +14,12 @@ Filter Builder improves query speed.
 private ElasticsearchTemplate elasticsearchTemplate;
 
 SearchQuery searchQuery = new NativeSearchQueryBuilder()
-    .withQuery(matchAllQuery())
-    .withFilter(boolFilter().must(termFilter("id", documentId)))
-    .build();
-    
+  .withQuery(matchAllQuery())
+  .withFilter(boolFilter().must(termFilter("id", documentId)))
+  .build();
+  
 Page<SampleEntity> sampleEntities =
-    elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);            
+  elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
 ----
 ====
 
@@ -33,21 +33,21 @@ Elasticsearch has a scroll API for getting big result set in chunks. `Elasticsea
 [source,java]
 ----
 SearchQuery searchQuery = new NativeSearchQueryBuilder()
-    .withQuery(matchAllQuery())
-    .withIndices(INDEX_NAME)
-    .withTypes(TYPE_NAME)
-    .withFields("message")
-    .withPageable(PageRequest.of(0, 10))
-    .build();
+  .withQuery(matchAllQuery())
+  .withIndices(INDEX_NAME)
+  .withTypes(TYPE_NAME)
+  .withFields("message")
+  .withPageable(PageRequest.of(0, 10))
+  .build();
 
 ScrolledPage<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class);
 
 String scrollId = scroll.getScrollId();
 List<SampleEntity> sampleEntities = new ArrayList<>();
 while (scroll.hasContent()) {
-    sampleEntities.addAll(scroll.getContent());
-    scrollId = scroll.getScrollId();
-    scroll = elasticsearchTemplate.continueScroll(scrollId, 1000, SampleEntity.class);
+  sampleEntities.addAll(scroll.getContent());
+  scrollId = scroll.getScrollId();
+  scroll = elasticsearchTemplate.continueScroll(scrollId, 1000, SampleEntity.class);
 }
 elasticsearchTemplate.clearScroll(scrollId);
 ----
@@ -60,18 +60,18 @@ elasticsearchTemplate.clearScroll(scrollId);
 [source,java]
 ----
 SearchQuery searchQuery = new NativeSearchQueryBuilder()
-    .withQuery(matchAllQuery())
-    .withIndices(INDEX_NAME)
-    .withTypes(TYPE_NAME)
-    .withFields("message")
-    .withPageable(PageRequest.of(0, 10))
-    .build();
+  .withQuery(matchAllQuery())
+  .withIndices(INDEX_NAME)
+  .withTypes(TYPE_NAME)
+  .withFields("message")
+  .withPageable(PageRequest.of(0, 10))
+  .build();
 
 CloseableIterator<SampleEntity> stream = elasticsearchTemplate.stream(searchQuery, SampleEntity.class);
 
 List<SampleEntity> sampleEntities = new ArrayList<>();
 while (stream.hasNext()) {
-    sampleEntities.add(stream.next());
+  sampleEntities.add(stream.next());
 }
 ----
 ====

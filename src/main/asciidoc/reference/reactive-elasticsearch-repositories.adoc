@@ -42,7 +42,7 @@ NOTE: Please note that the `id` property needs to be of type `String`.
 ====
 [source]
 ----
-public interface ReactivePersonRepository extends ReactiveSortingRepository<Person, String> {
+interface ReactivePersonRepository extends ReactiveSortingRepository<Person, String> {
 
   Flux<Person> findByFirstname(String firstname);                                   <1>
 
