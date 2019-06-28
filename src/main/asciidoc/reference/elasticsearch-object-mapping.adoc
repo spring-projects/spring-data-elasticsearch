@@ -28,7 +28,9 @@ public class Config extends AbstractElasticsearchConfiguration { <1>
 <1> `AbstractElasticsearchConfiguration` already defines a Jackson2 based `entityMapper` via `ElasticsearchConfigurationSupport`.
 ====
 
-WARNING: `CustomConversions`, `@ReadingConverter` & `@WritingConverter` cannot be applied when using the Jackson based `EntityMapper`.
+[WARNING]
+`CustomConversions`, `@ReadingConverter` & `@WritingConverter` cannot be applied when using the Jackson based `EntityMapper`.  +
+Setting the name of a mapped field with `@Field(name="custom-name")` also cannot be used with this Mapper.
 
 [[elasticsearch.mapping.meta-model]]
 == Meta Model Object Mapping
@@ -50,11 +52,12 @@ public class Config extends AbstractElasticsearchConfiguration {
 
   @Bean
   @Override
-  public EntityMapper entityMapper() { <1>
+  public EntityMapper entityMapper() {                                 <1>
 
-    ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
-      new DefaultConversionService()); <2>
-  	entityMapper.setConversions(elasticsearchCustomConversions()); <3>
+    ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(
+      elasticsearchMappingContext(), new DefaultConversionService()    <2>
+    );
+    entityMapper.setConversions(elasticsearchCustomConversions());     <3>
 
   	return entityMapper;
   }
@@ -72,10 +75,26 @@ for `Converter` registration.
 The `ElasticsearchEntityMapper` can use metadata to drive the mapping of objects to documents. The following annotations are available:
 
 * `@Id`: Applied at the field level to mark the field used for identity purpose.
-* `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database. You can specify the index name and index type where the document will be stored.
+* `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database. The most important attributes are:
+** `indexName`: the name of the index to store this entity in
+** `type`: the mapping type. If not set, the lowercased simple name of the class is used.
+** `shards`: the number of shards for the index.
+** `replicas`: the number of replicas for the index.
+** `refreshIntervall`: Refresh interval for the index. Used for index creation. Default value is _"1s"_.
+** `indexStoreType`:  Index storage type for the index. Used for index creation. Default value is _"fs"_.
+** `createIndex`: Configuration whether to create an index on repository bootstrapping. Default value is _true_.
+** `versionType`: Configuration of version management. Default value is _EXTERNAL_.
 * `@Transient`: By default all private fields are mapped to the document, this annotation excludes the field where it is applied from being stored in the database
 * `@PersistenceConstructor`: Marks a given constructor - even a package protected one - to use when instantiating the object from the database. Constructor arguments are mapped by name to the key values in the retrieved Document.
-* `@Field`: Applied at the field level and described the name of the field as it will be represented in the Elasticsearch document thus allowing the name to be different than the fieldname of the class.
+* `@Field`: Applied at the field level and defines properties of the field, most of the attributes map to the respective https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html[Elasticsearch Mapping] definitions:
+** `name`: The name of the field as it will be represented in the Elasticsearch document, if not set, the Java field name is used.
+** `type`: the field type, can be one of _Text, Integer, Long, Date, Float, Double, Boolean, Object, Auto, Nested, Ip, Attachment, Keyword_.
+** `format` and `pattern` custom definitions for the _Date_ type.
+** `store`: Flag wether the original field value should be store in Elasticsearch, default value is _false_.
+** `analyzer`, `searchAnalyzer`, `normalizer` for specifying custom custom analyzers and normalizer.
+** `copy_to`: the target field to copy multiple document fields to.
+* `@GeoPoint`: marks a field as _geo_point_ datatype. Can be omitted if the field is an instance of the `GeoPoint` class.
+
 
 The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic.
 
@@ -242,9 +261,9 @@ public class Config extends AbstractElasticsearchConfiguration {
   @Override
   public EntityMapper entityMapper() {
 
-    ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
-      new DefaultConversionService());
-  	entityMapper.setConversions(elasticsearchCustomConversions()); <1>
+    ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(
+      elasticsearchMappingContext(), new DefaultConversionService());
+    entityMapper.setConversions(elasticsearchCustomConversions());  <1>
 
   	return entityMapper;
   }
@@ -252,10 +271,11 @@ public class Config extends AbstractElasticsearchConfiguration {
   @Bean
   @Override
   public ElasticsearchCustomConversions elasticsearchCustomConversions() {
-    return new ElasticsearchCustomConversions(Arrays.asList(new AddressToMap(), new MapToAddress())); <2>
+    return new ElasticsearchCustomConversions(
+      Arrays.asList(new AddressToMap(), new MapToAddress()));       <2>
   }
 
-  @WritingConverter <3>
+  @WritingConverter                                                 <3>
   static class AddressToMap implements Converter<Address, Map<String, Object>> {
 
     @Override
@@ -269,7 +289,7 @@ public class Config extends AbstractElasticsearchConfiguration {
     }
   }
 
-  @ReadingConverter <4>
+  @ReadingConverter                                                 <4>
   static class MapToAddress implements Converter<Map<String, Object>, Address> {
 
     @Override

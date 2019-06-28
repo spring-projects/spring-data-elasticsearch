@@ -113,6 +113,9 @@ Add the Maven dependency:
 </dependency>
 ----
 
+// NOTE: since Github does not support include directives, the content of
+// the src/main/asciidoc/reference/preface.adoc file is duplicated here
+// Always change both files!
 **Compatibility Matrix**
 
 [cols="^,^"]

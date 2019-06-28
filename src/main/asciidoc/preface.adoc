@@ -1,20 +1,44 @@
 = Preface
 
-The Spring Data Elasticsearch project applies core Spring concepts to the development of solutions using the Elasticsearch Search Engine. We have povided a "template" as a high-level abstraction for storing,querying,sorting and faceting documents. You will notice similarities to the Spring data solr and mongodb support in the Spring Framework.
+The Spring Data Elasticsearch project applies core Spring concepts to the development of solutions using the Elasticsearch Search Engine. It provides:
 
-[[project]]
-[preface]
+* _Templates_ as a high-level abstraction for storing, querying, sorting and faceting documents.
+* _Repositories_ which for example enable the user to express queries by defining interfaces having customized method names (for basic information about repositories see <<repositories>>).
+
+You will notice similarities to the Spring data solr and mongodb support in the Spring Framework.
+
+include::reference/elasticsearch-new.adoc[leveloffset=+1]
+
+[[preface.metadata]]
 == Project Metadata
 
 * Version Control - https://github.com/spring-projects/spring-data-elasticsearch
+* API Documentation - https://docs.spring.io/spring-data/elasticsearch/docs/current/api/
 * Bugtracker - https://jira.spring.io/browse/DATAES
 * Release repository - https://repo.spring.io/libs-release
 * Milestone repository - https://repo.spring.io/libs-milestone
 * Snapshot repository - https://repo.spring.io/libs-snapshot
 
-[[requirements]]
-[preface]
+[[preface.requirements]]
 == Requirements
 
-Requires https://www.elastic.co/downloads/elasticsearch[Elasticsearch] 0.20.2 and above or optional dependency or not even that if you are using Embedded Node Client
+Requires an installation of https://www.elastic.co/products/elasticsearch[Elasticsearch].
 
+[[preface.versions]]
+=== Versions
+// NOTE: since Github does not support include directives, the content of
+// this file is duplicated in the toplevel README
+// Always change both files!
+
+The following table shows the Elasticsearch versions that are used by Spring Data Elasticsearch:
+[cols="^,^"]
+|===
+|Spring Data Elasticsearch |Elasticsearch
+
+|3.2.x |6.8.1
+|3.1.x |6.2.2
+|3.0.x |5.5.0
+|2.1.x |2.4.0
+|2.0.x |2.2.0
+|1.3.x |1.5.2
+|===
