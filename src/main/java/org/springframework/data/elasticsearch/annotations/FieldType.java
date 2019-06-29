@@ -19,17 +19,17 @@ package org.springframework.data.elasticsearch.annotations;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Artur Konczak
- * @author zzt
+ * @author Zeng Zetang
  */
 public enum FieldType {
 	Text,
-  Byte, 
-  Short, 
+	Byte,
+	Short,
 	Integer,
 	Long,
 	Date,
-  HalfFloat, 
-  ScaledFloat, 
+	Half_Float,
+	Scaled_Float,
 	Float,
 	Double,
 	Boolean,
