@@ -29,7 +29,6 @@ public enum FieldType {
 	Long,
 	Date,
 	Half_Float,
-	Scaled_Float,
 	Float,
 	Double,
 	Boolean,
