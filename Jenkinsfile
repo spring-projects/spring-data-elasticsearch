@@ -24,6 +24,7 @@ pipeline {
 					agent {
 						docker {
 							image 'adoptopenjdk/openjdk8:latest'
+							label 'data'
 							args '-v $HOME:/tmp/jenkins-home'
 						}
 					}
@@ -43,6 +44,7 @@ pipeline {
 			agent {
 				docker {
 					image 'adoptopenjdk/openjdk8:latest'
+					label 'data'
 					args '-v $HOME:/tmp/jenkins-home'
 				}
 			}
@@ -71,6 +73,7 @@ pipeline {
 			agent {
 				docker {
 					image 'adoptopenjdk/openjdk8:latest'
+					label 'data'
 					args '-v $HOME:/tmp/jenkins-home'
 				}
 			}
