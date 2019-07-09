@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
@@ -24,9 +23,9 @@ import org.springframework.data.elasticsearch.repository.query.parser.Elasticsea
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.util.ClassUtils;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.StreamUtils;
+import org.springframework.util.ClassUtils;
 
 /**
  * ElasticsearchPartQuery
@@ -53,7 +52,7 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 	public Object execute(Object[] parameters) {
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
 		CriteriaQuery query = createQuery(accessor);
-		if(tree.isDelete()) {
+		if (tree.isDelete()) {
 			Object result = countOrGetDocumentsForDelete(query, accessor);
 			elasticsearchOperations.delete(query, queryMethod.getEntityInformation().getJavaType());
 			return result;
@@ -66,15 +65,16 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 				query.setPageable(PageRequest.of(0, STREAMING_BATCH_SIZE));
 			}
 
-			return StreamUtils.createStreamFromIterator((CloseableIterator<Object>) elasticsearchOperations.stream(query, entityType));
+			return StreamUtils
+					.createStreamFromIterator((CloseableIterator<Object>) elasticsearchOperations.stream(query, entityType));
 
 		} else if (queryMethod.isCollectionQuery()) {
 			if (accessor.getPageable().isUnpaged()) {
 				int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
 				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 			} else {
-			    query.setPageable(accessor.getPageable());
-		    }
+				query.setPageable(accessor.getPageable());
+			}
 			return elasticsearchOperations.queryForList(query, queryMethod.getEntityInformation().getJavaType());
 		} else if (tree.isCountProjection()) {
 			return elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());

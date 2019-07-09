@@ -1235,7 +1235,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		// then
 		assertThat(count).isEqualTo(1L);
 	}
-
+	
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
 
 		List<SampleEntity> entities = new ArrayList<>();
