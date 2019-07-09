@@ -37,8 +37,7 @@ import org.springframework.util.ClassUtils;
  * @author Rasmus Faber-Espensen
  */
 public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery {
-
-	private static final int STREAMING_BATCH_SIZE = 100;
+	private static final int DEFAULT_STREAM_BATCH_SIZE = 500;
 	private final PartTree tree;
 	private final MappingContext<?, ElasticsearchPersistentProperty> mappingContext;
 
@@ -61,8 +60,10 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 			return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
 		} else if (queryMethod.isStreamQuery()) {
 			Class<?> entityType = queryMethod.getEntityInformation().getJavaType();
-			if (query.getPageable().isUnpaged()) {
-				query.setPageable(PageRequest.of(0, STREAMING_BATCH_SIZE));
+			if (accessor.getPageable().isUnpaged()) {
+				query.setPageable(PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
+			} else {
+				query.setPageable(accessor.getPageable());
 			}
 
 			return StreamUtils

@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.junit.Test;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -64,6 +63,8 @@ import org.springframework.data.geo.Point;
 public abstract class CustomMethodRepositoryBaseTests {
 
 	@Autowired private SampleCustomMethodRepository repository;
+
+	@Autowired private SampleStreamingCustomMethodRepository streamingRepository;
 
 	@Test
 	public void shouldExecuteCustomMethod() {
@@ -711,7 +712,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.saveAll(entities);
 
 		// when
-		Stream<SampleEntity> stream = repository.findByType("abc");
+		Stream<SampleEntity> stream = streamingRepository.findByType("abc");
 
 		// then
 		assertThat(stream).isNotNull();
@@ -1235,14 +1236,42 @@ public abstract class CustomMethodRepositoryBaseTests {
 		// then
 		assertThat(count).isEqualTo(1L);
 	}
-	
+
+	@Test // DATAES-605
+	public void streamMethodsShouldWorkWithLargeResultSets() {
+		// given
+		List<SampleEntity> entities = createSampleEntities("abc", 10001);
+		repository.saveAll(entities);
+
+		// when
+		Stream<SampleEntity> stream = streamingRepository.findByType("abc");
+
+		// then
+		assertThat(stream).isNotNull();
+		assertThat(stream.count()).isEqualTo(10001L);
+	}
+
+	@Test // DATAES-605
+	public void streamMethodsCanHandlePageable() {
+		// given
+		List<SampleEntity> entities = createSampleEntities("abc", 10);
+		repository.saveAll(entities);
+
+		// when
+		Stream<SampleEntity> stream = streamingRepository.findByType("abc", PageRequest.of(0, 2));
+
+		// then
+		assertThat(stream).isNotNull();
+		assertThat(stream.count()).isEqualTo(10L);
+	}
+
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
 
 		List<SampleEntity> entities = new ArrayList<>();
 		for (int i = 0; i < numberOfEntities; i++) {
 
 			SampleEntity entity = new SampleEntity();
-			entity.setId(randomNumeric(numberOfEntities));
+			entity.setId(randomNumeric(32));
 			entity.setAvailable(true);
 			entity.setMessage("Message");
 			entity.setType(type);
@@ -1328,8 +1357,6 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 		Page<SampleEntity> findByLocationNear(GeoPoint point, String distance, Pageable pageable);
 
-		Stream<SampleEntity> findByType(String type);
-
 		long countByType(String type);
 
 		long countByTypeNot(String type);
@@ -1371,4 +1398,12 @@ public abstract class CustomMethodRepositoryBaseTests {
 		long countByLocationNear(GeoPoint point, String distance);
 	}
 
+	/**
+	 * @author Rasmus Faber-Espensen
+	 */
+	public interface SampleStreamingCustomMethodRepository extends ElasticsearchRepository<SampleEntity, String> {
+		Stream<SampleEntity> findByType(String type);
+
+		Stream<SampleEntity> findByType(String type, Pageable pageable);
+	}
 }
