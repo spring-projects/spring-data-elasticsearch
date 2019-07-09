@@ -35,6 +35,7 @@ import org.springframework.data.util.StreamUtils;
  * @author Mohsin Husen
  * @author Kevin Leturc
  * @author Mark Paluch
+ * @author Rasmus Faber-Espensen
  */
 public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery {
 
