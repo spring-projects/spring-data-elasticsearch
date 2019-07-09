@@ -38,6 +38,7 @@ import org.springframework.data.util.StreamUtils;
  */
 public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery {
 
+	private static final int STREAMING_BATCH_SIZE = 100;
 	private final PartTree tree;
 	private final MappingContext<?, ElasticsearchPersistentProperty> mappingContext;
 
@@ -61,8 +62,7 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		} else if (queryMethod.isStreamQuery()) {
 			Class<?> entityType = queryMethod.getEntityInformation().getJavaType();
 			if (query.getPageable().isUnpaged()) {
-				int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
-				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
+				query.setPageable(PageRequest.of(0, STREAMING_BATCH_SIZE));
 			}
 
 			return StreamUtils.createStreamFromIterator((CloseableIterator<Object>) elasticsearchOperations.stream(query, entityType));
