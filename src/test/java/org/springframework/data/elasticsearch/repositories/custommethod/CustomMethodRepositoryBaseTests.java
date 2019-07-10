@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -59,6 +60,7 @@ import org.springframework.data.geo.Point;
  * @author Christoph Strobl
  * @author Don Wellington
  * @author Peter-Josef Meisch
+ * @author Rasmus Faber-Espensen
  */
 public abstract class CustomMethodRepositoryBaseTests {
 
@@ -1239,6 +1241,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 	@Test // DATAES-605
 	public void streamMethodsShouldWorkWithLargeResultSets() {
+
 		// given
 		List<SampleEntity> entities = createSampleEntities("abc", 10001);
 		repository.saveAll(entities);
@@ -1253,6 +1256,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 	@Test // DATAES-605
 	public void streamMethodsCanHandlePageable() {
+
 		// given
 		List<SampleEntity> entities = createSampleEntities("abc", 10);
 		repository.saveAll(entities);
@@ -1271,7 +1275,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		for (int i = 0; i < numberOfEntities; i++) {
 
 			SampleEntity entity = new SampleEntity();
-			entity.setId(randomNumeric(32));
+			entity.setId(UUID.randomUUID().toString());
 			entity.setAvailable(true);
 			entity.setMessage("Message");
 			entity.setType(type);
