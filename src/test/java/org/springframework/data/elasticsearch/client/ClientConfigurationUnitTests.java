@@ -30,8 +30,11 @@ import org.springframework.http.HttpHeaders;
  * Unit tests for {@link ClientConfiguration}.
  *
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  */
 public class ClientConfigurationUnitTests {
+
+	private static final String AUTHORIZATION_HEADER = "Authorization";
 
 	@Test // DATAES-488
 	public void shouldCreateSimpleConfiguration() {
@@ -77,5 +80,46 @@ public class ClientConfigurationUnitTests {
 		assertThat(clientConfiguration.getSslContext()).contains(sslContext);
 		assertThat(clientConfiguration.getConnectTimeout()).isEqualTo(Duration.ofSeconds(10));
 		assertThat(clientConfiguration.getSocketTimeout()).isEqualTo(Duration.ofSeconds(5));
+	}
+
+	@Test // DATAES-607
+	public void shouldAddBasicAuthenticationHeaderWhenNoHeadersAreSet() {
+
+		final String username = "secretUser";
+		final String password = "secretPassword";
+
+		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
+				.connectedTo("foo", "bar") //
+				.withBasicAuth(username, password) //
+				.build();
+
+		assertThat(clientConfiguration.getDefaultHeaders().get(AUTHORIZATION_HEADER))
+				.containsOnly(buildBasicAuth(username, password));
+	}
+
+	@Test // DATAES-607
+	public void shouldAddBasicAuthenticationHeaderAndKeepHeaders() {
+
+		final String username = "secretUser";
+		final String password = "secretPassword";
+
+		HttpHeaders defaultHeaders = new HttpHeaders();
+		defaultHeaders.set("foo", "bar");
+
+		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
+				.connectedTo("foo", "bar") //
+				.withBasicAuth(username, password) //
+				.withDefaultHeaders(defaultHeaders).build();
+		final HttpHeaders httpHeaders = clientConfiguration.getDefaultHeaders();
+
+		assertThat(httpHeaders.get(AUTHORIZATION_HEADER)).containsOnly(buildBasicAuth(username, password));
+		assertThat(httpHeaders.get("foo")).containsOnly("bar");
+	}
+
+	private String buildBasicAuth(String username, String password) {
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setBasicAuth(username, password);
+		return headers.get(AUTHORIZATION_HEADER).get(0);
 	}
 }

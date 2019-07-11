@@ -36,6 +36,7 @@ import org.springframework.util.Assert;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 class ClientConfigurationBuilder
@@ -47,6 +48,8 @@ class ClientConfigurationBuilder
 	private @Nullable SSLContext sslContext;
 	private Duration connectTimeout = Duration.ofSeconds(10);
 	private Duration soTimeout = Duration.ofSeconds(5);
+	private String username;
+	private String password;
 
 	/*
 	 * (non-Javadoc)
@@ -139,12 +142,31 @@ class ClientConfigurationBuilder
 		return this;
 	}
 
+	@Override
+	public TerminalClientConfigurationBuilder withBasicAuth(String username, String password) {
+
+		Assert.notNull(username, "username must not be null");
+		Assert.notNull(password, "password must not be null");
+
+		this.username = username;
+		this.password = password;
+
+		return this;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithOptionalDefaultHeaders#build()
 	 */
 	@Override
 	public ClientConfiguration build() {
+
+		if (username != null && password != null) {
+			if (HttpHeaders.EMPTY.equals(headers)) {
+				headers = new HttpHeaders();
+			}
+			headers.setBasicAuth(username, password);
+		}
 		return new DefaultClientConfiguration(this.hosts, this.headers, this.useSsl, this.sslContext, this.soTimeout,
 				this.connectTimeout);
 	}
@@ -152,4 +174,5 @@ class ClientConfigurationBuilder
 	private static InetSocketAddress parse(String hostAndPort) {
 		return InetSocketAddressParser.parse(hostAndPort, ElasticsearchHost.DEFAULT_PORT);
 	}
+
 }

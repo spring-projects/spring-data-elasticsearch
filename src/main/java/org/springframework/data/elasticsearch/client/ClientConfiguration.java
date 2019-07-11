@@ -29,6 +29,7 @@ import org.springframework.http.HttpHeaders;
  * Configuration interface exposing common client configuration properties for Elasticsearch clients.
  *
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public interface ClientConfiguration {
@@ -256,6 +257,15 @@ public interface ClientConfiguration {
 		 * @see io.netty.handler.timeout.WriteTimeoutHandler
 		 */
 		TerminalClientConfigurationBuilder withSocketTimeout(Duration timeout);
+
+		/**
+		 * Configure the username and password to be sent as a Basic Authentication header
+		 *
+		 * @param username the username. Must not be {@literal null}.
+		 * @param password the password. Must not be {@literal null}.
+		 * @return the {@link TerminalClientConfigurationBuilder}
+		 */
+		TerminalClientConfigurationBuilder withBasicAuth(String username, String password);
 
 		/**
 		 * Build the {@link ClientConfiguration} object.
