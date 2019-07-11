@@ -72,7 +72,7 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
 	@Override
 	public boolean isSingleton() {
-		return false;
+		return true;
 	}
 
 	@Override
