@@ -30,11 +30,13 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyExtractor;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 /**
  * Extension to {@link ActionResponse} that also implements {@link ClientResponse}.
  *
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 class RawActionResponse extends ActionResponse implements ClientResponse {
@@ -174,4 +176,14 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	public <T> Mono<ResponseEntity<List<T>>> toEntityList(ParameterizedTypeReference<T> typeReference) {
 		return delegate.toEntityList(typeReference);
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.web.reactive.function.client.ClientResponse#createException()
+	 */
+	@Override
+	public Mono<WebClientResponseException> createException() {
+		return delegate.createException();
+	}
+
 }
