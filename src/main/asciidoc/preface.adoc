@@ -1,3 +1,4 @@
+[[preface]]
 = Preface
 
 The Spring Data Elasticsearch project applies core Spring concepts to the development of solutions using the Elasticsearch Search Engine. It provides:

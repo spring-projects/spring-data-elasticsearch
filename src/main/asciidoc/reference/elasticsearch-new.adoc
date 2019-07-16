@@ -1,8 +1,12 @@
+[[new-features]]
 = What's new
 
+[[new-features.3-2-0]]
 == New in Spring Data Elasticsearch 3.2
 
 * Secured Elasticsearch cluster support with Basic Authentication and SSL transport.
 * Upgrade to Elasticsearch 6.8.1.
 * Reactive programming support with <<elasticsearch.reactive.operations>> and <<elasticsearch.reactive.repositories>>.
 * Introduction of the <<elasticsearch.mapping.meta-model,ElasticsearchEntityMapper>> as an alternative to the Jackson `ObjectMapper`.
+* Field name customization in `@Field`.
+* Support for Delete by Query.

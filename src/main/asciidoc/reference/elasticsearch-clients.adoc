@@ -123,7 +123,7 @@ Mono<IndexResponse> response = client.index(request ->
     .setRefreshPolicy(IMMEDIATE);
 );
 ----
-<1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enbale SSL.
+<1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
 ====
 
 NOTE: The ReactiveClient response, especially for search operations, is bound to the `from` (offset) & `size` (limit) options of the request.

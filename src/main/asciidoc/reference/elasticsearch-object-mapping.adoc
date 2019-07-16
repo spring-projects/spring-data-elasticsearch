@@ -21,7 +21,7 @@ public class Config extends AbstractElasticsearchConfiguration { <1>
 
   @Override
   public RestHighLevelClient elasticsearchClient() {
-    return RestClients.create(ClientConfiguration.create("localhost:9200")).rest()
+    return RestClients.create(ClientConfiguration.create("localhost:9200")).rest();
   }
 }
 ----
@@ -110,7 +110,7 @@ Those type hints are represented as `_class` attributes within the document and 
 ====
 [source,java]
 ----
-public class Person { <1>
+public class Person {              <1>
 
   @Id String id;
   String firstname;
@@ -138,7 +138,7 @@ to already have entity information available when first reading data from the st
 ====
 [source,java]
 ----
-@TypeAlias("human") <1>
+@TypeAlias("human")                <1>
 public class Person {
 
   @Id String id;
@@ -148,7 +148,7 @@ public class Person {
 [source,json]
 ----
 {
-  "_class" : "human", <1>
+  "_class" : "human",              <1>
   "id" : ...
 }
 ----
@@ -254,7 +254,7 @@ public class Config extends AbstractElasticsearchConfiguration {
 
   @Override
   public RestHighLevelClient elasticsearchClient() {
-    return RestClients.create(ClientConfiguration.create("localhost:9200")).rest()
+    return RestClients.create(ClientConfiguration.create("localhost:9200")).rest();
   }
 
   @Bean

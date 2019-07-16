@@ -45,7 +45,6 @@ public class TransportClientConfig extends ElasticsearchConfigurationSupport {
   }
 }
 ----
-
 <1> Setting up the <<elasticsearch.clients.transport>>.
 <2> Creating the `ElasticsearchTemplate` bean, offering both names, _elasticsearchOperations_ and _elasticsearchTemplate_.
 <3> Using the <<elasticsearch.mapping.meta-model>> ElasticsearchMapper.
@@ -84,7 +83,6 @@ public class RestClientConfig extends AbstractElasticsearchConfiguration {
 <1> Setting up the <<elasticsearch.clients.rest>>.
 <2> The base class `AbstractElasticsearchConfiguration` already provides the `elasticsearchTemplate` bean.
 <3> Using the <<elasticsearch.mapping.meta-model>> ElasticsearchMapper.
-
 ====
 
 [[elasticsearch.operations.usage]]
@@ -127,7 +125,6 @@ public class TestController {
 }
 
 ----
-
 <1> Let Spring inject the provided `ElasticsearchOperations` bean in the constructor.
 <2> Store some entity in the Elasticsearch cluster.
 <3> Retrieve the entity with a query by id.
