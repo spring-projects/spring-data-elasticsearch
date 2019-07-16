@@ -34,8 +34,6 @@ import org.springframework.http.HttpHeaders;
  */
 public class ClientConfigurationUnitTests {
 
-	private static final String AUTHORIZATION_HEADER = "Authorization";
-
 	@Test // DATAES-488
 	public void shouldCreateSimpleConfiguration() {
 
@@ -85,23 +83,23 @@ public class ClientConfigurationUnitTests {
 	@Test // DATAES-607
 	public void shouldAddBasicAuthenticationHeaderWhenNoHeadersAreSet() {
 
-		final String username = "secretUser";
-		final String password = "secretPassword";
+		String username = "secretUser";
+		String password = "secretPassword";
 
 		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
 				.connectedTo("foo", "bar") //
 				.withBasicAuth(username, password) //
 				.build();
 
-		assertThat(clientConfiguration.getDefaultHeaders().get(AUTHORIZATION_HEADER))
+		assertThat(clientConfiguration.getDefaultHeaders().get(HttpHeaders.AUTHORIZATION))
 				.containsOnly(buildBasicAuth(username, password));
 	}
 
 	@Test // DATAES-607
 	public void shouldAddBasicAuthenticationHeaderAndKeepHeaders() {
 
-		final String username = "secretUser";
-		final String password = "secretPassword";
+		String username = "secretUser";
+		String password = "secretPassword";
 
 		HttpHeaders defaultHeaders = new HttpHeaders();
 		defaultHeaders.set("foo", "bar");
@@ -109,17 +107,20 @@ public class ClientConfigurationUnitTests {
 		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
 				.connectedTo("foo", "bar") //
 				.withBasicAuth(username, password) //
-				.withDefaultHeaders(defaultHeaders).build();
-		final HttpHeaders httpHeaders = clientConfiguration.getDefaultHeaders();
+				.withDefaultHeaders(defaultHeaders) //
+				.build();
 
-		assertThat(httpHeaders.get(AUTHORIZATION_HEADER)).containsOnly(buildBasicAuth(username, password));
-		assertThat(httpHeaders.get("foo")).containsOnly("bar");
+		HttpHeaders httpHeaders = clientConfiguration.getDefaultHeaders();
+
+		assertThat(httpHeaders.get(HttpHeaders.AUTHORIZATION)).containsOnly(buildBasicAuth(username, password));
+		assertThat(httpHeaders.getFirst("foo")).isEqualTo("bar");
+		assertThat(defaultHeaders.get(HttpHeaders.AUTHORIZATION)).isNull();
 	}
 
-	private String buildBasicAuth(String username, String password) {
+	private static String buildBasicAuth(String username, String password) {
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setBasicAuth(username, password);
-		return headers.get(AUTHORIZATION_HEADER).get(0);
+		return headers.getFirst(HttpHeaders.AUTHORIZATION);
 	}
 }

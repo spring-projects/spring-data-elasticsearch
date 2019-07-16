@@ -112,7 +112,9 @@ class ClientConfigurationBuilder
 
 		Assert.notNull(defaultHeaders, "Default HTTP headers must not be null");
 
-		this.headers = defaultHeaders;
+		this.headers = new HttpHeaders();
+		this.headers.addAll(defaultHeaders);
+
 		return this;
 	}
 
@@ -167,6 +169,7 @@ class ClientConfigurationBuilder
 			}
 			headers.setBasicAuth(username, password);
 		}
+
 		return new DefaultClientConfiguration(this.hosts, this.headers, this.useSsl, this.sslContext, this.soTimeout,
 				this.connectTimeout);
 	}
