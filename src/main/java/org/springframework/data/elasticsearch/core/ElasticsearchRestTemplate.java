@@ -61,7 +61,6 @@ import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
-import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
@@ -105,6 +104,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -139,6 +139,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Roman Puchkovskiy
  * @author Martin Choraine
  * @author Farid Azaza
+ * @author Peter-Josef Meisch
  */
 public class ElasticsearchRestTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -739,8 +740,9 @@ public class ElasticsearchRestTemplate
 	}
 
 	@Override
-	public void bulkIndex(List<IndexQuery> queries) {
+	public void bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions) {
 		BulkRequest bulkRequest = new BulkRequest();
+		setBulkOptions(bulkRequest, bulkOptions);
 		for (IndexQuery query : queries) {
 			bulkRequest.add(prepareIndex(query));
 		}
@@ -752,8 +754,9 @@ public class ElasticsearchRestTemplate
 	}
 
 	@Override
-	public void bulkUpdate(List<UpdateQuery> queries) {
+	public void bulkUpdate(List<UpdateQuery> queries, BulkOptions bulkOptions) {
 		BulkRequest bulkRequest = new BulkRequest();
+		setBulkOptions(bulkRequest, bulkOptions);
 		for (UpdateQuery query : queries) {
 			bulkRequest.add(prepareUpdate(query));
 		}
@@ -761,6 +764,34 @@ public class ElasticsearchRestTemplate
 			checkForBulkUpdateFailure(client.bulk(bulkRequest, RequestOptions.DEFAULT));
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while bulk for request: " + bulkRequest.toString(), e);
+		}
+	}
+
+	private void setBulkOptions(BulkRequest bulkRequest, BulkOptions bulkOptions) {
+
+		if (bulkOptions.getTimeout() != null) {
+
+			bulkRequest.timeout(bulkOptions.getTimeout());
+		}
+
+		if (bulkOptions.getRefreshPolicy() != null) {
+
+			bulkRequest.setRefreshPolicy(bulkOptions.getRefreshPolicy());
+		}
+
+		if (bulkOptions.getWaitForActiveShards() != null) {
+
+			bulkRequest.waitForActiveShards(bulkOptions.getWaitForActiveShards());
+		}
+
+		if (bulkOptions.getPipeline() != null) {
+
+			bulkRequest.pipeline(bulkOptions.getPipeline());
+		}
+
+		if (bulkOptions.getRoutingId() != null) {
+
+			bulkRequest.routing(bulkOptions.getRoutingId());
 		}
 	}
 
