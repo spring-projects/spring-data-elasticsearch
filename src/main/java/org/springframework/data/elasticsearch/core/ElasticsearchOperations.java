@@ -21,12 +21,11 @@ import java.util.stream.Collectors;
 
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
-import org.elasticsearch.common.Nullable;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
@@ -36,6 +35,7 @@ import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.lang.Nullable;
 
 /**
  * ElasticsearchOperations
@@ -456,18 +456,40 @@ public interface ElasticsearchOperations {
 	UpdateResponse update(UpdateQuery updateQuery);
 
 	/**
-	 * Bulk index all objects. Will do save or update
+	 * Bulk index all objects. Will do save or update.
 	 *
-	 * @param queries
+	 * @param queries the queries to execute in bulk
 	 */
-	void bulkIndex(List<IndexQuery> queries);
+	default void bulkIndex(List<IndexQuery> queries) {
+		bulkIndex(queries, BulkOptions.defaultOptions());
+	}
+
+	/**
+	 * Bulk index all objects. Will do save or update.
+	 *
+	 * @param queries the queries to execute in bulk
+	 * @param bulkOptions options to be added to the bulk request
+	 * @since 3.2
+	 */
+	void bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions);
 
 	/**
 	 * Bulk update all objects. Will do update
 	 *
-	 * @param queries
+	 * @param queries the queries to execute in bulk
 	 */
-	void bulkUpdate(List<UpdateQuery> queries);
+	default void bulkUpdate(List<UpdateQuery> queries) {
+		bulkUpdate(queries, BulkOptions.defaultOptions());
+	}
+
+	/**
+	 * Bulk update all objects. Will do update
+	 *
+	 * @param queries the queries to execute in bulk
+	 * @param bulkOptions options to be added to the bulk request
+	 * @since 3.2
+	 */
+	void bulkUpdate(List<UpdateQuery> queries, BulkOptions bulkOptions);
 
 	/**
 	 * Delete the one object with provided id

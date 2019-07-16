@@ -52,7 +52,6 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
-import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
@@ -94,6 +93,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -635,8 +635,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public void bulkIndex(List<IndexQuery> queries) {
+	public void bulkIndex(List<IndexQuery> queries, @Nullable BulkOptions bulkOptions) {
 		BulkRequestBuilder bulkRequest = client.prepareBulk();
+		setBulkOptions(bulkRequest, bulkOptions);
 		for (IndexQuery query : queries) {
 			bulkRequest.add(prepareIndex(query));
 		}
@@ -644,12 +645,41 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public void bulkUpdate(List<UpdateQuery> queries) {
+	public void bulkUpdate(List<UpdateQuery> queries, @Nullable BulkOptions bulkOptions) {
 		BulkRequestBuilder bulkRequest = client.prepareBulk();
+		setBulkOptions(bulkRequest, bulkOptions);
 		for (UpdateQuery query : queries) {
 			bulkRequest.add(prepareUpdate(query));
 		}
 		checkForBulkUpdateFailure(bulkRequest.execute().actionGet());
+	}
+
+	private void setBulkOptions(BulkRequestBuilder bulkRequest, BulkOptions bulkOptions) {
+
+		if (bulkOptions.getTimeout() != null) {
+
+			bulkRequest.setTimeout(bulkOptions.getTimeout());
+		}
+
+		if (bulkOptions.getRefreshPolicy() != null) {
+
+			bulkRequest.setRefreshPolicy(bulkOptions.getRefreshPolicy());
+		}
+
+		if (bulkOptions.getWaitForActiveShards() != null) {
+
+			bulkRequest.setWaitForActiveShards(bulkOptions.getWaitForActiveShards());
+		}
+
+		if (bulkOptions.getPipeline() != null) {
+
+			bulkRequest.pipeline(bulkOptions.getPipeline());
+		}
+
+		if (bulkOptions.getRoutingId() != null) {
+
+			bulkRequest.routing(bulkOptions.getRoutingId());
+		}
 	}
 
 	private void checkForBulkUpdateFailure(BulkResponse bulkResponse) {
