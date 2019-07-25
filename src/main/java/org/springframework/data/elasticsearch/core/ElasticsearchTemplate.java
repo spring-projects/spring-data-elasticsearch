@@ -389,7 +389,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	@Override
 	public <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor) {
-		SearchResponse response = doSearch(prepareSearch(query), query);
+		SearchResponse response = doSearch(prepareSearch(query, (ElasticsearchPersistentEntity) null), query);
 		return resultsExtractor.extract(response);
 	}
 
@@ -410,7 +410,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	@Override
 	public <T> List<String> queryForIds(SearchQuery query) {
-		SearchRequestBuilder request = prepareSearch(query).setQuery(query.getQuery());
+		SearchRequestBuilder request = prepareSearch(query, (ElasticsearchPersistentEntity) null)
+				.setQuery(query.getQuery());
 		if (query.getFilter() != null) {
 			request.setPostFilter(query.getFilter());
 		}
@@ -781,10 +782,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	private <T> SearchRequestBuilder prepareScroll(Query query, long scrollTimeInMillis, Class<T> clazz) {
 		setPersistentEntityIndexAndType(query, clazz);
-		return prepareScroll(query, scrollTimeInMillis);
+		return prepareScroll(query, scrollTimeInMillis, getPersistentEntity(clazz));
 	}
 
-	private SearchRequestBuilder prepareScroll(Query query, long scrollTimeInMillis) {
+	private SearchRequestBuilder prepareScroll(Query query, long scrollTimeInMillis,
+			@Nullable ElasticsearchPersistentEntity<?> entity) {
 		SearchRequestBuilder requestBuilder = client.prepareSearch(toArray(query.getIndices()))
 				.setTypes(toArray(query.getTypes())).setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).setFrom(0)
 				.setVersion(true);
@@ -803,7 +805,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		}
 
 		if (query.getSort() != null) {
-			prepareSort(query, requestBuilder);
+			prepareSort(query, requestBuilder, entity);
 		}
 
 		return requestBuilder;
@@ -1070,10 +1072,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	private <T> SearchRequestBuilder prepareSearch(Query query, Class<T> clazz) {
 		setPersistentEntityIndexAndType(query, clazz);
-		return prepareSearch(query);
+        return prepareSearch(query, getPersistentEntity(clazz));
 	}
 
-	private SearchRequestBuilder prepareSearch(Query query) {
+	private SearchRequestBuilder prepareSearch(Query query, @Nullable ElasticsearchPersistentEntity<?> entity) {
 		Assert.notNull(query.getIndices(), "No index defined for Query");
 		Assert.notNull(query.getTypes(), "No type defined for Query");
 
@@ -1102,7 +1104,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		}
 
 		if (query.getSort() != null) {
-			prepareSort(query, searchRequestBuilder);
+			prepareSort(query, searchRequestBuilder, entity);
 		}
 
 		if (query.getMinScore() > 0) {
@@ -1116,7 +1118,8 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		return searchRequestBuilder;
 	}
 
-	private void prepareSort(Query query, SearchRequestBuilder searchRequestBuilder) {
+	private void prepareSort(Query query, SearchRequestBuilder searchRequestBuilder,
+			@Nullable ElasticsearchPersistentEntity<?> entity) {
 		for (Sort.Order order : query.getSort()) {
 			SortOrder sortOrder = order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC;
 
@@ -1127,8 +1130,12 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 				searchRequestBuilder.addSort(sort);
 			} else {
+				ElasticsearchPersistentProperty property = entity != null //
+						? entity.getPersistentProperty(order.getProperty()) //
+						: null;
+				String fieldName = property != null ? property.getFieldName() : order.getProperty();
 				FieldSortBuilder sort = SortBuilders //
-						.fieldSort(order.getProperty()) //
+						.fieldSort(fieldName) //
 						.order(sortOrder);
 
 				if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
@@ -1201,6 +1208,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	public List<AliasMetaData> queryForAlias(String indexName) {
 		return client.admin().indices().getAliases(new GetAliasesRequest().indices(indexName)).actionGet().getAliases()
 				.get(indexName);
+	}
+
+	@Nullable
+	private ElasticsearchPersistentEntity<?> getPersistentEntity(@Nullable Class<?> clazz) {
+		return clazz != null ? elasticsearchConverter.getMappingContext().getPersistentEntity(clazz) : null;
 	}
 
 	@Override
