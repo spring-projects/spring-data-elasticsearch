@@ -25,6 +25,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public class ConvertingParameterAccessor implements ElasticsearchParameterAccessor {
@@ -58,7 +59,12 @@ public class ConvertingParameterAccessor implements ElasticsearchParameterAccess
 		return delegate.getDynamicProjection();
 	}
 
-	@Override
+    @Override
+    public Class<?> findDynamicProjection() {
+        return delegate.findDynamicProjection();
+    }
+
+    @Override
 	public Object getBindableValue(int index) {
 		return getConvertedValue(delegate.getBindableValue(index));
 	}

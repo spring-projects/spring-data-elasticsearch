@@ -27,7 +27,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
  * Simple {@link ParameterAccessor} that returns the given parameters unfiltered.
  *
  * @author Christoph Strobl
- * @currentRead Fool's Fate - Robin Hobb
+ * @author Peter-Josef Meisch
  */
 class StubParameterAccessor implements ElasticsearchParameterAccessor {
 
@@ -95,4 +95,9 @@ class StubParameterAccessor implements ElasticsearchParameterAccessor {
 	public Optional<Class<?>> getDynamicProjection() {
 		return Optional.empty();
 	}
+
+    @Override
+    public Class<?> findDynamicProjection() {
+        return null;
+    }
 }
