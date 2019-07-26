@@ -635,7 +635,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public void bulkIndex(List<IndexQuery> queries, @Nullable BulkOptions bulkOptions) {
+	public void bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions) {
+
+		Assert.notNull(queries, "List of IndexQuery must not be null");
+		Assert.notNull(bulkOptions, "BulkOptions must not be null");
+
 		BulkRequestBuilder bulkRequest = client.prepareBulk();
 		setBulkOptions(bulkRequest, bulkOptions);
 		for (IndexQuery query : queries) {
@@ -645,7 +649,11 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	}
 
 	@Override
-	public void bulkUpdate(List<UpdateQuery> queries, @Nullable BulkOptions bulkOptions) {
+	public void bulkUpdate(List<UpdateQuery> queries, BulkOptions bulkOptions) {
+
+		Assert.notNull(queries, "List of UpdateQuery must not be null");
+		Assert.notNull(bulkOptions, "BulkOptions must not be null");
+
 		BulkRequestBuilder bulkRequest = client.prepareBulk();
 		setBulkOptions(bulkRequest, bulkOptions);
 		for (UpdateQuery query : queries) {
@@ -654,30 +662,25 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		checkForBulkUpdateFailure(bulkRequest.execute().actionGet());
 	}
 
-	private void setBulkOptions(BulkRequestBuilder bulkRequest, BulkOptions bulkOptions) {
+	private static void setBulkOptions(BulkRequestBuilder bulkRequest, BulkOptions bulkOptions) {
 
 		if (bulkOptions.getTimeout() != null) {
-
 			bulkRequest.setTimeout(bulkOptions.getTimeout());
 		}
 
 		if (bulkOptions.getRefreshPolicy() != null) {
-
 			bulkRequest.setRefreshPolicy(bulkOptions.getRefreshPolicy());
 		}
 
 		if (bulkOptions.getWaitForActiveShards() != null) {
-
 			bulkRequest.setWaitForActiveShards(bulkOptions.getWaitForActiveShards());
 		}
 
 		if (bulkOptions.getPipeline() != null) {
-
 			bulkRequest.pipeline(bulkOptions.getPipeline());
 		}
 
 		if (bulkOptions.getRoutingId() != null) {
-
 			bulkRequest.routing(bulkOptions.getRoutingId());
 		}
 	}

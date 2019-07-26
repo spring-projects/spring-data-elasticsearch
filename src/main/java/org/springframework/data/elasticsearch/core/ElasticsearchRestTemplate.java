@@ -741,6 +741,10 @@ public class ElasticsearchRestTemplate
 
 	@Override
 	public void bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions) {
+
+		Assert.notNull(queries, "List of IndexQuery must not be null");
+		Assert.notNull(bulkOptions, "BulkOptions must not be null");
+
 		BulkRequest bulkRequest = new BulkRequest();
 		setBulkOptions(bulkRequest, bulkOptions);
 		for (IndexQuery query : queries) {
@@ -755,6 +759,10 @@ public class ElasticsearchRestTemplate
 
 	@Override
 	public void bulkUpdate(List<UpdateQuery> queries, BulkOptions bulkOptions) {
+
+		Assert.notNull(queries, "List of UpdateQuery must not be null");
+		Assert.notNull(bulkOptions, "BulkOptions must not be null");
+
 		BulkRequest bulkRequest = new BulkRequest();
 		setBulkOptions(bulkRequest, bulkOptions);
 		for (UpdateQuery query : queries) {
@@ -767,30 +775,25 @@ public class ElasticsearchRestTemplate
 		}
 	}
 
-	private void setBulkOptions(BulkRequest bulkRequest, BulkOptions bulkOptions) {
+	private static void setBulkOptions(BulkRequest bulkRequest, BulkOptions bulkOptions) {
 
 		if (bulkOptions.getTimeout() != null) {
-
 			bulkRequest.timeout(bulkOptions.getTimeout());
 		}
 
 		if (bulkOptions.getRefreshPolicy() != null) {
-
 			bulkRequest.setRefreshPolicy(bulkOptions.getRefreshPolicy());
 		}
 
 		if (bulkOptions.getWaitForActiveShards() != null) {
-
 			bulkRequest.waitForActiveShards(bulkOptions.getWaitForActiveShards());
 		}
 
 		if (bulkOptions.getPipeline() != null) {
-
 			bulkRequest.pipeline(bulkOptions.getPipeline());
 		}
 
 		if (bulkOptions.getRoutingId() != null) {
-
 			bulkRequest.routing(bulkOptions.getRoutingId());
 		}
 	}

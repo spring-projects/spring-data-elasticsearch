@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.action.support.WriteRequest;
+import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.unit.TimeValue;
 
 /**
@@ -29,28 +30,21 @@ import org.elasticsearch.common.unit.TimeValue;
  * {@link BulkOptionsBuilder#build()} to get the BulkOptions object.
  *
  * @author Peter-Josef Meisch
+ * @author Mark Paluch
  * @since 3.2
  */
 public class BulkOptions {
 
 	private static final BulkOptions defaultOptions = builder().build();
 
-	private final TimeValue timeout;
-	private final WriteRequest.RefreshPolicy refreshPolicy;
-	private final ActiveShardCount waitForActiveShards;
-	private final String pipeline;
-	private final String routingId;
+	private final @Nullable TimeValue timeout;
+	private final @Nullable WriteRequest.RefreshPolicy refreshPolicy;
+	private final @Nullable ActiveShardCount waitForActiveShards;
+	private final @Nullable String pipeline;
+	private final @Nullable String routingId;
 
-	public static BulkOptionsBuilder builder() {
-		return new BulkOptionsBuilder();
-	}
-
-	public static BulkOptions defaultOptions() {
-		return defaultOptions;
-	}
-
-	private BulkOptions(TimeValue timeout, WriteRequest.RefreshPolicy refreshPolicy, ActiveShardCount waitForActiveShards,
-			String pipeline, String routingId) {
+	private BulkOptions(@Nullable TimeValue timeout, @Nullable WriteRequest.RefreshPolicy refreshPolicy,
+			@Nullable ActiveShardCount waitForActiveShards, @Nullable String pipeline, @Nullable String routingId) {
 		this.timeout = timeout;
 		this.refreshPolicy = refreshPolicy;
 		this.waitForActiveShards = waitForActiveShards;
@@ -58,32 +52,59 @@ public class BulkOptions {
 		this.routingId = routingId;
 	}
 
+	@Nullable
 	public TimeValue getTimeout() {
 		return timeout;
 	}
 
+	@Nullable
 	public WriteRequest.RefreshPolicy getRefreshPolicy() {
 		return refreshPolicy;
 	}
 
+	@Nullable
 	public ActiveShardCount getWaitForActiveShards() {
 		return waitForActiveShards;
 	}
 
+	@Nullable
 	public String getPipeline() {
 		return pipeline;
 	}
 
+	@Nullable
 	public String getRoutingId() {
 		return routingId;
 	}
 
-	public static final class BulkOptionsBuilder {
-		private TimeValue timeout;
-		private WriteRequest.RefreshPolicy refreshPolicy;
-		private ActiveShardCount waitForActiveShards;
-		private String pipeline;
-		private String routingId;
+	/**
+	 * Create a new {@link BulkOptionsBuilder} to build {@link BulkOptions}.
+	 *
+	 * @return a new {@link BulkOptionsBuilder} to build {@link BulkOptions}.
+	 */
+	public static BulkOptionsBuilder builder() {
+		return new BulkOptionsBuilder();
+	}
+
+	/**
+	 * Return default {@link BulkOptions}.
+	 *
+	 * @return default {@link BulkOptions}.
+	 */
+	public static BulkOptions defaultOptions() {
+		return defaultOptions;
+	}
+
+	/**
+	 * Builder for {@link BulkOptions}.
+	 */
+	public static class BulkOptionsBuilder {
+
+		private @Nullable TimeValue timeout;
+		private @Nullable WriteRequest.RefreshPolicy refreshPolicy;
+		private @Nullable ActiveShardCount waitForActiveShards;
+		private @Nullable String pipeline;
+		private @Nullable String routingId;
 
 		private BulkOptionsBuilder() {}
 
