@@ -33,8 +33,7 @@ class StubParameterAccessor implements ElasticsearchParameterAccessor {
 
 	private final Object[] values;
 
-	@SuppressWarnings("unchecked")
-	public StubParameterAccessor(Object... values) {
+	StubParameterAccessor(Object... values) {
 		this.values = values;
 	}
 
@@ -96,6 +95,10 @@ class StubParameterAccessor implements ElasticsearchParameterAccessor {
 		return Optional.empty();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#findDynamicProjection()
+	 */
     @Override
     public Class<?> findDynamicProjection() {
         return null;
