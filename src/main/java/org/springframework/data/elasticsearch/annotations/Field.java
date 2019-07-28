@@ -32,6 +32,7 @@ import java.lang.annotation.Target;
  * @author Jakub Vavrik
  * @author Kevin Leturc
  * @author Peter-Josef Meisch
+ * @author Murali Chevuri
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -41,6 +42,7 @@ public @interface Field {
 
 	/**
 	 * Alias for {@link #name}.
+	 * 
 	 * @since 3.2
 	 */
 	@AliasFor("name")
@@ -48,7 +50,9 @@ public @interface Field {
 
 	/**
 	 * The <em>name</em> to be used to store the field inside the document.
-	 * <p>If not set, the name of the annotated property is used.
+	 * <p>
+	 * If not set, the name of the annotated property is used.
+	 * 
 	 * @since 3.2
 	 */
 	@AliasFor("value")
@@ -77,4 +81,10 @@ public @interface Field {
 	boolean includeInParent() default false;
 
 	String[] copyTo() default {};
+
+	/**
+	 * Doc values is supported with all field types, with the exception of {@link FieldType#Text} and
+	 * {@link FieldType#Nested} type fields.
+	 */
+	boolean docValues() default true;
 }

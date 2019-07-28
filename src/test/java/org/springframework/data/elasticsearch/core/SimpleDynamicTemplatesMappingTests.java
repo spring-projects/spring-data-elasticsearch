@@ -37,6 +37,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  *
  * @author Petr Kukral
  * @author Peter-Josef Meisch
+ * @author Murali Chevuri
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")

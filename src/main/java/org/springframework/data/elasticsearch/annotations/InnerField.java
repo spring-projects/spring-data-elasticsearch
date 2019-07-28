@@ -24,6 +24,7 @@ import java.lang.annotation.Target;
  * @author Artur Konczak
  * @author Mohsin Husen
  * @author Sascha Woo
+ * @author Murali Chevuri
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -48,4 +49,11 @@ public @interface InnerField {
 	String analyzer() default "";
 
 	String normalizer() default "";
+
+	/**
+	 * Doc values is supported with all field types, with the exception of {@link FieldType#Text} and
+	 * {@link FieldType#Nested} type fields.
+	 */
+	boolean docValues() default true;
+
 }

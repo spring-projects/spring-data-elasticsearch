@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.junit.Assert.assertTrue;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
@@ -80,6 +81,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Don Wellington
  * @author Sascha Woo
  * @author Peter-Josef Meisch
+ * @author Murali Chevuri
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -99,6 +101,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		elasticsearchTemplate.deleteIndex(Book.class);
 		elasticsearchTemplate.deleteIndex(NormalizerEntity.class);
 		elasticsearchTemplate.deleteIndex(CopyToEntity.class);
+		elasticsearchTemplate.deleteIndex(DocValuesEntity.class);
 	}
 
 	@Test
@@ -249,6 +252,33 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		// then
 	}
 
+	@Test // DATAES-618
+	public void shouldUseDocValues() {
+
+		// given
+		elasticsearchTemplate.createIndex(DocValuesEntity.class);
+		elasticsearchTemplate.putMapping(DocValuesEntity.class);
+
+		// when
+		Map mapping = elasticsearchTemplate.getMapping(DocValuesEntity.class);
+		Map descriptionMapping = (Map) ((Map) mapping.get("properties")).get("description");
+		Map keywordDescriptionMapping = (Map) ((Map) descriptionMapping.get("fields")).get("keyword");
+		Map nameMapping = (Map) ((Map) mapping.get("properties")).get("name");
+		Map bucketsMapping = (Map) ((Map) mapping.get("properties")).get("buckets");
+
+		// then
+		assertTrue(bucketsMapping.size() == 1);
+		assertThat(bucketsMapping.get("type")).isEqualTo("nested");
+		assertTrue(nameMapping.size() == 2);
+		assertThat(nameMapping.get("type")).isEqualTo("keyword");
+		assertThat(nameMapping.get("doc_values")).isEqualTo(false);
+		assertTrue(descriptionMapping.size() == 2);
+		assertThat(descriptionMapping.get("type")).isEqualTo("text");
+		assertTrue(keywordDescriptionMapping.size() == 2);
+		assertThat(keywordDescriptionMapping.get("type")).isEqualTo("keyword");
+		assertThat(keywordDescriptionMapping.get("doc_values")).isEqualTo(false);
+	}
+
 	@Test // DATAES-420
 	public void shouldUseBothAnalyzer() {
 
@@ -258,6 +288,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		// when
 		Map mapping = elasticsearchTemplate.getMapping(Book.class);
+		System.out.println(mapping);
 		Map descriptionMapping = (Map) ((Map) mapping.get("properties")).get("description");
 		Map prefixDescription = (Map) ((Map) descriptionMapping.get("fields")).get("prefix");
 
@@ -563,6 +594,29 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		@MultiField(mainField = @Field(type = FieldType.Text), otherFields = { @InnerField(suffix = "lower_case",
 				type = FieldType.Keyword, normalizer = "lower_case_normalizer") }) private String description;
+	}
+
+	/**
+	 * @author Murali Chevuri
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-doc-values-mapping-builder", type = "test", shards = 1, replicas = 0,
+			refreshInterval = "-1")
+	static class DocValuesEntity {
+
+		@Id private String id;
+
+		@Field(type = FieldType.Keyword, docValues = false) private String name;
+
+		@Field(type = FieldType.Nested,
+				docValues = false) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+
+		@MultiField(mainField = @Field(type = FieldType.Text, docValues = true), otherFields = {
+				@InnerField(suffix = "keyword", type = FieldType.Keyword, docValues = false) }) private String description;
 	}
 
 	/**

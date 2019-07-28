@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Objects;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -67,6 +68,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Robert Gruendler
  * @author Petr Kukral
  * @author Peter-Josef Meisch
+ * @author Murali Chevuri
  */
 class MappingBuilder {
 
@@ -85,6 +87,7 @@ class MappingBuilder {
 	private static final String FIELD_CONTEXT_TYPE = "type";
 	private static final String FIELD_CONTEXT_PRECISION = "precision";
 	private static final String FIELD_DYNAMIC_TEMPLATES = "dynamic_templates";
+	private static final String FIELD_DOC_VALUES = "doc_values";
 
 	private static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
 	private static final String COMPLETION_PRESERVE_POSITION_INCREMENTS = "preserve_position_increments";
@@ -339,6 +342,7 @@ class MappingBuilder {
 		boolean index = true;
 		boolean store = false;
 		boolean fielddata = false;
+		Boolean docValues = true;
 		FieldType type = null;
 		DateFormat dateFormat = null;
 		String datePattern = null;
@@ -360,6 +364,9 @@ class MappingBuilder {
 			searchAnalyzer = fieldAnnotation.searchAnalyzer();
 			normalizer = fieldAnnotation.normalizer();
 			copyTo = fieldAnnotation.copyTo();
+			if (!FieldType.Text.equals(type) && !FieldType.Nested.equals(type)) {
+				docValues = fieldAnnotation.docValues();
+			}
 		} else if (annotation instanceof InnerField) {
 			// @InnerField
 			InnerField fieldAnnotation = (InnerField) annotation;
@@ -372,6 +379,9 @@ class MappingBuilder {
 			analyzer = fieldAnnotation.analyzer();
 			searchAnalyzer = fieldAnnotation.searchAnalyzer();
 			normalizer = fieldAnnotation.normalizer();
+			if (!FieldType.Text.equals(type) && !FieldType.Nested.equals(type)) {
+				docValues = fieldAnnotation.docValues();
+			}
 		} else {
 			throw new IllegalArgumentException("annotation must be an instance of @Field or @InnerField");
 		}
@@ -404,6 +414,10 @@ class MappingBuilder {
 		if (copyTo != null && copyTo.length > 0) {
 			builder.field(FIELD_COPY_TO, copyTo);
 		}
+		if (!docValues) {
+			builder.field(FIELD_DOC_VALUES, docValues);
+		}
+
 	}
 
 	/**
