@@ -51,7 +51,7 @@ import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Gad Akuka
@@ -62,7 +62,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Michael Wirth
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:/uuidkeyed-repository-test.xml")
 public class UUIDElasticsearchRepositoryTests {
 

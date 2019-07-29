@@ -33,7 +33,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQueryBuilder;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Rizwan Idrees
@@ -49,7 +49,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Don Wellington
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:elasticsearch-rest-template-test.xml")
 public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 

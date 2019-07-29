@@ -42,14 +42,14 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:/repository-spring-data-geo-support.xml")
 public class SpringDataGeoRepositoryTests {
 

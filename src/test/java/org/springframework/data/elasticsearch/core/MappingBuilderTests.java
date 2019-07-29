@@ -69,7 +69,7 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Stuart Stevenson
@@ -81,7 +81,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Sascha Woo
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class MappingBuilderTests extends MappingContextBaseTests {
 

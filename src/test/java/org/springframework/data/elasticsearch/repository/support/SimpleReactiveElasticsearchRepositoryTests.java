@@ -62,14 +62,14 @@ import org.springframework.data.elasticsearch.config.AbstractReactiveElasticsear
 import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Strobl
  * @currentRead Fool's Fate - Robin Hobb
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class SimpleReactiveElasticsearchRepositoryTests {
 

@@ -30,7 +30,7 @@ import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Dynamic templates tests
@@ -38,7 +38,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Petr Kukral
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests {
 

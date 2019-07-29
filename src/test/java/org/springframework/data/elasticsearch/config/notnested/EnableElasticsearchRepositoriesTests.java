@@ -51,7 +51,7 @@ import org.springframework.data.elasticsearch.repository.config.EnableElasticsea
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.data.repository.Repository;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Rizwan Idrees
@@ -60,7 +60,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Gad Akuka
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class EnableElasticsearchRepositoriesTests implements ApplicationContextAware {
 

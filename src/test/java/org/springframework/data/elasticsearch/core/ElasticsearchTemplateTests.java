@@ -84,7 +84,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Base for testing rest/transport templates
@@ -108,7 +108,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Martin Choraine
  * @author Farid Azaza
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
 public class ElasticsearchTemplateTests {
 
