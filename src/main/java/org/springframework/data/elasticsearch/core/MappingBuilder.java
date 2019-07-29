@@ -15,20 +15,18 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.*;
-import static org.springframework.util.StringUtils.*;
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import static org.springframework.util.StringUtils.hasText;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Objects;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.CompletionContext;
@@ -342,7 +340,7 @@ class MappingBuilder {
 		boolean index = true;
 		boolean store = false;
 		boolean fielddata = false;
-		Boolean docValues = true;
+		boolean docValues = true;
 		FieldType type = null;
 		DateFormat dateFormat = null;
 		String datePattern = null;
@@ -364,7 +362,7 @@ class MappingBuilder {
 			searchAnalyzer = fieldAnnotation.searchAnalyzer();
 			normalizer = fieldAnnotation.normalizer();
 			copyTo = fieldAnnotation.copyTo();
-			if (!FieldType.Text.equals(type) && !FieldType.Nested.equals(type)) {
+			if (FieldType.Text != type && FieldType.Nested != type) {
 				docValues = fieldAnnotation.docValues();
 			}
 		} else if (annotation instanceof InnerField) {
@@ -379,7 +377,7 @@ class MappingBuilder {
 			analyzer = fieldAnnotation.analyzer();
 			searchAnalyzer = fieldAnnotation.searchAnalyzer();
 			normalizer = fieldAnnotation.normalizer();
-			if (!FieldType.Text.equals(type) && !FieldType.Nested.equals(type)) {
+			if (FieldType.Text != type && FieldType.Nested != type) {
 				docValues = fieldAnnotation.docValues();
 			}
 		} else {
@@ -414,6 +412,7 @@ class MappingBuilder {
 		if (copyTo != null && copyTo.length > 0) {
 			builder.field(FIELD_COPY_TO, copyTo);
 		}
+		
 		if (!docValues) {
 			builder.field(FIELD_DOC_VALUES, docValues);
 		}
@@ -436,7 +435,7 @@ class MappingBuilder {
 				if (hasText(jsonString)) {
 
 					ObjectMapper objectMapper = new ObjectMapper();
-					JsonNode jsonNode = objectMapper.readTree(jsonString).get("dynamic_templates");
+					JsonNode jsonNode = objectMapper.readTree(jsonString).get(FIELD_DYNAMIC_TEMPLATES);
 					if (jsonNode != null && jsonNode.isArray()) {
 						String json = objectMapper.writeValueAsString(jsonNode);
 						builder.rawField(FIELD_DYNAMIC_TEMPLATES, new ByteArrayInputStream(json.getBytes()), XContentType.JSON);
