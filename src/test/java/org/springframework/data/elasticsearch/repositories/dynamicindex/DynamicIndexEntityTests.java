@@ -15,12 +15,13 @@
  */
 package org.springframework.data.elasticsearch.repositories.dynamicindex;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportResource;
@@ -74,11 +75,11 @@ public class DynamicIndexEntityTests {
 
 		indexNameProvider.setIndexName("index1");
 		repository.save(new DynamicIndexEntity());
-		assertTrue(indexNameProvider.callsCount > initialCallsCount);
-		assertEquals(1L, repository.count());
+		assertThat(indexNameProvider.callsCount > initialCallsCount).isTrue();
+		assertThat(repository.count()).isEqualTo(1L);
 
 		indexNameProvider.setIndexName("index2");
-		assertEquals(0L, repository.count());
+		assertThat(repository.count()).isEqualTo(0L);
 	}
 
 	@ImportResource(value = "classpath:/dynamic-index-repository-test.xml")

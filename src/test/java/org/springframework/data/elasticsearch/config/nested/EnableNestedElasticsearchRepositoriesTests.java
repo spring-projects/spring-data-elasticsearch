@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.config.nested;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import lombok.Builder;
@@ -70,7 +70,7 @@ public class EnableNestedElasticsearchRepositoriesTests {
 
 	@Test
 	public void hasNestedRepository() {
-		assertNotNull(nestedRepository);
+		assertThat(nestedRepository).isNotNull();
 	}
 
 	@Data

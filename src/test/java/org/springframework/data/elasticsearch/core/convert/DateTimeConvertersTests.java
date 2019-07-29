@@ -15,13 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.util.Calendar;
 import java.util.TimeZone;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
-import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -32,32 +33,32 @@ public class DateTimeConvertersTests {
 
 	@Test
 	public void testJodaDateTimeConverterWithNullValue() {
-		Assert.assertNull(DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(null));
+		assertThat(DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(null)).isNull();
 	}
 
 	@Test
 	public void testJodaDateTimeConverter() {
 		DateTime dateTime = new DateTime(2013, 1, 24, 6, 35, 0, DateTimeZone.UTC);
-		Assert.assertEquals("2013-01-24T06:35:00.000Z",
-				DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(dateTime));
+		assertThat(DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(dateTime))
+				.isEqualTo("2013-01-24T06:35:00.000Z");
 	}
 
 	@Test
 	public void testJodaLocalDateTimeConverterWithNullValue() {
-		Assert.assertNull(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE.convert(null));
+		assertThat(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE.convert(null)).isNull();
 	}
 
 	@Test
 	public void testJodaLocalDateTimeConverter() {
 		LocalDateTime dateTime = new LocalDateTime(new DateTime(2013, 1, 24, 6, 35, 0, DateTimeZone.UTC).getMillis(),
 				DateTimeZone.UTC);
-		Assert.assertEquals("2013-01-24T06:35:00.000Z",
-				DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE.convert(dateTime));
+		assertThat(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE.convert(dateTime))
+				.isEqualTo("2013-01-24T06:35:00.000Z");
 	}
 
 	@Test
 	public void testJavaDateConverterWithNullValue() {
-		Assert.assertNull(DateTimeConverters.JavaDateConverter.INSTANCE.convert(null));
+		assertThat(DateTimeConverters.JavaDateConverter.INSTANCE.convert(null)).isNull();
 	}
 
 	@Test
@@ -67,7 +68,7 @@ public class DateTimeConvertersTests {
 		calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
 		calendar.setTimeInMillis(dateTime.getMillis());
 
-		Assert.assertEquals("2013-01-24T06:35:00.000Z",
-				DateTimeConverters.JavaDateConverter.INSTANCE.convert(calendar.getTime()));
+		assertThat(DateTimeConverters.JavaDateConverter.INSTANCE.convert(calendar.getTime()))
+				.isEqualTo("2013-01-24T06:35:00.000Z");
 	}
 }

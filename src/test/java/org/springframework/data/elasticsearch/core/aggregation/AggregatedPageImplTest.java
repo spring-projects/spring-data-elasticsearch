@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.aggregation;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 
@@ -34,9 +34,9 @@ public class AggregatedPageImplTest {
 	public void constructFacetedPageWithPageable() {
 		Page<String> page = new AggregatedPageImpl<>(Arrays.asList("Test", "Test 2"), PageRequest.of(0, 2), 10);
 
-		assertEquals(10, page.getTotalElements());
-		assertEquals(2, page.getNumberOfElements());
-		assertEquals(2, page.getSize());
-		assertEquals(5, page.getTotalPages());
+		assertThat(page.getTotalElements()).isEqualTo(10);
+		assertThat(page.getNumberOfElements()).isEqualTo(2);
+		assertThat(page.getSize()).isEqualTo(2);
+		assertThat(page.getTotalPages()).isEqualTo(5);
 	}
 }
