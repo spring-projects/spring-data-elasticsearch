@@ -15,33 +15,42 @@
  */
 package org.springframework.data.elasticsearch;
 
-import static java.util.Arrays.*;
-
+import java.util.Collections;
 import java.util.UUID;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeValidationException;
 import org.elasticsearch.transport.Netty4Plugin;
-
 import org.springframework.data.elasticsearch.client.NodeClientFactoryBean;
 
 /**
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Ilkang Na
+ * @author Peter-Josef Meisch
  */
 public class Utils {
 
-	public static Client getNodeClient() throws NodeValidationException {
-
+	public static Node getNode() {
 		String pathHome = "src/test/resources/test-home-dir";
 		String pathData = "target/elasticsearchTestData";
 		String clusterName = UUID.randomUUID().toString();
 
-		return new NodeClientFactoryBean.TestNode(Settings.builder().put("transport.type", "netty4")
-				.put("http.type", "netty4").put("path.home", pathHome).put("path.data", pathData)
-				.put("cluster.name", clusterName).put("node.max_local_storage_nodes", 100).build(), asList(Netty4Plugin.class))
-						.start().client();
+		return new NodeClientFactoryBean.TestNode( //
+				Settings.builder() //
+						.put("transport.type", "netty4") //
+						.put("http.type", "netty4") //
+						.put("path.home", pathHome) //
+						.put("path.data", pathData) //
+						.put("cluster.name", clusterName) //
+						.put("node.max_local_storage_nodes", 100)//
+						.build(), //
+				Collections.singletonList(Netty4Plugin.class));
+	}
+
+	public static Client getNodeClient() throws NodeValidationException {
+		return getNode().start().client();
 	}
 }

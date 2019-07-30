@@ -26,6 +26,7 @@ import lombok.Setter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,36 +36,43 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 /**
+ * base class for query keyword tests. Implemented by subclasses using ElasticsearchClient and ElasticsearchRestClient
+ * based repositories.
+ *
  * @author Artur Konczak
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  */
 @RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:/repository-query-keywords.xml")
-public class QueryKeywordsTests {
+abstract class QueryKeywordsTests {
 
 	@Autowired private ProductRepository repository;
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations elasticsearchTemplate;
 
 	@Before
 	public void before() {
 
 		IndexInitializer.init(elasticsearchTemplate, Product.class);
 
-		repository.saveAll(
-				Arrays.asList(Product.builder().id("1").name("Sugar").text("Cane sugar").price(1.0f).available(false).build(),
-						Product.builder().id("2").name("Sugar").text("Cane sugar").price(1.2f).available(true).build(),
-						Product.builder().id("3").name("Sugar").text("Beet sugar").price(1.1f).available(true).build(),
-						Product.builder().id("4").name("Salt").text("Rock salt").price(1.9f).available(true).build(),
-						Product.builder().id("5").name("Salt").text("Sea salt").price(2.1f).available(false).build()));
+		 Product product1 = Product.builder().id("1").name("Sugar").text("Cane sugar").price(1.0f).available(false)
+				.sortName("sort5").build();
+		 Product product2 = Product.builder().id("2").name("Sugar").text("Cane sugar").price(1.2f).available(true)
+				.sortName("sort4").build();
+		 Product product3 = Product.builder().id("3").name("Sugar").text("Beet sugar").price(1.1f).available(true)
+				.sortName("sort3").build();
+		 Product product4 = Product.builder().id("4").name("Salt").text("Rock salt").price(1.9f).available(true)
+				.sortName("sort2").build();
+		 Product product5 = Product.builder().id("5").name("Salt").text("Sea salt").price(2.1f).available(false)
+				.sortName("sort1").build();
+
+		repository.saveAll(Arrays.asList(product1, product2, product3, product4, product5));
 
 		elasticsearchTemplate.refresh(Product.class);
 	}
@@ -155,6 +163,40 @@ public class QueryKeywordsTests {
 		assertThat(repository.findByPriceGreaterThanEqual(1.9f)).hasSize(2);
 	}
 
+	@Test // DATAES-615
+	public void shouldSupportSortOnStandardFieldWithCriteria() {
+		 List<String> sortedIds = repository.findAllByNameOrderByText("Salt").stream() //
+				.map(it -> it.id).collect(Collectors.toList());
+
+		assertThat(sortedIds).containsExactly("4", "5");
+	}
+
+	@Test // DATAES-615
+	public void shouldSupportSortOnFieldWithCustomFieldNameWithCriteria() {
+
+		 List<String> sortedIds = repository.findAllByNameOrderBySortName("Sugar").stream() //
+				.map(it -> it.id).collect(Collectors.toList());
+
+		assertThat(sortedIds).containsExactly("3", "2", "1");
+	}
+
+	@Test // DATAES-615
+	public void shouldSupportSortOnStandardFieldWithoutCriteria() {
+		 List<String> sortedIds = repository.findAllByOrderByText().stream() //
+				.map(it -> it.text).collect(Collectors.toList());
+
+		assertThat(sortedIds).containsExactly("Beet sugar", "Cane sugar", "Cane sugar", "Rock salt", "Sea salt");
+	}
+
+	@Test // DATAES-615
+	public void shouldSupportSortOnFieldWithCustomFieldNameWithoutCriteria() {
+
+		 List<String> sortedIds = repository.findAllByOrderBySortName().stream() //
+				.map(it -> it.id).collect(Collectors.toList());
+
+		assertThat(sortedIds).containsExactly("5", "4", "3", "2", "1");
+	}
+
 	/**
 	 * @author Mohsin Husen
 	 * @author Artur Konczak
@@ -176,7 +218,7 @@ public class QueryKeywordsTests {
 
 		private String description;
 
-		private String text;
+		@Field(type = FieldType.Keyword) private String text;
 
 		private List<String> categories;
 
@@ -191,12 +233,14 @@ public class QueryKeywordsTests {
 		private String location;
 
 		private Date lastModified;
+
+		@Field(name = "sort-name", type = FieldType.Keyword) private String sortName;
 	}
 
 	/**
 	 * Created by akonczak on 04/09/15.
 	 */
-	interface ProductRepository extends PagingAndSortingRepository<Product, String> {
+	interface ProductRepository extends ElasticsearchRepository<Product, String> {
 
 		List<Product> findByNameAndText(String name, String text);
 
@@ -227,6 +271,14 @@ public class QueryKeywordsTests {
 		List<Product> findByPriceGreaterThanEqual(float v);
 
 		List<Product> findByIdNotIn(List<String> strings);
+
+		List<Product> findAllByNameOrderByText(String name);
+
+		List<Product> findAllByNameOrderBySortName(String name);
+
+		List<Product> findAllByOrderByText();
+
+		List<Product> findAllByOrderBySortName();
 	}
 
 }

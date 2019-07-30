@@ -449,7 +449,7 @@ public class ElasticsearchRestTemplate
 
 	@Override
 	public <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor) {
-		SearchResponse response = doSearch(prepareSearch(query, Optional.ofNullable(query.getQuery())), query);
+		SearchResponse response = doSearch(prepareSearch(query, Optional.ofNullable(query.getQuery()), null), query);
 		return resultsExtractor.extract(response);
 	}
 
@@ -470,7 +470,7 @@ public class ElasticsearchRestTemplate
 
 	@Override
 	public <T> List<String> queryForIds(SearchQuery query) {
-		SearchRequest request = prepareSearch(query, Optional.ofNullable(query.getQuery()));
+		SearchRequest request = prepareSearch(query, Optional.ofNullable(query.getQuery()), null);
 		request.source().query(query.getQuery());
 		if (query.getFilter() != null) {
 			request.source().postFilter(query.getFilter());
@@ -627,10 +627,10 @@ public class ElasticsearchRestTemplate
 	}
 
 	private <T> SearchRequest prepareCount(Query query, Class<T> clazz) {
-		String indexName[] = !isEmpty(query.getIndices())
+		String[] indexName = !isEmpty(query.getIndices())
 				? query.getIndices().toArray(new String[query.getIndices().size()])
 				: retrieveIndexNameFromPersistentEntity(clazz);
-		String types[] = !isEmpty(query.getTypes()) ? query.getTypes().toArray(new String[query.getTypes().size()])
+		String[] types = !isEmpty(query.getTypes()) ? query.getTypes().toArray(new String[query.getTypes().size()])
 				: retrieveTypeFromPersistentEntity(clazz);
 
 		Assert.notNull(indexName, "No index defined for Query");
@@ -920,10 +920,12 @@ public class ElasticsearchRestTemplate
 
 	private <T> SearchRequest prepareScroll(Query query, long scrollTimeInMillis, Class<T> clazz) {
 		setPersistentEntityIndexAndType(query, clazz);
-		return prepareScroll(query, scrollTimeInMillis);
+		ElasticsearchPersistentEntity<?> entity = getPersistentEntity(clazz);
+		return prepareScroll(query, scrollTimeInMillis, entity);
 	}
 
-	private SearchRequest prepareScroll(Query query, long scrollTimeInMillis) {
+	private SearchRequest prepareScroll(Query query, long scrollTimeInMillis,
+			@Nullable ElasticsearchPersistentEntity<?> entity) {
 		SearchRequest request = new SearchRequest(toArray(query.getIndices()));
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 		request.types(toArray(query.getTypes()));
@@ -943,7 +945,7 @@ public class ElasticsearchRestTemplate
 		}
 
 		if (query.getSort() != null) {
-			prepareSort(query, searchSourceBuilder);
+			prepareSort(query, searchSourceBuilder, entity);
 		}
 
 		request.source(searchSourceBuilder);
@@ -1272,15 +1274,15 @@ public class ElasticsearchRestTemplate
 
 	private <T> SearchRequest prepareSearch(Query query, Class<T> clazz) {
 		setPersistentEntityIndexAndType(query, clazz);
-		return prepareSearch(query, Optional.empty());
+		return prepareSearch(query, Optional.empty(), clazz);
 	}
 
 	private <T> SearchRequest prepareSearch(SearchQuery query, Class<T> clazz) {
 		setPersistentEntityIndexAndType(query, clazz);
-		return prepareSearch(query, Optional.ofNullable(query.getQuery()));
+		return prepareSearch(query, Optional.ofNullable(query.getQuery()), clazz);
 	}
 
-	private SearchRequest prepareSearch(Query query, Optional<QueryBuilder> builder) {
+	private SearchRequest prepareSearch(Query query, Optional<QueryBuilder> builder, @Nullable Class<?> clazz) {
 		Assert.notNull(query.getIndices(), "No index defined for Query");
 		Assert.notNull(query.getTypes(), "No type defined for Query");
 
@@ -1315,7 +1317,7 @@ public class ElasticsearchRestTemplate
 		}
 
 		if (query.getSort() != null) {
-			prepareSort(query, sourceBuilder);
+			prepareSort(query, sourceBuilder, getPersistentEntity(clazz));
 		}
 
 		if (query.getMinScore() > 0) {
@@ -1330,9 +1332,14 @@ public class ElasticsearchRestTemplate
 		return request;
 	}
 
-	private void prepareSort(Query query, SearchSourceBuilder sourceBuilder) {
+	private void prepareSort(Query query, SearchSourceBuilder sourceBuilder,
+			@Nullable ElasticsearchPersistentEntity<?> entity) {
 		for (Sort.Order order : query.getSort()) {
-			FieldSortBuilder sort = SortBuilders.fieldSort(order.getProperty())
+			ElasticsearchPersistentProperty property = entity != null //
+					? entity.getPersistentProperty(order.getProperty()) //
+					: null;
+			String fieldName = property != null ? property.getFieldName() : order.getProperty();
+			FieldSortBuilder sort = SortBuilders.fieldSort(fieldName)
 					.order(order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC);
 			if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
 				sort.missing("_first");
@@ -1453,6 +1460,11 @@ public class ElasticsearchRestTemplate
 		} catch (IOException e) {
 			throw new ElasticsearchException("Could not map alias response : " + aliasResponse, e);
 		}
+	}
+
+	@Nullable
+	private ElasticsearchPersistentEntity<?> getPersistentEntity(@Nullable Class<?> clazz) {
+		return clazz != null ? elasticsearchConverter.getMappingContext().getPersistentEntity(clazz) : null;
 	}
 
 	@Override

@@ -34,6 +34,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.lang.Nullable;
 
 /**
  * ElasticsearchQueryCreator
@@ -42,13 +43,14 @@ import org.springframework.data.repository.query.parser.PartTree;
  * @author Mohsin Husen
  * @author Franck Marchand
  * @author Artur Konczak
+ * @author Peter-Josef Meisch
  */
 public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuery, CriteriaQuery> {
 
 	private final MappingContext<?, ElasticsearchPersistentProperty> context;
 
 	public ElasticsearchQueryCreator(PartTree tree, ParameterAccessor parameters,
-									 MappingContext<?, ElasticsearchPersistentProperty> context) {
+			MappingContext<?, ElasticsearchPersistentProperty> context) {
 		super(tree, parameters);
 		this.context = context;
 	}
@@ -83,9 +85,12 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 	}
 
 	@Override
-	protected CriteriaQuery complete(CriteriaQuery query, Sort sort) {
+	protected CriteriaQuery complete(@Nullable CriteriaQuery query, Sort sort) {
+
 		if (query == null) {
-			return null;
+
+			// this is the case in a findAllByOrderByField method, add empty criteria
+			query = new CriteriaQuery(new Criteria());
 		}
 		return query.addSort(sort);
 	}
@@ -190,6 +195,6 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 		} else if (o.getClass().isArray()) {
 			return (Object[]) o;
 		}
-		return new Object[]{o};
+		return new Object[] { o };
 	}
 }
