@@ -19,8 +19,8 @@ import java.util.List;
 
 import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.action.support.WriteRequest;
-import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.unit.TimeValue;
+import org.springframework.lang.Nullable;
 
 /**
  * Options that may be passed to an

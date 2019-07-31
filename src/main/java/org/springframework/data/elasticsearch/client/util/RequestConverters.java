@@ -61,7 +61,6 @@ import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.RethrottleRequest;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.Priority;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.SuppressForbidden;
@@ -86,6 +85,7 @@ import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.tasks.TaskId;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.http.HttpMethod;
+import org.springframework.lang.Nullable;
 
 /**
  * <p>
