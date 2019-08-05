@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.10.RELEASE (2019-08-05)
+----------------------------------------------
+* DATAES-592 - Integrate nohttp tooling into CI build profile.
+* DATAES-590 - Release 3.1.10 (Lovelace SR10).
+* DATAES-583 - Introduce Jenkins CI.
+
+
 Changes in version 2.1.23.RELEASE (2019-08-05)
 ----------------------------------------------
 * DATAES-583 - Introduce Jenkins CI.
