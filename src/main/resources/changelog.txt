@@ -1,6 +1,34 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.0.RC2 (2019-08-05)
+-----------------------------------------
+* DATAES-619 - Migrate remaining tests to AssertJ.
+* DATAES-616 - Fix implementations of ParameterAccessor interface.
+* DATAES-615 - OrderBy clause on repository queries does not honour @Field name annotation.
+* DATAES-611 - Adapt to API changes in Spring Webflux.
+* DATAES-610 - Clarify inclusion of rc and snapshot builds in readme.adoc.
+* DATAES-609 - Fix TransportClientFactoryBean.isSingleton().
+* DATAES-607 - Add client security configuration options for Rest clients.
+* DATAES-606 - update 3.2.x to use ES 6.8.1.
+* DATAES-604 - Revise readme for a consistent structure.
+* DATAES-603 - Add support for bulk options in Elasticsearch-Template classes.
+* DATAES-601 - Fix NoHTTP errors.
+* DATAES-598 - Add Elasticsearch authentication code example to readme.
+* DATAES-597 - Fix code formatting in readme.
+* DATAES-595 - Support for setting preference parameter in query.
+* DATAES-594 - Support for Index without refresh.
+* DATAES-593 - Add support for field collapse function.
+* DATAES-592 - Integrate nohttp tooling into CI build profile.
+* DATAES-591 - Release 3.2 RC2 (Moore).
+* DATAES-583 - Introduce Jenkins CI.
+* DATAES-497 - Revise reference documentation.
+* DATAES-456 - AbstractElasticsearchRepository.save(S entity) does not evaluate @Document(indexName) expression.
+* DATAES-415 - More Field Types Support.
+* DATAES-405 - use @Nullable from org.springframework.lang.
+* DATAES-387 - Index Not Found Exception When Using Spring EL in Index Name/Type.
+
+
 Changes in version 3.1.10.RELEASE (2019-08-05)
 ----------------------------------------------
 * DATAES-592 - Integrate nohttp tooling into CI build profile.
