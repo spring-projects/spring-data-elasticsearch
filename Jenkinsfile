@@ -31,7 +31,7 @@ pipeline {
 					options { timeout(time: 30, unit: 'MINUTES') }
 					steps {
 						sh 'rm -rf ?'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Dsort -B'
+						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Dsort -U -B'
 					}
 				}
 			}
@@ -63,7 +63,7 @@ pipeline {
 						"-Dartifactory.staging-repository=libs-snapshot-local " +
 						"-Dartifactory.build-name=spring-data-elasticsearch-3.1 " +
 						"-Dartifactory.build-number=${BUILD_NUMBER} " +
-						'-Dmaven.test.skip=true clean deploy -B'
+						'-Dmaven.test.skip=true clean deploy -U -B'
 			}
 		}
 		stage('Release to artifactory with docs') {
@@ -92,7 +92,7 @@ pipeline {
 						"-Dartifactory.staging-repository=libs-snapshot-local " +
 						"-Dartifactory.build-name=spring-data-elasticsearch-3.1 " +
 						"-Dartifactory.build-number=${BUILD_NUMBER} " +
-						'-Dmaven.test.skip=true clean deploy -B'
+						'-Dmaven.test.skip=true clean deploy -U -B'
 			}
 		}
 	}
