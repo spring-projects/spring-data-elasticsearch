@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 2.1.23.RELEASE (2019-08-05)
+----------------------------------------------
+* DATAES-583 - Introduce Jenkins CI.
+* DATAES-581 - Release 2.1.23 (Ingalls SR23).
+
+
 Changes in version 3.2.0.RC1 (2019-06-14)
 -----------------------------------------
 * DATAES-589 - improve readme file.
