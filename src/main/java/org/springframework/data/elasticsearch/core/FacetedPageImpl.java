@@ -15,18 +15,21 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static java.util.Optional.*;
+
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.range.Range;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStats;
-import org.elasticsearch.search.aggregations.metrics.sum.Sum;
-import org.joda.time.DateTime;
+import org.elasticsearch.search.aggregations.metrics.ExtendedStats;
+import org.elasticsearch.search.aggregations.metrics.Sum;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
@@ -40,8 +43,6 @@ import org.springframework.data.elasticsearch.core.facet.result.StatisticalResul
 import org.springframework.data.elasticsearch.core.facet.result.Term;
 import org.springframework.data.elasticsearch.core.facet.result.TermResult;
 
-import static java.util.Optional.ofNullable;
-
 /**
  * Container for query result and facet results
  *
@@ -51,6 +52,7 @@ import static java.util.Optional.ofNullable;
  * @author Jonathan Yan
  * @author Philipp Kräutli
  * @author Remco Zigterman
+ * @author Peter-Josef Meisch
  */
 @Deprecated
 public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedPage<T>, AggregatedPage<T> {
@@ -106,8 +108,7 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 		}
 	}
 
-	private void processAggregation(Aggregation agg)
-	{
+	private void processAggregation(Aggregation agg) {
 		if (agg instanceof Terms) {
 			processTermAggregation((Terms) agg);
 		}
@@ -122,8 +123,7 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 		}
 	}
 
-	private void processTermAggregation(Terms agg)
-	{
+	private void processTermAggregation(Terms agg) {
 		List<Term> terms = new ArrayList<>();
 		for (Terms.Bucket t : agg.getBuckets()) {
 			terms.add(new Term(t.getKeyAsString(), t.getDocCount()));
@@ -131,36 +131,39 @@ public abstract class FacetedPageImpl<T> extends PageImpl<T> implements FacetedP
 		addFacet(new TermResult(agg.getName(), terms, terms.size(), agg.getSumOfOtherDocCounts(), 0));
 	}
 
-	private void processRangeAggregation(Range agg)
-	{
+	private void processRangeAggregation(Range agg) {
 		List<? extends Range.Bucket> buckets = ((Range) agg).getBuckets();
 		List<org.springframework.data.elasticsearch.core.facet.result.Range> ranges = new ArrayList<>();
 		for (Range.Bucket b : buckets) {
 			ExtendedStats rStats = b.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
 			if (rStats != null) {
 				Sum sum = b.getAggregations().get(RangeFacetRequest.RANGE_INTERNAL_SUM);
-				ranges.add(new org.springframework.data.elasticsearch.core.facet.result.Range((Double) b.getFrom(), (Double) b.getTo(), b.getDocCount(), sum != null ? sum.getValue() : rStats.getSum(), rStats.getCount(), rStats.getMin(), rStats.getMax()));
+				ranges.add(new org.springframework.data.elasticsearch.core.facet.result.Range((Double) b.getFrom(),
+						(Double) b.getTo(), b.getDocCount(), sum != null ? sum.getValue() : rStats.getSum(), rStats.getCount(),
+						rStats.getMin(), rStats.getMax()));
 			} else {
-				ranges.add(new org.springframework.data.elasticsearch.core.facet.result.Range((Double) b.getFrom(), (Double) b.getTo(), b.getDocCount(), 0, 0, 0, 0));
+				ranges.add(new org.springframework.data.elasticsearch.core.facet.result.Range((Double) b.getFrom(),
+						(Double) b.getTo(), b.getDocCount(), 0, 0, 0, 0));
 			}
 		}
 		addFacet(new RangeResult(agg.getName(), ranges));
 	}
 
-	private void processExtendedStatsAggregation(ExtendedStats agg)
-	{
-		addFacet(new StatisticalResult(agg.getName(), agg.getCount(), agg.getMax(), agg.getMin(), agg.getAvg(), agg.getStdDeviation(), agg.getSumOfSquares(), agg.getSum(), agg.getVariance()));
+	private void processExtendedStatsAggregation(ExtendedStats agg) {
+		addFacet(new StatisticalResult(agg.getName(), agg.getCount(), agg.getMax(), agg.getMin(), agg.getAvg(),
+				agg.getStdDeviation(), agg.getSumOfSquares(), agg.getSum(), agg.getVariance()));
 	}
 
-	private void processHistogramAggregation(Histogram agg)
-	{
+	private void processHistogramAggregation(Histogram agg) {
 		List<IntervalUnit> intervals = new ArrayList<>();
 		for (Histogram.Bucket h : agg.getBuckets()) {
 			ExtendedStats hStats = h.getAggregations().get(AbstractFacetRequest.INTERNAL_STATS);
 			if (hStats != null) {
-				intervals.add(new IntervalUnit(((DateTime) h.getKey()).getMillis(), h.getDocCount(), h.getDocCount(), hStats.getSum(), hStats.getAvg(), hStats.getMin(), hStats.getMax()));
+				intervals.add(new IntervalUnit(((ZonedDateTime) h.getKey()).toInstant().toEpochMilli(), h.getDocCount(),
+						h.getDocCount(), hStats.getSum(), hStats.getAvg(), hStats.getMin(), hStats.getMax()));
 			} else {
-				intervals.add(new IntervalUnit(((DateTime) h.getKey()).getMillis(), h.getDocCount(), h.getDocCount(), 0, 0, 0, 0));
+				intervals.add(new IntervalUnit(((ZonedDateTime) h.getKey()).toInstant().toEpochMilli(), h.getDocCount(),
+						h.getDocCount(), 0, 0, 0, 0));
 			}
 		}
 		addFacet(new HistogramResult(agg.getName(), intervals));

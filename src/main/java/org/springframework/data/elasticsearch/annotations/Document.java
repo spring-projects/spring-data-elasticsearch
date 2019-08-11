@@ -22,7 +22,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.elasticsearch.index.VersionType;
-
 import org.springframework.data.annotation.Persistent;
 
 /**
@@ -33,6 +32,7 @@ import org.springframework.data.annotation.Persistent;
  * @author Mason Chan
  * @author Ivan Greene
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  */
 @Persistent
 @Inherited
@@ -54,8 +54,14 @@ public @interface Document {
 	String indexName();
 
 	/**
-	 * Mapping type name.
+	 * Mapping type name. <br/>
+	 * deprecated as Elasticsearch does not support this anymore
+	 * (@see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.3/removal-of-types.html">Elastisearch removal of types documentation</a>) and will remove it in
+	 * Elasticsearch 8.
+	 *
+	 * @deprecated since 4.0
 	 */
+	@Deprecated
 	String type() default "";
 
 	/**
@@ -64,9 +70,11 @@ public @interface Document {
 	boolean useServerConfiguration() default false;
 
 	/**
-	 * Number of shards for the index {@link #indexName()}. Used for index creation.
+	 * Number of shards for the index {@link #indexName()}. Used for index creation. <br/>
+	 * With version 4.0, the default value is changed from 5 to 1 to reflect the change in the default settings of
+	 * Elasticsearch which changed to 1 as well in Elasticsearch 7.0.
 	 */
-	short shards() default 5;
+	short shards() default 1;
 
 	/**
 	 * Number of replicas for the index {@link #indexName()}. Used for index creation.

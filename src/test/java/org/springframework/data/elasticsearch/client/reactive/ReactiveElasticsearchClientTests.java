@@ -30,7 +30,6 @@ import java.util.stream.IntStream;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.Version;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
@@ -41,6 +40,7 @@ import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -65,7 +65,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
- * @currentRead Fool's Fate - Robin Hobb
+ * @author Peter-Josef Meisch
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -79,7 +79,9 @@ public class ReactiveElasticsearchClientTests {
 	static final String TYPE_I = "doc-type-1";
 	static final String TYPE_II = "doc-type-2";
 
-	static final Map<String, String> DOC_SOURCE;
+	// must be <String, Object> and not <String, String>, otherwise UpdateRequest.doc() will use the overload with
+	// (Object...)
+	static final Map<String, Object> DOC_SOURCE;
 
 	RestHighLevelClient syncClient;
 	ReactiveElasticsearchClient client;
@@ -135,7 +137,6 @@ public class ReactiveElasticsearchClientTests {
 		client.info().as(StepVerifier::create) //
 				.consumeNextWith(it -> {
 
-					assertThat(it.isAvailable()).isTrue();
 					assertThat(it.getVersion()).isGreaterThanOrEqualTo(Version.CURRENT);
 				}) //
 				.verifyComplete();
