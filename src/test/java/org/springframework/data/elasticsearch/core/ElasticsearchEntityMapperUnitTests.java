@@ -47,7 +47,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
-import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -58,7 +58,10 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 
 /**
+ * Unit tests for {@link ElasticsearchEntityMapper}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class ElasticsearchEntityMapperUnitTests {
 
@@ -79,16 +82,16 @@ public class ElasticsearchEntityMapperUnitTests {
 	Address observatoryRoad;
 	Place bigBunsCafe;
 
-	Map<String, Object> sarahAsMap;
-	Map<String, Object> t800AsMap;
-	Map<String, Object> kyleAsMap;
-	Map<String, Object> gratiotAveAsMap;
-	Map<String, Object> locationAsMap;
-	Map<String, Object> gunAsMap;
-	Map<String, Object> grenadeAsMap;
-	Map<String, Object> rifleAsMap;
-	Map<String, Object> shotGunAsMap;
-	Map<String, Object> bigBunsCafeAsMap;
+	Document sarahAsMap;
+	Document t800AsMap;
+	Document kyleAsMap;
+	Document gratiotAveAsMap;
+	Document locationAsMap;
+	Document gunAsMap;
+	Document grenadeAsMap;
+	Document rifleAsMap;
+	Document shotGunAsMap;
+	Document bigBunsCafeAsMap;
 
 	@Before
 	public void init() {
@@ -117,7 +120,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		t800.name = "T-800";
 		t800.gender = Gender.MACHINE;
 
-		t800AsMap = new LinkedHashMap<>();
+		t800AsMap = Document.create();
 		t800AsMap.put("id", "t800");
 		t800AsMap.put("name", "T-800");
 		t800AsMap.put("gender", "MACHINE");
@@ -134,27 +137,27 @@ public class ElasticsearchEntityMapperUnitTests {
 		bigBunsCafe.street = "15 South Fremont Avenue";
 		bigBunsCafe.location = new Point(34.0945637D, -118.1545845D);
 
-		sarahAsMap = new LinkedHashMap<>();
+		sarahAsMap = Document.create();
 		sarahAsMap.put("id", "sarah");
 		sarahAsMap.put("name", "Sarah Connor");
 		sarahAsMap.put("gender", "MAN");
 		sarahAsMap.put("_class", "org.springframework.data.elasticsearch.core.ElasticsearchEntityMapperUnitTests$Person");
 
-		kyleAsMap = new LinkedHashMap<>();
+		kyleAsMap = Document.create();
 		kyleAsMap.put("id", "kyle");
 		kyleAsMap.put("gender", "MAN");
 		kyleAsMap.put("name", "Kyle Reese");
 
-		locationAsMap = new LinkedHashMap<>();
+		locationAsMap = Document.create();
 		locationAsMap.put("lat", 34.118347D);
 		locationAsMap.put("lon", -118.3026284D);
 
-		gratiotAveAsMap = new LinkedHashMap<>();
+		gratiotAveAsMap = Document.create();
 		gratiotAveAsMap.put("city", "Los Angeles");
 		gratiotAveAsMap.put("street", "2800 East Observatory Road");
 		gratiotAveAsMap.put("location", locationAsMap);
 
-		bigBunsCafeAsMap = new LinkedHashMap<>();
+		bigBunsCafeAsMap = Document.create();
 		bigBunsCafeAsMap.put("name", "Big Buns Cafe");
 		bigBunsCafeAsMap.put("city", "Los Angeles");
 		bigBunsCafeAsMap.put("street", "15 South Fremont Avenue");
@@ -164,22 +167,22 @@ public class ElasticsearchEntityMapperUnitTests {
 		bigBunsCafeAsMap.put("_class",
 				"org.springframework.data.elasticsearch.core.ElasticsearchEntityMapperUnitTests$Place");
 
-		gunAsMap = new LinkedHashMap<>();
+		gunAsMap = Document.create();
 		gunAsMap.put("label", "Glock 19");
 		gunAsMap.put("shotsPerMagazine", 33);
 		gunAsMap.put("_class", Gun.class.getName());
 
-		grenadeAsMap = new LinkedHashMap<>();
+		grenadeAsMap = Document.create();
 		grenadeAsMap.put("label", "40 mm");
 		grenadeAsMap.put("_class", Grenade.class.getName());
 
-		rifleAsMap = new LinkedHashMap<>();
+		rifleAsMap = Document.create();
 		rifleAsMap.put("label", "AR-18 Assault Rifle");
 		rifleAsMap.put("weight", 3.17D);
 		rifleAsMap.put("maxShotsPerMagazine", 40);
 		rifleAsMap.put("_class", "rifle");
 
-		shotGunAsMap = new LinkedHashMap<>();
+		shotGunAsMap = Document.create();
 		shotGunAsMap.put("model", "Ithaca 37 Pump Shotgun");
 		shotGunAsMap.put("_class", ShotGun.class.getName());
 	}
@@ -255,7 +258,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		person.gender = Gender.MAN;
 		person.address = observatoryRoad;
 
-		LinkedHashMap<String, Object> sink = writeToMap(person);
+		Map<String, Object> sink = writeToMap(person);
 
 		assertThat(sink.get("address")).isEqualTo(gratiotAveAsMap);
 	}
@@ -269,7 +272,7 @@ public class ElasticsearchEntityMapperUnitTests {
 
 		sarahConnor.coWorkers = Arrays.asList(kyleReese, ginger);
 
-		LinkedHashMap<String, Object> target = writeToMap(sarahConnor);
+		Map<String, Object> target = writeToMap(sarahConnor);
 		assertThat((List) target.get("coWorkers")).hasSize(2).contains(kyleAsMap);
 	}
 
@@ -281,7 +284,7 @@ public class ElasticsearchEntityMapperUnitTests {
 
 		sarahConnor.inventoryList = Arrays.asList(gun, grenade);
 
-		LinkedHashMap<String, Object> target = writeToMap(sarahConnor);
+		Map<String, Object> target = writeToMap(sarahConnor);
 		assertThat((List) target.get("inventoryList")).containsExactly(gunAsMap, grenadeAsMap);
 	}
 
@@ -319,7 +322,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		sarahConnor.shippingAddresses = new LinkedHashMap<>();
 		sarahConnor.shippingAddresses.put("home", observatoryRoad);
 
-		LinkedHashMap<String, Object> target = writeToMap(sarahConnor);
+		Map<String, Object> target = writeToMap(sarahConnor);
 		assertThat(target.get("shippingAddresses")).isInstanceOf(Map.class);
 		assertThat(target.get("shippingAddresses")).isEqualTo(Collections.singletonMap("home", gratiotAveAsMap));
 	}
@@ -331,7 +334,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		sarahConnor.inventoryMap.put("glock19", gun);
 		sarahConnor.inventoryMap.put("40 mm grenade", grenade);
 
-		LinkedHashMap<String, Object> target = writeToMap(sarahConnor);
+		Map<String, Object> target = writeToMap(sarahConnor);
 		assertThat(target.get("inventoryMap")).isInstanceOf(Map.class);
 		assertThat((Map) target.get("inventoryMap")).containsEntry("glock19", gunAsMap).containsEntry("40 mm grenade",
 				grenadeAsMap);
@@ -365,7 +368,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		skynet.objectList.add(t800);
 		skynet.objectList.add(gun);
 
-		LinkedHashMap<String, Object> target = writeToMap(skynet);
+		Map<String, Object> target = writeToMap(skynet);
 
 		assertThat((List<Object>) target.get("objectList")).containsExactly(t800AsMap, gunAsMap);
 	}
@@ -373,7 +376,7 @@ public class ElasticsearchEntityMapperUnitTests {
 	@Test // DATAES-530
 	public void readGenericList() {
 
-		LinkedHashMap<String, Object> source = new LinkedHashMap<>();
+		Document source = Document.create();
 		source.put("objectList", Arrays.asList(t800AsMap, gunAsMap));
 
 		Skynet target = entityMapper.read(Skynet.class, source);
@@ -388,7 +391,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		skynet.objectList = new ArrayList<>();
 		skynet.objectList.add(Arrays.asList(t800, gun));
 
-		LinkedHashMap<String, Object> target = writeToMap(skynet);
+		Map<String, Object> target = writeToMap(skynet);
 
 		assertThat((List<Object>) target.get("objectList")).containsExactly(Arrays.asList(t800AsMap, gunAsMap));
 	}
@@ -396,7 +399,7 @@ public class ElasticsearchEntityMapperUnitTests {
 	@Test // DATAES-530
 	public void readGenericListList() {
 
-		LinkedHashMap<String, Object> source = new LinkedHashMap<>();
+		Document source = Document.create();
 		source.put("objectList", Arrays.asList(Arrays.asList(t800AsMap, gunAsMap)));
 
 		Skynet target = entityMapper.read(Skynet.class, source);
@@ -412,7 +415,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		skynet.objectMap.put("gun", gun);
 		skynet.objectMap.put("grenade", grenade);
 
-		LinkedHashMap<String, Object> target = writeToMap(skynet);
+		Map<String, Object> target = writeToMap(skynet);
 
 		assertThat((Map<String, Object>) target.get("objectMap")).containsEntry("gun", gunAsMap).containsEntry("grenade",
 				grenadeAsMap);
@@ -421,7 +424,7 @@ public class ElasticsearchEntityMapperUnitTests {
 	@Test // DATAES-530
 	public void readGenericMap() {
 
-		LinkedHashMap<String, Object> source = new LinkedHashMap<>();
+		Document source = Document.create();
 		source.put("objectMap", Collections.singletonMap("glock19", gunAsMap));
 
 		Skynet target = entityMapper.read(Skynet.class, source);
@@ -436,7 +439,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		skynet.objectMap = new LinkedHashMap<>();
 		skynet.objectMap.put("inventory", Collections.singletonMap("glock19", gun));
 
-		LinkedHashMap<String, Object> target = writeToMap(skynet);
+		Map<String, Object> target = writeToMap(skynet);
 
 		assertThat((Map<String, Object>) target.get("objectMap")).containsEntry("inventory",
 				Collections.singletonMap("glock19", gunAsMap));
@@ -445,7 +448,7 @@ public class ElasticsearchEntityMapperUnitTests {
 	@Test // DATAES-530
 	public void readGenericMapMap() {
 
-		LinkedHashMap<String, Object> source = new LinkedHashMap<>();
+		Document source = Document.create();
 		source.put("objectMap", Collections.singletonMap("inventory", Collections.singletonMap("glock19", gunAsMap)));
 
 		Skynet target = entityMapper.read(Skynet.class, source);
@@ -466,7 +469,7 @@ public class ElasticsearchEntityMapperUnitTests {
 	@Test // DATAES-530
 	public void readsNestedObjectEntity() {
 
-		LinkedHashMap<String, Object> source = new LinkedHashMap<>();
+		Document source = Document.create();
 		source.put("object", t800AsMap);
 
 		Skynet target = entityMapper.read(Skynet.class, source);
@@ -483,7 +486,7 @@ public class ElasticsearchEntityMapperUnitTests {
 	public void writesNestedAliased() {
 
 		t800.inventoryList = Collections.singletonList(rifle);
-		LinkedHashMap<String, Object> target = writeToMap(t800);
+		Map<String, Object> target = writeToMap(t800);
 
 		assertThat((List) target.get("inventoryList")).contains(rifleAsMap);
 	}
@@ -516,7 +519,7 @@ public class ElasticsearchEntityMapperUnitTests {
 
 		sarahConnor.address = bigBunsCafe;
 
-		LinkedHashMap<String, Object> target = writeToMap(sarahConnor);
+		Map<String, Object> target = writeToMap(sarahConnor);
 
 		assertThat(target.get("address")).isEqualTo(bigBunsCafeAsMap);
 	}
@@ -535,9 +538,9 @@ public class ElasticsearchEntityMapperUnitTests {
 		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
 	}
 
-	private LinkedHashMap<String, Object> writeToMap(Object source) {
+	private Map<String, Object> writeToMap(Object source) {
 
-		LinkedHashMap<String, Object> sink = new LinkedHashMap<>();
+		Document sink = Document.create();
 		entityMapper.write(source, sink);
 		return sink;
 	}
@@ -696,7 +699,8 @@ public class ElasticsearchEntityMapperUnitTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-geo-core-entity-mapper", type = "geo-test-index", shards = 1, replicas = 0,
+	@org.springframework.data.elasticsearch.annotations.Document(indexName = "test-index-geo-core-entity-mapper",
+			type = "geo-test-index", shards = 1, replicas = 0,
 			refreshInterval = "-1")
 	static class GeoEntity {
 
