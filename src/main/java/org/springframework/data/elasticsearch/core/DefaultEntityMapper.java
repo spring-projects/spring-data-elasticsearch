@@ -17,11 +17,11 @@ package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.data.annotation.ReadOnlyProperty;
+import org.springframework.data.elasticsearch.Document;
 import org.springframework.data.elasticsearch.core.geo.CustomGeoModule;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
  * @author Petar Tahchiev
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class DefaultEntityMapper implements EntityMapper {
 
@@ -51,7 +52,7 @@ public class DefaultEntityMapper implements EntityMapper {
 
 	/**
 	 * Creates a new {@link DefaultEntityMapper} using the given {@link MappingContext}.
-	 * 
+	 *
 	 * @param context must not be {@literal null}.
 	 */
 	public DefaultEntityMapper(
@@ -74,7 +75,8 @@ public class DefaultEntityMapper implements EntityMapper {
 	 */
 	@Override
 	public String mapToString(Object object) throws IOException {
-		return objectMapper.writeValueAsString(object);
+		return objectMapper
+				.writeValueAsString(object instanceof Document ? new LinkedHashMap<>((Document) object) : object);
 	}
 
 	/*
@@ -82,10 +84,10 @@ public class DefaultEntityMapper implements EntityMapper {
 	 * @see org.springframework.data.elasticsearch.core.EntityMapper#mapObject(java.lang.Object)
 	 */
 	@Override
-	public Map<String, Object> mapObject(Object source) {
+	public Document mapObject(Object source) {
 
 		try {
-			return objectMapper.readValue(mapToString(source), HashMap.class);
+			return objectMapper.readValue(mapToString(source), Document.class);
 		} catch (IOException e) {
 			throw new MappingException(e.getMessage(), e);
 		}
@@ -105,8 +107,7 @@ public class DefaultEntityMapper implements EntityMapper {
 	 * @see org.springframework.data.elasticsearch.core.EntityMapper#readObject(java.util.Map, java.lang.Class)
 	 */
 	@Override
-	public <T> T readObject (Map<String, Object> source, Class<T> targetType) {
-
+	public <T> T readObject(Document source, Class<T> targetType) {
 		try {
 			return mapToObject(mapToString(source), targetType);
 		} catch (IOException e) {
@@ -126,7 +127,7 @@ public class DefaultEntityMapper implements EntityMapper {
 
 		/**
 		 * Creates a new {@link SpringDataElasticsearchModule} using the given {@link MappingContext}.
-		 * 
+		 *
 		 * @param context must not be {@literal null}.
 		 */
 		public SpringDataElasticsearchModule(
@@ -156,7 +157,7 @@ public class DefaultEntityMapper implements EntityMapper {
 				this.context = context;
 			}
 
-			/* 
+			/*
 			 * (non-Javadoc)
 			 * @see com.fasterxml.jackson.databind.ser.BeanSerializerModifier#changeProperties(com.fasterxml.jackson.databind.SerializationConfig, com.fasterxml.jackson.databind.BeanDescription, java.util.List)
 			 */

@@ -16,10 +16,11 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
+
+import org.springframework.data.elasticsearch.Document;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -34,6 +35,7 @@ import org.springframework.util.StringUtils;
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public interface ResultsMapper extends SearchResultMapper, GetResultMapper, MultiGetResultMapper {
 
@@ -50,6 +52,7 @@ public interface ResultsMapper extends SearchResultMapper, GetResultMapper, Mult
 	}
 
 	@Nullable
+	@Deprecated
 	default <T> T mapEntity(String source, Class<T> clazz) {
 
 		if (StringUtils.isEmpty(source)) {
@@ -63,27 +66,18 @@ public interface ResultsMapper extends SearchResultMapper, GetResultMapper, Mult
 	}
 
 	/**
-	 * Map a single {@link GetResult} to an instance of the given type.
+	 * Map a single {@link Document} to an instance of the given type.
 	 *
-	 * @param getResult must not be {@literal null}.
+	 * @param document must not be {@literal null}.
 	 * @param type must not be {@literal null}.
 	 * @param <T>
-	 * @return can be {@literal null} if the {@link GetResult#isSourceEmpty() is empty}.
-	 * @since 3.2
+	 * @return can be {@literal null} if the {@link Document#isEmpty() is empty}.
+	 * @since 4.0
 	 */
 	@Nullable
-	default <T> T mapGetResult(GetResult getResult, Class<T> type) {
+	default <T> T mapDocument(Document document, Class<T> type) {
 
-		if (getResult.isSourceEmpty()) {
-			return null;
-		}
-
-		Map<String, Object> source = getResult.getSource();
-		if (!source.containsKey("id") || source.get("id") == null) {
-			source.put("id", getResult.getId());
-		}
-
-		Object mappedResult = getEntityMapper().readObject(source, type);
+		Object mappedResult = getEntityMapper().readObject(document, type);
 
 		if (mappedResult == null) {
 			return (T) null;
@@ -97,6 +91,20 @@ public interface ResultsMapper extends SearchResultMapper, GetResultMapper, Mult
 	}
 
 	/**
+	 * Map a single {@link GetResult} to an instance of the given type.
+	 *
+	 * @param getResult must not be {@literal null}.
+	 * @param type must not be {@literal null}.
+	 * @param <T>
+	 * @return can be {@literal null} if the {@link GetResult#isSourceEmpty() is empty}.
+	 * @since 3.2
+	 */
+	@Nullable
+	default <T> T mapGetResult(GetResult getResult, Class<T> type) {
+		return mapDocument(DocumentAdapters.from(getResult), type);
+	}
+
+	/**
 	 * Map a single {@link SearchHit} to an instance of the given type.
 	 *
 	 * @param searchHit must not be {@literal null}.
@@ -107,26 +115,6 @@ public interface ResultsMapper extends SearchResultMapper, GetResultMapper, Mult
 	 */
 	@Nullable
 	default <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
-
-		if (!searchHit.hasSource()) {
-			return null;
-		}
-
-		Map<String, Object> source = searchHit.getSourceAsMap();
-		if (!source.containsKey("id") || source.get("id") == null) {
-			source.put("id", searchHit.getId());
-		}
-
-		Object mappedResult = getEntityMapper().readObject(source, type);
-
-		if (mappedResult == null) {
-			return null;
-		}
-
-		if (type.isInterface()) {
-			return getProjectionFactory().createProjection(type, mappedResult);
-		}
-
-		return type.cast(mappedResult);
+		return mapDocument(DocumentAdapters.from(searchHit), type);
 	}
 }

@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import java.io.IOException;
 import java.util.Map;
 
+import org.springframework.data.elasticsearch.Document;
 import org.springframework.lang.Nullable;
 
 /**
@@ -27,6 +28,7 @@ import org.springframework.lang.Nullable;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public interface EntityMapper {
 
@@ -41,7 +43,7 @@ public interface EntityMapper {
 	 * @return never {@literal null}
 	 * @since 3.2
 	 */
-	Map<String, Object> mapObject(Object source);
+	Document mapObject(Object source);
 
 	/**
 	 * Map the given {@link Map} into an instance of the {@literal targetType}.
@@ -53,5 +55,5 @@ public interface EntityMapper {
 	 * @since 3.2
 	 */
 	@Nullable
-	<T> T readObject(Map<String, Object> source, Class<T> targetType);
+	<T> T readObject(Document source, Class<T> targetType);
 }

@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
@@ -34,6 +32,8 @@ import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.convert.EntityWriter;
+import org.springframework.data.elasticsearch.Document;
+import org.springframework.data.elasticsearch.SearchDocument;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchTypeMapper;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -52,6 +52,8 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
  * Elasticsearch specific {@link EntityReader} & {@link EntityWriter} implementation based on domain type
@@ -59,12 +61,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Mark Paluch
  * @since 3.2
  */
-public class ElasticsearchEntityMapper implements
-		EntityConverter<ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty, Object, Map<String, Object>>,
-		EntityWriter<Object, Map<String, Object>>, EntityReader<Object, Map<String, Object>>, InitializingBean,
-		EntityMapper {
+public class ElasticsearchEntityMapper
+		implements EntityConverter<ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty, Object, Document>,
+		EntityWriter<Object, Document>, EntityReader<Object, Document>, InitializingBean, EntityMapper {
 
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	private final GenericConversionService conversionService;
@@ -134,14 +136,14 @@ public class ElasticsearchEntityMapper implements
 	// --> READ
 
 	@Override
-	public <T> T readObject(Map<String, Object> source, Class<T> targetType) {
+	public <T> T readObject(Document source, Class<T> targetType) {
 		return read(targetType, source);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	@Nullable
-	public <R> R read(Class<R> type, Map<String, Object> source) {
+	public <R> R read(Class<R> type, Document source) {
 		return doRead(source, ClassTypeInformation.from((Class<R>) ClassUtils.getUserClass(type)));
 	}
 
@@ -320,16 +322,16 @@ public class ElasticsearchEntityMapper implements
 	// --> WRITE
 
 	@Override
-	public Map<String, Object> mapObject(Object source) {
+	public Document mapObject(Object source) {
 
-		LinkedHashMap<String, Object> target = new LinkedHashMap<>();
+		Document target = Document.create();
 		write(source, target);
 		return target;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void write(@Nullable Object source, Map<String, Object> sink) {
+	public void write(@Nullable Object source, Document sink) {
 
 		if (source == null) {
 			return;
@@ -351,8 +353,7 @@ public class ElasticsearchEntityMapper implements
 		doWrite(source, sink, type);
 	}
 
-	protected void doWrite(@Nullable Object source, Map<String, Object> sink,
-			@Nullable TypeInformation<? extends Object> typeHint) {
+	protected void doWrite(@Nullable Object source, Document sink, @Nullable TypeInformation<? extends Object> typeHint) {
 
 		if (source == null) {
 			return;
@@ -382,7 +383,7 @@ public class ElasticsearchEntityMapper implements
 		writeEntity(entity, source, sink, null);
 	}
 
-	protected void writeEntity(ElasticsearchPersistentEntity<?> entity, Object source, Map<String, Object> sink,
+	protected void writeEntity(ElasticsearchPersistentEntity<?> entity, Object source, Document sink,
 			@Nullable TypeInformation containingStructure) {
 
 		PersistentPropertyAccessor<?> accessor = entity.getPropertyAccessor(source);
@@ -391,11 +392,11 @@ public class ElasticsearchEntityMapper implements
 			typeMapper.writeType(source.getClass(), sink);
 		}
 
-		writeProperties(entity, accessor, sink);
+		writeProperties(entity, accessor, new MapValueAccessor(sink));
 	}
 
 	protected void writeProperties(ElasticsearchPersistentEntity<?> entity, PersistentPropertyAccessor<?> accessor,
-			Map<String, Object> sink) {
+			MapValueAccessor sink) {
 
 		for (ElasticsearchPersistentProperty property : entity) {
 
@@ -412,19 +413,19 @@ public class ElasticsearchEntityMapper implements
 			if (!isSimpleType(value)) {
 				writeProperty(property, value, sink);
 			} else {
-				sink.put(property.getFieldName(), getWriteSimpleValue(value));
+				sink.set(property, getWriteSimpleValue(value));
 			}
 		}
 	}
 
-	protected void writeProperty(ElasticsearchPersistentProperty property, Object value, Map<String, Object> sink) {
+	protected void writeProperty(ElasticsearchPersistentProperty property, Object value, MapValueAccessor sink) {
 
 		Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(value.getClass());
 
 		if (customWriteTarget.isPresent()) {
 
 			Class<?> writeTarget = customWriteTarget.get();
-			sink.put(property.getFieldName(), conversionService.convert(value, writeTarget));
+			sink.set(property, conversionService.convert(value, writeTarget));
 			return;
 		}
 
@@ -442,7 +443,7 @@ public class ElasticsearchEntityMapper implements
 			}
 		}
 
-		sink.put(property.getFieldName(), getWriteComplexValue(property, typeHint, value));
+		sink.set(property, getWriteComplexValue(property, typeHint, value));
 	}
 
 	protected Object getWriteSimpleValue(Object value) {
@@ -479,7 +480,8 @@ public class ElasticsearchEntityMapper implements
 	}
 
 	private Object writeEntity(Object value, ElasticsearchPersistentProperty property, TypeInformation<?> typeHint) {
-		Map<String, Object> target = new LinkedHashMap<>();
+
+		Document target = Document.create();
 		writeEntity(mappingContext.getRequiredPersistentEntity(value.getClass()), value, target,
 				property.getTypeInformation());
 		return target;
@@ -549,15 +551,15 @@ public class ElasticsearchEntityMapper implements
 	@Override
 	public String mapToString(Object source) throws IOException {
 
-		Map<String, Object> sink = new LinkedHashMap<>();
+		Document sink = Document.create();
 		write(source, sink);
 
-		return objectWriter.writeValueAsString(sink);
+		return objectWriter.writeValueAsString(new LinkedHashMap<>(sink));
 	}
 
 	@Override
 	public <T> T mapToObject(String source, Class<T> clazz) throws IOException {
-		return read(clazz, objectReader.readValue(source));
+		return read(clazz, Document.from(objectReader.readValue(source)));
 	}
 
 	// --> PRIVATE HELPERS
@@ -669,6 +671,18 @@ public class ElasticsearchEntityMapper implements
 
 		public Object get(ElasticsearchPersistentProperty property) {
 
+			if (property.isIdProperty() && ((Document) target).hasId()) {
+				return ((Document) target).getId();
+			}
+
+			if (property.isVersionProperty() && ((Document) target).hasVersion()) {
+				return ((Document) target).getVersion();
+			}
+
+			if (property.isScoreProperty()) {
+				return ((SearchDocument) target).getScore();
+			}
+
 			String fieldName = property.getFieldName();
 
 			if (!fieldName.contains(".")) {
@@ -689,6 +703,19 @@ public class ElasticsearchEntityMapper implements
 			}
 
 			return result;
+		}
+
+		public void set(ElasticsearchPersistentProperty property, Object value) {
+
+			if (property.isIdProperty()) {
+				((Document) target).setId((String) value);
+			}
+
+			if (property.isVersionProperty()) {
+				((Document) target).setVersion((Long) value);
+			}
+
+			target.put(property.getFieldName(), value);
 		}
 
 		@SuppressWarnings("unchecked")
