@@ -385,7 +385,7 @@ class DocumentAdapters {
 		 */
 		@Override
 		public String toString() {
-			return getClass().getSimpleName() + "@" + this.id + "#" + this.version + " " + toJson();
+			return getClass().getSimpleName() + '@' + this.id + '#' + this.version + ' ' + toJson();
 		}
 
 		@Nullable
