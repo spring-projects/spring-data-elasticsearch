@@ -22,13 +22,14 @@ import java.lang.annotation.*;
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Jonathan Yan
+ * @author Xiao Yu
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 @Documented
 public @interface MultiField {
 
-	public Field mainField();
+	Field mainField();
 
-	public InnerField[] otherFields() default {};
+	InnerField[] otherFields() default {};
 }
