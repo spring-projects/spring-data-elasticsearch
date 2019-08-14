@@ -214,7 +214,7 @@ The generated documentation is available from `target/site/reference/html/index.
 
 == Examples
 
-For examples on using the _Spring Data for Elasticsearch, see the https://github.com/SpringSource/spring-elasticsearch-examples[spring-elasticsearch-examples] project.
+For examples on using the Spring Data for Elasticsearch, see the https://github.com/spring-projects/spring-data-examples/tree/master/elasticsearch/example[spring-data-examples] project.
 
 == License
 
