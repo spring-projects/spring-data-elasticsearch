@@ -31,6 +31,7 @@ import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
+import org.springframework.data.elasticsearch.support.SearchHitsUtil;
 import org.springframework.data.util.Version;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -59,7 +60,8 @@ public final class TestUtils {
 
 		try (RestHighLevelClient client = restHighLevelClient()) {
 
-			org.elasticsearch.Version version = client.info(RequestOptions.DEFAULT).getVersion();
+			org.elasticsearch.Version version = org.elasticsearch.Version
+					.fromString(client.info(RequestOptions.DEFAULT).getVersion().getNumber());
 			return new Version(version.major, version.minor, version.revision);
 
 		} catch (Exception e) {
@@ -91,10 +93,10 @@ public final class TestUtils {
 
 		try (RestHighLevelClient client = restHighLevelClient()) {
 
-			return 0L == client
+			return 0L == SearchHitsUtil.getTotalCount(client
 					.search(new SearchRequest(indexName)
 							.source(SearchSourceBuilder.searchSource().query(QueryBuilders.matchAllQuery())), RequestOptions.DEFAULT)
-					.getHits().getTotalHits();
+					.getHits());
 		}
 	}
 

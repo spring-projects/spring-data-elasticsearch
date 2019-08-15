@@ -27,7 +27,7 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.elasticsearch.common.geo.GeoHashUtils;
+import org.elasticsearch.geo.utils.Geohash;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,7 +86,7 @@ public class ElasticsearchTemplateGeoTests {
 		double[] lonLatArray = { 0.100000, 51.000000 };
 		String latLonString = "51.000000, 0.100000";
 		String geohash = "u10j46mkfekr";
-		GeoHashUtils.stringEncode(0.100000, 51.000000);
+		Geohash.stringEncode(0.100000, 51.000000);
 		LocationMarkerEntity location1 = LocationMarkerEntity.builder() //
 				.id("1").name("Artur Konczak") //
 				.locationAsString(latLonString) //
@@ -258,7 +258,7 @@ public class ElasticsearchTemplateGeoTests {
 		// given
 		loadClassBaseEntities();
 		CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(new Criteria("location")
-				.boundedBy(GeoHashUtils.stringEncode(0, 53.5171d), GeoHashUtils.stringEncode(0.2062d, 49.5171d)));
+				.boundedBy(Geohash.stringEncode(0, 53.5171d), Geohash.stringEncode(0.2062d, 49.5171d)));
 
 		// when
 		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3,

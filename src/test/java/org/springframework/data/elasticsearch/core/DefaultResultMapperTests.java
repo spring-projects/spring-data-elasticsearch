@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
@@ -51,7 +52,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -113,7 +113,7 @@ public class DefaultResultMapperTests {
 		// given
 		SearchHit[] hits = { createCarHit("Ford", "Grat"), createCarHit("BMW", "Arrow") };
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.getTotalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(new TotalHits(2L, TotalHits.Relation.EQUAL_TO));
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
@@ -135,7 +135,7 @@ public class DefaultResultMapperTests {
 		// given
 		SearchHit[] hits = { createCarHit("Ford", "Grat"), createCarHit("BMW", "Arrow") };
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.getTotalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(new TotalHits(2L, TotalHits.Relation.EQUAL_TO));
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
@@ -154,7 +154,7 @@ public class DefaultResultMapperTests {
 		// given
 		SearchHit[] hits = { createCarPartialHit("Ford", "Grat"), createCarPartialHit("BMW", "Arrow") };
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.getTotalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(new TotalHits(2L, TotalHits.Relation.EQUAL_TO));
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
@@ -247,7 +247,7 @@ public class DefaultResultMapperTests {
 		when(hit2.getVersion()).thenReturn(5678L);
 
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.getTotalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(new TotalHits(2L, TotalHits.Relation.EQUAL_TO));
 		when(searchHits.iterator()).thenReturn(Arrays.asList(hit1, hit2).iterator());
 
 		SearchResponse searchResponse = mock(SearchResponse.class);

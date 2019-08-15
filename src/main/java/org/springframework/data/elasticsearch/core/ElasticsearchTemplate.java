@@ -92,6 +92,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.support.SearchHitsUtil;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -508,7 +509,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 		if (elasticsearchQuery != null) {
 			countRequestBuilder.setQuery(elasticsearchQuery);
 		}
-		return countRequestBuilder.execute().actionGet().getHits().getTotalHits();
+		return SearchHitsUtil.getTotalCount(countRequestBuilder.execute().actionGet().getHits());
 	}
 
 	private long doCount(SearchRequestBuilder searchRequestBuilder, QueryBuilder elasticsearchQuery,
@@ -521,7 +522,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 		if (elasticsearchFilter != null) {
 			searchRequestBuilder.setPostFilter(elasticsearchFilter);
 		}
-		return searchRequestBuilder.execute().actionGet().getHits().getTotalHits();
+		return SearchHitsUtil.getTotalCount(searchRequestBuilder.execute().actionGet().getHits());
 	}
 
 	private <T> SearchRequestBuilder prepareCount(Query query, Class<T> clazz) {
@@ -1200,10 +1201,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 				indexRequestBuilder.setVersion(query.getVersion());
 				VersionType versionType = retrieveVersionTypeFromPersistentEntity(query.getObject().getClass());
 				indexRequestBuilder.setVersionType(versionType);
-			}
-
-			if (query.getParentId() != null) {
-				indexRequestBuilder.setParent(query.getParentId());
 			}
 
 			return indexRequestBuilder;

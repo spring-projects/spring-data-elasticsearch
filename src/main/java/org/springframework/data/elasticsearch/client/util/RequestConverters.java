@@ -33,7 +33,6 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.storedscripts.DeleteStoredScriptRequest;
 import org.elasticsearch.action.admin.cluster.storedscripts.GetStoredScriptRequest;
 import org.elasticsearch.action.admin.cluster.storedscripts.PutStoredScriptRequest;
-import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -60,6 +59,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.RethrottleRequest;
+import org.elasticsearch.client.indices.AnalyzeRequest;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.Priority;
 import org.elasticsearch.common.Strings;
@@ -98,6 +98,8 @@ import org.springframework.lang.Nullable;
  * <p>
  * Only intended for internal use.
  *
+ * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public class RequestConverters {
@@ -718,10 +720,10 @@ public class RequestConverters {
 		Request request = new Request(HttpMethod.PUT.name(),
 				RequestConverters.endpoint(putMappingRequest.indices(), "_mapping", putMappingRequest.type()));
 
-		RequestConverters.Params parameters = new RequestConverters.Params(request);
-		parameters.withTimeout(putMappingRequest.timeout());
-		parameters.withMasterTimeout(putMappingRequest.masterNodeTimeout());
-
+		RequestConverters.Params parameters = new RequestConverters.Params(request) //
+				.withTimeout(putMappingRequest.timeout()) //
+				.withMasterTimeout(putMappingRequest.masterNodeTimeout()) //
+				.withIncludeTypeName(true);
 		request.setEntity(RequestConverters.createEntity(putMappingRequest, RequestConverters.REQUEST_BODY_CONTENT_TYPE));
 		return request;
 	}
@@ -942,7 +944,10 @@ public class RequestConverters {
 
 		Params withWaitForActiveShards(ActiveShardCount activeShardCount, ActiveShardCount defaultActiveShardCount) {
 			if (activeShardCount != null && activeShardCount != defaultActiveShardCount) {
-				return putParam("wait_for_active_shards", activeShardCount.toString().toLowerCase(Locale.ROOT));
+				// in Elasticsearch 7, "default" cannot be sent anymore, so it needs to be mapped to the default value of 1
+				String value = activeShardCount == ActiveShardCount.DEFAULT ? "1"
+						: activeShardCount.toString().toLowerCase(Locale.ROOT);
+				return putParam("wait_for_active_shards", value);
 			}
 			return this;
 		}
@@ -1081,6 +1086,18 @@ public class RequestConverters {
 				return putParam("wait_for_events", waitForEvents.name().toLowerCase(Locale.ROOT));
 			}
 			return this;
+		}
+
+		/**
+		 * sets the include_type_name parameter. Needed for Elasticsearch 7 to be used with the mapping types still
+		 * available. Will be removed again when Elasticsearch drops the support for this parameter in Elasticsearch 8.
+		 *
+		 * @deprecated since 4.0
+		 * @since 4.0
+		 */
+		@Deprecated
+		Params withIncludeTypeName(boolean includeTypeName) {
+			return putParam("include_type_name", String.valueOf(includeTypeName));
 		}
 	}
 

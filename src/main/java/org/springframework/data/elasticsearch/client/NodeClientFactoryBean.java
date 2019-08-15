@@ -20,6 +20,7 @@ import static java.util.Arrays.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
@@ -42,6 +43,7 @@ import org.springframework.util.StringUtils;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Ilkang Na
+ * @author Peter-Josef Meisch
  */
 public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingBean, DisposableBean {
 
@@ -56,14 +58,17 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 
 	public static class TestNode extends Node {
 
+		private static final String DEFAULT_NODE_NAME = "spring-data-elasticsearch-test-node";
+
 		public TestNode(Settings preparedSettings, Collection<Class<? extends Plugin>> classpathPlugins) {
 
-			super(InternalSettingsPreparer.prepareEnvironment(preparedSettings, null), classpathPlugins, false);
+			super(InternalSettingsPreparer.prepareEnvironment(preparedSettings, Collections.emptyMap(), null,
+					() -> DEFAULT_NODE_NAME), classpathPlugins, false);
 		}
 
 		protected void registerDerivedNodeNameWithLogger(String nodeName) {
 			try {
-				 LogConfigurator.setNodeName(nodeName);
+				LogConfigurator.setNodeName(nodeName);
 			} catch (Exception e) {
 				// nagh - just forget about it
 			}
