@@ -61,15 +61,15 @@ abstract class QueryKeywordsTests {
 
 		IndexInitializer.init(elasticsearchTemplate, Product.class);
 
-		 Product product1 = Product.builder().id("1").name("Sugar").text("Cane sugar").price(1.0f).available(false)
+		Product product1 = Product.builder().id("1").name("Sugar").text("Cane sugar").price(1.0f).available(false)
 				.sortName("sort5").build();
-		 Product product2 = Product.builder().id("2").name("Sugar").text("Cane sugar").price(1.2f).available(true)
+		Product product2 = Product.builder().id("2").name("Sugar").text("Cane sugar").price(1.2f).available(true)
 				.sortName("sort4").build();
-		 Product product3 = Product.builder().id("3").name("Sugar").text("Beet sugar").price(1.1f).available(true)
+		Product product3 = Product.builder().id("3").name("Sugar").text("Beet sugar").price(1.1f).available(true)
 				.sortName("sort3").build();
-		 Product product4 = Product.builder().id("4").name("Salt").text("Rock salt").price(1.9f).available(true)
+		Product product4 = Product.builder().id("4").name("Salt").text("Rock salt").price(1.9f).available(true)
 				.sortName("sort2").build();
-		 Product product5 = Product.builder().id("5").name("Salt").text("Sea salt").price(2.1f).available(false)
+		Product product5 = Product.builder().id("5").name("Salt").text("Sea salt").price(2.1f).available(false)
 				.sortName("sort1").build();
 
 		repository.saveAll(Arrays.asList(product1, product2, product3, product4, product5));
@@ -165,7 +165,7 @@ abstract class QueryKeywordsTests {
 
 	@Test // DATAES-615
 	public void shouldSupportSortOnStandardFieldWithCriteria() {
-		 List<String> sortedIds = repository.findAllByNameOrderByText("Salt").stream() //
+		List<String> sortedIds = repository.findAllByNameOrderByText("Salt").stream() //
 				.map(it -> it.id).collect(Collectors.toList());
 
 		assertThat(sortedIds).containsExactly("4", "5");
@@ -174,7 +174,7 @@ abstract class QueryKeywordsTests {
 	@Test // DATAES-615
 	public void shouldSupportSortOnFieldWithCustomFieldNameWithCriteria() {
 
-		 List<String> sortedIds = repository.findAllByNameOrderBySortName("Sugar").stream() //
+		List<String> sortedIds = repository.findAllByNameOrderBySortName("Sugar").stream() //
 				.map(it -> it.id).collect(Collectors.toList());
 
 		assertThat(sortedIds).containsExactly("3", "2", "1");
@@ -182,7 +182,7 @@ abstract class QueryKeywordsTests {
 
 	@Test // DATAES-615
 	public void shouldSupportSortOnStandardFieldWithoutCriteria() {
-		 List<String> sortedIds = repository.findAllByOrderByText().stream() //
+		List<String> sortedIds = repository.findAllByOrderByText().stream() //
 				.map(it -> it.text).collect(Collectors.toList());
 
 		assertThat(sortedIds).containsExactly("Beet sugar", "Cane sugar", "Cane sugar", "Rock salt", "Sea salt");
@@ -191,10 +191,44 @@ abstract class QueryKeywordsTests {
 	@Test // DATAES-615
 	public void shouldSupportSortOnFieldWithCustomFieldNameWithoutCriteria() {
 
-		 List<String> sortedIds = repository.findAllByOrderBySortName().stream() //
+		List<String> sortedIds = repository.findAllByOrderBySortName().stream() //
 				.map(it -> it.id).collect(Collectors.toList());
 
 		assertThat(sortedIds).containsExactly("5", "4", "3", "2", "1");
+	}
+
+	@Test // DATAES-178
+	public void shouldReturnOneWithFindFirst() {
+
+		Product product = repository.findFirstByName("Sugar");
+
+		assertThat(product.name).isEqualTo("Sugar");
+	}
+
+	@Test // DATAES-178
+	public void shouldReturnOneWithFindTop() {
+
+		Product product = repository.findTopByName("Sugar");
+
+		assertThat(product.name).isEqualTo("Sugar");
+	}
+
+	@Test // DATAES-178
+	public void shouldReturnTwoWithFindFirst2() {
+
+		List<Product> products = repository.findFirst2ByName("Sugar");
+
+		assertThat(products).hasSize(2);
+		products.forEach(product -> assertThat(product.name).isEqualTo("Sugar"));
+	}
+
+	@Test // DATAES-178
+	public void shouldReturnTwoWithFindTop2() {
+
+		List<Product> products = repository.findTop2ByName("Sugar");
+
+		assertThat(products).hasSize(2);
+		products.forEach(product -> assertThat(product.name).isEqualTo("Sugar"));
 	}
 
 	/**
@@ -279,6 +313,14 @@ abstract class QueryKeywordsTests {
 		List<Product> findAllByOrderByText();
 
 		List<Product> findAllByOrderBySortName();
+
+		Product findFirstByName(String name);
+
+		Product findTopByName(String name);
+
+		List<Product> findFirst2ByName(String name);
+
+		List<Product> findTop2ByName(String name);
 	}
 
 }
