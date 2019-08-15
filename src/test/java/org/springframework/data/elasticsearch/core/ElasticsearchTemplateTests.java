@@ -2504,7 +2504,7 @@ public class ElasticsearchTemplateTests {
 		// then
 		assertThat(created).isTrue();
 		Map setting = elasticsearchTemplate.getSetting(UseServerConfigurationEntity.class);
-		assertThat(setting.get("index.number_of_shards")).isEqualTo("5");
+		assertThat(setting.get("index.number_of_shards")).isEqualTo("1");
 		assertThat(setting.get("index.number_of_replicas")).isEqualTo("1");
 	}
 

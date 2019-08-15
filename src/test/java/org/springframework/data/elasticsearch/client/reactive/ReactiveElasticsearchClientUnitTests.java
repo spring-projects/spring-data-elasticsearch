@@ -179,7 +179,7 @@ public class ReactiveElasticsearchClientUnitTests {
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.GET);
 		URI uri = hostProvider.when(HOST).captureUri();
-		assertThat(uri.getRawPath()).isEqualTo("/twitter/_all/1");
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_doc/1");
 	}
 
 	@Test // DATAES-488
@@ -315,7 +315,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		verify(hostProvider.client(HOST)).method(HttpMethod.HEAD);
 
 		URI uri = hostProvider.when(HOST).captureUri();
-		assertThat(uri.getRawPath()).isEqualTo("/twitter/_all/1");
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_doc/1");
 	}
 
 	@Test // DATAES-488
@@ -359,7 +359,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		});
 
 		URI uri = hostProvider.when(HOST).captureUri();
-		assertThat(uri.getRawPath()).isEqualTo("/twitter/10/_create");
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_doc/10/_create");
 	}
 
 	@Test // DATAES-488
@@ -378,7 +378,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		});
 
 		URI uri = hostProvider.when(HOST).captureUri();
-		assertThat(uri.getRawPath()).isEqualTo("/twitter/10");
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_doc/10");
 	}
 
 	@Test // DATAES-488

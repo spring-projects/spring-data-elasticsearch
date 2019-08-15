@@ -20,6 +20,7 @@ package org.springframework.data.elasticsearch.core.query;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Peter-Josef Meisch
  */
 
 public class IndexQuery {
@@ -84,6 +85,11 @@ public class IndexQuery {
 		return parentId;
 	}
 
+	/**
+	 * @deprecated from 4.0. Elasticsearch 7 does not support the parent id in an index request. parent/child relations
+	 *             must be modeled using the join datatype. Setting it here will have no effect.
+	 */
+	@Deprecated
 	public void setParentId(String parentId) {
 		this.parentId = parentId;
 	}

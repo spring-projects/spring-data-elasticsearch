@@ -121,12 +121,13 @@ Add the Maven dependency:
 [cols="^,^,"]
 |===
 |Spring Data Elasticsearch | Elasticsearch |
-| _3.2.x_ |_6.8.1_ | _not yet released_
-|3.1.x |6.2.2
-|3.0.x |5.5.0
-|2.1.x |2.4.0
-|2.0.x |2.2.0
-|1.3.x |1.5.2
+| _4.0.x_ |_7.3.0_ | _not yet released_
+| 3.2.x | 6.8.1 | _not yet released_
+| 3.1.x | 6.2.2 | 
+| 3.0.x | 5.5.0 | 
+| 2.1.x | 2.4.0 | 
+| 2.0.x | 2.2.0 | 
+| 1.3.x | 1.5.2 | 
 |===
 
 To use the Release candidate versions of the upcoming major version, use our Maven milestone repository and declare the appropriate dependency version:
