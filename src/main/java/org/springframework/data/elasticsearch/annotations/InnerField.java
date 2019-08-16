@@ -24,6 +24,7 @@ import java.lang.annotation.Target;
  * @author Artur Konczak
  * @author Mohsin Husen
  * @author Sascha Woo
+ * @author Xiao Yu
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -48,4 +49,9 @@ public @interface InnerField {
 	String analyzer() default "";
 
 	String normalizer() default "";
+
+	/**
+	 * @since 4.0
+	 */
+	int ignoreAbove() default -1;
 }
