@@ -27,8 +27,9 @@ import org.w3c.dom.Element;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @deprecated as of 4.0
  */
-
+@Deprecated
 public class TransportClientBeanDefinitionParser extends AbstractBeanDefinitionParser {
 
 	@Override

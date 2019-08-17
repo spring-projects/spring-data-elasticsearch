@@ -11,7 +11,7 @@ This project is lead and maintained by the community.
 == Features
 
 * Spring configuration support using Java based `@Configuration` classes or an XML namespace for a ES clients instances.
-* `ElasticsearchTemplate` helper class that increases productivity performing common ES operations. Includes integrated object mapping between documents and POJOs.
+* `ElasticsearchRestTemplate` helper class that increases productivity performing common ES operations. Includes integrated object mapping between documents and POJOs.
 * Feature Rich Object Mapping integrated with Spring’s Conversion Service
 * Annotation based mapping metadata but extensible to support other metadata formats
 * Automatic implementation of `Repository` interfaces including support for custom finder methods.
@@ -60,6 +60,9 @@ public class MyService {
 
 Using Node Client
 
+NOTE: Usage of the Node Client is deprecated as of version 4.0, use RestClient instead.
+
+
 [source,xml]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
@@ -79,6 +82,9 @@ Using Node Client
 ----
 
 Using Transport Client
+
+NOTE: Usage of the Transport Client is deprecated as of version 4.0, use RestClient instead.
+
 
 [source,xml]
 ----
