@@ -48,6 +48,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -67,6 +68,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Robert Gruendler
  * @author Petr Kukral
  * @author Peter-Josef Meisch
+ * @author Xiao Yu
  */
 class MappingBuilder {
 
@@ -85,6 +87,7 @@ class MappingBuilder {
 	private static final String FIELD_CONTEXT_TYPE = "type";
 	private static final String FIELD_CONTEXT_PRECISION = "precision";
 	private static final String FIELD_DYNAMIC_TEMPLATES = "dynamic_templates";
+	private static final String FIELD_IGNORE_ABOVE = "ignore_above";
 
 	private static final String COMPLETION_PRESERVE_SEPARATORS = "preserve_separators";
 	private static final String COMPLETION_PRESERVE_POSITION_INCREMENTS = "preserve_position_increments";
@@ -346,6 +349,7 @@ class MappingBuilder {
 		String searchAnalyzer = null;
 		String normalizer = null;
 		String[] copyTo = null;
+		Integer ignoreAbove = null;
 
 		if (annotation instanceof Field) {
 			// @Field
@@ -360,6 +364,7 @@ class MappingBuilder {
 			searchAnalyzer = fieldAnnotation.searchAnalyzer();
 			normalizer = fieldAnnotation.normalizer();
 			copyTo = fieldAnnotation.copyTo();
+			ignoreAbove = fieldAnnotation.ignoreAbove();
 		} else if (annotation instanceof InnerField) {
 			// @InnerField
 			InnerField fieldAnnotation = (InnerField) annotation;
@@ -372,6 +377,7 @@ class MappingBuilder {
 			analyzer = fieldAnnotation.analyzer();
 			searchAnalyzer = fieldAnnotation.searchAnalyzer();
 			normalizer = fieldAnnotation.normalizer();
+			ignoreAbove = fieldAnnotation.ignoreAbove();
 		} else {
 			throw new IllegalArgumentException("annotation must be an instance of @Field or @InnerField");
 		}
@@ -403,6 +409,10 @@ class MappingBuilder {
 		}
 		if (copyTo != null && copyTo.length > 0) {
 			builder.field(FIELD_COPY_TO, copyTo);
+		}
+		if (ignoreAbove != -1) {
+			Assert.isTrue(ignoreAbove >= 0, "ignore_above must be a positive value");
+			builder.field(FIELD_IGNORE_ABOVE, ignoreAbove);
 		}
 	}
 
