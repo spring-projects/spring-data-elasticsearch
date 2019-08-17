@@ -123,7 +123,9 @@ import org.springframework.util.StringUtils;
  * @author Peter-Josef Meisch
  * @author Martin Choraine
  * @author Farid Azaza
+ * @deprecated as of 4.0
  */
+@Deprecated
 public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
 	private static final Logger QUERY_LOGGER = LoggerFactory

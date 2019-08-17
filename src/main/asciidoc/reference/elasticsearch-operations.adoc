@@ -12,6 +12,8 @@ The default implementations of the interfaces offer:
 [[elasticsearch.operations.template]]
 == ElasticsearchTemplate
 
+NOTE: Usage of the ElasticsearchTemplate is deprecated as of version 4.0, use ElasticsearchRestTemplate instead.
+
 The `ElasticsearchTemplate` is an implementation of the `ElasticsearchOperations` interface using the <<elasticsearch.clients.transport>>.
 
 .ElasticsearchTemplate configuration
@@ -45,7 +47,7 @@ public class TransportClientConfig extends ElasticsearchConfigurationSupport {
   }
 }
 ----
-<1> Setting up the <<elasticsearch.clients.transport>>.
+<1> Setting up the <<elasticsearch.clients.transport>>. Deprecatedas of version 4.0.
 <2> Creating the `ElasticsearchTemplate` bean, offering both names, _elasticsearchOperations_ and _elasticsearchTemplate_.
 <3> Using the <<elasticsearch.mapping.meta-model>> ElasticsearchMapper.
 ====

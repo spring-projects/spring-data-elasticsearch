@@ -35,7 +35,10 @@ import org.springframework.beans.factory.InitializingBean;
  * @author Piotr Betkier
  * @author Ilkang Na
  * @author Oliver Gierke
+ * @author Peter-Josef Meisch
+ * @deprecated as of 4.0
  */
+@Deprecated
 public class TransportClientFactoryBean implements FactoryBean<TransportClient>, InitializingBean, DisposableBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(TransportClientFactoryBean.class);
@@ -101,13 +104,10 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
 			return builder.build();
 		}
-		return Settings.builder()
-				.put("cluster.name", clusterName)
-				.put("client.transport.sniff", clientTransportSniff)
+		return Settings.builder().put("cluster.name", clusterName).put("client.transport.sniff", clientTransportSniff)
 				.put("client.transport.ignore_cluster_name", clientIgnoreClusterName)
 				.put("client.transport.ping_timeout", clientPingTimeout)
-				.put("client.transport.nodes_sampler_interval", clientNodesSamplerInterval)
-				.build();
+				.put("client.transport.nodes_sampler_interval", clientNodesSamplerInterval).build();
 	}
 
 	public void setClusterNodes(String clusterNodes) {

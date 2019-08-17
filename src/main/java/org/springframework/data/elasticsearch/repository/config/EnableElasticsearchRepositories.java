@@ -15,11 +15,15 @@
  */
 package org.springframework.data.elasticsearch.repository.config;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.repository.support.ElasticsearchRepositoryFactoryBean;
 import org.springframework.data.repository.config.DefaultRepositoryBaseClass;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
@@ -31,6 +35,7 @@ import org.springframework.data.repository.query.QueryLookupStrategy.Key;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Kevin Leturc
+ * @author Peter-Josef Meisch
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -114,8 +119,9 @@ public @interface EnableElasticsearchRepositories {
 	// Elasticsearch specific configuration
 
 	/**
-	 * Configures the name of the {@link ElasticsearchTemplate} bean definition to be used to create repositories
-	 * discovered through this annotation. Defaults to {@code elasticsearchTemplate}.
+	 * Configures the name of the {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations} bean
+	 * definition to be used to create repositories discovered through this annotation. Defaults to
+	 * {@code elasticsearchTemplate}.
 	 *
 	 * @return
 	 */
