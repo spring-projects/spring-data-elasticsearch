@@ -124,9 +124,10 @@ import org.springframework.util.StringUtils;
  * @author Martin Choraine
  * @author Farid Azaza
  * @author Gyula Attila Csorogi
+ * @deprecated as of 4.0
  */
-public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
-		implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
+@Deprecated
+public class ElasticsearchTemplate extends AbstractElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
 	private static final Logger QUERY_LOGGER = LoggerFactory
 			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
