@@ -44,8 +44,9 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
- * Utility class to adapt {@link org.elasticsearch.common.document.DocumentField} to
- * {@link org.springframework.data.elasticsearch.Document}.
+ * Utility class to adapt {@link org.elasticsearch.action.get.GetResponse},
+ * {@link org.elasticsearch.index.get.GetResult}, {@link org.elasticsearch.search.SearchHit},
+ * {@link org.elasticsearch.common.document.DocumentField} to {@link org.springframework.data.elasticsearch.Document}.
  *
  * @author Mark Paluch
  * @since 4.0

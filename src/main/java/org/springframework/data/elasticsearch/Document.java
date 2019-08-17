@@ -37,6 +37,7 @@ import org.springframework.util.Assert;
  * {@link UnsupportedOperationException} when calling modifying methods.
  *
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  * @since 4.0
  */
 public interface Document extends Map<String, Object> {
@@ -53,7 +54,7 @@ public interface Document extends Map<String, Object> {
 	/**
 	 * Create a {@link Document} from a {@link Map} containing key-value pairs and sub-documents.
 	 *
-	 * @param map source map containing key-value pairs and sub-documents.
+	 * @param map source map containing key-value pairs and sub-documents. must not be {@literal null}.
 	 * @return a new {@link Document}.
 	 */
 	static Document from(Map<String, Object> map) {
@@ -74,6 +75,9 @@ public interface Document extends Map<String, Object> {
 	 * @return the parsed {@link Document}.
 	 */
 	static Document parse(String json) {
+
+		Assert.notNull(json, "JSON must not be null");
+
 		try {
 			return new MapDocument(MapDocument.OBJECT_MAPPER.readerFor(Map.class).readValue(json));
 		} catch (IOException e) {
@@ -84,11 +88,14 @@ public interface Document extends Map<String, Object> {
 	/**
 	 * {@link #put(Object, Object)} the {@code key}/{@code value} tuple and return {@code this} {@link Document}.
 	 *
-	 * @param key key with which the specified value is to be associated.
+	 * @param key key with which the specified value is to be associated. must not be {@literal null}.
 	 * @param value value to be associated with the specified key.
 	 * @return {@code this} {@link Document}.
 	 */
 	default Document append(String key, Object value) {
+
+		Assert.notNull(key, "Key must not be null");
+
 		put(key, value);
 		return this;
 	}
@@ -369,12 +376,15 @@ public interface Document extends Map<String, Object> {
 	 * <p>
 	 * Any exception thrown by the function will be propagated to the caller.
 	 *
-	 * @param transformer functional interface to a apply
+	 * @param transformer functional interface to a apply. must not be {@literal null}.
 	 * @param <R> class of the result
 	 * @return the result of applying the function to this string
 	 * @see java.util.function.Function
 	 */
 	default <R> R transform(Function<? super Document, ? extends R> transformer) {
+
+		Assert.notNull(transformer, "transformer must not be null");
+
 		return transformer.apply(this);
 	}
 

@@ -29,7 +29,6 @@ import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
 import org.junit.Test;
-
 import org.springframework.data.elasticsearch.Document;
 import org.springframework.data.elasticsearch.SearchDocument;
 
@@ -37,6 +36,7 @@ import org.springframework.data.elasticsearch.SearchDocument;
  * Unit tests for {@link DocumentAdapters}.
  *
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  */
 public class DocumentAdaptersUnitTests {
 
@@ -46,7 +46,7 @@ public class DocumentAdaptersUnitTests {
 		Map<String, DocumentField> fields = Collections.singletonMap("field",
 				new DocumentField("field", Arrays.asList("value")));
 
-		GetResult getResult = new GetResult("index", "type", "my-id", 1, 0, 42, true, null, fields);
+		GetResult getResult = new GetResult("index", "type", "my-id", 1, 1, 42, true, null, fields, null);
 		GetResponse response = new GetResponse(getResult);
 
 		Document document = DocumentAdapters.from(response);
@@ -63,7 +63,7 @@ public class DocumentAdaptersUnitTests {
 
 		BytesArray source = new BytesArray("{\"field\":\"value\"}");
 
-		GetResult getResult = new GetResult("index", "type", "my-id", 1, 0, 42, true, source, Collections.emptyMap());
+		GetResult getResult = new GetResult("index", "type", "my-id", 1, 1, 42, true, source, Collections.emptyMap(), null);
 		GetResponse response = new GetResponse(getResult);
 
 		Document document = DocumentAdapters.from(response);
