@@ -15,14 +15,14 @@
  */
 package org.springframework.data.elasticsearch.annotations;
 
-import org.springframework.core.annotation.AliasFor;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.springframework.core.annotation.AliasFor;
 
 /**
  * @author Rizwan Idrees
@@ -42,6 +42,7 @@ public @interface Field {
 
 	/**
 	 * Alias for {@link #name}.
+	 *
 	 * @since 3.2
 	 */
 	@AliasFor("name")
@@ -49,7 +50,9 @@ public @interface Field {
 
 	/**
 	 * The <em>name</em> to be used to store the field inside the document.
-	 * <p>If not set, the name of the annotated property is used.
+	 * <p>√5
+	 * If not set, the name of the annotated property is used.
+	 *
 	 * @since 3.2
 	 */
 	@AliasFor("value")

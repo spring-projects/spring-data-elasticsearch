@@ -27,7 +27,6 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.CompletionContext;
@@ -364,7 +363,7 @@ class MappingBuilder {
 			searchAnalyzer = fieldAnnotation.searchAnalyzer();
 			normalizer = fieldAnnotation.normalizer();
 			copyTo = fieldAnnotation.copyTo();
-			ignoreAbove = fieldAnnotation.ignoreAbove();
+			ignoreAbove = fieldAnnotation.ignoreAbove() >= 0 ? fieldAnnotation.ignoreAbove() : null;
 		} else if (annotation instanceof InnerField) {
 			// @InnerField
 			InnerField fieldAnnotation = (InnerField) annotation;
@@ -377,7 +376,7 @@ class MappingBuilder {
 			analyzer = fieldAnnotation.analyzer();
 			searchAnalyzer = fieldAnnotation.searchAnalyzer();
 			normalizer = fieldAnnotation.normalizer();
-			ignoreAbove = fieldAnnotation.ignoreAbove();
+            ignoreAbove = fieldAnnotation.ignoreAbove() >= 0 ? fieldAnnotation.ignoreAbove() : null;
 		} else {
 			throw new IllegalArgumentException("annotation must be an instance of @Field or @InnerField");
 		}
@@ -385,9 +384,11 @@ class MappingBuilder {
 		if (!nestedOrObjectField) {
 			builder.field(FIELD_STORE, store);
 		}
+
 		if (fielddata) {
 			builder.field(FIELD_DATA, fielddata);
 		}
+
 		if (type != FieldType.Auto) {
 			builder.field(FIELD_TYPE, type.name().toLowerCase());
 
@@ -395,22 +396,28 @@ class MappingBuilder {
 				builder.field(FIELD_FORMAT, dateFormat == DateFormat.custom ? datePattern : dateFormat.toString());
 			}
 		}
+
 		if (!index) {
 			builder.field(FIELD_INDEX, index);
 		}
+
 		if (!StringUtils.isEmpty(analyzer)) {
 			builder.field(FIELD_INDEX_ANALYZER, analyzer);
 		}
+
 		if (!StringUtils.isEmpty(searchAnalyzer)) {
 			builder.field(FIELD_SEARCH_ANALYZER, searchAnalyzer);
 		}
+
 		if (!StringUtils.isEmpty(normalizer)) {
 			builder.field(FIELD_NORMALIZER, normalizer);
 		}
+
 		if (copyTo != null && copyTo.length > 0) {
 			builder.field(FIELD_COPY_TO, copyTo);
 		}
-		if (ignoreAbove != -1) {
+
+		if (ignoreAbove != null) {
 			Assert.isTrue(ignoreAbove >= 0, "ignore_above must be a positive value");
 			builder.field(FIELD_IGNORE_ABOVE, ignoreAbove);
 		}
