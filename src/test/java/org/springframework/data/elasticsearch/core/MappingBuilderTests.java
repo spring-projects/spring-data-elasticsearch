@@ -80,6 +80,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Don Wellington
  * @author Sascha Woo
  * @author Peter-Josef Meisch
+ * @author Xiao Yu
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -407,6 +408,35 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		// then
 		assertEquals(expected, mapping, false);
+	}
+
+	@Test // DATAES-639
+	public void shouldUseIgnoreAbove() throws IOException, JSONException {
+
+		// given
+		String expected = "{\"ignore-above-type\":{\"properties\":{\"message\":{\"store\":false,\"type\":\"keyword\",\"ignore_above\":10}}}}";
+
+		// when
+		String mapping = getMappingBuilder().buildPropertyMapping(IgnoreAboveEntity.class);
+
+		// then
+		assertEquals(expected, mapping, false);
+	}
+
+	/**
+	 * @author Xiao Yu
+	 */
+	@Setter
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "ignore-above-index", type = "ignore-above-type")
+	static class IgnoreAboveEntity {
+
+		@Id private String id;
+
+		@Field(type = FieldType.Keyword, ignoreAbove = 10) private String message;
 	}
 
 	/**

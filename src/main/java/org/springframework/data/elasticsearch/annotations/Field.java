@@ -32,6 +32,7 @@ import java.lang.annotation.Target;
  * @author Jakub Vavrik
  * @author Kevin Leturc
  * @author Peter-Josef Meisch
+ * @author Xiao Yu
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -77,4 +78,9 @@ public @interface Field {
 	boolean includeInParent() default false;
 
 	String[] copyTo() default {};
+
+	/**
+	 * @since 4.0
+	 */
+	int ignoreAbove() default -1;
 }
