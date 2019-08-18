@@ -40,10 +40,10 @@ import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
@@ -52,6 +52,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.elasticsearch.TestNodeResource;
 import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -67,11 +68,13 @@ import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Strobl
- * @currentRead Fool's Fate - Robin Hobb
+ * @author Peter-Josef Meisch
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration
 public class SimpleReactiveElasticsearchRepositoryTests {
+
+	@ClassRule public static TestNodeResource testNodeResource = new TestNodeResource();
 
 	@Configuration
 	@EnableReactiveElasticsearchRepositories(considerNestedRepositories = true)

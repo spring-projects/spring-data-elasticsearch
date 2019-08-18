@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -42,6 +43,7 @@ import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.data.util.Streamable;
 import org.springframework.util.Assert;
 
 /**
@@ -57,6 +59,7 @@ import org.springframework.util.Assert;
  * @author Michael Wirth
  * @author Sascha Woo
  * @author Murali Chevuri
+ * @author Peter-Josef Meisch
  */
 public abstract class AbstractElasticsearchRepository<T, ID> implements ElasticsearchRepository<T, ID> {
 
@@ -182,16 +185,8 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	public <S extends T> List<S> save(List<S> entities) {
 
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
-		Assert.notEmpty(entities, "Cannot insert empty List.");
 
-		List<IndexQuery> queries = new ArrayList<>();
-		for (S s : entities) {
-			queries.add(createIndexQuery(s));
-		}
-		elasticsearchOperations.bulkIndex(queries);
-		elasticsearchOperations.refresh(entityInformation.getIndexName());
-
-		return entities;
+		return Streamable.of(saveAll(entities)).stream().collect(Collectors.toList());
 	}
 
 	@Override
@@ -215,12 +210,13 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
 
-		List<IndexQuery> queries = new ArrayList<>();
-		for (S s : entities) {
-			queries.add(createIndexQuery(s));
+		List<IndexQuery> queries = Streamable.of(entities).stream().map(this::createIndexQuery)
+				.collect(Collectors.toList());
+
+		if (!queries.isEmpty()) {
+			elasticsearchOperations.bulkIndex(queries);
+			elasticsearchOperations.refresh(entityInformation.getIndexName());
 		}
-		elasticsearchOperations.bulkIndex(queries);
-		elasticsearchOperations.refresh(entityInformation.getIndexName());
 
 		return entities;
 	}
