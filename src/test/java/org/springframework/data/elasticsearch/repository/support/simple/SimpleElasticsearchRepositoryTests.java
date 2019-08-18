@@ -28,11 +28,13 @@ import lombok.NoArgsConstructor;
 import java.lang.Long;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import org.elasticsearch.action.ActionRequestValidationException;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,12 +44,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.elasticsearch.RestElasticsearchTestConfiguration;
+import org.springframework.data.elasticsearch.TestNodeResource;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -62,16 +67,19 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Murali Chevuri
  */
 @RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:/simple-repository-test.xml")
+@ContextConfiguration(classes = { SimpleElasticsearchRepositoryTests.class, RestElasticsearchTestConfiguration.class })
+@EnableElasticsearchRepositories(considerNestedRepositories = true)
 public class SimpleElasticsearchRepositoryTests {
+
+	@ClassRule public static TestNodeResource testNodeResource = new TestNodeResource();
 
 	@Autowired private SampleElasticsearchRepository repository;
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations elasticsearchOperations;
 
 	@Before
 	public void before() {
-		IndexInitializer.init(elasticsearchTemplate, SampleEntity.class);
+		IndexInitializer.init(elasticsearchOperations, SampleEntity.class);
 	}
 
 	@Test
@@ -634,6 +642,34 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// then
 		assertThat(results.getTotalElements()).isGreaterThanOrEqualTo(1L);
+	}
+
+	@Test // DATAES-142
+	public void shouldIndexNotEmptyList() {
+		// given
+		List<SampleEntity> list = new ArrayList<>();
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(documentId);
+		sampleEntity1.setMessage("world");
+		list.add(sampleEntity1);
+
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setMessage("hello");
+		list.add(sampleEntity2);
+
+		Iterable<SampleEntity> savedEntities = repository.saveAll(list);
+
+		assertThat(savedEntities).containsExactlyElementsOf(list);
+	}
+
+	@Test // DATAES-142
+	public void shouldNotFailOnIndexingEmptyList() {
+		Iterable<SampleEntity> savedEntities = repository.saveAll(Collections.emptyList());
+
+		assertThat(savedEntities).hasSize(0);
 	}
 
 	private static List<SampleEntity> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
