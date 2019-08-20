@@ -58,6 +58,10 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		CriteriaQuery query = createQuery(accessor);
 		Assert.notNull(query, "unsupported query");
 
+		if (tree.isLimiting()) {
+			query.setMaxResults(tree.getMaxResults());
+		}
+
 		if (tree.isDelete()) {
 			Object result = countOrGetDocumentsForDelete(query, accessor);
 			elasticsearchOperations.delete(query, queryMethod.getEntityInformation().getJavaType());

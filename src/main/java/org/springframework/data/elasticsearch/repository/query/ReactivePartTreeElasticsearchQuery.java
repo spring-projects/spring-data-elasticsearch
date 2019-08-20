@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.repository.query.parser.ElasticsearchQueryCreator;
 import org.springframework.data.repository.query.ResultProcessor;
@@ -23,6 +24,7 @@ import org.springframework.data.repository.query.parser.PartTree;
 
 /**
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public class ReactivePartTreeElasticsearchQuery extends AbstractReactiveElasticsearchRepositoryQuery {
@@ -40,7 +42,12 @@ public class ReactivePartTreeElasticsearchQuery extends AbstractReactiveElastics
 
 	@Override
 	protected Query createQuery(ElasticsearchParameterAccessor accessor) {
-		return new ElasticsearchQueryCreator(tree, accessor, getMappingContext()).createQuery();
+		CriteriaQuery query = new ElasticsearchQueryCreator(tree, accessor, getMappingContext()).createQuery();
+
+		if (tree.isLimiting()) {
+			query.setMaxResults(tree.getMaxResults());
+		}
+		return query;
 	}
 
 	@Override

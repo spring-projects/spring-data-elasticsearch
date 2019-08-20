@@ -35,6 +35,7 @@ import org.springframework.data.domain.Sort;
  * @author Sascha Woo
  * @author Christoph Strobl
  * @author Farid Azaza
+ * @author Peter-Josef Meisch
  */
 public interface Query {
 
@@ -145,7 +146,7 @@ public interface Query {
 
 	/**
 	 * Get if scores will be computed and tracked, regardless of whether sorting on a field. Defaults to <tt>false</tt>.
-	 * 
+	 *
 	 * @return
 	 * @since 3.1
 	 */
@@ -194,4 +195,22 @@ public interface Query {
 	 * @since 3.2
 	 */
 	void setPreference(String preference);
+
+	/**
+	 * @return true if the query has a limit on the max number of results.
+	 * @since 4.0
+	 */
+	default boolean isLimiting() {
+		return false;
+	}
+
+	/**
+	 * return the max of results. Must not return null when {@link #isLimiting()} returns true.
+	 *
+	 * @since 4.0
+	 */
+	default Integer getMaxResults() {
+		return null;
+	}
+
 }

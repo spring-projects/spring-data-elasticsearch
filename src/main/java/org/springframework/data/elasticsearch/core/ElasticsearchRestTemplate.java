@@ -363,16 +363,19 @@ public class ElasticsearchRestTemplate
 
 	@Override
 	public <T> T queryForObject(CriteriaQuery query, Class<T> clazz) {
-		Page<T> page = queryForPage(query, clazz);
-		Assert.isTrue(page.getTotalElements() < 2, "Expected 1 but found " + page.getTotalElements() + " results");
-		return page.getTotalElements() > 0 ? page.getContent().get(0) : null;
+		return getObjectFromPage(queryForPage(query, clazz));
 	}
 
 	@Override
 	public <T> T queryForObject(StringQuery query, Class<T> clazz) {
-		Page<T> page = queryForPage(query, clazz);
-		Assert.isTrue(page.getTotalElements() < 2, "Expected 1 but found " + page.getTotalElements() + " results");
-		return page.getTotalElements() > 0 ? page.getContent().get(0) : null;
+		return getObjectFromPage(queryForPage(query, clazz));
+	}
+
+	@Nullable
+	private <T> T getObjectFromPage(Page<T> page) {
+		int contentSize = page.getContent().size();
+		Assert.isTrue(contentSize < 2, "Expected 1 but found " + contentSize + " results");
+		return contentSize > 0 ? page.getContent().get(0) : null;
 	}
 
 	@Override
@@ -493,19 +496,24 @@ public class ElasticsearchRestTemplate
 		QueryBuilder elasticsearchFilter = new CriteriaFilterProcessor()
 				.createFilterFromCriteria(criteriaQuery.getCriteria());
 		SearchRequest request = prepareSearch(criteriaQuery, clazz);
+		SearchSourceBuilder sourceBuilder = request.source();
 
 		if (elasticsearchQuery != null) {
-			request.source().query(elasticsearchQuery);
+			sourceBuilder.query(elasticsearchQuery);
 		} else {
-			request.source().query(QueryBuilders.matchAllQuery());
+			sourceBuilder.query(QueryBuilders.matchAllQuery());
+		}
+
+		if (criteriaQuery.isLimiting()) {
+			sourceBuilder.size(criteriaQuery.getMaxResults());
 		}
 
 		if (criteriaQuery.getMinScore() > 0) {
-			request.source().minScore(criteriaQuery.getMinScore());
+			sourceBuilder.minScore(criteriaQuery.getMinScore());
 		}
 
 		if (elasticsearchFilter != null)
-			request.source().postFilter(elasticsearchFilter);
+			sourceBuilder.postFilter(elasticsearchFilter);
 		if (logger.isDebugEnabled()) {
 			logger.debug("doSearch query:\n" + request.toString());
 		}

@@ -306,16 +306,19 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	@Override
 	public <T> T queryForObject(CriteriaQuery query, Class<T> clazz) {
-		Page<T> page = queryForPage(query, clazz);
-		Assert.isTrue(page.getTotalElements() < 2, "Expected 1 but found " + page.getTotalElements() + " results");
-		return page.getTotalElements() > 0 ? page.getContent().get(0) : null;
+		return getObjectFromPage(queryForPage(query, clazz));
 	}
 
 	@Override
 	public <T> T queryForObject(StringQuery query, Class<T> clazz) {
-		Page<T> page = queryForPage(query, clazz);
-		Assert.isTrue(page.getTotalElements() < 2, "Expected 1 but found " + page.getTotalElements() + " results");
-		return page.getTotalElements() > 0 ? page.getContent().get(0) : null;
+		return getObjectFromPage(queryForPage(query, clazz));
+	}
+
+	@Nullable
+	private <T> T getObjectFromPage(Page<T> page) {
+		int contentSize = page.getContent().size();
+		Assert.isTrue(contentSize < 2, "Expected 1 but found " + contentSize + " results");
+		return contentSize > 0 ? page.getContent().get(0) : null;
 	}
 
 	@Override
@@ -433,6 +436,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 			searchRequestBuilder.setQuery(elasticsearchQuery);
 		} else {
 			searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
+		}
+
+		if (criteriaQuery.isLimiting()) {
+			searchRequestBuilder.setSize(criteriaQuery.getMaxResults());
 		}
 
 		if (criteriaQuery.getMinScore() > 0) {
