@@ -24,6 +24,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -102,7 +103,7 @@ public class ReactiveElasticsearchTemplateTests {
 		restTemplate.refresh(SampleEntity.class);
 
 		template = new ReactiveElasticsearchTemplate(TestUtils.reactiveClient(), restTemplate.getElasticsearchConverter(),
-				new DefaultResultMapper(new ElasticsearchEntityMapper(
+				new DefaultResultMapper(new MappingElasticsearchConverter(
 						restTemplate.getElasticsearchConverter().getMappingContext(), new DefaultConversionService())));
 	}
 

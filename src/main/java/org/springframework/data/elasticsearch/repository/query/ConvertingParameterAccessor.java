@@ -59,12 +59,12 @@ public class ConvertingParameterAccessor implements ElasticsearchParameterAccess
 		return delegate.getDynamicProjection();
 	}
 
-    @Override
-    public Class<?> findDynamicProjection() {
-        return delegate.findDynamicProjection();
-    }
+	@Override
+	public Class<?> findDynamicProjection() {
+		return delegate.findDynamicProjection();
+	}
 
-    @Override
+	@Override
 	public Object getBindableValue(int index) {
 		return getConvertedValue(delegate.getBindableValue(index));
 	}

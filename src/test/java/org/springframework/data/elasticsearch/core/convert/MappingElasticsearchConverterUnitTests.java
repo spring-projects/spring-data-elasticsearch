@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
+package org.springframework.data.elasticsearch.core.convert;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -39,6 +39,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.Id;
@@ -49,26 +50,27 @@ import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.elasticsearch.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
+import org.springframework.data.mapping.context.MappingContext;
 
 /**
- * Unit tests for {@link ElasticsearchEntityMapper}.
+ * Unit tests for {@link MappingElasticsearchConverter}.
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  */
-public class ElasticsearchEntityMapperUnitTests {
+public class MappingElasticsearchConverterUnitTests {
 
-	static final String JSON_STRING = "{\"_class\":\"org.springframework.data.elasticsearch.core.ElasticsearchEntityMapperUnitTests$Car\",\"name\":\"Grat\",\"model\":\"Ford\"}";
+	static final String JSON_STRING = "{\"_class\":\"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Car\",\"name\":\"Grat\",\"model\":\"Ford\"}";
 	static final String CAR_MODEL = "Ford";
 	static final String CAR_NAME = "Grat";
-	ElasticsearchEntityMapper entityMapper;
+	MappingElasticsearchConverter mappingElasticsearchConverter;
 
 	Person sarahConnor;
 	Person kyleReese;
@@ -100,10 +102,10 @@ public class ElasticsearchEntityMapperUnitTests {
 		mappingContext.setInitialEntitySet(Collections.singleton(Rifle.class));
 		mappingContext.afterPropertiesSet();
 
-		entityMapper = new ElasticsearchEntityMapper(mappingContext, new GenericConversionService());
-		entityMapper.setConversions(
+		mappingElasticsearchConverter = new MappingElasticsearchConverter(mappingContext, new GenericConversionService());
+		mappingElasticsearchConverter.setConversions(
 				new ElasticsearchCustomConversions(Arrays.asList(new ShotGunToMapConverter(), new MapToShotGunConverter())));
-		entityMapper.afterPropertiesSet();
+		mappingElasticsearchConverter.afterPropertiesSet();
 
 		sarahConnor = new Person();
 		sarahConnor.id = "sarah";
@@ -124,7 +126,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		t800AsMap.put("id", "t800");
 		t800AsMap.put("name", "T-800");
 		t800AsMap.put("gender", "MACHINE");
-		t800AsMap.put("_class", "org.springframework.data.elasticsearch.core.ElasticsearchEntityMapperUnitTests$Person");
+		t800AsMap.put("_class", "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Person");
 
 		observatoryRoad = new Address();
 		observatoryRoad.city = "Los Angeles";
@@ -141,7 +143,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		sarahAsMap.put("id", "sarah");
 		sarahAsMap.put("name", "Sarah Connor");
 		sarahAsMap.put("gender", "MAN");
-		sarahAsMap.put("_class", "org.springframework.data.elasticsearch.core.ElasticsearchEntityMapperUnitTests$Person");
+		sarahAsMap.put("_class", "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Person");
 
 		kyleAsMap = Document.create();
 		kyleAsMap.put("id", "kyle");
@@ -165,7 +167,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		((HashMap<String, Object>) bigBunsCafeAsMap.get("location")).put("lat", 34.0945637D);
 		((HashMap<String, Object>) bigBunsCafeAsMap.get("location")).put("lon", -118.1545845D);
 		bigBunsCafeAsMap.put("_class",
-				"org.springframework.data.elasticsearch.core.ElasticsearchEntityMapperUnitTests$Place");
+				"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Place");
 
 		gunAsMap = Document.create();
 		gunAsMap.put("label", "Glock 19");
@@ -187,12 +189,46 @@ public class ElasticsearchEntityMapperUnitTests {
 		shotGunAsMap.put("_class", ShotGun.class.getName());
 	}
 
-	@Test // DATAES-530
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldFailToInitializeGivenMappingContextIsNull() {
+
+        // given
+        new MappingElasticsearchConverter(null);
+    }
+
+    @Test
+    public void shouldReturnMappingContextWithWhichItWasInitialized() {
+
+        // given
+        MappingContext mappingContext = new SimpleElasticsearchMappingContext();
+        MappingElasticsearchConverter converter = new MappingElasticsearchConverter(mappingContext);
+
+        // then
+        assertThat(converter.getMappingContext()).isNotNull();
+        assertThat(converter.getMappingContext()).isSameAs(mappingContext);
+    }
+
+    @Test
+    public void shouldReturnDefaultConversionService() {
+
+        // given
+        MappingElasticsearchConverter converter = new MappingElasticsearchConverter(
+            new SimpleElasticsearchMappingContext());
+
+        // when
+        ConversionService conversionService = converter.getConversionService();
+
+        // then
+        assertThat(conversionService).isNotNull();
+    }
+
+    @Test // DATAES-530
 	public void shouldMapObjectToJsonString() throws IOException {
 		// Given
 
 		// When
-		String jsonResult = entityMapper.mapToString(Car.builder().model(CAR_MODEL).name(CAR_NAME).build());
+		String jsonResult = mappingElasticsearchConverter.mapToString(Car.builder().model(CAR_MODEL).name(CAR_NAME).build());
 
 		// Then
 		assertThat(jsonResult).isEqualTo(JSON_STRING);
@@ -203,7 +239,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		// Given
 
 		// When
-		Car result = entityMapper.mapToObject(JSON_STRING, Car.class);
+		Car result = mappingElasticsearchConverter.mapToObject(JSON_STRING, Car.class);
 
 		// Then
 		assertThat(result.getName()).isEqualTo(CAR_NAME);
@@ -219,7 +255,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		GeoEntity geoEntity = GeoEntity.builder().pointA(point).pointB(GeoPoint.fromPoint(point)).pointC(pointAsString)
 				.pointD(pointAsArray).build();
 		// when
-		String jsonResult = entityMapper.mapToString(geoEntity);
+		String jsonResult = mappingElasticsearchConverter.mapToString(geoEntity);
 
 		// then
 		assertThat(jsonResult).contains(pointTemplate("pointA", point));
@@ -240,7 +276,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		sample.annotatedTransientProperty = "transient";
 
 		// when
-		String result = entityMapper.mapToString(sample);
+		String result = mappingElasticsearchConverter.mapToString(sample);
 
 		// then
 		assertThat(result).contains("\"property\"");
@@ -291,7 +327,7 @@ public class ElasticsearchEntityMapperUnitTests {
 	@Test // DATAES-530
 	public void readTypeCorrectly() {
 
-		Person target = entityMapper.read(Person.class, sarahAsMap);
+		Person target = mappingElasticsearchConverter.read(Person.class, sarahAsMap);
 
 		assertThat(target).isEqualTo(sarahConnor);
 	}
@@ -301,7 +337,7 @@ public class ElasticsearchEntityMapperUnitTests {
 
 		sarahAsMap.put("coWorkers", Arrays.asList(kyleAsMap));
 
-		Person target = entityMapper.read(Person.class, sarahAsMap);
+		Person target = mappingElasticsearchConverter.read(Person.class, sarahAsMap);
 
 		assertThat(target.getCoWorkers()).contains(kyleReese);
 	}
@@ -311,7 +347,7 @@ public class ElasticsearchEntityMapperUnitTests {
 
 		sarahAsMap.put("inventoryList", Arrays.asList(gunAsMap, grenadeAsMap));
 
-		Person target = entityMapper.read(Person.class, sarahAsMap);
+		Person target = mappingElasticsearchConverter.read(Person.class, sarahAsMap);
 
 		assertThat(target.getInventoryList()).containsExactly(gun, grenade);
 	}
@@ -345,7 +381,7 @@ public class ElasticsearchEntityMapperUnitTests {
 
 		sarahAsMap.put("shippingAddresses", Collections.singletonMap("home", gratiotAveAsMap));
 
-		Person target = entityMapper.read(Person.class, sarahAsMap);
+		Person target = mappingElasticsearchConverter.read(Person.class, sarahAsMap);
 
 		assertThat(target.getShippingAddresses()).hasSize(1).containsEntry("home", observatoryRoad);
 	}
@@ -355,7 +391,7 @@ public class ElasticsearchEntityMapperUnitTests {
 
 		sarahAsMap.put("inventoryMap", Collections.singletonMap("glock19", gunAsMap));
 
-		Person target = entityMapper.read(Person.class, sarahAsMap);
+		Person target = mappingElasticsearchConverter.read(Person.class, sarahAsMap);
 
 		assertThat(target.getInventoryMap()).hasSize(1).containsEntry("glock19", gun);
 	}
@@ -379,7 +415,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		Document source = Document.create();
 		source.put("objectList", Arrays.asList(t800AsMap, gunAsMap));
 
-		Skynet target = entityMapper.read(Skynet.class, source);
+		Skynet target = mappingElasticsearchConverter.read(Skynet.class, source);
 
 		assertThat(target.getObjectList()).containsExactly(t800, gun);
 	}
@@ -402,7 +438,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		Document source = Document.create();
 		source.put("objectList", Arrays.asList(Arrays.asList(t800AsMap, gunAsMap)));
 
-		Skynet target = entityMapper.read(Skynet.class, source);
+		Skynet target = mappingElasticsearchConverter.read(Skynet.class, source);
 
 		assertThat(target.getObjectList()).containsExactly(Arrays.asList(t800, gun));
 	}
@@ -427,7 +463,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		Document source = Document.create();
 		source.put("objectMap", Collections.singletonMap("glock19", gunAsMap));
 
-		Skynet target = entityMapper.read(Skynet.class, source);
+		Skynet target = mappingElasticsearchConverter.read(Skynet.class, source);
 
 		assertThat(target.getObjectMap()).containsEntry("glock19", gun);
 	}
@@ -451,7 +487,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		Document source = Document.create();
 		source.put("objectMap", Collections.singletonMap("inventory", Collections.singletonMap("glock19", gunAsMap)));
 
-		Skynet target = entityMapper.read(Skynet.class, source);
+		Skynet target = mappingElasticsearchConverter.read(Skynet.class, source);
 
 		assertThat(target.getObjectMap()).containsEntry("inventory", Collections.singletonMap("glock19", gun));
 	}
@@ -461,7 +497,7 @@ public class ElasticsearchEntityMapperUnitTests {
 
 		sarahAsMap.put("address", gratiotAveAsMap);
 
-		Person target = entityMapper.read(Person.class, sarahAsMap);
+		Person target = mappingElasticsearchConverter.read(Person.class, sarahAsMap);
 
 		assertThat(target.getAddress()).isEqualTo(observatoryRoad);
 	}
@@ -472,7 +508,7 @@ public class ElasticsearchEntityMapperUnitTests {
 		Document source = Document.create();
 		source.put("object", t800AsMap);
 
-		Skynet target = entityMapper.read(Skynet.class, source);
+		Skynet target = mappingElasticsearchConverter.read(Skynet.class, source);
 
 		assertThat(target.getObject()).isEqualTo(t800);
 	}
@@ -493,7 +529,7 @@ public class ElasticsearchEntityMapperUnitTests {
 
 	@Test // DATAES-530
 	public void readsAliased() {
-		assertThat(entityMapper.read(Inventory.class, rifleAsMap)).isEqualTo(rifle);
+		assertThat(mappingElasticsearchConverter.read(Inventory.class, rifleAsMap)).isEqualTo(rifle);
 	}
 
 	@Test // DATAES-530
@@ -501,7 +537,7 @@ public class ElasticsearchEntityMapperUnitTests {
 
 		t800AsMap.put("inventoryList", Collections.singletonList(rifleAsMap));
 
-		assertThat(entityMapper.read(Person.class, t800AsMap).getInventoryList()).containsExactly(rifle);
+		assertThat(mappingElasticsearchConverter.read(Person.class, t800AsMap).getInventoryList()).containsExactly(rifle);
 	}
 
 	@Test // DATAES-530
@@ -511,7 +547,7 @@ public class ElasticsearchEntityMapperUnitTests {
 
 	@Test // DATAES-530
 	public void appliesCustomConverterForRead() {
-		assertThat(entityMapper.read(Inventory.class, shotGunAsMap)).isEqualTo(shotGun);
+		assertThat(mappingElasticsearchConverter.read(Inventory.class, shotGunAsMap)).isEqualTo(shotGun);
 	}
 
 	@Test // DATAES-530
@@ -529,7 +565,7 @@ public class ElasticsearchEntityMapperUnitTests {
 
 		sarahAsMap.put("address", bigBunsCafeAsMap);
 
-		Person target = entityMapper.read(Person.class, sarahAsMap);
+		Person target = mappingElasticsearchConverter.read(Person.class, sarahAsMap);
 
 		assertThat(target.address).isEqualTo(bigBunsCafe);
 	}
@@ -541,7 +577,7 @@ public class ElasticsearchEntityMapperUnitTests {
 	private Map<String, Object> writeToMap(Object source) {
 
 		Document sink = Document.create();
-		entityMapper.write(source, sink);
+		mappingElasticsearchConverter.write(source, sink);
 		return sink;
 	}
 

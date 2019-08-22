@@ -154,30 +154,38 @@ public class ElasticsearchRestTemplate
 	private String searchTimeout;
 
 	public ElasticsearchRestTemplate(RestHighLevelClient client) {
-		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()));
+		MappingElasticsearchConverter mappingElasticsearchConverter = createElasticsearchConverter();
+		initialize(client, mappingElasticsearchConverter,
+				new DefaultResultMapper(mappingElasticsearchConverter.getMappingContext()));
 	}
 
-	public ElasticsearchRestTemplate(RestHighLevelClient client, EntityMapper entityMapper) {
-		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()), entityMapper);
-	}
-
-	public ElasticsearchRestTemplate(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
-			EntityMapper entityMapper) {
-		this(client, elasticsearchConverter,
+	public ElasticsearchRestTemplate(RestHighLevelClient client,
+                                     ElasticsearchConverter elasticsearchConverter, EntityMapper entityMapper) {
+		initialize(client, elasticsearchConverter,
 				new DefaultResultMapper(elasticsearchConverter.getMappingContext(), entityMapper));
 	}
 
 	public ElasticsearchRestTemplate(RestHighLevelClient client, ResultsMapper resultsMapper) {
-		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()), resultsMapper);
+		initialize(client, createElasticsearchConverter(), resultsMapper);
 	}
 
-	public ElasticsearchRestTemplate(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter) {
-		this(client, elasticsearchConverter, new DefaultResultMapper(elasticsearchConverter.getMappingContext()));
+	public ElasticsearchRestTemplate(RestHighLevelClient client,
+			ElasticsearchConverter elasticsearchConverter) {
+		initialize(client, elasticsearchConverter,
+				new DefaultResultMapper(elasticsearchConverter.getMappingContext()));
 	}
 
-	public ElasticsearchRestTemplate(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
+	public ElasticsearchRestTemplate(RestHighLevelClient client,
+                                     ElasticsearchConverter elasticsearchConverter, ResultsMapper resultsMapper) {
+		initialize(client, elasticsearchConverter, resultsMapper);
+	}
+
+	private MappingElasticsearchConverter createElasticsearchConverter() {
+		return new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext());
+	}
+
+	private void initialize(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
 			ResultsMapper resultsMapper) {
-
 		Assert.notNull(client, "Client must not be null!");
 		Assert.notNull(elasticsearchConverter, "ElasticsearchConverter must not be null!");
 		Assert.notNull(resultsMapper, "ResultsMapper must not be null!");
@@ -1020,28 +1028,33 @@ public class ElasticsearchRestTemplate
 		}
 	}
 
+	@Override
 	public <T> ScrolledPage<T> startScroll(long scrollTimeInMillis, SearchQuery searchQuery, Class<T> clazz) {
 		SearchResponse response = doScroll(prepareScroll(searchQuery, scrollTimeInMillis, clazz), searchQuery);
 		return resultsMapper.mapResults(response, clazz, null);
 	}
 
+	@Override
 	public <T> ScrolledPage<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz) {
 		SearchResponse response = doScroll(prepareScroll(criteriaQuery, scrollTimeInMillis, clazz), criteriaQuery);
 		return resultsMapper.mapResults(response, clazz, null);
 	}
 
+	@Override
 	public <T> ScrolledPage<T> startScroll(long scrollTimeInMillis, SearchQuery searchQuery, Class<T> clazz,
 			SearchResultMapper mapper) {
 		SearchResponse response = doScroll(prepareScroll(searchQuery, scrollTimeInMillis, clazz), searchQuery);
 		return mapper.mapResults(response, clazz, null);
 	}
 
+	@Override
 	public <T> ScrolledPage<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz,
 			SearchResultMapper mapper) {
 		SearchResponse response = doScroll(prepareScroll(criteriaQuery, scrollTimeInMillis, clazz), criteriaQuery);
 		return mapper.mapResults(response, clazz, null);
 	}
 
+	@Override
 	public <T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz) {
 		SearchScrollRequest request = new SearchScrollRequest(scrollId);
 		request.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
@@ -1054,6 +1067,7 @@ public class ElasticsearchRestTemplate
 		return resultsMapper.mapResults(response, clazz, Pageable.unpaged());
 	}
 
+	@Override
 	public <T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz,
 			SearchResultMapper mapper) {
 		SearchScrollRequest request = new SearchScrollRequest(scrollId);

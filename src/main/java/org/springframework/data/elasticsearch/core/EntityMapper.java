@@ -32,12 +32,14 @@ import org.springframework.lang.Nullable;
  */
 public interface EntityMapper {
 
-	String mapToString(Object object) throws IOException;
+	default String mapToString(Object object) throws IOException {
+        return mapObject(object).toJson();
+    }
 
 	<T> T mapToObject(String source, Class<T> clazz) throws IOException;
 
 	/**
-	 * Map the given {@literal source} to {@link Map}.
+	 * Map the given {@literal source} to {@link Document}.
 	 *
 	 * @param source must not be {@literal null}.
 	 * @return never {@literal null}
@@ -46,7 +48,7 @@ public interface EntityMapper {
 	Document mapObject(Object source);
 
 	/**
-	 * Map the given {@link Map} into an instance of the {@literal targetType}.
+	 * Map the given {@link Document} into an instance of the {@literal targetType}.
 	 *
 	 * @param source must not be {@literal null}.
 	 * @param targetType must not be {@literal null}.

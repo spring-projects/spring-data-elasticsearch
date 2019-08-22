@@ -37,6 +37,7 @@ import org.springframework.util.Assert;
  * {@link Publisher}.
  *
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public interface ReactiveElasticsearchOperations {
@@ -172,7 +173,7 @@ public interface ReactiveElasticsearchOperations {
 
 	/**
 	 * Check if an entity with given {@literal id} exists.
-	 * 
+	 *
 	 * @param id the {@literal _id} of the document to look for.
 	 * @param entityType the domain type used.
 	 * @return a {@link Mono} emitting {@literal true} if a matching document exists, {@literal false} otherwise.
