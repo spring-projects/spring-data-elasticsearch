@@ -140,6 +140,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Martin Choraine
  * @author Farid Azaza
  * @author Peter-Josef Meisch
+ * @author Mathias Teier
  */
 public class ElasticsearchRestTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -1326,6 +1327,10 @@ public class ElasticsearchRestTemplate
 
 		if (query.getPreference() != null) {
 			request.preference(query.getPreference());
+		}
+
+		if (query.getSearchType() != null) {
+			request.searchType(query.getSearchType());
 		}
 
 		request.source(sourceBuilder);
