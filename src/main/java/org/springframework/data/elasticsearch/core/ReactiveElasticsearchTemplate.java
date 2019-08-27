@@ -78,6 +78,7 @@ import org.springframework.util.Assert;
  * @author Farid Azaza
  * @author Martin Choraine
  * @author Peter-Josef Meisch
+ * @author Mathias Teier
  * @since 3.2
  */
 public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations {
@@ -281,6 +282,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 			if (query.getPreference() != null) {
 				request.preference(query.getPreference());
+			}
+
+			if (query.getSearchType() != null) {
+				request.searchType(query.getSearchType());
 			}
 
 			Pageable pageable = query.getPageable();
