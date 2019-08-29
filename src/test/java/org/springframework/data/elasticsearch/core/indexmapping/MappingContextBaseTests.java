@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.elasticsearch.core;
+package org.springframework.data.elasticsearch.core.indexmapping;
 
 import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
