@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.elasticsearch.core;
+package org.springframework.data.elasticsearch.core.indexmapping;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -30,6 +30,7 @@ import lombok.Setter;
 
 import java.io.IOException;
 import java.lang.Boolean;
+import java.lang.Double;
 import java.lang.Integer;
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -49,16 +50,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.elasticsearch.annotations.CompletionField;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.GeoPointField;
-import org.springframework.data.elasticsearch.annotations.InnerField;
-import org.springframework.data.elasticsearch.annotations.Mapping;
-import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.Parent;
-import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -125,7 +118,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldUseValueFromAnnotationType() throws IOException, JSONException {
 
 		// Given
-		String expected = "{\"price\":{\"properties\":{\"price\":{\"store\":false,\"type\":\"double\"}}}}";
+		String expected = "{\"price\":{\"properties\":{\"price\":{\"type\":\"double\"}}}}";
 
 		// When
 		String mapping = getMappingBuilder().buildPropertyMapping(StockPrice.class);
@@ -174,7 +167,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldBuildMappingWithSuperclass() throws IOException, JSONException {
 
 		String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\""
-				+ "type\":\"text\",\"index\":false,\"analyzer\":\"standard\"}" + ",\"createdDate\":{\"store\":false,"
+				+ "type\":\"text\",\"index\":false,\"analyzer\":\"standard\"}" + ",\"createdDate\":{"
 				+ "\"type\":\"date\",\"index\":false}}}}";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleInheritedEntity.class);
@@ -329,7 +322,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		// given
 		String expected = "{\"fieldname-type\":{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"text-property\":{\"store\":false,\"type\":\"text\"}" + "}}}";
+				+ "\"text-property\":{\"type\":\"text\"}" + "}}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.TextEntity.class);
@@ -371,7 +364,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		// given
 		String expected = "{\"fieldname-type\":{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"circular-property\":{\"type\":\"object\",\"properties\":{\"id-property\":{\"store\":false}}}" + "}}}";
+				+ "\"circular-property\":{\"type\":\"object\",\"properties\":{\"id-property\":{}}}" + "}}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.CircularEntity.class);
@@ -385,7 +378,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		// given
 		String expected = "{\"fieldname-type\":{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"completion-property\":{\"type\":\"completion\",\"max_input_length\":100,\"preserve_position_increments\":true,\"preserve_separators\":true,\"search_analyzer\":\"simple\",\"analyzer\":\"simple\"},\"completion-property\":{\"store\":false}"
+				+ "\"completion-property\":{\"type\":\"completion\",\"max_input_length\":100,\"preserve_position_increments\":true,\"preserve_separators\":true,\"search_analyzer\":\"simple\",\"analyzer\":\"simple\"},\"completion-property\":{}"
 				+ "}}}";
 
 		// when
@@ -400,7 +393,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		// given
 		String expected = "{\"fieldname-type\":{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"multifield-property\":{\"store\":false,\"type\":\"text\",\"analyzer\":\"whitespace\",\"fields\":{\"prefix\":{\"store\":false,\"type\":\"text\",\"analyzer\":\"stop\",\"search_analyzer\":\"standard\"}}}"
+				+ "\"multifield-property\":{\"type\":\"text\",\"analyzer\":\"whitespace\",\"fields\":{\"prefix\":{\"type\":\"text\",\"analyzer\":\"stop\",\"search_analyzer\":\"standard\"}}}"
 				+ "}}}";
 
 		// when
@@ -414,13 +407,111 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldUseIgnoreAbove() throws IOException, JSONException {
 
 		// given
-		String expected = "{\"ignore-above-type\":{\"properties\":{\"message\":{\"store\":false,\"type\":\"keyword\",\"ignore_above\":10}}}}";
+		String expected = "{\"ignore-above-type\":{\"properties\":{\"message\":{\"type\":\"keyword\",\"ignore_above\":10}}}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(IgnoreAboveEntity.class);
 
 		// then
 		assertEquals(expected, mapping, false);
+	}
+
+	@Test
+	public void shouldSetFieldMappingProperties() throws JSONException, IOException {
+		String expected = "{\n" + //
+				"    \"fmp\": {\n" + //
+				"        \"properties\": {\n" + //
+				"            \"storeTrue\": {\n" + //
+				"                \"store\": true\n" + //
+				"            },\n" + //
+				"            \"storeFalse\": {},\n" + //
+				"            \"indexTrue\": {},\n" + //
+				"            \"indexFalse\": {\n" + //
+				"                \"index\": false\n" + //
+				"            },\n" + //
+				"            \"coerceTrue\": {},\n" + //
+				"            \"coerceFalse\": {\n" + //
+				"                \"coerce\": false\n" + //
+				"            },\n" + //
+				"            \"fielddataTrue\": {\n" + //
+				"                \"fielddata\": true\n" + //
+				"            },\n" + //
+				"            \"fielddataFalse\": {},\n" + //
+				"            \"type\": {\n" + //
+				"                \"type\": \"integer\"\n" + //
+				"            },\n" + //
+				"            \"ignoreAbove\": {\n" + //
+				"                \"ignore_above\": 42\n" + //
+				"            },\n" + //
+				"            \"copyTo\": {\n" + //
+				"                \"copy_to\": [\"foo\", \"bar\"]\n" + //
+				"            },\n" + //
+				"            \"date\": {\n" + //
+				"                \"type\": \"date\",\n" + //
+				"                \"format\": \"YYYYMMDD\"\n" + //
+				"            },\n" + //
+				"            \"analyzers\": {\n" + //
+				"                \"analyzer\": \"ana\",\n" + //
+				"                \"search_analyzer\": \"sana\",\n" + //
+				"                \"normalizer\": \"norma\"\n" + //
+				"            },\n" + //
+				"            \"docValuesTrue\": {\n" + //
+				"                \"type\": \"keyword\"\n" + //
+				"            },\n" + //
+				"            \"docValuesFalse\": {\n" + //
+				"                \"type\": \"keyword\",\n" + //
+				"                \"doc_values\": false\n" + //
+				"            },\n" + //
+				"            \"ignoreMalformedFalse\": {},\n" + //
+				"            \"ignoreMalformedTrue\": {\n" + //
+				"                \"ignore_malformed\": true\n" + //
+				"            },\n" + //
+				"            \"indexPhrasesTrue\": {\n" + //
+				"                \"index_phrases\": true\n" + //
+				"            },\n" + //
+				"            \"indexPhrasesFalse\": {},\n" + //
+				"            \"indexOptionsNone\": {},\n" + //
+				"            \"indexOptionsPositions\": {\n" + //
+				"                \"index_options\": \"positions\"\n" + //
+				"            },\n" + //
+				"            \"defaultIndexPrefixes\": {\n" + //
+				"                \"index_prefixes\":{}" + //
+				"            },\n" + //
+				"            \"customIndexPrefixes\": {\n" + //
+				"                \"index_prefixes\":{\"min_chars\":1,\"max_chars\":10}" + //
+				"            },\n" + //
+				"            \"normsTrue\": {},\n" + //
+				"            \"normsFalse\": {\n" + //
+				"                \"norms\": false\n" + //
+				"            },\n" + //
+				"            \"nullValueNotSet\": {},\n" + //
+				"            \"nullValueSet\": {\n" + //
+				"                \"null_value\": \"NULLNULL\"\n" + //
+				"            },\n" + //
+				"            \"positionIncrementGap\": {\n" + //
+				"                \"position_increment_gap\": 42\n" + //
+				"            },\n" + //
+				"            \"similarityDefault\": {},\n" + //
+				"            \"similarityBoolean\": {\n" + //
+				"                \"similarity\": \"boolean\"\n" + //
+				"            },\n" + //
+				"            \"termVectorDefault\": {},\n" + //
+				"            \"termVectorWithOffsets\": {\n" + //
+				"                \"term_vector\": \"with_offsets\"\n" + //
+				"            },\n" + //
+				"            \"scaledFloat\": {\n" + //
+				"                \"type\": \"scaled_float\",\n" + //
+				"                \"scaling_factor\": 100.0\n" + //
+				"            }\n" + //
+				"        }\n" + //
+				"    }\n" + //
+				"}\n"; //
+
+		// when
+		String mapping = getMappingBuilder().buildPropertyMapping(FieldMappingParameters.class);
+
+		// then
+		assertEquals(expected, mapping, true);
 	}
 
 	/**
@@ -821,4 +912,40 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Nested, ignoreFields = { "groups" }) private Set<User> users = new HashSet<>();
 	}
 
+	@Document(indexName = "test-index-field-mapping-parameters", type = "fmp")
+	static class FieldMappingParameters {
+		@Field private String indexTrue;
+		@Field(index = false) private String indexFalse;
+		@Field(store = true) private String storeTrue;
+		@Field private String storeFalse;
+		@Field private String coerceTrue;
+		@Field(coerce = false) private String coerceFalse;
+		@Field(fielddata = true) private String fielddataTrue;
+		@Field private String fielddataFalse;
+		@Field(copyTo = { "foo", "bar" }) private String copyTo;
+		@Field(ignoreAbove = 42) private String ignoreAbove;
+		@Field(type = FieldType.Integer) private String type;
+		@Field(type = FieldType.Date, format = DateFormat.custom, pattern = "YYYYMMDD") private String date;
+		@Field(analyzer = "ana", searchAnalyzer = "sana", normalizer = "norma") private String analyzers;
+		@Field(type = Keyword, docValues = true) private String docValuesTrue;
+		@Field(type = Keyword, docValues = false) private String docValuesFalse;
+		@Field(ignoreMalformed = true) private String ignoreMalformedTrue;
+		@Field(ignoreMalformed = false) private String ignoreMalformedFalse;
+		@Field(indexOptions = IndexOptions.none) private String indexOptionsNone;
+		@Field(indexOptions = IndexOptions.positions) private String indexOptionsPositions;
+		@Field(indexPhrases = true) private String indexPhrasesTrue;
+		@Field(indexPhrases = false) private String indexPhrasesFalse;
+		@Field(indexPrefixes = @IndexPrefixes) private String defaultIndexPrefixes;
+		@Field(indexPrefixes = @IndexPrefixes(minChars = 1, maxChars = 10)) private String customIndexPrefixes;
+		@Field private String normsTrue;
+		@Field(norms = false) private String normsFalse;
+		@Field private String nullValueNotSet;
+		@Field(nullValue = "NULLNULL") private String nullValueSet;
+		@Field(positionIncrementGap = 42) private String positionIncrementGap;
+		@Field private String similarityDefault;
+		@Field(similarity = Similarity.Boolean) private String similarityBoolean;
+		@Field private String termVectorDefault;
+		@Field(termVector = TermVector.with_offsets) private String termVectorWithOffsets;
+		@Field(type = FieldType.Scaled_Float, scalingFactor = 100.0) Double scaledFloat;
+	}
 }

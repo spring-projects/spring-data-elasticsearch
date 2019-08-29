@@ -25,6 +25,7 @@ import java.lang.annotation.Target;
  * @author Mohsin Husen
  * @author Sascha Woo
  * @author Xiao Yu
+ * @author Peter-Josef Meisch
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -54,4 +55,66 @@ public @interface InnerField {
 	 * @since 4.0
 	 */
 	int ignoreAbove() default -1;
+
+	/**
+	 * @since 4.0
+	 */
+	boolean coerce() default true;
+
+	/**
+	 * @since 4.0
+	 */
+	boolean docValues() default true;
+
+	/**
+	 * @since 4.0
+	 */
+	boolean ignoreMalformed() default false;
+
+	/**
+	 * @since 4.0
+	 */
+	IndexOptions indexOptions() default IndexOptions.none;
+
+	/**
+	 * @since 4.0
+	 */
+	boolean indexPhrases() default false;
+
+	/**
+	 * implemented as array to enable the empty default value
+	 *
+	 * @since 4.0
+	 */
+	IndexPrefixes[] indexPrefixes() default {};
+
+	/**
+	 * @since 4.0
+	 */
+	boolean norms() default true;
+
+	/**
+	 * @since 4.0
+	 */
+	String nullValue() default "";
+
+	/**
+	 * @since 4.0
+	 */
+	int positionIncrementGap() default -1;
+
+	/**
+	 * @since 4.0
+	 */
+	Similarity similarity() default Similarity.Default;
+
+	/**
+	 * @since 4.0
+	 */
+	TermVector termVector() default TermVector.none;
+
+	/**
+	 * @since 4.0
+	 */
+	double scalingFactor() default 1;
 }

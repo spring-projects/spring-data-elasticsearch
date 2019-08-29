@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,38 +16,9 @@
 package org.springframework.data.elasticsearch.annotations;
 
 /**
- * @author Rizwan Idrees
- * @author Mohsin Husen
- * @author Artur Konczak
- * @author Zeng Zetang
  * @author Peter-Josef Meisch
+ * @since 4.0
  */
-public enum FieldType {
-    Auto,
-    Text,
-    Keyword,
-    Long,
-    Integer,
-    Short,
-    Byte,
-    Double,
-    Float,
-    Half_Float,
-    Scaled_Float,
-    Date,
-    Date_Nanos,
-    Boolean,
-    Binary,
-    Integer_Range,
-    Float_Range,
-    Long_Range,
-    Double_Range,
-    Date_Range,
-    Ip_Range,
-    Object,
-    Nested,
-    Ip,
-    TokenCount,
-    Percolator,
-    Flattened
+public enum TermVector {
+	none, no, yes, with_positions, with_offsets, woth_positions_offsets, with_positions_payloads, with_positions_offets_payloads
 }

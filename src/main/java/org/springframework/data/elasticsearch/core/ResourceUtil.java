@@ -20,7 +20,6 @@ import java.nio.charset.Charset;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StreamUtils;
 
@@ -28,9 +27,10 @@ import org.springframework.util.StreamUtils;
  * Utility to read {@link org.springframework.core.io.Resource}s.
  *
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
-abstract class ResourceUtil {
+public abstract class ResourceUtil {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ResourceUtil.class);
 
