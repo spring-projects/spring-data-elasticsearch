@@ -15,6 +15,11 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
+
 import org.elasticsearch.action.ActionResponse;
 
 import org.springframework.http.HttpStatus;
