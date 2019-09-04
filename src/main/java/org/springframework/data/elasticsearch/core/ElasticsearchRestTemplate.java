@@ -141,6 +141,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Farid Azaza
  * @author Peter-Josef Meisch
  * @author Mathias Teier
+ * @author Gyula Attila Csorogi
  */
 public class ElasticsearchRestTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -947,6 +948,23 @@ public class ElasticsearchRestTemplate
 
 		if (query.getSort() != null) {
 			prepareSort(query, searchSourceBuilder, entity);
+		}
+
+		if (query instanceof SearchQuery) {
+			SearchQuery searchQuery	= (SearchQuery) query;
+
+			if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
+				HighlightBuilder highlightBuilder = searchQuery.getHighlightBuilder();
+				if (highlightBuilder == null) {
+					highlightBuilder = new HighlightBuilder();
+				}
+				if (searchQuery.getHighlightFields() != null) {
+					for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
+						highlightBuilder.field(highlightField);
+					}
+				}
+				searchSourceBuilder.highlighter(highlightBuilder);
+			}
 		}
 
 		request.source(searchSourceBuilder);
