@@ -122,6 +122,7 @@ import org.springframework.util.StringUtils;
  * @author Peter-Josef Meisch
  * @author Martin Choraine
  * @author Farid Azaza
+ * @author Gyula Attila Csorogi
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
@@ -806,6 +807,23 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 		if (query.getSort() != null) {
 			prepareSort(query, requestBuilder, entity);
+		}
+
+		if (query instanceof SearchQuery) {
+			SearchQuery searchQuery	= (SearchQuery) query;
+
+			if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
+				HighlightBuilder highlightBuilder = searchQuery.getHighlightBuilder();
+				if (highlightBuilder == null) {
+					highlightBuilder = new HighlightBuilder();
+				}
+				if (searchQuery.getHighlightFields() != null) {
+					for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
+						highlightBuilder.field(highlightField);
+					}
+				}
+				requestBuilder.highlighter(highlightBuilder);
+			}
 		}
 
 		return requestBuilder;

@@ -27,6 +27,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.io.IOException;
 import java.lang.Double;
 import java.lang.Integer;
 import java.lang.Long;
@@ -81,6 +82,7 @@ import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
@@ -107,6 +109,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Peter-Josef Meisch
  * @author Martin Choraine
  * @author Farid Azaza
+ * @author Gyula Attila Csorogi
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -1587,6 +1590,75 @@ public class ElasticsearchTemplateTests {
 				return null;
 			}
 		});
+	}
+
+	@Test // DATAES-645
+	public void shouldReturnHighlightedFieldsInScroll() {
+
+		// given
+		long scrollTimeInMillis = 3000;
+		String documentId = randomNumeric(5);
+		String actualType = "some test type";
+		String actualMessage = "some test message";
+		String highlightedType = "some <em>test</em> type";
+		String highlightedMessage = "some <em>test</em> message";
+
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).type(actualType).message(actualMessage)
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		HighlightBuilder highlightBuilder = new HighlightBuilder().field("type").field("message");
+
+		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+				.withQuery(boolQuery().must(termQuery("type", "test")).must(termQuery("message", "test")))
+				.withPageable(PageRequest.of(0, 10))
+				.withHighlightBuilder(highlightBuilder).build();
+
+		SearchResultMapper searchResultMapper = new SearchResultMapper() {
+			@Override
+			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+				DefaultEntityMapper defaultEntityMapper = new DefaultEntityMapper(new SimpleElasticsearchMappingContext());
+				ArrayList<T> result = new ArrayList<>();
+
+				for (SearchHit searchHit : response.getHits()) {
+					try {
+						result.add((T) defaultEntityMapper.mapToObject(searchHit.getSourceAsString(), SampleEntity.class));
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+
+					Map<String, HighlightField> highlightFields = searchHit.getHighlightFields();
+					HighlightField highlightFieldType = highlightFields.get("type");
+					HighlightField highlightFieldMessage = highlightFields.get("message");
+
+					// then
+					assertThat(highlightFieldType).isNotNull();
+					assertThat(highlightFieldMessage).isNotNull();
+					assertThat(highlightFieldType.fragments()[0].toString()).isEqualTo(highlightedType);
+					assertThat(highlightFieldMessage.fragments()[0].toString()).isEqualTo(highlightedMessage);
+				}
+
+				return new AggregatedPageImpl<>(result, pageable, response.getHits().getTotalHits(), response.getAggregations(),
+						response.getScrollId(), response.getHits().getMaxScore());
+			}
+
+			@Override
+			public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
+				return null;
+			}
+		};
+
+		// when
+		ScrolledPage<SampleEntity> scroll = elasticsearchTemplate.startScroll(scrollTimeInMillis, searchQuery, SampleEntity.class, searchResultMapper);
+		while (scroll.hasContent()) {
+			scroll = elasticsearchTemplate.continueScroll(scroll.getScrollId(), scrollTimeInMillis, SampleEntity.class, searchResultMapper);
+		}
+
+		elasticsearchTemplate.clearScroll(scroll.getScrollId());
 	}
 
 	@Test // DATAES-479
