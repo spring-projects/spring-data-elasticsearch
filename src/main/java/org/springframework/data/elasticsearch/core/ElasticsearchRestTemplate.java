@@ -951,7 +951,7 @@ public class ElasticsearchRestTemplate
 		}
 
 		if (query instanceof SearchQuery) {
-			SearchQuery searchQuery	= (SearchQuery) query;
+			SearchQuery searchQuery = (SearchQuery) query;
 
 			if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
 				HighlightBuilder highlightBuilder = searchQuery.getHighlightBuilder();

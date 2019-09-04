@@ -810,7 +810,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		}
 
 		if (query instanceof SearchQuery) {
-			SearchQuery searchQuery	= (SearchQuery) query;
+			SearchQuery searchQuery = (SearchQuery) query;
 
 			if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
 				HighlightBuilder highlightBuilder = searchQuery.getHighlightBuilder();
@@ -1090,7 +1090,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	private <T> SearchRequestBuilder prepareSearch(Query query, Class<T> clazz) {
 		setPersistentEntityIndexAndType(query, clazz);
-        return prepareSearch(query, getPersistentEntity(clazz));
+		return prepareSearch(query, getPersistentEntity(clazz));
 	}
 
 	private SearchRequestBuilder prepareSearch(Query query, @Nullable ElasticsearchPersistentEntity<?> entity) {

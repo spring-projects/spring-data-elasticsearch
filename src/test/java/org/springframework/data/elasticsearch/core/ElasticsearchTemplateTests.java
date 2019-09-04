@@ -1615,8 +1615,7 @@ public class ElasticsearchTemplateTests {
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(boolQuery().must(termQuery("type", "test")).must(termQuery("message", "test")))
-				.withPageable(PageRequest.of(0, 10))
-				.withHighlightBuilder(highlightBuilder).build();
+				.withPageable(PageRequest.of(0, 10)).withHighlightBuilder(highlightBuilder).build();
 
 		SearchResultMapper searchResultMapper = new SearchResultMapper() {
 			@Override
@@ -1653,9 +1652,11 @@ public class ElasticsearchTemplateTests {
 		};
 
 		// when
-		ScrolledPage<SampleEntity> scroll = elasticsearchTemplate.startScroll(scrollTimeInMillis, searchQuery, SampleEntity.class, searchResultMapper);
+		ScrolledPage<SampleEntity> scroll = elasticsearchTemplate.startScroll(scrollTimeInMillis, searchQuery,
+				SampleEntity.class, searchResultMapper);
 		while (scroll.hasContent()) {
-			scroll = elasticsearchTemplate.continueScroll(scroll.getScrollId(), scrollTimeInMillis, SampleEntity.class, searchResultMapper);
+			scroll = elasticsearchTemplate.continueScroll(scroll.getScrollId(), scrollTimeInMillis, SampleEntity.class,
+					searchResultMapper);
 		}
 
 		elasticsearchTemplate.clearScroll(scroll.getScrollId());
