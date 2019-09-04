@@ -37,6 +37,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
  *
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Mark Paluch
  * @since 3.2
  */
 class RawActionResponse extends ActionResponse implements ClientResponse {
@@ -143,6 +144,15 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.web.reactive.function.client.ClientResponse#releaseBody()
+	 */
+	@Override
+	public Mono<Void> releaseBody() {
+		return delegate.releaseBody();
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.web.reactive.function.client.ClientResponse#toEntity(java.lang.Class)
 	 */
 	@Override
@@ -166,6 +176,15 @@ class RawActionResponse extends ActionResponse implements ClientResponse {
 	@Override
 	public <T> Mono<ResponseEntity<List<T>>> toEntityList(Class<T> elementType) {
 		return delegate.toEntityList(elementType);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.web.reactive.function.client.ClientResponse#toBodilessEntity()
+	 */
+	@Override
+	public Mono<ResponseEntity<Void>> toBodilessEntity() {
+		return delegate.toBodilessEntity();
 	}
 
 	/*

@@ -22,6 +22,7 @@
 		<elasticsearch>6.8.1</elasticsearch>
 		<log4j>2.9.1</log4j>
 		<springdata.commons>2.2.0.BUILD-SNAPSHOT</springdata.commons>
+		<netty>4.1.39.Final</netty>
 		<java-module-name>spring.data.elasticsearch</java-module-name>
 	</properties>
 
@@ -71,6 +72,19 @@
 		<system>JIRA</system>
 		<url>https://jira.spring.io/browse/DATAES</url>
 	</issueManagement>
+
+	<dependencyManagement>
+
+		<dependencies>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-bom</artifactId>
+				<version>${netty}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<dependencies>
 
