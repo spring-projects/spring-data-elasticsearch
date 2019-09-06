@@ -19,6 +19,7 @@ import static org.elasticsearch.index.query.Operator.AND;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.core.query.Criteria.*;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,6 +37,7 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Franck Marchand
  * @author Artur Konczak
+ * @author Rasmus Faber-Espensen
  */
 class CriteriaQueryProcessor {
 
@@ -142,8 +144,6 @@ class CriteriaQueryProcessor {
 
 		String searchText = StringUtils.toString(value);
 
-		Iterable<Object> collection = null;
-
 		switch (key) {
 			case EQUALS:
 				query = queryStringQuery(searchText).field(fieldName).defaultOperator(AND);
@@ -180,21 +180,21 @@ class CriteriaQueryProcessor {
 				query = fuzzyQuery(fieldName, searchText);
 				break;
 			case IN:
-				query = boolQuery();
-				collection = (Iterable<Object>) value;
-				for (Object item : collection) {
-					((BoolQueryBuilder) query).should(queryStringQuery(item.toString()).field(fieldName));
-				}
+				query = boolQuery().must(termsQuery(fieldName, toStringList((Iterable<Object>) value)));
 				break;
 			case NOT_IN:
-				query = boolQuery();
-				collection = (Iterable<Object>) value;
-				for (Object item : collection) {
-					((BoolQueryBuilder) query).mustNot(queryStringQuery(item.toString()).field(fieldName));
-				}
+				query = boolQuery().mustNot(termsQuery(fieldName, toStringList((Iterable<Object>) value)));
 				break;
 		}
 		return query;
+	}
+
+	private static List<String> toStringList(Iterable<?> iterable){
+		List<String> list = new ArrayList<>();
+		for (Object item : iterable) {
+			list.add(StringUtils.toString(item));
+		}
+		return list;
 	}
 
 	private void addBoost(QueryBuilder query, float boost) {
