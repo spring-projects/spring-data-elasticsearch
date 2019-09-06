@@ -1,6 +1,15 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.0.RC3 (2019-09-06)
+-----------------------------------------
+* DATAES-646 - Adapt to Spring Framework 5.2 RC2.
+* DATAES-645 - Missing highlight support for scrolling queries.
+* DATAES-643 - RestTemplate ignores search_type.
+* DATAES-627 - Add HTTPS entries into spring.schemas.
+* DATAES-626 - Release 3.2 RC3 (Moore).
+
+
 Changes in version 3.2.0.RC2 (2019-08-05)
 -----------------------------------------
 * DATAES-619 - Migrate remaining tests to AssertJ.
