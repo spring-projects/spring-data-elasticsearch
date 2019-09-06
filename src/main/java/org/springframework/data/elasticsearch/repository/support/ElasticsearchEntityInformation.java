@@ -25,6 +25,7 @@ import org.springframework.data.repository.core.EntityInformation;
  * @author Mohsin Husen
  * @author Christoph Strobl
  * @author Ivan Greene
+ * @author Wang Qinghuan
  */
 public interface ElasticsearchEntityInformation<T, ID> extends EntityInformation<T, ID> {
 
@@ -39,4 +40,7 @@ public interface ElasticsearchEntityInformation<T, ID> extends EntityInformation
 	VersionType getVersionType();
 
 	String getParentId(T entity);
+	
+	String getRouting(T entity);
+	
 }

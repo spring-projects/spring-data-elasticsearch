@@ -28,6 +28,7 @@ import org.springframework.lang.Nullable;
  * @author Sascha Woo
  * @author Oliver Gierke
  * @author Ivan Greene
+ * @author Wang Qinghuan
  */
 public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, ElasticsearchPersistentProperty> {
 
@@ -76,4 +77,6 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	 */
 	@Nullable
 	ElasticsearchPersistentProperty getScoreProperty();
+	
+	ElasticsearchPersistentProperty getRoutingProperty();
 }

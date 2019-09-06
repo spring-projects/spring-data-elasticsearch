@@ -26,6 +26,7 @@ import org.springframework.data.mapping.PersistentProperty;
  * @author Sascha Woo
  * @author Oliver Gierke
  * @author Peter-Josef Meisch
+ * @author Wang Qinghuan
  */
 public interface ElasticsearchPersistentProperty extends PersistentProperty<ElasticsearchPersistentProperty> {
 
@@ -59,6 +60,16 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 * @since 3.1
 	 */
 	boolean isParentProperty();
+	/**
+	 * Returns whether the current property is a <em>potential</em> routing property of the owning
+	 * {@link ElasticsearchPersistentEntity}. This method is mainly used by {@link ElasticsearchPersistentEntity}
+	 * implementation to discover route property candidates on {@link ElasticsearchPersistentEntity} creation you should
+	 * rather call {@link ElasticsearchPersistentEntity#isRoutingProperty()} to determine whether the current property is
+	 * the routing property of that {@link ElasticsearchPersistentEntity} under consideration.
+	 *
+	 * @return
+	 */
+	boolean isRoutingProperty();
 
 	public enum PropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
 

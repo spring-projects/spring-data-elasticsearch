@@ -15,17 +15,18 @@
  */
 package org.springframework.data.elasticsearch.repository.support.simple;
 
-import static org.apache.commons.lang.RandomStringUtils.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.lang.Long;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,7 +45,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -60,6 +63,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Michael Wirth
  * @author Peter-Josef Meisch
  * @author Murali Chevuri
+ * @author Wang Qinghuan
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:/simple-repository-test.xml")
@@ -100,7 +104,33 @@ public class SimpleElasticsearchRepositoryTests {
 		Optional<SampleEntity> entity2FromElasticSearch = repository.findById(documentId2);
 		assertThat(entity2FromElasticSearch.isPresent()).isTrue();
 	}
+	@Test
+	public void shouldDoBulkIndexDocumentWithRouting() {
 
+		// given
+		String documentId1 = randomNumeric(5);
+		String routing = "1";
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(documentId1);
+		sampleEntity1.setMessage("some message");
+		sampleEntity1.setVersion(System.currentTimeMillis());
+		sampleEntity1.setRouting(routing);
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setMessage("some message");
+		sampleEntity2.setVersion(System.currentTimeMillis());
+		sampleEntity2.setRouting(routing);
+
+		// when
+		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2));
+
+		// then
+		// query on field _routing
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termsQuery("_routing", routing)).build();
+		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
+		assertThat(sampleEntities.getTotalElements()).isEqualTo(2);
+	}
 	@Test
 	public void shouldSaveDocument() {
 
@@ -670,6 +700,7 @@ public class SimpleElasticsearchRepositoryTests {
 		private int rate;
 		private boolean available;
 		@Version private Long version;
+		@Routing private String routing;
 	}
 
 	/**

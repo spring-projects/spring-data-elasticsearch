@@ -34,6 +34,7 @@ import org.springframework.data.repository.core.support.PersistentEntityInformat
  * @author Christoph Strobl
  * @author Ivan Greene
  * @author Sylvain Laurent
+ * @author Wang Qinghuan
  */
 public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEntityInformation<T, ID>
 		implements ElasticsearchEntityInformation<T, ID> {
@@ -98,6 +99,17 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 					: null;
 		} catch (Exception e) {
 			throw new IllegalStateException("failed to load parent ID: " + e, e);
+		}
+	}
+
+	@Override
+	public String getRouting(T entity) {
+		ElasticsearchPersistentProperty routingProperty = entityMetadata.getRoutingProperty();
+		try {
+			return routingProperty != null ? (String) entityMetadata.getPropertyAccessor(entity).getProperty(routingProperty)
+					: null;
+		} catch (Exception e) {
+			throw new IllegalStateException("failed to load routing: " + e, e);
 		}
 	}
 }

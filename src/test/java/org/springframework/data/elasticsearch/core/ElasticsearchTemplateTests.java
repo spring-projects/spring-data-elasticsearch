@@ -15,11 +15,19 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.apache.commons.lang.RandomStringUtils.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
+import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.idsQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
+import static org.elasticsearch.index.query.QueryBuilders.typeQuery;
+import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.buildIndex;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,10 +36,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.IOException;
-import java.lang.Double;
-import java.lang.Integer;
-import java.lang.Long;
-import java.lang.Object;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -77,13 +81,30 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.ScriptField;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.core.query.SourceFilter;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQueryBuilder;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -110,6 +131,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Martin Choraine
  * @author Farid Azaza
  * @author Gyula Attila Csorogi
+ * @author Wang Qinghuan
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -432,6 +454,41 @@ public class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(2);
+	}
+	@Test
+	public void shouldDoBulkIndexWithRouting() {
+		// given
+		List<IndexQuery> indexQueries = new ArrayList<>();
+
+		// first document
+		String documentId = "1";
+		String routing = "1";
+		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("some message")
+				.version(System.currentTimeMillis()).routing(routing).build();
+
+		// second document
+		String documentId2 = "2";
+		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("some message")
+				.version(System.currentTimeMillis()).routing(routing).build();
+
+		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2));
+
+		// when
+		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		// then
+		//query on the field _routing
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termsQuery("_routing","1")).build();
+		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+		assertThat(sampleEntities.getTotalElements()).isEqualTo(2);
+		
+		searchQuery = new NativeSearchQueryBuilder().withQuery(termsQuery("_routing","2")).build();
+		sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+		assertThat(sampleEntities.getTotalElements()).isEqualTo(0);
+		
+		
+		
 	}
 
 	@Test
@@ -2931,7 +2988,7 @@ public class ElasticsearchTemplateTests {
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
 		return new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity)
-				.withVersion(sampleEntity.getVersion()).build();
+				.withVersion(sampleEntity.getVersion()).withRouting(sampleEntity.getRouting()).build();
 	}
 
 	private List<IndexQuery> getIndexQueries(List<SampleEntity> sampleEntities) {
@@ -2975,6 +3032,7 @@ public class ElasticsearchTemplateTests {
 		private GeoPoint location;
 		@Version private Long version;
 		@Score private float score;
+		@Routing private String routing;
 	}
 
 	/**

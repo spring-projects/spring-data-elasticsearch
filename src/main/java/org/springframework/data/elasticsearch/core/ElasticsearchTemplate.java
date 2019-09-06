@@ -123,6 +123,7 @@ import org.springframework.util.StringUtils;
  * @author Martin Choraine
  * @author Farid Azaza
  * @author Gyula Attila Csorogi
+ * @author Wang Qinghuan
  */
 public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
@@ -1204,7 +1205,9 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 			if (query.getParentId() != null) {
 				indexRequestBuilder.setParent(query.getParentId());
 			}
-
+			if (query.getRouting() != null) {
+				indexRequestBuilder.setRouting(query.getRouting());
+			}
 			return indexRequestBuilder;
 		} catch (IOException e) {
 			throw new ElasticsearchException("failed to index the document [id: " + query.getId() + "]", e);

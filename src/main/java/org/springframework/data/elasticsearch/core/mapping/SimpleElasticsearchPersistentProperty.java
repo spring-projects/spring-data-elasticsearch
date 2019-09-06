@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Parent;
+import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
@@ -39,6 +40,7 @@ import org.springframework.util.StringUtils;
  * @author Sascha Woo
  * @author Oliver Gierke
  * @author Peter-Josef Meisch
+ * @author Wang Qinghuan
  */
 public class SimpleElasticsearchPersistentProperty extends
 		AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements ElasticsearchPersistentProperty {
@@ -47,6 +49,7 @@ public class SimpleElasticsearchPersistentProperty extends
 
 	private final boolean isScore;
 	private final boolean isParent;
+	private final boolean isRouting;
 	private final boolean isId;
 	private final @Nullable String annotatedFieldName;
 
@@ -59,7 +62,8 @@ public class SimpleElasticsearchPersistentProperty extends
 		this.isId = super.isIdProperty() || SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName());
 		this.isScore = isAnnotationPresent(Score.class);
 		this.isParent = isAnnotationPresent(Parent.class);
-
+		this.isRouting = isAnnotationPresent(Routing.class);
+        
 		if (isVersionProperty() && !getType().equals(Long.class)) {
 			throw new MappingException(String.format("Version property %s must be of type Long!", property.getName()));
 		}
@@ -138,5 +142,11 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Override
 	public boolean isParentProperty() {
 		return isParent;
+	}
+
+	@Override
+	public boolean isRoutingProperty() {
+		// TODO Auto-generated method stub
+		return isRouting;
 	}
 }

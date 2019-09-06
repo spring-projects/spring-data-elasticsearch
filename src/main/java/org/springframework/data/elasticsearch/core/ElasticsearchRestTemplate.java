@@ -130,7 +130,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Sascha Woo
  * @author Ted Liang
  * @author Don Wellington
- * @author Zetang Zeng
+ * @author Zetang Zengr
  * @author Peter Nowak
  * @author Ivan Greene
  * @author Christoph Strobl
@@ -142,6 +142,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Peter-Josef Meisch
  * @author Mathias Teier
  * @author Gyula Attila Csorogi
+ * @author Wang Qinghuan
  */
 public class ElasticsearchRestTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -1410,7 +1411,9 @@ public class ElasticsearchRestTemplate
 			if (query.getParentId() != null) {
 				indexRequest.parent(query.getParentId());
 			}
-
+			if (query.getRouting() != null) {
+				indexRequest.routing(query.getRouting());
+			}
 			return indexRequest;
 		} catch (IOException e) {
 			throw new ElasticsearchException("failed to index the document [id: " + query.getId() + "]", e);

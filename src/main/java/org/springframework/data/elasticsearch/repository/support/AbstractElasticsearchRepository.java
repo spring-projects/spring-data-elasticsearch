@@ -57,6 +57,7 @@ import org.springframework.util.Assert;
  * @author Michael Wirth
  * @author Sascha Woo
  * @author Murali Chevuri
+ * @author Wang Qinghuan
  */
 public abstract class AbstractElasticsearchRepository<T, ID> implements ElasticsearchRepository<T, ID> {
 
@@ -325,6 +326,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		query.setId(stringIdRepresentation(extractIdFromBean(entity)));
 		query.setVersion(extractVersionFromBean(entity));
 		query.setParentId(extractParentIdFromBean(entity));
+		query.setRouting(extractRoutingFromBean(entity));
 		return query;
 	}
 
@@ -405,5 +407,9 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	private String extractParentIdFromBean(T entity) {
 		return entityInformation.getParentId(entity);
+	}
+	
+	private String extractRoutingFromBean(T entity) {
+		return entityInformation.getRouting(entity);
 	}
 }

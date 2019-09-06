@@ -48,6 +48,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Sascha Woo
  * @author Ivan Greene
+ * @author Wang Qinghuan
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
@@ -65,10 +66,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private @Nullable String parentType;
 	private @Nullable ElasticsearchPersistentProperty parentIdProperty;
 	private @Nullable ElasticsearchPersistentProperty scoreProperty;
+	private @Nullable ElasticsearchPersistentProperty routingProperty;
 	private @Nullable String settingPath;
 	private VersionType versionType;
 	private boolean createIndexAndMapping;
-
+	
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 
 		super(typeInformation);
@@ -184,7 +186,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	public ElasticsearchPersistentProperty getScoreProperty() {
 		return scoreProperty;
 	}
-
+	@Override
+	public ElasticsearchPersistentProperty getRoutingProperty() {
+		return routingProperty;
+	}
 	@Override
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
 		super.addPersistentProperty(property);
@@ -217,6 +222,20 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 			this.scoreProperty = property;
 		}
+		if (property.isRoutingProperty()) {
+
+			ElasticsearchPersistentProperty routingProperty = this.routingProperty;
+
+			if (routingProperty != null) {
+				throw new MappingException(String.format(
+						"Attempt to add routing property %s but already have property %s registered "
+								+ "as routing property. Check your mapping configuration!",
+						property.getField(), routingProperty.getField()));
+			}
+
+			this.routingProperty = property;
+		}
+		
 	}
 
 	/*
@@ -230,4 +249,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		// DATACMNS-1322 switches to proper immutability behavior which Spring Data Elasticsearch
 		// cannot yet implement
 	}
+
+	
 }

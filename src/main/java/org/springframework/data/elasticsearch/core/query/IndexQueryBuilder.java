@@ -20,6 +20,7 @@ package org.springframework.data.elasticsearch.core.query;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Wang Qinghuan
  */
 public class IndexQueryBuilder {
 
@@ -30,6 +31,7 @@ public class IndexQueryBuilder {
 	private String type;
 	private String source;
 	private String parentId;
+	private String routing;
 
 	public IndexQueryBuilder withId(String id) {
 		this.id = id;
@@ -65,6 +67,11 @@ public class IndexQueryBuilder {
 		this.parentId = parentId;
 		return this;
 	}
+	
+	public IndexQueryBuilder withRouting(String routing) {
+		this.routing = routing;
+		return this;
+	}
 
 	public IndexQuery build() {
 		IndexQuery indexQuery = new IndexQuery();
@@ -75,6 +82,7 @@ public class IndexQueryBuilder {
 		indexQuery.setParentId(parentId);
 		indexQuery.setSource(source);
 		indexQuery.setVersion(version);
+		indexQuery.setRouting(routing);
 		return indexQuery;
 	}
 }
