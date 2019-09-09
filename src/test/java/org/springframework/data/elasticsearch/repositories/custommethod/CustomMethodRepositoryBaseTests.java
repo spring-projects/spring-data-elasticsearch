@@ -358,7 +358,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		List<SampleEntity> list = repository.findByKeywordIn(keywords);
 
 		// then
-		assertThat(list.size()).isEqualTo(1L);
+        assertThat(list).hasSize(1);
 		assertThat(list.get(0).getId()).isEqualTo(documentId1);
 	}
 
@@ -389,7 +389,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		List<SampleEntity> list = repository.findByKeywordNotIn(keywords);
 
 		// then
-		assertThat(list.size()).isEqualTo(1L);
+		assertThat(list).hasSize(1);
 		assertThat(list.get(0).getId()).isEqualTo(documentId2);
 	}
 
