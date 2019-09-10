@@ -30,7 +30,7 @@ import org.springframework.util.Assert;
 
 /**
  * RestClientFactoryBean
- * 
+ *
  * @author Don Wellington
  */
 @Slf4j

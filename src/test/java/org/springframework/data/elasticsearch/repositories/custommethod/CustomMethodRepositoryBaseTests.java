@@ -331,6 +331,68 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat(page.getContent().get(0).getId()).isEqualTo(documentId2);
 	}
 
+	@Test // DATAES-647
+	public void shouldHandleManyValuesQueryingIn() {
+
+		// given
+		String documentId1 = randomNumeric(32);
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(documentId1);
+		sampleEntity1.setKeyword("foo");
+		repository.save(sampleEntity1);
+
+		String documentId2 = randomNumeric(32);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setKeyword("bar");
+		repository.save(sampleEntity2);
+
+		List<String> keywords = new ArrayList<>();
+		keywords.add("foo");
+
+		for (int i = 0; i < 1025; i++) {
+			keywords.add(randomNumeric(32));
+		}
+
+		// when
+		List<SampleEntity> list = repository.findByKeywordIn(keywords);
+
+		// then
+        assertThat(list).hasSize(1);
+		assertThat(list.get(0).getId()).isEqualTo(documentId1);
+	}
+
+	@Test // DATAES-647
+	public void shouldHandleManyValuesQueryingNotIn() {
+
+		// given
+		String documentId1 = randomNumeric(32);
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(documentId1);
+		sampleEntity1.setKeyword("foo");
+		repository.save(sampleEntity1);
+
+		String documentId2 = randomNumeric(32);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setKeyword("bar");
+		repository.save(sampleEntity2);
+
+		List<String> keywords = new ArrayList<>();
+		keywords.add("foo");
+
+		for (int i = 0; i < 1025; i++) {
+			keywords.add(randomNumeric(32));
+		}
+
+		// when
+		List<SampleEntity> list = repository.findByKeywordNotIn(keywords);
+
+		// then
+		assertThat(list).hasSize(1);
+		assertThat(list.get(0).getId()).isEqualTo(documentId2);
+	}
+
 	@Test
 	public void shouldExecuteCustomMethodForTrue() {
 
@@ -1296,6 +1358,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		@Id private String id;
 		@Field(type = Text, store = true, fielddata = true) private String type;
 		@Field(type = Text, store = true, fielddata = true) private String message;
+		@Field(type = Keyword) private String keyword;
 		private int rate;
 		private boolean available;
 		private GeoPoint location;
@@ -1336,6 +1399,10 @@ public abstract class CustomMethodRepositoryBaseTests {
 		Page<SampleEntity> findByMessageContaining(String message, Pageable pageable);
 
 		Page<SampleEntity> findByIdIn(List<String> ids, Pageable pageable);
+
+		List<SampleEntity> findByKeywordIn(List<String> keywords);
+
+		List<SampleEntity> findByKeywordNotIn(List<String> keywords);
 
 		Page<SampleEntity> findByIdNotIn(List<String> ids, Pageable pageable);
 

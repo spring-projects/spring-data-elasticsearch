@@ -16,11 +16,13 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
-import java.util.Map;
+
+import org.springframework.data.elasticsearch.Document;
 
 /**
  * @author Artur Konczak
  * @author Mohsin Husen
+ * @author Mark Paluch
  */
 public class CustomEntityMapper implements EntityMapper {
 
@@ -41,12 +43,12 @@ public class CustomEntityMapper implements EntityMapper {
 	}
 
 	@Override
-	public Map<String, Object> mapObject(Object source) {
+	public Document mapObject(Object source) {
 		return null;
 	}
 
 	@Override
-	public <T> T readObject(Map<String, Object> source, Class<T> targetType) {
+	public <T> T readObject(Document source, Class<T> targetType) {
 		return null;
 	}
 }

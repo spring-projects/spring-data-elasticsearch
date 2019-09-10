@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
+package org.springframework.data.elasticsearch.core.indexmapping;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.*;
+import static org.springframework.data.elasticsearch.core.indexmapping.MappingParameters.*;
 import static org.springframework.util.StringUtils.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -27,12 +29,10 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.CompletionContext;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
-import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -40,6 +40,8 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -67,20 +69,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Robert Gruendler
  * @author Petr Kukral
  * @author Peter-Josef Meisch
+ * @author Xiao Yu
  */
-class MappingBuilder {
+public class MappingBuilder {
 
-	private static final String FIELD_DATA = "fielddata";
-	private static final String FIELD_STORE = "store";
-	private static final String FIELD_TYPE = "type";
 	private static final String FIELD_INDEX = "index";
-	private static final String FIELD_FORMAT = "format";
-	private static final String FIELD_SEARCH_ANALYZER = "search_analyzer";
-	private static final String FIELD_INDEX_ANALYZER = "analyzer";
-	private static final String FIELD_NORMALIZER = "normalizer";
 	private static final String FIELD_PROPERTIES = "properties";
 	private static final String FIELD_PARENT = "_parent";
-	private static final String FIELD_COPY_TO = "copy_to";
 	private static final String FIELD_CONTEXT_NAME = "name";
 	private static final String FIELD_CONTEXT_TYPE = "type";
 	private static final String FIELD_CONTEXT_PRECISION = "precision";
@@ -99,7 +94,7 @@ class MappingBuilder {
 
 	private final ElasticsearchConverter elasticsearchConverter;
 
-	MappingBuilder(ElasticsearchConverter elasticsearchConverter) {
+	public MappingBuilder(ElasticsearchConverter elasticsearchConverter) {
 		this.elasticsearchConverter = elasticsearchConverter;
 	}
 
@@ -109,7 +104,7 @@ class MappingBuilder {
 	 * @return JSON string
 	 * @throws IOException
 	 */
-	String buildPropertyMapping(Class<?> clazz) throws IOException {
+	public String buildPropertyMapping(Class<?> clazz) throws IOException {
 
 		ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext()
 				.getRequiredPersistentEntity(clazz);
@@ -122,7 +117,7 @@ class MappingBuilder {
 		// Parent
 		String parentType = entity.getParentType();
 		if (hasText(parentType)) {
-			builder.startObject(FIELD_PARENT).field(FIELD_TYPE, parentType).endObject();
+			builder.startObject(FIELD_PARENT).field(FIELD_PARAM_TYPE, parentType).endObject();
 		}
 
 		// Properties
@@ -147,7 +142,7 @@ class MappingBuilder {
 
 			String type = nestedOrObjectField ? fieldType.toString().toLowerCase()
 					: FieldType.Object.toString().toLowerCase();
-			builder.startObject(nestedObjectFieldName).field(FIELD_TYPE, type);
+			builder.startObject(nestedObjectFieldName).field(FIELD_PARAM_TYPE, type);
 
 			if (nestedOrObjectField && FieldType.Nested == fieldType && parentFieldAnnotation != null
 					&& parentFieldAnnotation.includeInParent()) {
@@ -248,14 +243,14 @@ class MappingBuilder {
 	private void applyGeoPointFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property)
 			throws IOException {
 
-		builder.startObject(property.getFieldName()).field(FIELD_TYPE, TYPE_VALUE_GEO_POINT).endObject();
+		builder.startObject(property.getFieldName()).field(FIELD_PARAM_TYPE, TYPE_VALUE_GEO_POINT).endObject();
 	}
 
 	private void applyCompletionFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property,
 			@Nullable CompletionField annotation) throws IOException {
 
 		builder.startObject(property.getFieldName());
-		builder.field(FIELD_TYPE, TYPE_VALUE_COMPLETION);
+		builder.field(FIELD_PARAM_TYPE, TYPE_VALUE_COMPLETION);
 
 		if (annotation != null) {
 
@@ -263,10 +258,10 @@ class MappingBuilder {
 			builder.field(COMPLETION_PRESERVE_POSITION_INCREMENTS, annotation.preservePositionIncrements());
 			builder.field(COMPLETION_PRESERVE_SEPARATORS, annotation.preserveSeparators());
 			if (!StringUtils.isEmpty(annotation.searchAnalyzer())) {
-				builder.field(FIELD_SEARCH_ANALYZER, annotation.searchAnalyzer());
+				builder.field(FIELD_PARAM_SEARCH_ANALYZER, annotation.searchAnalyzer());
 			}
 			if (!StringUtils.isEmpty(annotation.analyzer())) {
-				builder.field(FIELD_INDEX_ANALYZER, annotation.analyzer());
+				builder.field(FIELD_PARAM_INDEX_ANALYZER, annotation.analyzer());
 			}
 
 			if (annotation.contexts().length > 0) {
@@ -292,7 +287,7 @@ class MappingBuilder {
 	private void applyDefaultIdFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property)
 			throws IOException {
 
-		builder.startObject(property.getFieldName()).field(FIELD_TYPE, TYPE_VALUE_KEYWORD).field(FIELD_INDEX, true)
+		builder.startObject(property.getFieldName()).field(FIELD_PARAM_TYPE, TYPE_VALUE_KEYWORD).field(FIELD_INDEX, true)
 				.endObject();
 	}
 
@@ -333,77 +328,15 @@ class MappingBuilder {
 		builder.endObject();
 	}
 
-	private void addFieldMappingParameters(XContentBuilder builder, Object annotation, boolean nestedOrObjectField)
+	private void addFieldMappingParameters(XContentBuilder builder, Annotation annotation, boolean nestedOrObjectField)
 			throws IOException {
 
-		boolean index = true;
-		boolean store = false;
-		boolean fielddata = false;
-		FieldType type = null;
-		DateFormat dateFormat = null;
-		String datePattern = null;
-		String analyzer = null;
-		String searchAnalyzer = null;
-		String normalizer = null;
-		String[] copyTo = null;
+		MappingParameters mappingParameters = MappingParameters.from(annotation);
 
-		if (annotation instanceof Field) {
-			// @Field
-			Field fieldAnnotation = (Field) annotation;
-			index = fieldAnnotation.index();
-			store = fieldAnnotation.store();
-			fielddata = fieldAnnotation.fielddata();
-			type = fieldAnnotation.type();
-			dateFormat = fieldAnnotation.format();
-			datePattern = fieldAnnotation.pattern();
-			analyzer = fieldAnnotation.analyzer();
-			searchAnalyzer = fieldAnnotation.searchAnalyzer();
-			normalizer = fieldAnnotation.normalizer();
-			copyTo = fieldAnnotation.copyTo();
-		} else if (annotation instanceof InnerField) {
-			// @InnerField
-			InnerField fieldAnnotation = (InnerField) annotation;
-			index = fieldAnnotation.index();
-			store = fieldAnnotation.store();
-			fielddata = fieldAnnotation.fielddata();
-			type = fieldAnnotation.type();
-			dateFormat = fieldAnnotation.format();
-			datePattern = fieldAnnotation.pattern();
-			analyzer = fieldAnnotation.analyzer();
-			searchAnalyzer = fieldAnnotation.searchAnalyzer();
-			normalizer = fieldAnnotation.normalizer();
-		} else {
-			throw new IllegalArgumentException("annotation must be an instance of @Field or @InnerField");
+		if (!nestedOrObjectField && mappingParameters.isStore()) {
+			builder.field(FIELD_PARAM_STORE, mappingParameters.isStore());
 		}
-
-		if (!nestedOrObjectField) {
-			builder.field(FIELD_STORE, store);
-		}
-		if (fielddata) {
-			builder.field(FIELD_DATA, fielddata);
-		}
-		if (type != FieldType.Auto) {
-			builder.field(FIELD_TYPE, type.name().toLowerCase());
-
-			if (type == FieldType.Date && dateFormat != DateFormat.none) {
-				builder.field(FIELD_FORMAT, dateFormat == DateFormat.custom ? datePattern : dateFormat.toString());
-			}
-		}
-		if (!index) {
-			builder.field(FIELD_INDEX, index);
-		}
-		if (!StringUtils.isEmpty(analyzer)) {
-			builder.field(FIELD_INDEX_ANALYZER, analyzer);
-		}
-		if (!StringUtils.isEmpty(searchAnalyzer)) {
-			builder.field(FIELD_SEARCH_ANALYZER, searchAnalyzer);
-		}
-		if (!StringUtils.isEmpty(normalizer)) {
-			builder.field(FIELD_NORMALIZER, normalizer);
-		}
-		if (copyTo != null && copyTo.length > 0) {
-			builder.field(FIELD_COPY_TO, copyTo);
-		}
+		mappingParameters.writeTypeAndParametersTo(builder);
 	}
 
 	/**

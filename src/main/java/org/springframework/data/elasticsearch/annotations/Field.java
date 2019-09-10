@@ -15,14 +15,14 @@
  */
 package org.springframework.data.elasticsearch.annotations;
 
-import org.springframework.core.annotation.AliasFor;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.springframework.core.annotation.AliasFor;
 
 /**
  * @author Rizwan Idrees
@@ -32,6 +32,7 @@ import java.lang.annotation.Target;
  * @author Jakub Vavrik
  * @author Kevin Leturc
  * @author Peter-Josef Meisch
+ * @author Xiao Yu
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -41,6 +42,7 @@ public @interface Field {
 
 	/**
 	 * Alias for {@link #name}.
+	 *
 	 * @since 3.2
 	 */
 	@AliasFor("name")
@@ -48,7 +50,9 @@ public @interface Field {
 
 	/**
 	 * The <em>name</em> to be used to store the field inside the document.
-	 * <p>If not set, the name of the annotated property is used.
+	 * <p>
+	 * √5 If not set, the name of the annotated property is used.
+	 *
 	 * @since 3.2
 	 */
 	@AliasFor("value")
@@ -77,4 +81,71 @@ public @interface Field {
 	boolean includeInParent() default false;
 
 	String[] copyTo() default {};
+
+	/**
+	 * @since 4.0
+	 */
+	int ignoreAbove() default -1;
+
+	/**
+	 * @since 4.0
+	 */
+	boolean coerce() default true;
+
+	/**
+	 * @since 4.0
+	 */
+	boolean docValues() default true;
+
+	/**
+	 * @since 4.0
+	 */
+	boolean ignoreMalformed() default false;
+
+	/**
+	 * @since 4.0
+	 */
+	IndexOptions indexOptions() default IndexOptions.none;
+
+	/**
+	 * @since 4.0
+	 */
+	boolean indexPhrases() default false;
+
+	/**
+	 * implemented as array to enable the empty default value
+	 *
+	 * @since 4.0
+	 */
+	IndexPrefixes[] indexPrefixes() default {};
+
+	/**
+	 * @since 4.0
+	 */
+	boolean norms() default true;
+
+	/**
+	 * @since 4.0
+	 */
+	String nullValue() default "";
+
+	/**
+	 * @since 4.0
+	 */
+	int positionIncrementGap() default -1;
+
+	/**
+	 * @since 4.0
+	 */
+	Similarity similarity() default Similarity.Default;
+
+	/**
+	 * @since 4.0
+	 */
+	TermVector termVector() default TermVector.none;
+
+	/**
+	 * @since 4.0
+	 */
+	double scalingFactor() default 1;
 }

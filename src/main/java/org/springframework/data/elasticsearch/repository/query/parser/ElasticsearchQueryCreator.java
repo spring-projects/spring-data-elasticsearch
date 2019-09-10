@@ -88,7 +88,6 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 	protected CriteriaQuery complete(@Nullable CriteriaQuery query, Sort sort) {
 
 		if (query == null) {
-
 			// this is the case in a findAllByOrderByField method, add empty criteria
 			query = new CriteriaQuery(new Criteria());
 		}

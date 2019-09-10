@@ -30,13 +30,16 @@ import java.lang.Object;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -51,7 +54,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -113,7 +115,7 @@ public class DefaultResultMapperTests {
 		// given
 		SearchHit[] hits = { createCarHit("Ford", "Grat"), createCarHit("BMW", "Arrow") };
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.getTotalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(new TotalHits(2L, TotalHits.Relation.EQUAL_TO));
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
@@ -135,7 +137,7 @@ public class DefaultResultMapperTests {
 		// given
 		SearchHit[] hits = { createCarHit("Ford", "Grat"), createCarHit("BMW", "Arrow") };
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.getTotalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(new TotalHits(2L, TotalHits.Relation.EQUAL_TO));
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
@@ -154,7 +156,7 @@ public class DefaultResultMapperTests {
 		// given
 		SearchHit[] hits = { createCarPartialHit("Ford", "Grat"), createCarPartialHit("BMW", "Arrow") };
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.getTotalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(new TotalHits(2L, TotalHits.Relation.EQUAL_TO));
 		when(searchHits.iterator()).thenReturn(new ArrayIterator(hits));
 		when(response.getHits()).thenReturn(searchHits);
 
@@ -172,7 +174,14 @@ public class DefaultResultMapperTests {
 
 		// given
 		GetResponse response = mock(GetResponse.class);
-		when(response.getSourceAsString()).thenReturn(createJsonCar("Ford", "Grat"));
+		when(response.isExists()).thenReturn(true);
+
+		Map<String, Object> sourceAsMap = new HashMap<>();
+		sourceAsMap.put("name", "Ford");
+		sourceAsMap.put("model", "Grat");
+
+		when(response.getSourceAsMap()).thenReturn(sourceAsMap);
+		when(response.getSourceAsBytesRef()).thenReturn(new BytesArray(" "));
 
 		// when
 		Car result = resultMapper.mapResult(response, Car.class);
@@ -188,7 +197,9 @@ public class DefaultResultMapperTests {
 	public void setsIdentifierOnImmutableType() {
 
 		GetResponse response = mock(GetResponse.class);
+		when(response.isExists()).thenReturn(true);
 		when(response.getSourceAsString()).thenReturn("{}");
+		when(response.getSourceAsBytesRef()).thenReturn(new BytesArray("{}"));
 		when(response.getId()).thenReturn("identifier");
 
 		ImmutableEntity result = resultMapper.mapResult(response, ImmutableEntity.class);
@@ -201,6 +212,7 @@ public class DefaultResultMapperTests {
 	public void setsVersionFromGetResponse() {
 
 		GetResponse response = mock(GetResponse.class);
+		when(response.isExists()).thenReturn(true);
 		when(response.getSourceAsString()).thenReturn("{}");
 		when(response.getVersion()).thenReturn(1234L);
 
@@ -214,12 +226,16 @@ public class DefaultResultMapperTests {
 	public void setsVersionFromMultiGetResponse() {
 
 		GetResponse response1 = mock(GetResponse.class);
+		when(response1.isExists()).thenReturn(true);
 		when(response1.getSourceAsString()).thenReturn("{}");
+		when(response1.getSourceAsBytesRef()).thenReturn(new BytesArray("{}"));
 		when(response1.isExists()).thenReturn(true);
 		when(response1.getVersion()).thenReturn(1234L);
 
 		GetResponse response2 = mock(GetResponse.class);
+		when(response2.isExists()).thenReturn(true);
 		when(response2.getSourceAsString()).thenReturn("{}");
+		when(response2.getSourceAsBytesRef()).thenReturn(new BytesArray("{}"));
 		when(response2.isExists()).thenReturn(true);
 		when(response2.getVersion()).thenReturn(5678L);
 
@@ -239,15 +255,15 @@ public class DefaultResultMapperTests {
 	public void setsVersionFromSearchResponse() {
 
 		SearchHit hit1 = mock(SearchHit.class);
-		when(hit1.getSourceAsString()).thenReturn("{}");
+		when(hit1.getSourceRef()).thenReturn(new BytesArray("{}"));
 		when(hit1.getVersion()).thenReturn(1234L);
 
 		SearchHit hit2 = mock(SearchHit.class);
-		when(hit2.getSourceAsString()).thenReturn("{}");
+		when(hit2.getSourceRef()).thenReturn(new BytesArray("{}"));
 		when(hit2.getVersion()).thenReturn(5678L);
 
 		SearchHits searchHits = mock(SearchHits.class);
-		when(searchHits.getTotalHits()).thenReturn(2L);
+		when(searchHits.getTotalHits()).thenReturn(new TotalHits(2L, TotalHits.Relation.EQUAL_TO));
 		when(searchHits.iterator()).thenReturn(Arrays.asList(hit1, hit2).iterator());
 
 		SearchResponse searchResponse = mock(SearchResponse.class);
@@ -272,7 +288,13 @@ public class DefaultResultMapperTests {
 	private SearchHit createCarHit(String name, String model) {
 
 		SearchHit hit = mock(SearchHit.class);
-		when(hit.getSourceAsString()).thenReturn(createJsonCar(name, model));
+		String json = createJsonCar(name, model);
+		when(hit.getSourceAsString()).thenReturn(json);
+		when(hit.getSourceRef()).thenReturn(new BytesArray(json));
+		Map<String, Object> map = new LinkedHashMap<>();
+		map.put("name", name);
+		map.put("model", model);
+		when(hit.getSourceAsMap()).thenReturn(map);
 		return hit;
 	}
 
@@ -281,6 +303,7 @@ public class DefaultResultMapperTests {
 		SearchHit hit = mock(SearchHit.class);
 		when(hit.getSourceAsString()).thenReturn(null);
 		when(hit.getFields()).thenReturn(createCarFields(name, model));
+		when(hit.iterator()).thenReturn(createCarFields(name, model).values().iterator());
 		return hit;
 	}
 

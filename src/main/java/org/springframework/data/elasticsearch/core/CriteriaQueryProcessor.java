@@ -15,17 +15,19 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.elasticsearch.index.query.Operator.AND;
+import static org.elasticsearch.index.query.Operator.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.core.query.Criteria.*;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
 import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
-import org.elasticsearch.index.query.*;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.util.Assert;
 
@@ -36,9 +38,9 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Franck Marchand
  * @author Artur Konczak
+ * @author Rasmus Faber-Espensen
  */
 class CriteriaQueryProcessor {
-
 
 	QueryBuilder createQueryFromCriteria(Criteria criteria) {
 		if (criteria == null)
@@ -104,7 +106,6 @@ class CriteriaQueryProcessor {
 		return query;
 	}
 
-
 	private QueryBuilder createQueryFragmentForCriteria(Criteria chainedCriteria) {
 		if (chainedCriteria.getQueryCriteriaEntries().isEmpty())
 			return null;
@@ -131,8 +132,8 @@ class CriteriaQueryProcessor {
 		return query;
 	}
 
-
-	private QueryBuilder processCriteriaEntry(Criteria.CriteriaEntry entry,/* OperationKey key, Object value,*/ String fieldName) {
+	private QueryBuilder processCriteriaEntry(Criteria.CriteriaEntry entry,
+			/* OperationKey key, Object value,*/ String fieldName) {
 		Object value = entry.getValue();
 		if (value == null) {
 			return null;
@@ -141,8 +142,6 @@ class CriteriaQueryProcessor {
 		QueryBuilder query = null;
 
 		String searchText = StringUtils.toString(value);
-
-		Iterable<Object> collection = null;
 
 		switch (key) {
 			case EQUALS:
@@ -180,21 +179,21 @@ class CriteriaQueryProcessor {
 				query = fuzzyQuery(fieldName, searchText);
 				break;
 			case IN:
-				query = boolQuery();
-				collection = (Iterable<Object>) value;
-				for (Object item : collection) {
-					((BoolQueryBuilder) query).should(queryStringQuery(item.toString()).field(fieldName));
-				}
+				query = boolQuery().must(termsQuery(fieldName, toStringList((Iterable<Object>) value)));
 				break;
 			case NOT_IN:
-				query = boolQuery();
-				collection = (Iterable<Object>) value;
-				for (Object item : collection) {
-					((BoolQueryBuilder) query).mustNot(queryStringQuery(item.toString()).field(fieldName));
-				}
+				query = boolQuery().mustNot(termsQuery(fieldName, toStringList((Iterable<Object>) value)));
 				break;
 		}
 		return query;
+	}
+
+	private static List<String> toStringList(Iterable<?> iterable) {
+		List<String> list = new ArrayList<>();
+		for (Object item : iterable) {
+			list.add(StringUtils.toString(item));
+		}
+		return list;
 	}
 
 	private void addBoost(QueryBuilder query, float boost) {

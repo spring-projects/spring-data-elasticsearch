@@ -170,14 +170,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				}
 			}
 
-			if (entity.hasParent()) {
-
-				Object parentId = entity.getParentId();
-				if (parentId != null) {
-					request.parent(converter.convertId(parentId));
-				}
-			}
-
 			request = prepareIndexRequest(value, request);
 			return doIndex(request);
 		});
@@ -302,7 +294,12 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 				request.source(searchSourceBuilder);
 				return doFind(prepareSearchRequest(request));
+			} else if (query.isLimiting()) {
+				searchSourceBuilder.from(0);
+				searchSourceBuilder.size(query.getMaxResults());
 
+				request.source(searchSourceBuilder);
+				return doFind(prepareSearchRequest(request));
 			} else {
 
 				request.source(searchSourceBuilder);
@@ -665,9 +662,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			elasticsearchQuery = new WrapperQueryBuilder(((StringQuery) query).getSource());
 		} else if (query instanceof NativeSearchQuery) {
 			elasticsearchQuery = ((NativeSearchQuery) query).getQuery();
-		}
-
-		else {
+		} else {
 			throw new IllegalArgumentException(String.format("Unknown query type '%s'.", query.getClass()));
 		}
 

@@ -88,10 +88,12 @@ import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
+import org.springframework.data.elasticsearch.core.indexmapping.MappingBuilder;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.support.SearchHitsUtil;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -125,6 +127,7 @@ import org.springframework.util.StringUtils;
  * @author Gyula Attila Csorogi
  * @author Wang Qinghuan
  */
+@Deprecated
 public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
 	private static final Logger QUERY_LOGGER = LoggerFactory
@@ -305,16 +308,19 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	@Override
 	public <T> T queryForObject(CriteriaQuery query, Class<T> clazz) {
-		Page<T> page = queryForPage(query, clazz);
-		Assert.isTrue(page.getTotalElements() < 2, "Expected 1 but found " + page.getTotalElements() + " results");
-		return page.getTotalElements() > 0 ? page.getContent().get(0) : null;
+		return getObjectFromPage(queryForPage(query, clazz));
 	}
 
 	@Override
 	public <T> T queryForObject(StringQuery query, Class<T> clazz) {
-		Page<T> page = queryForPage(query, clazz);
-		Assert.isTrue(page.getTotalElements() < 2, "Expected 1 but found " + page.getTotalElements() + " results");
-		return page.getTotalElements() > 0 ? page.getContent().get(0) : null;
+		return getObjectFromPage(queryForPage(query, clazz));
+	}
+
+	@Nullable
+	private <T> T getObjectFromPage(Page<T> page) {
+		int contentSize = page.getContent().size();
+		Assert.isTrue(contentSize < 2, "Expected 1 but found " + contentSize + " results");
+		return contentSize > 0 ? page.getContent().get(0) : null;
 	}
 
 	@Override
@@ -434,6 +440,10 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 			searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
 		}
 
+		if (criteriaQuery.isLimiting()) {
+			searchRequestBuilder.setSize(criteriaQuery.getMaxResults());
+		}
+
 		if (criteriaQuery.getMinScore() > 0) {
 			searchRequestBuilder.setMinScore(criteriaQuery.getMinScore());
 		}
@@ -521,7 +531,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		if (elasticsearchQuery != null) {
 			countRequestBuilder.setQuery(elasticsearchQuery);
 		}
-		return countRequestBuilder.execute().actionGet().getHits().getTotalHits();
+		return SearchHitsUtil.getTotalCount(countRequestBuilder.execute().actionGet().getHits());
 	}
 
 	private long doCount(SearchRequestBuilder searchRequestBuilder, QueryBuilder elasticsearchQuery,
@@ -534,7 +544,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 		if (elasticsearchFilter != null) {
 			searchRequestBuilder.setPostFilter(elasticsearchFilter);
 		}
-		return searchRequestBuilder.execute().actionGet().getHits().getTotalHits();
+		return SearchHitsUtil.getTotalCount(searchRequestBuilder.execute().actionGet().getHits());
 	}
 
 	private <T> SearchRequestBuilder prepareCount(Query query, Class<T> clazz) {
@@ -1201,8 +1211,7 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 				VersionType versionType = retrieveVersionTypeFromPersistentEntity(query.getObject().getClass());
 				indexRequestBuilder.setVersionType(versionType);
 			}
-
-			if (query.getParentId() != null) {
+      if (query.getParentId() != null) {
 				indexRequestBuilder.setParent(query.getParentId());
 			}
 			if (query.getRouting() != null) {

@@ -36,6 +36,7 @@ import org.springframework.util.Assert;
  * @author Alen Turkovic
  * @author Sascha Woo
  * @author Farid Azaza
+ * @author Peter-Josef Meisch
  */
 abstract class AbstractQuery implements Query {
 
@@ -52,6 +53,7 @@ abstract class AbstractQuery implements Query {
 	protected IndicesOptions indicesOptions;
 	protected boolean trackScores;
 	protected String preference;
+	protected Integer maxResults;
 
 	@Override
 	public Sort getSort() {
@@ -112,6 +114,7 @@ abstract class AbstractQuery implements Query {
 		return sourceFilter;
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public final <T extends Query> T addSort(Sort sort) {
 		if (sort == null) {
@@ -127,6 +130,7 @@ abstract class AbstractQuery implements Query {
 		return (T) this;
 	}
 
+	@Override
 	public float getMinScore() {
 		return minScore;
 	}
@@ -135,6 +139,7 @@ abstract class AbstractQuery implements Query {
 		this.minScore = minScore;
 	}
 
+	@Override
 	public Collection<String> getIds() {
 		return ids;
 	}
@@ -143,6 +148,7 @@ abstract class AbstractQuery implements Query {
 		this.ids = ids;
 	}
 
+	@Override
 	public String getRoute() {
 		return route;
 	}
@@ -155,10 +161,12 @@ abstract class AbstractQuery implements Query {
 		this.searchType = searchType;
 	}
 
+	@Override
 	public SearchType getSearchType() {
 		return searchType;
 	}
 
+	@Override
 	public IndicesOptions getIndicesOptions() {
 		return indicesOptions;
 	}
@@ -178,7 +186,7 @@ abstract class AbstractQuery implements Query {
 
 	/**
 	 * Configures whether to track scores.
-	 * 
+	 *
 	 * @param trackScores
 	 * @since 3.1
 	 */
@@ -194,5 +202,19 @@ abstract class AbstractQuery implements Query {
 	@Override
 	public void setPreference(String preference) {
 		this.preference = preference;
+	}
+
+	@Override
+	public boolean isLimiting() {
+		return maxResults != null;
+	}
+
+	@Override
+	public Integer getMaxResults() {
+		return maxResults;
+	}
+
+	public void setMaxResults(Integer maxResults) {
+		this.maxResults = maxResults;
 	}
 }

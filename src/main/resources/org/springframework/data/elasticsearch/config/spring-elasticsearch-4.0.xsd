@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xsd:schema xmlns="http://www.springframework.org/schema/data/elasticsearch"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:beans="http://www.springframework.org/schema/beans"
+            xmlns:tool="http://www.springframework.org/schema/tool"
+            xmlns:repository="http://www.springframework.org/schema/data/repository"
+            targetNamespace="http://www.springframework.org/schema/data/elasticsearch"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified">
+
+    <xsd:import namespace="http://www.springframework.org/schema/beans"/>
+    <xsd:import namespace="http://www.springframework.org/schema/tool"/>
+    <xsd:import namespace="http://www.springframework.org/schema/data/repository"
+                schemaLocation="https://www.springframework.org/schema/data/repository/spring-repository.xsd"/>
+
+    <xsd:element name="repositories">
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="repository:repositories">
+                    <xsd:attributeGroup ref="repository:repository-attributes"/>
+                    <xsd:attribute name="elasticsearch-template-ref" type="elasticsearchTemplateRef"
+                                   default="elasticsearchTemplate"/>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:simpleType name="elasticsearchTemplateRef">
+        <xsd:annotation>
+            <xsd:appinfo>
+                <tool:annotation kind="ref">
+                    <tool:assignable-to type="org.springframework.data.elasticsearch.core.ElasticsearchTemplate"/>
+                </tool:annotation>
+            </xsd:appinfo>
+        </xsd:annotation>
+        <xsd:union memberTypes="xsd:string"/>
+    </xsd:simpleType>
+
+    <xsd:element name="node-client">
+        <xsd:annotation>
+            <xsd:documentation/>
+            <xsd:appinfo>
+                <tool:assignable-to type="org.elasticsearch.client.Client"/>
+            </xsd:appinfo>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="beans:identifiedType">
+                    <xsd:attribute name="local" type="xsd:boolean" default="false">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[local here means local on the JVM (well, actually class loader) level, meaning that two local servers started within the same JVM will discover themselves and form a cluster]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="cluster-name" type="xsd:string" default="elasticsearch">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[Name of the cluster in which this instance of node client will connect to]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="http-enabled" type="xsd:boolean" default="true">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[ to enable or disable http port ]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="path-data" type="xsd:string" default="">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[ path to the data folder for node client ]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="path-home" type="xsd:string" default="">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[ path to the home folder for node client ]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="path-configuration" type="xsd:string" default="">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[ path to configuration file for node client ]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="transport-client">
+        <xsd:annotation>
+            <xsd:documentation/>
+            <xsd:appinfo>
+                <tool:assignable-to type="org.elasticsearch.client.Client"/>
+            </xsd:appinfo>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="beans:identifiedType">
+                    <xsd:attribute name="cluster-nodes" type="xsd:string" default="127.0.0.1:9300">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[The comma delimited list of host:port entries to use for elasticsearch cluster.]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="cluster-name" type="xsd:string" default="elasticsearch">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[Name of the cluster in which this instance of node client will connect to]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="client-transport-sniff" type="xsd:boolean" default="true">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[The client allows to sniff the rest of the cluster, and add those into its list of machines to use.]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="client-transport-ignore-cluster-name" type="xsd:boolean" default="false">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[Set to true to ignore cluster name validation of connected nodes. (since 0.19.4)]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="client-transport-ping-timeout" type="xsd:string" default="5s">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[The time to wait for a ping response from a node. Defaults to 5s.]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="client-transport-nodes-sampler-interval" type="xsd:string" default="5s">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[How often to sample / ping the nodes listed and connected. Defaults to 5s.]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="rest-client">
+    	 <xsd:annotation>
+            <xsd:documentation/>
+            <xsd:appinfo>
+                <tool:assignable-to type="org.elasticsearch.client.RestHighLevelClient"/>
+            </xsd:appinfo>
+        </xsd:annotation>
+       	<xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="beans:identifiedType">
+                    <xsd:attribute name="hosts" type="xsd:string" default="http://127.0.0.1:9200">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                <![CDATA[The comma delimited list of host:port entries to use for elasticsearch cluster.]]>
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+               	</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+    </xsd:element>
+</xsd:schema>

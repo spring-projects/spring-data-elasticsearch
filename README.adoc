@@ -11,7 +11,7 @@ This project is lead and maintained by the community.
 == Features
 
 * Spring configuration support using Java based `@Configuration` classes or an XML namespace for a ES clients instances.
-* `ElasticsearchTemplate` helper class that increases productivity performing common ES operations. Includes integrated object mapping between documents and POJOs.
+* `ElasticsearchRestTemplate` helper class that increases productivity performing common ES operations. Includes integrated object mapping between documents and POJOs.
 * Feature Rich Object Mapping integrated with Spring’s Conversion Service
 * Annotation based mapping metadata but extensible to support other metadata formats
 * Automatic implementation of `Repository` interfaces including support for custom finder methods.
@@ -60,6 +60,9 @@ public class MyService {
 
 Using Node Client
 
+NOTE: Usage of the Node Client is deprecated as of version 4.0, use RestClient instead.
+
+
 [source,xml]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
@@ -79,6 +82,9 @@ Using Node Client
 ----
 
 Using Transport Client
+
+NOTE: Usage of the Transport Client is deprecated as of version 4.0, use RestClient instead.
+
 
 [source,xml]
 ----
@@ -121,12 +127,13 @@ Add the Maven dependency:
 [cols="^,^,"]
 |===
 |Spring Data Elasticsearch | Elasticsearch |
-| _3.2.x_ |_6.8.1_ | _not yet released_
-|3.1.x |6.2.2
-|3.0.x |5.5.0
-|2.1.x |2.4.0
-|2.0.x |2.2.0
-|1.3.x |1.5.2
+| _4.0.x_ |_7.3.0_ | _not yet released_
+| 3.2.x | 6.8.1 | _not yet released_
+| 3.1.x | 6.2.2 | 
+| 3.0.x | 5.5.0 | 
+| 2.1.x | 2.4.0 | 
+| 2.0.x | 2.2.0 | 
+| 1.3.x | 1.5.2 | 
 |===
 
 To use the Release candidate versions of the upcoming major version, use our Maven milestone repository and declare the appropriate dependency version:

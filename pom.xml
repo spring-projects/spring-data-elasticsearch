@@ -3,9 +3,9 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.springframework.data</groupId>
-    <artifactId>spring-data-elasticsearch</artifactId>
-    <version>3.2.0.BUILD-SNAPSHOT</version>
+	<groupId>org.springframework.data</groupId>
+	<artifactId>spring-data-elasticsearch</artifactId>
+	<version>4.0.0.BUILD-SNAPSHOT</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -19,7 +19,7 @@
 
 	<properties>
 		<commonslang>2.6</commonslang>
-		<elasticsearch>6.8.1</elasticsearch>
+		<elasticsearch>7.3.0</elasticsearch>
 		<log4j>2.9.1</log4j>
 		<springdata.commons>2.2.0.BUILD-SNAPSHOT</springdata.commons>
 		<netty>4.1.39.Final</netty>
@@ -144,6 +144,7 @@
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
 			<version>${jodatime}</version>
+			<optional>true</optional>
 		</dependency>
 
 		<!-- Elasticsearch -->

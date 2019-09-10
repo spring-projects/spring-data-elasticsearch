@@ -15,11 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.elasticsearch.action.get.GetResponse;
@@ -28,7 +24,6 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.search.SearchHit;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.domain.Pageable;
@@ -40,16 +35,12 @@ import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPa
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.elasticsearch.support.SearchHitsUtil;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
-
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
  * @author Artur Konczak
@@ -99,19 +90,13 @@ public class DefaultResultMapper extends AbstractResultMapper {
 	@Override
 	public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
 
-		long totalHits = response.getHits().getTotalHits();
+		long totalHits = SearchHitsUtil.getTotalCount(response.getHits());
 		float maxScore = response.getHits().getMaxScore();
 
 		List<T> results = new ArrayList<>();
 		for (SearchHit hit : response.getHits()) {
 			if (hit != null) {
-				T result = null;
-				String hitSourceAsString = hit.getSourceAsString();
-				if (!StringUtils.isEmpty(hitSourceAsString)) {
-					result = mapEntity(hitSourceAsString, clazz);
-				} else {
-					result = mapEntity(hit.getFields().values(), clazz);
-				}
+				T result = mapSearchHit(hit, clazz);
 
 				setPersistentEntityId(result, hit.getId(), clazz);
 				setPersistentEntityVersion(result, hit.getVersion(), clazz);
@@ -149,38 +134,14 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		}
 	}
 
-	private <T> T mapEntity(Collection<DocumentField> values, Class<T> clazz) {
-		return mapEntity(buildJSONFromFields(values), clazz);
-	}
-
-	private String buildJSONFromFields(Collection<DocumentField> values) {
-		JsonFactory nodeFactory = new JsonFactory();
-		try {
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			JsonGenerator generator = nodeFactory.createGenerator(stream, JsonEncoding.UTF8);
-			generator.writeStartObject();
-			for (DocumentField value : values) {
-				if (value.getValues().size() > 1) {
-					generator.writeArrayFieldStart(value.getName());
-					for (Object val : value.getValues()) {
-						generator.writeObject(val);
-					}
-					generator.writeEndArray();
-				} else {
-					generator.writeObjectField(value.getName(), value.getValue());
-				}
-			}
-			generator.writeEndObject();
-			generator.flush();
-			return new String(stream.toByteArray(), Charset.forName("UTF-8"));
-		} catch (IOException e) {
-			return null;
-		}
-	}
-
 	@Override
 	public <T> T mapResult(GetResponse response, Class<T> clazz) {
-		T result = mapEntity(response.getSourceAsString(), clazz);
+
+		if (!response.isExists()) {
+			return null;
+		}
+
+		T result = mapDocument(DocumentAdapters.from(response), clazz);
 		if (result != null) {
 			setPersistentEntityId(result, response.getId(), clazz);
 			setPersistentEntityVersion(result, response.getVersion(), clazz);
@@ -193,7 +154,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 		List<T> list = new ArrayList<>();
 		for (MultiGetItemResponse response : responses.getResponses()) {
 			if (!response.isFailed() && response.getResponse().isExists()) {
-				T result = mapEntity(response.getResponse().getSourceAsString(), clazz);
+				T result = mapResult(response.getResponse(), clazz);
 				setPersistentEntityId(result, response.getResponse().getId(), clazz);
 				setPersistentEntityVersion(result, response.getResponse().getVersion(), clazz);
 				list.add(result);

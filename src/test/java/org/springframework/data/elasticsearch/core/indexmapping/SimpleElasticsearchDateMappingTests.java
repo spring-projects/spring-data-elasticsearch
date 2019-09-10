@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
+package org.springframework.data.elasticsearch.core.indexmapping;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.Date;
 
 import org.junit.Test;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -40,8 +39,8 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests {
 
 	private static final String EXPECTED_MAPPING = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,"
-			+ "\"type\":\"text\",\"index\":false,\"analyzer\":\"standard\"},\"customFormatDate\":{\"store\":false,\"type\":\"date\",\"format\":\"dd.MM.yyyy hh:mm\"},"
-			+ "\"defaultFormatDate\":{\"store\":false,\"type\":\"date\"},\"basicFormatDate\":{\"store\":false,\""
+			+ "\"type\":\"text\",\"index\":false,\"analyzer\":\"standard\"},\"customFormatDate\":{\"type\":\"date\",\"format\":\"dd.MM.yyyy hh:mm\"},"
+			+ "\"defaultFormatDate\":{\"type\":\"date\"},\"basicFormatDate\":{\""
 			+ "type\":\"date\",\"format\":\"basic_date\"}}}}";
 
 	@Test // DATAES-568

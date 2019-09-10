@@ -122,6 +122,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
@@ -548,7 +549,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		return new GetResult(response.getIndex(), response.getType(), response.getId(), response.getSeqNo(),
 				response.getPrimaryTerm(), response.getVersion(), response.isExists(), response.getSourceAsBytesRef(),
-				response.getFields());
+				response.getFields(), null);
 	}
 
 	// -->
