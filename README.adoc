@@ -118,10 +118,10 @@ Add the Maven dependency:
 // Always change both files!
 **Compatibility Matrix**
 
-[cols="^,^,"]
+[cols="^,^"]
 |===
-|Spring Data Elasticsearch | Elasticsearch |
-| _3.2.x_ |_6.8.1_ | _not yet released_
+|Spring Data Elasticsearch | Elasticsearch
+|_3.2.x_ (not yet released) |_6.8.1_
 |3.1.x |6.2.2
 |3.0.x |5.5.0
 |2.1.x |2.4.0
