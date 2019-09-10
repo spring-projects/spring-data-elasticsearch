@@ -63,6 +63,7 @@ public final class MappingParameters {
 	static final String FIELD_PARAM_SIMILARITY = "similarity";
 	static final String FIELD_PARAM_TERM_VECTOR = "term_vector";
 	static final String FIELD_PARAM_TYPE = "type";
+	static final String FIELD_PARAM_REQUIRED = "required";
 
 	private boolean index = true;
 	private boolean store = false;

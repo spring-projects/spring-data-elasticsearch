@@ -462,33 +462,25 @@ public class ElasticsearchTemplateTests {
 
 		// first document
 		String documentId = "1";
-		String routing = "1";
-		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("some message")
-				.version(System.currentTimeMillis()).routing(routing).build();
+		PersonEntity personEntity1 = PersonEntity.builder().id(documentId).name("wang").build();
 
 		// second document
 		String documentId2 = "2";
-		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("some message")
-				.version(System.currentTimeMillis()).routing(routing).build();
+		PersonEntity personEntity2 = PersonEntity.builder().id(documentId2).name("li").build();
 
-		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2));
+		indexQueries.add(getIndexQuery(personEntity1));
+		indexQueries.add(getIndexQuery(personEntity2));
 
 		// when
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(SampleEntity.class);
+		elasticsearchTemplate.refresh(PersonEntity.class);
 
 		// then
 		//query on the field _routing
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termsQuery("_routing","1")).build();
-		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(2);
-		
-		searchQuery = new NativeSearchQueryBuilder().withQuery(termsQuery("_routing","2")).build();
-		sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(0);
-		
-		
-		
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termsQuery("_routing","wang")).build();
+		Page<PersonEntity> personEntities = elasticsearchTemplate.queryForPage(searchQuery, PersonEntity.class);
+		assertThat(personEntities.getTotalElements()).isEqualTo(1);
+		 
 	}
 
 	@Test
@@ -1008,6 +1000,18 @@ public class ElasticsearchTemplateTests {
 		assertThat(setting.get("index.number_of_replicas")).isEqualTo("0");
 	}
 
+	@Test 
+	public void shouldReturnMappingWithRoutingForGivenEntityClass() {
+
+    // when
+		Map<String, Object> mapping = elasticsearchTemplate.getMapping(SampleEntity.class);
+
+		// then
+		assertThat(mapping).isNotNull();
+		assertThat(((Map<String, Object>) mapping.get("_routing")).get("required"))
+				.isEqualTo(true);
+	}
+	
 	@Test
 	public void shouldExecuteGivenCriteriaQuery() {
 
@@ -2988,7 +2992,7 @@ public class ElasticsearchTemplateTests {
 
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
 		return new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity)
-				.withVersion(sampleEntity.getVersion()).withRouting(sampleEntity.getRouting()).build();
+				.withVersion(sampleEntity.getVersion()).build();
 	}
 
 	private List<IndexQuery> getIndexQueries(List<SampleEntity> sampleEntities) {
@@ -2998,6 +3002,12 @@ public class ElasticsearchTemplateTests {
 		}
 		return indexQueries;
 	}
+	private IndexQuery getIndexQuery(PersonEntity psersonEntity) {
+		return new IndexQueryBuilder().withId(psersonEntity.getId()).withObject(psersonEntity)
+				.withRouting(psersonEntity.getName()).build();
+	}
+
+ 
 
 	@Document(indexName = INDEX_2_NAME, replicas = 0, shards = 1)
 	class ResultAggregator {
@@ -3032,7 +3042,6 @@ public class ElasticsearchTemplateTests {
 		private GeoPoint location;
 		@Version private Long version;
 		@Score private float score;
-		@Routing private String routing;
 	}
 
 	/**
@@ -3161,5 +3170,17 @@ public class ElasticsearchTemplateTests {
 			}
 		}
 	}
+	@Data
+  @AllArgsConstructor
+	@NoArgsConstructor
+	@Builder
+  @Document(indexName = "person", type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
+	static class PersonEntity {
+
+		@Id private String id;
+		
+		@Routing private String name;
+	}
+
 
 }

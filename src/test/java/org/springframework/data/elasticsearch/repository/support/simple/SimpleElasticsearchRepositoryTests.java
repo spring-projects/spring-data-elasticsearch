@@ -80,6 +80,8 @@ public class SimpleElasticsearchRepositoryTests {
 
 	@Autowired private SampleElasticsearchRepository repository;
 
+	@Autowired private PersonElasticsearchRepository personRepository;
+
 	@Autowired private ElasticsearchOperations elasticsearchOperations;
 
 	@Before
@@ -117,28 +119,23 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldDoBulkIndexDocumentWithRouting() {
 
 		// given
-		String documentId1 = randomNumeric(5);
-		String routing = "1";
-		SampleEntity sampleEntity1 = new SampleEntity();
-		sampleEntity1.setId(documentId1);
-		sampleEntity1.setMessage("some message");
-		sampleEntity1.setVersion(System.currentTimeMillis());
-		sampleEntity1.setRouting(routing);
-		String documentId2 = randomNumeric(5);
-		SampleEntity sampleEntity2 = new SampleEntity();
-		sampleEntity2.setId(documentId2);
-		sampleEntity2.setMessage("some message");
-		sampleEntity2.setVersion(System.currentTimeMillis());
-		sampleEntity2.setRouting(routing);
-
+		String documentId1 = "1";
+		PersonEntity personEntity1 = new PersonEntity();
+		personEntity1.setId(documentId1);
+		personEntity1.setName("wang");
+	  String documentId2 = "2";
+	  PersonEntity personEntity2 = new PersonEntity();
+		personEntity2.setId(documentId2);
+		personEntity2.setName("li");
+	
 		// when
-		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2));
+		personRepository.saveAll(Arrays.asList(personEntity1, personEntity2));
 
 		// then
 		// query on field _routing
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termsQuery("_routing", routing)).build();
-		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(2);
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termsQuery("_routing", "wang")).build();
+		Page<PersonEntity> sampleEntities = personRepository.search(searchQuery);
+		assertThat(sampleEntities.getTotalElements()).isEqualTo(1);
 	}
 	@Test
 	public void shouldSaveDocument() {
@@ -737,7 +734,6 @@ public class SimpleElasticsearchRepositoryTests {
 		private int rate;
 		private boolean available;
 		@Version private Long version;
-		@Routing private String routing;
 	}
 
 	/**
@@ -756,5 +752,17 @@ public class SimpleElasticsearchRepositoryTests {
 		void deleteByType(String type);
 
 	}
+	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-pserson-simple-repository", type = "test-type", shards = 1, replicas = 0,
+			refreshInterval = "-1")
+	static class PersonEntity {
 
+		@Id private String id;
+		@Routing private String name;
+	}
+	interface PersonElasticsearchRepository extends ElasticsearchRepository<PersonEntity, String> {
+	}
 }

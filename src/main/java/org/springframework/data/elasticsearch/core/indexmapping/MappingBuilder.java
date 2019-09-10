@@ -76,6 +76,7 @@ public class MappingBuilder {
 	private static final String FIELD_INDEX = "index";
 	private static final String FIELD_PROPERTIES = "properties";
 	private static final String FIELD_PARENT = "_parent";
+	private static final String FIELD_ROUTING = "_routing";
 	private static final String FIELD_CONTEXT_NAME = "name";
 	private static final String FIELD_CONTEXT_TYPE = "type";
 	private static final String FIELD_CONTEXT_PRECISION = "precision";
@@ -119,7 +120,10 @@ public class MappingBuilder {
 		if (hasText(parentType)) {
 			builder.startObject(FIELD_PARENT).field(FIELD_PARAM_TYPE, parentType).endObject();
 		}
-
+    ElasticsearchPersistentProperty routingProp = entity.getRoutingProperty();
+    if(routingProp!=null) {
+    	builder.startObject(FIELD_ROUTING).field(FIELD_PARAM_REQUIRED,true).endObject();
+    }
 		// Properties
 		builder.startObject(FIELD_PROPERTIES);
 
