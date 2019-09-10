@@ -31,15 +31,14 @@ Requires an installation of https://www.elastic.co/products/elasticsearch[Elasti
 // this file is duplicated in the toplevel README
 // Always change both files!
 
-The following table shows the Elasticsearch versions that are used by Spring Data Elasticsearch:
-[cols="^,^"]
+The following table shows the Elasticsearch versions that are used by Spring Data release trains and version of Spring Data Elasticsearch included in that, as well as the Spring Boot versions refering to that particular Spring Data release train:
+[cols="^,^,^,^",options="header"]
 |===
-|Spring Data Elasticsearch |Elasticsearch
+|Spring Data Release Train |Spring Data Elasticsearch |Elasticsearch | Spring Boot
+|Moorefootnote:cdv[Currently in development] |3.2.xfootnote:cdv[]|6.8.1 / 7.xfootnote:hrc[via the <<elasticsearch.clients.rest,high-level REST client>>]|2.2.0footnote:cdv[]
+|Lovelace |3.1.x |6.2.2 / 7.xfootnote:hrc[]|2.1.x
+|Kayfootnote:oom[Out of maintenance]|3.0.xfootnote:oom[] |5.5.0 |2.0.xfootnote:oom[]
+|Ingallsfootnote:oom[]|2.1.xfootnote:oom[] |2.4.0 |1.5.xfootnote:oom[]
+|===
 
-|3.2.x |6.8.1
-|3.1.x |6.2.2
-|3.0.x |5.5.0
-|2.1.x |2.4.0
-|2.0.x |2.2.0
-|1.3.x |1.5.2
-|===
+Support for upcoming versions of Elasticsearch is being tracked and general compatibility should be given assuming the usage of the <<elasticsearch.clients.rest,high-level REST client>>.
