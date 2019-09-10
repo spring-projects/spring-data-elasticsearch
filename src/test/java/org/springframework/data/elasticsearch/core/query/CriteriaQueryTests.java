@@ -49,6 +49,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
+ * @author James Bodkin
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:elasticsearch-template-test.xml")
@@ -796,6 +797,31 @@ public class CriteriaQueryTests {
 		// then
 		assertThat(page.getTotalElements()).isEqualTo(1);
 		assertThat(page.getContent().get(0).getMessage()).isEqualTo("ab");
+	}
+
+	@Test
+	public void shouldEscapeValue() {
+
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setMessage("Hello World!");
+		sampleEntity.setVersion(System.currentTimeMillis());
+
+		IndexQuery indexQuery = new IndexQuery();
+		indexQuery.setId(documentId);
+		indexQuery.setObject(sampleEntity);
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(SampleEntity.class);
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("Hello World!"));
+
+		// when
+		SampleEntity sampleEntity1 = elasticsearchTemplate.queryForObject(criteriaQuery, SampleEntity.class);
+
+		// then
+		assertThat(sampleEntity1).isNotNull();
 	}
 
 	@Builder

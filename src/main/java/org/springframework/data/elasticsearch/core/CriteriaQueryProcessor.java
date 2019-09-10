@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
+import org.apache.lucene.queryparser.flexible.standard.QueryParserUtil;
 import org.elasticsearch.index.query.*;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.util.Assert;
@@ -36,6 +37,7 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Franck Marchand
  * @author Artur Konczak
+ * @author James Bodkin
  */
 class CriteriaQueryProcessor {
 
@@ -140,7 +142,7 @@ class CriteriaQueryProcessor {
 		OperationKey key = entry.getKey();
 		QueryBuilder query = null;
 
-		String searchText = StringUtils.toString(value);
+		String searchText = QueryParserUtil.escape(StringUtils.toString(value));
 
 		Iterable<Object> collection = null;
 
