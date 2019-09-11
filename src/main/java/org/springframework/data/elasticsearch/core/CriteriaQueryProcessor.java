@@ -28,6 +28,7 @@ import java.util.ListIterator;
 import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.apache.lucene.queryparser.flexible.standard.QueryParserUtil;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.util.Assert;
 
@@ -39,6 +40,7 @@ import org.springframework.util.Assert;
  * @author Franck Marchand
  * @author Artur Konczak
  * @author Rasmus Faber-Espensen
+ * @author James Bodkin
  */
 class CriteriaQueryProcessor {
 
@@ -141,7 +143,7 @@ class CriteriaQueryProcessor {
 		OperationKey key = entry.getKey();
 		QueryBuilder query = null;
 
-		String searchText = StringUtils.toString(value);
+		String searchText = QueryParserUtil.escape(StringUtils.toString(value));
 
 		switch (key) {
 			case EQUALS:
