@@ -33,7 +33,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -799,7 +798,7 @@ public class CriteriaQueryTests {
 		assertThat(page.getContent().get(0).getMessage()).isEqualTo("ab");
 	}
 
-	@Test
+	@Test // DATAES-213
 	public void shouldEscapeValue() {
 
 		// given
