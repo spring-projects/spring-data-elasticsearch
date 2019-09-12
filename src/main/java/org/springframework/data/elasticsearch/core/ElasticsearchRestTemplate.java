@@ -143,12 +143,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Mathias Teier
  * @author Gyula Attila Csorogi
  */
-public class ElasticsearchRestTemplate
+public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
 
 	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
 	private RestHighLevelClient client;
-	private ElasticsearchConverter elasticsearchConverter;
 	private ResultsMapper resultsMapper;
 	private String searchTimeout;
 
@@ -176,9 +175,10 @@ public class ElasticsearchRestTemplate
 
 	public ElasticsearchRestTemplate(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
 			ResultsMapper resultsMapper) {
+		
+		super(elasticsearchConverter);
 
 		Assert.notNull(client, "Client must not be null!");
-		Assert.notNull(elasticsearchConverter, "ElasticsearchConverter must not be null!");
 		Assert.notNull(resultsMapper, "ResultsMapper must not be null!");
 
 		this.client = client;
@@ -254,29 +254,18 @@ public class ElasticsearchRestTemplate
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz) {
-		if (clazz.isAnnotationPresent(Mapping.class)) {
-			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
-			if (hasText(mappingPath)) {
-				String mappings = ResourceUtil.readFileFromClasspath(mappingPath);
-				if (hasText(mappings)) {
-					return putMapping(clazz, mappings);
-				}
-			} else {
-				logger.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
-			}
-		}
-		try {
-			MappingBuilder mappingBuilder = new MappingBuilder(elasticsearchConverter);
-			return putMapping(clazz, mappingBuilder.buildPropertyMapping(clazz));
-		} catch (Exception e) {
-			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
-		}
+		return putMapping(clazz, buildMapping(clazz));
 	}
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz, Object mapping) {
 		return putMapping(getPersistentEntityFor(clazz).getIndexName(), getPersistentEntityFor(clazz).getIndexType(),
 				mapping);
+	}
+
+	@Override
+	public <T> boolean putMapping(String indexName, String type, Class<T> clazz) {
+		return putMapping(indexName, type, buildMapping(clazz));
 	}
 
 	@Override

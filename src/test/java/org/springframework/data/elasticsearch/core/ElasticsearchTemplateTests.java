@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.hamcrest.CoreMatchers.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
@@ -1436,6 +1437,22 @@ public class ElasticsearchTemplateTests {
 
 		// then
 		assertThat(elasticsearchTemplate.putMapping(entity)).isTrue();
+	}
+
+	@Test // DATAES-305
+	public void shouldPutMappingWithCustomIndexName() throws Exception {
+
+		// given
+		Class<SampleEntity> entity = SampleEntity.class;
+		elasticsearchTemplate.deleteIndex(INDEX_1_NAME);
+		elasticsearchTemplate.createIndex(INDEX_1_NAME);
+
+		// when
+		elasticsearchTemplate.putMapping(INDEX_1_NAME, TYPE_NAME, entity);
+
+		// then
+		Map<String, Object> mapping = elasticsearchTemplate.getMapping(INDEX_1_NAME, TYPE_NAME);
+		assertThat(mapping.get("properties")).isNotNull();
 	}
 
 	@Test
