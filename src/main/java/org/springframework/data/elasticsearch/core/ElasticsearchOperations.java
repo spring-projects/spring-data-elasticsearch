@@ -105,6 +105,16 @@ public interface ElasticsearchOperations {
 	<T> boolean putMapping(Class<T> clazz);
 
 	/**
+	 * Create mapping for the given class and put the mapping to the given indexName and type.
+	 *
+	 * @param indexName
+	 * @param type
+	 * @param mappings
+	 * @since 3.2
+	 */
+	<T> boolean putMapping(String indexName, String type, Class<T> clazz);
+
+	/**
 	 * Create mapping for a given indexName and type
 	 *
 	 * @param indexName

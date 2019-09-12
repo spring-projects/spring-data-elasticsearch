@@ -82,7 +82,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -124,7 +123,7 @@ import org.springframework.util.StringUtils;
  * @author Farid Azaza
  * @author Gyula Attila Csorogi
  */
-public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
+public class ElasticsearchTemplate extends AbstractElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
 	private static final Logger QUERY_LOGGER = LoggerFactory
 			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
@@ -132,7 +131,6 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 	private static final String FIELD_SCORE = "_score";
 
 	private Client client;
-	private ElasticsearchConverter elasticsearchConverter;
 	private ResultsMapper resultsMapper;
 	private String searchTimeout;
 
@@ -160,13 +158,13 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter,
 			ResultsMapper resultsMapper) {
+		
+		super(elasticsearchConverter);
 
 		Assert.notNull(client, "Client must not be null!");
-		Assert.notNull(elasticsearchConverter, "ElasticsearchConverter must not be null!");
 		Assert.notNull(resultsMapper, "ResultsMapper must not be null!");
 
 		this.client = client;
-		this.elasticsearchConverter = elasticsearchConverter;
 		this.resultsMapper = resultsMapper;
 	}
 
@@ -221,29 +219,18 @@ public class ElasticsearchTemplate implements ElasticsearchOperations, EsClient<
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz) {
-		if (clazz.isAnnotationPresent(Mapping.class)) {
-			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
-			if (!StringUtils.isEmpty(mappingPath)) {
-				String mappings = ResourceUtil.readFileFromClasspath(mappingPath);
-				if (!StringUtils.isEmpty(mappings)) {
-					return putMapping(clazz, mappings);
-				}
-			} else {
-				LOGGER.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
-			}
-		}
-		try {
-			MappingBuilder mappingBuilder = new MappingBuilder(elasticsearchConverter);
-			return putMapping(clazz, mappingBuilder.buildPropertyMapping(clazz));
-		} catch (Exception e) {
-			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
-		}
+		return putMapping(clazz, buildMapping(clazz));
 	}
 
 	@Override
 	public <T> boolean putMapping(Class<T> clazz, Object mapping) {
 		return putMapping(getPersistentEntityFor(clazz).getIndexName(), getPersistentEntityFor(clazz).getIndexType(),
 				mapping);
+	}
+
+	@Override
+	public <T> boolean putMapping(String indexName, String type, Class<T> clazz) {
+		return putMapping(indexName, type, buildMapping(clazz));
 	}
 
 	@Override
