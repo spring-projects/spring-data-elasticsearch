@@ -123,6 +123,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Huw Ayling-Miller
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
@@ -216,6 +217,10 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		ReactorClientHttpConnector connector = new ReactorClientHttpConnector(httpClient);
 		WebClientProvider provider = WebClientProvider.create(scheme, connector);
+
+		if (clientConfiguration.getPathPrefix() != null) {
+			provider = provider.withPathPrefix(clientConfiguration.getPathPrefix());
+		}
 
 		return provider.withDefaultHeaders(clientConfiguration.getDefaultHeaders());
 	}

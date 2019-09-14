@@ -52,6 +52,7 @@ import org.springframework.util.Assert;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Huw Ayling-Miller
  * @since 3.2
  */
 public final class RestClients {
@@ -75,6 +76,11 @@ public final class RestClients {
 		HttpHost[] httpHosts = formattedHosts(clientConfiguration.getEndpoints(), clientConfiguration.useSsl()).stream()
 				.map(HttpHost::create).toArray(HttpHost[]::new);
 		RestClientBuilder builder = RestClient.builder(httpHosts);
+
+		if (clientConfiguration.getPathPrefix() != null) {
+			builder.setPathPrefix(clientConfiguration.getPathPrefix());
+		}
+
 		HttpHeaders headers = clientConfiguration.getDefaultHeaders();
 
 		if (!headers.isEmpty()) {
