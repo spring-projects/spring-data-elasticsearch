@@ -553,7 +553,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	// -->
 
-	private <Req extends ActionRequest, Resp extends ActionResponse> Flux<Resp> sendRequest(Req request,
+	protected final <Req extends ActionRequest, Resp extends ActionResponse> Flux<Resp> sendRequest(Req request,
 			Function<Req, Request> converter, Class<Resp> responseType, HttpHeaders headers) {
 		return sendRequest(converter.apply(request), responseType, headers);
 	}
