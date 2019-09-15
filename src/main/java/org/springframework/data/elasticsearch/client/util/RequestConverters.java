@@ -81,6 +81,7 @@ import org.elasticsearch.index.reindex.AbstractBulkByScrollRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.ReindexRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.elasticsearch.index.seqno.SequenceNumbers;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.tasks.TaskId;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
@@ -315,6 +316,8 @@ public class RequestConverters {
 		parameters.withTimeout(indexRequest.timeout());
 		parameters.withVersion(indexRequest.version());
 		parameters.withVersionType(indexRequest.versionType());
+		parameters.withIfSeqNo(indexRequest.ifSeqNo());
+		parameters.withIfPrimaryTerm(indexRequest.ifPrimaryTerm());
 		parameters.withPipeline(indexRequest.getPipeline());
 		parameters.withRefreshPolicy(indexRequest.getRefreshPolicy());
 		parameters.withWaitForActiveShards(indexRequest.waitForActiveShards());
@@ -913,6 +916,20 @@ public class RequestConverters {
 		Params withVersionType(VersionType versionType) {
 			if (versionType != VersionType.INTERNAL) {
 				return putParam("version_type", versionType.name().toLowerCase(Locale.ROOT));
+			}
+			return this;
+		}
+
+		Params withIfSeqNo(long seqNo) {
+			if (seqNo != SequenceNumbers.UNASSIGNED_SEQ_NO) {
+				return putParam("if_seq_no", Long.toString(seqNo));
+			}
+			return this;
+		}
+
+		Params withIfPrimaryTerm(long primaryTerm) {
+			if (primaryTerm != SequenceNumbers.UNASSIGNED_PRIMARY_TERM) {
+				return putParam("if_primary_term", Long.toString(primaryTerm));
 			}
 			return this;
 		}
