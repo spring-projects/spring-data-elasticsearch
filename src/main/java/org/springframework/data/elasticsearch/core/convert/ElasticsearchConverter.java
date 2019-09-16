@@ -15,34 +15,20 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import org.springframework.core.convert.ConversionService;
+import org.springframework.data.convert.EntityConverter;
+import org.springframework.data.elasticsearch.Document;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.util.Assert;
 
 /**
- * ElasticsearchConverter
- *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  */
-public interface ElasticsearchConverter {
-
-	/**
-	 * Returns the underlying {@link org.springframework.data.mapping.context.MappingContext} used by the converter.
-	 *
-	 * @return never {@literal null}
-	 */
-	MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> getMappingContext();
-
-	/**
-	 * Returns the underlying {@link org.springframework.core.convert.ConversionService} used by the converter.
-	 *
-	 * @return never {@literal null}.
-	 */
-	ConversionService getConversionService();
+public interface ElasticsearchConverter
+		extends EntityConverter<ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty, Object, Document> {
 
 	/**
 	 * Convert a given {@literal idValue} to its {@link String} representation taking potentially registered
@@ -55,6 +41,7 @@ public interface ElasticsearchConverter {
 	default String convertId(Object idValue) {
 
 		Assert.notNull(idValue, "idValue must not be null!");
+
 		if (!getConversionService().canConvert(idValue.getClass(), String.class)) {
 			return idValue.toString();
 		}

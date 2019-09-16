@@ -22,6 +22,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ResultsMapper;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.lang.Nullable;
 
 /**
@@ -47,10 +49,11 @@ public abstract class AbstractReactiveElasticsearchConfiguration extends Elastic
 	 * @return never {@literal null}.
 	 */
 	@Bean
-	public ReactiveElasticsearchOperations reactiveElasticsearchTemplate() {
+	public ReactiveElasticsearchOperations reactiveElasticsearchTemplate(
+        MappingElasticsearchConverter mappingElasticsearchConverter, ResultsMapper resultsMapper) {
 
 		ReactiveElasticsearchTemplate template = new ReactiveElasticsearchTemplate(reactiveElasticsearchClient(),
-				elasticsearchConverter(), resultsMapper());
+            mappingElasticsearchConverter, resultsMapper);
 		template.setIndicesOptions(indicesOptions());
 		template.setRefreshPolicy(refreshPolicy());
 

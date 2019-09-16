@@ -38,7 +38,7 @@ public class ElasticsearchRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 
 	/**
 	 * Creates a new {@link ElasticsearchRepositoryFactoryBean} for the given repository interface.
-	 * 
+	 *
 	 * @param repositoryInterface must not be {@literal null}.
 	 */
 	public ElasticsearchRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
@@ -51,9 +51,9 @@ public class ElasticsearchRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	 * @param operations the operations to set
 	 */
 	public void setElasticsearchOperations(ElasticsearchOperations operations) {
-		
+
 		Assert.notNull(operations, "ElasticsearchOperations must not be null!");
-		
+
 		setMappingContext(operations.getElasticsearchConverter().getMappingContext());
 		this.operations = operations;
 	}

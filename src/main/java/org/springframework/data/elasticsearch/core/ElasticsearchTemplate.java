@@ -139,25 +139,28 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate impleme
 	private String searchTimeout;
 
 	public ElasticsearchTemplate(Client client) {
-		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()));
-	}
-
-	public ElasticsearchTemplate(Client client, EntityMapper entityMapper) {
-		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()), entityMapper);
+		MappingElasticsearchConverter mappingElasticsearchConverter = createElasticsearchConverter();
+		initialize(client, mappingElasticsearchConverter,
+				new DefaultResultMapper(mappingElasticsearchConverter.getMappingContext()));
 	}
 
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter,
 			EntityMapper entityMapper) {
-		this(client, elasticsearchConverter,
+		initialize(client, elasticsearchConverter,
 				new DefaultResultMapper(elasticsearchConverter.getMappingContext(), entityMapper));
 	}
 
 	public ElasticsearchTemplate(Client client, ResultsMapper resultsMapper) {
-		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()), resultsMapper);
+		initialize(client, createElasticsearchConverter(), resultsMapper);
 	}
 
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter) {
-		this(client, elasticsearchConverter, new DefaultResultMapper(elasticsearchConverter.getMappingContext()));
+		this(client, elasticsearchConverter,
+				new DefaultResultMapper(elasticsearchConverter.getMappingContext()));
+	}
+
+	private MappingElasticsearchConverter createElasticsearchConverter() {
+		return new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext());
 	}
 
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter,
@@ -165,6 +168,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate impleme
 
 		super(elasticsearchConverter);
 
+		initialize(client, elasticsearchConverter, resultsMapper);
+	}
+
+	private void initialize(Client client, ElasticsearchConverter elasticsearchConverter,
+			ResultsMapper resultsMapper) {
 		Assert.notNull(client, "Client must not be null!");
 		Assert.notNull(resultsMapper, "ResultsMapper must not be null!");
 

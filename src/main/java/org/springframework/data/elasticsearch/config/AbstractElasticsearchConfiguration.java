@@ -19,6 +19,8 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.ResultsMapper;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 
 /**
  * @author Christoph Strobl
@@ -42,8 +44,9 @@ public abstract class AbstractElasticsearchConfiguration extends ElasticsearchCo
 	 *
 	 * @return never {@literal null}.
 	 */
-	@Bean(name = {"elasticsearchOperations", "elasticsearchTemplate"})
-	public ElasticsearchOperations elasticsearchOperations() {
-		return new ElasticsearchRestTemplate(elasticsearchClient(), elasticsearchConverter(), resultsMapper());
+	@Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
+	public ElasticsearchOperations elasticsearchOperations(MappingElasticsearchConverter mappingElasticsearchConverter,
+                                                           ResultsMapper resultsMapper) {
+		return new ElasticsearchRestTemplate(elasticsearchClient(), mappingElasticsearchConverter, resultsMapper);
 	}
 }

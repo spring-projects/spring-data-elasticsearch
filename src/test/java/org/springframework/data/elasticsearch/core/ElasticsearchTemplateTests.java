@@ -3164,8 +3164,7 @@ public class ElasticsearchTemplateTests {
 	static class SampleEntity {
 
 		@Id private String id;
-		@org.springframework.data.elasticsearch.annotations.Field(type = Text, store = true,
-				fielddata = true) private String type;
+		@Field(type = Text, store = true, fielddata = true) private String type;
 		@Field(type = Text, store = true, fielddata = true) private String message;
 		private int rate;
 		@ScriptedField private Double scriptedRate;

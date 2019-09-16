@@ -25,17 +25,15 @@ import org.apache.commons.lang.ClassUtils;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
-import org.springframework.data.elasticsearch.core.ElasticsearchEntityMapper;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.EntityMapper;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 
 /**
@@ -108,7 +106,7 @@ public class ElasticsearchConfigurationSupportUnitTests {
 	public void usesConfiguredEntityMapper() {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(EntityMapperConfig.class);
-		assertThat(context.getBean(EntityMapper.class)).isInstanceOf(ElasticsearchEntityMapper.class);
+		assertThat(context.getBean(EntityMapper.class)).isInstanceOf(MappingElasticsearchConverter.class);
 	}
 
 	@Configuration
@@ -135,19 +133,7 @@ public class ElasticsearchConfigurationSupportUnitTests {
 	}
 
 	@Configuration
-	static class EntityMapperConfig extends ElasticsearchConfigurationSupport {
-
-		@Bean
-		@Override
-		public EntityMapper entityMapper() {
-
-			ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
-					new DefaultConversionService());
-			entityMapper.setConversions(elasticsearchCustomConversions());
-
-			return entityMapper;
-		}
-	}
+	static class EntityMapperConfig extends ElasticsearchConfigurationSupport {}
 
 	@Document(indexName = "config-support-tests")
 	static class Entity {}

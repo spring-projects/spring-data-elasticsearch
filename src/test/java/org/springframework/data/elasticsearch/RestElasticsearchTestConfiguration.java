@@ -18,10 +18,7 @@ package org.springframework.data.elasticsearch;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
-import org.springframework.data.elasticsearch.core.ElasticsearchEntityMapper;
-import org.springframework.data.elasticsearch.core.EntityMapper;
 
 /**
  * @author Peter-Josef Meisch
@@ -29,22 +26,9 @@ import org.springframework.data.elasticsearch.core.EntityMapper;
 @Configuration
 public class RestElasticsearchTestConfiguration extends AbstractElasticsearchConfiguration {
 
-    @Override
-    @Bean
-    public RestHighLevelClient elasticsearchClient() {
-        return TestUtils.restHighLevelClient();
-    }
-
-    /*
-     * need the ElasticsearchMapper, because some tests rely on @Field(name) being handled correctly
-     */
-    @Bean
-    @Override
-    public EntityMapper entityMapper() {
-        ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
-            new DefaultConversionService());
-        entityMapper.setConversions(elasticsearchCustomConversions());
-
-        return entityMapper;
-    }
+	@Override
+	@Bean
+	public RestHighLevelClient elasticsearchClient() {
+		return TestUtils.restHighLevelClient();
+	}
 }
