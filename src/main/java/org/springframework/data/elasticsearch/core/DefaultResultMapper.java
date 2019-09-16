@@ -32,6 +32,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
@@ -65,7 +66,7 @@ public class DefaultResultMapper extends AbstractResultMapper {
 
 	public DefaultResultMapper(
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
-		this(mappingContext, initEntityMapper(mappingContext));
+		this(mappingContext, null);
 	}
 
 	public DefaultResultMapper(EntityMapper entityMapper) {
@@ -84,7 +85,9 @@ public class DefaultResultMapper extends AbstractResultMapper {
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
 
 		Assert.notNull(mappingContext, "MappingContext must not be null!");
-		return new DefaultEntityMapper(mappingContext);
+		MappingElasticsearchConverter mappingElasticsearchConverter = new MappingElasticsearchConverter(mappingContext, null);
+		mappingElasticsearchConverter.afterPropertiesSet();
+		return mappingElasticsearchConverter;
 	}
 
 	@Override

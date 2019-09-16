@@ -19,11 +19,9 @@ import org.elasticsearch.client.Client;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
-import org.springframework.data.elasticsearch.core.ElasticsearchEntityMapper;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.EntityMapper;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 
 /**
  * configuration class for the classic ElasticsearchTemplate. Needs a {@link TestNodeResource} bean that should be set up in
@@ -42,20 +40,8 @@ public class ElasticsearchTestConfiguration extends ElasticsearchConfigurationSu
 	}
 
 	@Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
-	public ElasticsearchTemplate elasticsearchTemplate(Client elasticsearchClient, EntityMapper entityMapper) {
+	public ElasticsearchTemplate elasticsearchTemplate(Client elasticsearchClient, MappingElasticsearchConverter entityMapper) {
 		return new ElasticsearchTemplate(elasticsearchClient, entityMapper);
 	}
 
-	/*
-	 * need the ElasticsearchMapper, because some tests rely on @Field(name) being handled correctly
-	 */
-	@Bean
-	@Override
-	public EntityMapper entityMapper() {
-		ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
-				new DefaultConversionService());
-		entityMapper.setConversions(elasticsearchCustomConversions());
-
-		return entityMapper;
-	}
 }

@@ -64,6 +64,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 
@@ -78,36 +79,13 @@ import com.fasterxml.jackson.databind.util.ArrayIterator;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  */
-@RunWith(Parameterized.class)
 public class DefaultResultMapperTests {
 
-	private DefaultResultMapper resultMapper;
-	private SimpleElasticsearchMappingContext context;
-	private EntityMapper entityMapper;
+    private SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
+    private EntityMapper entityMapper = new MappingElasticsearchConverter(context);
+    private DefaultResultMapper resultMapper = new DefaultResultMapper(context, entityMapper);
 
-	@Mock private SearchResponse response;
-
-	public DefaultResultMapperTests(SimpleElasticsearchMappingContext context, EntityMapper entityMapper) {
-
-		this.context = context;
-		this.entityMapper = entityMapper;
-	}
-
-	@Parameters
-	public static Collection<Object[]> data() {
-
-		SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
-
-		return Arrays.asList(new Object[] { context, new DefaultEntityMapper(context) },
-				new Object[] { context, new ElasticsearchEntityMapper(context, new DefaultConversionService()) });
-	}
-
-	@Before
-	public void init() {
-
-		MockitoAnnotations.initMocks(this);
-		resultMapper = new DefaultResultMapper(context, entityMapper);
-	}
+    private SearchResponse response = mock(SearchResponse.class);
 
 	@Test
 	public void shouldMapAggregationsToPage() {

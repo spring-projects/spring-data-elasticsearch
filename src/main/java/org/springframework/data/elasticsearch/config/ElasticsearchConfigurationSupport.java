@@ -27,14 +27,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.DefaultEntityMapper;
 import org.springframework.data.elasticsearch.core.DefaultResultMapper;
 import org.springframework.data.elasticsearch.core.EntityMapper;
 import org.springframework.data.elasticsearch.core.ResultsMapper;
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
@@ -43,14 +42,16 @@ import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 @Configuration
 public class ElasticsearchConfigurationSupport {
 
 	@Bean
-	public ElasticsearchConverter elasticsearchConverter() {
-		return new MappingElasticsearchConverter(elasticsearchMappingContext());
+	public MappingElasticsearchConverter elasticsearchEntityMapper(
+			SimpleElasticsearchMappingContext elasticsearchMappingContext) {
+		return new MappingElasticsearchConverter(elasticsearchMappingContext);
 	}
 
 	/**
@@ -72,32 +73,14 @@ public class ElasticsearchConfigurationSupport {
 	}
 
 	/**
-	 * Returns the {@link EntityMapper} used for mapping between the source and domain type. <br />
-	 * <strong>Hint</strong>: you can use {@link org.springframework.data.elasticsearch.core.ElasticsearchEntityMapper} as
-	 * an alternative to the {@link DefaultEntityMapper}.
-	 *
-	 * <pre class="code">
-	 * ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
-	 * 		new DefaultConversionService());
-	 * entityMapper.setConversions(elasticsearchCustomConversions());
-	 * </pre>
-	 *
-	 * @return never {@literal null}.
-	 */
-	@Bean
-	public EntityMapper entityMapper() {
-		return new DefaultEntityMapper(elasticsearchMappingContext());
-	}
-
-	/**
 	 * Returns the {@link ResultsMapper} to be used for search responses.
 	 *
-	 * @see #entityMapper()
+	 * @see MappingElasticsearchConverter
 	 * @return never {@literal null}.
 	 */
 	@Bean
-	public ResultsMapper resultsMapper() {
-		return new DefaultResultMapper(elasticsearchMappingContext(), entityMapper());
+	public ResultsMapper resultsMapper(SimpleElasticsearchMappingContext elasticsearchMappingContext) {
+		return new DefaultResultMapper(elasticsearchMappingContext, elasticsearchEntityMapper(elasticsearchMappingContext));
 	}
 
 	/**

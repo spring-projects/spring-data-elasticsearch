@@ -59,7 +59,7 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
 public class ElasticsearchStringQueryUnitTests {
 
 	@Mock ElasticsearchOperations operations;
-	ElasticsearchConverter converter;
+    ElasticsearchConverter converter;
 
 	@Before
 	public void setUp() {
@@ -105,6 +105,16 @@ public class ElasticsearchStringQueryUnitTests {
 		Method method = SampleRepository.class.getMethod(name, parameters);
 		return new ElasticsearchQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
 				new SpelAwareProxyProjectionFactory(), converter.getMappingContext());
+	}
+
+	private interface SampleRepository extends Repository<Person, String> {
+
+		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '?0' } } } }")
+		Person findByName(String name);
+
+		@Query(value = "name:(?0, ?11, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?0, ?1)")
+		Person findWithRepeatedPlaceholder(String arg0, String arg1, String arg2, String arg3, String arg4, String arg5,
+				String arg6, String arg7, String arg8, String arg9, String arg10, String arg11);
 	}
 
 	/**
@@ -156,16 +166,6 @@ public class ElasticsearchStringQueryUnitTests {
 		public void setBooks(List<Book> books) {
 			this.books = books;
 		}
-	}
-
-	private interface SampleRepository extends Repository<Person, String> {
-
-		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '?0' } } } }")
-		Person findByName(String name);
-
-		@Query(value = "name:(?0, ?11, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?0, ?1)")
-		Person findWithRepeatedPlaceholder(String arg0, String arg1, String arg2, String arg3, String arg4, String arg5,
-				String arg6, String arg7, String arg8, String arg9, String arg10, String arg11);
 	}
 
 	/**
