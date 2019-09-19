@@ -62,6 +62,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 	 * @param connector can be {@literal null}.
 	 * @param errorListener must not be {@literal null}.
 	 * @param headers must not be {@literal null}.
+     * @param pathPrefixcan be {@literal null}
 	 */
 	private DefaultWebClientProvider(String scheme, @Nullable ClientHttpConnector connector,
 			Consumer<Throwable> errorListener, HttpHeaders headers, @Nullable String pathPrefix) {
