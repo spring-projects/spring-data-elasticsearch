@@ -37,6 +37,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Huw Ayling-Miller
  * @since 3.2
  */
 class ClientConfigurationBuilder
@@ -50,6 +51,7 @@ class ClientConfigurationBuilder
 	private Duration soTimeout = Duration.ofSeconds(5);
 	private String username;
 	private String password;
+	private String pathPrefix;
 
 	/*
 	 * (non-Javadoc)
@@ -156,6 +158,14 @@ class ClientConfigurationBuilder
 		return this;
 	}
 
+	@Override
+	public TerminalClientConfigurationBuilder withPathPrefix(String pathPrefix) {
+
+		this.pathPrefix = pathPrefix;
+
+		return this;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithOptionalDefaultHeaders#build()
@@ -171,7 +181,7 @@ class ClientConfigurationBuilder
 		}
 
 		return new DefaultClientConfiguration(this.hosts, this.headers, this.useSsl, this.sslContext, this.soTimeout,
-				this.connectTimeout);
+				this.connectTimeout, this.pathPrefix);
 	}
 
 	private static InetSocketAddress parse(String hostAndPort) {

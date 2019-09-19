@@ -34,6 +34,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Huw Ayling-Miller
  * @since 3.2
  */
 public interface WebClientProvider {
@@ -97,6 +98,14 @@ public interface WebClientProvider {
 	Consumer<Throwable> getErrorListener();
 
 	/**
+	 * Obtain the {@link String pathPrefix} to be used.
+	 * 
+	 * @return the pathPrefix if set.
+	 * @since 4.0
+	 */
+	String getPathPrefix();
+
+	/**
 	 * Create a new instance of {@link WebClientProvider} applying the given headers by default.
 	 *
 	 * @param headers must not be {@literal null}.
@@ -111,4 +120,13 @@ public interface WebClientProvider {
 	 * @return new instance of {@link WebClientProvider}.
 	 */
 	WebClientProvider withErrorListener(Consumer<Throwable> errorListener);
+
+	/**
+	 * Create a new instance of {@link WebClientProvider} where HTTP requests are called with the given path prefix.
+	 * 
+	 * @param pathPrefix Path prefix to add to requests
+	 * @return new instance of {@link WebClientProvider}
+	 * @since 4.0
+	 */
+	WebClientProvider withPathPrefix(String pathPrefix);
 }
