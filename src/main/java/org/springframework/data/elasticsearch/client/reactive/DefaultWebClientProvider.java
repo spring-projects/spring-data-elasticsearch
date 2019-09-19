@@ -32,6 +32,7 @@ import org.springframework.web.reactive.function.client.WebClient.Builder;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Huw Ayling-Miller
  * @since 3.2
  */
 class DefaultWebClientProvider implements WebClientProvider {
@@ -42,6 +43,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 	private final @Nullable ClientHttpConnector connector;
 	private final Consumer<Throwable> errorListener;
 	private final HttpHeaders headers;
+	private final String pathPrefix;
 
 	/**
 	 * Create new {@link DefaultWebClientProvider} with empty {@link HttpHeaders} and no-op {@literal error listener}.
@@ -50,7 +52,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 	 * @param connector can be {@literal null}.
 	 */
 	DefaultWebClientProvider(String scheme, @Nullable ClientHttpConnector connector) {
-		this(scheme, connector, e -> {}, HttpHeaders.EMPTY);
+		this(scheme, connector, e -> {}, HttpHeaders.EMPTY, null);
 	}
 
 	/**
@@ -62,7 +64,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 	 * @param headers must not be {@literal null}.
 	 */
 	private DefaultWebClientProvider(String scheme, @Nullable ClientHttpConnector connector,
-			Consumer<Throwable> errorListener, HttpHeaders headers) {
+			Consumer<Throwable> errorListener, HttpHeaders headers, @Nullable String pathPrefix) {
 
 		Assert.notNull(scheme, "Scheme must not be null! A common scheme would be 'http'.");
 		Assert.notNull(errorListener, "ErrorListener must not be null! You may want use a no-op one 'e -> {}' instead.");
@@ -73,6 +75,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 		this.connector = connector;
 		this.errorListener = errorListener;
 		this.headers = headers;
+		this.pathPrefix = pathPrefix;
 	}
 
 	/*
@@ -109,7 +112,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 		merged.addAll(this.headers);
 		merged.addAll(headers);
 
-		return new DefaultWebClientProvider(this.scheme, this.connector, errorListener, merged);
+		return new DefaultWebClientProvider(this.scheme, this.connector, errorListener, merged, this.pathPrefix);
 	}
 
 	/*
@@ -123,6 +126,15 @@ class DefaultWebClientProvider implements WebClientProvider {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#getPathPrefix()
+	 */
+	@Override
+	public String getPathPrefix() {
+		return pathPrefix;
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#withErrorListener(java.util.function.Consumer)
 	 */
 	@Override
@@ -131,7 +143,18 @@ class DefaultWebClientProvider implements WebClientProvider {
 		Assert.notNull(errorListener, "Error listener must not be null.");
 
 		Consumer<Throwable> listener = this.errorListener.andThen(errorListener);
-		return new DefaultWebClientProvider(this.scheme, this.connector, listener, this.headers);
+		return new DefaultWebClientProvider(this.scheme, this.connector, listener, this.headers, this.pathPrefix);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.WebClientProvider#withPathPrefix(java.lang.String)
+	 */
+	@Override
+	public WebClientProvider withPathPrefix(String pathPrefix) {
+		Assert.notNull(pathPrefix, "pathPrefix must not be null.");
+
+		return new DefaultWebClientProvider(this.scheme, this.connector, this.errorListener, this.headers, pathPrefix);
 	}
 
 	protected WebClient createWebClientForSocketAddress(InetSocketAddress socketAddress) {
@@ -142,7 +165,8 @@ class DefaultWebClientProvider implements WebClientProvider {
 			builder = builder.clientConnector(connector);
 		}
 
-		String baseUrl = String.format("%s://%s:%d", this.scheme, socketAddress.getHostString(), socketAddress.getPort());
+		String baseUrl = String.format("%s://%s:%d%s", this.scheme, socketAddress.getHostString(), socketAddress.getPort(),
+				pathPrefix == null ? "" : "/" + pathPrefix);
 		return builder.baseUrl(baseUrl).filter((request, next) -> next.exchange(request).doOnError(errorListener)).build();
 	}
 }

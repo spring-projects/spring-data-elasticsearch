@@ -31,6 +31,7 @@ import org.springframework.http.HttpHeaders;
  *
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Huw Ayling-Miller
  */
 public class ClientConfigurationUnitTests {
 
@@ -42,7 +43,7 @@ public class ClientConfigurationUnitTests {
 		assertThat(clientConfiguration.getEndpoints()).containsOnly(InetSocketAddress.createUnresolved("localhost", 9200));
 	}
 
-	@Test // DATAES-488, DATAES-504
+	@Test // DATAES-488, DATAES-504, DATAES-650
 	public void shouldCreateCustomizedConfiguration() {
 
 		HttpHeaders headers = new HttpHeaders();
@@ -52,7 +53,8 @@ public class ClientConfigurationUnitTests {
 				.connectedTo("foo", "bar") //
 				.usingSsl() //
 				.withDefaultHeaders(headers) //
-				.withConnectTimeout(Duration.ofDays(1)).withSocketTimeout(Duration.ofDays(2)).build();
+				.withConnectTimeout(Duration.ofDays(1)).withSocketTimeout(Duration.ofDays(2)) //
+				.withPathPrefix("myPathPrefix").build();
 
 		assertThat(clientConfiguration.getEndpoints()).containsOnly(InetSocketAddress.createUnresolved("foo", 9200),
 				InetSocketAddress.createUnresolved("bar", 9200));
@@ -60,6 +62,7 @@ public class ClientConfigurationUnitTests {
 		assertThat(clientConfiguration.getDefaultHeaders().get("foo")).containsOnly("bar");
 		assertThat(clientConfiguration.getConnectTimeout()).isEqualTo(Duration.ofDays(1));
 		assertThat(clientConfiguration.getSocketTimeout()).isEqualTo(Duration.ofDays(2));
+		assertThat(clientConfiguration.getPathPrefix()).isEqualTo("myPathPrefix");
 	}
 
 	@Test // DATAES-488, DATAES-504

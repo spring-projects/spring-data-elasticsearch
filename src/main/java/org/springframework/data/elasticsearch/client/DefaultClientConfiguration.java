@@ -32,6 +32,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Huw Ayling-Miller
  * @since 3.2
  */
 class DefaultClientConfiguration implements ClientConfiguration {
@@ -42,9 +43,10 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	private final @Nullable SSLContext sslContext;
 	private final Duration soTimeout;
 	private final Duration connectTimeout;
+	private final String pathPrefix;
 
 	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
-			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout) {
+			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout, @Nullable String pathPrefix) {
 
 		this.hosts = Collections.unmodifiableList(new ArrayList<>(hosts));
 		this.headers = new HttpHeaders(headers);
@@ -52,6 +54,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		this.sslContext = sslContext;
 		this.soTimeout = soTimeout;
 		this.connectTimeout = connectTimeout;
+		this.pathPrefix = pathPrefix;
 	}
 
 	/*
@@ -106,6 +109,15 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	@Override
 	public Duration getSocketTimeout() {
 		return this.soTimeout;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getPathPrefix()
+	 */
+	@Override
+	public String getPathPrefix() {
+		return this.pathPrefix;
 	}
 
 }

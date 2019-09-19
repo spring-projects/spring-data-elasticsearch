@@ -30,6 +30,7 @@ import org.springframework.http.HttpHeaders;
  *
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Huw Ayling-Miller
  * @since 3.2
  */
 public interface ClientConfiguration {
@@ -134,6 +135,14 @@ public interface ClientConfiguration {
 	 * @see io.netty.handler.timeout.WriteTimeoutHandler
 	 */
 	Duration getSocketTimeout();
+
+	/**
+	 * Returns the path prefix that should be prepended to HTTP(s) requests for Elasticsearch behind a proxy.
+	 * 
+	 * @return the path prefix.
+	 * @since 4.0
+	 */
+	String getPathPrefix();
 
 	/**
 	 * @author Christoph Strobl
@@ -266,6 +275,15 @@ public interface ClientConfiguration {
 		 * @return the {@link TerminalClientConfigurationBuilder}
 		 */
 		TerminalClientConfigurationBuilder withBasicAuth(String username, String password);
+
+		/**
+		 * Configure the path prefix that will be prepended to any HTTP(s) requests
+		 * 
+		 * @param pathPrefix the pathPrefix.
+		 * @return the {@link TerminalClientConfigurationBuilder}
+		 * @since 4.0
+		 */
+		TerminalClientConfigurationBuilder withPathPrefix(String pathPrefix);
 
 		/**
 		 * Build the {@link ClientConfiguration} object.
