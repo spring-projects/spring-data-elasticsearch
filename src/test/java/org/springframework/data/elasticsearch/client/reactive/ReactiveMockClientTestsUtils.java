@@ -59,6 +59,7 @@ import org.springframework.web.util.UriBuilder;
 
 /**
  * @author Christoph Strobl
+ * @author Huw Ayling-Miller
  */
 public class ReactiveMockClientTestsUtils {
 
@@ -263,12 +264,12 @@ public class ReactiveMockClientTestsUtils {
 		public WebClientProvider withErrorListener(Consumer<Throwable> errorListener) {
 			throw new UnsupportedOperationException();
 		}
-		
+
 		@Override
 		public String getPathPrefix() {
 			return null;
 		}
-		
+
 		@Override
 		public WebClientProvider withPathPrefix(String pathPrefix) {
 			throw new UnsupportedOperationException();
