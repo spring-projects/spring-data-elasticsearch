@@ -53,7 +53,7 @@ public class RequestConvertersTest {
 	}
 
 	@Test // DATAES-652
-	public void shouldAddIfSeqNoAndIfPrimaryTermToResultIfInputcontainsThemWhenConvertingIndex() {
+	public void shouldAddIfSeqNoAndIfPrimaryTermToResultIfInputcontainsThemWhenConvertingIndexRequest() {
 		IndexRequest request = createMinimalIndexRequest();
 		request.setIfSeqNo(3);
 		request.setIfPrimaryTerm(4);
