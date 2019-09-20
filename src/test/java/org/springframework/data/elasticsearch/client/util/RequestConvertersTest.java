@@ -33,7 +33,7 @@ import org.junit.Test;
  */
 public class RequestConvertersTest {
 	@Test // DATAES-652
-	public void shouldNotAddIfSeqNoAndIfPrimaryTermToResultIfInputDoesNotcontainThemWhenConvertingIndex() {
+	public void shouldNotAddIfSeqNoAndIfPrimaryTermToResultIfInputDoesNotcontainThemWhenConvertingIndexRequest() {
 		IndexRequest request = createMinimalIndexRequest();
 
 		Request result = RequestConverters.index(request);
