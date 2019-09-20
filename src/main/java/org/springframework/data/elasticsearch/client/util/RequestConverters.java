@@ -117,6 +117,8 @@ public class RequestConverters {
 		parameters.withTimeout(deleteRequest.timeout());
 		parameters.withVersion(deleteRequest.version());
 		parameters.withVersionType(deleteRequest.versionType());
+		parameters.withIfSeqNo(deleteRequest.ifSeqNo());
+		parameters.withIfPrimaryTerm(deleteRequest.ifPrimaryTerm());
 		parameters.withRefreshPolicy(deleteRequest.getRefreshPolicy());
 		parameters.withWaitForActiveShards(deleteRequest.waitForActiveShards());
 		return request;

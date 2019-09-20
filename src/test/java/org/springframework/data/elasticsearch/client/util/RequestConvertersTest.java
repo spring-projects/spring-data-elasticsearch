@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 
 import java.util.HashMap;
 
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Request;
 import org.junit.Test;
@@ -59,6 +60,32 @@ public class RequestConvertersTest {
 		request.setIfPrimaryTerm(4);
 
 		Request result = RequestConverters.index(request);
+
+		assertThat(result.getParameters(), hasEntry("if_seq_no", "3"));
+		assertThat(result.getParameters(), hasEntry("if_primary_term", "4"));
+	}
+
+	@Test // DATAES-652
+	public void shouldNotAddIfSeqNoAndIfPrimaryTermToResultIfInputDoesNotcontainThemWhenConvertingDeleteRequest() {
+		DeleteRequest request = createMinimalDeleteRequest();
+
+		Request result = RequestConverters.delete(request);
+
+		assertThat(result.getParameters(), not(hasKey("if_seq_no")));
+		assertThat(result.getParameters(), not(hasKey("if_primary_term")));
+	}
+
+	private DeleteRequest createMinimalDeleteRequest() {
+		return new DeleteRequest("the-index", "the-type", "id");
+	}
+
+	@Test // DATAES-652
+	public void shouldAddIfSeqNoAndIfPrimaryTermToResultIfInputcontainsThemWhenConvertingDeleteRequest() {
+		DeleteRequest request = createMinimalDeleteRequest();
+		request.setIfSeqNo(3);
+		request.setIfPrimaryTerm(4);
+
+		Request result = RequestConverters.delete(request);
 
 		assertThat(result.getParameters(), hasEntry("if_seq_no", "3"));
 		assertThat(result.getParameters(), hasEntry("if_primary_term", "4"));
