@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.core;
 import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.CoreMatchers.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
@@ -29,10 +28,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.IOException;
-import java.lang.Double;
-import java.lang.Integer;
-import java.lang.Long;
-import java.lang.Object;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,6 +46,7 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
@@ -2957,6 +2953,158 @@ public class ElasticsearchTemplateTests {
 			indexQueries.add(getIndexQuery(sampleEntity));
 		}
 		return indexQueries;
+	}
+
+	@Test
+	public void shouldAddAlias() {
+
+		// given
+		String aliasName = "test-alias";
+		AliasQuery aliasQuery = new AliasBuilder() //
+				.withIndexName(INDEX_NAME_SAMPLE_ENTITY) //
+				.withAliasName(aliasName) //
+				.build();
+
+		// when
+		elasticsearchTemplate.addAlias(aliasQuery);
+
+		// then
+		List<AliasMetaData> aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
+		assertThat(aliases).isNotNull();
+		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
+	}
+
+	@Test // DATAES-70
+	public void shouldAddAliasForVariousRoutingValues() {
+
+		// given
+		String alias1 = "test-alias-1";
+		String alias2 = "test-alias-2";
+
+		AliasQuery aliasQuery1 = new AliasBuilder() //
+				.withIndexName(INDEX_NAME_SAMPLE_ENTITY) //
+				.withAliasName(alias1) //
+				.withIndexRouting("0") //
+				.build();
+
+		AliasQuery aliasQuery2 = new AliasBuilder() //
+				.withIndexName(INDEX_NAME_SAMPLE_ENTITY) //
+				.withAliasName(alias2) //
+				.withSearchRouting("1") //
+				.build();
+
+		// when
+		elasticsearchTemplate.addAlias(aliasQuery1);
+		elasticsearchTemplate.addAlias(aliasQuery2);
+
+		String documentId = randomNumeric(5);
+		SampleEntity entity = SampleEntity.builder() //
+				.id(documentId) //
+				.message("some message") //
+				.version(System.currentTimeMillis()) //
+				.build();
+
+		IndexQuery indexQuery = new IndexQueryBuilder() //
+				.withIndexName(alias1) //
+				.withType(TYPE_NAME) //
+				.withId(entity.getId()) //
+				.withObject(entity) //
+				.build();
+
+		elasticsearchTemplate.index(indexQuery);
+
+		// then
+		List<AliasMetaData> aliasMetaData = elasticsearchTemplate.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
+		assertThat(aliasMetaData).isNotEmpty();
+
+		AliasMetaData aliasMetaData1 = aliasMetaData.get(0);
+		assertThat(aliasMetaData1).isNotNull();
+		assertThat(aliasMetaData1.alias()).isEqualTo(alias1);
+		assertThat(aliasMetaData1.indexRouting()).isEqualTo("0");
+
+		AliasMetaData aliasMetaData2 = aliasMetaData.get(1);
+		assertThat(aliasMetaData2).isNotNull();
+		assertThat(aliasMetaData2.alias()).isEqualTo(alias2);
+		assertThat(aliasMetaData2.searchRouting()).isEqualTo("1");
+
+		// cleanup
+		elasticsearchTemplate.removeAlias(aliasQuery1);
+		elasticsearchTemplate.removeAlias(aliasQuery2);
+	}
+
+	@Test // DATAES-70
+	public void shouldAddAliasWithGivenRoutingValue() {
+
+		// given
+		String alias = "test-alias";
+
+		AliasQuery aliasQuery = new AliasBuilder() //
+				.withIndexName(INDEX_NAME_SAMPLE_ENTITY) //
+				.withAliasName(alias) //
+				.withRouting("0") //
+				.build();
+
+		// when
+		elasticsearchTemplate.addAlias(aliasQuery);
+
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = SampleEntity.builder() //
+				.id(documentId) //
+				.message("some message") //
+				.version(System.currentTimeMillis()) //
+				.build();
+
+		IndexQuery indexQuery = new IndexQueryBuilder() //
+				.withIndexName(alias) //
+				.withId(sampleEntity.getId()) //
+				.withType(TYPE_NAME) //
+				.withObject(sampleEntity) //
+				.build();
+
+		elasticsearchTemplate.index(indexQuery);
+		elasticsearchTemplate.refresh(INDEX_NAME_SAMPLE_ENTITY);
+
+		SearchQuery query = new NativeSearchQueryBuilder() //
+				.withQuery(matchAllQuery()) //
+				.withIndices(alias) //
+				.withTypes(TYPE_NAME) //
+				.build();
+
+		long count = elasticsearchTemplate.count(query);
+
+		// then
+		List<AliasMetaData> aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
+		assertThat(aliases).isNotNull();
+		AliasMetaData aliasMetaData = aliases.get(0);
+		assertThat(aliasMetaData.alias()).isEqualTo(alias);
+		assertThat(aliasMetaData.searchRouting()).isEqualTo("0");
+		assertThat(aliasMetaData.indexRouting()).isEqualTo("0");
+		assertThat(count).isEqualTo(1);
+
+		// cleanup
+		elasticsearchTemplate.removeAlias(aliasQuery);
+	}
+
+	@Test // DATAES-541
+	public void shouldRemoveAlias() {
+	
+		// given
+		String aliasName = "test-alias";
+		AliasQuery aliasQuery = new AliasBuilder() //
+				.withIndexName(INDEX_NAME_SAMPLE_ENTITY) //
+				.withAliasName(aliasName) //
+				.build();
+	
+		// when
+		elasticsearchTemplate.addAlias(aliasQuery);
+		List<AliasMetaData> aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
+		assertThat(aliases).isNotNull();
+		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
+	
+		// then
+		elasticsearchTemplate.removeAlias(aliasQuery);
+		aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
+		assertThat(aliases).isEmpty();
 	}
 
 	@Document(indexName = INDEX_2_NAME, replicas = 0, shards = 1)

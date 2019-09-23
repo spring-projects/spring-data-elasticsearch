@@ -22,6 +22,7 @@ import static org.springframework.util.StringUtils.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -225,11 +226,17 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 
 	@Override
 	public boolean removeAlias(AliasQuery query) {
+
 		Assert.notNull(query.getIndexName(), "No index defined for Alias");
 		Assert.notNull(query.getAliasName(), "No alias defined");
-		IndicesAliasesRequest request = new IndicesAliasesRequest();
-		AliasActions aliasAction = new AliasActions(AliasActions.Type.REMOVE);
-		request.addAliasAction(aliasAction);
+
+		AliasActions aliasAction = IndicesAliasesRequest.AliasActions.remove() //
+				.index(query.getIndexName()) //
+				.alias(query.getAliasName());
+
+		IndicesAliasesRequest request = Requests.indexAliasesRequest() //
+				.addAliasAction(aliasAction);
+
 		try {
 			return client.indices().updateAliases(request, RequestOptions.DEFAULT).isAcknowledged();
 		} catch (IOException e) {
@@ -1451,10 +1458,11 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 
 		try {
 			JsonNode node = mapper.readTree(aliasResponse);
-
-			Iterator<String> names = node.fieldNames();
-			String name = names.next();
 			node = node.findValue("aliases");
+
+			if (node == null) {
+				return Collections.emptyList();
+			}
 
 			Map<String, AliasData> aliasData = mapper.readValue(mapper.writeValueAsString(node),
 					new TypeReference<Map<String, AliasData>>() {});
