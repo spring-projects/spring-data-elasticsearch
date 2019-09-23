@@ -128,7 +128,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate impleme
 	private static final Logger QUERY_LOGGER = LoggerFactory
 			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
 	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchTemplate.class);
-	private static final String FIELD_SCORE = "_score";
 
 	private Client client;
 	private ResultsMapper resultsMapper;
@@ -1128,7 +1127,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate impleme
 		for (Sort.Order order : query.getSort()) {
 			SortOrder sortOrder = order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC;
 
-			if (FIELD_SCORE.equals(order.getProperty())) {
+			if (ScoreSortBuilder.NAME.equals(order.getProperty())) {
 				ScoreSortBuilder sort = SortBuilders //
 						.scoreSort() //
 						.order(sortOrder);

@@ -79,6 +79,7 @@ import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.ScoreSortBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -93,7 +94,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.client.support.AliasData;
@@ -148,6 +148,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
 
 	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
+	
 	private RestHighLevelClient client;
 	private ResultsMapper resultsMapper;
 	private String searchTimeout;
@@ -1353,19 +1354,34 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 
 	private void prepareSort(Query query, SearchSourceBuilder sourceBuilder,
 			@Nullable ElasticsearchPersistentEntity<?> entity) {
+
 		for (Sort.Order order : query.getSort()) {
-			ElasticsearchPersistentProperty property = entity != null //
-					? entity.getPersistentProperty(order.getProperty()) //
-					: null;
-			String fieldName = property != null ? property.getFieldName() : order.getProperty();
-			FieldSortBuilder sort = SortBuilders.fieldSort(fieldName)
-					.order(order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC);
-			if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
-				sort.missing("_first");
-			} else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
-				sort.missing("_last");
+			SortOrder sortOrder = order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC;
+
+			if (ScoreSortBuilder.NAME.equals(order.getProperty())) {
+				ScoreSortBuilder sort = SortBuilders //
+						.scoreSort() //
+						.order(sortOrder);
+
+				sourceBuilder.sort(sort);
+			} else {
+				ElasticsearchPersistentProperty property = (entity != null) //
+						? entity.getPersistentProperty(order.getProperty()) //
+						: null;
+				String fieldName = property != null ? property.getFieldName() : order.getProperty();
+
+				FieldSortBuilder sort = SortBuilders //
+						.fieldSort(fieldName) //
+						.order(sortOrder);
+
+				if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
+					sort.missing("_first");
+				} else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
+					sort.missing("_last");
+				}
+
+				sourceBuilder.sort(sort);
 			}
-			sourceBuilder.sort(sort);
 		}
 	}
 
