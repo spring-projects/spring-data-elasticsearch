@@ -786,26 +786,30 @@ public class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.getContent().get(1).getMessage()).isEqualTo(sampleEntity2.getMessage());
 	}
 
-	@Test // DATAES-467
+	@Test // DATAES-467, DATAES-657
 	public void shouldSortResultsByScore() {
 
 		// given
 		List<SampleEntity> entities = Arrays.asList( //
-				SampleEntity.builder().id("1").message("abc").build(), //
-				SampleEntity.builder().id("2").message("def").build(), //
-				SampleEntity.builder().id("3").message("ghi").build());
+				SampleEntity.builder().id("1").message("green").build(), //
+				SampleEntity.builder().id("2").message("yellow green").build(), //
+				SampleEntity.builder().id("3").message("blue").build());
 
 		elasticsearchTemplate.bulkIndex(getIndexQueries(entities));
 		elasticsearchTemplate.refresh(SampleEntity.class);
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withPageable(PageRequest.of(0, 10, Sort.by(Sort.Order.asc("_score")))).build();
+		SearchQuery searchQuery = new NativeSearchQueryBuilder() //
+				.withQuery(matchQuery("message", "green")) //
+				.withPageable(PageRequest.of(0, 10, Sort.by(Sort.Order.asc("_score")))) //
+				.build();
 
 		// when
-		Page<SampleEntity> sampleEntities = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
+		Page<SampleEntity> page = elasticsearchTemplate.queryForPage(searchQuery, SampleEntity.class);
 
 		// then
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(3);
+		assertThat(page.getTotalElements()).isEqualTo(2);
+		assertThat(page.getContent().get(0).getId()).isEqualTo("2");
+		assertThat(page.getContent().get(1).getId()).isEqualTo("1");
 	}
 
 	@Test
