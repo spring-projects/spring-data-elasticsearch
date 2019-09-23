@@ -127,7 +127,7 @@ Add the Maven dependency:
 [cols="^,^,"]
 |===
 |Spring Data Elasticsearch | Elasticsearch |
-| _4.0.x_ |_7.3.0_ | _not yet released_
+| _4.0.x_ |_7.3.2_ | _not yet released_
 | 3.2.x | 6.8.1 | _not yet released_
 | 3.1.x | 6.2.2 | 
 | 3.0.x | 5.5.0 | 
