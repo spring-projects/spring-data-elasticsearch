@@ -1,4 +1,4 @@
-package org.springframework.data.elasticsearch.core.indexmapping;
+package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
 
