@@ -47,6 +47,7 @@ import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
@@ -596,27 +597,40 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate impleme
 	}
 
 	private UpdateRequestBuilder prepareUpdate(UpdateQuery query) {
+
 		String indexName = !StringUtils.isEmpty(query.getIndexName()) ? query.getIndexName()
 				: getPersistentEntityFor(query.getClazz()).getIndexName();
 		String type = !StringUtils.isEmpty(query.getType()) ? query.getType()
 				: getPersistentEntityFor(query.getClazz()).getIndexType();
+
 		Assert.notNull(indexName, "No index defined for Query");
 		Assert.notNull(type, "No type define for Query");
 		Assert.notNull(query.getId(), "No Id define for Query");
-		Assert.notNull(query.getUpdateRequest(), "No IndexRequest define for Query");
-		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId());
-		updateRequestBuilder.setRouting(query.getUpdateRequest().routing());
+		Assert.notNull(query.getUpdateRequest(), "No UpdateRequest define for Query");
 
-		if (query.getUpdateRequest().script() == null) {
-			// doc
-			if (query.DoUpsert()) {
-				updateRequestBuilder.setDocAsUpsert(true).setDoc(query.getUpdateRequest().doc());
-			} else {
-				updateRequestBuilder.setDoc(query.getUpdateRequest().doc());
-			}
-		} else {
-			// or script
-			updateRequestBuilder.setScript(query.getUpdateRequest().script());
+		UpdateRequest queryUpdateRequest = query.getUpdateRequest();
+
+		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, type, query.getId()) //
+				.setRouting(queryUpdateRequest.routing()) //
+				.setRetryOnConflict(queryUpdateRequest.retryOnConflict()) //
+				.setTimeout(queryUpdateRequest.timeout()) //
+				.setWaitForActiveShards(queryUpdateRequest.waitForActiveShards()) //
+				.setRefreshPolicy(queryUpdateRequest.getRefreshPolicy()) //
+				.setWaitForActiveShards(queryUpdateRequest.waitForActiveShards()) //
+				.setScriptedUpsert(queryUpdateRequest.scriptedUpsert()) //
+				.setDocAsUpsert(queryUpdateRequest.docAsUpsert());
+
+		if (query.DoUpsert()) {
+			updateRequestBuilder.setDocAsUpsert(true);
+		}
+		if (queryUpdateRequest.script() != null) {
+			updateRequestBuilder.setScript(queryUpdateRequest.script());
+		}
+		if (queryUpdateRequest.doc() != null) {
+			updateRequestBuilder.setDoc(queryUpdateRequest.doc());
+		}
+		if (queryUpdateRequest.upsertRequest() != null) {
+			updateRequestBuilder.setUpsert(queryUpdateRequest.upsertRequest());
 		}
 
 		return updateRequestBuilder;

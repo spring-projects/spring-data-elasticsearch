@@ -55,6 +55,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Requests;
@@ -713,26 +714,39 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 	}
 
 	private UpdateRequest prepareUpdate(UpdateQuery query) {
+
 		String indexName = hasText(query.getIndexName()) ? query.getIndexName()
 				: getPersistentEntityFor(query.getClazz()).getIndexName();
 		String type = hasText(query.getType()) ? query.getType() : getPersistentEntityFor(query.getClazz()).getIndexType();
+
 		Assert.notNull(indexName, "No index defined for Query");
 		Assert.notNull(type, "No type define for Query");
 		Assert.notNull(query.getId(), "No Id define for Query");
-		Assert.notNull(query.getUpdateRequest(), "No IndexRequest define for Query");
-		UpdateRequest updateRequest = new UpdateRequest(indexName, type, query.getId());
-		updateRequest.routing(query.getUpdateRequest().routing());
+		Assert.notNull(query.getUpdateRequest(), "No UpdateRequest define for Query");
 
-		if (query.getUpdateRequest().script() == null) {
-			// doc
-			if (query.DoUpsert()) {
-				updateRequest.docAsUpsert(true).doc(query.getUpdateRequest().doc());
-			} else {
-				updateRequest.doc(query.getUpdateRequest().doc());
-			}
-		} else {
-			// or script
-			updateRequest.script(query.getUpdateRequest().script());
+		UpdateRequest queryUpdateRequest = query.getUpdateRequest();
+
+		UpdateRequest updateRequest = new UpdateRequest(indexName, type, query.getId()) //
+				.routing(queryUpdateRequest.routing()) //
+				.retryOnConflict(queryUpdateRequest.retryOnConflict()) //
+				.timeout(queryUpdateRequest.timeout()) //
+				.waitForActiveShards(queryUpdateRequest.waitForActiveShards()) //
+				.setRefreshPolicy(queryUpdateRequest.getRefreshPolicy()) //
+				.waitForActiveShards(queryUpdateRequest.waitForActiveShards()) //
+				.scriptedUpsert(queryUpdateRequest.scriptedUpsert()) //
+				.docAsUpsert(queryUpdateRequest.docAsUpsert());
+
+		if (query.DoUpsert()) {
+			updateRequest.docAsUpsert(true);
+		}
+		if (queryUpdateRequest.script() != null) {
+			updateRequest.script(queryUpdateRequest.script());
+		}
+		if (queryUpdateRequest.doc() != null) {
+			updateRequest.doc(queryUpdateRequest.doc());
+		}
+		if (queryUpdateRequest.upsertRequest() != null) {
+			updateRequest.upsert(queryUpdateRequest.upsertRequest());
 		}
 
 		return updateRequest;
