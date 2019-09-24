@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core.indexmapping;
+package org.springframework.data.elasticsearch.core.index;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.*;
-import static org.springframework.data.elasticsearch.core.indexmapping.MappingParameters.*;
+import static org.springframework.data.elasticsearch.core.index.MappingParameters.*;
 import static org.springframework.util.StringUtils.*;
 
 import java.io.ByteArrayInputStream;

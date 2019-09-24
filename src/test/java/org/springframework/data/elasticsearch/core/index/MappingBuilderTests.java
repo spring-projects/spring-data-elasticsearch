@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.elasticsearch.core.indexmapping;
+package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
