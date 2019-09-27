@@ -16,17 +16,22 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.apache.commons.lang.RandomStringUtils.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import lombok.Builder;
 import lombok.Data;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -34,6 +39,7 @@ import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQueryBuilder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * @author Rizwan Idrees
@@ -62,6 +68,33 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5)).withClass(SampleEntity.class)
 				.withIndexRequest(indexRequest).build();
 		elasticsearchTemplate.update(updateQuery);
+	}
+
+	@Test // DATAES-227
+	@Override
+	public void shouldUseUpsertOnUpdate() throws IOException {
+
+		// given
+		Map<String, Object> doc = new HashMap<>();
+		doc.put("id", "1");
+		doc.put("message", "test");
+
+		UpdateRequest updateRequest = new UpdateRequest() //
+				.doc(doc) //
+				.upsert(doc);
+
+		UpdateQuery updateQuery = new UpdateQueryBuilder() //
+				.withClass(SampleEntity.class) //
+				.withId("1") //
+				.withUpdateRequest(updateRequest).build();
+
+		// when
+		UpdateRequest request = (UpdateRequest) ReflectionTestUtils //
+				.invokeMethod(elasticsearchTemplate, "prepareUpdate", updateQuery);
+
+		// then
+		assertThat(request).isNotNull();
+		assertThat(request.upsertRequest()).isNotNull();
 	}
 
 	@Data

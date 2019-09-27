@@ -46,6 +46,8 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.script.Script;
@@ -84,6 +86,7 @@ import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * Base for testing rest/transport templates
@@ -1497,6 +1500,33 @@ public class ElasticsearchTemplateTests {
 		getQuery.setId(documentId);
 		SampleEntity indexedEntity = elasticsearchTemplate.queryForObject(getQuery, SampleEntity.class);
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
+	}
+
+	@Test // DATAES-227
+	public void shouldUseUpsertOnUpdate() throws IOException {
+
+		// given
+		Map<String, Object> doc = new HashMap<>();
+		doc.put("id", "1");
+		doc.put("message", "test");
+
+		UpdateRequest updateRequest = new UpdateRequest() //
+				.doc(doc) //
+				.upsert(doc);
+
+		UpdateQuery updateQuery = new UpdateQueryBuilder() //
+				.withClass(SampleEntity.class) //
+				.withId("1") //
+				.withUpdateRequest(updateRequest).build();
+
+		// when
+		UpdateRequest request = ((UpdateRequestBuilder) ReflectionTestUtils //
+				.invokeMethod(elasticsearchTemplate, "prepareUpdate", updateQuery)) //
+						.request();
+
+		// then
+		assertThat(request).isNotNull();
+		assertThat(request.upsertRequest()).isNotNull();
 	}
 
 	@Test
