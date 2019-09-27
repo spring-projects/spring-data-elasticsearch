@@ -124,7 +124,8 @@ import org.springframework.util.StringUtils;
  * @author Farid Azaza
  * @author Gyula Attila Csorogi
  */
-public class ElasticsearchTemplate extends AbstractElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
+public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
+		implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
 	private static final Logger QUERY_LOGGER = LoggerFactory
 			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
@@ -158,7 +159,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate impleme
 
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter,
 			ResultsMapper resultsMapper) {
-		
+
 		super(elasticsearchConverter);
 
 		Assert.notNull(client, "Client must not be null!");

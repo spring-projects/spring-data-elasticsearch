@@ -55,7 +55,6 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Requests;
@@ -149,7 +148,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
 
 	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
-	
+
 	private RestHighLevelClient client;
 	private ResultsMapper resultsMapper;
 	private String searchTimeout;
@@ -178,7 +177,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 
 	public ElasticsearchRestTemplate(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
 			ResultsMapper resultsMapper) {
-		
+
 		super(elasticsearchConverter);
 
 		Assert.notNull(client, "Client must not be null!");

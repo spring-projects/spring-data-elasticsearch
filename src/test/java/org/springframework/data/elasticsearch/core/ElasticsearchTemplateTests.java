@@ -3121,20 +3121,20 @@ public class ElasticsearchTemplateTests {
 
 	@Test // DATAES-541
 	public void shouldRemoveAlias() {
-	
+
 		// given
 		String aliasName = "test-alias";
 		AliasQuery aliasQuery = new AliasBuilder() //
 				.withIndexName(INDEX_NAME_SAMPLE_ENTITY) //
 				.withAliasName(aliasName) //
 				.build();
-	
+
 		// when
 		elasticsearchTemplate.addAlias(aliasQuery);
 		List<AliasMetaData> aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
 		assertThat(aliases).isNotNull();
 		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
-	
+
 		// then
 		elasticsearchTemplate.removeAlias(aliasQuery);
 		aliases = elasticsearchTemplate.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
