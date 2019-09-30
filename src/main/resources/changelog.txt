@@ -1,6 +1,17 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.0.RELEASE (2019-09-30)
+---------------------------------------------
+* DATAES-657 - Sort by _score not supported by ElasticsearchRestTemplate.
+* DATAES-652 - Send if_seq_no and if_primary_term parameters when indexing via ReactiveElasticsearchClient.
+* DATAES-648 - Unify documentation of version compatibilities.
+* DATAES-625 - Release 3.2 GA (Moore).
+* DATAES-541 - IllegalArgumentException on ElasticsearchRestTemplate#removeAlias.
+* DATAES-305 - let users create mappings with dynamical indexName.
+* DATAES-227 - ElasticsearchTemplate.prepareUpdate should call setUpsert.
+
+
 Changes in version 3.1.11.RELEASE (2019-09-30)
 ----------------------------------------------
 * DATAES-627 - Add HTTPS entries into spring.schemas.
