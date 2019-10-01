@@ -5,12 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
-import org.springframework.util.Assert;
+import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.util.StringUtils;
 
 /**
  * AbstractElasticsearchTemplate
- * 
+ *
  * @author Sascha Woo
  */
 public abstract class AbstractElasticsearchTemplate {
@@ -18,12 +18,6 @@ public abstract class AbstractElasticsearchTemplate {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractElasticsearchTemplate.class);
 
 	protected ElasticsearchConverter elasticsearchConverter;
-
-	public AbstractElasticsearchTemplate(ElasticsearchConverter elasticsearchConverter) {
-
-		Assert.notNull(elasticsearchConverter, "elasticsearchConverter must not be null.");
-		this.elasticsearchConverter = elasticsearchConverter;
-	}
 
 	protected String buildMapping(Class<?> clazz) {
 

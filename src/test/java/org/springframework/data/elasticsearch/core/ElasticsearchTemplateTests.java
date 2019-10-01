@@ -28,6 +28,10 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.IOException;
+import java.lang.Double;
+import java.lang.Integer;
+import java.lang.Long;
+import java.lang.Object;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -80,6 +84,7 @@ import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -1667,12 +1672,14 @@ public class ElasticsearchTemplateTests {
 		SearchResultMapper searchResultMapper = new SearchResultMapper() {
 			@Override
 			public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-				DefaultEntityMapper defaultEntityMapper = new DefaultEntityMapper(new SimpleElasticsearchMappingContext());
+				MappingElasticsearchConverter mappingElasticsearchConverter = new MappingElasticsearchConverter(
+						new SimpleElasticsearchMappingContext());
 				ArrayList<T> result = new ArrayList<>();
 
 				for (SearchHit searchHit : response.getHits()) {
 					try {
-						result.add((T) defaultEntityMapper.mapToObject(searchHit.getSourceAsString(), SampleEntity.class));
+						result
+								.add((T) mappingElasticsearchConverter.mapToObject(searchHit.getSourceAsString(), SampleEntity.class));
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -1688,8 +1695,8 @@ public class ElasticsearchTemplateTests {
 					assertThat(highlightFieldMessage.fragments()[0].toString()).isEqualTo(highlightedMessage);
 				}
 
-				return new AggregatedPageImpl<>(result, pageable, response.getHits().getTotalHits(), response.getAggregations(),
-						response.getScrollId(), response.getHits().getMaxScore());
+				return new AggregatedPageImpl<T>(result, pageable, response.getHits().getTotalHits().value,
+						response.getAggregations(), response.getScrollId(), response.getHits().getMaxScore());
 			}
 
 			@Override

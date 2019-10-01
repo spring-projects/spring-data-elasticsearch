@@ -101,7 +101,6 @@ import org.springframework.data.elasticsearch.core.client.support.AliasData;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
-import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
@@ -162,8 +161,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 				new DefaultResultMapper(mappingElasticsearchConverter.getMappingContext()));
 	}
 
-	public ElasticsearchRestTemplate(RestHighLevelClient client,
-                                     ElasticsearchConverter elasticsearchConverter, EntityMapper entityMapper) {
+	public ElasticsearchRestTemplate(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
+			EntityMapper entityMapper) {
 		initialize(client, elasticsearchConverter,
 				new DefaultResultMapper(elasticsearchConverter.getMappingContext(), entityMapper));
 	}
@@ -172,14 +171,12 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 		initialize(client, createElasticsearchConverter(), resultsMapper);
 	}
 
-	public ElasticsearchRestTemplate(RestHighLevelClient client,
-			ElasticsearchConverter elasticsearchConverter) {
-		initialize(client, elasticsearchConverter,
-				new DefaultResultMapper(elasticsearchConverter.getMappingContext()));
+	public ElasticsearchRestTemplate(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter) {
+		initialize(client, elasticsearchConverter, new DefaultResultMapper(elasticsearchConverter.getMappingContext()));
 	}
 
-	public ElasticsearchRestTemplate(RestHighLevelClient client,
-                                     ElasticsearchConverter elasticsearchConverter, ResultsMapper resultsMapper) {
+	public ElasticsearchRestTemplate(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
+			ResultsMapper resultsMapper) {
 		initialize(client, elasticsearchConverter, resultsMapper);
 	}
 
@@ -190,9 +187,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 	private void initialize(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
 			ResultsMapper resultsMapper) {
 
-		super(elasticsearchConverter);
-
 		Assert.notNull(client, "Client must not be null!");
+		Assert.notNull(elasticsearchConverter, "elasticsearchConverter must not be null.");
 		Assert.notNull(resultsMapper, "ResultsMapper must not be null!");
 
 		this.client = client;

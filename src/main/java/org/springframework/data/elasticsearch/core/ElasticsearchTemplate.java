@@ -88,7 +88,6 @@ import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
-import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
@@ -128,7 +127,8 @@ import org.springframework.util.StringUtils;
  * @deprecated as of 4.0
  */
 @Deprecated
-public class ElasticsearchTemplate extends AbstractElasticsearchTemplate implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
+public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
+		implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
 
 	private static final Logger QUERY_LOGGER = LoggerFactory
 			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
@@ -155,8 +155,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate impleme
 	}
 
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter) {
-		this(client, elasticsearchConverter,
-				new DefaultResultMapper(elasticsearchConverter.getMappingContext()));
+		this(client, elasticsearchConverter, new DefaultResultMapper(elasticsearchConverter.getMappingContext()));
 	}
 
 	private MappingElasticsearchConverter createElasticsearchConverter() {
@@ -166,17 +165,16 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate impleme
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter,
 			ResultsMapper resultsMapper) {
 
-		super(elasticsearchConverter);
-
 		initialize(client, elasticsearchConverter, resultsMapper);
 	}
 
-	private void initialize(Client client, ElasticsearchConverter elasticsearchConverter,
-			ResultsMapper resultsMapper) {
+	private void initialize(Client client, ElasticsearchConverter elasticsearchConverter, ResultsMapper resultsMapper) {
 		Assert.notNull(client, "Client must not be null!");
+		Assert.notNull(elasticsearchConverter, "elasticsearchConverter must not be null.");
 		Assert.notNull(resultsMapper, "ResultsMapper must not be null!");
 
 		this.client = client;
+		this.elasticsearchConverter = elasticsearchConverter;
 		this.resultsMapper = resultsMapper;
 	}
 
