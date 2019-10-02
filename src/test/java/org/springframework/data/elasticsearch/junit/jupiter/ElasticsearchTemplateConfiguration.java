@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch;
+package org.springframework.data.elasticsearch.junit.jupiter;
 
 import org.elasticsearch.client.Client;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,26 +22,25 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
-import org.springframework.data.elasticsearch.junit.junit4.TestNodeResource;
+import org.springframework.util.Assert;
 
 /**
- * configuration class for the classic ElasticsearchTemplate. Needs a {@link TestNodeResource} bean that should be set up in
- * the test as ClassRule and exported as bean.
+ * Configuration for Spring Data Elasticsearch using
+ * {@link org.springframework.data.elasticsearch.core.ElasticsearchTemplate}.
  *
  * @author Peter-Josef Meisch
  */
 @Configuration
-public class ElasticsearchTestConfiguration extends ElasticsearchConfigurationSupport {
-
-	@Autowired private TestNodeResource testNodeResource;
+public class ElasticsearchTemplateConfiguration extends ElasticsearchConfigurationSupport {
 
 	@Bean
-	public Client elasticsearchClient() {
-		return testNodeResource.client();
+	public Client elasticsearchClient(ClusterConnectionInfo clusterConnectionInfo) {
+        return clusterConnectionInfo.getClient();
 	}
 
 	@Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
-	public ElasticsearchTemplate elasticsearchTemplate(Client elasticsearchClient, MappingElasticsearchConverter entityMapper) {
+	public ElasticsearchTemplate elasticsearchTemplate(Client elasticsearchClient,
+			MappingElasticsearchConverter entityMapper) {
 		return new ElasticsearchTemplate(elasticsearchClient, entityMapper);
 	}
 

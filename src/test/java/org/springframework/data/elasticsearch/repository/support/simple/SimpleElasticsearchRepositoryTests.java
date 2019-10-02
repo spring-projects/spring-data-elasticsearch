@@ -45,7 +45,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.RestElasticsearchTestConfiguration;
-import org.springframework.data.elasticsearch.TestNodeResource;
+import org.springframework.data.elasticsearch.junit.junit4.TestNodeResource;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;

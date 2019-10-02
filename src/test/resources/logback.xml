@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d %5p %40.40c:%4L - %m%n</pattern>
-        </encoder>
-    </appender>
+	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d %5p %40.40c:%4L - %m%n</pattern>
+		</encoder>
+	</appender>
 
-    <logger name="org.springframework.data.elasticsearch.ElasticsearchVersionRule" level="info" />
+	<logger name="org.springframework.data.elasticsearch.junit" level="debug"/>
+	<logger name="org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersionRule" level="info"/>
 	<logger name="org.springframework.data.elasticsearch.client.WIRE" level="info"/>
 
-    <root level="error">
-        <appender-ref ref="console"/>
-    </root>
+	<root level="error">
+		<appender-ref ref="console"/>
+	</root>
 
 </configuration>
