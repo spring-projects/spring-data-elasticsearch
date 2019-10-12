@@ -17,9 +17,18 @@ package org.springframework.data.elasticsearch.core.convert;
 
 import lombok.RequiredArgsConstructor;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
@@ -32,9 +41,14 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.EntityInstantiators;
-import org.springframework.data.elasticsearch.Document;
-import org.springframework.data.elasticsearch.SearchDocument;
-import org.springframework.data.elasticsearch.core.EntityMapper;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
+import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.document.SearchDocument;
+import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
@@ -51,9 +65,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-
 /**
  * Elasticsearch specific {@link org.springframework.data.convert.EntityConverter} implementation based on domain type
  * {@link ElasticsearchPersistentEntity metadata}.
@@ -66,11 +77,10 @@ import com.fasterxml.jackson.databind.ObjectReader;
  * @since 3.2
  */
 public class MappingElasticsearchConverter
-		implements ElasticsearchConverter, EntityMapper, ApplicationContextAware, InitializingBean {
+		implements ElasticsearchConverter, ApplicationContextAware, InitializingBean {
 
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	private final GenericConversionService conversionService;
-	private final ObjectReader objectReader;
 
 	private CustomConversions conversions = new ElasticsearchCustomConversions(Collections.emptyList());
 	private EntityInstantiators instantiators = new EntityInstantiators();
@@ -91,9 +101,6 @@ public class MappingElasticsearchConverter
 		this.mappingContext = mappingContext;
 		this.conversionService = conversionService != null ? conversionService : new DefaultConversionService();
 		this.typeMapper = ElasticsearchTypeMapper.create(mappingContext);
-
-		ObjectMapper objectMapper = new ObjectMapper();
-		objectReader = objectMapper.readerFor(HashMap.class);
 	}
 
 	@Override
@@ -102,8 +109,6 @@ public class MappingElasticsearchConverter
 			((ApplicationContextAware) mappingContext).setApplicationContext(applicationContext);
 		}
 	}
-
-	// --> GETTERS / SETTERS
 
 	@Override
 	public MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> getMappingContext() {
@@ -145,8 +150,6 @@ public class MappingElasticsearchConverter
 		conversions.registerConvertersIn(conversionService);
 	}
 
-	// --> READ
-
 	@SuppressWarnings("unchecked")
 	@Override
 	@Nullable
@@ -156,7 +159,7 @@ public class MappingElasticsearchConverter
 
 	@SuppressWarnings("unchecked")
 	@Nullable
-	protected <R> R doRead(Map<String, Object> source, TypeInformation<R> typeHint) {
+	protected <R> R doRead(Document source, TypeInformation<R> typeHint) {
 
 		if (source == null) {
 			return null;
@@ -189,8 +192,48 @@ public class MappingElasticsearchConverter
 		R instance = (R) instantiator.createInstance(targetEntity,
 				new PersistentEntityParameterValueProvider<>(targetEntity, propertyValueProvider, null));
 
-		return targetEntity.requiresPropertyPopulation() ? readProperties(targetEntity, instance, propertyValueProvider)
-				: instance;
+		if (!targetEntity.requiresPropertyPopulation()) {
+			return instance;
+		}
+
+		R result = readProperties(targetEntity, instance, propertyValueProvider);
+
+		if (source instanceof Document) {
+			Document document = (Document) source;
+			if (document.hasId()) {
+				ElasticsearchPersistentProperty idProperty = targetEntity.getIdProperty();
+				PersistentPropertyAccessor<R> accessor = new ConvertingPropertyAccessor<>(
+						targetEntity.getPropertyAccessor(result), conversionService);
+				// Only deal with String because ES generated Ids are strings !
+				if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
+					accessor.setProperty(idProperty, document.getId());
+				}
+			}
+
+			if (document.hasVersion()) {
+				long version = document.getVersion();
+				ElasticsearchPersistentProperty versionProperty = targetEntity.getVersionProperty();
+				// Only deal with Long because ES versions are longs !
+				if (versionProperty != null && versionProperty.getType().isAssignableFrom(Long.class)) {
+					// check that a version was actually returned in the response, -1 would indicate that
+					// a search didn't request the version ids in the response, which would be an issue
+					Assert.isTrue(version != -1, "Version in response is -1");
+					targetEntity.getPropertyAccessor(result).setProperty(versionProperty, version);
+				}
+			}
+		}
+
+		if (source instanceof SearchDocument) {
+			SearchDocument searchDocument = (SearchDocument) source;
+			if (targetEntity.hasScoreProperty()) {
+				targetEntity.getPropertyAccessor(result) //
+						.setProperty(targetEntity.getScoreProperty(), searchDocument.getScore());
+			}
+			populateScriptFields(result, searchDocument);
+		}
+
+		return result;
+
 	}
 
 	protected <R> R readProperties(ElasticsearchPersistentEntity<?> entity, R instance,
@@ -349,8 +392,6 @@ public class MappingElasticsearchConverter
 
 		doWrite(source, sink, type);
 	}
-
-	// --> WRITE
 
 	protected void doWrite(@Nullable Object source, Document sink, @Nullable TypeInformation<? extends Object> typeHint) {
 
@@ -546,11 +587,24 @@ public class MappingElasticsearchConverter
 	}
 
 	@Override
-	public <T> T mapToObject(String source, Class<T> clazz) throws IOException {
-		return read(clazz, Document.from(objectReader.readValue(source)));
+	@Nullable
+	public <T> T mapDocument(Document document, Class<T> type) {
+
+		Object mappedResult = read(type, document);
+
+		if (mappedResult == null) {
+			return (T) null;
+		}
+
+		return type.isInterface() || !ClassUtils.isAssignableValue(type, mappedResult)
+				? getProjectionFactory().createProjection(type, mappedResult)
+				: type.cast(mappedResult);
 	}
 
-	// --> LEGACY
+	@Override
+	public <T> List<T> mapDocuments(List<Document> documents, Class<T> type) {
+		return documents.stream().map(it -> mapDocument(it, type)).collect(Collectors.toList());
+	}
 
 	@Override
 	public Document mapObject(Object source) {
@@ -559,13 +613,6 @@ public class MappingElasticsearchConverter
 		write(source, target);
 		return target;
 	}
-
-	@Override
-	public <T> T readObject(Document source, Class<T> targetType) {
-		return read(targetType, source);
-	}
-
-	// --> PRIVATE HELPERS
 
 	private boolean requiresTypeHint(TypeInformation<?> type, Class<?> actualType,
 			@Nullable TypeInformation<?> container) {
@@ -649,7 +696,37 @@ public class MappingElasticsearchConverter
 		return conversions.isSimpleType(type);
 	}
 
-	// --> OHTER STUFF
+	@Override
+	public <T> AggregatedPage<T> mapResults(SearchDocumentResponse response, Class<T> type, Pageable pageable) {
+
+		List<T> results = response.getSearchDocuments().stream() //
+				.map(searchDocument -> mapDocument(searchDocument, type)).collect(Collectors.toList());
+
+		return new AggregatedPageImpl<T>(results, pageable, response);
+	}
+
+	private <T> void populateScriptFields(T result, SearchDocument searchDocument) {
+		Map<String, List<Object>> fields = searchDocument.getFields();
+		if (!fields.isEmpty()) {
+			for (java.lang.reflect.Field field : result.getClass().getDeclaredFields()) {
+				ScriptedField scriptedField = field.getAnnotation(ScriptedField.class);
+				if (scriptedField != null) {
+					String name = scriptedField.name().isEmpty() ? field.getName() : scriptedField.name();
+					Object value = searchDocument.getFieldValue(name);
+					if (value != null) {
+						field.setAccessible(true);
+						try {
+							field.set(result, value);
+						} catch (IllegalArgumentException e) {
+							throw new ElasticsearchException("failed to set scripted field: " + name + " with value: " + value, e);
+						} catch (IllegalAccessException e) {
+							throw new ElasticsearchException("failed to access scripted field: " + name, e);
+						}
+					}
+				}
+			}
+		}
+	}
 
 	static class MapValueAccessor {
 

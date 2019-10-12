@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch;
+package org.springframework.data.elasticsearch.core.document;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.lang.Nullable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -51,7 +52,7 @@ class MapDocument implements Document {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.Document#hasId()
+	 * @see org.springframework.data.elasticsearch.core.document.Document#hasId()
 	 */
 	@Override
 	public boolean hasId() {
@@ -60,7 +61,7 @@ class MapDocument implements Document {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.Document#getId()
+	 * @see org.springframework.data.elasticsearch.core.document.Document#getId()
 	 */
 	@Override
 	public String getId() {
@@ -74,7 +75,7 @@ class MapDocument implements Document {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.Document#setId(java.lang.String)
+	 * @see org.springframework.data.elasticsearch.core.document.Document#setId(java.lang.String)
 	 */
 	@Override
 	public void setId(String id) {
@@ -83,7 +84,7 @@ class MapDocument implements Document {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.Document#hasVersion()
+	 * @see org.springframework.data.elasticsearch.core.document.Document#hasVersion()
 	 */
 	@Override
 	public boolean hasVersion() {
@@ -92,7 +93,7 @@ class MapDocument implements Document {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.Document#getVersion()
+	 * @see org.springframework.data.elasticsearch.core.document.Document#getVersion()
 	 */
 	@Override
 	public long getVersion() {
@@ -106,7 +107,7 @@ class MapDocument implements Document {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.Document#setVersion(long)
+	 * @see org.springframework.data.elasticsearch.core.document.Document#setVersion(long)
 	 */
 	@Override
 	public void setVersion(long version) {
@@ -259,7 +260,7 @@ class MapDocument implements Document {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.Document#toJson()
+	 * @see org.springframework.data.elasticsearch.core.document.Document#toJson()
 	 */
 	@Override
 	public String toJson() {

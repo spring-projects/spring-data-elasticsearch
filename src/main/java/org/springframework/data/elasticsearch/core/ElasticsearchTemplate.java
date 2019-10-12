@@ -19,7 +19,6 @@ import static org.elasticsearch.client.Requests.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.util.CollectionUtils.*;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -86,11 +85,11 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
+import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.facet.FacetRequest;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
-import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.support.SearchHitsUtil;
 import org.springframework.data.util.CloseableIterator;
@@ -128,54 +127,29 @@ import org.springframework.util.StringUtils;
  */
 @Deprecated
 public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
-		implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
+		implements EsClient<Client>, ApplicationContextAware {
 
 	private static final Logger QUERY_LOGGER = LoggerFactory
 			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
 	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchTemplate.class);
 
 	private Client client;
-	private ResultsMapper resultsMapper;
 	private String searchTimeout;
 
 	public ElasticsearchTemplate(Client client) {
-		MappingElasticsearchConverter mappingElasticsearchConverter = createElasticsearchConverter();
-		initialize(client, mappingElasticsearchConverter,
-				new DefaultResultMapper(mappingElasticsearchConverter.getMappingContext()));
-	}
-
-	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter,
-			EntityMapper entityMapper) {
-		initialize(client, elasticsearchConverter,
-				new DefaultResultMapper(elasticsearchConverter.getMappingContext(), entityMapper));
-	}
-
-	public ElasticsearchTemplate(Client client, ResultsMapper resultsMapper) {
-		initialize(client, createElasticsearchConverter(), resultsMapper);
+		initialize(client, createElasticsearchConverter());
 	}
 
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter) {
-		this(client, elasticsearchConverter, new DefaultResultMapper(elasticsearchConverter.getMappingContext()));
+		initialize(client, elasticsearchConverter);
 	}
 
-	private MappingElasticsearchConverter createElasticsearchConverter() {
-		return new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext());
-	}
-
-	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter,
-			ResultsMapper resultsMapper) {
-
-		initialize(client, elasticsearchConverter, resultsMapper);
-	}
-
-	private void initialize(Client client, ElasticsearchConverter elasticsearchConverter, ResultsMapper resultsMapper) {
+	private void initialize(Client client, ElasticsearchConverter elasticsearchConverter) {
 		Assert.notNull(client, "Client must not be null!");
 		Assert.notNull(elasticsearchConverter, "elasticsearchConverter must not be null.");
-		Assert.notNull(resultsMapper, "ResultsMapper must not be null!");
 
 		this.client = client;
 		this.elasticsearchConverter = elasticsearchConverter;
-		this.resultsMapper = resultsMapper;
 	}
 
 	@Override
@@ -279,23 +253,13 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 	}
 
 	@Override
-	public ElasticsearchConverter getElasticsearchConverter() {
-		return elasticsearchConverter;
-	}
-
-	@Override
 	public <T> T queryForObject(GetQuery query, Class<T> clazz) {
-		return queryForObject(query, clazz, resultsMapper);
-	}
-
-	@Override
-	public <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper) {
 		ElasticsearchPersistentEntity<T> persistentEntity = getPersistentEntityFor(clazz);
 		GetResponse response = client
 				.prepareGet(persistentEntity.getIndexName(), persistentEntity.getIndexType(), query.getId()).execute()
 				.actionGet();
 
-		T entity = mapper.mapResult(response, clazz);
+		T entity = elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);
 		return entity;
 	}
 
@@ -318,48 +282,38 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 
 	@Override
 	public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz) {
-		return queryForPage(query, clazz, resultsMapper);
-	}
-
-	@Override
-	public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
 		SearchResponse response = doSearch(prepareSearch(query, clazz), query);
-		return mapper.mapResults(response, clazz, query.getPageable());
+		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, query.getPageable());
 	}
 
 	@Override
 	public <T> List<Page<T>> queryForPage(List<SearchQuery> queries, Class<T> clazz) {
-		return queryForPage(queries, clazz, resultsMapper);
-	}
-
-	@Override
-	public <T> List<Page<T>> queryForPage(List<SearchQuery> queries, Class<T> clazz, SearchResultMapper mapper) {
 		MultiSearchRequest request = new MultiSearchRequest();
 		for (SearchQuery query : queries) {
 			request.add(prepareSearch(prepareSearch(query, clazz), query));
 		}
-		return doMultiSearch(queries, clazz, request, mapper);
+		return doMultiSearch(queries, clazz, request);
 	}
 
-	private <T> List<Page<T>> doMultiSearch(List<SearchQuery> queries, Class<T> clazz, MultiSearchRequest request,
-			SearchResultMapper resultsMapper) {
+	private <T> List<Page<T>> doMultiSearch(List<SearchQuery> queries, Class<T> clazz, MultiSearchRequest request) {
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
 		List<Page<T>> res = new ArrayList<>(queries.size());
 		int c = 0;
 		for (SearchQuery query : queries) {
-			res.add(resultsMapper.mapResults(items[c++].getResponse(), clazz, query.getPageable()));
+			res.add(elasticsearchConverter.mapResults(SearchDocumentResponse.from(items[c++].getResponse()), clazz,
+					query.getPageable()));
 		}
 		return res;
 	}
 
-	private List<Page<?>> doMultiSearch(List<SearchQuery> queries, List<Class<?>> classes, MultiSearchRequest request,
-			SearchResultMapper resultsMapper) {
+	private List<Page<?>> doMultiSearch(List<SearchQuery> queries, List<Class<?>> classes, MultiSearchRequest request) {
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
 		List<Page<?>> res = new ArrayList<>(queries.size());
 		int c = 0;
 		Iterator<Class<?>> it = classes.iterator();
 		for (SearchQuery query : queries) {
-			res.add(resultsMapper.mapResults(items[c++].getResponse(), it.next(), query.getPageable()));
+			res.add(elasticsearchConverter.mapResults(SearchDocumentResponse.from(items[c++].getResponse()), it.next(),
+					query.getPageable()));
 		}
 		return res;
 	}
@@ -374,18 +328,13 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 
 	@Override
 	public List<Page<?>> queryForPage(List<SearchQuery> queries, List<Class<?>> classes) {
-		return queryForPage(queries, classes, resultsMapper);
-	}
-
-	@Override
-	public List<Page<?>> queryForPage(List<SearchQuery> queries, List<Class<?>> classes, SearchResultMapper mapper) {
 		Assert.isTrue(queries.size() == classes.size(), "Queries should have same length with classes");
 		MultiSearchRequest request = new MultiSearchRequest();
 		Iterator<Class<?>> it = classes.iterator();
 		for (SearchQuery query : queries) {
 			request.add(prepareSearch(prepareSearch(query, it.next()), query));
 		}
-		return doMultiSearch(queries, classes, request, mapper);
+		return doMultiSearch(queries, classes, request);
 	}
 
 	@Override
@@ -445,40 +394,29 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 			searchRequestBuilder.setPostFilter(elasticsearchFilter);
 
 		SearchResponse response = getSearchResponse(searchRequestBuilder);
-		return resultsMapper.mapResults(response, clazz, criteriaQuery.getPageable());
+		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, criteriaQuery.getPageable());
 	}
 
 	@Override
 	public <T> Page<T> queryForPage(StringQuery query, Class<T> clazz) {
-		return queryForPage(query, clazz, resultsMapper);
-	}
-
-	@Override
-	public <T> Page<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper) {
 		SearchResponse response = getSearchResponse(prepareSearch(query, clazz).setQuery(wrapperQuery(query.getSource())));
-		return mapper.mapResults(response, clazz, query.getPageable());
+		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, query.getPageable());
 	}
 
 	@Override
 	public <T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz) {
 		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
-		return doStream(scrollTimeInMillis, startScroll(scrollTimeInMillis, query, clazz), clazz, resultsMapper);
+		return doStream(scrollTimeInMillis, startScroll(scrollTimeInMillis, query, clazz), clazz);
 	}
 
 	@Override
 	public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz) {
-		return stream(query, clazz, resultsMapper);
-	}
-
-	@Override
-	public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
 		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
-		return doStream(scrollTimeInMillis, startScroll(scrollTimeInMillis, query, clazz, mapper), clazz, mapper);
+		return doStream(scrollTimeInMillis, startScroll(scrollTimeInMillis, query, clazz), clazz);
 	}
 
-	private <T> CloseableIterator<T> doStream(long scrollTimeInMillis, ScrolledPage<T> page, Class<T> clazz,
-			SearchResultMapper mapper) {
-		return StreamQueries.streamResults(page, scrollId -> continueScroll(scrollId, scrollTimeInMillis, clazz, mapper),
+	private <T> CloseableIterator<T> doStream(long scrollTimeInMillis, ScrolledPage<T> page, Class<T> clazz) {
+		return StreamQueries.streamResults(page, scrollId -> continueScroll(scrollId, scrollTimeInMillis, clazz),
 				this::clearScroll);
 	}
 
@@ -560,7 +498,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 
 	@Override
 	public <T> List<T> multiGet(SearchQuery searchQuery, Class<T> clazz) {
-		return resultsMapper.mapResults(getMultiResponse(searchQuery, clazz), clazz);
+		return elasticsearchConverter.mapDocuments(DocumentAdapters.from(getMultiResponse(searchQuery, clazz)), clazz);
 	}
 
 	private <T> MultiGetResponse getMultiResponse(Query searchQuery, Class<T> clazz) {
@@ -591,11 +529,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 			builder.add(item);
 		}
 		return builder.execute().actionGet();
-	}
-
-	@Override
-	public <T> List<T> multiGet(SearchQuery searchQuery, Class<T> clazz, MultiGetResultMapper getResultMapper) {
-		return getResultMapper.mapResults(getMultiResponse(searchQuery, clazz), clazz);
 	}
 
 	@Override
@@ -890,39 +823,23 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 		return getSearchResponse(requestBuilder.setQuery(searchQuery.getQuery()));
 	}
 
+	@Override
 	public <T> ScrolledPage<T> startScroll(long scrollTimeInMillis, SearchQuery searchQuery, Class<T> clazz) {
 		SearchResponse response = doScroll(prepareScroll(searchQuery, scrollTimeInMillis, clazz), searchQuery);
-		return resultsMapper.mapResults(response, clazz, null);
+		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, null);
 	}
 
+	@Override
 	public <T> ScrolledPage<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz) {
 		SearchResponse response = doScroll(prepareScroll(criteriaQuery, scrollTimeInMillis, clazz), criteriaQuery);
-		return resultsMapper.mapResults(response, clazz, null);
+		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, null);
 	}
 
-	public <T> ScrolledPage<T> startScroll(long scrollTimeInMillis, SearchQuery searchQuery, Class<T> clazz,
-			SearchResultMapper mapper) {
-		SearchResponse response = doScroll(prepareScroll(searchQuery, scrollTimeInMillis, clazz), searchQuery);
-		return mapper.mapResults(response, clazz, null);
-	}
-
-	public <T> ScrolledPage<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz,
-			SearchResultMapper mapper) {
-		SearchResponse response = doScroll(prepareScroll(criteriaQuery, scrollTimeInMillis, clazz), criteriaQuery);
-		return mapper.mapResults(response, clazz, null);
-	}
-
+	@Override
 	public <T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz) {
 		SearchResponse response = getSearchResponse(
 				client.prepareSearchScroll(scrollId).setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
-		return resultsMapper.mapResults(response, clazz, Pageable.unpaged());
-	}
-
-	public <T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz,
-			SearchResultMapper mapper) {
-		SearchResponse response = getSearchResponse(
-				client.prepareSearchScroll(scrollId).setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
-		return mapper.mapResults(response, clazz, Pageable.unpaged());
+		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, Pageable.unpaged());
 	}
 
 	@Override
@@ -1189,43 +1106,39 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 	}
 
 	private IndexRequestBuilder prepareIndex(IndexQuery query) {
-		try {
-			String indexName = StringUtils.isEmpty(query.getIndexName())
-					? retrieveIndexNameFromPersistentEntity(query.getObject().getClass())[0]
-					: query.getIndexName();
-			String type = StringUtils.isEmpty(query.getType())
-					? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
-					: query.getType();
+		String indexName = StringUtils.isEmpty(query.getIndexName())
+				? retrieveIndexNameFromPersistentEntity(query.getObject().getClass())[0]
+				: query.getIndexName();
+		String type = StringUtils.isEmpty(query.getType())
+				? retrieveTypeFromPersistentEntity(query.getObject().getClass())[0]
+				: query.getType();
 
-			IndexRequestBuilder indexRequestBuilder = null;
+		IndexRequestBuilder indexRequestBuilder = null;
 
-			if (query.getObject() != null) {
-				String id = StringUtils.isEmpty(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();
-				// If we have a query id and a document id, do not ask ES to generate one.
-				if (id != null) {
-					indexRequestBuilder = client.prepareIndex(indexName, type, id);
-				} else {
-					indexRequestBuilder = client.prepareIndex(indexName, type);
-				}
-				indexRequestBuilder.setSource(resultsMapper.getEntityMapper().mapToString(query.getObject()),
-						Requests.INDEX_CONTENT_TYPE);
-			} else if (query.getSource() != null) {
-				indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource(),
-						Requests.INDEX_CONTENT_TYPE);
+		if (query.getObject() != null) {
+			String id = StringUtils.isEmpty(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();
+			// If we have a query id and a document id, do not ask ES to generate one.
+			if (id != null) {
+				indexRequestBuilder = client.prepareIndex(indexName, type, id);
 			} else {
-				throw new ElasticsearchException(
-						"object or source is null, failed to index the document [id: " + query.getId() + "]");
+				indexRequestBuilder = client.prepareIndex(indexName, type);
 			}
-			if (query.getVersion() != null) {
-				indexRequestBuilder.setVersion(query.getVersion());
-				VersionType versionType = retrieveVersionTypeFromPersistentEntity(query.getObject().getClass());
-				indexRequestBuilder.setVersionType(versionType);
-			}
-
-			return indexRequestBuilder;
-		} catch (IOException e) {
-			throw new ElasticsearchException("failed to index the document [id: " + query.getId() + "]", e);
+			indexRequestBuilder.setSource(elasticsearchConverter.mapObject(query.getObject()).toJson(),
+					Requests.INDEX_CONTENT_TYPE);
+		} else if (query.getSource() != null) {
+			indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource(),
+					Requests.INDEX_CONTENT_TYPE);
+		} else {
+			throw new ElasticsearchException(
+					"object or source is null, failed to index the document [id: " + query.getId() + "]");
 		}
+		if (query.getVersion() != null) {
+			indexRequestBuilder.setVersion(query.getVersion());
+			VersionType versionType = retrieveVersionTypeFromPersistentEntity(query.getObject().getClass());
+			indexRequestBuilder.setVersionType(versionType);
+		}
+
+		return indexRequestBuilder;
 	}
 
 	@Override
@@ -1337,10 +1250,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 		return values;
 	}
 
-	protected ResultsMapper getResultsMapper() {
-		return resultsMapper;
-	}
-
 	@Deprecated
 	public static String readFileFromClasspath(String url) {
 		return ResourceUtil.readFileFromClasspath(url);
@@ -1353,4 +1262,5 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 	public SearchResponse suggest(SuggestBuilder suggestion, Class clazz) {
 		return suggest(suggestion, retrieveIndexNameFromPersistentEntity(clazz));
 	}
+
 }

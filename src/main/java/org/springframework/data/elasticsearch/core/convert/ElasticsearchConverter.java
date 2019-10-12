@@ -15,10 +15,18 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
+import java.util.List;
+
 import org.springframework.data.convert.EntityConverter;
-import org.springframework.data.elasticsearch.Document;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -48,4 +56,47 @@ public interface ElasticsearchConverter
 
 		return getConversionService().convert(idValue, String.class);
 	}
+
+	<T> AggregatedPage<T> mapResults(SearchDocumentResponse response, Class<T> clazz, Pageable pageable);
+
+	/**
+	 * Get the configured {@link ProjectionFactory}. <br />
+	 * <strong>NOTE</strong> Should be overwritten in implementation to make use of the type cache.
+	 *
+	 * @since 3.2
+	 */
+	default ProjectionFactory getProjectionFactory() {
+		return new SpelAwareProxyProjectionFactory();
+	}
+
+	/**
+	 * Map a single {@link Document} to an instance of the given type.
+	 *
+	 * @param document must not be {@literal null}.
+	 * @param type must not be {@literal null}.
+	 * @param <T>
+	 * @return can be {@literal null} if the {@link Document#isEmpty()} is true.
+	 * @since 4.0
+	 */
+	@Nullable
+	<T> T mapDocument(Document document, Class<T> type);
+
+	/**
+	 * Map a list of {@link Document}s to alist of instance of the given type.
+	 *
+	 * @param documents must not be {@literal null}.
+	 * @param type must not be {@literal null}.
+	 * @param <T>
+	 * @return a list obtained by calling {@link #mapDocument(Document, Class)} on the elements of the list.
+	 * @since 4.0
+	 */
+	<T> List<T> mapDocuments(List<Document> documents, Class<T> type);
+
+	/**
+	 * Map an object to a {@link Document}.
+	 * 
+	 * @param source
+	 * @return will not be {@literal null}.
+	 */
+	Document mapObject(Object source);
 }

@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch;
+package org.springframework.data.elasticsearch.core.document;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Extension to {@link Document} exposing a search {@link #getScore() score}.
  *
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  * @since 4.0
  * @see Document
  */
@@ -30,4 +34,22 @@ public interface SearchDocument extends Document {
 	 * @return the search {@code score}.
 	 */
 	float getScore();
+
+	/**
+	 * @return the fields for the search result, not {@literal null}
+	 */
+	Map<String, List<Object>> getFields();
+
+	/**
+	 * The first value of the given field.
+	 * 
+	 * @param name the field name
+	 */
+	default <V> V getFieldValue(final String name) {
+		List<Object> values = getFields().get(name);
+		if (values == null || values.isEmpty()) {
+			return null;
+		}
+		return (V) values.get(0);
+	}
 }

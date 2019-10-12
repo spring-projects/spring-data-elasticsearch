@@ -5,19 +5,29 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.util.StringUtils;
 
 /**
  * AbstractElasticsearchTemplate
  *
  * @author Sascha Woo
+ * @author Peter-Josef Meisch
  */
-public abstract class AbstractElasticsearchTemplate {
+public abstract class AbstractElasticsearchTemplate implements ElasticsearchOperations {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractElasticsearchTemplate.class);
 
 	protected ElasticsearchConverter elasticsearchConverter;
+
+	protected ElasticsearchConverter createElasticsearchConverter() {
+		MappingElasticsearchConverter mappingElasticsearchConverter = new MappingElasticsearchConverter(
+				new SimpleElasticsearchMappingContext());
+		mappingElasticsearchConverter.afterPropertiesSet();
+		return mappingElasticsearchConverter;
+	}
 
 	protected String buildMapping(Class<?> clazz) {
 
@@ -43,4 +53,8 @@ public abstract class AbstractElasticsearchTemplate {
 		}
 	}
 
+	@Override
+	public ElasticsearchConverter getElasticsearchConverter() {
+		return elasticsearchConverter;
+	}
 }

@@ -36,9 +36,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -48,8 +47,8 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
-import org.springframework.data.elasticsearch.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.geo.Box;
@@ -95,7 +94,7 @@ public class MappingElasticsearchConverterUnitTests {
 	Document shotGunAsMap;
 	Document bigBunsCafeAsMap;
 
-	@Before
+	@BeforeEach
 	public void init() {
 
 		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
@@ -126,7 +125,8 @@ public class MappingElasticsearchConverterUnitTests {
 		t800AsMap.put("id", "t800");
 		t800AsMap.put("name", "T-800");
 		t800AsMap.put("gender", "MACHINE");
-		t800AsMap.put("_class", "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Person");
+		t800AsMap.put("_class",
+				"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Person");
 
 		observatoryRoad = new Address();
 		observatoryRoad.city = "Los Angeles";
@@ -143,7 +143,8 @@ public class MappingElasticsearchConverterUnitTests {
 		sarahAsMap.put("id", "sarah");
 		sarahAsMap.put("name", "Sarah Connor");
 		sarahAsMap.put("gender", "MAN");
-		sarahAsMap.put("_class", "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Person");
+		sarahAsMap.put("_class",
+				"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Person");
 
 		kyleAsMap = Document.create();
 		kyleAsMap.put("id", "kyle");
@@ -189,46 +190,48 @@ public class MappingElasticsearchConverterUnitTests {
 		shotGunAsMap.put("_class", ShotGun.class.getName());
 	}
 
+	@Test
+	public void shouldFailToInitializeGivenMappingContextIsNull() {
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldFailToInitializeGivenMappingContextIsNull() {
+		// given
+		assertThatThrownBy(() -> {
+			new MappingElasticsearchConverter(null);
+		}).isInstanceOf(IllegalArgumentException.class);
+	}
 
-        // given
-        new MappingElasticsearchConverter(null);
-    }
+	@Test
+	public void shouldReturnMappingContextWithWhichItWasInitialized() {
 
-    @Test
-    public void shouldReturnMappingContextWithWhichItWasInitialized() {
+		// given
+		MappingContext mappingContext = new SimpleElasticsearchMappingContext();
+		MappingElasticsearchConverter converter = new MappingElasticsearchConverter(mappingContext);
 
-        // given
-        MappingContext mappingContext = new SimpleElasticsearchMappingContext();
-        MappingElasticsearchConverter converter = new MappingElasticsearchConverter(mappingContext);
+		// then
+		assertThat(converter.getMappingContext()).isNotNull();
+		assertThat(converter.getMappingContext()).isSameAs(mappingContext);
+	}
 
-        // then
-        assertThat(converter.getMappingContext()).isNotNull();
-        assertThat(converter.getMappingContext()).isSameAs(mappingContext);
-    }
+	@Test
+	public void shouldReturnDefaultConversionService() {
 
-    @Test
-    public void shouldReturnDefaultConversionService() {
+		// given
+		MappingElasticsearchConverter converter = new MappingElasticsearchConverter(
+				new SimpleElasticsearchMappingContext());
 
-        // given
-        MappingElasticsearchConverter converter = new MappingElasticsearchConverter(
-            new SimpleElasticsearchMappingContext());
+		// when
+		ConversionService conversionService = converter.getConversionService();
 
-        // when
-        ConversionService conversionService = converter.getConversionService();
+		// then
+		assertThat(conversionService).isNotNull();
+	}
 
-        // then
-        assertThat(conversionService).isNotNull();
-    }
-
-    @Test // DATAES-530
+	@Test // DATAES-530
 	public void shouldMapObjectToJsonString() throws IOException {
 		// Given
 
 		// When
-		String jsonResult = mappingElasticsearchConverter.mapToString(Car.builder().model(CAR_MODEL).name(CAR_NAME).build());
+		String jsonResult = mappingElasticsearchConverter.mapObject(Car.builder().model(CAR_MODEL).name(CAR_NAME).build())
+				.toJson();
 
 		// Then
 		assertThat(jsonResult).isEqualTo(JSON_STRING);
@@ -239,9 +242,10 @@ public class MappingElasticsearchConverterUnitTests {
 		// Given
 
 		// When
-		Car result = mappingElasticsearchConverter.mapToObject(JSON_STRING, Car.class);
+		Car result = mappingElasticsearchConverter.mapDocument(Document.parse(JSON_STRING), Car.class);
 
 		// Then
+		assertThat(result).isNotNull();
 		assertThat(result.getName()).isEqualTo(CAR_NAME);
 		assertThat(result.getModel()).isEqualTo(CAR_MODEL);
 	}
@@ -255,7 +259,7 @@ public class MappingElasticsearchConverterUnitTests {
 		GeoEntity geoEntity = GeoEntity.builder().pointA(point).pointB(GeoPoint.fromPoint(point)).pointC(pointAsString)
 				.pointD(pointAsArray).build();
 		// when
-		String jsonResult = mappingElasticsearchConverter.mapToString(geoEntity);
+		String jsonResult = mappingElasticsearchConverter.mapObject(geoEntity).toJson();
 
 		// then
 		assertThat(jsonResult).contains(pointTemplate("pointA", point));
@@ -276,7 +280,7 @@ public class MappingElasticsearchConverterUnitTests {
 		sample.annotatedTransientProperty = "transient";
 
 		// when
-		String result = mappingElasticsearchConverter.mapToString(sample);
+		String result = mappingElasticsearchConverter.mapObject(sample).toJson();
 
 		// then
 		assertThat(result).contains("\"property\"");
@@ -736,8 +740,7 @@ public class MappingElasticsearchConverterUnitTests {
 	@AllArgsConstructor
 	@Builder
 	@org.springframework.data.elasticsearch.annotations.Document(indexName = "test-index-geo-core-entity-mapper",
-			type = "geo-test-index", shards = 1, replicas = 0,
-			refreshInterval = "-1")
+			type = "geo-test-index", shards = 1, replicas = 0, refreshInterval = "-1")
 	static class GeoEntity {
 
 		@Id private String id;

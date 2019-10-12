@@ -30,10 +30,8 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.core.EntityMapper;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 
 /**
@@ -100,13 +98,6 @@ public class ElasticsearchConfigurationSupportUnitTests {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(ReactiveRestConfig.class);
 		assertThat(context.getBean(ReactiveElasticsearchTemplate.class)).isNotNull();
-	}
-
-	@Test // DATAES-530
-	public void usesConfiguredEntityMapper() {
-
-		AbstractApplicationContext context = new AnnotationConfigApplicationContext(EntityMapperConfig.class);
-		assertThat(context.getBean(EntityMapper.class)).isInstanceOf(MappingElasticsearchConverter.class);
 	}
 
 	@Configuration

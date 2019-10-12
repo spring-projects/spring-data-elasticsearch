@@ -21,12 +21,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.junit.junit4.TestNodeResource;
 
 /**
- * configuration class for the classic ElasticsearchTemplate. Needs a {@link TestNodeResource} bean that should be set up in
- * the test as ClassRule and exported as bean.
+ * configuration class for the classic ElasticsearchTemplate. Needs a {@link TestNodeResource} bean that should be set
+ * up in the test as ClassRule and exported as bean.
  *
  * @author Peter-Josef Meisch
  */
@@ -41,8 +41,9 @@ public class ElasticsearchTestConfiguration extends ElasticsearchConfigurationSu
 	}
 
 	@Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
-	public ElasticsearchTemplate elasticsearchTemplate(Client elasticsearchClient, MappingElasticsearchConverter entityMapper) {
-		return new ElasticsearchTemplate(elasticsearchClient, entityMapper);
+	public ElasticsearchTemplate elasticsearchTemplate(Client elasticsearchClient,
+			ElasticsearchConverter elasticsearchConverter) {
+		return new ElasticsearchTemplate(elasticsearchClient, elasticsearchConverter);
 	}
 
 }
