@@ -15,62 +15,62 @@
  */
 package org.springframework.data.elasticsearch.client.util;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
-import java.util.HashMap;
+import java.util.Collections;
 
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Request;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.*;
+
 /**
  * Unit tests for {@link RequestConverters}.
  *
  * @author Roman Puchkovskiy
+ * @author Mark Paluch
  */
 public class RequestConvertersTest {
+
 	@Test // DATAES-652
 	public void shouldNotAddIfSeqNoAndIfPrimaryTermToResultIfInputDoesNotcontainThemWhenConvertingIndexRequest() {
 		IndexRequest request = createMinimalIndexRequest();
 
 		Request result = RequestConverters.index(request);
 
-		assertThat(result.getParameters(), not(hasKey("if_seq_no")));
-		assertThat(result.getParameters(), not(hasKey("if_primary_term")));
+		assertThat(result.getParameters())
+				.doesNotContainKeys("if_seq_no", "if_primary_term");
 	}
 
 	private IndexRequest createMinimalIndexRequest() {
+
 		IndexRequest request = new IndexRequest("the-index", "the-type", "id");
-		request.source(new HashMap<String, String>() {
-			{
-				put("test", "test");
-			}
-		});
+		request.source(Collections.singletonMap("test", "test"));
 		return request;
 	}
 
 	@Test // DATAES-652
 	public void shouldAddIfSeqNoAndIfPrimaryTermToResultIfInputcontainsThemWhenConvertingIndexRequest() {
+
 		IndexRequest request = createMinimalIndexRequest();
 		request.setIfSeqNo(3);
 		request.setIfPrimaryTerm(4);
 
 		Request result = RequestConverters.index(request);
 
-		assertThat(result.getParameters(), hasEntry("if_seq_no", "3"));
-		assertThat(result.getParameters(), hasEntry("if_primary_term", "4"));
+		assertThat(result.getParameters()).containsEntry("if_seq_no", "3")
+				.containsEntry("if_primary_term", "4");
 	}
 
 	@Test // DATAES-652
 	public void shouldNotAddIfSeqNoAndIfPrimaryTermToResultIfInputDoesNotcontainThemWhenConvertingDeleteRequest() {
+
 		DeleteRequest request = createMinimalDeleteRequest();
 
 		Request result = RequestConverters.delete(request);
 
-		assertThat(result.getParameters(), not(hasKey("if_seq_no")));
-		assertThat(result.getParameters(), not(hasKey("if_primary_term")));
+		assertThat(result.getParameters())
+				.doesNotContainKeys("if_seq_no", "if_primary_term");
 	}
 
 	private DeleteRequest createMinimalDeleteRequest() {
@@ -79,13 +79,14 @@ public class RequestConvertersTest {
 
 	@Test // DATAES-652
 	public void shouldAddIfSeqNoAndIfPrimaryTermToResultIfInputcontainsThemWhenConvertingDeleteRequest() {
+
 		DeleteRequest request = createMinimalDeleteRequest();
 		request.setIfSeqNo(3);
 		request.setIfPrimaryTerm(4);
 
 		Request result = RequestConverters.delete(request);
 
-		assertThat(result.getParameters(), hasEntry("if_seq_no", "3"));
-		assertThat(result.getParameters(), hasEntry("if_primary_term", "4"));
+		assertThat(result.getParameters()).containsEntry("if_seq_no", "3");
+		assertThat(result.getParameters()).containsEntry("if_primary_term", "4");
 	}
 }
