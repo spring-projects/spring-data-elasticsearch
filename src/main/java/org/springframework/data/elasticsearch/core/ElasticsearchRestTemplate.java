@@ -960,6 +960,10 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 			prepareSort(query, searchSourceBuilder, entity);
 		}
 
+		if (query.getIndicesOptions() != null) {
+			request.indicesOptions(query.getIndicesOptions());
+		}
+
 		if (query instanceof SearchQuery) {
 			SearchQuery searchQuery = (SearchQuery) query;
 
