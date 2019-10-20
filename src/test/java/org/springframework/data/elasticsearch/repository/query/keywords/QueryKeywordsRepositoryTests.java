@@ -19,7 +19,7 @@ import org.junit.ClassRule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.ElasticsearchTestConfiguration;
-import org.springframework.data.elasticsearch.TestNodeResource;
+import org.springframework.data.elasticsearch.junit.junit4.TestNodeResource;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.test.context.ContextConfiguration;
 

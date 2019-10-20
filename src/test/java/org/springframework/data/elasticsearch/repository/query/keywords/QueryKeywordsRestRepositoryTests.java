@@ -16,13 +16,11 @@
 package org.springframework.data.elasticsearch.repository.query.keywords;
 
 import org.junit.ClassRule;
-import org.junit.runner.RunWith;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.RestElasticsearchTestConfiguration;
-import org.springframework.data.elasticsearch.TestNodeResource;
+import org.springframework.data.elasticsearch.junit.junit4.TestNodeResource;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * {@link QueryKeywordsTests} using a Repository backed by an ElasticsearchRestTemplate.
