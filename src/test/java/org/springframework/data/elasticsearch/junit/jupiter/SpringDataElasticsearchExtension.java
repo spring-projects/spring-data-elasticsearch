@@ -105,8 +105,11 @@ public class SpringDataElasticsearchExtension
 
 	private void customizeContext(ConfigurableApplicationContext context, MergedContextConfiguration mergedConfig) {
 
-		context.getBeanFactory().registerResolvableDependency(ClusterConnectionInfo.class,
-				ClusterConnection.clusterConnectionInfo());
+		ClusterConnectionInfo clusterConnectionInfo = ClusterConnection.clusterConnectionInfo();
+
+		if (clusterConnectionInfo != null) {
+			context.getBeanFactory().registerResolvableDependency(ClusterConnectionInfo.class, clusterConnectionInfo);
+		}
 	}
 
 }
