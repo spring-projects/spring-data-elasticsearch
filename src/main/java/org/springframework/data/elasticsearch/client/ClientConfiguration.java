@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.springframework.http.HttpHeaders;
@@ -30,6 +31,7 @@ import org.springframework.http.HttpHeaders;
  *
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Henrique Amaral
  * @since 3.2
  */
 public interface ClientConfiguration {
@@ -119,6 +121,13 @@ public interface ClientConfiguration {
 	Optional<SSLContext> getSslContext();
 
 	/**
+	 * Returns the {@link HostnameVerifier} to use. Can be {@link Optional#empty()} if unconfigured.
+	 *
+	 * @return the {@link HostnameVerifier} to use. Can be {@link Optional#empty()} if unconfigured.
+	 */
+	Optional<HostnameVerifier> getHostNameVerifier();
+
+	/**
 	 * Returns the {@link java.time.Duration connect timeout}.
 	 *
 	 * @see java.net.Socket#connect(SocketAddress, int)
@@ -201,6 +210,16 @@ public interface ClientConfiguration {
 		 * @return the {@link TerminalClientConfigurationBuilder}.
 		 */
 		TerminalClientConfigurationBuilder usingSsl(SSLContext sslContext);
+
+		/**
+		 * Connect via {@literal https} using the givens {@link SSLContext} and HostnameVerifier {@link HostnameVerifier}  .<br />
+		 *
+		 * <strong>NOTE</strong> You need to leave out the protocol in
+		 * {@link ClientConfigurationBuilderWithRequiredEndpoint#connectedTo(String)}.
+		 *
+		 * @return the {@link TerminalClientConfigurationBuilder}.
+		 */
+		TerminalClientConfigurationBuilder usingSsl(SSLContext sslContext, HostnameVerifier hostnameVerifier);
 	}
 
 	/**

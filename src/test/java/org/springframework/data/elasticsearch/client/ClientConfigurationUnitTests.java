@@ -23,6 +23,7 @@ import java.time.Duration;
 
 import javax.net.ssl.SSLContext;
 
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.junit.Test;
 import org.springframework.http.HttpHeaders;
 
@@ -31,6 +32,7 @@ import org.springframework.http.HttpHeaders;
  *
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Henrique Amaral
  */
 public class ClientConfigurationUnitTests {
 
@@ -115,6 +117,25 @@ public class ClientConfigurationUnitTests {
 		assertThat(httpHeaders.get(HttpHeaders.AUTHORIZATION)).containsOnly(buildBasicAuth(username, password));
 		assertThat(httpHeaders.getFirst("foo")).isEqualTo("bar");
 		assertThat(defaultHeaders.get(HttpHeaders.AUTHORIZATION)).isNull();
+	}
+
+	@Test // DATAES-673
+	public void shouldCreateSslConfigurationWithHostnameVerifier() {
+
+		SSLContext sslContext = mock(SSLContext.class);
+
+		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
+				.connectedTo("foo", "bar") //
+				.usingSsl(sslContext, NoopHostnameVerifier.INSTANCE) //
+				.build();
+
+		assertThat(clientConfiguration.getEndpoints()).containsOnly(InetSocketAddress.createUnresolved("foo", 9200),
+				InetSocketAddress.createUnresolved("bar", 9200));
+		assertThat(clientConfiguration.useSsl()).isTrue();
+		assertThat(clientConfiguration.getSslContext()).contains(sslContext);
+		assertThat(clientConfiguration.getConnectTimeout()).isEqualTo(Duration.ofSeconds(10));
+		assertThat(clientConfiguration.getSocketTimeout()).isEqualTo(Duration.ofSeconds(5));
+		assertThat(clientConfiguration.getHostNameVerifier()).contains(NoopHostnameVerifier.INSTANCE);
 	}
 
 	private static String buildBasicAuth(String username, String password) {
