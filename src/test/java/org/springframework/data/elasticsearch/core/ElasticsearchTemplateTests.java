@@ -1716,6 +1716,44 @@ public class ElasticsearchTemplateTests {
 		elasticsearchTemplate.clearScroll(scroll.getScrollId());
 	}
 
+	@Test // DATAES-671
+	public void shouldPassIndicesOptionsForGivenSearchScrollQuery() {
+
+		// given
+		long scrollTimeInMillis = 3000;
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery idxQuery = new IndexQueryBuilder().withIndexName(INDEX_1_NAME).withId(sampleEntity.getId())
+				.withObject(sampleEntity).build();
+
+		elasticsearchTemplate.index(idxQuery);
+		elasticsearchTemplate.refresh(INDEX_1_NAME);
+
+		// when
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withIndices(INDEX_1_NAME, INDEX_2_NAME).withIndicesOptions(IndicesOptions.lenientExpandOpen()).build();
+
+		List<SampleEntity> entities = new ArrayList<>();
+
+		ScrolledPage<SampleEntity> scroll = elasticsearchTemplate.startScroll(scrollTimeInMillis, searchQuery,
+				SampleEntity.class, searchResultMapper);
+
+		entities.addAll(scroll.getContent());
+
+		while (scroll.hasContent()) {
+			scroll = elasticsearchTemplate.continueScroll(scroll.getScrollId(), scrollTimeInMillis, SampleEntity.class,
+					searchResultMapper);
+
+			entities.addAll(scroll.getContent());
+		}
+
+		// then
+		assertThat(entities).isNotNull();
+		assertThat(entities.size()).isGreaterThanOrEqualTo(1);
+	}
+
 	@Test // DATAES-479
 	public void shouldHonorTheHighlightBuilderOptions() {
 

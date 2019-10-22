@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch;
+package org.springframework.data.elasticsearch.junit.junit4;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -23,6 +23,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.util.Version;
 
 /**
