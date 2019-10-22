@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithRequiredEndpoint;
@@ -38,6 +39,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Peter-Josef Meisch
  * @author Huw Ayling-Miller
+ * @author Henrique Amaral
  * @since 3.2
  */
 class ClientConfigurationBuilder
@@ -47,6 +49,7 @@ class ClientConfigurationBuilder
 	private HttpHeaders headers = HttpHeaders.EMPTY;
 	private boolean useSsl;
 	private @Nullable SSLContext sslContext;
+	private @Nullable HostnameVerifier hostnameVerifier;
 	private Duration connectTimeout = Duration.ofSeconds(10);
 	private Duration soTimeout = Duration.ofSeconds(5);
 	private String username;
@@ -102,6 +105,22 @@ class ClientConfigurationBuilder
 
 		this.useSsl = true;
 		this.sslContext = sslContext;
+		return this;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.MaybeSecureClientConfigurationBuilder#usingSsl(javax.net.ssl.SSLContext, javax.net.ssl.HostnameVerifier)
+	 */
+	@Override
+	public TerminalClientConfigurationBuilder usingSsl(SSLContext sslContext, HostnameVerifier hostnameVerifier) {
+
+		Assert.notNull(sslContext, "SSL Context must not be null");
+		Assert.notNull(hostnameVerifier, "Host Name Verifier must not be null");
+
+		this.useSsl = true;
+		this.sslContext = sslContext;
+		this.hostnameVerifier = hostnameVerifier;
 		return this;
 	}
 
@@ -181,7 +200,7 @@ class ClientConfigurationBuilder
 		}
 
 		return new DefaultClientConfiguration(this.hosts, this.headers, this.useSsl, this.sslContext, this.soTimeout,
-				this.connectTimeout, this.pathPrefix);
+				this.connectTimeout, this.pathPrefix, this.hostnameVerifier);
 	}
 
 	private static InetSocketAddress parse(String hostAndPort) {

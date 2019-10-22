@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.springframework.http.HttpHeaders;
@@ -44,9 +45,10 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	private final Duration soTimeout;
 	private final Duration connectTimeout;
 	private final String pathPrefix;
+	private final @Nullable HostnameVerifier hostnameVerifier;
 
 	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
-			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout, @Nullable String pathPrefix) {
+			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout, @Nullable String pathPrefix, @Nullable HostnameVerifier hostnameVerifier) {
 
 		this.hosts = Collections.unmodifiableList(new ArrayList<>(hosts));
 		this.headers = new HttpHeaders(headers);
@@ -55,6 +57,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		this.soTimeout = soTimeout;
 		this.connectTimeout = connectTimeout;
 		this.pathPrefix = pathPrefix;
+		this.hostnameVerifier = hostnameVerifier;
 	}
 
 	/*
@@ -91,6 +94,15 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	@Override
 	public Optional<SSLContext> getSslContext() {
 		return Optional.ofNullable(this.sslContext);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getHostNameVerifier()
+	 */
+	@Override
+	public Optional<HostnameVerifier> getHostNameVerifier() {
+		return Optional.ofNullable(this.hostnameVerifier);
 	}
 
 	/*
