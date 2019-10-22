@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client;
 
-import static java.util.Arrays.*;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -51,6 +49,7 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 	private boolean local;
 	private boolean enableHttp;
 	private String clusterName;
+	private Node node;
 	private NodeClient nodeClient;
 	private String pathData;
 	private String pathHome;
@@ -99,10 +98,17 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 	@Override
 	public void afterPropertiesSet() throws Exception {
 
-		nodeClient = (NodeClient) new TestNode(Settings.builder().put(loadConfig()).put("transport.type", "netty4")
-				.put("http.type", "netty4").put("path.home", this.pathHome).put("path.data", this.pathData)
-				.put("cluster.name", this.clusterName).put("node.max_local_storage_nodes", 100).build(),
-				asList(Netty4Plugin.class)).start().client();
+		Settings settings = Settings.builder() //
+				.put(loadConfig()) //
+				.put("transport.type", "netty4") //
+				.put("http.type", "netty4") //
+				.put("path.home", this.pathHome) //
+				.put("path.data", this.pathData) //
+				.put("cluster.name", this.clusterName) //
+				.put("node.max_local_storage_nodes", 100) //
+				.build();
+		node = new TestNode(settings, Collections.singletonList(Netty4Plugin.class));
+		nodeClient = (NodeClient) node.start().client();
 	}
 
 	private Settings loadConfig() throws IOException {
@@ -144,9 +150,10 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 	@Override
 	public void destroy() throws Exception {
 		try {
-			logger.info("Closing elasticSearch  client");
-			if (nodeClient != null) {
-				nodeClient.close();
+			// NodeClient.close() is a noop, no need to call it here
+			logger.info("Closing elasticSearch node");
+			if (node != null) {
+				node.close();
 			}
 		} catch (final Exception e) {
 			logger.error("Error closing ElasticSearch client: ", e);
