@@ -15,14 +15,14 @@
  */
 package org.springframework.data.elasticsearch.client.util;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.util.Collections;
 
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Request;
-import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link RequestConverters}.
@@ -38,8 +38,7 @@ public class RequestConvertersTest {
 
 		Request result = RequestConverters.index(request);
 
-		assertThat(result.getParameters())
-				.doesNotContainKeys("if_seq_no", "if_primary_term");
+		assertThat(result.getParameters()).doesNotContainKeys("if_seq_no", "if_primary_term");
 	}
 
 	private IndexRequest createMinimalIndexRequest() {
@@ -58,8 +57,7 @@ public class RequestConvertersTest {
 
 		Request result = RequestConverters.index(request);
 
-		assertThat(result.getParameters()).containsEntry("if_seq_no", "3")
-				.containsEntry("if_primary_term", "4");
+		assertThat(result.getParameters()).containsEntry("if_seq_no", "3").containsEntry("if_primary_term", "4");
 	}
 
 	@Test // DATAES-652
@@ -69,8 +67,7 @@ public class RequestConvertersTest {
 
 		Request result = RequestConverters.delete(request);
 
-		assertThat(result.getParameters())
-				.doesNotContainKeys("if_seq_no", "if_primary_term");
+		assertThat(result.getParameters()).doesNotContainKeys("if_seq_no", "if_primary_term");
 	}
 
 	private DeleteRequest createMinimalDeleteRequest() {

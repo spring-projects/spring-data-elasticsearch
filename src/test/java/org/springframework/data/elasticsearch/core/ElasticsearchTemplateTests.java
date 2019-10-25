@@ -53,9 +53,9 @@ import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -110,7 +110,7 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Autowired protected ElasticsearchOperations elasticsearchTemplate;
 
-	@Before
+	@BeforeEach
 	public void before() {
 
 		deleteIndices();
@@ -122,7 +122,7 @@ public abstract class ElasticsearchTemplateTests {
 		elasticsearchTemplate.putMapping(SampleEntityUUIDKeyed.class);
 	}
 
-	@After
+	@AfterEach
 	public void after() {
 
 		deleteIndices();
@@ -306,7 +306,7 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.getTotalElements()).isGreaterThanOrEqualTo(1);
 	}
 
-	@Test(expected = Exception.class) // DATAES-595
+	@Test // DATAES-595
 	public void shouldThrowExceptionWhenInvalidPreferenceForSearchQuery() {
 
 		// given
@@ -323,10 +323,9 @@ public abstract class ElasticsearchTemplateTests {
 				.withPreference("_only_nodes:oops").build();
 
 		// when
-		elasticsearchTemplate.queryForPage(searchQueryWithInvalidPreference, SampleEntity.class);
-
-		// then Throw IllegalArgumentException in case of ElasticsearchTemplate and ElasticsearchStatusException in case of
-		// ElasticsearchRestTemplate
+		assertThatThrownBy(() -> {
+			elasticsearchTemplate.queryForPage(searchQueryWithInvalidPreference, SampleEntity.class);
+		}).isInstanceOf(Exception.class);
 	}
 
 	@Test // DATAES-422 - Add support for IndicesOptions in search queries
@@ -1639,17 +1638,17 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(page.getContent().get(0).getId()).isEqualTo(indexQuery.getId());
 	}
 
-	@Test(expected = ElasticsearchException.class)
+	@Test
 	public void shouldThrowElasticsearchExceptionWhenNoDocumentSpecified() {
 
 		// given
-		IndexQuery indexQuery = new IndexQuery();
+		final IndexQuery indexQuery = new IndexQuery();
 		indexQuery.setId("2333343434");
 		indexQuery.setIndexName(INDEX_NAME_SAMPLE_ENTITY);
 		indexQuery.setType(TYPE_NAME);
 
 		// when
-		elasticsearchTemplate.index(indexQuery);
+		assertThatThrownBy(() -> elasticsearchTemplate.index(indexQuery)).isInstanceOf(ElasticsearchException.class);
 	}
 
 	@Test
@@ -2136,7 +2135,7 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(count).isEqualTo(1);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void shouldThrowAnExceptionForGivenCriteriaQueryWhenNoIndexSpecifiedForCountQuery() {
 
 		// given
@@ -2150,13 +2149,12 @@ public abstract class ElasticsearchTemplateTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 
 		// when
-		long count = elasticsearchTemplate.count(criteriaQuery);
-
-		// then
-		assertThat(count).isEqualTo(1);
+		assertThatThrownBy(() -> {
+			long count = elasticsearchTemplate.count(criteriaQuery);
+		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAES-67
+	@Test // DATAES-67
 	public void shouldThrowAnExceptionForGivenSearchQueryWhenNoIndexSpecifiedForCountQuery() {
 
 		// given
@@ -2170,7 +2168,9 @@ public abstract class ElasticsearchTemplateTests {
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
 		// when
-		elasticsearchTemplate.count(searchQuery);
+		assertThatThrownBy(() -> {
+			elasticsearchTemplate.count(searchQuery);
+		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test // DATAES-71

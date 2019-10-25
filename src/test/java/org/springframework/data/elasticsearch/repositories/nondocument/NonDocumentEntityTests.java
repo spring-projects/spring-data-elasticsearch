@@ -15,7 +15,9 @@
  */
 package org.springframework.data.elasticsearch.repositories.nondocument;
 
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -29,11 +31,13 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
  */
 public class NonDocumentEntityTests {
 
-	@Test(expected = BeanCreationException.class)
+	@Test
 	public void shouldNotInitialiseRepositoryWithNonDocument() {
 		// when
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("/repository-non-document-entity.xml");
-		ctx.getBean(NonDocumentEntityRepository.class);
+		assertThatThrownBy(() -> {
+			ctx.getBean(NonDocumentEntityRepository.class);
+		}).isInstanceOf(BeanCreationException.class);
 	}
 
 	/**

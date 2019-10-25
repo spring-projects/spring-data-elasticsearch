@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.lang.annotation.Annotation;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;

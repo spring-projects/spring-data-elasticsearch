@@ -29,9 +29,8 @@ import java.util.List;
 
 import org.elasticsearch.geo.utils.Geohash;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -41,28 +40,30 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.data.geo.Point;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Franck Marchand
  * @author Artur Konczak
- * @author Peter-Josef Meisch Basic info: latitude - horizontal lines (equator = 0.0, values -90.0 to 90.0) longitude -
- *         vertical lines (Greenwich = 0.0, values -180 to 180) London [lat,lon] = [51.50985,-0.118082] - geohash =
- *         gcpvj3448 Bouding Box for London = (bbox=-0.489,51.28,0.236,51.686) bbox = left,bottom,right,top bbox = min
- *         Longitude , min Latitude , max Longitude , max Latitude
+ * @author Peter-Josef Meisch <br/>
+ *         Basic info: latitude - horizontal lines (equator = 0.0, values -90.0 to 90.0) longitude - vertical lines
+ *         (Greenwich = 0.0, values -180 to 180) London [lat,lon] = [51.50985,-0.118082] - geohash = gcpvj3448 Bouding
+ *         Box for London = (bbox=-0.489,51.28,0.236,51.686) bbox = left,bottom,right,top bbox = min Longitude , min
+ *         Latitude , max Longitude , max Latitude
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:elasticsearch-template-test.xml")
+@SpringIntegrationTest
+@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
 public class ElasticsearchTemplateGeoTests {
 
 	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
-	@Before
+	@BeforeEach
 	public void before() {
 
 		IndexInitializer.init(elasticsearchTemplate, AuthorMarkerEntity.class);
@@ -257,8 +258,8 @@ public class ElasticsearchTemplateGeoTests {
 
 		// given
 		loadClassBaseEntities();
-		CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(new Criteria("location")
-				.boundedBy(Geohash.stringEncode(0, 53.5171d), Geohash.stringEncode(0.2062d, 49.5171d)));
+		CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
+				new Criteria("location").boundedBy(Geohash.stringEncode(0, 53.5171d), Geohash.stringEncode(0.2062d, 49.5171d)));
 
 		// when
 		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3,

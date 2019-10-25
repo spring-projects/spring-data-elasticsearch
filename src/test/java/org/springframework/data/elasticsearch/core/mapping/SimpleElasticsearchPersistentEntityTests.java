@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.beans.IntrospectionException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.mapping.MappingException;
@@ -34,23 +34,23 @@ import org.springframework.util.ReflectionUtils;
  * @author Mohsin Husen
  * @author Mark Paluch
  * @author Oliver Gierke
+ * @author Peter-Josef Meisch
  */
 public class SimpleElasticsearchPersistentEntityTests {
 
-	@Test(expected = MappingException.class)
+	@Test
 	public void shouldThrowExceptionGivenVersionPropertyIsNotLong() throws NoSuchFieldException, IntrospectionException {
 		// given
 		TypeInformation typeInformation = ClassTypeInformation.from(EntityWithWrongVersionType.class);
 		SimpleElasticsearchPersistentEntity<EntityWithWrongVersionType> entity = new SimpleElasticsearchPersistentEntity<>(
 				typeInformation);
-
-		SimpleElasticsearchPersistentProperty persistentProperty = createProperty(entity, "version");
-
 		// when
-		entity.addPersistentProperty(persistentProperty);
+		assertThatThrownBy(() -> {
+			SimpleElasticsearchPersistentProperty persistentProperty = createProperty(entity, "version");
+		}).isInstanceOf(MappingException.class);
 	}
 
-	@Test(expected = MappingException.class)
+	@Test
 	public void shouldThrowExceptionGivenMultipleVersionPropertiesArePresent()
 			throws NoSuchFieldException, IntrospectionException {
 		// given
@@ -64,7 +64,9 @@ public class SimpleElasticsearchPersistentEntityTests {
 
 		entity.addPersistentProperty(persistentProperty1);
 		// when
-		entity.addPersistentProperty(persistentProperty2);
+		assertThatThrownBy(() -> {
+			entity.addPersistentProperty(persistentProperty2);
+		}).isInstanceOf(MappingException.class);
 	}
 
 	@Test // DATAES-462

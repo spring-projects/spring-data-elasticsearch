@@ -31,15 +31,15 @@ import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQueryBuilder;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
@@ -56,11 +56,11 @@ import org.springframework.test.util.ReflectionTestUtils;
  * @author Don Wellington
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:elasticsearch-rest-template-test.xml")
+@SpringIntegrationTest
+@ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
 public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 
-	@Test(expected = ElasticsearchStatusException.class)
+	@Test
 	public void shouldThrowExceptionIfDocumentDoesNotExistWhileDoingPartialUpdate() {
 
 		// when
@@ -68,7 +68,9 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 		indexRequest.source("{}", XContentType.JSON);
 		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5)).withClass(SampleEntity.class)
 				.withIndexRequest(indexRequest).build();
-		elasticsearchTemplate.update(updateQuery);
+		assertThatThrownBy(() -> {
+			elasticsearchTemplate.update(updateQuery);
+		}).isInstanceOf(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-227

@@ -28,10 +28,8 @@ import java.util.Date;
 import java.util.List;
 
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -39,9 +37,10 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * LogEntityTests
@@ -50,13 +49,13 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:elasticsearch-template-test.xml")
+@SpringIntegrationTest
+@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
 public class LogEntityTests {
 
 	@Autowired private ElasticsearchTemplate template;
 
-	@Before
+	@BeforeEach
 	public void before() throws ParseException {
 
 		IndexInitializer.init(template, LogEntity.class);
@@ -89,15 +88,15 @@ public class LogEntityTests {
 		assertThat(entities).isNotNull().hasSize(1);
 	}
 
-	@Test(expected = SearchPhaseExecutionException.class) // DATAES-66
+	@Test // DATAES-66
 	public void shouldThrowExceptionWhenInvalidIPGivenForSearchQuery() {
 
 		// when
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("ip", "10.10.10")).build();
-		List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class);
 
-		// then
-		assertThat(entities).isNotNull().hasSize(1);
+		assertThatThrownBy(() -> {
+			List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class);
+		}).isInstanceOf(SearchPhaseExecutionException.class);
 	}
 
 	@Test // DATAES-66
