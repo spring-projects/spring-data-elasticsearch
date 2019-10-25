@@ -44,25 +44,25 @@ import java.util.Set;
 
 import org.assertj.core.data.Percentage;
 import org.json.JSONException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Stuart Stevenson
@@ -75,13 +75,13 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Peter-Josef Meisch
  * @author Xiao Yu
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:elasticsearch-template-test.xml")
+@SpringIntegrationTest
+@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
 public class MappingBuilderTests extends MappingContextBaseTests {
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations elasticsearchTemplate;
 
-	@Before
+	@BeforeEach
 	public void before() {
 
 		elasticsearchTemplate.deleteIndex(StockPrice.class);

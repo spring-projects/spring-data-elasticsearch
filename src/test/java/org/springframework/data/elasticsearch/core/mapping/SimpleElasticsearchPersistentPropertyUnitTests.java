@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.mapping.MappingException;

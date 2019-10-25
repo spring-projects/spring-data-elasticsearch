@@ -23,7 +23,7 @@ import lombok.Data;
 import java.io.IOException;
 import java.util.Date;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;

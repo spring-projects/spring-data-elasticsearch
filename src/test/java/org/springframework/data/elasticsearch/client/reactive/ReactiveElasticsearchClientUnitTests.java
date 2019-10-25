@@ -38,8 +38,8 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockDelegatingElasticsearchHostProvider;
@@ -51,7 +51,6 @@ import org.springframework.util.StreamUtils;
 
 /**
  * @author Christoph Strobl
- * @currentRead Golden Fool - Robin Hobb
  */
 public class ReactiveElasticsearchClientUnitTests {
 
@@ -60,7 +59,7 @@ public class ReactiveElasticsearchClientUnitTests {
 	MockDelegatingElasticsearchHostProvider<HostProvider> hostProvider;
 	ReactiveElasticsearchClient client;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		hostProvider = ReactiveMockClientTestsUtils.provider(HOST).withActiveDefaultHost(HOST);

@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.net.InetSocketAddress;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**

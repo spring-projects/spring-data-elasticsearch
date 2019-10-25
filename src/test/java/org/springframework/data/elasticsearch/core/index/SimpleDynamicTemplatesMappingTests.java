@@ -21,16 +21,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Dynamic templates tests
@@ -38,8 +37,8 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Petr Kukral
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:elasticsearch-template-test.xml")
+@SpringIntegrationTest
+@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
 public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests {
 
 	@Test // DATAES-568

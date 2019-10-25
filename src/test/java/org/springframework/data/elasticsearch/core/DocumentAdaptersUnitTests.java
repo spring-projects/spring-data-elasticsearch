@@ -28,7 +28,7 @@ import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
