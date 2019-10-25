@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
+package org.springframework.data.elasticsearch.core.document;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -29,13 +31,12 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
-import org.springframework.data.elasticsearch.Document;
 import org.springframework.data.elasticsearch.ElasticsearchException;
-import org.springframework.data.elasticsearch.SearchDocument;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -45,13 +46,15 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
  * Utility class to adapt {@link org.elasticsearch.action.get.GetResponse},
- * {@link org.elasticsearch.index.get.GetResult}, {@link org.elasticsearch.search.SearchHit},
- * {@link org.elasticsearch.common.document.DocumentField} to {@link org.springframework.data.elasticsearch.Document}.
+ * {@link org.elasticsearch.index.get.GetResult}, {@link org.elasticsearch.action.get.MultiGetResponse}
+ * {@link org.elasticsearch.search.SearchHit}, {@link org.elasticsearch.common.document.DocumentField} to
+ * {@link Document}.
  *
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  * @since 4.0
  */
-class DocumentAdapters {
+public class DocumentAdapters {
 
 	/**
 	 * Create a {@link Document} from {@link GetResponse}.
@@ -59,11 +62,16 @@ class DocumentAdapters {
 	 * Returns a {@link Document} using the source if available.
 	 *
 	 * @param source the source {@link GetResponse}.
-	 * @return the adapted {@link Document}.
+	 * @return the adapted {@link Document}, null if source.isExists() returns false.
 	 */
+	@Nullable
 	public static Document from(GetResponse source) {
 
 		Assert.notNull(source, "GetResponse must not be null");
+
+		if (!source.isExists()) {
+			return null;
+		}
 
 		if (source.isSourceEmpty()) {
 			return fromDocumentFields(source, source.getId(), source.getVersion());
@@ -82,11 +90,16 @@ class DocumentAdapters {
 	 * Returns a {@link Document} using the source if available.
 	 *
 	 * @param source the source {@link GetResult}.
-	 * @return the adapted {@link Document}.
+	 * @return the adapted {@link Document}, null if source.isExists() returns false.
 	 */
+	@Nullable
 	public static Document from(GetResult source) {
 
 		Assert.notNull(source, "GetResult must not be null");
+
+		if (!source.isExists()) {
+			return null;
+		}
 
 		if (source.isSourceEmpty()) {
 			return fromDocumentFields(source, source.getId(), source.getVersion());
@@ -97,6 +110,21 @@ class DocumentAdapters {
 		document.setVersion(source.getVersion());
 
 		return document;
+	}
+
+	/**
+	 * Creates a List of {@link Document}s from {@link MultiGetResponse}.
+	 * 
+	 * @param source the source {@link MultiGetResponse}, not {@literal null}.
+	 * @return a possibly empty list of the Documents.
+	 */
+	public static List<Document> from(MultiGetResponse source) {
+
+		Assert.notNull(source, "MultiGetResponse must not be null");
+
+		return Arrays.stream(source.getResponses()) //
+				.map(itemResponse -> itemResponse.isFailed() ? null : DocumentAdapters.from(itemResponse.getResponse())) //
+				.filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
 	/**
@@ -114,7 +142,7 @@ class DocumentAdapters {
 		BytesReference sourceRef = source.getSourceRef();
 
 		if (sourceRef == null || sourceRef.length() == 0) {
-			return new SearchDocumentAdapter(source.getScore(),
+			return new SearchDocumentAdapter(source.getScore(), source.getFields(),
 					fromDocumentFields(source, source.getId(), source.getVersion()));
 		}
 
@@ -125,7 +153,7 @@ class DocumentAdapters {
 			document.setVersion(source.getVersion());
 		}
 
-		return new SearchDocumentAdapter(source.getScore(), document);
+		return new SearchDocumentAdapter(source.getScore(), source.getFields(), document);
 	}
 
 	/**
@@ -163,7 +191,7 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#hasId()
+		 * @see org.springframework.data.elasticsearch.core.document.Document#hasId()
 		 */
 		@Override
 		public boolean hasId() {
@@ -172,7 +200,7 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#getId()
+		 * @see org.springframework.data.elasticsearch.core.document.Document#getId()
 		 */
 		@Override
 		public String getId() {
@@ -181,7 +209,7 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#hasVersion()
+		 * @see org.springframework.data.elasticsearch.core.document.Document#hasVersion()
 		 */
 		@Override
 		public boolean hasVersion() {
@@ -190,7 +218,7 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#getVersion()
+		 * @see org.springframework.data.elasticsearch.core.document.Document#getVersion()
 		 */
 		@Override
 		public long getVersion() {
@@ -351,7 +379,7 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#toJson()
+		 * @see org.springframework.data.elasticsearch.core.document.Document#toJson()
 		 */
 		@Override
 		public String toJson() {
@@ -410,16 +438,18 @@ class DocumentAdapters {
 	static class SearchDocumentAdapter implements SearchDocument {
 
 		private final float score;
+		private final Map<String, List<Object>> fields = new HashMap<>();
 		private final Document delegate;
 
-		SearchDocumentAdapter(float score, Document delegate) {
+		SearchDocumentAdapter(float score, Map<String, DocumentField> fields, Document delegate) {
 			this.score = score;
 			this.delegate = delegate;
+			fields.forEach((name, documentField) -> this.fields.put(name, documentField.getValues()));
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#append(java.lang.String, java.lang.Object)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#append(java.lang.String, java.lang.Object)
 		 */
 		@Override
 		public SearchDocument append(String key, Object value) {
@@ -430,7 +460,7 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.SearchDocument#getScore()
+		 * @see org.springframework.data.elasticsearch.core.document.SearchDocument#getScore()
 		 */
 		@Override
 		public float getScore() {
@@ -439,7 +469,16 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#hasId()
+		 * @see org.springframework.data.elasticsearch.core.document.SearchDocument#getFields()
+		 */
+		@Override
+		public Map<String, List<Object>> getFields() {
+			return fields;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#hasId()
 		 */
 		@Override
 		public boolean hasId() {
@@ -448,7 +487,7 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#getId()
+		 * @see org.springframework.data.elasticsearch.core.document.Document#getId()
 		 */
 		@Override
 		public String getId() {
@@ -457,7 +496,7 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#setId(java.lang.String)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#setId(java.lang.String)
 		 */
 		@Override
 		public void setId(String id) {
@@ -466,7 +505,7 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#hasVersion()
+		 * @see org.springframework.data.elasticsearch.core.document.Document#hasVersion()
 		 */
 		@Override
 		public boolean hasVersion() {
@@ -475,7 +514,7 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#getVersion()
+		 * @see org.springframework.data.elasticsearch.core.document.Document#getVersion()
 		 */
 		@Override
 		public long getVersion() {
@@ -484,7 +523,7 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#setVersion(long)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#setVersion(long)
 		 */
 		@Override
 		public void setVersion(long version) {
@@ -493,7 +532,7 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#get(java.lang.Object, java.lang.Class)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#get(java.lang.Object, java.lang.Class)
 		 */
 		@Override
 		@Nullable
@@ -503,7 +542,7 @@ class DocumentAdapters {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.Document#toJson()
+		 * @see org.springframework.data.elasticsearch.core.document.Document#toJson()
 		 */
 		@Override
 		public String toJson() {

@@ -22,12 +22,14 @@ import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.FacetedPageImpl;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 
 /**
  * @author Petar Tahchiev
  * @author Artur Konczak
  * @author Mohsin Husen
  * @author Sascha Woo
+ * @author Peter-Josef Meisch
  */
 public class AggregatedPageImpl<T> extends FacetedPageImpl<T> implements AggregatedPage<T> {
 
@@ -93,6 +95,11 @@ public class AggregatedPageImpl<T> extends FacetedPageImpl<T> implements Aggrega
 			float maxScore) {
 		this(content, pageable, total, aggregations, scrollId);
 		this.maxScore = maxScore;
+	}
+
+	public AggregatedPageImpl(List<T> content, Pageable pageable, SearchDocumentResponse response) {
+		this(content, pageable, response.getTotalHits(), response.getAggregations(), response.getScrollId(),
+				response.getMaxScore());
 	}
 
 	@Override

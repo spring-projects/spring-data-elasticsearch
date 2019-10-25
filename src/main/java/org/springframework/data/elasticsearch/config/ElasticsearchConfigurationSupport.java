@@ -27,13 +27,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.DefaultResultMapper;
-import org.springframework.data.elasticsearch.core.EntityMapper;
-import org.springframework.data.elasticsearch.core.ResultsMapper;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
@@ -49,7 +46,7 @@ import org.springframework.util.StringUtils;
 public class ElasticsearchConfigurationSupport {
 
 	@Bean
-	public MappingElasticsearchConverter elasticsearchEntityMapper(
+	public ElasticsearchConverter elasticsearchEntityMapper(
 			SimpleElasticsearchMappingContext elasticsearchMappingContext) {
 		return new MappingElasticsearchConverter(elasticsearchMappingContext);
 	}
@@ -70,17 +67,6 @@ public class ElasticsearchConfigurationSupport {
 		mappingContext.setSimpleTypeHolder(elasticsearchCustomConversions().getSimpleTypeHolder());
 
 		return mappingContext;
-	}
-
-	/**
-	 * Returns the {@link ResultsMapper} to be used for search responses.
-	 *
-	 * @see MappingElasticsearchConverter
-	 * @return never {@literal null}.
-	 */
-	@Bean
-	public ResultsMapper resultsMapper(SimpleElasticsearchMappingContext elasticsearchMappingContext) {
-		return new DefaultResultMapper(elasticsearchMappingContext, elasticsearchEntityMapper(elasticsearchMappingContext));
 	}
 
 	/**

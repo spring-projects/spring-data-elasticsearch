@@ -1,4 +1,3 @@
-
 /**
  * Infrastructure for the Elasticsearch document-to-object mapping subsystem.
  */

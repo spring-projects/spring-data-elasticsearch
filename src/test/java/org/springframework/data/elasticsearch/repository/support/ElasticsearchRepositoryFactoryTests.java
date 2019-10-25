@@ -39,12 +39,12 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
 @RunWith(MockitoJUnitRunner.class)
 public class ElasticsearchRepositoryFactoryTests {
 
-    @Mock private ElasticsearchOperations operations;
+	@Mock private ElasticsearchOperations operations;
 	private ElasticsearchRepositoryFactory factory;
 
 	@Before
 	public void before() {
-        ElasticsearchConverter converter = new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext());
+		ElasticsearchConverter converter = new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext());
 		when(operations.getElasticsearchConverter()).thenReturn(converter);
 		factory = new ElasticsearchRepositoryFactory(operations);
 	}

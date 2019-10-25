@@ -24,7 +24,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -46,15 +45,12 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersion;
-import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersionRule;
 import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -66,6 +62,8 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersion;
+import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersionRule;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StringUtils;
@@ -102,9 +100,7 @@ public class ReactiveElasticsearchTemplateTests {
 		restTemplate.putMapping(SampleEntity.class);
 		restTemplate.refresh(SampleEntity.class);
 
-		template = new ReactiveElasticsearchTemplate(TestUtils.reactiveClient(), restTemplate.getElasticsearchConverter(),
-				new DefaultResultMapper(new MappingElasticsearchConverter(
-						restTemplate.getElasticsearchConverter().getMappingContext(), new DefaultConversionService())));
+		template = new ReactiveElasticsearchTemplate(TestUtils.reactiveClient(), restTemplate.getElasticsearchConverter());
 	}
 
 	@After

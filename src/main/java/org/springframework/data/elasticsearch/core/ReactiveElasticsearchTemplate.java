@@ -21,7 +21,6 @@ import lombok.NonNull;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -59,6 +58,7 @@ import org.springframework.data.elasticsearch.core.EntityOperations.Entity;
 import org.springframework.data.elasticsearch.core.EntityOperations.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
@@ -89,7 +89,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	private final ReactiveElasticsearchClient client;
 	private final ElasticsearchConverter converter;
 	private final @NonNull MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
-	private final ResultsMapper resultMapper;
 	private final ElasticsearchExceptionTranslator exceptionTranslator;
 	private final EntityOperations operations;
 
@@ -101,17 +100,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client, ElasticsearchConverter converter) {
-		this(client, converter, new DefaultResultMapper(converter.getMappingContext()));
-	}
-
-	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client, ElasticsearchConverter converter,
-			ResultsMapper resultsMapper) {
 
 		this.client = client;
 		this.converter = converter;
 		this.mappingContext = converter.getMappingContext();
 
-		this.resultMapper = resultsMapper;
 		this.exceptionTranslator = new ElasticsearchExceptionTranslator();
 		this.operations = new EntityOperations(this.mappingContext);
 	}
@@ -155,11 +148,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 					? new IndexRequest(indexCoordinates.getIndexName(), indexCoordinates.getTypeName(), converter.convertId(id))
 					: new IndexRequest(indexCoordinates.getIndexName(), indexCoordinates.getTypeName());
 
-			try {
-				request.source(resultMapper.getEntityMapper().mapToString(value), Requests.INDEX_CONTENT_TYPE);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
+			request.source(converter.mapObject(value).toJson(), Requests.INDEX_CONTENT_TYPE);
 
 			if (entity.isVersionedEntity()) {
 
@@ -185,7 +174,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		Assert.notNull(id, "Id must not be null!");
 
 		return doFindById(id, getPersistentEntity(entityType), index, type)
-				.map(it -> resultMapper.mapGetResult(it, entityType));
+				.map(it -> converter.mapDocument(DocumentAdapters.from(it), entityType));
 	}
 
 	private Mono<GetResult> doFindById(String id, ElasticsearchPersistentEntity<?> entity, @Nullable String index,
@@ -232,7 +221,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			Class<T> resultType) {
 
 		return doFind(query, getPersistentEntity(entityType), index, type)
-				.map(it -> resultMapper.mapSearchHit(it, resultType));
+				.map(it -> converter.mapDocument(DocumentAdapters.from(it), resultType));
 	}
 
 	private Flux<SearchHit> doFind(Query query, ElasticsearchPersistentEntity<?> entity, @Nullable String index,

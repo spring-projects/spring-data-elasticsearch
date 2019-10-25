@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch;
+package org.springframework.data.elasticsearch.core.document;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -24,6 +24,7 @@ import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
+import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 

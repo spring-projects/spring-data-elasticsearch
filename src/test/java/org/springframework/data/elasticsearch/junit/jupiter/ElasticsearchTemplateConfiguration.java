@@ -16,13 +16,11 @@
 package org.springframework.data.elasticsearch.junit.jupiter;
 
 import org.elasticsearch.client.Client;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
-import org.springframework.util.Assert;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 
 /**
  * Configuration for Spring Data Elasticsearch using
@@ -35,13 +33,13 @@ public class ElasticsearchTemplateConfiguration extends ElasticsearchConfigurati
 
 	@Bean
 	public Client elasticsearchClient(ClusterConnectionInfo clusterConnectionInfo) {
-        return clusterConnectionInfo.getClient();
+		return clusterConnectionInfo.getClient();
 	}
 
 	@Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
 	public ElasticsearchTemplate elasticsearchTemplate(Client elasticsearchClient,
-			MappingElasticsearchConverter entityMapper) {
-		return new ElasticsearchTemplate(elasticsearchClient, entityMapper);
+			ElasticsearchConverter elasticsearchConverter) {
+		return new ElasticsearchTemplate(elasticsearchClient, elasticsearchConverter);
 	}
 
 }

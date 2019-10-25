@@ -18,6 +18,8 @@ package org.springframework.data.elasticsearch.client.reactive;
 import static org.assertj.core.api.Assertions.*;
 
 import lombok.SneakyThrows;
+import org.junit.ClassRule;
+import org.springframework.data.elasticsearch.junit.junit4.TestNodeResource;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -68,8 +70,10 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Peter-Josef Meisch
  */
 @RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:infrastructure.xml")
 public class ReactiveElasticsearchClientTests {
+
+	@ClassRule
+	public static TestNodeResource testNodeResource = new TestNodeResource();
 
 	public @Rule ElasticsearchVersionRule elasticsearchVersion = ElasticsearchVersionRule.any();
 

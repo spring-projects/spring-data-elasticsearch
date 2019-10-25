@@ -109,7 +109,7 @@ public interface ElasticsearchOperations {
 	 *
 	 * @param indexName
 	 * @param type
-	 * @param mappings
+	 * @param clazz
 	 * @since 3.2
 	 */
 	<T> boolean putMapping(String indexName, String type, Class<T> clazz);
@@ -181,16 +181,6 @@ public interface ElasticsearchOperations {
 	<T> T queryForObject(GetQuery query, Class<T> clazz);
 
 	/**
-	 * Execute the query against elasticsearch and return the first returned object using custom mapper
-	 *
-	 * @param query
-	 * @param clazz
-	 * @param mapper
-	 * @return the first matching object
-	 */
-	<T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper);
-
-	/**
 	 * Execute the query against elasticsearch and return the first returned object
 	 *
 	 * @param query
@@ -218,15 +208,6 @@ public interface ElasticsearchOperations {
 	<T> Page<T> queryForPage(SearchQuery query, Class<T> clazz);
 
 	/**
-	 * Execute the query against elasticsearch and return result as {@link Page} using custom mapper
-	 *
-	 * @param query
-	 * @param clazz
-	 * @return
-	 */
-	<T> Page<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
-
-	/**
 	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link Page}
 	 *
 	 * @param queries
@@ -236,16 +217,6 @@ public interface ElasticsearchOperations {
 	<T> List<Page<T>> queryForPage(List<SearchQuery> queries, Class<T> clazz);
 
 	/**
-	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link Page} using custom
-	 * mapper
-	 *
-	 * @param queries
-	 * @param clazz
-	 * @return
-	 */
-	<T> List<Page<T>> queryForPage(List<SearchQuery> queries, Class<T> clazz, SearchResultMapper mapper);
-
-	/**
 	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link Page}
 	 *
 	 * @param queries
@@ -253,16 +224,6 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	List<Page<?>> queryForPage(List<SearchQuery> queries, List<Class<?>> classes);
-
-	/**
-	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link Page} using custom
-	 * mapper
-	 *
-	 * @param queries
-	 * @param classes
-	 * @return
-	 */
-	List<Page<?>> queryForPage(List<SearchQuery> queries, List<Class<?>> classes, SearchResultMapper mapper);
 
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page}
@@ -281,15 +242,6 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	<T> Page<T> queryForPage(StringQuery query, Class<T> clazz);
-
-	/**
-	 * Execute the query against elasticsearch and return result as {@link Page} using custom mapper
-	 *
-	 * @param query
-	 * @param clazz
-	 * @return
-	 */
-	<T> Page<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
 	 * Executes the given {@link CriteriaQuery} against elasticsearch and return result as {@link CloseableIterator}.
@@ -318,22 +270,6 @@ public interface ElasticsearchOperations {
 	 * @since 1.3
 	 */
 	<T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz);
-
-	/**
-	 * Executes the given {@link SearchQuery} against elasticsearch and return result as {@link CloseableIterator} using
-	 * custom mapper.
-	 * <p>
-	 * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of
-	 * error.
-	 *
-	 * @param <T> element return type
-	 * @param query
-	 * @param clazz
-	 * @param mapper
-	 * @return
-	 * @since 1.3
-	 */
-	<T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
 
 	/**
 	 * Execute the criteria query against elasticsearch and return result as {@link List}
@@ -438,16 +374,6 @@ public interface ElasticsearchOperations {
 	 * @return
 	 */
 	<T> List<T> multiGet(SearchQuery searchQuery, Class<T> clazz);
-
-	/**
-	 * Execute a multiGet against elasticsearch for the given ids with MultiGetResultMapper
-	 *
-	 * @param searchQuery
-	 * @param clazz
-	 * @param multiGetResultMapper
-	 * @return
-	 */
-	<T> List<T> multiGet(SearchQuery searchQuery, Class<T> clazz, MultiGetResultMapper multiGetResultMapper);
 
 	/**
 	 * Index an object. Will do save or update
@@ -614,18 +540,6 @@ public interface ElasticsearchOperations {
 	/**
 	 * Returns scrolled page for given query
 	 *
-	 * @param query The search query.
-	 * @param scrollTimeInMillis The time in millisecond for scroll feature
-	 *          {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
-	 * @param mapper Custom impl to map result to entities
-	 * @return The scan id for input query.
-	 */
-	<T> ScrolledPage<T> startScroll(long scrollTimeInMillis, SearchQuery query, Class<T> clazz,
-			SearchResultMapper mapper);
-
-	/**
-	 * Returns scrolled page for given query
-	 *
 	 * @param criteriaQuery The search query.
 	 * @param scrollTimeInMillis The time in millisecond for scroll feature
 	 *          {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
@@ -634,22 +548,7 @@ public interface ElasticsearchOperations {
 	 */
 	<T> ScrolledPage<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz);
 
-	/**
-	 * Returns scrolled page for given query
-	 *
-	 * @param criteriaQuery The search query.
-	 * @param scrollTimeInMillis The time in millisecond for scroll feature
-	 *          {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
-	 * @param mapper Custom impl to map result to entities
-	 * @return The scan id for input query.
-	 */
-	<T> ScrolledPage<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz,
-			SearchResultMapper mapper);
-
 	<T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz);
-
-	<T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz,
-			SearchResultMapper mapper);
 
 	/**
 	 * Clears the search contexts associated with specified scroll ids.
