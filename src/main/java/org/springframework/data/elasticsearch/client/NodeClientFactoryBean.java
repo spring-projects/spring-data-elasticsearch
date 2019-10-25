@@ -152,9 +152,12 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 		try {
 			// NodeClient.close() is a noop, no need to call it here
 			logger.info("Closing elasticSearch node");
-			if (node != null) {
-				node.close();
-			}
+			// closing the Node causes tests to fail in the pipeline build and on some
+			// "mvn test" runs, there seem still to be tests relying on a running instance that
+			// is not properly set up.
+//			if (node != null) {
+//				node.close();
+//			}
 		} catch (final Exception e) {
 			logger.error("Error closing ElasticSearch client: ", e);
 		}
