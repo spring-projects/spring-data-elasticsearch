@@ -27,7 +27,7 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.elasticsearch.geo.utils.Geohash;
+import org.elasticsearch.geometry.utils.Geohash;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
