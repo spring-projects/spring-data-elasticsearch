@@ -15,9 +15,11 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import org.elasticsearch.common.io.stream.StreamOutput;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.elasticsearch.action.ActionResponse;
@@ -65,5 +67,13 @@ class RawActionResponse extends ActionResponse {
 	 */
 	public <T> T body(BodyExtractor<T, ? super ClientHttpResponse> extractor) {
 		return delegate.body(extractor);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * until Elasticsearch 7.4 this empty implementation was available in the abstract base class
+	 */
+	@Override
+	public void writeTo(StreamOutput out) throws IOException {
 	}
 }
