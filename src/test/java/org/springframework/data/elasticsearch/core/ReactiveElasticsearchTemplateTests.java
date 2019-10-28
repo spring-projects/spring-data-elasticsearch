@@ -40,11 +40,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.elasticsearch.ElasticsearchStatusException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -63,9 +61,9 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersion;
-import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersionRule;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StringUtils;
 
 /**
@@ -76,13 +74,10 @@ import org.springframework.util.StringUtils;
  * @author Peter-Josef Meisch
  * @author Farid Azaza
  * @author Martin Choraine
- * @currentRead Golden Fool - Robin Hobb
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:infrastructure.xml")
+@SpringIntegrationTest
+@ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
 public class ReactiveElasticsearchTemplateTests {
-
-	public @Rule ElasticsearchVersionRule elasticsearchVersion = ElasticsearchVersionRule.any();
 
 	static final String DEFAULT_INDEX = "reactive-template-test-index";
 	static final String ALTERNATE_INDEX = "reactive-template-tests-alternate-index";
@@ -90,7 +85,7 @@ public class ReactiveElasticsearchTemplateTests {
 	private ElasticsearchRestTemplate restTemplate;
 	private ReactiveElasticsearchTemplate template;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		deleteIndices();
@@ -103,7 +98,7 @@ public class ReactiveElasticsearchTemplateTests {
 		template = new ReactiveElasticsearchTemplate(TestUtils.reactiveClient(), restTemplate.getElasticsearchConverter());
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		deleteIndices();
 	}
@@ -195,9 +190,10 @@ public class ReactiveElasticsearchTemplateTests {
 				}).verifyComplete();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAES-504
+	@Test // DATAES-504
 	public void insertShouldErrorOnNullEntity() {
-		template.save(null);
+		assertThatThrownBy(() -> template.save(null)).isInstanceOf(IllegalArgumentException.class);
+
 	}
 
 	@Test // DATAES-519
@@ -247,9 +243,9 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAES-504
+	@Test // DATAES-504
 	public void findByIdShouldErrorForNullId() {
-		template.findById(null, SampleEntity.class);
+		assertThatThrownBy(() -> template.findById(null, SampleEntity.class)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test // DATAES-504
