@@ -24,10 +24,8 @@ import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -53,9 +51,10 @@ import org.springframework.data.elasticsearch.core.facet.result.TermResult;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Rizwan Idrees
@@ -64,8 +63,8 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Artur Konczak
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:elasticsearch-template-test.xml")
+@SpringIntegrationTest
+@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
 public class ElasticsearchTemplateFacetTests {
 
 	private static final String RIZWAN_IDREES = "Rizwan Idrees";
@@ -79,7 +78,7 @@ public class ElasticsearchTemplateFacetTests {
 
 	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
-	@Before
+	@BeforeEach
 	public void before() {
 
 		IndexInitializer.init(elasticsearchTemplate, ArticleEntity.class);
@@ -342,56 +341,17 @@ public class ElasticsearchTemplateFacetTests {
 		assertThat(facet.getMissing()).isEqualTo(0);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void shouldThrowExeptionsForMultiFieldFacet() {
 
 		// given
 		String facetName = "fyears";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withFacet(
-						new TermFacetRequestBuilder(facetName).fields("publishedYears", "authors.untouched").ascTerm().build())
-				.build();
-
-		// when
-		FacetedPage<ArticleEntity> result = elasticsearchTemplate.queryForPage(searchQuery, ArticleEntity.class);
-
-		// then
-		assertThat(result.getNumberOfElements()).isEqualTo(4);
-
-		TermResult facet = (TermResult) result.getFacet(facetName);
-		assertThat(facet.getTerms()).hasSize(7);
-
-		Term term = facet.getTerms().get(0);
-		assertThat(term.getTerm()).isEqualTo(Long.toString(YEAR_2000));
-		assertThat(term.getCount()).isEqualTo(3);
-
-		term = facet.getTerms().get(1);
-		assertThat(term.getTerm()).isEqualTo(Long.toString(YEAR_2001));
-		assertThat(term.getCount()).isEqualTo(2);
-
-		term = facet.getTerms().get(2);
-		assertThat(term.getTerm()).isEqualTo(Long.toString(YEAR_2002));
-		assertThat(term.getCount()).isEqualTo(1);
-
-		term = facet.getTerms().get(3);
-		assertThat(term.getTerm()).isEqualTo(ARTUR_KONCZAK);
-		assertThat(term.getCount()).isEqualTo(3);
-
-		term = facet.getTerms().get(4);
-		assertThat(term.getTerm()).isEqualTo(JONATHAN_YAN);
-		assertThat(term.getCount()).isEqualTo(1);
-
-		term = facet.getTerms().get(5);
-		assertThat(term.getTerm()).isEqualTo(MOHSIN_HUSEN);
-		assertThat(term.getCount()).isEqualTo(2);
-
-		term = facet.getTerms().get(6);
-		assertThat(term.getTerm()).isEqualTo(RIZWAN_IDREES);
-		assertThat(term.getCount()).isEqualTo(4);
-
-		assertThat(facet.getTotal()).isEqualTo(16);
-		assertThat(facet.getOther()).isEqualTo(0);
-		assertThat(facet.getMissing()).isEqualTo(1);
+		assertThatThrownBy(() -> {
+			SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+					.withFacet(
+							new TermFacetRequestBuilder(facetName).fields("publishedYears", "authors.untouched").ascTerm().build())
+					.build();
+		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
@@ -447,38 +407,15 @@ public class ElasticsearchTemplateFacetTests {
 		assertThat(stringFacet.getMissing()).isEqualTo(0);
 	}
 
-	@Test(expected = UnsupportedOperationException.class)
+	@Test
 	public void shouldThrowExceptionForNativeFacets() {
 
 		// given
 		String facetName = "fyears";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withFacet(new NativeFacetRequest()).build();
-
-		// when
-		FacetedPage<ArticleEntity> result = elasticsearchTemplate.queryForPage(searchQuery, ArticleEntity.class);
-
-		// then
-		assertThat(result.getNumberOfElements()).isEqualTo(4);
-
-		TermResult facet = (TermResult) result.getFacet(facetName);
-		assertThat(facet.getTerms()).hasSize(3);
-
-		Term term = facet.getTerms().get(0);
-		assertThat(term.getTerm()).isEqualTo(Long.toString(YEAR_2000));
-		assertThat(term.getCount()).isEqualTo(3);
-
-		term = facet.getTerms().get(1);
-		assertThat(term.getTerm()).isEqualTo(Long.toString(YEAR_2001));
-		assertThat(term.getCount()).isEqualTo(2);
-
-		term = facet.getTerms().get(2);
-		assertThat(term.getTerm()).isEqualTo(Long.toString(YEAR_2002));
-		assertThat(term.getCount()).isEqualTo(1);
-
-		assertThat(facet.getTotal()).isEqualTo(6);
-		assertThat(facet.getOther()).isEqualTo(0);
-		assertThat(facet.getMissing()).isEqualTo(1);
+		assertThatThrownBy(() -> {
+			SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+					.withFacet(new NativeFacetRequest()).build();
+		}).isInstanceOf(UnsupportedOperationException.class);
 	}
 
 	@Test

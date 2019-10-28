@@ -40,14 +40,12 @@ import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
-
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
@@ -63,18 +61,15 @@ import org.springframework.data.elasticsearch.core.query.StringQuery;
 
 /**
  * @author Christoph Strobl
- * @currentRead Fool's Fate - Robin Hobb
  * @author Peter-Josef Meisch
  */
+@ExtendWith(MockitoExtension.class)
 public class ReactiveElasticsearchTemplateUnitTests {
-
-	@Rule //
-	public MockitoRule rule = MockitoJUnit.rule();
 
 	@Mock ReactiveElasticsearchClient client;
 	ReactiveElasticsearchTemplate template;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		template = new ReactiveElasticsearchTemplate(client);

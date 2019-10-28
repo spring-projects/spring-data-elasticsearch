@@ -26,17 +26,17 @@ import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Rizwan Idrees
@@ -46,8 +46,8 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Mewes Kochheim
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:elasticsearch-template-test.xml")
+@SpringIntegrationTest
+@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
 public class ElasticsearchTemplateCompletionTests {
 
 	@Autowired private ElasticsearchTemplate elasticsearchTemplate;

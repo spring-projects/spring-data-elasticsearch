@@ -18,8 +18,6 @@ package org.springframework.data.elasticsearch.client.reactive;
 import static org.assertj.core.api.Assertions.*;
 
 import lombok.SneakyThrows;
-import org.junit.ClassRule;
-import org.springframework.data.elasticsearch.junit.junit4.TestNodeResource;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -50,32 +48,26 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersion;
-import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersionRule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersion;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringRunner.class)
+@SpringIntegrationTest
+@ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
 public class ReactiveElasticsearchClientTests {
-
-	@ClassRule
-	public static TestNodeResource testNodeResource = new TestNodeResource();
-
-	public @Rule ElasticsearchVersionRule elasticsearchVersion = ElasticsearchVersionRule.any();
 
 	static final String INDEX_I = "idx-1-reactive-client-tests";
 	static final String INDEX_II = "idx-2-reactive-client-tests";
@@ -99,7 +91,7 @@ public class ReactiveElasticsearchClientTests {
 		DOC_SOURCE = Collections.unmodifiableMap(source);
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		syncClient = TestUtils.restHighLevelClient();
@@ -108,7 +100,7 @@ public class ReactiveElasticsearchClientTests {
 		TestUtils.deleteIndex(INDEX_I, INDEX_II);
 	}
 
-	@After
+	@AfterEach
 	public void after() throws IOException {
 
 		TestUtils.deleteIndex(INDEX_I, INDEX_II);

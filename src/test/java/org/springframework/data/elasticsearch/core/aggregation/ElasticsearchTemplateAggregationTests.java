@@ -30,11 +30,9 @@ import java.util.List;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.search.aggregations.Aggregations;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -46,9 +44,10 @@ import org.springframework.data.elasticsearch.core.ResultsExtractor;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Rizwan Idrees
@@ -57,8 +56,8 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Artur Konczak
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:elasticsearch-template-test.xml")
+@SpringIntegrationTest
+@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
 public class ElasticsearchTemplateAggregationTests {
 
 	static final String RIZWAN_IDREES = "Rizwan Idrees";
@@ -72,7 +71,7 @@ public class ElasticsearchTemplateAggregationTests {
 
 	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
-	@Before
+	@BeforeEach
 	public void before() {
 
 		IndexInitializer.init(elasticsearchTemplate, ArticleEntity.class);
@@ -97,7 +96,7 @@ public class ElasticsearchTemplateAggregationTests {
 		elasticsearchTemplate.refresh(ArticleEntity.class);
 	}
 
-	@After
+	@AfterEach
 	public void after() {
 
 		elasticsearchTemplate.deleteIndex(ArticleEntity.class);

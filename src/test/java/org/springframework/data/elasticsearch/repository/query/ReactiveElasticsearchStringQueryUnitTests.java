@@ -22,7 +22,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -33,12 +32,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -47,6 +46,7 @@ import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
@@ -60,7 +60,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ReactiveElasticsearchStringQueryUnitTests {
 
 	SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -68,7 +68,7 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 
 	@Mock ReactiveElasticsearchOperations operations;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		converter = new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext());
 	}
@@ -87,7 +87,7 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 	}
 
 	@Test // DATAES-519
-	@Ignore("TODO: fix spel query integration")
+	@Disabled("TODO: fix spel query integration")
 	public void bindsExpressionPropertyCorrectly() throws Exception {
 
 		ReactiveElasticsearchStringQuery elasticsearchStringQuery = createQueryForMethod("findByNameWithExpression",

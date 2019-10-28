@@ -30,11 +30,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -55,13 +55,13 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ElasticsearchStringQueryUnitTests {
 
 	@Mock ElasticsearchOperations operations;
-    ElasticsearchConverter converter;
+	ElasticsearchConverter converter;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		converter = new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext());
 	}

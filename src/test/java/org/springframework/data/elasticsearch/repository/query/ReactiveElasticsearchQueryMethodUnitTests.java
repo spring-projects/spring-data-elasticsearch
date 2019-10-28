@@ -31,8 +31,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
@@ -58,7 +58,7 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 	public static final String INDEX_NAME = "test-index-person-reactive-repository-query";
 	SimpleElasticsearchMappingContext mappingContext;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		mappingContext = new SimpleElasticsearchMappingContext();
 	}
@@ -74,28 +74,32 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 		assertThat(metadata.getIndexTypeName()).isEqualTo("user");
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAES-519
+	@Test // DATAES-519
 	public void rejectsNullMappingContext() throws Exception {
 
 		Method method = PersonRepository.class.getMethod("findByName", String.class);
 
-		new ReactiveElasticsearchQueryMethod(method, new DefaultRepositoryMetadata(PersonRepository.class),
-				new SpelAwareProxyProjectionFactory(), null);
+		assertThatThrownBy(() -> new ReactiveElasticsearchQueryMethod(method,
+				new DefaultRepositoryMetadata(PersonRepository.class), new SpelAwareProxyProjectionFactory(), null))
+						.isInstanceOf(IllegalArgumentException.class);
 	}
 
-	@Test(expected = IllegalStateException.class) // DATAES-519
+	@Test // DATAES-519
 	public void rejectsMonoPageableResult() throws Exception {
-		queryMethod(PersonRepository.class, "findMonoByName", String.class, Pageable.class);
+		assertThatThrownBy(() -> queryMethod(PersonRepository.class, "findMonoByName", String.class, Pageable.class))
+				.isInstanceOf(IllegalStateException.class);
 	}
 
-	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAES-519
+	@Test // DATAES-519
 	public void throwsExceptionOnWrappedPage() throws Exception {
-		queryMethod(PersonRepository.class, "findMonoPageByName", String.class, Pageable.class);
+		assertThatThrownBy(() -> queryMethod(PersonRepository.class, "findMonoPageByName", String.class, Pageable.class))
+				.isInstanceOf(InvalidDataAccessApiUsageException.class);
 	}
 
-	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAES-519
+	@Test // DATAES-519
 	public void throwsExceptionOnWrappedSlice() throws Exception {
-		queryMethod(PersonRepository.class, "findMonoSliceByName", String.class, Pageable.class);
+		assertThatThrownBy(() -> queryMethod(PersonRepository.class, "findMonoSliceByName", String.class, Pageable.class))
+				.isInstanceOf(InvalidDataAccessApiUsageException.class);
 	}
 
 	@Test // DATAES-519
