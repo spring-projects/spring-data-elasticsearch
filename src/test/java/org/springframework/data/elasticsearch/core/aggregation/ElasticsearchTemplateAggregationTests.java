@@ -40,6 +40,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.ResultsExtractor;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
@@ -89,10 +90,11 @@ public class ElasticsearchTemplateAggregationTests {
 				.addAuthor(RIZWAN_IDREES).addPublishedYear(YEAR_2002).addPublishedYear(YEAR_2001).addPublishedYear(YEAR_2000)
 				.score(40).buildIndex();
 
-		elasticsearchTemplate.index(article1);
-		elasticsearchTemplate.index(article2);
-		elasticsearchTemplate.index(article3);
-		elasticsearchTemplate.index(article4);
+		IndexCoordinates index = IndexCoordinates.of(INDEX_NAME).withTypes( "article");
+		elasticsearchTemplate.index(article1, index);
+		elasticsearchTemplate.index(article2, index);
+		elasticsearchTemplate.index(article3, index);
+		elasticsearchTemplate.index(article4, index);
 		elasticsearchTemplate.refresh(ArticleEntity.class);
 	}
 
@@ -118,7 +120,7 @@ public class ElasticsearchTemplateAggregationTests {
 			public Aggregations extract(SearchResponse response) {
 				return response.getAggregations();
 			}
-		});
+		}, null, IndexCoordinates.of(INDEX_NAME).withTypes("article"));
 		// then
 		assertThat(aggregations).isNotNull();
 		assertThat(aggregations.asMap().get("subjects")).isNotNull();

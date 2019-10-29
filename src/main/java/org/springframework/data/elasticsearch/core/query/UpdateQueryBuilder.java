@@ -21,15 +21,13 @@ import org.elasticsearch.action.update.UpdateRequest;
 /**
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Peter-Josef Meisch
  */
 public class UpdateQueryBuilder {
 
 	private String id;
 	private UpdateRequest updateRequest;
 	private IndexRequest indexRequest;
-	private String indexName;
-	private String type;
-	private Class clazz;
 	private boolean doUpsert;
 
 	public UpdateQueryBuilder withId(String id) {
@@ -47,21 +45,6 @@ public class UpdateQueryBuilder {
 		return this;
 	}
 
-	public UpdateQueryBuilder withIndexName(String indexName) {
-		this.indexName = indexName;
-		return this;
-	}
-
-	public UpdateQueryBuilder withType(String type) {
-		this.type = type;
-		return this;
-	}
-
-	public UpdateQueryBuilder withClass(Class clazz) {
-		this.clazz = clazz;
-		return this;
-	}
-
 	public UpdateQueryBuilder withDoUpsert(boolean doUpsert) {
 		this.doUpsert = doUpsert;
 		return this;
@@ -70,9 +53,6 @@ public class UpdateQueryBuilder {
 	public UpdateQuery build() {
 		UpdateQuery updateQuery = new UpdateQuery();
 		updateQuery.setId(id);
-		updateQuery.setIndexName(indexName);
-		updateQuery.setType(type);
-		updateQuery.setClazz(clazz);
 		if (this.indexRequest != null) {
 			if (this.updateRequest == null) {
 				updateRequest = new UpdateRequest();

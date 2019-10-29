@@ -22,9 +22,17 @@ import java.util.stream.Collectors;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.springframework.data.domain.Page;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.data.elasticsearch.core.query.BulkOptions;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
 
@@ -44,28 +52,22 @@ public interface ElasticsearchOperations {
 	 * adding new alias
 	 *
 	 * @param query
+	 * @param index
 	 * @return
 	 */
-	boolean addAlias(AliasQuery query);
+	boolean addAlias(AliasQuery query, IndexCoordinates index);
 
 	/**
 	 * removing previously created alias
 	 *
 	 * @param query
+	 * @param index
 	 * @return
 	 */
-	boolean removeAlias(AliasQuery query);
+	boolean removeAlias(AliasQuery query, IndexCoordinates index);
 
 	/**
-	 * Create an index for a class
-	 *
-	 * @param clazz
-	 * @param <T>
-	 */
-	<T> boolean createIndex(Class<T> clazz);
-
-	/**
-	 * Create an index for given indexName
+	 * Create an index for given indexName if it does not already exist
 	 *
 	 * @param indexName
 	 */
@@ -78,6 +80,14 @@ public interface ElasticsearchOperations {
 	 * @param settings
 	 */
 	boolean createIndex(String indexName, Object settings);
+
+	/**
+	 * Create an index for a class if it does not already exist
+	 *
+	 * @param clazz
+	 * @param <T>
+	 */
+	<T> boolean createIndex(Class<T> clazz);
 
 	/**
 	 * Create an index for given class and Settings
@@ -96,23 +106,21 @@ public interface ElasticsearchOperations {
 	<T> boolean putMapping(Class<T> clazz);
 
 	/**
-	 * Create mapping for the given class and put the mapping to the given indexName and type.
+	 * Create mapping for the given class and put the mapping to the given index
 	 *
-	 * @param indexName
-	 * @param type
+	 * @param index
 	 * @param clazz
 	 * @since 3.2
 	 */
-	<T> boolean putMapping(String indexName, String type, Class<T> clazz);
+	<T> boolean putMapping(IndexCoordinates index, Class<T> clazz);
 
 	/**
-	 * Create mapping for a given indexName and type
-	 *
-	 * @param indexName
-	 * @param type
+	 * Create mapping for a given index
+	 *  @param index
 	 * @param mappings
+	 * @param index
 	 */
-	boolean putMapping(String indexName, String type, Object mappings);
+	boolean putMapping(IndexCoordinates index, Object mappings);
 
 	/**
 	 * Create mapping for a class
@@ -126,17 +134,17 @@ public interface ElasticsearchOperations {
 	 * Get mapping for a class
 	 *
 	 * @param clazz
-	 * @param <T>
 	 */
-	<T> Map<String, Object> getMapping(Class<T> clazz);
+	default Map<String, Object> getMapping(Class<?> clazz) {
+		return getMapping(getIndexCoordinatesFor(clazz));
+	}
 
 	/**
-	 * Get mapping for a given indexName and type
+	 * Get mapping for a given index coordinates
 	 *
-	 * @param indexName
-	 * @param type
+	 * @param index
 	 */
-	Map<String, Object> getMapping(String indexName, String type);
+	Map<String, Object> getMapping(IndexCoordinates index);
 
 	/**
 	 * Get settings for a given indexName
@@ -160,34 +168,30 @@ public interface ElasticsearchOperations {
 	 */
 	List<AliasMetaData> queryForAlias(String indexName);
 
-	<T> T query(NativeSearchQuery query, ResultsExtractor<T> resultsExtractor);
+	<T> T query(Query query, ResultsExtractor<T> resultsExtractor, Class<T> clazz, IndexCoordinates index);
+
+	/**
+	 * Retrieves an object from an index
+	 *
+	 * @param query the query defining the id of the object to get
+	 * @param clazz the type of the object to be returned
+	 * @param index the index from which the object is read.
+	 * @return the found object
+	 */
+	<T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Execute the query against elasticsearch and return the first returned object
 	 *
 	 * @param query
 	 * @param clazz
+	 * @param index
 	 * @return the first matching object
 	 */
-	<T> T queryForObject(GetQuery query, Class<T> clazz);
-
-	/**
-	 * Execute the query against elasticsearch and return the first returned object
-	 *
-	 * @param query
-	 * @param clazz
-	 * @return the first matching object
-	 */
-	<T> T queryForObject(CriteriaQuery query, Class<T> clazz);
-
-	/**
-	 * Execute the query against elasticsearch and return the first returned object
-	 *
-	 * @param query
-	 * @param clazz
-	 * @return the first matching object
-	 */
-	<T> T queryForObject(StringQuery query, Class<T> clazz);
+	default <T> T queryForObject(Query query, Class<T> clazz, IndexCoordinates index) {
+		List<T> content = queryForPage(query, clazz, index).getContent();
+		return content.isEmpty() ? null : content.get(0);
+	}
 
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page}
@@ -196,46 +200,30 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @return
 	 */
-	<T> Page<T> queryForPage(NativeSearchQuery query, Class<T> clazz);
+	<T> AggregatedPage<T> queryForPage(Query query, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link Page}
 	 *
 	 * @param queries
 	 * @param clazz
+	 * @param index
 	 * @return
 	 */
-	<T> List<Page<T>> queryForPage(List<NativeSearchQuery> queries, Class<T> clazz);
+	<T> List<Page<T>> queryForPage(List<? extends Query> queries, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link Page}
 	 *
 	 * @param queries
 	 * @param classes
+	 * @param index
 	 * @return
 	 */
-	List<Page<?>> queryForPage(List<NativeSearchQuery> queries, List<Class<?>> classes);
+	List<Page<?>> queryForPage(List<? extends Query> queries, List<Class<?>> classes, IndexCoordinates index);
 
 	/**
-	 * Execute the query against elasticsearch and return result as {@link Page}
-	 *
-	 * @param query
-	 * @param clazz
-	 * @return
-	 */
-	<T> Page<T> queryForPage(CriteriaQuery query, Class<T> clazz);
-
-	/**
-	 * Execute the query against elasticsearch and return result as {@link Page}
-	 *
-	 * @param query
-	 * @param clazz
-	 * @return
-	 */
-	<T> Page<T> queryForPage(StringQuery query, Class<T> clazz);
-
-	/**
-	 * Executes the given {@link CriteriaQuery} against elasticsearch and return result as {@link CloseableIterator}.
+	 * Executes the given {@link Query} against elasticsearch and return result as {@link CloseableIterator}.
 	 * <p>
 	 * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of
 	 * error.
@@ -243,65 +231,34 @@ public interface ElasticsearchOperations {
 	 * @param <T> element return type
 	 * @param query
 	 * @param clazz
+	 * @param index
 	 * @return
 	 * @since 1.3
 	 */
-	<T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz);
-
-	/**
-	 * Executes the given {@link NativeSearchQuery} against elasticsearch and return result as {@link CloseableIterator}.
-	 * <p>
-	 * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of
-	 * error.
-	 *
-	 * @param <T> element return type
-	 * @param query
-	 * @param clazz
-	 * @return
-	 * @since 1.3
-	 */
-	<T> CloseableIterator<T> stream(NativeSearchQuery query, Class<T> clazz);
+	<T> CloseableIterator<T> stream(Query query, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Execute the criteria query against elasticsearch and return result as {@link List}
 	 *
 	 * @param query
 	 * @param clazz
+	 * @param index
 	 * @param <T>
 	 * @return
 	 */
-	<T> List<T> queryForList(CriteriaQuery query, Class<T> clazz);
-
-	/**
-	 * Execute the string query against elasticsearch and return result as {@link List}
-	 *
-	 * @param query
-	 * @param clazz
-	 * @param <T>
-	 * @return
-	 */
-	<T> List<T> queryForList(StringQuery query, Class<T> clazz);
-
-	/**
-	 * Execute the search query against elasticsearch and return result as {@link List}
-	 *
-	 * @param query
-	 * @param clazz
-	 * @param <T>
-	 * @return
-	 */
-	<T> List<T> queryForList(NativeSearchQuery query, Class<T> clazz);
+	<T> List<T> queryForList(Query query, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Execute the multi search query against elasticsearch and return result as {@link List}
 	 *
+	 * @param <T>
 	 * @param queries
 	 * @param clazz
-	 * @param <T>
+	 * @param index
 	 * @return
 	 */
-	default <T> List<List<T>> queryForList(List<NativeSearchQuery> queries, Class<T> clazz) {
-		return queryForPage(queries, clazz).stream().map(Page::getContent).collect(Collectors.toList());
+	default <T> List<List<T>> queryForList(List<Query> queries, Class<T> clazz, IndexCoordinates index) {
+		return queryForPage(queries, clazz, index).stream().map(Page::getContent).collect(Collectors.toList());
 	}
 
 	/**
@@ -309,62 +266,53 @@ public interface ElasticsearchOperations {
 	 *
 	 * @param queries
 	 * @param classes
+	 * @param index
 	 * @return
 	 */
-	default List<List<?>> queryForList(List<NativeSearchQuery> queries, List<Class<?>> classes) {
-		return queryForPage(queries, classes).stream().map(Page::getContent).collect(Collectors.toList());
+	default List<List<?>> queryForList(List<Query> queries, List<Class<?>> classes, IndexCoordinates index) {
+		return queryForPage(queries, classes, index).stream().map(Page::getContent).collect(Collectors.toList());
 	}
 
 	/**
 	 * Execute the query against elasticsearch and return ids
 	 *
 	 * @param query
-	 * @return
-	 */
-	<T> List<String> queryForIds(NativeSearchQuery query);
-
-	/**
-	 * return number of elements found by given query
-	 *
-	 * @param query
 	 * @param clazz
+	 * @param index
 	 * @return
 	 */
-	<T> long count(CriteriaQuery query, Class<T> clazz);
+	List<String> queryForIds(Query query, Class<?> clazz, IndexCoordinates index);
 
 	/**
 	 * return number of elements found by given query
 	 *
-	 * @param query
-	 * @return
+	 * @param query the query to execute
+	 * @param index the index to run the query against
+	 * @return count
 	 */
-	<T> long count(CriteriaQuery query);
+	default long count(Query query, IndexCoordinates index) {
+		return count(query, null, index);
+	}
 
 	/**
 	 * return number of elements found by given query
 	 *
-	 * @param query
-	 * @param clazz
-	 * @return
+	 * @param query the query to execute
+	 * @param clazz the entity clazz used for property mapping
+	 * @param index the index to run the query against
+	 * @return count
 	 */
-	<T> long count(NativeSearchQuery query, Class<T> clazz);
-
-	/**
-	 * return number of elements found by given query
-	 *
-	 * @param query
-	 * @return
-	 */
-	<T> long count(NativeSearchQuery query);
+	long count(Query query, @Nullable Class<?> clazz, IndexCoordinates index);
 
 	/**
 	 * Execute a multiGet against elasticsearch for the given ids
 	 *
-	 * @param searchQuery
+	 * @param query
 	 * @param clazz
+	 * @param index
 	 * @return
 	 */
-	<T> List<T> multiGet(NativeSearchQuery searchQuery, Class<T> clazz);
+	<T> List<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Index an object. Will do save or update
@@ -372,7 +320,7 @@ public interface ElasticsearchOperations {
 	 * @param query
 	 * @return returns the document id
 	 */
-	String index(IndexQuery query);
+	String index(IndexQuery query, IndexCoordinates index);
 
 	/**
 	 * Partial update of the document
@@ -380,15 +328,15 @@ public interface ElasticsearchOperations {
 	 * @param updateQuery
 	 * @return
 	 */
-	UpdateResponse update(UpdateQuery updateQuery);
+	UpdateResponse update(UpdateQuery updateQuery, IndexCoordinates index);
 
 	/**
 	 * Bulk index all objects. Will do save or update.
 	 *
 	 * @param queries the queries to execute in bulk
 	 */
-	default void bulkIndex(List<IndexQuery> queries) {
-		bulkIndex(queries, BulkOptions.defaultOptions());
+	default void bulkIndex(List<IndexQuery> queries, IndexCoordinates index) {
+		bulkIndex(queries, BulkOptions.defaultOptions(), index);
 	}
 
 	/**
@@ -398,15 +346,15 @@ public interface ElasticsearchOperations {
 	 * @param bulkOptions options to be added to the bulk request
 	 * @since 3.2
 	 */
-	void bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions);
+	void bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index);
 
 	/**
 	 * Bulk update all objects. Will do update
 	 *
 	 * @param queries the queries to execute in bulk
 	 */
-	default void bulkUpdate(List<UpdateQuery> queries) {
-		bulkUpdate(queries, BulkOptions.defaultOptions());
+	default void bulkUpdate(List<UpdateQuery> queries, IndexCoordinates index) {
+		bulkUpdate(queries, BulkOptions.defaultOptions(), index);
 	}
 
 	/**
@@ -416,58 +364,43 @@ public interface ElasticsearchOperations {
 	 * @param bulkOptions options to be added to the bulk request
 	 * @since 3.2
 	 */
-	void bulkUpdate(List<UpdateQuery> queries, BulkOptions bulkOptions);
+	void bulkUpdate(List<UpdateQuery> queries, BulkOptions bulkOptions, IndexCoordinates index);
 
 	/**
-	 * Delete the one object with provided id
+	 * Delete the one object with provided id.
 	 *
-	 * @param indexName
-	 * @param type
-	 * @param id
+	 * @param id the document ot delete
+	 * @param index the index from which to delete
 	 * @return documentId of the document deleted
 	 */
-	String delete(String indexName, String type, String id);
+	String delete(String id, IndexCoordinates index);
 
 	/**
 	 * Delete all records matching the criteria
-	 *
-	 * @param clazz
-	 * @param criteriaQuery
-	 */
-	<T> void delete(CriteriaQuery criteriaQuery, Class<T> clazz);
-
-	/**
-	 * Delete the one object with provided id
-	 *
-	 * @param clazz
-	 * @param id
-	 * @return documentId of the document deleted
-	 */
-	<T> String delete(Class<T> clazz, String id);
-
-	/**
-	 * Delete all records matching the query
-	 *
-	 * @param clazz
+	 * 
 	 * @param query
+	 * @param clazz
+	 * @param index
 	 */
-	<T> void delete(DeleteQuery query, Class<T> clazz);
+	void delete(Query query, Class<?> clazz, IndexCoordinates index);
 
 	/**
 	 * Delete all records matching the query
 	 *
 	 * @param query
+	 * @param index the index where to delete the records
 	 */
-	void delete(DeleteQuery query);
+	void delete(DeleteQuery query, IndexCoordinates index);
 
 	/**
 	 * Deletes an index for given entity
 	 *
 	 * @param clazz
-	 * @param <T>
 	 * @return
 	 */
-	<T> boolean deleteIndex(Class<T> clazz);
+	default boolean deleteIndex(Class<?> clazz) {
+		return deleteIndex(getPersistentEntityFor(clazz).getIndexName());
+	}
 
 	/**
 	 * Deletes an index for given indexName
@@ -481,10 +414,11 @@ public interface ElasticsearchOperations {
 	 * check if index is exists
 	 *
 	 * @param clazz
-	 * @param <T>
 	 * @return
 	 */
-	<T> boolean indexExists(Class<T> clazz);
+	default boolean indexExists(Class<?> clazz) {
+		return indexExists(getIndexCoordinatesFor(clazz).getIndexName());
+	}
 
 	/**
 	 * check if index is exists for given IndexName
@@ -495,49 +429,32 @@ public interface ElasticsearchOperations {
 	boolean indexExists(String indexName);
 
 	/**
-	 * check if type is exists in an index
+	 * refresh the index(es)
 	 *
 	 * @param index
-	 * @param type
-	 * @return
 	 */
-	boolean typeExists(String index, String type);
-
-	/**
-	 * refresh the index
-	 *
-	 * @param indexName
-	 */
-	void refresh(String indexName);
+	void refresh(IndexCoordinates index);
 
 	/**
 	 * refresh the index
 	 *
 	 * @param clazz
 	 */
-	<T> void refresh(Class<T> clazz);
+	default <T> void refresh(Class<T> clazz) {
+		refresh(getIndexCoordinatesFor(clazz));
+	}
 
 	/**
 	 * Returns scrolled page for given query
 	 *
+	 * @param scrollTimeInMillis The time in millisecond for scroll feature
+	 *          {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
 	 * @param query The search query.
-	 * @param scrollTimeInMillis The time in millisecond for scroll feature
-	 *          {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
 	 * @param clazz The class of entity to retrieve.
+	 * @param index
 	 * @return The scan id for input query.
 	 */
-	<T> ScrolledPage<T> startScroll(long scrollTimeInMillis, NativeSearchQuery query, Class<T> clazz);
-
-	/**
-	 * Returns scrolled page for given query
-	 *
-	 * @param criteriaQuery The search query.
-	 * @param scrollTimeInMillis The time in millisecond for scroll feature
-	 *          {@link org.elasticsearch.action.search.SearchRequestBuilder#setScroll(org.elasticsearch.common.unit.TimeValue)}.
-	 * @param clazz The class of entity to retrieve.
-	 * @return The scan id for input query.
-	 */
-	<T> ScrolledPage<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz);
+	<T> ScrolledPage<T> startScroll(long scrollTimeInMillis, Query query, Class<T> clazz, IndexCoordinates index);
 
 	<T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz);
 
@@ -546,17 +463,18 @@ public interface ElasticsearchOperations {
 	 *
 	 * @param scrollId
 	 */
-	<T> void clearScroll(String scrollId);
+	void clearScroll(String scrollId);
 
 	/**
 	 * more like this query to search for documents that are "like" a specific document.
 	 *
 	 * @param query
 	 * @param clazz
+	 * @param index
 	 * @param <T>
 	 * @return
 	 */
-	<T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz);
+	<T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz, IndexCoordinates index);
 
 	ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz);
 
@@ -564,4 +482,20 @@ public interface ElasticsearchOperations {
 	 * @return Converter in use
 	 */
 	ElasticsearchConverter getElasticsearchConverter();
+
+	/**
+	 * @since 4.0
+	 */
+	RequestFactory getRequestFactory();
+
+	/**
+	 * @param clazz
+	 * @return the IndexCoordinates defined on the entity.
+	 * @since 4.0
+	 */
+	default IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {
+		ElasticsearchPersistentEntity entity = getPersistentEntityFor(clazz);
+		return IndexCoordinates.of(entity.getIndexName()).withTypes(entity.getIndexType());
+	}
+
 }

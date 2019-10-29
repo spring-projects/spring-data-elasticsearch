@@ -46,10 +46,9 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		// when
 		IndexRequest indexRequest = new IndexRequest();
 		indexRequest.source("{}", XContentType.JSON);
-		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5)).withClass(SampleEntity.class)
-				.withIndexRequest(indexRequest).build();
+		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5)).withIndexRequest(indexRequest).build();
 		assertThatThrownBy(() -> {
-			elasticsearchTemplate.update(updateQuery);
+			elasticsearchTemplate.update(updateQuery, index);
 		}).isInstanceOf(DocumentMissingException.class);
 	}
 

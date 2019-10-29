@@ -15,12 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core.aggregation.impl;
 
+import static java.util.Optional.*;
+
 import java.util.List;
 
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.FacetedPageImpl;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 
@@ -31,11 +33,15 @@ import org.springframework.data.elasticsearch.core.document.SearchDocumentRespon
  * @author Sascha Woo
  * @author Peter-Josef Meisch
  */
-public class AggregatedPageImpl<T> extends FacetedPageImpl<T> implements AggregatedPage<T> {
+public class AggregatedPageImpl<T> extends PageImpl<T> implements AggregatedPage<T> {
 
 	private Aggregations aggregations;
 	private String scrollId;
 	private float maxScore;
+
+	private static Pageable pageableOrUnpaged(Pageable pageable) {
+		return ofNullable(pageable).orElse(Pageable.unpaged());
+	}
 
 	public AggregatedPageImpl(List<T> content) {
 		super(content);
@@ -57,26 +63,26 @@ public class AggregatedPageImpl<T> extends FacetedPageImpl<T> implements Aggrega
 	}
 
 	public AggregatedPageImpl(List<T> content, Pageable pageable, long total) {
-		super(content, pageable, total);
+		super(content, pageableOrUnpaged(pageable), total);
 	}
 
 	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, float maxScore) {
-		super(content, pageable, total);
+		super(content, pageableOrUnpaged(pageable), total);
 		this.maxScore = maxScore;
 	}
 
 	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, String scrollId) {
-		super(content, pageable, total);
+		super(content, pageableOrUnpaged(pageable), total);
 		this.scrollId = scrollId;
 	}
 
 	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, String scrollId, float maxScore) {
-		this(content, pageable, total, scrollId);
+		this(content, pageableOrUnpaged(pageable), total, scrollId);
 		this.maxScore = maxScore;
 	}
 
 	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, Aggregations aggregations) {
-		super(content, pageable, total);
+		super(content, pageableOrUnpaged(pageable), total);
 		this.aggregations = aggregations;
 	}
 

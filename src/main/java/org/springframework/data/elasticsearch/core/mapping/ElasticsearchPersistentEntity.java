@@ -28,6 +28,7 @@ import org.springframework.lang.Nullable;
  * @author Sascha Woo
  * @author Oliver Gierke
  * @author Ivan Greene
+ * @author Peter-Josef Meisch
  */
 public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, ElasticsearchPersistentProperty> {
 
@@ -58,7 +59,7 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	boolean isCreateIndexAndMapping();
 
 	/**
-	 * Returns whether the {@link ElasticsearchPersistentEntity} has an score property. If this call returns
+	 * Returns whether the {@link ElasticsearchPersistentEntity} has a score property. If this call returns
 	 * {@literal true}, {@link #getScoreProperty()} will return a non-{@literal null} value.
 	 *
 	 * @return false when {@link ElasticsearchPersistentEntity} does not define a score property.

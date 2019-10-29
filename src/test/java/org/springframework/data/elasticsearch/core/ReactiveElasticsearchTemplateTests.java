@@ -61,9 +61,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersion;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.util.StringUtils;
 
 /**
@@ -76,7 +74,6 @@ import org.springframework.util.StringUtils;
  * @author Martin Choraine
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
 public class ReactiveElasticsearchTemplateTests {
 
 	static final String DEFAULT_INDEX = "reactive-template-test-index";
@@ -139,8 +136,9 @@ public class ReactiveElasticsearchTemplateTests {
 
 		restTemplate.refresh(SampleEntity.class);
 
-		List<SampleEntity> result = restTemplate
-				.queryForList(new CriteriaQuery(Criteria.where("message").is(sampleEntity.getMessage())), SampleEntity.class);
+		List<SampleEntity> result = restTemplate.queryForList(
+				new CriteriaQuery(Criteria.where("message").is(sampleEntity.getMessage())), SampleEntity.class,
+				IndexCoordinates.of(DEFAULT_INDEX));
 		assertThat(result).hasSize(1);
 	}
 
@@ -171,8 +169,8 @@ public class ReactiveElasticsearchTemplateTests {
 				.expectNextCount(1)//
 				.verifyComplete();
 
-		restTemplate.refresh(DEFAULT_INDEX);
-		restTemplate.refresh(ALTERNATE_INDEX);
+		restTemplate.refresh(IndexCoordinates.of(DEFAULT_INDEX));
+		restTemplate.refresh(IndexCoordinates.of(ALTERNATE_INDEX));
 
 		assertThat(TestUtils.documentWithId(sampleEntity.getId()).existsIn(DEFAULT_INDEX)).isFalse();
 		assertThat(TestUtils.documentWithId(sampleEntity.getId()).existsIn(ALTERNATE_INDEX)).isTrue();
@@ -192,8 +190,9 @@ public class ReactiveElasticsearchTemplateTests {
 
 	@Test // DATAES-504
 	public void insertShouldErrorOnNullEntity() {
-		assertThatThrownBy(() -> template.save(null)).isInstanceOf(IllegalArgumentException.class);
-
+		assertThatThrownBy(() -> {
+			template.save(null);
+		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test // DATAES-519
@@ -245,7 +244,9 @@ public class ReactiveElasticsearchTemplateTests {
 
 	@Test // DATAES-504
 	public void findByIdShouldErrorForNullId() {
-		assertThatThrownBy(() -> template.findById(null, SampleEntity.class)).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> {
+			template.findById(null, SampleEntity.class);
+		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test // DATAES-504
@@ -254,13 +255,12 @@ public class ReactiveElasticsearchTemplateTests {
 		SampleEntity sampleEntity = randomEntity("some message");
 
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
-		indexQuery.setIndexName(ALTERNATE_INDEX);
 
-		restTemplate.index(indexQuery);
+		restTemplate.index(indexQuery, IndexCoordinates.of(ALTERNATE_INDEX).withTypes( "test-type"));
 		restTemplate.refresh(SampleEntity.class);
 
-		restTemplate.refresh(DEFAULT_INDEX);
-		restTemplate.refresh(ALTERNATE_INDEX);
+		restTemplate.refresh(IndexCoordinates.of(DEFAULT_INDEX));
+		restTemplate.refresh(IndexCoordinates.of(ALTERNATE_INDEX));
 
 		template.findById(sampleEntity.getId(), SampleEntity.class) //
 				.as(StepVerifier::create) //
@@ -586,8 +586,8 @@ public class ReactiveElasticsearchTemplateTests {
 				.as(StepVerifier::create)//
 				.verifyComplete();
 
-		restTemplate.refresh(thisIndex);
-		restTemplate.refresh(thatIndex);
+		restTemplate.refresh(IndexCoordinates.of(thisIndex));
+		restTemplate.refresh(IndexCoordinates.of(thatIndex));
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
 				.withQuery(termQuery("message", "test")) //
@@ -616,8 +616,8 @@ public class ReactiveElasticsearchTemplateTests {
 				.as(StepVerifier::create)//
 				.verifyComplete();
 
-		restTemplate.refresh(thisIndex);
-		restTemplate.refresh(thatIndex);
+		restTemplate.refresh(IndexCoordinates.of(thisIndex));
+		restTemplate.refresh(IndexCoordinates.of(thatIndex));
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
 				.withQuery(termQuery("message", "negative")) //
@@ -725,10 +725,12 @@ public class ReactiveElasticsearchTemplateTests {
 
 	private void index(SampleEntity... entities) {
 
+		IndexCoordinates indexCoordinates = IndexCoordinates.of(DEFAULT_INDEX).withTypes( "test-type");
+
 		if (entities.length == 1) {
-			restTemplate.index(getIndexQuery(entities[0]));
+			restTemplate.index(getIndexQuery(entities[0]), indexCoordinates);
 		} else {
-			restTemplate.bulkIndex(getIndexQueries(entities));
+			restTemplate.bulkIndex(getIndexQueries(entities), indexCoordinates);
 		}
 
 		restTemplate.refresh(SampleEntity.class);

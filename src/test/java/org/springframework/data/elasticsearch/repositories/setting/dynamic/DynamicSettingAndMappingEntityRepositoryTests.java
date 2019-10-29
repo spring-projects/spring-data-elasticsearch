@@ -32,6 +32,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
@@ -107,9 +108,11 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(QueryBuilders.termQuery("email", dynamicSettingAndMappingEntity1.getEmail())).build();
 
-		long count = elasticsearchTemplate.count(searchQuery, DynamicSettingAndMappingEntity.class);
+		IndexCoordinates index = IndexCoordinates.of("test-index-dynamic-setting-and-mapping").withTypes( "test-setting-type");
+		long count = elasticsearchTemplate.count(searchQuery, DynamicSettingAndMappingEntity.class,
+				index);
 		List<DynamicSettingAndMappingEntity> entityList = elasticsearchTemplate.queryForList(searchQuery,
-				DynamicSettingAndMappingEntity.class);
+				DynamicSettingAndMappingEntity.class, index);
 
 		// then
 		assertThat(count).isEqualTo(1L);

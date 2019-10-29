@@ -23,24 +23,16 @@ import org.elasticsearch.index.query.QueryBuilder;
  * AliasQuery is useful for creating new alias or deleting existing ones
  *
  * @author Mohsin Husen
+ * @author Peter-Josef Meisch
  */
 public class AliasQuery {
 
-	private String indexName;
 	private String aliasName;
 	private QueryBuilder filterBuilder;
 	private Map<String, Object> filter;
 	private String searchRouting;
 	private String indexRouting;
 	private String routing;
-
-	public String getIndexName() {
-		return indexName;
-	}
-
-	public void setIndexName(String indexName) {
-		this.indexName = indexName;
-	}
 
 	public String getAliasName() {
 		return aliasName;

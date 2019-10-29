@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.repository.query.parser.ElasticsearchQueryCreator;
@@ -57,6 +58,8 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
 		CriteriaQuery query = createQuery(accessor);
 		Assert.notNull(query, "unsupported query");
+		Class<?> clazz = queryMethod.getEntityInformation().getJavaType();
+		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
 
 		if (tree.isLimiting()) {
 			query.setMaxResults(tree.getMaxResults());
@@ -64,55 +67,60 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 
 		if (tree.isDelete()) {
 			Object result = countOrGetDocumentsForDelete(query, accessor);
-			elasticsearchOperations.delete(query, queryMethod.getEntityInformation().getJavaType());
+			elasticsearchOperations.delete(query, clazz, index);
 			return result;
 		} else if (queryMethod.isPageQuery()) {
 			query.setPageable(accessor.getPageable());
-			return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
+			return elasticsearchOperations.queryForPage(query, clazz, index);
 		} else if (queryMethod.isStreamQuery()) {
-			Class<?> entityType = queryMethod.getEntityInformation().getJavaType();
+			Class<?> entityType = clazz;
 			if (accessor.getPageable().isUnpaged()) {
 				query.setPageable(PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
 			} else {
 				query.setPageable(accessor.getPageable());
 			}
 			return StreamUtils
-					.createStreamFromIterator((CloseableIterator<Object>) elasticsearchOperations.stream(query, entityType));
+					.createStreamFromIterator((CloseableIterator<Object>) elasticsearchOperations.stream(query, entityType, index));
 		} else if (queryMethod.isCollectionQuery()) {
 
 			if (accessor.getPageable().isUnpaged()) {
 
-				int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
+				int itemCount = (int) elasticsearchOperations.count(query, clazz,
+						index);
 				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 			} else {
 				query.setPageable(accessor.getPageable());
 			}
 
-			return elasticsearchOperations.queryForList(query, queryMethod.getEntityInformation().getJavaType());
+			return elasticsearchOperations.queryForList(query, clazz, index);
 		} else if (tree.isCountProjection()) {
-			return elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
+			return elasticsearchOperations.count(query, clazz, index);
 		}
 
-		return elasticsearchOperations.queryForObject(query, queryMethod.getEntityInformation().getJavaType());
+		return elasticsearchOperations.queryForObject(query, clazz, index);
 	}
 
 	private Object countOrGetDocumentsForDelete(CriteriaQuery query, ParametersParameterAccessor accessor) {
 
 		Object result = null;
+		Class<?> clazz = queryMethod.getEntityInformation().getJavaType();
+		IndexCoordinates index = elasticsearchOperations
+				.getIndexCoordinatesFor(clazz);
 
 		if (queryMethod.isCollectionQuery()) {
 
 			if (accessor.getPageable().isUnpaged()) {
-				int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
+				int itemCount = (int) elasticsearchOperations.count(query, clazz,
+						index);
 				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 			} else {
 				query.setPageable(accessor.getPageable());
 			}
-			result = elasticsearchOperations.queryForList(query, queryMethod.getEntityInformation().getJavaType());
+			result = elasticsearchOperations.queryForList(query, clazz, index);
 		}
 
 		if (ClassUtils.isAssignable(Number.class, queryMethod.getReturnedObjectType())) {
-			result = elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
+			result = elasticsearchOperations.count(query, clazz, index);
 		}
 		return result;
 	}
