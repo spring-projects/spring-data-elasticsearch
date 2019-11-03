@@ -47,7 +47,6 @@ import javax.net.ssl.SSLContext;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionRequest;
-import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -79,6 +78,8 @@ import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Request;
+import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
@@ -330,6 +331,17 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#count(org.springframework.http.HttpHeaders, org.elasticsearch.action.search.SearchRequest)
+	 */
+	@Override
+	public Mono<Long> count(HttpHeaders headers, CountRequest countRequest) {
+		return sendRequest(countRequest, RequestCreator.count(), CountResponse.class, headers) //
+				.map(CountResponse::getCount) //
+				.next();
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.search.SearchRequest)
 	 */
 	@Override
@@ -572,13 +584,12 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	// -->
 
-	private <Req extends ActionRequest, Resp extends ActionResponse> Flux<Resp> sendRequest(Req request,
-			Function<Req, Request> converter, Class<Resp> responseType, HttpHeaders headers) {
+	private <Req extends ActionRequest, Resp> Flux<Resp> sendRequest(Req request, Function<Req, Request> converter,
+			Class<Resp> responseType, HttpHeaders headers) {
 		return sendRequest(converter.apply(request), responseType, headers);
 	}
 
-	private <AR extends ActionResponse> Flux<AR> sendRequest(Request request, Class<AR> responseType,
-			HttpHeaders headers) {
+	private <Resp> Flux<Resp> sendRequest(Request request, Class<Resp> responseType, HttpHeaders headers) {
 
 		String logId = ClientLogger.newLogId();
 
@@ -805,6 +816,10 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		static Function<FlushRequest, Request> flushIndex() {
 			return RequestConverters::flushIndex;
+		}
+
+		static Function<CountRequest, Request> count() {
+			return RequestConverters::count;
 		}
 
 	}
