@@ -1,6 +1,16 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.1.RELEASE (2019-11-04)
+---------------------------------------------
+* DATAES-679 - Upgrade to Elasticsearch 6.8.4.
+* DATAES-673 - Create a Ssl Rest Client using SslContext and HostnameVerifier.
+* DATAES-671 - Missing indicesOptions support for scrolling queries.
+* DATAES-670 - fix version compatibility matrix in documentation.
+* DATAES-665 - Javadoc not deployed.
+* DATAES-662 - Release 3.2.1 (Moore SR1).
+
+
 Changes in version 3.1.12.RELEASE (2019-11-04)
 ----------------------------------------------
 * DATAES-660 - Release 3.1.12 (Lovelace SR12).
