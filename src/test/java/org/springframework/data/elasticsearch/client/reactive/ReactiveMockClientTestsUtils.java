@@ -371,6 +371,12 @@ public class ReactiveMockClientTestsUtils {
 						});
 			}
 
+			default Receive receiveBulkOk() {
+
+				return receiveJsonFromFile("bulk-ok") //
+						.receive(Receive::ok);
+			}
+
 		}
 
 		public interface Receive {
