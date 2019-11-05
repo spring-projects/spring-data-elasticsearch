@@ -60,6 +60,7 @@ import org.springframework.web.util.UriBuilder;
 /**
  * @author Christoph Strobl
  * @author Huw Ayling-Miller
+ * @author Henrique Amaral
  */
 public class ReactiveMockClientTestsUtils {
 

@@ -66,6 +66,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Henrique Amaral
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })

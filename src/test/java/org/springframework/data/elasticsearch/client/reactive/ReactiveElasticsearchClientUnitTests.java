@@ -53,6 +53,7 @@ import org.springframework.util.StreamUtils;
 
 /**
  * @author Christoph Strobl
+ * @author Henrique Amaral
  */
 public class ReactiveElasticsearchClientUnitTests {
 
