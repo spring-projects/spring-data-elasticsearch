@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -32,6 +30,8 @@ import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
@@ -436,8 +436,8 @@ public interface ReactiveElasticsearchClient {
 	 * Execute a {@link BulkRequest} against the {@literal bulk} API.
 	 *
 	 * @param consumer never {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">Bulk
-	 *      API on elastic.co</a>
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">Bulk API on
+	 *      elastic.co</a>
 	 * @return a {@link Mono} emitting the emitting operation response.
 	 */
 	default Mono<BulkResponse> bulk(Consumer<BulkRequest> consumer) {
@@ -451,8 +451,8 @@ public interface ReactiveElasticsearchClient {
 	 * Execute a {@link BulkRequest} against the {@literal bulk} API.
 	 *
 	 * @param bulkRequest must not be {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">Bulk
-	 *      API on elastic.co</a>
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">Bulk API on
+	 *      elastic.co</a>
 	 * @return a {@link Mono} emitting the emitting operation response.
 	 */
 	default Mono<BulkResponse> bulk(BulkRequest bulkRequest) {
@@ -464,8 +464,8 @@ public interface ReactiveElasticsearchClient {
 	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param bulkRequest must not be {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">Bulk
-	 *      API on elastic.co</a>
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">Bulk API on
+	 *      elastic.co</a>
 	 * @return a {@link Mono} emitting operation response.
 	 */
 	Mono<BulkResponse> bulk(HttpHeaders headers, BulkRequest bulkRequest);

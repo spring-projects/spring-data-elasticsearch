@@ -20,8 +20,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive.*;
 
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.rest.RestStatus;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -31,6 +29,7 @@ import java.util.Collections;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.DocWriteResponse.Result;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.MultiGetRequest;
@@ -40,6 +39,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
+import org.elasticsearch.rest.RestStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -636,8 +636,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		final BulkRequest bulkRequest = new BulkRequest();
 		bulkRequest.add(updateRequest);
 
-		client.bulk(bulkRequest)
-				.as(StepVerifier::create) //
+		client.bulk(bulkRequest).as(StepVerifier::create) //
 				.consumeNextWith(bulkResponse -> {
 
 					assertThat(bulkResponse.status()).isEqualTo(RestStatus.OK);
