@@ -460,7 +460,7 @@ public interface ReactiveElasticsearchClient {
 	}
 
 	/**
-	 * Execute a {@link DeleteByQueryRequest} against the {@literal delete by query} API.
+	 * Execute a {@link BulkRequest} against the {@literal bulk} API.
 	 *
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param bulkRequest must not be {@literal null}.
