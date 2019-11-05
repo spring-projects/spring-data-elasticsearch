@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.client.reactive;
 import static org.assertj.core.api.Assertions.*;
 
 import lombok.SneakyThrows;
-import org.elasticsearch.action.bulk.BulkRequest;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -34,6 +33,7 @@ import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.MultiGetRequest;
@@ -669,18 +669,16 @@ public class ReactiveElasticsearchClientTests {
 		bulkRequest.add(requestFirstDoc);
 		bulkRequest.add(requestSecondDoc);
 
-		client.bulk(bulkRequest)
-				.as(StepVerifier::create) //
+		client.bulk(bulkRequest).as(StepVerifier::create) //
 				.consumeNextWith(it -> {
 					assertThat(it.status()).isEqualTo(RestStatus.OK);
 					assertThat(it.hasFailures()).isFalse();
 
-					Arrays.stream(it.getItems()).forEach(itemResponse-> {
+					Arrays.stream(it.getItems()).forEach(itemResponse -> {
 						assertThat(itemResponse.status()).isEqualTo(RestStatus.OK);
 						assertThat(itemResponse.getVersion()).isEqualTo(2);
 					});
-				})
-		.verifyComplete();
+				}).verifyComplete();
 	}
 
 	private AddToIndexOfType addSourceDocument() {
