@@ -18,10 +18,12 @@ package org.springframework.data.elasticsearch.client.reactive;
 import static org.assertj.core.api.Assertions.*;
 
 import lombok.SneakyThrows;
+import org.elasticsearch.action.bulk.BulkRequest;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -64,6 +66,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Henrique Amaral
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
@@ -648,6 +651,34 @@ public class ReactiveElasticsearchClientTests {
 		client.indices().flushIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
 				.verifyError(ElasticsearchStatusException.class);
+	}
+
+	@Test // DATAES-684
+	public void bulkShouldUpdateExistingDocument() {
+		String idFirstDoc = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		String idSecondDoc = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+
+		UpdateRequest requestFirstDoc = new UpdateRequest(INDEX_I, TYPE_I, idFirstDoc) //
+				.doc(Collections.singletonMap("dutiful", "farseer"));
+		UpdateRequest requestSecondDoc = new UpdateRequest(INDEX_I, TYPE_I, idSecondDoc) //
+				.doc(Collections.singletonMap("secondDocUpdate", "secondDocUpdatePartTwo"));
+
+		BulkRequest bulkRequest = new BulkRequest();
+		bulkRequest.add(requestFirstDoc);
+		bulkRequest.add(requestSecondDoc);
+
+		client.bulk(bulkRequest)
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+					assertThat(it.status()).isEqualTo(RestStatus.OK);
+					assertThat(it.hasFailures()).isFalse();
+
+					Arrays.stream(it.getItems()).forEach(itemResponse-> {
+						assertThat(itemResponse.status()).isEqualTo(RestStatus.OK);
+						assertThat(itemResponse.getVersion()).isEqualTo(2);
+					});
+				})
+		.verifyComplete();
 	}
 
 	private AddToIndexOfType addSourceDocument() {

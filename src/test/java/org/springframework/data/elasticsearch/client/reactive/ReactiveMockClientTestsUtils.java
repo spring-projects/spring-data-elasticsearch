@@ -60,6 +60,7 @@ import org.springframework.web.util.UriBuilder;
 /**
  * @author Christoph Strobl
  * @author Huw Ayling-Miller
+ * @author Henrique Amaral
  */
 public class ReactiveMockClientTestsUtils {
 
@@ -369,6 +370,12 @@ public class ReactiveMockClientTestsUtils {
 						.receive(response -> {
 							Mockito.when(response.statusCode()).thenReturn(HttpStatus.ACCEPTED, HttpStatus.NOT_FOUND);
 						});
+			}
+
+			default Receive receiveBulkOk() {
+
+				return receiveJsonFromFile("bulk-ok") //
+						.receive(Receive::ok);
 			}
 
 		}
