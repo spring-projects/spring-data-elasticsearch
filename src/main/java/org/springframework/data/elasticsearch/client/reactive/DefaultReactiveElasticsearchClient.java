@@ -58,6 +58,8 @@ import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
@@ -122,6 +124,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Henrique Amaral
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
@@ -420,6 +423,16 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	public Mono<BulkByScrollResponse> deleteBy(HttpHeaders headers, DeleteByQueryRequest deleteRequest) {
 
 		return sendRequest(deleteRequest, RequestCreator.deleteByQuery(), BulkByScrollResponse.class, headers) //
+				.publishNext();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#bulk(org.springframework.http.HttpHeaders, org.elasticsearch.action.bulk.BulkRequest)
+	 */
+	@Override
+	public Mono<BulkResponse> bulk(HttpHeaders headers, BulkRequest bulkRequest) {
+		return sendRequest(bulkRequest, RequestCreator.bulk(), BulkResponse.class, headers) //
 				.publishNext();
 	}
 
@@ -736,6 +749,18 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 				try {
 					return RequestConverters.deleteByQuery(request);
+				} catch (IOException e) {
+					throw new ElasticsearchException("Could not parse request", e);
+				}
+			};
+		}
+
+		static Function<BulkRequest, Request> bulk() {
+
+			return request -> {
+
+				try {
+					return RequestConverters.bulk(request);
 				} catch (IOException e) {
 					throw new ElasticsearchException("Could not parse request", e);
 				}

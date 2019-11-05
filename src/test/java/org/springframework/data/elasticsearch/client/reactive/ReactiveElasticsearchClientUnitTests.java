@@ -20,6 +20,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive.*;
 
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.rest.RestStatus;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -51,7 +53,7 @@ import org.springframework.util.StreamUtils;
 
 /**
  * @author Christoph Strobl
- * @currentRead Golden Fool - Robin Hobb
+ * @author Henrique Amaral
  */
 public class ReactiveElasticsearchClientUnitTests {
 
@@ -621,6 +623,28 @@ public class ReactiveElasticsearchClientUnitTests {
 		hostProvider.when(HOST).receive(response -> {
 			verify(response, times(3)).body(any());
 		});
+	}
+
+	@Test // DATAES-684
+	public void bulkShouldEmitResponseCorrectly() {
+
+		hostProvider.when(HOST) //
+				.receiveBulkOk();
+
+		final UpdateRequest updateRequest = new UpdateRequest("twitter", "doc", "1")
+				.doc(Collections.singletonMap("user", "cstrobl"));
+		final BulkRequest bulkRequest = new BulkRequest();
+		bulkRequest.add(updateRequest);
+
+		client.bulk(bulkRequest)
+				.as(StepVerifier::create) //
+				.consumeNextWith(bulkResponse -> {
+
+					assertThat(bulkResponse.status()).isEqualTo(RestStatus.OK);
+					assertThat(bulkResponse.hasFailures()).isFalse();
+
+				}) //
+				.verifyComplete();
 	}
 
 }

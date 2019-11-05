@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -58,6 +60,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Henrique Amaral
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
@@ -429,6 +432,44 @@ public interface ReactiveElasticsearchClient {
 	 * @return a {@link Mono} emitting operation response.
 	 */
 	Mono<BulkByScrollResponse> deleteBy(HttpHeaders headers, DeleteByQueryRequest deleteRequest);
+
+	/**
+	 * Execute a {@link BulkRequest} against the {@literal bulk} API.
+	 *
+	 * @param consumer never {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">Bulk
+	 *      API on elastic.co</a>
+	 * @return a {@link Mono} emitting the emitting operation response.
+	 */
+	default Mono<BulkResponse> bulk(Consumer<BulkRequest> consumer) {
+
+		BulkRequest request = new BulkRequest();
+		consumer.accept(request);
+		return bulk(request);
+	}
+
+	/**
+	 * Execute a {@link BulkRequest} against the {@literal bulk} API.
+	 *
+	 * @param bulkRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">Bulk
+	 *      API on elastic.co</a>
+	 * @return a {@link Mono} emitting the emitting operation response.
+	 */
+	default Mono<BulkResponse> bulk(BulkRequest bulkRequest) {
+		return bulk(HttpHeaders.EMPTY, bulkRequest);
+	}
+
+	/**
+	 * Execute a {@link BulkRequest} against the {@literal bulk} API.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param bulkRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">Bulk
+	 *      API on elastic.co</a>
+	 * @return a {@link Mono} emitting operation response.
+	 */
+	Mono<BulkResponse> bulk(HttpHeaders headers, BulkRequest bulkRequest);
 
 	/**
 	 * Compose the actual command/s to run against Elasticsearch using the underlying {@link WebClient connection}.

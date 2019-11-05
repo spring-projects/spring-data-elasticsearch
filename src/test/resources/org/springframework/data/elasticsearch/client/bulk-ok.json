@@ -1,0 +1,23 @@
+{
+  "took": 30,
+  "errors": false,
+  "items": [
+  {
+    "update": {
+      "_index": "twitter",
+      "_type": "doc",
+      "_id": "1",
+      "_version": 2,
+      "result": "updated",
+      "_shards": {
+        "total": 2,
+        "successful": 1,
+        "failed": 0
+      },
+      "_seq_no": 2,
+      "_primary_term": 4
+    }
+  }
+  ]
+
+}
