@@ -43,6 +43,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
@@ -60,6 +61,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  * @author Henrique Amaral
  * @since 3.2
  * @see ClientConfiguration
@@ -331,6 +333,47 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Mono} emitting the {@link DeleteResponse}.
 	 */
 	Mono<DeleteResponse> delete(HttpHeaders headers, DeleteRequest deleteRequest);
+
+	/**
+	 * Execute a {@link SearchRequest} against the {@literal count} API.
+	 *
+	 * @param consumer new {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-count.html">Count API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the count result.
+	 * @since 4.0
+	 */
+	default Mono<Long> count(Consumer<CountRequest> consumer) {
+
+		CountRequest countRequest = new CountRequest();
+		consumer.accept(countRequest);
+		return count(countRequest);
+	}
+
+	/**
+	 * Execute a {@link SearchRequest} against the {@literal count} API.
+	 *
+	 * @param countRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-count.html">Count API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the count result.
+	 * @since 4.0
+	 */
+	default Mono<Long> count(CountRequest countRequest) {
+		return count(HttpHeaders.EMPTY, countRequest);
+	}
+
+	/**
+	 * Execute a {@link SearchRequest} against the {@literal count} API.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param countRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-count.html">Count API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the count result.
+	 * @since 4.0
+	 */
+	Mono<Long> count(HttpHeaders headers, CountRequest countRequest);
 
 	/**
 	 * Execute a {@link SearchRequest} against the {@literal search} API.

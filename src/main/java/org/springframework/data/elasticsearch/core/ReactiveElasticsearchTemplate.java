@@ -21,7 +21,6 @@ import lombok.NonNull;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +35,7 @@ import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.client.Requests;
+import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -247,80 +247,133 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			@Nullable String type) {
 
 		return Flux.defer(() -> {
+			SearchRequest request = prepareSearchRequest(buildSearchRequest(query, entity, index, type));
 
-			IndexCoordinates indexCoordinates = operations.determineIndex(entity, index, type);
-			SearchRequest request = new SearchRequest(indices(query, indexCoordinates::getIndexName));
-			request.types(indexTypes(query, indexCoordinates::getTypeName));
-
-			SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-			searchSourceBuilder.query(mappedQuery(query, entity));
-			searchSourceBuilder.version(entity.hasVersionProperty());
-			searchSourceBuilder.trackScores(query.getTrackScores());
-
-			QueryBuilder postFilterQuery = mappedFilterQuery(query, entity);
-			if (postFilterQuery != null) {
-				searchSourceBuilder.postFilter(postFilterQuery);
-			}
-
-			if (query.getSourceFilter() != null) {
-				searchSourceBuilder.fetchSource(query.getSourceFilter().getIncludes(), query.getSourceFilter().getExcludes());
-			}
-
-			if (query instanceof SearchQuery && ((SearchQuery) query).getCollapseBuilder() != null) {
-				searchSourceBuilder.collapse(((SearchQuery) query).getCollapseBuilder());
-			}
-
-			sort(query, entity).forEach(searchSourceBuilder::sort);
-
-			if (query.getMinScore() > 0) {
-				searchSourceBuilder.minScore(query.getMinScore());
-			}
-
-			if (query.getIndicesOptions() != null) {
-				request.indicesOptions(query.getIndicesOptions());
-			}
-
-			if (query.getPreference() != null) {
-				request.preference(query.getPreference());
-			}
-
-			if (query.getSearchType() != null) {
-				request.searchType(query.getSearchType());
-			}
-
-			Pageable pageable = query.getPageable();
-
-			if (pageable.isPaged()) {
-
-				long offset = pageable.getOffset();
-				if (offset > Integer.MAX_VALUE) {
-					throw new IllegalArgumentException(String.format("Offset must not be more than %s", Integer.MAX_VALUE));
-				}
-
-				searchSourceBuilder.from((int) offset);
-				searchSourceBuilder.size(pageable.getPageSize());
-
-				request.source(searchSourceBuilder);
-				return doFind(prepareSearchRequest(request));
-
+			if (query.getPageable().isPaged() || query.isLimiting()) {
+				return doFind(request);
 			} else {
-
-				request.source(searchSourceBuilder);
-				return doScan(prepareSearchRequest(request));
+				return doScroll(request);
 			}
 		});
 	}
 
+	@Override
+	public Mono<Long> count(Query query, Class<?> entityType, String index, String type) {
+		return doCount(query, getPersistentEntity(entityType), index, type);
+	}
+
+	private Mono<Long> doCount(Query query, ElasticsearchPersistentEntity<?> entity, @Nullable String index,
+			@Nullable String type) {
+		return Mono.defer(() -> {
+
+			CountRequest countRequest = buildCountRequest(query, entity, index, type);
+			CountRequest request = prepareCountRequest(countRequest);
+			return doCount(request);
+		});
+
+	}
+
+	private CountRequest buildCountRequest(Query query, ElasticsearchPersistentEntity<?> entity, @Nullable String index,
+			@Nullable String type) {
+
+		IndexCoordinates indexCoordinates = operations.determineIndex(entity, index, type);
+		CountRequest request = new CountRequest(indices(query, indexCoordinates::getIndexName));
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+		searchSourceBuilder.query(mappedQuery(query, entity));
+		searchSourceBuilder.trackScores(query.getTrackScores());
+
+		QueryBuilder postFilterQuery = mappedFilterQuery(query, entity);
+		if (postFilterQuery != null) {
+			searchSourceBuilder.postFilter(postFilterQuery);
+		}
+
+		if (query.getSourceFilter() != null) {
+			searchSourceBuilder.fetchSource(query.getSourceFilter().getIncludes(), query.getSourceFilter().getExcludes());
+		}
+
+		if (query instanceof SearchQuery && ((SearchQuery) query).getCollapseBuilder() != null) {
+			searchSourceBuilder.collapse(((SearchQuery) query).getCollapseBuilder());
+		}
+
+		sort(query, entity).forEach(searchSourceBuilder::sort);
+
+		if (query.getMinScore() > 0) {
+			searchSourceBuilder.minScore(query.getMinScore());
+		}
+
+		if (query.getIndicesOptions() != null) {
+			request.indicesOptions(query.getIndicesOptions());
+		}
+
+		if (query.getPreference() != null) {
+			request.preference(query.getPreference());
+		}
+		request.source(searchSourceBuilder);
+		return request;
+	}
+
+	private SearchRequest buildSearchRequest(Query query, ElasticsearchPersistentEntity<?> entity, @Nullable String index,
+			@Nullable String type) {
+		IndexCoordinates indexCoordinates = operations.determineIndex(entity, index, type);
+		SearchRequest request = new SearchRequest(indices(query, indexCoordinates::getIndexName));
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+		searchSourceBuilder.query(mappedQuery(query, entity));
+		searchSourceBuilder.version(entity.hasVersionProperty());
+		searchSourceBuilder.trackScores(query.getTrackScores());
+
+		QueryBuilder postFilterQuery = mappedFilterQuery(query, entity);
+		if (postFilterQuery != null) {
+			searchSourceBuilder.postFilter(postFilterQuery);
+		}
+
+		if (query.getSourceFilter() != null) {
+			searchSourceBuilder.fetchSource(query.getSourceFilter().getIncludes(), query.getSourceFilter().getExcludes());
+		}
+
+		if (query instanceof SearchQuery && ((SearchQuery) query).getCollapseBuilder() != null) {
+			searchSourceBuilder.collapse(((SearchQuery) query).getCollapseBuilder());
+		}
+
+		sort(query, entity).forEach(searchSourceBuilder::sort);
+
+		if (query.getMinScore() > 0) {
+			searchSourceBuilder.minScore(query.getMinScore());
+		}
+
+		if (query.getIndicesOptions() != null) {
+			request.indicesOptions(query.getIndicesOptions());
+		}
+
+		if (query.getPreference() != null) {
+			request.preference(query.getPreference());
+		}
+
+		if (query.getSearchType() != null) {
+			request.searchType(query.getSearchType());
+		}
+
+		Pageable pageable = query.getPageable();
+
+		if (pageable.isPaged()) {
+
+			long offset = pageable.getOffset();
+			if (offset > Integer.MAX_VALUE) {
+				throw new IllegalArgumentException(String.format("Offset must not be more than %s", Integer.MAX_VALUE));
+			}
+
+			searchSourceBuilder.from((int) offset);
+			searchSourceBuilder.size(pageable.getPageSize());
+
+			request.source(searchSourceBuilder);
+		} else {
+			request.source(searchSourceBuilder);
+		}
+		return request;
+	}
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#count(Query, Class, String, String)
 	 */
-	@Override
-	public Mono<Long> count(Query query, Class<?> entityType, String index, String type) {
-
-		// TODO: ES 7.0 has a dedicated CountRequest - use that one once available.
-		return find(query, entityType, index, type).count();
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -461,6 +514,22 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * Customization hook to modify a generated {@link SearchRequest} prior to its execution. Eg. by setting the
 	 * {@link SearchRequest#indicesOptions(IndicesOptions) indices options} if applicable.
 	 *
+	 * @param request the generated {@link CountRequest}.
+	 * @return never {@literal null}.
+	 */
+	protected CountRequest prepareCountRequest(CountRequest request) {
+
+		if (indicesOptions == null) {
+			return request;
+		}
+
+		return request.indicesOptions(indicesOptions);
+	}
+
+	/**
+	 * Customization hook to modify a generated {@link SearchRequest} prior to its execution. Eg. by setting the
+	 * {@link SearchRequest#indicesOptions(IndicesOptions) indices options} if applicable.
+	 *
 	 * @param request the generated {@link SearchRequest}.
 	 * @return never {@literal null}.
 	 */
@@ -560,13 +629,29 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	/**
 	 * Customization hook on the actual execution result {@link Publisher}. <br />
 	 *
+	 * @param request the already prepared {@link CountRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<Long> doCount(CountRequest request) {
+
+		if (QUERY_LOGGER.isDebugEnabled()) {
+			QUERY_LOGGER.debug("Executing doCount: {}", request);
+		}
+
+		return Mono.from(execute(client -> client.count(request))) //
+				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
 	 * @param request the already prepared {@link SearchRequest} ready to be executed.
 	 * @return a {@link Flux} emitting the result of the operation.
 	 */
-	protected Flux<SearchHit> doScan(SearchRequest request) {
+	protected Flux<SearchHit> doScroll(SearchRequest request) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
-			QUERY_LOGGER.debug("Executing doScan: {}", request);
+			QUERY_LOGGER.debug("Executing doScroll: {}", request);
 		}
 
 		return Flux.from(execute(client -> client.scroll(request))) //
@@ -665,9 +750,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			elasticsearchQuery = new WrapperQueryBuilder(((StringQuery) query).getSource());
 		} else if (query instanceof NativeSearchQuery) {
 			elasticsearchQuery = ((NativeSearchQuery) query).getQuery();
-		}
-
-		else {
+		} else {
 			throw new IllegalArgumentException(String.format("Unknown query type '%s'.", query.getClass()));
 		}
 

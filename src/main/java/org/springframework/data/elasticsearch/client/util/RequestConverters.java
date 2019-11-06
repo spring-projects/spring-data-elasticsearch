@@ -60,6 +60,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.RethrottleRequest;
+import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.Priority;
 import org.elasticsearch.common.Strings;
@@ -98,6 +99,8 @@ import org.springframework.lang.Nullable;
  * <p>
  * Only intended for internal use.
  *
+ * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public class RequestConverters {
@@ -384,6 +387,32 @@ public class RequestConverters {
 			request.setEntity(createEntity(searchRequest.source(), REQUEST_BODY_CONTENT_TYPE));
 		}
 		return request;
+	}
+
+	/**
+	 * Creates a count request.
+	 *
+	 * @param countRequest the search defining the data to be counted
+	 * @return Elasticsearch count request
+	 * @since 4.0
+	 */
+	public static Request count(CountRequest countRequest) {
+		Request request = new Request(HttpMethod.POST.name(),
+				endpoint(countRequest.indices(), countRequest.types(), "_count"));
+
+		Params params = new Params(request);
+		addCountRequestParams(params, countRequest);
+
+		if (countRequest.source() != null) {
+			request.setEntity(createEntity(countRequest.source(), REQUEST_BODY_CONTENT_TYPE));
+		}
+		return request;
+	}
+
+	private static void addCountRequestParams(Params params, CountRequest countRequest) {
+		params.withRouting(countRequest.routing());
+		params.withPreference(countRequest.preference());
+		params.withIndicesOptions(countRequest.indicesOptions());
 	}
 
 	private static void addSearchRequestParams(Params params, SearchRequest searchRequest) {
