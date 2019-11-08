@@ -21,6 +21,7 @@ import lombok.NonNull;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -249,7 +250,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return Flux.defer(() -> {
 			SearchRequest request = prepareSearchRequest(buildSearchRequest(query, entity, index, type));
 
-			if (query.getPageable().isPaged() || query.isLimiting()) {
+			if (query.getPageable().isPaged()) {
 				return doFind(request);
 			} else {
 				return doScroll(request);
