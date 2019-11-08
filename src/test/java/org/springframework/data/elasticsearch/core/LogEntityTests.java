@@ -35,8 +35,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
@@ -81,7 +81,7 @@ public class LogEntityTests {
 	public void shouldIndexGivenLogEntityWithIPFieldType() {
 
 		// when
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("ip", "10.10.10.1")).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("ip", "10.10.10.1")).build();
 		List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class);
 
 		// then
@@ -92,7 +92,7 @@ public class LogEntityTests {
 	public void shouldThrowExceptionWhenInvalidIPGivenForSearchQuery() {
 
 		// when
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("ip", "10.10.10")).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("ip", "10.10.10")).build();
 
 		assertThatThrownBy(() -> {
 			List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class);
@@ -103,7 +103,7 @@ public class LogEntityTests {
 	public void shouldReturnLogsForGivenIPRanges() {
 
 		// when
-		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(rangeQuery("ip").from("10.10.10.1").to("10.10.10.3")).build();
 		List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class);
 

@@ -47,8 +47,8 @@ import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
@@ -128,7 +128,7 @@ public class NestedObjectTests {
 		QueryBuilder builder = nestedQuery("car",
 				boolQuery().must(termQuery("car.name", "saturn")).must(termQuery("car.model", "imprezza")), ScoreMode.None);
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
 		List<Person> persons = elasticsearchTemplate.queryForList(searchQuery, Person.class);
 
 		assertThat(persons).hasSize(1);
@@ -186,7 +186,7 @@ public class NestedObjectTests {
 		builder.must(nestedQuery("girlFriends", termQuery("girlFriends.type", "temp"), ScoreMode.None)).must(
 				nestedQuery("girlFriends.cars", termQuery("girlFriends.cars.name", "Ford".toLowerCase()), ScoreMode.None));
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
 
 		Page<PersonMultipleLevelNested> personIndexed = elasticsearchTemplate.queryForPage(searchQuery,
 				PersonMultipleLevelNested.class);
@@ -323,7 +323,7 @@ public class NestedObjectTests {
 		// when
 		QueryBuilder builder = nestedQuery("books", boolQuery().must(termQuery("books.name", "java")), ScoreMode.None);
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
 		List<Person> persons = elasticsearchTemplate.queryForList(searchQuery, Person.class);
 
 		// then
@@ -369,7 +369,7 @@ public class NestedObjectTests {
 		elasticsearchTemplate.refresh(Book.class);
 
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder()
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(nestedQuery("buckets", termQuery("buckets.1", "test3"), ScoreMode.None)).build();
 		Page<Book> books = elasticsearchTemplate.queryForPage(searchQuery, Book.class);
 

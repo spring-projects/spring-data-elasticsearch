@@ -42,8 +42,8 @@ import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ResultsExtractor;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
@@ -106,7 +106,7 @@ public class ElasticsearchTemplateAggregationTests {
 	public void shouldReturnAggregatedResponseForGivenSearchQuery() {
 
 		// given
-		SearchQuery searchQuery = new NativeSearchQueryBuilder() //
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
 				.withQuery(matchAllQuery()) //
 				.withSearchType(SearchType.DEFAULT) //
 				.withIndices(INDEX_NAME).withTypes("article") //

@@ -24,16 +24,7 @@ import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
-import org.springframework.data.elasticsearch.core.query.AliasQuery;
-import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
 
@@ -169,7 +160,7 @@ public interface ElasticsearchOperations {
 	 */
 	List<AliasMetaData> queryForAlias(String indexName);
 
-	<T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor);
+	<T> T query(NativeSearchQuery query, ResultsExtractor<T> resultsExtractor);
 
 	/**
 	 * Execute the query against elasticsearch and return the first returned object
@@ -205,7 +196,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @return
 	 */
-	<T> Page<T> queryForPage(SearchQuery query, Class<T> clazz);
+	<T> Page<T> queryForPage(NativeSearchQuery query, Class<T> clazz);
 
 	/**
 	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link Page}
@@ -214,7 +205,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @return
 	 */
-	<T> List<Page<T>> queryForPage(List<SearchQuery> queries, Class<T> clazz);
+	<T> List<Page<T>> queryForPage(List<NativeSearchQuery> queries, Class<T> clazz);
 
 	/**
 	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link Page}
@@ -223,7 +214,7 @@ public interface ElasticsearchOperations {
 	 * @param classes
 	 * @return
 	 */
-	List<Page<?>> queryForPage(List<SearchQuery> queries, List<Class<?>> classes);
+	List<Page<?>> queryForPage(List<NativeSearchQuery> queries, List<Class<?>> classes);
 
 	/**
 	 * Execute the query against elasticsearch and return result as {@link Page}
@@ -258,7 +249,7 @@ public interface ElasticsearchOperations {
 	<T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz);
 
 	/**
-	 * Executes the given {@link SearchQuery} against elasticsearch and return result as {@link CloseableIterator}.
+	 * Executes the given {@link NativeSearchQuery} against elasticsearch and return result as {@link CloseableIterator}.
 	 * <p>
 	 * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of
 	 * error.
@@ -269,7 +260,7 @@ public interface ElasticsearchOperations {
 	 * @return
 	 * @since 1.3
 	 */
-	<T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz);
+	<T> CloseableIterator<T> stream(NativeSearchQuery query, Class<T> clazz);
 
 	/**
 	 * Execute the criteria query against elasticsearch and return result as {@link List}
@@ -299,7 +290,7 @@ public interface ElasticsearchOperations {
 	 * @param <T>
 	 * @return
 	 */
-	<T> List<T> queryForList(SearchQuery query, Class<T> clazz);
+	<T> List<T> queryForList(NativeSearchQuery query, Class<T> clazz);
 
 	/**
 	 * Execute the multi search query against elasticsearch and return result as {@link List}
@@ -309,7 +300,7 @@ public interface ElasticsearchOperations {
 	 * @param <T>
 	 * @return
 	 */
-	default <T> List<List<T>> queryForList(List<SearchQuery> queries, Class<T> clazz) {
+	default <T> List<List<T>> queryForList(List<NativeSearchQuery> queries, Class<T> clazz) {
 		return queryForPage(queries, clazz).stream().map(Page::getContent).collect(Collectors.toList());
 	}
 
@@ -320,7 +311,7 @@ public interface ElasticsearchOperations {
 	 * @param classes
 	 * @return
 	 */
-	default List<List<?>> queryForList(List<SearchQuery> queries, List<Class<?>> classes) {
+	default List<List<?>> queryForList(List<NativeSearchQuery> queries, List<Class<?>> classes) {
 		return queryForPage(queries, classes).stream().map(Page::getContent).collect(Collectors.toList());
 	}
 
@@ -330,7 +321,7 @@ public interface ElasticsearchOperations {
 	 * @param query
 	 * @return
 	 */
-	<T> List<String> queryForIds(SearchQuery query);
+	<T> List<String> queryForIds(NativeSearchQuery query);
 
 	/**
 	 * return number of elements found by given query
@@ -356,7 +347,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @return
 	 */
-	<T> long count(SearchQuery query, Class<T> clazz);
+	<T> long count(NativeSearchQuery query, Class<T> clazz);
 
 	/**
 	 * return number of elements found by given query
@@ -364,7 +355,7 @@ public interface ElasticsearchOperations {
 	 * @param query
 	 * @return
 	 */
-	<T> long count(SearchQuery query);
+	<T> long count(NativeSearchQuery query);
 
 	/**
 	 * Execute a multiGet against elasticsearch for the given ids
@@ -373,7 +364,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz
 	 * @return
 	 */
-	<T> List<T> multiGet(SearchQuery searchQuery, Class<T> clazz);
+	<T> List<T> multiGet(NativeSearchQuery searchQuery, Class<T> clazz);
 
 	/**
 	 * Index an object. Will do save or update
@@ -535,7 +526,7 @@ public interface ElasticsearchOperations {
 	 * @param clazz The class of entity to retrieve.
 	 * @return The scan id for input query.
 	 */
-	<T> ScrolledPage<T> startScroll(long scrollTimeInMillis, SearchQuery query, Class<T> clazz);
+	<T> ScrolledPage<T> startScroll(long scrollTimeInMillis, NativeSearchQuery query, Class<T> clazz);
 
 	/**
 	 * Returns scrolled page for given query

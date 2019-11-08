@@ -33,29 +33,28 @@ import java.util.List;
 import java.util.Optional;
 
 import org.elasticsearch.action.ActionRequestValidationException;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.elasticsearch.RestElasticsearchTestConfiguration;
-import org.springframework.data.elasticsearch.junit.junit4.TestNodeResource;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Rizwan Idrees
@@ -66,18 +65,22 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Peter-Josef Meisch
  * @author Murali Chevuri
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { SimpleElasticsearchRepositoryTests.class, RestElasticsearchTestConfiguration.class })
-@EnableElasticsearchRepositories(considerNestedRepositories = true)
+@SpringIntegrationTest
+@ContextConfiguration(classes = { SimpleElasticsearchRepositoryTests.Config.class })
 public class SimpleElasticsearchRepositoryTests {
 
-	@ClassRule public static TestNodeResource testNodeResource = new TestNodeResource();
+	@Configuration
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(
+			basePackages = { "org.springframework.data.elasticsearch.repository.support.simple" },
+			considerNestedRepositories = true)
+	static class Config {}
 
 	@Autowired private SampleElasticsearchRepository repository;
 
 	@Autowired private ElasticsearchOperations elasticsearchOperations;
 
-	@Before
+	@BeforeEach
 	public void before() {
 		IndexInitializer.init(elasticsearchOperations, SampleEntity.class);
 	}
@@ -127,7 +130,7 @@ public class SimpleElasticsearchRepositoryTests {
 		assertThat(entityFromElasticSearch).isPresent();
 	}
 
-	@Test(expected = ActionRequestValidationException.class)
+	@Test
 	public void throwExceptionWhenTryingToInsertWithVersionButWithoutId() {
 
 		// given
@@ -136,10 +139,9 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity.setVersion(System.currentTimeMillis());
 
 		// when
-		repository.save(sampleEntity);
-
-		// then
-		assertThat(sampleEntity.getId()).isNotNull();
+		assertThatThrownBy(() -> {
+			repository.save(sampleEntity);
+		}).isInstanceOf(ActionRequestValidationException.class);
 	}
 
 	@Test
@@ -219,7 +221,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntity);
 
-		SearchQuery query = new NativeSearchQueryBuilder().withQuery(termQuery("message", "test")).build();
+		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(termQuery("message", "test")).build();
 
 		// when
 		Page<SampleEntity> page = repository.search(query);
@@ -342,7 +344,7 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.save(sampleEntity);
 
 		// when
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
 		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
 
 		// then
@@ -356,7 +358,7 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.deleteAll();
 
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(0L);
 	}
@@ -377,7 +379,7 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.refresh();
 
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
 		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(0L);
 		assertThat(result).isEqualTo(1L);
@@ -415,7 +417,7 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// then
 		assertThat(result).hasSize(2);
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(1L);
 	}
@@ -449,7 +451,7 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// then
 		assertThat(result).hasSize(1);
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(2L);
 	}
@@ -482,7 +484,7 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.refresh();
 
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(2L);
 	}
@@ -502,7 +504,7 @@ public class SimpleElasticsearchRepositoryTests {
 		repository.delete(sampleEntity);
 
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
 		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(0L);
 	}

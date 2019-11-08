@@ -57,8 +57,8 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersion;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
@@ -589,7 +589,7 @@ public class ReactiveElasticsearchTemplateTests {
 		restTemplate.refresh(thisIndex);
 		restTemplate.refresh(thatIndex);
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder() //
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
 				.withQuery(termQuery("message", "test")) //
 				.withIndices(indexPrefix + "*") //
 				.build();
@@ -619,7 +619,7 @@ public class ReactiveElasticsearchTemplateTests {
 		restTemplate.refresh(thisIndex);
 		restTemplate.refresh(thatIndex);
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder() //
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
 				.withQuery(termQuery("message", "negative")) //
 				.withIndices(indexPrefix + "*") //
 				.build();
@@ -671,7 +671,7 @@ public class ReactiveElasticsearchTemplateTests {
 		entity3.setRate(1);
 		index(entity1, entity2, entity3);
 
-		SearchQuery query = new NativeSearchQueryBuilder() //
+		NativeSearchQuery query = new NativeSearchQueryBuilder() //
 				.withIndices(DEFAULT_INDEX) //
 				.withQuery(matchAllQuery()) //
 				.withCollapseField("rate") //

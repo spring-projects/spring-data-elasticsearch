@@ -66,7 +66,6 @@ import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMa
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.http.HttpStatus;
@@ -273,8 +272,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			searchSourceBuilder.fetchSource(query.getSourceFilter().getIncludes(), query.getSourceFilter().getExcludes());
 		}
 
-		if (query instanceof SearchQuery && ((SearchQuery) query).getCollapseBuilder() != null) {
-			searchSourceBuilder.collapse(((SearchQuery) query).getCollapseBuilder());
+		if (query instanceof NativeSearchQuery && ((NativeSearchQuery) query).getCollapseBuilder() != null) {
+			searchSourceBuilder.collapse(((NativeSearchQuery) query).getCollapseBuilder());
 		}
 
 		sort(query, entity).forEach(searchSourceBuilder::sort);
@@ -312,8 +311,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			searchSourceBuilder.fetchSource(query.getSourceFilter().getIncludes(), query.getSourceFilter().getExcludes());
 		}
 
-		if (query instanceof SearchQuery && ((SearchQuery) query).getCollapseBuilder() != null) {
-			searchSourceBuilder.collapse(((SearchQuery) query).getCollapseBuilder());
+		if (query instanceof NativeSearchQuery && ((NativeSearchQuery) query).getCollapseBuilder() != null) {
+			searchSourceBuilder.collapse(((NativeSearchQuery) query).getCollapseBuilder());
 		}
 
 		sort(query, entity).forEach(searchSourceBuilder::sort);
@@ -747,8 +746,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	@Nullable
 	private QueryBuilder mappedFilterQuery(Query query, ElasticsearchPersistentEntity<?> entity) {
 
-		if (query instanceof SearchQuery) {
-			return ((SearchQuery) query).getFilter();
+		if (query instanceof NativeSearchQuery) {
+			return ((NativeSearchQuery) query).getFilter();
 		}
 
 		return null;
