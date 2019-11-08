@@ -281,37 +281,38 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 	}
 
 	@Override
-	public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz) {
+	public <T> AggregatedPage<T> queryForPage(NativeSearchQuery query, Class<T> clazz) {
 		SearchResponse response = doSearch(prepareSearch(query, clazz), query);
 		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, query.getPageable());
 	}
 
 	@Override
-	public <T> List<Page<T>> queryForPage(List<SearchQuery> queries, Class<T> clazz) {
+	public <T> List<Page<T>> queryForPage(List<NativeSearchQuery> queries, Class<T> clazz) {
 		MultiSearchRequest request = new MultiSearchRequest();
-		for (SearchQuery query : queries) {
+		for (NativeSearchQuery query : queries) {
 			request.add(prepareSearch(prepareSearch(query, clazz), query));
 		}
 		return doMultiSearch(queries, clazz, request);
 	}
 
-	private <T> List<Page<T>> doMultiSearch(List<SearchQuery> queries, Class<T> clazz, MultiSearchRequest request) {
+	private <T> List<Page<T>> doMultiSearch(List<NativeSearchQuery> queries, Class<T> clazz, MultiSearchRequest request) {
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
 		List<Page<T>> res = new ArrayList<>(queries.size());
 		int c = 0;
-		for (SearchQuery query : queries) {
+		for (NativeSearchQuery query : queries) {
 			res.add(elasticsearchConverter.mapResults(SearchDocumentResponse.from(items[c++].getResponse()), clazz,
 					query.getPageable()));
 		}
 		return res;
 	}
 
-	private List<Page<?>> doMultiSearch(List<SearchQuery> queries, List<Class<?>> classes, MultiSearchRequest request) {
+	private List<Page<?>> doMultiSearch(List<NativeSearchQuery> queries, List<Class<?>> classes,
+			MultiSearchRequest request) {
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
 		List<Page<?>> res = new ArrayList<>(queries.size());
 		int c = 0;
 		Iterator<Class<?>> it = classes.iterator();
-		for (SearchQuery query : queries) {
+		for (NativeSearchQuery query : queries) {
 			res.add(elasticsearchConverter.mapResults(SearchDocumentResponse.from(items[c++].getResponse()), it.next(),
 					query.getPageable()));
 		}
@@ -327,18 +328,18 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 	}
 
 	@Override
-	public List<Page<?>> queryForPage(List<SearchQuery> queries, List<Class<?>> classes) {
+	public List<Page<?>> queryForPage(List<NativeSearchQuery> queries, List<Class<?>> classes) {
 		Assert.isTrue(queries.size() == classes.size(), "Queries should have same length with classes");
 		MultiSearchRequest request = new MultiSearchRequest();
 		Iterator<Class<?>> it = classes.iterator();
-		for (SearchQuery query : queries) {
+		for (NativeSearchQuery query : queries) {
 			request.add(prepareSearch(prepareSearch(query, it.next()), query));
 		}
 		return doMultiSearch(queries, classes, request);
 	}
 
 	@Override
-	public <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor) {
+	public <T> T query(NativeSearchQuery query, ResultsExtractor<T> resultsExtractor) {
 		SearchResponse response = doSearch(prepareSearch(query, (ElasticsearchPersistentEntity) null), query);
 		return resultsExtractor.extract(response);
 	}
@@ -354,12 +355,12 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 	}
 
 	@Override
-	public <T> List<T> queryForList(SearchQuery query, Class<T> clazz) {
+	public <T> List<T> queryForList(NativeSearchQuery query, Class<T> clazz) {
 		return queryForPage(query, clazz).getContent();
 	}
 
 	@Override
-	public <T> List<String> queryForIds(SearchQuery query) {
+	public <T> List<String> queryForIds(NativeSearchQuery query) {
 		SearchRequestBuilder request = prepareSearch(query, (ElasticsearchPersistentEntity) null)
 				.setQuery(query.getQuery());
 		if (query.getFilter() != null) {
@@ -410,7 +411,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 	}
 
 	@Override
-	public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz) {
+	public <T> CloseableIterator<T> stream(NativeSearchQuery query, Class<T> clazz) {
 		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
 		return doStream(scrollTimeInMillis, startScroll(scrollTimeInMillis, query, clazz), clazz);
 	}
@@ -435,7 +436,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 	}
 
 	@Override
-	public <T> long count(SearchQuery searchQuery, Class<T> clazz) {
+	public <T> long count(NativeSearchQuery searchQuery, Class<T> clazz) {
 		QueryBuilder elasticsearchQuery = searchQuery.getQuery();
 		QueryBuilder elasticsearchFilter = searchQuery.getFilter();
 
@@ -453,7 +454,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 	}
 
 	@Override
-	public <T> long count(SearchQuery query) {
+	public <T> long count(NativeSearchQuery query) {
 		return count(query, null);
 	}
 
@@ -497,7 +498,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 	}
 
 	@Override
-	public <T> List<T> multiGet(SearchQuery searchQuery, Class<T> clazz) {
+	public <T> List<T> multiGet(NativeSearchQuery searchQuery, Class<T> clazz) {
 		return elasticsearchConverter.mapDocuments(DocumentAdapters.from(getMultiResponse(searchQuery, clazz)), clazz);
 	}
 
@@ -763,8 +764,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 			requestBuilder.setIndicesOptions(query.getIndicesOptions());
 		}
 
-		if (query instanceof SearchQuery) {
-			SearchQuery searchQuery = (SearchQuery) query;
+		if (query instanceof NativeSearchQuery) {
+			NativeSearchQuery searchQuery = (NativeSearchQuery) query;
 
 			if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
 				HighlightBuilder highlightBuilder = searchQuery.getHighlightBuilder();
@@ -805,7 +806,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 		return getSearchResponse(requestBuilder);
 	}
 
-	private SearchResponse doScroll(SearchRequestBuilder requestBuilder, SearchQuery searchQuery) {
+	private SearchResponse doScroll(SearchRequestBuilder requestBuilder, NativeSearchQuery searchQuery) {
 		Assert.notNull(searchQuery.getIndices(), "No index defined for Query");
 		Assert.notNull(searchQuery.getTypes(), "No type define for Query");
 		Assert.notNull(searchQuery.getPageable(), "Query.pageable is required for scan & scroll");
@@ -824,7 +825,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 	}
 
 	@Override
-	public <T> ScrolledPage<T> startScroll(long scrollTimeInMillis, SearchQuery searchQuery, Class<T> clazz) {
+	public <T> ScrolledPage<T> startScroll(long scrollTimeInMillis, NativeSearchQuery searchQuery, Class<T> clazz) {
 		SearchResponse response = doScroll(prepareScroll(searchQuery, scrollTimeInMillis, clazz), searchQuery);
 		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, null);
 	}
@@ -890,12 +891,12 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 		return queryForPage(new NativeSearchQueryBuilder().withQuery(moreLikeThisQueryBuilder).build(), clazz);
 	}
 
-	private SearchResponse doSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
+	private SearchResponse doSearch(SearchRequestBuilder searchRequest, NativeSearchQuery searchQuery) {
 		SearchRequestBuilder requestBuilder = prepareSearch(searchRequest, searchQuery);
 		return getSearchResponse(requestBuilder);
 	}
 
-	private SearchRequestBuilder prepareSearch(SearchRequestBuilder searchRequest, SearchQuery searchQuery) {
+	private SearchRequestBuilder prepareSearch(SearchRequestBuilder searchRequest, NativeSearchQuery searchQuery) {
 		if (searchQuery.getFilter() != null) {
 			searchRequest.setPostFilter(searchQuery.getFilter());
 		}

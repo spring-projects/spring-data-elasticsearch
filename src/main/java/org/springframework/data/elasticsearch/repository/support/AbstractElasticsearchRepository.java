@@ -40,8 +40,8 @@ import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.util.Streamable;
 import org.springframework.util.Assert;
@@ -134,7 +134,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	@Override
 	public Page<T> findAll(Pageable pageable) {
 
-		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withPageable(pageable).build();
+		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withPageable(pageable).build();
 
 		return elasticsearchOperations.queryForPage(query, getEntityClass());
 	}
@@ -147,7 +147,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 			return new PageImpl<>(Collections.<T> emptyList());
 		}
 
-		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, itemCount, sort)).build();
 
 		return elasticsearchOperations.queryForPage(query, getEntityClass());
@@ -158,7 +158,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 		Assert.notNull(ids, "ids can't be null.");
 
-		SearchQuery query = new NativeSearchQueryBuilder().withIds(stringIdsRepresentation(ids)).build();
+		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(stringIdsRepresentation(ids)).build();
 
 		return elasticsearchOperations.multiGet(query, getEntityClass());
 	}
@@ -166,7 +166,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	@Override
 	public long count() {
 
-		SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
 		return elasticsearchOperations.count(query, getEntityClass());
 	}
@@ -230,7 +230,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	@Override
 	public Iterable<T> search(QueryBuilder query) {
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(query).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(query).build();
 		int count = (int) elasticsearchOperations.count(searchQuery, getEntityClass());
 		if (count == 0) {
 			return new PageImpl<>(Collections.<T> emptyList());
@@ -244,13 +244,13 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	@Override
 	public Page<T> search(QueryBuilder query, Pageable pageable) {
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(query).withPageable(pageable).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(query).withPageable(pageable).build();
 
 		return elasticsearchOperations.queryForPage(searchQuery, getEntityClass());
 	}
 
 	@Override
-	public Page<T> search(SearchQuery query) {
+	public Page<T> search(NativeSearchQuery query) {
 
 		return elasticsearchOperations.queryForPage(query, getEntityClass());
 	}

@@ -19,19 +19,21 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
+import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * FieldDynamicMappingEntityRepositoryTests
@@ -39,15 +41,22 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Ted Liang
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:field-dynamic-settings-test.xml")
+@SpringIntegrationTest
+@ContextConfiguration(classes = { FieldDynamicMappingEntityRepositoryTests.Config.class })
 public class FieldDynamicMappingEntityRepositoryTests {
+
+	@Configuration
+	@Import({ ElasticsearchTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(
+			basePackages = { "org.springframework.data.elasticsearch.repositories.setting.fielddynamic" },
+			considerNestedRepositories = true)
+	static class Config {}
 
 	@Autowired private FieldDynamicMappingEntityRepository repository;
 
 	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
-	@Before
+	@BeforeEach
 	public void before() {
 		IndexInitializer.init(elasticsearchTemplate, FieldDynamicMappingEntity.class);
 	}

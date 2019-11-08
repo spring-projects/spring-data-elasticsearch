@@ -34,8 +34,9 @@ import org.springframework.data.elasticsearch.core.facet.FacetRequest;
  * @author Artur Konczak
  * @author Jean-Baptiste Nizet
  * @author Martin Choraine
+ * @author Peter-Josef Meisch
  */
-public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
+public class NativeSearchQuery extends AbstractQuery {
 
 	private QueryBuilder query;
 	private QueryBuilder filter;
@@ -97,17 +98,14 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 		return sorts;
 	}
 
-	@Override
 	public HighlightBuilder getHighlightBuilder() {
 		return highlightBuilder;
 	}
 
-	@Override
 	public HighlightBuilder.Field[] getHighlightFields() {
 		return highlightFields;
 	}
 
-	@Override
 	public List<ScriptField> getScriptFields() {
 		return scriptFields;
 	}
@@ -120,7 +118,6 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 		scriptFields.addAll(Arrays.asList(scriptField));
 	}
 
-	@Override
 	public CollapseBuilder getCollapseBuilder() {
 		return collapseBuilder;
 	}
@@ -142,12 +139,10 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 		this.facets = facets;
 	}
 
-	@Override
 	public List<FacetRequest> getFacets() {
 		return facets;
 	}
 
-	@Override
 	public List<AbstractAggregationBuilder> getAggregations() {
 		return aggregations;
 	}
@@ -165,7 +160,6 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 		this.aggregations = aggregations;
 	}
 
-	@Override
 	public List<IndexBoost> getIndicesBoost() {
 		return indicesBoost;
 	}

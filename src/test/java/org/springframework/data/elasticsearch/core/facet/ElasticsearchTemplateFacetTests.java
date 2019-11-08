@@ -49,8 +49,8 @@ import org.springframework.data.elasticsearch.core.facet.result.StatisticalResul
 import org.springframework.data.elasticsearch.core.facet.result.Term;
 import org.springframework.data.elasticsearch.core.facet.result.TermResult;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
@@ -104,7 +104,7 @@ public class ElasticsearchTemplateFacetTests {
 
 		// given
 		String facetName = "fauthors";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new TermFacetRequestBuilder(facetName).fields("authors.untouched").build()).build();
 
 		// when
@@ -139,7 +139,7 @@ public class ElasticsearchTemplateFacetTests {
 
 		// given
 		String facetName = "fauthors";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new TermFacetRequestBuilder(facetName).applyQueryFilter().fields("authors.untouched").build())
 				.build();
 		// when
@@ -171,7 +171,7 @@ public class ElasticsearchTemplateFacetTests {
 
 		// given
 		String facetName = "fauthors";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new TermFacetRequestBuilder(facetName).applyQueryFilter().fields("authors.untouched")
 						.excludeTerms(RIZWAN_IDREES, ARTUR_KONCZAK).build())
 				.build();
@@ -204,7 +204,7 @@ public class ElasticsearchTemplateFacetTests {
 
 		// given
 		String facetName = "fauthors";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new TermFacetRequestBuilder(facetName).fields("authors.untouched").ascTerm().build()).build();
 
 		// when
@@ -240,7 +240,7 @@ public class ElasticsearchTemplateFacetTests {
 
 		// given
 		String facetName = "fauthors";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new TermFacetRequestBuilder(facetName).fields("authors.untouched").ascCount().build()).build();
 
 		// when
@@ -276,7 +276,7 @@ public class ElasticsearchTemplateFacetTests {
 
 		// given
 		String facetName = "fyears";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new TermFacetRequestBuilder(facetName).fields("publishedYears").descCount().build()).build();
 
 		// when
@@ -310,7 +310,7 @@ public class ElasticsearchTemplateFacetTests {
 
 		// given
 		String facetName = "fyears";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(
 						new TermFacetRequestBuilder(facetName).applyQueryFilter().fields("publishedYears").descCount().build())
 				.build();
@@ -347,7 +347,7 @@ public class ElasticsearchTemplateFacetTests {
 		// given
 		String facetName = "fyears";
 		assertThatThrownBy(() -> {
-			SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+			NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 					.withFacet(
 							new TermFacetRequestBuilder(facetName).fields("publishedYears", "authors.untouched").ascTerm().build())
 					.build();
@@ -360,7 +360,7 @@ public class ElasticsearchTemplateFacetTests {
 		// given
 		String numberFacetName = "fAuthors";
 		String stringFacetName = "fyears";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new TermFacetRequestBuilder(numberFacetName).fields("publishedYears").ascTerm().build())
 				.withFacet(new TermFacetRequestBuilder(stringFacetName).fields("authors.untouched").ascTerm().build()).build();
 
@@ -413,7 +413,7 @@ public class ElasticsearchTemplateFacetTests {
 		// given
 		String facetName = "fyears";
 		assertThatThrownBy(() -> {
-			SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+			NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 					.withFacet(new NativeFacetRequest()).build();
 		}).isInstanceOf(UnsupportedOperationException.class);
 	}
@@ -423,7 +423,7 @@ public class ElasticsearchTemplateFacetTests {
 
 		// given
 		String facetName = "regex_authors";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withFacet(
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withFacet(
 				new TermFacetRequestBuilder(facetName).applyQueryFilter().fields("authors.untouched").regex("Art.*").build())
 				.build();
 
@@ -451,7 +451,7 @@ public class ElasticsearchTemplateFacetTests {
 
 		// given
 		String facetName = "all_authors";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(
 						new TermFacetRequestBuilder(facetName).applyQueryFilter().fields("authors.untouched").allTerms().build())
 				.build();
@@ -476,7 +476,7 @@ public class ElasticsearchTemplateFacetTests {
 
 		// given
 		String facetName = "rangeYears";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new RangeFacetRequestBuilder(facetName).field(PUBLISHED_YEARS).to(YEAR_2000)
 						.range(YEAR_2000, YEAR_2002).from(YEAR_2002).build())
 				.build();
@@ -514,7 +514,7 @@ public class ElasticsearchTemplateFacetTests {
 
 		// given
 		String facetName = "rangeScoreOverYears";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new RangeFacetRequestBuilder(facetName).fields(PUBLISHED_YEARS, "score").to(YEAR_2000)
 						.range(YEAR_2000, YEAR_2002).from(YEAR_2002).build())
 				.build();
@@ -552,7 +552,7 @@ public class ElasticsearchTemplateFacetTests {
 
 		// given
 		String facetName = "statPublishedYear";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new StatisticalFacetRequestBuilder(facetName).field(PUBLISHED_YEARS).build()).build();
 
 		// when
@@ -572,7 +572,7 @@ public class ElasticsearchTemplateFacetTests {
 
 		// given
 		String facetName = "numberPublicationPerYear";
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFacet(new HistogramFacetRequestBuilder(facetName).field(PUBLISHED_YEARS).interval(1).build()).build();
 
 		// when
@@ -600,7 +600,7 @@ public class ElasticsearchTemplateFacetTests {
 	@Test
 	public void shouldNotThrowExceptionForNoFacets() {
 
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		AggregatedPage<ArticleEntity> result = elasticsearchTemplate.queryForPage(searchQuery, ArticleEntity.class);
 
 		assertThat(result.hasFacets()).isEqualTo(false);

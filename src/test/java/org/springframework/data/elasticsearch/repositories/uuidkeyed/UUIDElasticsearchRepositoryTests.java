@@ -29,11 +29,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Page;
@@ -46,12 +46,14 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Gad Akuka
@@ -62,15 +64,21 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Michael Wirth
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:/uuidkeyed-repository-test.xml")
+@SpringIntegrationTest
+@ContextConfiguration(classes = { UUIDElasticsearchRepositoryTests.Config.class })
 public class UUIDElasticsearchRepositoryTests {
+
+	@Configuration
+	@Import({ ElasticsearchTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(basePackages = { "org.springframework.data.elasticsearch.repositories.uuidkeyed" },
+			considerNestedRepositories = true)
+	static class Config {}
 
 	@Autowired private SampleUUIDKeyedElasticsearchRepository repository;
 
 	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
 
-	@Before
+	@BeforeEach
 	public void before() {
 
 		IndexInitializer.init(elasticsearchTemplate, SampleEntityUUIDKeyed.class);
@@ -198,7 +206,7 @@ public class UUIDElasticsearchRepositoryTests {
 		sampleEntityUUIDKeyed.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntityUUIDKeyed);
 
-		SearchQuery query = new NativeSearchQueryBuilder().withQuery(termQuery("message", "test")).build();
+		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(termQuery("message", "test")).build();
 		// when
 		Page<SampleEntityUUIDKeyed> page = repository.search(query);
 
@@ -319,7 +327,7 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.deleteAll();
 
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(0L);
 	}
@@ -339,7 +347,8 @@ public class UUIDElasticsearchRepositoryTests {
 		long result = repository.deleteSampleEntityUUIDKeyedById(documentId);
 
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId.toString())).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId.toString()))
+				.build();
 		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements()).isGreaterThanOrEqualTo(0);
 		assertThat(result).isEqualTo(1L);
@@ -377,7 +386,7 @@ public class UUIDElasticsearchRepositoryTests {
 
 		// then
 		assertThat(result).hasSize(2);
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(1);
 	}
@@ -411,7 +420,7 @@ public class UUIDElasticsearchRepositoryTests {
 
 		// then
 		assertThat(result).hasSize(1);
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(2);
 	}
@@ -444,7 +453,7 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.refresh();
 
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(2);
 	}
@@ -465,7 +474,8 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.refresh();
 
 		// then
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId.toString())).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId.toString()))
+				.build();
 		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
 		assertThat(sampleEntities.getTotalElements()).isEqualTo(0);
 	}
