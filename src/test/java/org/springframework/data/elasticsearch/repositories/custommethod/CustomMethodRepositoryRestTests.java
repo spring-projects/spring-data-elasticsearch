@@ -15,26 +15,34 @@
  */
 package org.springframework.data.elasticsearch.repositories.custommethod;
 
-import org.junit.Before;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Don Wellington
  * @author Mark Paluch
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:custom-method-repository-rest-test.xml")
+@ContextConfiguration(classes = { CustomMethodRepositoryRestTests.Config.class })
 public class CustomMethodRepositoryRestTests extends CustomMethodRepositoryBaseTests {
+
+	@Configuration
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(
+			basePackages = { "org.springframework.data.elasticsearch.repositories.custommethod" },
+			considerNestedRepositories = true)
+	static class Config {}
 
 	@Autowired private ElasticsearchRestTemplate elasticsearchTemplate;
 
-	@Before
+	@BeforeEach
 	public void before() {
 		IndexInitializer.init(elasticsearchTemplate, SampleEntity.class);
 	}

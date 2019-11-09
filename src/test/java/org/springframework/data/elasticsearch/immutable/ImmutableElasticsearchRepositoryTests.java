@@ -22,15 +22,18 @@ import lombok.NoArgsConstructor;
 
 import java.util.Optional;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Young Gu
@@ -39,14 +42,20 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:immutable-repository-test.xml")
+@SpringIntegrationTest
+@ContextConfiguration(classes = { ImmutableElasticsearchRepositoryTests.Config.class })
 public class ImmutableElasticsearchRepositoryTests {
+
+	@Configuration
+	@Import({ ElasticsearchTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(basePackages = { "org.springframework.data.elasticsearch.immutable" },
+			considerNestedRepositories = true)
+	static class Config {}
 
 	@Autowired ImmutableElasticsearchRepository repository;
 	@Autowired ElasticsearchOperations operations;
 
-	@Before
+	@BeforeEach
 	public void before() {
 
 		operations.deleteIndex(ImmutableEntity.class);

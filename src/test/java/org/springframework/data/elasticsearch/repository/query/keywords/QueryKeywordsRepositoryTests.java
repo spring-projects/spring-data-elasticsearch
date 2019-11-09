@@ -15,11 +15,9 @@
  */
 package org.springframework.data.elasticsearch.repository.query.keywords;
 
-import org.junit.ClassRule;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.elasticsearch.ElasticsearchTestConfiguration;
-import org.springframework.data.elasticsearch.junit.junit4.TestNodeResource;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -28,16 +26,13 @@ import org.springframework.test.context.ContextConfiguration;
  *
  * @author Peter-Josef Meisch
  */
-@ContextConfiguration(classes = { QueryKeywordsRepositoryTests.class, ElasticsearchTestConfiguration.class })
-@Configuration
-@EnableElasticsearchRepositories(considerNestedRepositories = true)
+@ContextConfiguration(classes = { QueryKeywordsRepositoryTests.Config.class})
 public class QueryKeywordsRepositoryTests extends QueryKeywordsTests {
 
-	@ClassRule public static TestNodeResource testNodeResource = new TestNodeResource();
-
-	// needed by the ElasticsearchTestConfiguration.
-	@Bean
-	public TestNodeResource nodeResource() {
-		return testNodeResource;
-	}
+	@Configuration
+	@Import({ ElasticsearchTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(
+			basePackages = { "org.springframework.data.elasticsearch.repository.query.keywords" },
+			considerNestedRepositories = true)
+	static class Config {}
 }
