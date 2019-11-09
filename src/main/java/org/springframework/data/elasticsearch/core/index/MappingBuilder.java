@@ -33,6 +33,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.CompletionContext;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
+import org.springframework.data.elasticsearch.annotations.DynamicMapping;
 import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -86,6 +87,7 @@ public class MappingBuilder {
 	private static final String COMPLETION_MAX_INPUT_LENGTH = "max_input_length";
 	private static final String COMPLETION_CONTEXTS = "contexts";
 
+	private static final String TYPE_DYNAMIC = "dynamic";
 	private static final String TYPE_VALUE_KEYWORD = "keyword";
 	private static final String TYPE_VALUE_GEO_POINT = "geo_point";
 	private static final String TYPE_VALUE_COMPLETION = "completion";
@@ -120,13 +122,9 @@ public class MappingBuilder {
 			builder.startObject(FIELD_PARENT).field(FIELD_PARAM_TYPE, parentType).endObject();
 		}
 
-		// Properties
-		builder.startObject(FIELD_PROPERTIES);
+		mapEntity(builder, entity, true, "", false, FieldType.Auto, null, entity.findAnnotation(DynamicMapping.class));
 
-		mapEntity(builder, entity, true, "", false, FieldType.Auto, null);
-
-		builder.endObject() // FIELD_PROPERTIES
-				.endObject() // indexType
+		builder.endObject() // indexType
 				.endObject() // root object
 				.close();
 
@@ -135,7 +133,7 @@ public class MappingBuilder {
 
 	private void mapEntity(XContentBuilder builder, @Nullable ElasticsearchPersistentEntity entity, boolean isRootObject,
 			String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType,
-			@Nullable Field parentFieldAnnotation) throws IOException {
+			@Nullable Field parentFieldAnnotation, @Nullable DynamicMapping dynamicMapping) throws IOException {
 
 		boolean writeNestedProperties = !isRootObject && (isAnyPropertyAnnotatedWithField(entity) || nestedOrObjectField);
 		if (writeNestedProperties) {
@@ -146,14 +144,17 @@ public class MappingBuilder {
 
 			if (nestedOrObjectField && FieldType.Nested == fieldType && parentFieldAnnotation != null
 					&& parentFieldAnnotation.includeInParent()) {
-
 				builder.field("include_in_parent", parentFieldAnnotation.includeInParent());
 			}
-
-			builder.startObject(FIELD_PROPERTIES);
 		}
-		if (entity != null) {
 
+		if (dynamicMapping != null) {
+			builder.field(TYPE_DYNAMIC, dynamicMapping.value().name().toLowerCase());
+		}
+
+		builder.startObject(FIELD_PROPERTIES);
+
+		if (entity != null) {
 			entity.doWithProperties((PropertyHandler<ElasticsearchPersistentProperty>) property -> {
 				try {
 					if (property.isAnnotationPresent(Transient.class) || isInIgnoreFields(property, parentFieldAnnotation)) {
@@ -167,9 +168,12 @@ public class MappingBuilder {
 			});
 		}
 
+		builder.endObject();
+
 		if (writeNestedProperties) {
-			builder.endObject().endObject();
+			builder.endObject();
 		}
+
 	}
 
 	private void buildPropertyMapping(XContentBuilder builder, boolean isRootObject,
@@ -205,7 +209,7 @@ public class MappingBuilder {
 					: null;
 
 			mapEntity(builder, persistentEntity, false, property.getFieldName(), isNestedOrObjectProperty,
-					fieldAnnotation.type(), fieldAnnotation);
+					fieldAnnotation.type(), fieldAnnotation, property.findAnnotation(DynamicMapping.class));
 
 			if (isNestedOrObjectProperty) {
 				return;

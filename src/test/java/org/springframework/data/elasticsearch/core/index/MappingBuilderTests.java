@@ -514,6 +514,27 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, true);
 	}
 
+	@Test
+	void shouldWriteDynamicMappingSettings() throws IOException, JSONException {
+
+		String expected = "{\n" + //
+				"  \"dms\": {\n" + //
+				"    \"dynamic\": \"false\",\n" + //
+				"    \"properties\": {\n" + //
+				"      \"author\": {\n" + //
+				"        \"dynamic\": \"strict\",\n" + //
+				"        \"type\": \"object\",\n" + //
+				"        \"properties\": {}\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n";
+
+		String mapping = getMappingBuilder().buildPropertyMapping(ConfigureDynamicMappingEntity.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
 	/**
 	 * @author Xiao Yu
 	 */
@@ -947,5 +968,20 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		@Field private String termVectorDefault;
 		@Field(termVector = TermVector.with_offsets) private String termVectorWithOffsets;
 		@Field(type = FieldType.Scaled_Float, scalingFactor = 100.0) Double scaledFloat;
+	}
+
+	@Document(indexName = "test-index-configure-dynamic-mapping", type = "dms")
+	@DynamicMapping(DynamicMappingValue.False)
+	static class ConfigureDynamicMappingEntity {
+
+		@DynamicMapping(DynamicMappingValue.Strict) @Field(type = FieldType.Object) private Author author;
+
+		public Author getAuthor() {
+			return author;
+		}
+
+		public void setAuthor(Author author) {
+			this.author = author;
+		}
 	}
 }
