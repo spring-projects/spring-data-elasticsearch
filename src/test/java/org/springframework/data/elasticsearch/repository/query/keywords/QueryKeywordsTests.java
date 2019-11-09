@@ -28,18 +28,17 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * base class for query keyword tests. Implemented by subclasses using ElasticsearchClient and ElasticsearchRestClient
@@ -49,14 +48,14 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  */
-@RunWith(SpringRunner.class)
+@SpringIntegrationTest
 abstract class QueryKeywordsTests {
 
 	@Autowired private ProductRepository repository;
 
 	@Autowired private ElasticsearchOperations elasticsearchTemplate;
 
-	@Before
+	@BeforeEach
 	public void before() {
 
 		IndexInitializer.init(elasticsearchTemplate, Product.class);

@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -46,6 +46,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
@@ -62,6 +63,7 @@ import org.springframework.data.geo.Point;
  * @author Peter-Josef Meisch
  * @author Rasmus Faber-Espensen
  */
+@SpringIntegrationTest
 public abstract class CustomMethodRepositoryBaseTests {
 
 	@Autowired private SampleCustomMethodRepository repository;
