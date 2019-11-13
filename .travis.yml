@@ -2,7 +2,6 @@ dist: xenial
 
 language: java
 
-jdk:
-  - openjdk8
+sudo: true
 
-script: "mvn clean dependency:list test -Dsort -U -B"
+script: "./mvnw -Pjava11 clean dependency:list test -Dsort -U -B"
