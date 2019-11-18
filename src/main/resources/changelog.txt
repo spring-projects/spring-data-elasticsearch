@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.2.RELEASE (2019-11-18)
+---------------------------------------------
+* DATAES-685 - Release 3.2.2 (Moore SR2).
+* DATAES-684 - Implement Bulk Request for Reactive.
+* DATAES-680 - ReactiveElasticsearchTemplate should use the count API.
+
+
 Changes in version 3.1.13.RELEASE (2019-11-18)
 ----------------------------------------------
 * DATAES-683 - Release 3.1.13 (Lovelace SR13).
