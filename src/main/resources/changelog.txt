@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.13.RELEASE (2019-11-18)
+----------------------------------------------
+* DATAES-683 - Release 3.1.13 (Lovelace SR13).
+
+
 Changes in version 3.2.1.RELEASE (2019-11-04)
 ---------------------------------------------
 * DATAES-679 - Upgrade to Elasticsearch 6.8.4.
