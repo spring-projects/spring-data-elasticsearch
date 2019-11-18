@@ -145,6 +145,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Peter-Josef Meisch
  * @author Mathias Teier
  * @author Gyula Attila Csorogi
+ * @author Massimiliano Poggi
  */
 public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 		implements EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -685,7 +686,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 				.setRefreshPolicy(queryUpdateRequest.getRefreshPolicy()) //
 				.waitForActiveShards(queryUpdateRequest.waitForActiveShards()) //
 				.scriptedUpsert(queryUpdateRequest.scriptedUpsert()) //
-				.docAsUpsert(queryUpdateRequest.docAsUpsert());
+				.docAsUpsert(queryUpdateRequest.docAsUpsert()) //
+				.fetchSource(queryUpdateRequest.fetchSource());
 
 		if (query.DoUpsert()) {
 			updateRequest.docAsUpsert(true);

@@ -31,6 +31,7 @@ import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -55,6 +56,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * @author Sascha Woo
  * @author Don Wellington
  * @author Peter-Josef Meisch
+ * @author Massimiliano Poggi
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
@@ -98,6 +100,31 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 		// then
 		assertThat(request).isNotNull();
 		assertThat(request.upsertRequest()).isNotNull();
+	}
+
+	@Test // DATAES-693
+	public void shouldReturnSourceWhenRequested() throws IOException {
+		// given
+		Map<String, Object> doc = new HashMap<>();
+		doc.put("id", "1");
+		doc.put("message", "test");
+
+		UpdateRequest updateRequest = new UpdateRequest()
+				.doc(doc)
+				.fetchSource(FetchSourceContext.FETCH_SOURCE);
+
+		UpdateQuery updateQuery = new UpdateQueryBuilder() //
+				.withClass(SampleEntity.class) //
+				.withId("1") //
+				.withUpdateRequest(updateRequest).build();
+
+		// when
+		UpdateRequest request = (UpdateRequest) ReflectionTestUtils //
+				.invokeMethod(elasticsearchTemplate, "prepareUpdate", updateQuery);
+
+		// then
+		assertThat(request).isNotNull();
+		assertThat(request.fetchSource()).isEqualTo(FetchSourceContext.FETCH_SOURCE);
 	}
 
 	@Data
