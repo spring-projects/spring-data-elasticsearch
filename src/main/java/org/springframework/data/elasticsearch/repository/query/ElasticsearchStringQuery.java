@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
@@ -68,17 +69,19 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	public Object execute(Object[] parameters) {
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
 		StringQuery stringQuery = createQuery(accessor);
+		Class<?> clazz = queryMethod.getEntityInformation().getJavaType();
+		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
 		if (queryMethod.isPageQuery()) {
 			stringQuery.setPageable(accessor.getPageable());
-			return elasticsearchOperations.queryForPage(stringQuery, queryMethod.getEntityInformation().getJavaType());
+			return elasticsearchOperations.queryForPage(stringQuery, clazz, index);
 		} else if (queryMethod.isCollectionQuery()) {
 			if (accessor.getPageable().isPaged()) {
 				stringQuery.setPageable(accessor.getPageable());
 			}
-			return elasticsearchOperations.queryForList(stringQuery, queryMethod.getEntityInformation().getJavaType());
+			return elasticsearchOperations.queryForList(stringQuery, clazz, index);
 		}
 
-		return elasticsearchOperations.queryForObject(stringQuery, queryMethod.getEntityInformation().getJavaType());
+		return elasticsearchOperations.queryForObject(stringQuery, clazz, index);
 	}
 
 	protected StringQuery createQuery(ParametersParameterAccessor parameterAccessor) {

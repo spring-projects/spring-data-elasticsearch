@@ -83,7 +83,7 @@ public class ElasticsearchTemplateParentChildTests {
 		// find all parents that have the first child
 		QueryBuilder query = hasChildQuery(ParentEntity.CHILD_TYPE,
 				QueryBuilders.termQuery("name", child1name.toLowerCase()), ScoreMode.None);
-		List<ParentEntity> parents = elasticsearchTemplate.queryForList(new NativeSearchQuery(query), ParentEntity.class);
+		List<ParentEntity> parents = elasticsearchTemplate.queryForList(new NativeSearchQuery(query), ParentEntity.class, IndexCoordinates.of(ParentEntity.INDEX));
 
 		// we're expecting only the first parent as result
 		assertThat(parents).hasSize(1);
@@ -105,7 +105,7 @@ public class ElasticsearchTemplateParentChildTests {
 		XContentBuilder builder;
 		builder = jsonBuilder().startObject().field("name", newChildName).endObject();
 		updateRequest.doc(builder);
-		UpdateResponse response = update(updateRequest);
+		UpdateResponse response = update(updateRequest, IndexCoordinates.of(ParentEntity.INDEX).withTypes( ParentEntity.CHILD_TYPE));
 
 		assertThat(response.getShardInfo().getSuccessful()).isEqualTo(1);
 	}
@@ -124,7 +124,7 @@ public class ElasticsearchTemplateParentChildTests {
 		XContentBuilder builder;
 		builder = jsonBuilder().startObject().field("name", newChildName).endObject();
 		updateRequest.doc(builder);
-		update(updateRequest);
+		update(updateRequest, IndexCoordinates.of(ParentEntity.INDEX).withTypes( ParentEntity.CHILD_TYPE));
 	}
 
 	@Ignore(value = "DATAES-421")
@@ -142,7 +142,7 @@ public class ElasticsearchTemplateParentChildTests {
 		builder = jsonBuilder().startObject().field("name", newChildName).endObject();
 		updateRequest.doc(builder);
 		updateRequest.doc().routing(parent.getId());
-		update(updateRequest);
+		update(updateRequest, IndexCoordinates.of(ParentEntity.INDEX).withTypes( ParentEntity.CHILD_TYPE));
 	}
 
 	private ParentEntity index(String parentId, String name) {
@@ -151,7 +151,7 @@ public class ElasticsearchTemplateParentChildTests {
 		IndexQuery index = new IndexQuery();
 		index.setId(parent.getId());
 		index.setObject(parent);
-		elasticsearchTemplate.index(index);
+		elasticsearchTemplate.index(index, IndexCoordinates.of(ParentEntity.INDEX).withTypes( ParentEntity.PARENT_TYPE));
 
 		return parent;
 	}
@@ -163,19 +163,17 @@ public class ElasticsearchTemplateParentChildTests {
 		index.setId(child.getId());
 		index.setObject(child);
 		index.setParentId(child.getParentId());
-		elasticsearchTemplate.index(index);
+		elasticsearchTemplate.index(index, IndexCoordinates.of(ParentEntity.INDEX).withTypes( ParentEntity.CHILD_TYPE));
 
 		return child;
 	}
 
-	private UpdateResponse update(UpdateRequest updateRequest) {
+	private UpdateResponse update(UpdateRequest updateRequest, IndexCoordinates index) {
 
 		UpdateQuery update = new UpdateQuery();
 		update.setId(updateRequest.id());
-		update.setType(updateRequest.type());
-		update.setIndexName(updateRequest.index());
 		update.setUpdateRequest(updateRequest);
-		return elasticsearchTemplate.update(update);
+		return elasticsearchTemplate.update(update, index);
 	}
 
 	/**

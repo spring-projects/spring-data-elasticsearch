@@ -51,6 +51,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -139,12 +140,16 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		double price = 2.34;
 		String id = "abc";
 
-		elasticsearchTemplate
-				.index(buildIndex(StockPrice.builder().id(id).symbol(symbol).price(BigDecimal.valueOf(price)).build()));
+		IndexCoordinates index = IndexCoordinates.of("test-index-stock-mapping-builder").withTypes( "price");
+		elasticsearchTemplate.index(buildIndex(StockPrice.builder() //
+				.id(id) //
+				.symbol(symbol) //
+				.price(BigDecimal.valueOf(price)) //
+				.build()), index);
 		elasticsearchTemplate.refresh(StockPrice.class);
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		List<StockPrice> result = elasticsearchTemplate.queryForList(searchQuery, StockPrice.class);
+		List<StockPrice> result = elasticsearchTemplate.queryForList(searchQuery, StockPrice.class, index);
 
 		// Then
 		assertThat(result).hasSize(1);
@@ -186,12 +191,14 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		Date createdDate = new Date();
 		String message = "msg";
 		String id = "abc";
-		elasticsearchTemplate
-				.index(new SampleInheritedEntityBuilder(id).createdDate(createdDate).message(message).buildIndex());
+		IndexCoordinates index = IndexCoordinates.of("test-index-sample-inherited-mapping-builder").withTypes( "mapping");
+		elasticsearchTemplate.index(
+				new SampleInheritedEntityBuilder(id).createdDate(createdDate).message(message).buildIndex(),
+				index);
 		elasticsearchTemplate.refresh(SampleInheritedEntity.class);
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		List<SampleInheritedEntity> result = elasticsearchTemplate.queryForList(searchQuery, SampleInheritedEntity.class);
+		List<SampleInheritedEntity> result = elasticsearchTemplate.queryForList(searchQuery, SampleInheritedEntity.class, index);
 
 		// then
 		assertThat(result).hasSize(1);

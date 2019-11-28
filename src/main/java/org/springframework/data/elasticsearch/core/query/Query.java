@@ -86,6 +86,7 @@ public interface Query {
 	 *
 	 * @return
 	 */
+	@Deprecated
 	List<String> getIndices();
 
 	/**
@@ -93,6 +94,7 @@ public interface Query {
 	 *
 	 * @param indices
 	 */
+	@Deprecated
 	void addIndices(String... indices);
 
 	/**
@@ -100,6 +102,7 @@ public interface Query {
 	 *
 	 * @param types
 	 */
+	@Deprecated
 	void addTypes(String... types);
 
 	/**
@@ -107,6 +110,7 @@ public interface Query {
 	 *
 	 * @return
 	 */
+	@Deprecated
 	List<String> getTypes();
 
 	/**

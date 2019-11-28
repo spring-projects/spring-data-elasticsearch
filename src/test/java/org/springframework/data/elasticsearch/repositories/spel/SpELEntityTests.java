@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -70,7 +71,7 @@ public class SpELEntityTests {
 		// then
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(QueryBuilders.matchAllQuery());
 		nativeSearchQuery.addIndices("test-index-abz-entity");
-		long count = template.count(nativeSearchQuery);
+		long count = template.count(nativeSearchQuery, IndexCoordinates.of("test-index-abz-entity"));
 		assertThat(count).isEqualTo(2);
 	}
 
@@ -87,7 +88,7 @@ public class SpELEntityTests {
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(QueryBuilders.matchAllQuery());
 		nativeSearchQuery.addIndices("test-index-abz-entity");
 		nativeSearchQuery.addTypes("myType");
-		long count = template.count(nativeSearchQuery);
+		long count = template.count(nativeSearchQuery, IndexCoordinates.of("test-index-abz-entity"));
 		assertThat(count).isEqualTo(1);
 	}
 

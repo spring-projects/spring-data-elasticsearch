@@ -53,6 +53,7 @@ import org.springframework.test.context.ContextConfiguration;
 @ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
 public class LogEntityTests {
 
+	private final IndexCoordinates index = IndexCoordinates.of("test-index-log-core").withTypes( "test-log-type");
 	@Autowired private ElasticsearchTemplate template;
 
 	@BeforeEach
@@ -73,7 +74,7 @@ public class LogEntityTests {
 		IndexQuery indexQuery4 = new LogEntityBuilder("4").action("update").date(dateFormatter.parse("2013-10-19 18:04"))
 				.code(2).ip("10.10.10.4").buildIndex();
 
-		template.bulkIndex(Arrays.asList(indexQuery1, indexQuery2, indexQuery3, indexQuery4));
+		template.bulkIndex(Arrays.asList(indexQuery1, indexQuery2, indexQuery3, indexQuery4), index);
 		template.refresh(LogEntity.class);
 	}
 
@@ -82,7 +83,7 @@ public class LogEntityTests {
 
 		// when
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("ip", "10.10.10.1")).build();
-		List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class);
+		List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class, index);
 
 		// then
 		assertThat(entities).isNotNull().hasSize(1);
@@ -95,7 +96,7 @@ public class LogEntityTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("ip", "10.10.10")).build();
 
 		assertThatThrownBy(() -> {
-			List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class);
+			List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class, index);
 		}).isInstanceOf(SearchPhaseExecutionException.class);
 	}
 
@@ -105,7 +106,7 @@ public class LogEntityTests {
 		// when
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(rangeQuery("ip").from("10.10.10.1").to("10.10.10.3")).build();
-		List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class);
+		List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class, index);
 
 		// then
 		assertThat(entities).isNotNull().hasSize(3);

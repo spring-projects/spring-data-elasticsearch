@@ -32,6 +32,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -66,7 +67,7 @@ public class ElasticsearchTemplateCompletionTests {
 		indexQueries.add(new CompletionEntityBuilder("4").name("Artur Konczak").suggest(new String[] { "Artur", "Konczak" })
 				.buildIndex());
 
-		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.bulkIndex(indexQueries, IndexCoordinates.of("test-index-core-completion").withTypes( "completion-type"));
 		elasticsearchTemplate.refresh(CompletionEntity.class);
 	}
 
@@ -88,7 +89,8 @@ public class ElasticsearchTemplateCompletionTests {
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Artur Konczak")
 				.suggest(new String[] { "Artur", "Konczak" }).buildIndex());
 
-		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.bulkIndex(indexQueries,
+				IndexCoordinates.of("test-index-annotated-completion").withTypes( "annotated-completion-type"));
 		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
 	}
 
@@ -106,7 +108,8 @@ public class ElasticsearchTemplateCompletionTests {
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Mewes Kochheim4")
 				.suggest(new String[] { "Mewes Kochheim4" }, Integer.MAX_VALUE).buildIndex());
 
-		elasticsearchTemplate.bulkIndex(indexQueries);
+		elasticsearchTemplate.bulkIndex(indexQueries,
+				IndexCoordinates.of("test-index-annotated-completion").withTypes( "annotated-completion-type"));
 		elasticsearchTemplate.refresh(AnnotatedCompletionEntity.class);
 	}
 
@@ -132,7 +135,8 @@ public class ElasticsearchTemplateCompletionTests {
 
 		// when
 		SearchResponse suggestResponse = elasticsearchTemplate.suggest(
-				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder), CompletionEntity.class);
+				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
+				IndexCoordinates.of("test-index-core-completion").withTypes( "completion-type"));
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
 
@@ -152,7 +156,8 @@ public class ElasticsearchTemplateCompletionTests {
 
 		// when
 		SearchResponse suggestResponse = elasticsearchTemplate.suggest(
-				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder), CompletionEntity.class);
+				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
+				IndexCoordinates.of("test-index-core-completion").withTypes( "completion-type"));
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
 
@@ -173,7 +178,7 @@ public class ElasticsearchTemplateCompletionTests {
 		// when
 		SearchResponse suggestResponse = elasticsearchTemplate.suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
-				AnnotatedCompletionEntity.class);
+				IndexCoordinates.of("test-index-annotated-completion").withTypes( "annotated-completion-type"));
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
 

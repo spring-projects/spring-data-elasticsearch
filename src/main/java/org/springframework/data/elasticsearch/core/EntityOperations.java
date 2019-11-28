@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core;
 
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -38,12 +37,17 @@ import org.springframework.util.StringUtils;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
-@RequiredArgsConstructor
 class EntityOperations {
 
 	private static final String ID_FIELD = "id";
+
+	public EntityOperations(
+			@NonNull MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context) {
+		this.context = context;
+	}
 
 	private final @NonNull MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context;
 
@@ -116,7 +120,7 @@ class EntityOperations {
 	 */
 	IndexCoordinates determineIndex(ElasticsearchPersistentEntity<?> persistentEntity, @Nullable String index,
 			@Nullable String type) {
-		return new IndexCoordinates(indexName(persistentEntity, index), typeName(persistentEntity, type));
+		return IndexCoordinates.of(indexName(persistentEntity, index)).withTypes(typeName(persistentEntity, type));
 	}
 
 	private static String indexName(@Nullable ElasticsearchPersistentEntity<?> entity, @Nullable String index) {
@@ -615,14 +619,4 @@ class EntityOperations {
 		}
 	}
 
-	/**
-	 * Value object encapsulating index name and index type.
-	 */
-	@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-	@Getter
-	static class IndexCoordinates {
-
-		private final String indexName;
-		private final String typeName;
-	}
 }

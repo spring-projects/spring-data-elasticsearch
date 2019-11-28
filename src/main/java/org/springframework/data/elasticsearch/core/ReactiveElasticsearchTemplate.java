@@ -56,7 +56,6 @@ import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity;
 import org.springframework.data.elasticsearch.core.EntityOperations.Entity;
-import org.springframework.data.elasticsearch.core.EntityOperations.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
@@ -346,6 +345,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			searchSourceBuilder.size(pageable.getPageSize());
 
 			request.source(searchSourceBuilder);
+			request.source(searchSourceBuilder);
 		} else if (query.isLimiting()) {
 			searchSourceBuilder.from(0);
 			searchSourceBuilder.size(query.getMaxResults());
@@ -356,10 +356,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		}
 		return request;
 	}
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#count(Query, Class, String, String)
-	 */
 
 	/*
 	 * (non-Javadoc)
