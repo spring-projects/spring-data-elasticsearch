@@ -45,7 +45,7 @@ public class ClientConfigurationUnitTests {
 		assertThat(clientConfiguration.getEndpoints()).containsOnly(InetSocketAddress.createUnresolved("localhost", 9200));
 	}
 
-	@Test // DATAES-488, DATAES-504, DATAES-650
+	@Test // DATAES-488, DATAES-504, DATAES-650, DATAES-700
 	public void shouldCreateCustomizedConfiguration() {
 
 		HttpHeaders headers = new HttpHeaders();
@@ -56,7 +56,8 @@ public class ClientConfigurationUnitTests {
 				.usingSsl() //
 				.withDefaultHeaders(headers) //
 				.withConnectTimeout(Duration.ofDays(1)).withSocketTimeout(Duration.ofDays(2)) //
-				.withPathPrefix("myPathPrefix").build();
+				.withPathPrefix("myPathPrefix") //
+				.withProxy("localhost:8080").build();
 
 		assertThat(clientConfiguration.getEndpoints()).containsOnly(InetSocketAddress.createUnresolved("foo", 9200),
 				InetSocketAddress.createUnresolved("bar", 9200));
@@ -65,6 +66,7 @@ public class ClientConfigurationUnitTests {
 		assertThat(clientConfiguration.getConnectTimeout()).isEqualTo(Duration.ofDays(1));
 		assertThat(clientConfiguration.getSocketTimeout()).isEqualTo(Duration.ofDays(2));
 		assertThat(clientConfiguration.getPathPrefix()).isEqualTo("myPathPrefix");
+		assertThat(clientConfiguration.getProxy()).contains("localhost:8080");
 	}
 
 	@Test // DATAES-488, DATAES-504
