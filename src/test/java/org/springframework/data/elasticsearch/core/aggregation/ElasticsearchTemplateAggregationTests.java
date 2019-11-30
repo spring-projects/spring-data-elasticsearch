@@ -90,7 +90,7 @@ public class ElasticsearchTemplateAggregationTests {
 				.addAuthor(RIZWAN_IDREES).addPublishedYear(YEAR_2002).addPublishedYear(YEAR_2001).addPublishedYear(YEAR_2000)
 				.score(40).buildIndex();
 
-		IndexCoordinates index = IndexCoordinates.of(INDEX_NAME).withTypes( "article");
+		IndexCoordinates index = IndexCoordinates.of(INDEX_NAME).withTypes("article");
 		elasticsearchTemplate.index(article1, index);
 		elasticsearchTemplate.index(article2, index);
 		elasticsearchTemplate.index(article3, index);
@@ -111,7 +111,6 @@ public class ElasticsearchTemplateAggregationTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
 				.withQuery(matchAllQuery()) //
 				.withSearchType(SearchType.DEFAULT) //
-				.withIndices(INDEX_NAME).withTypes("article") //
 				.addAggregation(terms("subjects").field("subject")) //
 				.build();
 		// when

@@ -57,6 +57,7 @@ import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsea
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 
 /**
@@ -68,6 +69,8 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 	@Mock ReactiveElasticsearchClient client;
 	ReactiveElasticsearchTemplate template;
+
+	private IndexCoordinates index = IndexCoordinates.of("index").withTypes("type");
 
 	@BeforeEach
 	public void setUp() {
@@ -81,7 +84,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		ArgumentCaptor<IndexRequest> captor = ArgumentCaptor.forClass(IndexRequest.class);
 		when(client.index(captor.capture())).thenReturn(Mono.empty());
 
-		template.save(Collections.singletonMap("key", "value"), "index", "type") //
+		template.save(Collections.singletonMap("key", "value"), index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -96,7 +99,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 		template.setRefreshPolicy(RefreshPolicy.WAIT_UNTIL);
 
-		template.save(Collections.singletonMap("key", "value"), "index", "type") //
+		template.save(Collections.singletonMap("key", "value"), index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -124,7 +127,8 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 		template.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
 
-		template.find(new CriteriaQuery(new Criteria("*")).setPageable(PageRequest.of(0, 10)), SampleEntity.class) //
+		Query query = new CriteriaQuery(new Criteria("*")).setPageable(PageRequest.of(0, 10));
+		template.find(query, SampleEntity.class, index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -137,7 +141,8 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
 		when(client.search(captor.capture())).thenReturn(Flux.empty());
 
-		template.find(new CriteriaQuery(new Criteria("*")).setPageable(PageRequest.of(2, 50)), SampleEntity.class) //
+		Query query = new CriteriaQuery(new Criteria("*")).setPageable(PageRequest.of(2, 50));
+		template.find(query, SampleEntity.class, index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -164,7 +169,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		ArgumentCaptor<DeleteRequest> captor = ArgumentCaptor.forClass(DeleteRequest.class);
 		when(client.delete(captor.capture())).thenReturn(Mono.empty());
 
-		template.deleteById("id", "index", "type") //
+		template.deleteById("id", index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -179,7 +184,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 		template.setRefreshPolicy(RefreshPolicy.WAIT_UNTIL);
 
-		template.deleteById("id", "index", "type") //
+		template.deleteById("id", index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -192,7 +197,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		ArgumentCaptor<DeleteByQueryRequest> captor = ArgumentCaptor.forClass(DeleteByQueryRequest.class);
 		when(client.deleteBy(captor.capture())).thenReturn(Mono.empty());
 
-		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, "index", "type") //
+		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -207,7 +212,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 		template.setRefreshPolicy(RefreshPolicy.NONE);
 
-		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, "index", "type") //
+		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -220,7 +225,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		ArgumentCaptor<DeleteByQueryRequest> captor = ArgumentCaptor.forClass(DeleteByQueryRequest.class);
 		when(client.deleteBy(captor.capture())).thenReturn(Mono.empty());
 
-		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, "index", "type") //
+		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -235,7 +240,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 		template.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
 
-		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, "index", "type") //
+		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 

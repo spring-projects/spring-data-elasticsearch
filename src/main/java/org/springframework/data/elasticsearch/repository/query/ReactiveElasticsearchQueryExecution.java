@@ -15,39 +15,46 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 /**
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public interface ReactiveElasticsearchQueryExecution {
 
-	Object execute(Query query, Class<?> type, String indexName, String indexType, @Nullable Class<?> targetType);
+	Object execute(Query query, Class<?> type, @Nullable Class<?> targetType, IndexCoordinates indexCoordinates);
 
 	/**
 	 * An {@link ReactiveElasticsearchQueryExecution} that wraps the results of the given delegate with the given result
 	 * processing.
 	 */
-	@RequiredArgsConstructor
 	final class ResultProcessingExecution implements ReactiveElasticsearchQueryExecution {
 
-		private final @NonNull ReactiveElasticsearchQueryExecution delegate;
-		private final @NonNull Converter<Object, Object> converter;
+		private final ReactiveElasticsearchQueryExecution delegate;
+		private final Converter<Object, Object> converter;
+
+		public ResultProcessingExecution(ReactiveElasticsearchQueryExecution delegate,
+				Converter<Object, Object> converter) {
+			Assert.notNull(delegate, "delegate must not be null");
+			Assert.notNull(converter, "converter must not be null");
+			this.delegate = delegate;
+			this.converter = converter;
+		}
 
 		@Override
-		public Object execute(Query query, Class<?> type, String indexName, String indexType,
-				@Nullable Class<?> targetType) {
-			return converter.convert(delegate.execute(query, type, indexName, indexType, targetType));
+		public Object execute(Query query, Class<?> type, @Nullable Class<?> targetType,
+				IndexCoordinates indexCoordinates) {
+			return converter.convert(delegate.execute(query, type, targetType, indexCoordinates));
 		}
 	}
 
@@ -56,11 +63,17 @@ public interface ReactiveElasticsearchQueryExecution {
 	 *
 	 * @author Mark Paluch
 	 */
-	@RequiredArgsConstructor
 	final class ResultProcessingConverter implements Converter<Object, Object> {
 
-		private final @NonNull ResultProcessor processor;
-		private final @NonNull ReactiveElasticsearchOperations operations;
+		private final ResultProcessor processor;
+		private final ReactiveElasticsearchOperations operations;
+
+		public ResultProcessingConverter(ResultProcessor processor, ReactiveElasticsearchOperations operations) {
+			Assert.notNull(processor, "processor must not be null");
+			Assert.notNull(operations, "operations must not be null");
+			this.processor = processor;
+			this.operations = operations;
+		}
 
 		/*
 		 * (non-Javadoc)

@@ -604,17 +604,7 @@ class RequestFactory {
 		}
 
 		if (query instanceof NativeSearchQuery) {
-			NativeSearchQuery nativeSearchQuery = (NativeSearchQuery) query;
-
-			if (!nativeSearchQuery.getScriptFields().isEmpty()) {
-				for (ScriptField scriptedField : nativeSearchQuery.getScriptFields()) {
-					sourceBuilder.scriptField(scriptedField.fieldName(), scriptedField.script());
-				}
-			}
-
-			if (nativeSearchQuery.getCollapseBuilder() != null) {
-				sourceBuilder.collapse(nativeSearchQuery.getCollapseBuilder());
-			}
+			prepareNativeSearch((NativeSearchQuery) query, sourceBuilder);
 
 		}
 
@@ -679,6 +669,33 @@ class RequestFactory {
 		}
 
 		return searchRequestBuilder;
+	}
+
+	private void prepareNativeSearch(NativeSearchQuery query, SearchSourceBuilder sourceBuilder) {
+		NativeSearchQuery nativeSearchQuery = query;
+
+		if (!nativeSearchQuery.getScriptFields().isEmpty()) {
+			for (ScriptField scriptedField : nativeSearchQuery.getScriptFields()) {
+				sourceBuilder.scriptField(scriptedField.fieldName(), scriptedField.script());
+			}
+		}
+
+		if (nativeSearchQuery.getCollapseBuilder() != null) {
+			sourceBuilder.collapse(nativeSearchQuery.getCollapseBuilder());
+		}
+
+		if (!isEmpty(nativeSearchQuery.getIndicesBoost())) {
+			for (IndexBoost indexBoost : nativeSearchQuery.getIndicesBoost()) {
+				sourceBuilder.indexBoost(indexBoost.getIndexName(), indexBoost.getBoost());
+			}
+		}
+
+		if (!isEmpty(nativeSearchQuery.getAggregations())) {
+			for (AbstractAggregationBuilder aggregationBuilder : nativeSearchQuery.getAggregations()) {
+				sourceBuilder.aggregation(aggregationBuilder);
+			}
+		}
+
 	}
 
 	private void prepareNativeSearch(SearchRequestBuilder searchRequestBuilder, NativeSearchQuery nativeSearchQuery) {

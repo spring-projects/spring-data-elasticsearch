@@ -163,14 +163,15 @@ public class ReactiveElasticsearchTemplateTests {
 	public void insertWithExplicitIndexNameShouldOverwriteMetadata() {
 
 		SampleEntity sampleEntity = randomEntity("in another index");
+		IndexCoordinates alternateIndex = IndexCoordinates.of(ALTERNATE_INDEX);
 
-		template.save(sampleEntity, ALTERNATE_INDEX) //
+		template.save(sampleEntity, alternateIndex) //
 				.as(StepVerifier::create)//
 				.expectNextCount(1)//
 				.verifyComplete();
 
 		restTemplate.refresh(IndexCoordinates.of(DEFAULT_INDEX));
-		restTemplate.refresh(IndexCoordinates.of(ALTERNATE_INDEX));
+		restTemplate.refresh(alternateIndex);
 
 		assertThat(TestUtils.documentWithId(sampleEntity.getId()).existsIn(DEFAULT_INDEX)).isFalse();
 		assertThat(TestUtils.documentWithId(sampleEntity.getId()).existsIn(ALTERNATE_INDEX)).isTrue();
@@ -181,7 +182,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		Map<String, Object> map = new LinkedHashMap<>(Collections.singletonMap("foo", "bar"));
 
-		template.save(map, ALTERNATE_INDEX, "singleton-map") //
+		template.save(map, IndexCoordinates.of(ALTERNATE_INDEX).withTypes("singleton-map")) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 					assertThat(map).containsKey("id");
@@ -198,7 +199,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@Test // DATAES-519
 	public void findByIdShouldCompleteWhenIndexDoesNotExist() {
 
-		template.findById("foo", SampleEntity.class, "no-such-index") //
+		template.findById("foo", SampleEntity.class, IndexCoordinates.of("no-such-index").withTypes("test-type")) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
@@ -256,17 +257,20 @@ public class ReactiveElasticsearchTemplateTests {
 
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
-		restTemplate.index(indexQuery, IndexCoordinates.of(ALTERNATE_INDEX).withTypes( "test-type"));
+		IndexCoordinates defaultIndex = IndexCoordinates.of(DEFAULT_INDEX).withTypes("test-type");
+		IndexCoordinates alternateIndex = IndexCoordinates.of(ALTERNATE_INDEX).withTypes("test-type");
+
+		restTemplate.index(indexQuery, alternateIndex);
 		restTemplate.refresh(SampleEntity.class);
 
-		restTemplate.refresh(IndexCoordinates.of(DEFAULT_INDEX));
-		restTemplate.refresh(IndexCoordinates.of(ALTERNATE_INDEX));
+		restTemplate.refresh(defaultIndex);
+		restTemplate.refresh(alternateIndex);
 
-		template.findById(sampleEntity.getId(), SampleEntity.class) //
+		template.findById(sampleEntity.getId(), SampleEntity.class, defaultIndex) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		template.findById(sampleEntity.getId(), SampleEntity.class, ALTERNATE_INDEX) //
+		template.findById(sampleEntity.getId(), SampleEntity.class, alternateIndex) //
 				.as(StepVerifier::create)//
 				.expectNextCount(1) //
 				.verifyComplete();
@@ -275,7 +279,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@Test // DATAES-519
 	public void existsShouldReturnFalseWhenIndexDoesNotExist() {
 
-		template.exists("foo", SampleEntity.class, "no-such-index") //
+		template.exists("foo", SampleEntity.class, IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
 				.expectNext(false) //
 				.verifyComplete();
@@ -308,7 +312,9 @@ public class ReactiveElasticsearchTemplateTests {
 	@Test // DATAES-519
 	public void findShouldCompleteWhenIndexDoesNotExist() {
 
-		template.find(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class, "no-such-index") //
+		template
+				.find(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
+						IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
@@ -509,7 +515,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@Test // DATAES-519
 	public void deleteByIdShouldCompleteWhenIndexDoesNotExist() {
 
-		template.deleteById("does-not-exists", SampleEntity.class, "no-such-index") //
+		template.deleteById("does-not-exists", SampleEntity.class, IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create)//
 				.verifyComplete();
 	}
@@ -532,7 +538,7 @@ public class ReactiveElasticsearchTemplateTests {
 		SampleEntity sampleEntity = randomEntity("test message");
 		index(sampleEntity);
 
-		template.deleteById(sampleEntity.getId(), DEFAULT_INDEX, "test-type") //
+		template.deleteById(sampleEntity.getId(), IndexCoordinates.of(DEFAULT_INDEX).withTypes("test-type")) //
 				.as(StepVerifier::create)//
 				.expectNext(sampleEntity.getId()) //
 				.verifyComplete();
@@ -577,8 +583,8 @@ public class ReactiveElasticsearchTemplateTests {
 	public void shouldDeleteAcrossIndex() {
 
 		String indexPrefix = "rx-template-test-index";
-		String thisIndex = indexPrefix + "-this";
-		String thatIndex = indexPrefix + "-that";
+		IndexCoordinates thisIndex = IndexCoordinates.of(indexPrefix + "-this");
+		IndexCoordinates thatIndex = IndexCoordinates.of(indexPrefix + "-that");
 
 		template.save(randomEntity("test"), thisIndex) //
 				.then(template.save(randomEntity("test"), thatIndex)) //
@@ -586,20 +592,19 @@ public class ReactiveElasticsearchTemplateTests {
 				.as(StepVerifier::create)//
 				.verifyComplete();
 
-		restTemplate.refresh(IndexCoordinates.of(thisIndex));
-		restTemplate.refresh(IndexCoordinates.of(thatIndex));
+		restTemplate.refresh(thisIndex);
+		restTemplate.refresh(thatIndex);
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
 				.withQuery(termQuery("message", "test")) //
-				.withIndices(indexPrefix + "*") //
 				.build();
 
-		template.deleteBy(searchQuery, SampleEntity.class) //
+		template.deleteBy(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
 				.verifyComplete();
 
-		TestUtils.deleteIndex(thisIndex, thatIndex);
+		TestUtils.deleteIndex(thisIndex.getIndexName(), thatIndex.getIndexName());
 	}
 
 	@Test // DATAES-547
@@ -607,8 +612,8 @@ public class ReactiveElasticsearchTemplateTests {
 	public void shouldDeleteAcrossIndexWhenNoMatchingDataPresent() {
 
 		String indexPrefix = "rx-template-test-index";
-		String thisIndex = indexPrefix + "-this";
-		String thatIndex = indexPrefix + "-that";
+		IndexCoordinates thisIndex = IndexCoordinates.of(indexPrefix + "-this");
+		IndexCoordinates thatIndex = IndexCoordinates.of(indexPrefix + "-that");
 
 		template.save(randomEntity("positive"), thisIndex) //
 				.then(template.save(randomEntity("positive"), thatIndex)) //
@@ -616,20 +621,19 @@ public class ReactiveElasticsearchTemplateTests {
 				.as(StepVerifier::create)//
 				.verifyComplete();
 
-		restTemplate.refresh(IndexCoordinates.of(thisIndex));
-		restTemplate.refresh(IndexCoordinates.of(thatIndex));
+		restTemplate.refresh(thisIndex);
+		restTemplate.refresh(thatIndex);
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
 				.withQuery(termQuery("message", "negative")) //
-				.withIndices(indexPrefix + "*") //
 				.build();
 
-		template.deleteBy(searchQuery, SampleEntity.class) //
+		template.deleteBy(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
 				.verifyComplete();
 
-		TestUtils.deleteIndex(thisIndex, thatIndex);
+		TestUtils.deleteIndex(thisIndex.getIndexName(), thatIndex.getIndexName());
 	}
 
 	@Test // DATAES-504
@@ -672,13 +676,12 @@ public class ReactiveElasticsearchTemplateTests {
 		index(entity1, entity2, entity3);
 
 		NativeSearchQuery query = new NativeSearchQueryBuilder() //
-				.withIndices(DEFAULT_INDEX) //
 				.withQuery(matchAllQuery()) //
 				.withCollapseField("rate") //
 				.withPageable(PageRequest.of(0, 25)) //
 				.build();
 
-		template.find(query, SampleEntity.class) //
+		template.find(query, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
 				.as(StepVerifier::create) //
 				.expectNextCount(2) //
 				.verifyComplete();
@@ -725,7 +728,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 	private void index(SampleEntity... entities) {
 
-		IndexCoordinates indexCoordinates = IndexCoordinates.of(DEFAULT_INDEX).withTypes( "test-type");
+		IndexCoordinates indexCoordinates = IndexCoordinates.of(DEFAULT_INDEX).withTypes("test-type");
 
 		if (entities.length == 1) {
 			restTemplate.index(getIndexQuery(entities[0]), indexCoordinates);
