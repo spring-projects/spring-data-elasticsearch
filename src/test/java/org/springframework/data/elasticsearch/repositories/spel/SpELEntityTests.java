@@ -70,7 +70,6 @@ public class SpELEntityTests {
 
 		// then
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(QueryBuilders.matchAllQuery());
-		nativeSearchQuery.addIndices("test-index-abz-entity");
 		long count = template.count(nativeSearchQuery, IndexCoordinates.of("test-index-abz-entity"));
 		assertThat(count).isEqualTo(2);
 	}
@@ -86,8 +85,6 @@ public class SpELEntityTests {
 
 		// then
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(QueryBuilders.matchAllQuery());
-		nativeSearchQuery.addIndices("test-index-abz-entity");
-		nativeSearchQuery.addTypes("myType");
 		long count = template.count(nativeSearchQuery, IndexCoordinates.of("test-index-abz-entity"));
 		assertThat(count).isEqualTo(1);
 	}

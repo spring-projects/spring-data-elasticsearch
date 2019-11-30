@@ -42,6 +42,7 @@ import org.springframework.data.domain.Pageable;
  * @author Jean-Baptiste Nizet
  * @author Martin Choraine
  * @author Farid Azaza
+ * @author Peter-Josef Meisch
  */
 public class NativeSearchQueryBuilder {
 
@@ -53,8 +54,6 @@ public class NativeSearchQueryBuilder {
 	private HighlightBuilder highlightBuilder;
 	private HighlightBuilder.Field[] highlightFields;
 	private Pageable pageable = Pageable.unpaged();
-	private String[] indices;
-	private String[] types;
 	private String[] fields;
 	private SourceFilter sourceFilter;
 	private CollapseBuilder collapseBuilder;
@@ -117,16 +116,6 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withIndices(String... indices) {
-		this.indices = indices;
-		return this;
-	}
-
-	public NativeSearchQueryBuilder withTypes(String... types) {
-		this.types = types;
-		return this;
-	}
-
 	public NativeSearchQueryBuilder withFields(String... fields) {
 		this.fields = fields;
 		return this;
@@ -183,14 +172,6 @@ public class NativeSearchQueryBuilder {
 
 		nativeSearchQuery.setPageable(pageable);
 		nativeSearchQuery.setTrackScores(trackScores);
-
-		if (indices != null) {
-			nativeSearchQuery.addIndices(indices);
-		}
-
-		if (types != null) {
-			nativeSearchQuery.addTypes(types);
-		}
 
 		if (fields != null) {
 			nativeSearchQuery.addFields(fields);

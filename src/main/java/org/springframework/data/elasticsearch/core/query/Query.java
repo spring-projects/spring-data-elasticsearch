@@ -82,38 +82,6 @@ public interface Query {
 	Sort getSort();
 
 	/**
-	 * Get Indices to be searched
-	 *
-	 * @return
-	 */
-	@Deprecated
-	List<String> getIndices();
-
-	/**
-	 * Add Indices to be added as part of search request
-	 *
-	 * @param indices
-	 */
-	@Deprecated
-	void addIndices(String... indices);
-
-	/**
-	 * Add types to be searched
-	 *
-	 * @param types
-	 */
-	@Deprecated
-	void addTypes(String... types);
-
-	/**
-	 * Get types to be searched
-	 *
-	 * @return
-	 */
-	@Deprecated
-	List<String> getTypes();
-
-	/**
 	 * Add fields to be added as part of search request
 	 *
 	 * @param fields

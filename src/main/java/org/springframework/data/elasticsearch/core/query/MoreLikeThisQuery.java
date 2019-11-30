@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import static java.util.Collections.addAll;
+import static java.util.Collections.*;
 import static org.springframework.data.elasticsearch.core.query.AbstractQuery.*;
 
 import java.util.ArrayList;
@@ -28,12 +28,11 @@ import org.springframework.data.domain.Pageable;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Peter-Josef Meisch
  */
 public class MoreLikeThisQuery {
 
 	private String id;
-	private String indexName;
-	private String type;
 	private List<String> searchIndices = new ArrayList<>();
 	private List<String> searchTypes = new ArrayList<>();
 	private List<String> fields = new ArrayList<>();
@@ -55,22 +54,6 @@ public class MoreLikeThisQuery {
 
 	public void setId(String id) {
 		this.id = id;
-	}
-
-	public String getIndexName() {
-		return indexName;
-	}
-
-	public void setIndexName(String indexName) {
-		this.indexName = indexName;
-	}
-
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
 	}
 
 	public List<String> getSearchIndices() {

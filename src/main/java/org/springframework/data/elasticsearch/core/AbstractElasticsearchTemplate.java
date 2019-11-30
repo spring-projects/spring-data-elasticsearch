@@ -34,7 +34,6 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.util.Assert;
@@ -53,6 +52,9 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	protected ElasticsearchConverter elasticsearchConverter;
 	protected RequestFactory requestFactory;
 
+	/**
+	 * @since 4.0
+	 */
 	public RequestFactory getRequestFactory() {
 		return requestFactory;
 	}
@@ -195,43 +197,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 							+ failedDocuments + "]",
 					failedDocuments);
 		}
-	}
-
-	/**
-	 * @param query
-	 * @param clazz
-	 * @deprecated index names and types should not be set in query
-	 */
-	@Deprecated
-	protected void setPersistentEntityIndexAndType(Query query, Class clazz) {
-		if (query.getIndices().isEmpty()) {
-			String[] indices = retrieveIndexNameFromPersistentEntity(clazz);
-
-			if (indices != null) {
-				query.addIndices(indices);
-			}
-		}
-		if (query.getTypes().isEmpty()) {
-			String[] types = retrieveTypeFromPersistentEntity(clazz);
-
-			if (types != null) {
-				query.addTypes(types);
-			}
-		}
-	}
-
-	private String[] retrieveIndexNameFromPersistentEntity(Class clazz) {
-		if (clazz != null) {
-			return new String[] { getPersistentEntityFor(clazz).getIndexName() };
-		}
-		return null;
-	}
-
-	private String[] retrieveTypeFromPersistentEntity(Class clazz) {
-		if (clazz != null) {
-			return new String[] { getPersistentEntityFor(clazz).getIndexType() };
-		}
-		return null;
 	}
 
 	@Override

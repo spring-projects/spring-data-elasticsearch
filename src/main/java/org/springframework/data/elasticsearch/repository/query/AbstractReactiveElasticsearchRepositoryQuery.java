@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 
 import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -36,6 +37,7 @@ import org.springframework.data.repository.query.ResultProcessor;
  * AbstractElasticsearchRepositoryQuery
  *
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 abstract class AbstractReactiveElasticsearchRepositoryQuery implements RepositoryQuery {
@@ -79,14 +81,15 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 		Query query = createQuery(
 				new ConvertingParameterAccessor(elasticsearchOperations.getElasticsearchConverter(), parameterAccessor));
 
-		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
+		Class<?> targetType = processor.getReturnedType().getTypeToRead();
 		String indexName = queryMethod.getEntityInformation().getIndexName();
 		String indexTypeName = queryMethod.getEntityInformation().getIndexTypeName();
+		IndexCoordinates index = IndexCoordinates.of(indexName).withTypes(indexTypeName);
 
 		ReactiveElasticsearchQueryExecution execution = getExecution(parameterAccessor,
 				new ResultProcessingConverter(processor, elasticsearchOperations));
 
-		return execution.execute(query, processor.getReturnedType().getDomainType(), indexName, indexTypeName, typeToRead);
+		return execution.execute(query, processor.getReturnedType().getDomainType(), targetType, index);
 	}
 
 	private ReactiveElasticsearchQueryExecution getExecution(ElasticsearchParameterAccessor accessor,
@@ -106,15 +109,17 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 			ReactiveElasticsearchOperations operations) {
 
 		if (isDeleteQuery()) {
-			return (q, t, i, it, tt) -> operations.deleteBy(q, t, i, it);
+			return (query, type, targetType, indexCoordinates) -> operations.deleteBy(query, type, indexCoordinates);
 		} else if (isCountQuery()) {
-			return (q, t, i, it, tt) -> operations.count(q, t, i, it);
+			return (query, type, targetType, indexCoordinates) -> operations.count(query, type, indexCoordinates);
 		} else if (isExistsQuery()) {
-			return (q, t, i, it, tt) -> operations.count(q, t, i, it).map(count -> count > 0);
+			return (query, type, targetType, indexCoordinates) -> operations.count(query, type, indexCoordinates)
+					.map(count -> count > 0);
 		} else if (queryMethod.isCollectionQuery()) {
-			return (q, t, i, it, tt) -> operations.find(q.setPageable(accessor.getPageable()), t, i, it, tt);
+			return (query, type, targetType, indexCoordinates) -> operations.find(query.setPageable(accessor.getPageable()),
+					type, targetType, indexCoordinates);
 		} else {
-			return (q, t, i, it, tt) -> operations.find(q, t, i, it, tt);
+			return (query, type, targetType, indexCoordinates) -> operations.find(query, type, targetType, indexCoordinates);
 		}
 	}
 

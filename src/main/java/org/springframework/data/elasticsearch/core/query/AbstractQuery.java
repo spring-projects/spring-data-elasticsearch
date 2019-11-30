@@ -42,8 +42,6 @@ abstract class AbstractQuery implements Query {
 
 	protected Pageable pageable = DEFAULT_PAGE;
 	protected Sort sort;
-	protected List<String> indices = new ArrayList<>();
-	protected List<String> types = new ArrayList<>();
 	protected List<String> fields = new ArrayList<>();
 	protected SourceFilter sourceFilter;
 	protected float minScore;
@@ -82,26 +80,6 @@ abstract class AbstractQuery implements Query {
 	@Override
 	public List<String> getFields() {
 		return fields;
-	}
-
-	@Override
-	public List<String> getIndices() {
-		return indices;
-	}
-
-	@Override
-	public void addIndices(String... indices) {
-		addAll(this.indices, indices);
-	}
-
-	@Override
-	public void addTypes(String... types) {
-		addAll(this.types, types);
-	}
-
-	@Override
-	public List<String> getTypes() {
-		return types;
 	}
 
 	@Override

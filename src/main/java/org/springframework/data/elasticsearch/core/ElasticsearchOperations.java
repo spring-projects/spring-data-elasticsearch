@@ -484,11 +484,6 @@ public interface ElasticsearchOperations {
 	ElasticsearchConverter getElasticsearchConverter();
 
 	/**
-	 * @since 4.0
-	 */
-	RequestFactory getRequestFactory();
-
-	/**
 	 * @param clazz
 	 * @return the IndexCoordinates defined on the entity.
 	 * @since 4.0
