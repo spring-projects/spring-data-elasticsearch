@@ -53,6 +53,7 @@ class ClientConfigurationBuilder
 	private Duration soTimeout = Duration.ofSeconds(5);
 	private String username;
 	private String password;
+    private String proxy;
 
 	/*
 	 * (non-Javadoc)
@@ -78,6 +79,13 @@ class ClientConfigurationBuilder
 
 		this.hosts.addAll(Arrays.asList(endpoints));
 
+		return this;
+	}
+
+	@Override
+	public MaybeSecureClientConfigurationBuilder withProxy(String proxy) {
+		Assert.hasLength(proxy, "proxy must not be null or empty");
+		this.proxy = proxy;
 		return this;
 	}
 
@@ -189,8 +197,8 @@ class ClientConfigurationBuilder
 			headers.setBasicAuth(username, password);
 		}
 
-		return new DefaultClientConfiguration(this.hosts, this.headers, this.useSsl, this.sslContext, this.soTimeout,
-				this.connectTimeout, this.hostnameVerifier);
+		return new DefaultClientConfiguration(hosts, headers, useSsl, sslContext, soTimeout, connectTimeout,
+				hostnameVerifier, proxy);
 	}
 
 	private static InetSocketAddress parse(String hostAndPort) {

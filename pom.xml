@@ -248,6 +248,24 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>com.github.tomakehurst</groupId>
+			<artifactId>wiremock-jre8</artifactId>
+			<version>2.25.1</version>
+			<scope>test</scope>
+			<exclusions>
+				<!-- these exclusions are needed because of Elasticsearch JarHell-->
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.ow2.asm</groupId>
+					<artifactId>asm</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
 		<!-- Upgrade xbean to 4.5 to prevent incompatibilities due to ASM versions -->
 		<dependency>
 			<groupId>org.apache.xbean</groupId>
@@ -258,8 +276,8 @@
 
 		<dependency>
 			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>3.0-alpha-1</version>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>3.1.0</version>
 			<scope>test</scope>
 		</dependency>
 
