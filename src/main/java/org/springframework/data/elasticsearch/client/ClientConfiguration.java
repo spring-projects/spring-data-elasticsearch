@@ -154,6 +154,14 @@ public interface ClientConfiguration {
 	String getPathPrefix();
 
 	/**
+	 * returns an optionally set proxy in the form host:port
+	 * 
+	 * @return the optional proxy
+	 * @since 4.0
+	 */
+	Optional<String> getProxy();
+
+	/**
 	 * @author Christoph Strobl
 	 */
 	interface ClientConfigurationBuilderWithRequiredEndpoint {
@@ -221,8 +229,8 @@ public interface ClientConfiguration {
 		TerminalClientConfigurationBuilder usingSsl(SSLContext sslContext);
 
 		/**
-		 * Connect via {@literal https} using the givens {@link SSLContext} and HostnameVerifier {@link HostnameVerifier}  .<br />
-		 *
+		 * Connect via {@literal https} using the givens {@link SSLContext} and HostnameVerifier {@link HostnameVerifier}
+		 * .<br />
 		 * <strong>NOTE</strong> You need to leave out the protocol in
 		 * {@link ClientConfigurationBuilderWithRequiredEndpoint#connectedTo(String)}.
 		 *
@@ -303,6 +311,12 @@ public interface ClientConfiguration {
 		 * @since 4.0
 		 */
 		TerminalClientConfigurationBuilder withPathPrefix(String pathPrefix);
+
+		/**
+		 * @param proxy a proxy formatted as String {@literal host:port}.
+		 * @return the {@link MaybeSecureClientConfigurationBuilder}.
+		 */
+		MaybeSecureClientConfigurationBuilder withProxy(String proxy);
 
 		/**
 		 * Build the {@link ClientConfiguration} object.

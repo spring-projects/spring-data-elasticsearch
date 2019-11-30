@@ -46,9 +46,11 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	private final Duration connectTimeout;
 	private final String pathPrefix;
 	private final @Nullable HostnameVerifier hostnameVerifier;
+	private final String proxy;
 
 	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
-			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout, @Nullable String pathPrefix, @Nullable HostnameVerifier hostnameVerifier) {
+			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout, @Nullable String pathPrefix,
+			@Nullable HostnameVerifier hostnameVerifier, String proxy) {
 
 		this.hosts = Collections.unmodifiableList(new ArrayList<>(hosts));
 		this.headers = new HttpHeaders(headers);
@@ -58,6 +60,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		this.connectTimeout = connectTimeout;
 		this.pathPrefix = pathPrefix;
 		this.hostnameVerifier = hostnameVerifier;
+		this.proxy = proxy;
 	}
 
 	/*
@@ -132,4 +135,12 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		return this.pathPrefix;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getProxy()
+	 */
+	@Override
+	public Optional<String> getProxy() {
+		return Optional.ofNullable(proxy);
+	}
 }
