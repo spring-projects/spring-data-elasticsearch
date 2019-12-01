@@ -598,6 +598,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 		if (elasticsearchQuery != null) {
 			sourceBuilder.query(elasticsearchQuery);
 		}
+		sourceBuilder.size(0);
 		countRequest.source(sourceBuilder);
 
 		try {
@@ -616,6 +617,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 		if (elasticsearchFilter != null) {
 			searchRequest.source().postFilter(elasticsearchFilter);
 		}
+		searchRequest.source().size(0);
 		SearchResponse response;
 		try {
 			response = client.search(searchRequest, RequestOptions.DEFAULT);
