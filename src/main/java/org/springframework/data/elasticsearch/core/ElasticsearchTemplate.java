@@ -508,6 +508,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 		if (elasticsearchQuery != null) {
 			countRequestBuilder.setQuery(elasticsearchQuery);
 		}
+		countRequestBuilder.setSize(0);
 		return countRequestBuilder.execute().actionGet().getHits().getTotalHits();
 	}
 
@@ -521,6 +522,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 		if (elasticsearchFilter != null) {
 			searchRequestBuilder.setPostFilter(elasticsearchFilter);
 		}
+		searchRequestBuilder.setSize(0);
 		return searchRequestBuilder.execute().actionGet().getHits().getTotalHits();
 	}
 
