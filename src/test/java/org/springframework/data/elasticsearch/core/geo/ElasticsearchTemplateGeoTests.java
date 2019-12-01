@@ -32,16 +32,18 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.data.geo.Point;
@@ -59,21 +61,25 @@ import org.springframework.test.context.ContextConfiguration;
  *         Latitude , max Longitude , max Latitude
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
+@ContextConfiguration(classes = { ElasticsearchTemplateGeoTests.Config.class })
 public class ElasticsearchTemplateGeoTests {
+
+	@Configuration
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	static class Config {}
 
 	private final IndexCoordinates locationMarkerIndex = IndexCoordinates.of("test-index-location-marker-core-geo")
 			.withTypes("geo-annotation-point-type");
 	private final IndexCoordinates authorMarkerIndex = IndexCoordinates.of("test-index-author-marker-core-geo")
 			.withTypes("geo-class-point-type");
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations operations;
 
 	@BeforeEach
 	public void before() {
 
-		IndexInitializer.init(elasticsearchTemplate, AuthorMarkerEntity.class);
-		IndexInitializer.init(elasticsearchTemplate, LocationMarkerEntity.class);
+		IndexInitializer.init(operations, AuthorMarkerEntity.class);
+		IndexInitializer.init(operations, LocationMarkerEntity.class);
 	}
 
 	private void loadClassBaseEntities() {
@@ -83,8 +89,8 @@ public class ElasticsearchTemplateGeoTests {
 				.add(new AuthorMarkerEntityBuilder("1").name("Franck Marchand").location(45.7806d, 3.0875d).buildIndex());
 		indexQueries.add(new AuthorMarkerEntityBuilder("2").name("Mohsin Husen").location(51.5171d, 0.1062d).buildIndex());
 		indexQueries.add(new AuthorMarkerEntityBuilder("3").name("Rizwan Idrees").location(51.5171d, 0.1062d).buildIndex());
-		elasticsearchTemplate.bulkIndex(indexQueries, authorMarkerIndex);
-		elasticsearchTemplate.refresh(AuthorMarkerEntity.class);
+		operations.bulkIndex(indexQueries, authorMarkerIndex);
+		operations.refresh(AuthorMarkerEntity.class);
 	}
 
 	private void loadAnnotationBaseEntities() {
@@ -115,8 +121,8 @@ public class ElasticsearchTemplateGeoTests {
 		indexQueries.add(buildIndex(location2));
 		indexQueries.add(buildIndex(location3));
 
-		elasticsearchTemplate.bulkIndex(indexQueries, locationMarkerIndex);
-		elasticsearchTemplate.refresh(LocationMarkerEntity.class);
+		operations.bulkIndex(indexQueries, locationMarkerIndex);
+		operations.refresh(LocationMarkerEntity.class);
 	}
 
 	@Test
@@ -124,10 +130,10 @@ public class ElasticsearchTemplateGeoTests {
 
 		// given
 		Class<?> entity = AuthorMarkerEntity.class;
-		elasticsearchTemplate.createIndex(entity);
+		operations.createIndex(entity);
 
 		// when
-		assertThat(elasticsearchTemplate.putMapping(entity)).isTrue();
+		assertThat(operations.putMapping(entity)).isTrue();
 	}
 
 	@Test
@@ -139,7 +145,7 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("location").within(new GeoPoint(45.7806d, 3.0875d), "20km"));
 
 		// when
-		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery,
+		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria = operations.queryForList(geoLocationCriteriaQuery,
 				AuthorMarkerEntity.class, authorMarkerIndex);
 
 		// then
@@ -156,7 +162,7 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("name").is("Mohsin Husen").and("location").within(new GeoPoint(51.5171d, 0.1062d), "20km"));
 
 		// when
-		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria2 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery2,
+		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria2 = operations.queryForList(geoLocationCriteriaQuery2,
 				AuthorMarkerEntity.class, authorMarkerIndex);
 
 		// then
@@ -172,7 +178,7 @@ public class ElasticsearchTemplateGeoTests {
 		CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(
 				new Criteria("locationAsString").within(new GeoPoint(51.000000, 0.100000), "1km"));
 		// when
-		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery,
+		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.queryForList(geoLocationCriteriaQuery,
 				LocationMarkerEntity.class, locationMarkerIndex);
 
 		// then
@@ -188,7 +194,7 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("locationAsArray").within(new GeoPoint(51.001000, 0.10100), "1km"));
 
 		// when
-		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery,
+		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.queryForList(geoLocationCriteriaQuery,
 				LocationMarkerEntity.class, locationMarkerIndex);
 
 		// then
@@ -203,7 +209,7 @@ public class ElasticsearchTemplateGeoTests {
 		CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(
 				new Criteria("locationAsArray").within("51.001000, 0.10100", "1km"));
 		// when
-		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery,
+		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.queryForList(geoLocationCriteriaQuery,
 				LocationMarkerEntity.class, locationMarkerIndex);
 
 		// then
@@ -218,7 +224,7 @@ public class ElasticsearchTemplateGeoTests {
 		CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(new Criteria("locationAsArray").within("u1044", "3km"));
 
 		// when
-		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery,
+		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.queryForList(geoLocationCriteriaQuery,
 				LocationMarkerEntity.class, locationMarkerIndex);
 
 		// then
@@ -234,7 +240,7 @@ public class ElasticsearchTemplateGeoTests {
 				.withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsArray").setCorners(52, -1, 50, 1));
 
 		// when
-		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = elasticsearchTemplate.queryForList(queryBuilder.build(),
+		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.queryForList(queryBuilder.build(),
 				LocationMarkerEntity.class, locationMarkerIndex);
 
 		// then
@@ -250,7 +256,7 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("location").boundedBy(new GeoBox(new GeoPoint(53.5171d, 0), new GeoPoint(49.5171d, 0.2062d))));
 
 		// when
-		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3,
+		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.queryForList(geoLocationCriteriaQuery3,
 				AuthorMarkerEntity.class, authorMarkerIndex);
 
 		// then
@@ -268,7 +274,7 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("location").boundedBy(Geohash.stringEncode(0, 53.5171d), Geohash.stringEncode(0.2062d, 49.5171d)));
 
 		// when
-		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3,
+		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.queryForList(geoLocationCriteriaQuery3,
 				AuthorMarkerEntity.class, authorMarkerIndex);
 
 		// then
@@ -286,7 +292,7 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("location").boundedBy(new GeoPoint(53.5171d, 0), new GeoPoint(49.5171d, 0.2062d)));
 
 		// when
-		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3,
+		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.queryForList(geoLocationCriteriaQuery3,
 				AuthorMarkerEntity.class, authorMarkerIndex);
 
 		// then
@@ -304,7 +310,7 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("location").boundedBy(new Point(53.5171d, 0), new Point(49.5171d, 0.2062d)));
 
 		// when
-		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = elasticsearchTemplate.queryForList(geoLocationCriteriaQuery3,
+		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.queryForList(geoLocationCriteriaQuery3,
 				AuthorMarkerEntity.class, authorMarkerIndex);
 
 		// then
@@ -332,18 +338,18 @@ public class ElasticsearchTemplateGeoTests {
 				.withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsGeoHash").setCorners("u10j46mkfek"));
 
 		// when
-		List<LocationMarkerEntity> result1 = elasticsearchTemplate.queryForList(location1.build(),
-				LocationMarkerEntity.class, locationMarkerIndex);
-		List<LocationMarkerEntity> result2 = elasticsearchTemplate.queryForList(location2.build(),
-				LocationMarkerEntity.class, locationMarkerIndex);
-		List<LocationMarkerEntity> result3 = elasticsearchTemplate.queryForList(location3.build(),
-				LocationMarkerEntity.class, locationMarkerIndex);
-		List<LocationMarkerEntity> result4 = elasticsearchTemplate.queryForList(location4.build(),
-				LocationMarkerEntity.class, locationMarkerIndex);
-		List<LocationMarkerEntity> result5 = elasticsearchTemplate.queryForList(location5.build(),
-				LocationMarkerEntity.class, locationMarkerIndex);
-		List<LocationMarkerEntity> result11 = elasticsearchTemplate.queryForList(location11.build(),
-				LocationMarkerEntity.class, locationMarkerIndex);
+		List<LocationMarkerEntity> result1 = operations.queryForList(location1.build(), LocationMarkerEntity.class,
+				locationMarkerIndex);
+		List<LocationMarkerEntity> result2 = operations.queryForList(location2.build(), LocationMarkerEntity.class,
+				locationMarkerIndex);
+		List<LocationMarkerEntity> result3 = operations.queryForList(location3.build(), LocationMarkerEntity.class,
+				locationMarkerIndex);
+		List<LocationMarkerEntity> result4 = operations.queryForList(location4.build(), LocationMarkerEntity.class,
+				locationMarkerIndex);
+		List<LocationMarkerEntity> result5 = operations.queryForList(location5.build(), LocationMarkerEntity.class,
+				locationMarkerIndex);
+		List<LocationMarkerEntity> result11 = operations.queryForList(location11.build(), LocationMarkerEntity.class,
+				locationMarkerIndex);
 
 		// then
 		assertThat(result1).hasSize(3);

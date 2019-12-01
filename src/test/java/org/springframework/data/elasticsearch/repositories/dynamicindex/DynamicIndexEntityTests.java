@@ -17,20 +17,21 @@ package org.springframework.data.elasticsearch.repositories.dynamicindex;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ImportResource;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * DynamicIndexEntityTests
@@ -39,33 +40,43 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Peter-Josef Meisch
  */
 
-@RunWith(SpringRunner.class)
-@ContextConfiguration(classes = DynamicIndexEntityTests.TestConfig.class)
+@SpringIntegrationTest
+@ContextConfiguration(classes = { DynamicIndexEntityTests.Config.class })
 public class DynamicIndexEntityTests {
+
+	@Configuration
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(considerNestedRepositories = true)
+	static class Config {
+		@Bean
+		public IndexNameProvider indexNameProvider() {
+			return new IndexNameProvider();
+		}
+	}
 
 	@Autowired private DynamicIndexRepository repository;
 
-	@Autowired private ElasticsearchTemplate template;
+	@Autowired private ElasticsearchOperations operations;
 
 	@Autowired private IndexNameProvider indexNameProvider;
 
-	@Before
+	@BeforeEach
 	public void init() {
 
 		deleteIndexes();
-		template.createIndex("index1");
-		template.createIndex("index2");
+		operations.createIndex("index1");
+		operations.createIndex("index2");
 	}
 
-	@After
+	@AfterEach
 	public void teardown() {
 		deleteIndexes();
 	}
 
 	private void deleteIndexes() {
 
-		template.deleteIndex("index1");
-		template.deleteIndex("index2");
+		operations.deleteIndex("index1");
+		operations.deleteIndex("index2");
 	}
 
 	@Test // DATAES-456
@@ -80,16 +91,6 @@ public class DynamicIndexEntityTests {
 
 		indexNameProvider.setIndexName("index2");
 		assertThat(repository.count()).isEqualTo(0L);
-	}
-
-	@ImportResource(value = "classpath:/dynamic-index-repository-test.xml")
-	static class TestConfig {
-
-		@Bean
-		public IndexNameProvider indexNameProvider() {
-			return new IndexNameProvider();
-		}
-
 	}
 
 	static class IndexNameProvider {

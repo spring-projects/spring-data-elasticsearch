@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repository.query.keywords;
+package org.springframework.data.elasticsearch.repositories.setting.fielddynamic;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -22,17 +22,12 @@ import org.springframework.data.elasticsearch.repository.config.EnableElasticsea
 import org.springframework.test.context.ContextConfiguration;
 
 /**
- * {@link QueryKeywordsTests} using a Repository backed by an ElasticsearchTemplate.
- *
  * @author Peter-Josef Meisch
  */
-@ContextConfiguration(classes = { QueryKeywordsRepositoryTests.Config.class})
-public class QueryKeywordsRepositoryTests extends QueryKeywordsTests {
-
+@ContextConfiguration(classes = { FieldDynamicMappingEntityRepositoryTransportTests.Config.class })
+public class FieldDynamicMappingEntityRepositoryTransportTests extends FieldDynamicMappingEntityRepositoryTests {
 	@Configuration
 	@Import({ ElasticsearchTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(
-			basePackages = { "org.springframework.data.elasticsearch.repository.query.keywords" },
-			considerNestedRepositories = true)
+	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
 }

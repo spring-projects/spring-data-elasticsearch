@@ -27,17 +27,19 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.elasticsearch.action.search.SearchPhaseExecutionException;
+import org.elasticsearch.ElasticsearchException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
@@ -50,16 +52,20 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
+@ContextConfiguration(classes = { LogEntityTests.Config.class })
 public class LogEntityTests {
 
-	private final IndexCoordinates index = IndexCoordinates.of("test-index-log-core").withTypes( "test-log-type");
-	@Autowired private ElasticsearchTemplate template;
+	@Configuration
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	static class Config {}
+
+	private final IndexCoordinates index = IndexCoordinates.of("test-index-log-core").withTypes("test-log-type");
+	@Autowired private ElasticsearchOperations operations;
 
 	@BeforeEach
 	public void before() throws ParseException {
 
-		IndexInitializer.init(template, LogEntity.class);
+		IndexInitializer.init(operations, LogEntity.class);
 
 		SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 		IndexQuery indexQuery1 = new LogEntityBuilder("1").action("update").date(dateFormatter.parse("2013-10-18 18:01"))
@@ -74,8 +80,8 @@ public class LogEntityTests {
 		IndexQuery indexQuery4 = new LogEntityBuilder("4").action("update").date(dateFormatter.parse("2013-10-19 18:04"))
 				.code(2).ip("10.10.10.4").buildIndex();
 
-		template.bulkIndex(Arrays.asList(indexQuery1, indexQuery2, indexQuery3, indexQuery4), index);
-		template.refresh(LogEntity.class);
+		operations.bulkIndex(Arrays.asList(indexQuery1, indexQuery2, indexQuery3, indexQuery4), index);
+		operations.refresh(LogEntity.class);
 	}
 
 	@Test // DATAES-66
@@ -83,7 +89,7 @@ public class LogEntityTests {
 
 		// when
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("ip", "10.10.10.1")).build();
-		List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class, index);
+		List<LogEntity> entities = operations.queryForList(searchQuery, LogEntity.class, index);
 
 		// then
 		assertThat(entities).isNotNull().hasSize(1);
@@ -96,8 +102,8 @@ public class LogEntityTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("ip", "10.10.10")).build();
 
 		assertThatThrownBy(() -> {
-			List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class, index);
-		}).isInstanceOf(SearchPhaseExecutionException.class);
+			List<LogEntity> entities = operations.queryForList(searchQuery, LogEntity.class, index);
+		}).isInstanceOf(ElasticsearchException.class);
 	}
 
 	@Test // DATAES-66
@@ -106,7 +112,7 @@ public class LogEntityTests {
 		// when
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(rangeQuery("ip").from("10.10.10.1").to("10.10.10.3")).build();
-		List<LogEntity> entities = template.queryForList(searchQuery, LogEntity.class, index);
+		List<LogEntity> entities = operations.queryForList(searchQuery, LogEntity.class, index);
 
 		// then
 		assertThat(entities).isNotNull().hasSize(3);

@@ -44,11 +44,11 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
@@ -69,19 +69,18 @@ import org.springframework.test.context.ContextConfiguration;
 public class UUIDElasticsearchRepositoryTests {
 
 	@Configuration
-	@Import({ ElasticsearchTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(basePackages = { "org.springframework.data.elasticsearch.repositories.uuidkeyed" },
-			considerNestedRepositories = true)
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
 
 	@Autowired private SampleUUIDKeyedElasticsearchRepository repository;
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations operations;
 
 	@BeforeEach
 	public void before() {
 
-		IndexInitializer.init(elasticsearchTemplate, SampleEntityUUIDKeyed.class);
+		IndexInitializer.init(operations, SampleEntityUUIDKeyed.class);
 	}
 
 	@Test

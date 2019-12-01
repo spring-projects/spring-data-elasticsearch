@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,37 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repositories.custommethod;
+package org.springframework.data.elasticsearch.repositories.complex.custommethod.manualwiring;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
-import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
- * @author Don Wellington
- * @author Mark Paluch
  * @author Peter-Josef Meisch
  */
-@ContextConfiguration(classes = { CustomMethodRepositoryTests.Config.class })
-public class CustomMethodRepositoryTests extends CustomMethodRepositoryBaseTests {
-
+@ContextConfiguration(classes = { ComplexCustomMethodRepositoryManualWiringTransportTests.Config.class })
+public class ComplexCustomMethodRepositoryManualWiringTransportTests
+		extends ComplexCustomMethodRepositoryManualWiringTests {
 	@Configuration
 	@Import({ ElasticsearchTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(
-			basePackages = { "org.springframework.data.elasticsearch.repositories.custommethod" },
-			considerNestedRepositories = true)
+	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
-
-	@Autowired private ElasticsearchOperations operations;
-
-	@BeforeEach
-	public void before() {
-		IndexInitializer.init(operations, SampleEntity.class);
-	}
 }

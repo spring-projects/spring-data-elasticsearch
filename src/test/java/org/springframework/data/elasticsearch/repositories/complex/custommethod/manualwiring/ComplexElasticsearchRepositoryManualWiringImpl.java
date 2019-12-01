@@ -15,24 +15,25 @@
  */
 package org.springframework.data.elasticsearch.repositories.complex.custommethod.manualwiring;
 
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repositories.complex.custommethod.autowiring.ComplexElasticsearchRepositoryCustom;
 
 /**
  * @author Artur Konczak
  * @author Mohsin Husen
+ * @author Peter-Josef Meisch
  */
 public class ComplexElasticsearchRepositoryManualWiringImpl implements ComplexElasticsearchRepositoryCustom {
 
-	private ElasticsearchTemplate template;
+	private ElasticsearchOperations operations;
+
+	public ComplexElasticsearchRepositoryManualWiringImpl(ElasticsearchOperations operations) {
+		this.operations = operations;
+	}
 
 	@Override
 	public String doSomethingSpecial() {
-		assert (template.getElasticsearchConverter() != null);
+		assert (operations.getElasticsearchConverter() != null);
 		return "3+3=6";
-	}
-
-	public void setTemplate(ElasticsearchTemplate template) {
-		this.template = template;
 	}
 }

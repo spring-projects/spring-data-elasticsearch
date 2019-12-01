@@ -25,10 +25,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
@@ -45,18 +45,18 @@ import org.springframework.test.context.ContextConfiguration;
 @ContextConfiguration(classes = { SpELEntityTests.Config.class })
 public class SpELEntityTests {
 
-	@Autowired private SpELRepository repository;
-
-	@Autowired private ElasticsearchTemplate template;
-
 	@Configuration
-	@Import(ElasticsearchTemplateConfiguration.class)
+	@Import(ElasticsearchRestTemplateConfiguration.class)
 	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
 
+	@Autowired private SpELRepository repository;
+
+	@Autowired private ElasticsearchOperations operations;
+
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(template, SpELEntity.class);
+		IndexInitializer.init(operations, SpELEntity.class);
 	}
 
 	@Test
@@ -70,7 +70,7 @@ public class SpELEntityTests {
 
 		// then
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(QueryBuilders.matchAllQuery());
-		long count = template.count(nativeSearchQuery, IndexCoordinates.of("test-index-abz-entity"));
+		long count = operations.count(nativeSearchQuery, IndexCoordinates.of("test-index-abz-entity"));
 		assertThat(count).isEqualTo(2);
 	}
 
@@ -85,7 +85,7 @@ public class SpELEntityTests {
 
 		// then
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(QueryBuilders.matchAllQuery());
-		long count = template.count(nativeSearchQuery, IndexCoordinates.of("test-index-abz-entity"));
+		long count = operations.count(nativeSearchQuery, IndexCoordinates.of("test-index-abz-entity"));
 		assertThat(count).isEqualTo(1);
 	}
 

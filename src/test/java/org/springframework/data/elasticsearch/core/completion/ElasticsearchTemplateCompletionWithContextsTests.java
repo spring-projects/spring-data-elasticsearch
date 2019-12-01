@@ -35,14 +35,17 @@ import org.elasticsearch.search.suggest.completion.context.CategoryQueryContext;
 import org.elasticsearch.search.suggest.completion.context.ContextMapping;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.CompletionContext;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
@@ -52,14 +55,18 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
+@ContextConfiguration(classes = { ElasticsearchTemplateCompletionWithContextsTests.Config.class })
 public class ElasticsearchTemplateCompletionWithContextsTests {
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Configuration
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	static class Config {}
+
+	@Autowired private ElasticsearchOperations operations;
 
 	private void loadContextCompletionObjectEntities() {
 
-		IndexInitializer.init(elasticsearchTemplate, ContextCompletionEntity.class);
+		IndexInitializer.init(operations, ContextCompletionEntity.class);
 
 		NonDocumentEntity nonDocumentEntity = new NonDocumentEntity();
 		nonDocumentEntity.setSomeField1("foo");
@@ -87,9 +94,9 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		indexQueries.add(new ContextCompletionEntityBuilder("4").name("Artur Konczak")
 				.suggest(new String[] { "Artur", "Konczak" }, context4).buildIndex());
 
-		elasticsearchTemplate.bulkIndex(indexQueries,
-				IndexCoordinates.of("test-index-context-completion").withTypes( "context-completion-type"));
-		elasticsearchTemplate.refresh(ContextCompletionEntity.class);
+		operations.bulkIndex(indexQueries,
+				IndexCoordinates.of("test-index-context-completion").withTypes("context-completion-type"));
+		operations.refresh(ContextCompletionEntity.class);
 	}
 
 	@Test
@@ -97,10 +104,10 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 
 		// given
 		Class<?> entity = ContextCompletionEntity.class;
-		elasticsearchTemplate.createIndex(entity);
+		operations.createIndex(entity);
 
 		// when
-		assertThat(elasticsearchTemplate.putMapping(entity)).isTrue();
+		assertThat(operations.putMapping(entity)).isTrue();
 	}
 
 	@Test // DATAES-536
@@ -123,9 +130,9 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		((CompletionSuggestionBuilder) completionSuggestionFuzzyBuilder).contexts(contextMap);
 
 		// when
-		SearchResponse suggestResponse = elasticsearchTemplate.suggest(
+		SearchResponse suggestResponse = ((AbstractElasticsearchTemplate) operations).suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
-				IndexCoordinates.of("test-index-context-completion").withTypes( "context-completion-type"));
+				IndexCoordinates.of("test-index-context-completion").withTypes("context-completion-type"));
 		assertThat(suggestResponse.getSuggest()).isNotNull();
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
@@ -155,9 +162,9 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		((CompletionSuggestionBuilder) completionSuggestionFuzzyBuilder).contexts(contextMap);
 
 		// when
-		SearchResponse suggestResponse = elasticsearchTemplate.suggest(
+		SearchResponse suggestResponse = ((AbstractElasticsearchTemplate) operations).suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
-				IndexCoordinates.of("test-index-context-completion").withTypes( "context-completion-type"));
+				IndexCoordinates.of("test-index-context-completion").withTypes("context-completion-type"));
 		assertThat(suggestResponse.getSuggest()).isNotNull();
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
@@ -187,9 +194,9 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		((CompletionSuggestionBuilder) completionSuggestionFuzzyBuilder).contexts(contextMap);
 
 		// when
-		SearchResponse suggestResponse = elasticsearchTemplate.suggest(
+		SearchResponse suggestResponse = ((AbstractElasticsearchTemplate) operations).suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
-				IndexCoordinates.of("test-index-context-completion").withTypes( "context-completion-type"));
+				IndexCoordinates.of("test-index-context-completion").withTypes("context-completion-type"));
 		assertThat(suggestResponse.getSuggest()).isNotNull();
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();

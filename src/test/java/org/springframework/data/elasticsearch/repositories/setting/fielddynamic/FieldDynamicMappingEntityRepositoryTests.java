@@ -27,8 +27,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
@@ -46,19 +46,17 @@ import org.springframework.test.context.ContextConfiguration;
 public class FieldDynamicMappingEntityRepositoryTests {
 
 	@Configuration
-	@Import({ ElasticsearchTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(
-			basePackages = { "org.springframework.data.elasticsearch.repositories.setting.fielddynamic" },
-			considerNestedRepositories = true)
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
 
 	@Autowired private FieldDynamicMappingEntityRepository repository;
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations operations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(elasticsearchTemplate, FieldDynamicMappingEntity.class);
+		IndexInitializer.init(operations, FieldDynamicMappingEntity.class);
 	}
 
 	@Test // DATAES-209
@@ -67,7 +65,7 @@ public class FieldDynamicMappingEntityRepositoryTests {
 		// given
 
 		// then
-		Map<String, Object> mapping = elasticsearchTemplate.getMapping(FieldDynamicMappingEntity.class);
+		Map<String, Object> mapping = operations.getMapping(FieldDynamicMappingEntity.class);
 		assertThat(mapping).isNotNull();
 
 		Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");

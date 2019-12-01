@@ -28,8 +28,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
@@ -45,19 +45,17 @@ import org.springframework.test.context.ContextConfiguration;
 public class ComplexCustomMethodRepositoryTests {
 
 	@Configuration
-	@Import({ ElasticsearchTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(
-			basePackages = { "org.springframework.data.elasticsearch.repositories.complex.custommethod.autowiring" },
-			considerNestedRepositories = true)
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
 
 	@Autowired private ComplexElasticsearchRepository complexRepository;
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations operations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(elasticsearchTemplate, SampleEntity.class);
+		IndexInitializer.init(operations, SampleEntity.class);
 	}
 
 	@Test

@@ -13,8 +13,10 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
+import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -258,6 +260,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	abstract protected MultiSearchResponse.Item[] getMultiSearchResult(MultiSearchRequest request);
+
+	public abstract SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index);
 
 	protected void setPersistentEntityId(Object entity, String id) {
 
