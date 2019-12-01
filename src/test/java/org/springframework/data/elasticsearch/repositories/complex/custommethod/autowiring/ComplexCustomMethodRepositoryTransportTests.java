@@ -13,26 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repository.query.keywords;
+package org.springframework.data.elasticsearch.repositories.complex.custommethod.autowiring;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
- * {@link QueryKeywordsTests} using a Repository backed by an ElasticsearchRestTemplate.
- *
  * @author Peter-Josef Meisch
  */
-@ContextConfiguration(classes = { QueryKeywordsRestRepositoryTests.Config.class })
-public class QueryKeywordsRestRepositoryTests extends QueryKeywordsTests {
-
+@ContextConfiguration(classes = { ComplexCustomMethodRepositoryTransportTests.Config.class })
+public class ComplexCustomMethodRepositoryTransportTests extends ComplexCustomMethodRepositoryTests {
 	@Configuration
-	@Import({ ElasticsearchRestTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(
-			basePackages = { "org.springframework.data.elasticsearch.repository.query.keywords" },
-			considerNestedRepositories = true)
+	@Import({ ElasticsearchTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
 }

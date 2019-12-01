@@ -31,10 +31,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
@@ -52,18 +52,17 @@ import org.springframework.test.context.ContextConfiguration;
 public class SynonymRepositoryTests {
 
 	@Configuration
-	@Import({ ElasticsearchTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(basePackages = { "org.springframework.data.elasticsearch.repositories.synonym" },
-			considerNestedRepositories = true)
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
 
 	@Autowired private SynonymRepository repository;
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations operations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(elasticsearchTemplate, SynonymEntity.class);
+		IndexInitializer.init(operations, SynonymEntity.class);
 	}
 
 	@Test
@@ -83,9 +82,9 @@ public class SynonymRepositoryTests {
 		// then
 		assertThat(repository.count()).isEqualTo(2L);
 
-		List<SynonymEntity> synonymEntities = elasticsearchTemplate.queryForList(
+		List<SynonymEntity> synonymEntities = operations.queryForList(
 				new NativeSearchQueryBuilder().withQuery(QueryBuilders.termQuery("text", "british")).build(),
-				SynonymEntity.class, IndexCoordinates.of("test-index-synonym").withTypes( "synonym-type"));
+				SynonymEntity.class, IndexCoordinates.of("test-index-synonym").withTypes("synonym-type"));
 		assertThat(synonymEntities).hasSize(1);
 	}
 

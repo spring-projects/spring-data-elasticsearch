@@ -44,7 +44,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -66,7 +66,7 @@ import org.springframework.test.context.ContextConfiguration;
 @ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
 public class NestedObjectTests {
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations elasticsearchTemplate;
 
 	@BeforeEach
 	public void before() {
@@ -123,7 +123,7 @@ public class NestedObjectTests {
 		indexQueries.add(indexQuery1);
 		indexQueries.add(indexQuery2);
 
-		IndexCoordinates index = IndexCoordinates.of("test-index-person").withTypes( "user");
+		IndexCoordinates index = IndexCoordinates.of("test-index-person").withTypes("user");
 		elasticsearchTemplate.bulkIndex(indexQueries, index);
 		elasticsearchTemplate.refresh(Person.class);
 
@@ -144,14 +144,14 @@ public class NestedObjectTests {
 
 		// when
 		elasticsearchTemplate.bulkIndex(indexQueries,
-				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes( "user"));
+				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes("user"));
 		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class);
 
 		// then
 		GetQuery getQuery = new GetQuery();
 		getQuery.setId("1");
 		PersonMultipleLevelNested personIndexed = elasticsearchTemplate.get(getQuery, PersonMultipleLevelNested.class,
-				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes( "user"));
+				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes("user"));
 		assertThat(personIndexed).isNotNull();
 	}
 
@@ -163,7 +163,7 @@ public class NestedObjectTests {
 
 		// when
 		elasticsearchTemplate.bulkIndex(indexQueries,
-				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes( "user"));
+				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes("user"));
 
 		// then
 		Map<String, Object> mapping = elasticsearchTemplate.getMapping(PersonMultipleLevelNested.class);
@@ -182,9 +182,8 @@ public class NestedObjectTests {
 		List<IndexQuery> indexQueries = createPerson();
 
 		// when
-		IndexCoordinates index = IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes( "user");
-		elasticsearchTemplate.bulkIndex(indexQueries,
-				index);
+		IndexCoordinates index = IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes("user");
+		elasticsearchTemplate.bulkIndex(indexQueries, index);
 		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class);
 
 		// then
@@ -323,7 +322,7 @@ public class NestedObjectTests {
 		indexQueries.add(indexQuery1);
 		indexQueries.add(indexQuery2);
 
-		IndexCoordinates index = IndexCoordinates.of("test-index-person").withTypes( "user");
+		IndexCoordinates index = IndexCoordinates.of("test-index-person").withTypes("user");
 		elasticsearchTemplate.bulkIndex(indexQueries, index);
 		elasticsearchTemplate.refresh(Person.class);
 
@@ -372,7 +371,7 @@ public class NestedObjectTests {
 		indexQueries.add(indexQuery2);
 
 		// when
-		IndexCoordinates index = IndexCoordinates.of("test-index-book-nested-objects").withTypes( "book");
+		IndexCoordinates index = IndexCoordinates.of("test-index-book-nested-objects").withTypes("book");
 		elasticsearchTemplate.bulkIndex(indexQueries, index);
 		elasticsearchTemplate.refresh(Book.class);
 

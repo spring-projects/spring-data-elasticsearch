@@ -31,11 +31,10 @@ import java.util.Optional;
 
 import org.apache.webbeans.cditest.CdiTestContainer;
 import org.apache.webbeans.cditest.CdiTestContainerLoader;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -56,7 +55,7 @@ public class CdiRepositoryTests {
 	private SamplePersonRepository personRepository;
 	private QualifiedProductRepository qualifiedProductRepository;
 
-	@BeforeClass
+	@BeforeAll
 	public static void init() throws Exception {
 
 		cdiContainer = CdiTestContainerLoader.getCdiContainer();
@@ -64,14 +63,14 @@ public class CdiRepositoryTests {
 		cdiContainer.bootContainer();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void shutdown() throws Exception {
 
 		cdiContainer.stopContexts();
 		cdiContainer.shutdownContainer();
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		CdiRepositoryClient client = cdiContainer.getInstance(CdiRepositoryClient.class);

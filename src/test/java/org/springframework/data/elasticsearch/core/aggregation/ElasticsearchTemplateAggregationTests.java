@@ -34,18 +34,20 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.ResultsExtractor;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
@@ -58,8 +60,12 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
+@ContextConfiguration(classes = { ElasticsearchTemplateAggregationTests.Config.class })
 public class ElasticsearchTemplateAggregationTests {
+
+	@Configuration
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	static class Config {}
 
 	static final String RIZWAN_IDREES = "Rizwan Idrees";
 	static final String MOHSIN_HUSEN = "Mohsin Husen";
@@ -70,12 +76,12 @@ public class ElasticsearchTemplateAggregationTests {
 	static final int YEAR_2000 = 2000;
 	static final String INDEX_NAME = "test-index-articles-core-aggregation";
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations operations;
 
 	@BeforeEach
 	public void before() {
 
-		IndexInitializer.init(elasticsearchTemplate, ArticleEntity.class);
+		IndexInitializer.init(operations, ArticleEntity.class);
 
 		IndexQuery article1 = new ArticleEntityBuilder("1").title("article four").subject("computing")
 				.addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addAuthor(JONATHAN_YAN).score(10)
@@ -91,17 +97,17 @@ public class ElasticsearchTemplateAggregationTests {
 				.score(40).buildIndex();
 
 		IndexCoordinates index = IndexCoordinates.of(INDEX_NAME).withTypes("article");
-		elasticsearchTemplate.index(article1, index);
-		elasticsearchTemplate.index(article2, index);
-		elasticsearchTemplate.index(article3, index);
-		elasticsearchTemplate.index(article4, index);
-		elasticsearchTemplate.refresh(ArticleEntity.class);
+		operations.index(article1, index);
+		operations.index(article2, index);
+		operations.index(article3, index);
+		operations.index(article4, index);
+		operations.refresh(ArticleEntity.class);
 	}
 
 	@AfterEach
 	public void after() {
 
-		elasticsearchTemplate.deleteIndex(ArticleEntity.class);
+		operations.deleteIndex(ArticleEntity.class);
 	}
 
 	@Test
@@ -114,7 +120,7 @@ public class ElasticsearchTemplateAggregationTests {
 				.addAggregation(terms("subjects").field("subject")) //
 				.build();
 		// when
-		Aggregations aggregations = elasticsearchTemplate.query(searchQuery, new ResultsExtractor<Aggregations>() {
+		Aggregations aggregations = operations.query(searchQuery, new ResultsExtractor<Aggregations>() {
 			@Override
 			public Aggregations extract(SearchResponse response) {
 				return response.getAggregations();

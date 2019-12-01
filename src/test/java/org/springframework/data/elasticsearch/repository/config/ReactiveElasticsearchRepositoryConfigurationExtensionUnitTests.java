@@ -19,8 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.Collection;
 
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.core.env.Environment;
@@ -37,7 +36,7 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
 /**
  * @author Christoph Strobl
- * @currentRead Fool's Fate - Robin Hobb
+ * @author Peter-Josef Meisch
  */
 public class ReactiveElasticsearchRepositoryConfigurationExtensionUnitTests {
 

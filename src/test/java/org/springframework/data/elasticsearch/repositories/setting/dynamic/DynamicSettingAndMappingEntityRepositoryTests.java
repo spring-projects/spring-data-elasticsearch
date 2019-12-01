@@ -31,11 +31,11 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
@@ -54,19 +54,17 @@ import org.springframework.test.context.ContextConfiguration;
 public class DynamicSettingAndMappingEntityRepositoryTests {
 
 	@Configuration
-	@Import({ ElasticsearchTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(
-			basePackages = { "org.springframework.data.elasticsearch.repositories.setting.dynamic" },
-			considerNestedRepositories = true)
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
+
+	@Autowired private ElasticsearchOperations operations;
 
 	@Autowired private DynamicSettingAndMappingEntityRepository repository;
 
-	@Autowired private ElasticsearchTemplate elasticsearchTemplate;
-
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(elasticsearchTemplate, DynamicSettingAndMappingEntity.class);
+		IndexInitializer.init(operations, DynamicSettingAndMappingEntity.class);
 	}
 
 	@Test // DATAES-64
@@ -76,8 +74,8 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		// delete , create and apply mapping in before method
 
 		// then
-		assertThat(elasticsearchTemplate.indexExists(DynamicSettingAndMappingEntity.class)).isTrue();
-		Map<String, Object> map = elasticsearchTemplate.getSetting(DynamicSettingAndMappingEntity.class);
+		assertThat(operations.indexExists(DynamicSettingAndMappingEntity.class)).isTrue();
+		Map<String, Object> map = operations.getSetting(DynamicSettingAndMappingEntity.class);
 		assertThat(map.containsKey("index.number_of_replicas")).isTrue();
 		assertThat(map.containsKey("index.number_of_shards")).isTrue();
 		assertThat(map.containsKey("index.analysis.analyzer.emailAnalyzer.tokenizer")).isTrue();
@@ -108,10 +106,10 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(QueryBuilders.termQuery("email", dynamicSettingAndMappingEntity1.getEmail())).build();
 
-		IndexCoordinates index = IndexCoordinates.of("test-index-dynamic-setting-and-mapping").withTypes( "test-setting-type");
-		long count = elasticsearchTemplate.count(searchQuery, DynamicSettingAndMappingEntity.class,
-				index);
-		List<DynamicSettingAndMappingEntity> entityList = elasticsearchTemplate.queryForList(searchQuery,
+		IndexCoordinates index = IndexCoordinates.of("test-index-dynamic-setting-and-mapping")
+				.withTypes("test-setting-type");
+		long count = operations.count(searchQuery, DynamicSettingAndMappingEntity.class, index);
+		List<DynamicSettingAndMappingEntity> entityList = operations.queryForList(searchQuery,
 				DynamicSettingAndMappingEntity.class, index);
 
 		// then
@@ -127,7 +125,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		// delete , create and apply mapping in before method
 
 		// when
-		Map<String, Object> mapping = elasticsearchTemplate.getMapping(DynamicSettingAndMappingEntity.class);
+		Map<String, Object> mapping = operations.getMapping(DynamicSettingAndMappingEntity.class);
 
 		// then
 		Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
@@ -142,9 +140,9 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 	public void shouldCreateMappingWithSpecifiedMappings() {
 
 		// given
-		elasticsearchTemplate.deleteIndex(DynamicSettingAndMappingEntity.class);
-		elasticsearchTemplate.createIndex(DynamicSettingAndMappingEntity.class);
-		elasticsearchTemplate.refresh(DynamicSettingAndMappingEntity.class);
+		operations.deleteIndex(DynamicSettingAndMappingEntity.class);
+		operations.createIndex(DynamicSettingAndMappingEntity.class);
+		operations.refresh(DynamicSettingAndMappingEntity.class);
 
 		// when
 		String mappings = "{\n" + //
@@ -154,11 +152,11 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 				"        }\n" + //
 				"    }\n" + //
 				"}";
-		elasticsearchTemplate.putMapping(DynamicSettingAndMappingEntity.class, mappings);
-		elasticsearchTemplate.refresh(DynamicSettingAndMappingEntity.class);
+		operations.putMapping(DynamicSettingAndMappingEntity.class, mappings);
+		operations.refresh(DynamicSettingAndMappingEntity.class);
 
 		// then
-		Map<String, Object> mapping = elasticsearchTemplate.getMapping(DynamicSettingAndMappingEntity.class);
+		Map<String, Object> mapping = operations.getMapping(DynamicSettingAndMappingEntity.class);
 		Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
 		assertThat(mapping).isNotNull();
 		assertThat(properties).isNotNull();
@@ -173,7 +171,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		// given
 
 		// then
-		Map<String, Object> mapping = elasticsearchTemplate.getMapping(DynamicSettingAndMappingEntity.class);
+		Map<String, Object> mapping = operations.getMapping(DynamicSettingAndMappingEntity.class);
 		Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
 		assertThat(mapping).isNotNull();
 		assertThat(properties).isNotNull();

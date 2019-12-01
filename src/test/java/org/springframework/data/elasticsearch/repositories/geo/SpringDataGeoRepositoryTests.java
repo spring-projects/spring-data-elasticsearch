@@ -34,9 +34,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
@@ -57,18 +57,17 @@ import org.springframework.test.context.ContextConfiguration;
 public class SpringDataGeoRepositoryTests {
 
 	@Configuration
-	@Import({ ElasticsearchTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(basePackages = { "org.springframework.data.elasticsearch.repositories.geo" },
-			considerNestedRepositories = true)
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
 
-	@Autowired ElasticsearchTemplate template;
+	@Autowired ElasticsearchOperations operations;
 
 	@Autowired SpringDataGeoRepository repository;
 
 	@BeforeEach
 	public void init() {
-		IndexInitializer.init(template, GeoEntity.class);
+		IndexInitializer.init(operations, GeoEntity.class);
 	}
 
 	@Test
