@@ -31,16 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.elasticsearch.annotations.CompletionContext;
-import org.springframework.data.elasticsearch.annotations.CompletionField;
-import org.springframework.data.elasticsearch.annotations.DynamicMapping;
-import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.GeoPointField;
-import org.springframework.data.elasticsearch.annotations.InnerField;
-import org.springframework.data.elasticsearch.annotations.Mapping;
-import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.completion.Completion;
@@ -111,7 +102,7 @@ public class MappingBuilder {
 		ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext()
 				.getRequiredPersistentEntity(clazz);
 
-		XContentBuilder builder = jsonBuilder().startObject().startObject(entity.getIndexType());
+		XContentBuilder builder = jsonBuilder().startObject().startObject(entity.getIndexCoordinates().getTypeName());
 
 		// Dynamic templates
 		addDynamicTemplatesMapping(builder, entity);

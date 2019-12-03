@@ -38,12 +38,12 @@ public class SimpleElasticsearchEntityMetadata<T> implements ElasticsearchEntity
 
 	@Override
 	public String getIndexName() {
-		return entity.getIndexName();
+		return entity.getIndexCoordinates().getIndexName();
 	}
 
 	@Override
 	public String getIndexTypeName() {
-		return entity.getIndexType();
+		return entity.getIndexCoordinates().getTypeName();
 	}
 
 	@Override

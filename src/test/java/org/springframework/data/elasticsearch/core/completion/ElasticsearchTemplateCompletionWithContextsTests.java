@@ -33,6 +33,7 @@ import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.elasticsearch.search.suggest.completion.context.CategoryQueryContext;
 import org.elasticsearch.search.suggest.completion.context.ContextMapping;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -43,7 +44,8 @@ import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -64,9 +66,18 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 
 	@Autowired private ElasticsearchOperations operations;
 
+	private IndexOperations indexOperations;
+
+	@BeforeEach
+	void setup() {
+		indexOperations = operations.getIndexOperations();
+
+		indexOperations.deleteIndex(ContextCompletionEntity.class);
+	}
+
 	private void loadContextCompletionObjectEntities() {
 
-		IndexInitializer.init(operations, ContextCompletionEntity.class);
+		IndexInitializer.init(indexOperations, ContextCompletionEntity.class);
 
 		NonDocumentEntity nonDocumentEntity = new NonDocumentEntity();
 		nonDocumentEntity.setSomeField1("foo");
@@ -97,17 +108,6 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		operations.bulkIndex(indexQueries,
 				IndexCoordinates.of("test-index-context-completion").withTypes("context-completion-type"));
 		operations.refresh(ContextCompletionEntity.class);
-	}
-
-	@Test
-	public void shouldPutMappingForGivenEntity() throws Exception {
-
-		// given
-		Class<?> entity = ContextCompletionEntity.class;
-		operations.createIndex(entity);
-
-		// when
-		assertThat(operations.putMapping(entity)).isTrue();
 	}
 
 	@Test // DATAES-536

@@ -19,6 +19,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.repository.NoRepositoryBean;
 
 /**
@@ -46,7 +47,7 @@ public interface ElasticsearchRepository<T, ID> extends ElasticsearchCrudReposit
 
 	Page<T> search(QueryBuilder query, Pageable pageable);
 
-	Page<T> search(NativeSearchQuery searchQuery);
+	Page<T> search(Query searchQuery);
 
 	Page<T> searchSimilar(T entity, String[] fields, Pageable pageable);
 

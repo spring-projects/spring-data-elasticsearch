@@ -32,9 +32,7 @@ import org.springframework.lang.Nullable;
  */
 public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, ElasticsearchPersistentProperty> {
 
-	String getIndexName();
-
-	String getIndexType();
+	IndexCoordinates getIndexCoordinates();
 
 	short getShards();
 

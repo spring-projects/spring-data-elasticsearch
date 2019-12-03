@@ -115,9 +115,8 @@ public class ReactiveElasticsearchRepositoryFactory extends ReactiveRepositoryFa
 			@Nullable RepositoryInformation information) {
 
 		ElasticsearchPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainClass);
-
-		return new MappingElasticsearchEntityInformation<>((ElasticsearchPersistentEntity<T>) entity, entity.getIndexName(),
-				entity.getIndexType(), entity.getVersionType());
+		return new MappingElasticsearchEntityInformation<>((ElasticsearchPersistentEntity<T>) entity,
+				entity.getIndexCoordinates(), entity.getVersionType());
 	}
 
 	/**

@@ -102,8 +102,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		context.setRootObject(applicationContext);
 	}
 
-	@Override
-	public String getIndexName() {
+	private String getIndexName() {
 
 		if (indexName != null) {
 			Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
@@ -113,8 +112,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		return getTypeInformation().getType().getSimpleName();
 	}
 
-	@Override
-	public String getIndexType() {
+	private String getIndexType() {
 
 		if (indexType != null) {
 			Expression expression = parser.parseExpression(indexType, ParserContext.TEMPLATE_EXPRESSION);
@@ -122,6 +120,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		}
 
 		return "";
+	}
+
+	@Override
+	public IndexCoordinates getIndexCoordinates() {
+		return IndexCoordinates.of(getIndexName()).withTypes(getIndexType());
 	}
 
 	@Override

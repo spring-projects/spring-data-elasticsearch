@@ -20,7 +20,6 @@ import reactor.core.publisher.Mono;
 
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
@@ -35,7 +34,6 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 	private final ElasticsearchEntityInformation<T, ID> entityInformation;
 	private final ReactiveElasticsearchOperations elasticsearchOperations;
-	private final IndexCoordinates index;
 
 	public SimpleReactiveElasticsearchRepository(ElasticsearchEntityInformation<T, ID> entityInformation,
 			ReactiveElasticsearchOperations elasticsearchOperations) {
@@ -45,20 +43,19 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		this.entityInformation = entityInformation;
 		this.elasticsearchOperations = elasticsearchOperations;
-		this.index = IndexCoordinates.of(entityInformation.getIndexName()).withTypes(entityInformation.getType());
 	}
 
 	@Override
 	public Flux<T> findAll(Sort sort) {
 
-		return elasticsearchOperations.find(Query.findAll().addSort(sort), entityInformation.getJavaType(), index);
+		return elasticsearchOperations.find(Query.findAll().addSort(sort), entityInformation.getJavaType(), entityInformation.getIndexCoordinates());
 	}
 
 	@Override
 	public <S extends T> Mono<S> save(S entity) {
 
 		Assert.notNull(entity, "Entity must not be null!");
-		return elasticsearchOperations.save(entity, index);
+		return elasticsearchOperations.save(entity, entityInformation.getIndexCoordinates());
 	}
 
 	@Override
@@ -79,7 +76,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public Mono<T> findById(ID id) {
 
 		Assert.notNull(id, "Id must not be null!");
-		return elasticsearchOperations.findById(convertId(id), entityInformation.getJavaType(), index);
+		return elasticsearchOperations.findById(convertId(id), entityInformation.getJavaType(), entityInformation.getIndexCoordinates());
 	}
 
 	@Override
@@ -93,7 +90,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public Mono<Boolean> existsById(ID id) {
 
 		Assert.notNull(id, "Id must not be null!");
-		return elasticsearchOperations.exists(convertId(id), entityInformation.getJavaType(), index);
+		return elasticsearchOperations.exists(convertId(id), entityInformation.getJavaType(), entityInformation.getIndexCoordinates());
 	}
 
 	@Override
@@ -106,7 +103,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	@Override
 	public Flux<T> findAll() {
 
-		return elasticsearchOperations.find(Query.findAll(), entityInformation.getJavaType(), index);
+		return elasticsearchOperations.find(Query.findAll(), entityInformation.getJavaType(), entityInformation.getIndexCoordinates());
 	}
 
 	@Override
@@ -127,14 +124,14 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	@Override
 	public Mono<Long> count() {
 
-		return elasticsearchOperations.count(Query.findAll(), entityInformation.getJavaType(), index);
+		return elasticsearchOperations.count(Query.findAll(), entityInformation.getJavaType(), entityInformation.getIndexCoordinates());
 	}
 
 	@Override
 	public Mono<Void> deleteById(ID id) {
 
 		Assert.notNull(id, "Id must not be null!");
-		return elasticsearchOperations.deleteById(convertId(id), entityInformation.getJavaType(), index) //
+		return elasticsearchOperations.deleteById(convertId(id), entityInformation.getJavaType(), entityInformation.getIndexCoordinates()) //
 				.then();
 	}
 
@@ -149,7 +146,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public Mono<Void> delete(T entity) {
 
 		Assert.notNull(entity, "Entity must not be null!");
-		return elasticsearchOperations.delete(entity, index) //
+		return elasticsearchOperations.delete(entity, entityInformation.getIndexCoordinates()) //
 				.then();
 	}
 
@@ -170,7 +167,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	@Override
 	public Mono<Void> deleteAll() {
 
-		return elasticsearchOperations.deleteBy(Query.findAll(), entityInformation.getJavaType(), index) //
+		return elasticsearchOperations.deleteBy(Query.findAll(), entityInformation.getJavaType(), entityInformation.getIndexCoordinates()) //
 				.then();
 	}
 

@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository.support;
 
 import org.elasticsearch.index.VersionType;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
@@ -39,21 +40,19 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 		implements ElasticsearchEntityInformation<T, ID> {
 
 	private final ElasticsearchPersistentEntity<T> entityMetadata;
-	private final String indexName;
-	private final String type;
+	private final IndexCoordinates indexCoordinates;
 	private final VersionType versionType;
 
 	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity) {
-		this(entity, entity.getIndexName(), entity.getIndexType(), entity.getVersionType());
+		this(entity, entity.getIndexCoordinates(), entity.getVersionType());
 	}
 
-	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity, String indexName, String type,
-			VersionType versionType) {
+	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity,
+			IndexCoordinates indexCoordinates, VersionType versionType) {
 		super(entity);
 
 		this.entityMetadata = entity;
-		this.indexName = indexName;
-		this.type = type;
+		this.indexCoordinates = indexCoordinates;
 		this.versionType = versionType;
 	}
 
@@ -62,14 +61,10 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 		return entityMetadata.getRequiredIdProperty().getFieldName();
 	}
 
-	@Override
-	public String getIndexName() {
-		return indexName != null ? indexName : entityMetadata.getIndexName();
-	}
 
 	@Override
-	public String getType() {
-		return type != null ? type : entityMetadata.getIndexType();
+	public IndexCoordinates getIndexCoordinates() {
+		return indexCoordinates;
 	}
 
 	@Override
