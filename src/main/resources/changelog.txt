@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.3.RELEASE (2019-12-04)
+---------------------------------------------
+* DATAES-700 - Enable proxy support for RestClient.
+* DATAES-699 - ElasticsearchRestTemplate.count(..) returns all documents instead of just total hits number.
+* DATAES-692 - Release 3.2.3 (Moore SR3).
+
+
 Changes in version 3.1.14.RELEASE (2019-12-04)
 ----------------------------------------------
 * DATAES-691 - Release 3.1.14 (Lovelace SR14).
@@ -915,4 +922,5 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
