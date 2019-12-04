@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.14.RELEASE (2019-12-04)
+----------------------------------------------
+* DATAES-691 - Release 3.1.14 (Lovelace SR14).
+
+
 Changes in version 3.2.2.RELEASE (2019-11-18)
 ---------------------------------------------
 * DATAES-685 - Release 3.2.2 (Moore SR2).
@@ -910,3 +915,4 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
