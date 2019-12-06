@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 
 import org.assertj.core.util.Lists;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
@@ -61,6 +62,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.ElasticsearchException;
@@ -1443,8 +1445,7 @@ public abstract class ElasticsearchTemplateTests {
 				.withUpdateRequest(updateRequest).build();
 
 		// when
-		UpdateRequest request = ((AbstractElasticsearchTemplate) elasticsearchTemplate).getRequestFactory()
-				.updateRequest(updateQuery, IndexCoordinates.of("index"));
+		UpdateRequest request = getRequestFactory().updateRequest(updateQuery, IndexCoordinates.of("index"));
 
 		// then
 		assertThat(request).isNotNull();
@@ -1465,8 +1466,7 @@ public abstract class ElasticsearchTemplateTests {
 				.withUpdateRequest(updateRequest).build();
 
 		// when
-		UpdateRequest request = ((AbstractElasticsearchTemplate) elasticsearchTemplate).getRequestFactory()
-				.updateRequest(updateQuery, IndexCoordinates.of("index"));
+		UpdateRequest request = getRequestFactory().updateRequest(updateQuery, IndexCoordinates.of("index"));
 
 		// then
 		assertThat(request).isNotNull();
@@ -2792,6 +2792,32 @@ public abstract class ElasticsearchTemplateTests {
 			this.firstName = firstName;
 			this.lastName = lastName;
 		}
+	}
+
+	@Test // DATAES-187
+	public void shouldUsePageableOffsetToSetFromInSearchRequest() {
+
+		// given
+		Pageable pageable = new PageRequest(1, 10, Sort.unsorted()) {
+			@Override
+			public long getOffset() {
+				return 30;
+			}
+		};
+
+		NativeSearchQuery query = new NativeSearchQueryBuilder() //
+				.withPageable(pageable) //
+				.build();
+
+		// when
+		SearchRequest searchRequest = getRequestFactory().searchRequest(query, null, IndexCoordinates.of("test"));
+
+		// then
+		assertThat(searchRequest.source().from()).isEqualTo(30);
+	}
+
+	protected RequestFactory getRequestFactory() {
+		return ((AbstractElasticsearchTemplate) elasticsearchTemplate).getRequestFactory();
 	}
 
 	@Data

@@ -22,12 +22,20 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import lombok.Data;
 
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQueryBuilder;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
@@ -36,10 +44,13 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
 public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTests {
+
+	@Autowired private Client client;
 
 	@Test
 	public void shouldThrowExceptionIfDocumentDoesNotExistWhileDoingPartialUpdate() {
@@ -50,6 +61,29 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		assertThatThrownBy(() -> {
 			elasticsearchTemplate.update(updateQuery, index);
 		}).isInstanceOf(DocumentMissingException.class);
+	}
+
+	@Test // DATAES-187
+	public void shouldUsePageableOffsetToSetFromInSearchRequest() {
+
+		// given
+		Pageable pageable = new PageRequest(1, 10, Sort.unsorted()) {
+			@Override
+			public long getOffset() {
+				return 30;
+			}
+		};
+
+		NativeSearchQuery query = new NativeSearchQueryBuilder() //
+				.withPageable(pageable) //
+				.build();
+
+		// when
+		SearchRequestBuilder searchRequestBuilder = getRequestFactory().searchRequestBuilder(client, query, null,
+				IndexCoordinates.of("test"));
+
+		// then
+		assertThat(searchRequestBuilder.request().source().from()).isEqualTo(30);
 	}
 
 	@Data

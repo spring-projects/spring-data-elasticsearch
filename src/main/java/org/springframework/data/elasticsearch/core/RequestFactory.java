@@ -75,6 +75,7 @@ import org.springframework.util.StringUtils;
  * Factory class to create Elasticsearch request instances from Spring Data Elasticsearch query objects.
  *
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  * @since 4.0
  */
 class RequestFactory {
@@ -551,7 +552,6 @@ class RequestFactory {
 		Assert.notEmpty(index.getIndexNames(), "No index defined for Query");
 		Assert.notNull(index.getTypeNames(), "No type defined for Query");
 
-		int startRecord = 0;
 		SearchRequest request = new SearchRequest(index.getIndexNames());
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 		request.types(index.getTypeNames());
@@ -566,10 +566,9 @@ class RequestFactory {
 		}
 
 		if (query.getPageable().isPaged()) {
-			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
+			sourceBuilder.from((int) query.getPageable().getOffset());
 			sourceBuilder.size(query.getPageable().getPageSize());
 		}
-		sourceBuilder.from(startRecord);
 
 		if (!query.getFields().isEmpty()) {
 			sourceBuilder.fetchSource(query.getFields().toArray(new String[0]), null);
@@ -618,7 +617,6 @@ class RequestFactory {
 		Assert.notEmpty(index.getIndexNames(), "No index defined for Query");
 		Assert.notNull(index.getTypeNames(), "No type defined for Query");
 
-		int startRecord = 0;
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(index.getIndexNames()) //
 				.setSearchType(query.getSearchType()) //
 				.setTypes(index.getTypeNames()) //
@@ -631,10 +629,9 @@ class RequestFactory {
 		}
 
 		if (query.getPageable().isPaged()) {
-			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
+			searchRequestBuilder.setFrom((int) query.getPageable().getOffset());
 			searchRequestBuilder.setSize(query.getPageable().getPageSize());
 		}
-		searchRequestBuilder.setFrom(startRecord);
 
 		if (!query.getFields().isEmpty()) {
 			searchRequestBuilder.setFetchSource(query.getFields().toArray(new String[0]), null);
