@@ -32,6 +32,7 @@ import org.springframework.http.HttpHeaders;
  *
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Huw Ayling-Miller
  * @author Henrique Amaral
  */
 public class ClientConfigurationUnitTests {
@@ -55,6 +56,7 @@ public class ClientConfigurationUnitTests {
 				.usingSsl() //
 				.withDefaultHeaders(headers) //
 				.withConnectTimeout(Duration.ofDays(1)).withSocketTimeout(Duration.ofDays(2)) //
+				.withPathPrefix("myPathPrefix") //
 				.withProxy("localhost:8080").build();
 
 		assertThat(clientConfiguration.getEndpoints()).containsOnly(InetSocketAddress.createUnresolved("foo", 9200),
@@ -63,6 +65,7 @@ public class ClientConfigurationUnitTests {
 		assertThat(clientConfiguration.getDefaultHeaders().get("foo")).containsOnly("bar");
 		assertThat(clientConfiguration.getConnectTimeout()).isEqualTo(Duration.ofDays(1));
 		assertThat(clientConfiguration.getSocketTimeout()).isEqualTo(Duration.ofDays(2));
+		assertThat(clientConfiguration.getPathPrefix()).isEqualTo("myPathPrefix");
 		assertThat(clientConfiguration.getProxy()).contains("localhost:8080");
 	}
 
