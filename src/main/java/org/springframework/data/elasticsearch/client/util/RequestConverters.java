@@ -394,7 +394,7 @@ public class RequestConverters {
 	 *
 	 * @param countRequest the search defining the data to be counted
 	 * @return Elasticsearch count request
-	 * @since 4.0
+	 * @since 3.2
 	 */
 	public static Request count(CountRequest countRequest) {
 		Request request = new Request(HttpMethod.POST.name(),

@@ -39,7 +39,6 @@ import java.util.function.Supplier;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
@@ -60,7 +59,9 @@ import org.springframework.web.util.UriBuilder;
 
 /**
  * @author Christoph Strobl
+ * @author Huw Ayling-Miller
  * @author Henrique Amaral
+ * @author Peter-Josef Meisch
  */
 public class ReactiveMockClientTestsUtils {
 
@@ -263,6 +264,16 @@ public class ReactiveMockClientTestsUtils {
 
 		@Override
 		public WebClientProvider withErrorListener(Consumer<Throwable> errorListener) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String getPathPrefix() {
+			return null;
+		}
+
+		@Override
+		public WebClientProvider withPathPrefix(String pathPrefix) {
 			throw new UnsupportedOperationException();
 		}
 

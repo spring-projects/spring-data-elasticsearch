@@ -38,6 +38,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Huw Ayling-Miller
  * @author Henrique Amaral
  * @since 3.2
  */
@@ -53,7 +54,8 @@ class ClientConfigurationBuilder
 	private Duration soTimeout = Duration.ofSeconds(5);
 	private String username;
 	private String password;
-    private String proxy;
+	private String pathPrefix;
+	private String proxy;
 
 	/*
 	 * (non-Javadoc)
@@ -183,6 +185,14 @@ class ClientConfigurationBuilder
 		return this;
 	}
 
+	@Override
+	public TerminalClientConfigurationBuilder withPathPrefix(String pathPrefix) {
+
+		this.pathPrefix = pathPrefix;
+
+		return this;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithOptionalDefaultHeaders#build()
@@ -197,7 +207,7 @@ class ClientConfigurationBuilder
 			headers.setBasicAuth(username, password);
 		}
 
-		return new DefaultClientConfiguration(hosts, headers, useSsl, sslContext, soTimeout, connectTimeout,
+		return new DefaultClientConfiguration(hosts, headers, useSsl, sslContext, soTimeout, connectTimeout, pathPrefix,
 				hostnameVerifier, proxy);
 	}
 

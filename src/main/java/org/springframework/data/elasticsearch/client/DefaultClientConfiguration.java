@@ -33,6 +33,8 @@ import org.springframework.lang.Nullable;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Huw Ayling-Miller
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 class DefaultClientConfiguration implements ClientConfiguration {
@@ -43,11 +45,12 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	private final @Nullable SSLContext sslContext;
 	private final Duration soTimeout;
 	private final Duration connectTimeout;
+	private final String pathPrefix;
 	private final @Nullable HostnameVerifier hostnameVerifier;
 	private final String proxy;
 
 	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
-			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout,
+			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout, @Nullable String pathPrefix,
 			@Nullable HostnameVerifier hostnameVerifier, String proxy) {
 
 		this.hosts = Collections.unmodifiableList(new ArrayList<>(hosts));
@@ -56,6 +59,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		this.sslContext = sslContext;
 		this.soTimeout = soTimeout;
 		this.connectTimeout = connectTimeout;
+		this.pathPrefix = pathPrefix;
 		this.hostnameVerifier = hostnameVerifier;
 		this.proxy = proxy;
 	}
@@ -123,12 +127,21 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		return this.soTimeout;
 	}
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getProxy()
-     */
-    @Override
-    public Optional<String> getProxy() {
-        return Optional.ofNullable(proxy);
-    }
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getPathPrefix()
+	 */
+	@Override
+	public String getPathPrefix() {
+		return this.pathPrefix;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getProxy()
+	 */
+	@Override
+	public Optional<String> getProxy() {
+		return Optional.ofNullable(proxy);
+	}
 }

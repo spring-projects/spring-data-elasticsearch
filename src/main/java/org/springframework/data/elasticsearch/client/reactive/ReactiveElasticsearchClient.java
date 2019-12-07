@@ -48,7 +48,6 @@ import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
-
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.http.HttpHeaders;
@@ -341,7 +340,7 @@ public interface ReactiveElasticsearchClient {
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-count.html">Count API on
 	 *      elastic.co</a>
 	 * @return the {@link Mono} emitting the count result.
-	 * @since 4.0
+	 * @since 3.2.4
 	 */
 	default Mono<Long> count(Consumer<CountRequest> consumer) {
 
@@ -357,7 +356,7 @@ public interface ReactiveElasticsearchClient {
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-count.html">Count API on
 	 *      elastic.co</a>
 	 * @return the {@link Mono} emitting the count result.
-	 * @since 4.0
+	 * @since 3.2.4
 	 */
 	default Mono<Long> count(CountRequest countRequest) {
 		return count(HttpHeaders.EMPTY, countRequest);
@@ -371,7 +370,7 @@ public interface ReactiveElasticsearchClient {
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-count.html">Count API on
 	 *      elastic.co</a>
 	 * @return the {@link Mono} emitting the count result.
-	 * @since 4.0
+	 * @since 3.2.4
 	 */
 	Mono<Long> count(HttpHeaders headers, CountRequest countRequest);
 
