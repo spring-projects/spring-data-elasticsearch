@@ -38,7 +38,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -75,11 +76,15 @@ public class ElasticsearchTemplateGeoTests {
 
 	@Autowired private ElasticsearchOperations operations;
 
+	private IndexOperations indexOperations;
+
 	@BeforeEach
 	public void before() {
 
-		IndexInitializer.init(operations, AuthorMarkerEntity.class);
-		IndexInitializer.init(operations, LocationMarkerEntity.class);
+		indexOperations = operations.getIndexOperations();
+
+		IndexInitializer.init(indexOperations, AuthorMarkerEntity.class);
+		IndexInitializer.init(indexOperations, LocationMarkerEntity.class);
 	}
 
 	private void loadClassBaseEntities() {
@@ -123,17 +128,6 @@ public class ElasticsearchTemplateGeoTests {
 
 		operations.bulkIndex(indexQueries, locationMarkerIndex);
 		operations.refresh(LocationMarkerEntity.class);
-	}
-
-	@Test
-	public void shouldPutMappingForGivenEntityWithGeoLocation() throws Exception {
-
-		// given
-		Class<?> entity = AuthorMarkerEntity.class;
-		operations.createIndex(entity);
-
-		// when
-		assertThat(operations.putMapping(entity)).isTrue();
 	}
 
 	@Test

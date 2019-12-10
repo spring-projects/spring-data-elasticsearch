@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository.support;
 
 import org.elasticsearch.index.VersionType;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.repository.core.EntityInformation;
 
 /**
@@ -25,14 +26,13 @@ import org.springframework.data.repository.core.EntityInformation;
  * @author Mohsin Husen
  * @author Christoph Strobl
  * @author Ivan Greene
+ * @author Peter-Josef Meisch
  */
 public interface ElasticsearchEntityInformation<T, ID> extends EntityInformation<T, ID> {
 
 	String getIdAttribute();
 
-	String getIndexName();
-
-	String getType();
+	IndexCoordinates getIndexCoordinates();
 
 	Long getVersion(T entity);
 

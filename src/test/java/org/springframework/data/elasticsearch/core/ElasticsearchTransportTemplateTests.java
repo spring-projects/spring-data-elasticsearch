@@ -34,6 +34,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
@@ -59,7 +60,7 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		indexRequest.source("{}", XContentType.JSON);
 		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5)).withIndexRequest(indexRequest).build();
 		assertThatThrownBy(() -> {
-			elasticsearchTemplate.update(updateQuery, index);
+			operations.update(updateQuery, index);
 		}).isInstanceOf(DocumentMissingException.class);
 	}
 

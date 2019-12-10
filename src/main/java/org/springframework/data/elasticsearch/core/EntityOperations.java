@@ -24,6 +24,7 @@ import java.util.Map;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
@@ -127,7 +128,7 @@ class EntityOperations {
 
 		if (StringUtils.isEmpty(index)) {
 			Assert.notNull(entity, "Cannot determine index name");
-			return entity.getIndexName();
+			return entity.getIndexCoordinates().getIndexName();
 		}
 
 		return index;
@@ -137,7 +138,7 @@ class EntityOperations {
 
 		if (StringUtils.isEmpty(type)) {
 			Assert.notNull(entity, "Cannot determine index type");
-			return entity.getIndexType();
+			return entity.getIndexCoordinates().getTypeName();
 		}
 
 		return type;

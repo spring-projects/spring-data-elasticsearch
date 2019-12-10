@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.elasticsearch.core.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.repository.query.ResultProcessor;

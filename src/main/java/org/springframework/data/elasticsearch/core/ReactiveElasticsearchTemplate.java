@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.elasticsearch.index.VersionType.*;
 
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -48,7 +49,6 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
@@ -93,6 +93,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	private @Nullable RefreshPolicy refreshPolicy = RefreshPolicy.IMMEDIATE;
 	private @Nullable IndicesOptions indicesOptions = IndicesOptions.strictExpandOpenAndForbidClosedIgnoreThrottled();
 
+	// region Initialization
 	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client) {
 		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()));
 	}
@@ -109,19 +110,12 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		this.operations = new EntityOperations(this.mappingContext);
 		this.requestFactory = new RequestFactory(converter);
 	}
+	// endregion
 
+	// region DocumentOperations
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exctute(ClientCallback)
-	 */
-	@Override
-	public <T> Publisher<T> execute(ClientCallback<Publisher<T>> callback) {
-		return Flux.defer(() -> callback.doWithClient(getClient())).onErrorMap(this::translateException);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#index(Object, IndexCoordinates)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveDElasticsearchOperations#index(Object, IndexCoordinates)
 	 */
 	@Override
 	public <T> Mono<T> save(T entity, IndexCoordinates index) {
@@ -134,6 +128,51 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				.map(it -> {
 					return adaptableEntity.populateIdIfNecessary(it.getId());
 				});
+	}
+
+	@Override
+	public <T> Mono<T> save(T entity) {
+		return save(entity, getIndexCoordinatesFor(entity.getClass()));
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 * You know what you're doing here? Well fair enough, go ahead on your own risk.
+	 *
+	 * @param request the already prepared {@link IndexRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<IndexResponse> doIndex(IndexRequest request) {
+		return Mono.from(execute(client -> client.index(request)));
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link GetRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<GetResult> doFindById(GetRequest request) {
+
+		return Mono.from(execute(client -> client.get(request))) //
+				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
+	}
+
+	@Override
+	public Mono<Boolean> exists(String id, Class<?> entityType) {
+		return exists(id, entityType, getIndexCoordinatesFor(entityType));
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link GetRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<Boolean> doExists(GetRequest request) {
+
+		return Mono.from(execute(client -> client.exists(request))) //
+				.onErrorReturn(NoSuchIndexException.class, false);
 	}
 
 	private Mono<IndexResponse> doIndex(Object value, AdaptibleEntity<?> entity, IndexCoordinates index) {
@@ -160,6 +199,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			request = prepareIndexRequest(value, request);
 			return doIndex(request);
 		});
+	}
+
+	@Override
+	public <T> Mono<T> findById(String id, Class<T> entityType) {
+		return findById(id, entityType, getIndexCoordinatesFor(entityType));
 	}
 
 	/*
@@ -202,12 +246,190 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(Object, String, String)
+	 */
+	@Override
+	public Mono<String> delete(Object entity, IndexCoordinates index) {
+
+		Entity<?> elasticsearchEntity = operations.forEntity(entity);
+
+		return Mono.defer(() -> doDeleteById(entity, converter.convertId(elasticsearchEntity.getId()),
+				elasticsearchEntity.getPersistentEntity(), index));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(String, Class, IndexCoordinates)
+	 */
+	@Override
+	public Mono<String> deleteById(String id, Class<?> entityType, IndexCoordinates index) {
+
+		Assert.notNull(id, "Id must not be null!");
+
+		return doDeleteById(null, id, getPersistentEntityFor(entityType), index);
+
+	}
+
+	@Override
+	public Mono<String> delete(Object entity) {
+		return delete(entity, getIndexCoordinatesFor(entity.getClass()));
+	}
+
+	@Override
+	public Mono<String> deleteById(String id, Class<?> entityType) {
+		return deleteById(id, entityType, getIndexCoordinatesFor(entityType));
+	}
+
+	private Mono<String> doDeleteById(@Nullable Object source, String id, ElasticsearchPersistentEntity<?> entity,
+			IndexCoordinates index) {
+
+		return Mono.defer(() -> {
+
+			return doDelete(prepareDeleteRequest(source, new DeleteRequest(index.getIndexName(), index.getTypeName(), id)));
+		});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#deleteBy(Query, Class, IndexCoordinates)
+	 */
+	@Override
+	public Mono<Long> deleteBy(Query query, Class<?> entityType, IndexCoordinates index) {
+
+		Assert.notNull(query, "Query must not be null!");
+
+		return doDeleteBy(query, getPersistentEntityFor(entityType), index).map(BulkByScrollResponse::getDeleted)
+				.publishNext();
+	}
+
+	@Override
+	public Mono<Long> deleteBy(Query query, Class<?> entityType) {
+		return deleteBy(query, entityType, getIndexCoordinatesFor(entityType));
+	}
+
+	private Flux<BulkByScrollResponse> doDeleteBy(Query query, ElasticsearchPersistentEntity<?> entity,
+			IndexCoordinates index) {
+
+		return Flux.defer(() -> {
+			DeleteByQueryRequest request = new DeleteByQueryRequest(index.getIndexNames());
+			request.types(index.getTypeNames());
+			request.setQuery(mappedQuery(query, entity));
+
+			return doDeleteBy(prepareDeleteByRequest(request));
+		});
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link DeleteRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<String> doDelete(DeleteRequest request) {
+
+		return Mono.from(execute(client -> client.delete(request))) //
+
+				.flatMap(it -> {
+
+					if (HttpStatus.valueOf(it.status().getStatus()).equals(HttpStatus.NOT_FOUND)) {
+						return Mono.empty();
+					}
+
+					return Mono.just(it.getId());
+				}) //
+				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link DeleteByQueryRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<BulkByScrollResponse> doDeleteBy(DeleteByQueryRequest request) {
+
+		return Mono.from(execute(client -> client.deleteBy(request))) //
+				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
+	}
+
+	/**
+	 * Customization hook to modify a generated {@link DeleteRequest} prior to its execution. Eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param source the source object the {@link DeleteRequest} was derived from. My be {@literal null} if using the
+	 *          {@literal id} directly.
+	 * @param request the generated {@link DeleteRequest}.
+	 * @return never {@literal null}.
+	 */
+	protected DeleteRequest prepareDeleteRequest(@Nullable Object source, DeleteRequest request) {
+		return prepareWriteRequest(request);
+	}
+
+	/**
+	 * Customization hook to modify a generated {@link DeleteByQueryRequest} prior to its execution. Eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param request the generated {@link DeleteByQueryRequest}.
+	 * @return never {@literal null}.
+	 */
+	protected DeleteByQueryRequest prepareDeleteByRequest(DeleteByQueryRequest request) {
+
+		if (refreshPolicy != null && !RefreshPolicy.NONE.equals(refreshPolicy)) {
+			request = request.setRefresh(true);
+		}
+
+		if (indicesOptions != null) {
+			request = request.setIndicesOptions(indicesOptions);
+		}
+
+		return request;
+	}
+
+	/**
+	 * Customization hook to modify a generated {@link IndexRequest} prior to its execution. Eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param source the source object the {@link IndexRequest} was derived from.
+	 * @param request the generated {@link IndexRequest}.
+	 * @return never {@literal null}.
+	 */
+	protected IndexRequest prepareIndexRequest(Object source, IndexRequest request) {
+		return prepareWriteRequest(request);
+	}
+
+	/**
+	 * Pre process the write request before it is sent to the server, eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param request must not be {@literal null}.
+	 * @param <R>
+	 * @return the processed {@link WriteRequest}.
+	 */
+	protected <R extends WriteRequest<R>> R prepareWriteRequest(R request) {
+
+		if (refreshPolicy == null) {
+			return request;
+		}
+
+		return request.setRefreshPolicy(refreshPolicy);
+	}
+
+	// endregion
+
+	// region SearchOperations
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#find(Query, Class, Class, IndexCoordinates)
 	 */
 	@Override
 	public <T> Flux<T> find(Query query, Class<?> entityType, Class<T> resultType, IndexCoordinates index) {
 
 		return doFind(query, entityType, index).map(it -> converter.mapDocument(DocumentAdapters.from(it), resultType));
+	}
+
+	@Override
+	public <T> Flux<T> find(Query query, Class<?> entityType, Class<T> returnType) {
+		return find(query, entityType, returnType, getIndexCoordinatesFor(entityType));
 	}
 
 	private Flux<SearchHit> doFind(Query query, Class<?> clazz, IndexCoordinates index) {
@@ -225,6 +447,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				return doScroll(request);
 			}
 		});
+	}
+
+	@Override
+	public Mono<Long> count(Query query, Class<?> entityType) {
+		return count(query, entityType, getIndexCoordinatesFor(entityType));
 	}
 
 	@Override
@@ -279,235 +506,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return request;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(Object, String, String)
-	 */
-	@Override
-	public Mono<String> delete(Object entity, IndexCoordinates index) {
-
-		Entity<?> elasticsearchEntity = operations.forEntity(entity);
-
-		return Mono.defer(() -> doDeleteById(entity, converter.convertId(elasticsearchEntity.getId()),
-				elasticsearchEntity.getPersistentEntity(), index));
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(String, Class, IndexCoordinates)
-	 */
-	@Override
-	public Mono<String> deleteById(String id, Class<?> entityType, IndexCoordinates index) {
-
-		Assert.notNull(id, "Id must not be null!");
-
-		return doDeleteById(null, id, getPersistentEntityFor(entityType), index);
-
-	}
-
-	private Mono<String> doDeleteById(@Nullable Object source, String id, ElasticsearchPersistentEntity<?> entity,
-			IndexCoordinates index) {
-
-		return Mono.defer(() -> {
-
-			return doDelete(prepareDeleteRequest(source, new DeleteRequest(index.getIndexName(), index.getTypeName(), id)));
-		});
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#deleteBy(Query, Class, IndexCoordinates)
-	 */
-	@Override
-	public Mono<Long> deleteBy(Query query, Class<?> entityType, IndexCoordinates index) {
-
-		Assert.notNull(query, "Query must not be null!");
-
-		return doDeleteBy(query, getPersistentEntityFor(entityType), index).map(BulkByScrollResponse::getDeleted)
-				.publishNext();
-	}
-
-	private Flux<BulkByScrollResponse> doDeleteBy(Query query, ElasticsearchPersistentEntity<?> entity,
-			IndexCoordinates index) {
-
-		return Flux.defer(() -> {
-			DeleteByQueryRequest request = new DeleteByQueryRequest(index.getIndexNames());
-			request.types(index.getTypeNames());
-			request.setQuery(mappedQuery(query, entity));
-
-			return doDeleteBy(prepareDeleteByRequest(request));
-		});
-	}
-
-	// Property Setters / Getters
-
-	/**
-	 * Set the default {@link RefreshPolicy} to apply when writing to Elasticsearch.
-	 *
-	 * @param refreshPolicy can be {@literal null}.
-	 */
-	public void setRefreshPolicy(@Nullable RefreshPolicy refreshPolicy) {
-		this.refreshPolicy = refreshPolicy;
-	}
-
-	/**
-	 * Set the default {@link IndicesOptions} for {@link SearchRequest search requests}.
-	 *
-	 * @param indicesOptions can be {@literal null}.
-	 */
-	public void setIndicesOptions(@Nullable IndicesOptions indicesOptions) {
-		this.indicesOptions = indicesOptions;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#getElasticsearchConverter()
-	 */
-	@Override
-	public ElasticsearchConverter getElasticsearchConverter() {
-		return converter;
-	}
-
-	// Customization Hooks
-
-	/**
-	 * Obtain the {@link ReactiveElasticsearchClient} to operate upon.
-	 *
-	 * @return never {@literal null}.
-	 */
-	protected ReactiveElasticsearchClient getClient() {
-		return this.client;
-	}
-
-	/**
-	 * Pre process the write request before it is sent to the server, eg. by setting the
-	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
-	 *
-	 * @param request must not be {@literal null}.
-	 * @param <R>
-	 * @return the processed {@link WriteRequest}.
-	 */
-	protected <R extends WriteRequest<R>> R prepareWriteRequest(R request) {
-
-		if (refreshPolicy == null) {
-			return request;
-		}
-
-		return request.setRefreshPolicy(refreshPolicy);
-	}
-
-	/**
-	 * Customization hook to modify a generated {@link IndexRequest} prior to its execution. Eg. by setting the
-	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
-	 *
-	 * @param source the source object the {@link IndexRequest} was derived from.
-	 * @param request the generated {@link IndexRequest}.
-	 * @return never {@literal null}.
-	 */
-	protected IndexRequest prepareIndexRequest(Object source, IndexRequest request) {
-		return prepareWriteRequest(request);
-	}
-
-	/**
-	 * Customization hook to modify a generated {@link SearchRequest} prior to its execution. Eg. by setting the
-	 * {@link SearchRequest#indicesOptions(IndicesOptions) indices options} if applicable.
-	 *
-	 * @param request the generated {@link CountRequest}.
-	 * @return never {@literal null}.
-	 */
-	protected CountRequest prepareCountRequest(CountRequest request) {
-
-		if (indicesOptions == null) {
-			return request;
-		}
-
-		return request.indicesOptions(indicesOptions);
-	}
-
-	/**
-	 * Customization hook to modify a generated {@link SearchRequest} prior to its execution. Eg. by setting the
-	 * {@link SearchRequest#indicesOptions(IndicesOptions) indices options} if applicable.
-	 *
-	 * @param request the generated {@link SearchRequest}.
-	 * @return never {@literal null}.
-	 */
-	protected SearchRequest prepareSearchRequest(SearchRequest request) {
-
-		if (indicesOptions == null) {
-			return request;
-		}
-
-		return request.indicesOptions(indicesOptions);
-	}
-
-	/**
-	 * Customization hook to modify a generated {@link DeleteRequest} prior to its execution. Eg. by setting the
-	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
-	 *
-	 * @param source the source object the {@link DeleteRequest} was derived from. My be {@literal null} if using the
-	 *          {@literal id} directly.
-	 * @param request the generated {@link DeleteRequest}.
-	 * @return never {@literal null}.
-	 */
-	protected DeleteRequest prepareDeleteRequest(@Nullable Object source, DeleteRequest request) {
-		return prepareWriteRequest(request);
-	}
-
-	/**
-	 * Customization hook to modify a generated {@link DeleteByQueryRequest} prior to its execution. Eg. by setting the
-	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
-	 *
-	 * @param request the generated {@link DeleteByQueryRequest}.
-	 * @return never {@literal null}.
-	 */
-	protected DeleteByQueryRequest prepareDeleteByRequest(DeleteByQueryRequest request) {
-
-		if (refreshPolicy != null && !RefreshPolicy.NONE.equals(refreshPolicy)) {
-			request = request.setRefresh(true);
-		}
-
-		if (indicesOptions != null) {
-			request = request.setIndicesOptions(indicesOptions);
-		}
-
-		return request;
-	}
-
-	/**
-	 * Customization hook on the actual execution result {@link Publisher}. <br />
-	 * You know what you're doing here? Well fair enough, go ahead on your own risk.
-	 *
-	 * @param request the already prepared {@link IndexRequest} ready to be executed.
-	 * @return a {@link Mono} emitting the result of the operation.
-	 */
-	protected Mono<IndexResponse> doIndex(IndexRequest request) {
-		return Mono.from(execute(client -> client.index(request)));
-	}
-
-	/**
-	 * Customization hook on the actual execution result {@link Publisher}. <br />
-	 *
-	 * @param request the already prepared {@link GetRequest} ready to be executed.
-	 * @return a {@link Mono} emitting the result of the operation.
-	 */
-	protected Mono<GetResult> doFindById(GetRequest request) {
-
-		return Mono.from(execute(client -> client.get(request))) //
-				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
-	}
-
-	/**
-	 * Customization hook on the actual execution result {@link Publisher}. <br />
-	 *
-	 * @param request the already prepared {@link GetRequest} ready to be executed.
-	 * @return a {@link Mono} emitting the result of the operation.
-	 */
-	protected Mono<Boolean> doExists(GetRequest request) {
-
-		return Mono.from(execute(client -> client.exists(request))) //
-				.onErrorReturn(NoSuchIndexException.class, false);
-	}
-
 	/**
 	 * Customization hook on the actual execution result {@link Publisher}. <br />
 	 *
@@ -556,40 +554,34 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
 	}
 
-	/**
-	 * Customization hook on the actual execution result {@link Publisher}. <br />
-	 *
-	 * @param request the already prepared {@link DeleteRequest} ready to be executed.
-	 * @return a {@link Mono} emitting the result of the operation.
-	 */
-	protected Mono<String> doDelete(DeleteRequest request) {
+	@Nullable
+	private QueryBuilder mappedFilterQuery(Query query, ElasticsearchPersistentEntity<?> entity) {
 
-		return Mono.from(execute(client -> client.delete(request))) //
+		if (query instanceof NativeSearchQuery) {
+			return ((NativeSearchQuery) query).getFilter();
+		}
 
-				.flatMap(it -> {
-
-					if (HttpStatus.valueOf(it.status().getStatus()).equals(HttpStatus.NOT_FOUND)) {
-						return Mono.empty();
-					}
-
-					return Mono.just(it.getId());
-				}) //
-				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
+		return null;
 	}
 
-	/**
-	 * Customization hook on the actual execution result {@link Publisher}. <br />
-	 *
-	 * @param request the already prepared {@link DeleteByQueryRequest} ready to be executed.
-	 * @return a {@link Mono} emitting the result of the operation.
-	 */
-	protected Mono<BulkByScrollResponse> doDeleteBy(DeleteByQueryRequest request) {
+	private QueryBuilder mappedQuery(Query query, ElasticsearchPersistentEntity<?> entity) {
 
-		return Mono.from(execute(client -> client.deleteBy(request))) //
-				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
+		// TODO: we need to actually map the fields to the according field names!
+
+		QueryBuilder elasticsearchQuery = null;
+
+		if (query instanceof CriteriaQuery) {
+			elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(((CriteriaQuery) query).getCriteria());
+		} else if (query instanceof StringQuery) {
+			elasticsearchQuery = new WrapperQueryBuilder(((StringQuery) query).getSource());
+		} else if (query instanceof NativeSearchQuery) {
+			elasticsearchQuery = ((NativeSearchQuery) query).getQuery();
+		} else {
+			throw new IllegalArgumentException(String.format("Unknown query type '%s'.", query.getClass()));
+		}
+
+		return elasticsearchQuery != null ? elasticsearchQuery : QueryBuilders.matchAllQuery();
 	}
-
-	// private helpers
 
 	private static List<FieldSortBuilder> sort(Query query, ElasticsearchPersistentEntity<?> entity) {
 
@@ -618,33 +610,82 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return mappedSort;
 	}
 
-	private QueryBuilder mappedQuery(Query query, ElasticsearchPersistentEntity<?> entity) {
+	/**
+	 * Customization hook to modify a generated {@link SearchRequest} prior to its execution. Eg. by setting the
+	 * {@link SearchRequest#indicesOptions(IndicesOptions) indices options} if applicable.
+	 *
+	 * @param request the generated {@link CountRequest}.
+	 * @return never {@literal null}.
+	 */
+	protected CountRequest prepareCountRequest(CountRequest request) {
 
-		// TODO: we need to actually map the fields to the according field names!
-
-		QueryBuilder elasticsearchQuery = null;
-
-		if (query instanceof CriteriaQuery) {
-			elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(((CriteriaQuery) query).getCriteria());
-		} else if (query instanceof StringQuery) {
-			elasticsearchQuery = new WrapperQueryBuilder(((StringQuery) query).getSource());
-		} else if (query instanceof NativeSearchQuery) {
-			elasticsearchQuery = ((NativeSearchQuery) query).getQuery();
-		} else {
-			throw new IllegalArgumentException(String.format("Unknown query type '%s'.", query.getClass()));
+		if (indicesOptions == null) {
+			return request;
 		}
 
-		return elasticsearchQuery != null ? elasticsearchQuery : QueryBuilders.matchAllQuery();
+		return request.indicesOptions(indicesOptions);
 	}
 
-	@Nullable
-	private QueryBuilder mappedFilterQuery(Query query, ElasticsearchPersistentEntity<?> entity) {
+	/**
+	 * Customization hook to modify a generated {@link SearchRequest} prior to its execution. Eg. by setting the
+	 * {@link SearchRequest#indicesOptions(IndicesOptions) indices options} if applicable.
+	 *
+	 * @param request the generated {@link SearchRequest}.
+	 * @return never {@literal null}.
+	 */
+	protected SearchRequest prepareSearchRequest(SearchRequest request) {
 
-		if (query instanceof NativeSearchQuery) {
-			return ((NativeSearchQuery) query).getFilter();
+		if (indicesOptions == null) {
+			return request;
 		}
 
-		return null;
+		return request.indicesOptions(indicesOptions);
+	}
+
+	// endregion
+
+	// region Helper methods
+	// Property Setters / Getters
+
+	/**
+	 * Set the default {@link RefreshPolicy} to apply when writing to Elasticsearch.
+	 *
+	 * @param refreshPolicy can be {@literal null}.
+	 */
+	public void setRefreshPolicy(@Nullable RefreshPolicy refreshPolicy) {
+		this.refreshPolicy = refreshPolicy;
+	}
+
+	/**
+	 * Set the default {@link IndicesOptions} for {@link SearchRequest search requests}.
+	 *
+	 * @param indicesOptions can be {@literal null}.
+	 */
+	public void setIndicesOptions(@Nullable IndicesOptions indicesOptions) {
+		this.indicesOptions = indicesOptions;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exctute(ClientCallback)
+	 */
+	@Override
+	public <T> Publisher<T> execute(ClientCallback<Publisher<T>> callback) {
+		return Flux.defer(() -> callback.doWithClient(getClient())).onErrorMap(this::translateException);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#getElasticsearchConverter()
+	 */
+	@Override
+	public ElasticsearchConverter getElasticsearchConverter() {
+		return converter;
+	}
+
+	@Override
+	public IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {
+		return getPersistentEntityFor(clazz).getIndexCoordinates();
 	}
 
 	@Override
@@ -661,4 +702,16 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		return potentiallyTranslatedException != null ? potentiallyTranslatedException : throwable;
 	}
+
+	/**
+	 * Obtain the {@link ReactiveElasticsearchClient} to operate upon.
+	 *
+	 * @return never {@literal null}.
+	 */
+	protected ReactiveElasticsearchClient getClient() {
+		return this.client;
+	}
+
+	// endregion
+
 }

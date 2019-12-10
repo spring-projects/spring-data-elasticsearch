@@ -61,7 +61,7 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 		indexRequest.source("{}", XContentType.JSON);
 		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5)).withIndexRequest(indexRequest).build();
 		assertThatThrownBy(() -> {
-			elasticsearchTemplate.update(updateQuery, index);
+			operations.update(updateQuery, index);
 		}).isInstanceOf(ElasticsearchStatusException.class);
 	}
 
