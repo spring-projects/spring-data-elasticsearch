@@ -41,6 +41,7 @@ import org.springframework.util.Assert;
  * @author Artur Konczak
  * @author Rasmus Faber-Espensen
  * @author James Bodkin
+ * @author Peter-Josef Meisch
  */
 class CriteriaQueryProcessor {
 
@@ -134,16 +135,22 @@ class CriteriaQueryProcessor {
 		return query;
 	}
 
-	private QueryBuilder processCriteriaEntry(Criteria.CriteriaEntry entry,
-			/* OperationKey key, Object value,*/ String fieldName) {
-		Object value = entry.getValue();
-		if (value == null) {
-			return null;
-		}
+	private QueryBuilder processCriteriaEntry(Criteria.CriteriaEntry entry, String fieldName) {
 		OperationKey key = entry.getKey();
-		QueryBuilder query = null;
+		Object value = entry.getValue();
+
+		if (value == null) {
+
+			if (key == OperationKey.EXISTS) {
+				return existsQuery(fieldName);
+			} else {
+				return null;
+			}
+		}
 
 		String searchText = QueryParserUtil.escape(value.toString());
+
+		QueryBuilder query = null;
 
 		switch (key) {
 			case EQUALS:
