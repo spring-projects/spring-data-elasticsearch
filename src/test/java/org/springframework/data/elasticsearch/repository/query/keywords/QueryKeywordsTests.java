@@ -24,7 +24,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,6 +42,7 @@ import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTes
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -81,10 +81,10 @@ class QueryKeywordsTests {
 				.sortName("sort2").build();
 		Product product5 = Product.builder().id("5").name("Salt").text("Sea salt").price(2.1f).available(false)
 				.sortName("sort1").build();
+		Product product6 = Product.builder().id("6").name(null).text("no name").price(3.4f).available(false)
+				.sortName("sort0").build();
 
-		repository.saveAll(Arrays.asList(product1, product2, product3, product4, product5));
-
-		elasticsearchTemplate.refresh(Product.class);
+		repository.saveAll(Arrays.asList(product1, product2, product3, product4, product5, product6));
 	}
 
 	@Test
@@ -120,7 +120,7 @@ class QueryKeywordsTests {
 
 		// then
 		assertThat(repository.findByAvailableTrue()).hasSize(3);
-		assertThat(repository.findByAvailableFalse()).hasSize(2);
+		assertThat(repository.findByAvailableFalse()).hasSize(3);
 	}
 
 	@Test
@@ -132,8 +132,8 @@ class QueryKeywordsTests {
 
 		// then
 		assertThat(repository.findByPriceIn(Arrays.asList(1.2f, 1.1f))).hasSize(2);
-		assertThat(repository.findByPriceNotIn(Arrays.asList(1.2f, 1.1f))).hasSize(3);
-		assertThat(repository.findByPriceNot(1.2f)).hasSize(4);
+		assertThat(repository.findByPriceNotIn(Arrays.asList(1.2f, 1.1f))).hasSize(4);
+		assertThat(repository.findByPriceNot(1.2f)).hasSize(5);
 	}
 
 	@Test // DATAES-171
@@ -144,7 +144,7 @@ class QueryKeywordsTests {
 		// when
 
 		// then
-		assertThat(repository.findByIdNotIn(Arrays.asList("2", "3"))).hasSize(3);
+		assertThat(repository.findByIdNotIn(Arrays.asList("2", "3"))).hasSize(4);
 	}
 
 	@Test
@@ -169,8 +169,8 @@ class QueryKeywordsTests {
 		assertThat(repository.findByPriceLessThan(1.1f)).hasSize(1);
 		assertThat(repository.findByPriceLessThanEqual(1.1f)).hasSize(2);
 
-		assertThat(repository.findByPriceGreaterThan(1.9f)).hasSize(1);
-		assertThat(repository.findByPriceGreaterThanEqual(1.9f)).hasSize(2);
+		assertThat(repository.findByPriceGreaterThan(1.9f)).hasSize(2);
+		assertThat(repository.findByPriceGreaterThanEqual(1.9f)).hasSize(3);
 	}
 
 	@Test // DATAES-615
@@ -195,7 +195,7 @@ class QueryKeywordsTests {
 		List<String> sortedIds = repository.findAllByOrderByText().stream() //
 				.map(it -> it.text).collect(Collectors.toList());
 
-		assertThat(sortedIds).containsExactly("Beet sugar", "Cane sugar", "Cane sugar", "Rock salt", "Sea salt");
+		assertThat(sortedIds).containsExactly("Beet sugar", "Cane sugar", "Cane sugar", "Rock salt", "Sea salt", "no name");
 	}
 
 	@Test // DATAES-615
@@ -204,7 +204,7 @@ class QueryKeywordsTests {
 		List<String> sortedIds = repository.findAllByOrderBySortName().stream() //
 				.map(it -> it.id).collect(Collectors.toList());
 
-		assertThat(sortedIds).containsExactly("5", "4", "3", "2", "1");
+		assertThat(sortedIds).containsExactly("6", "5", "4", "3", "2", "1");
 	}
 
 	@Test // DATAES-178
@@ -241,6 +241,22 @@ class QueryKeywordsTests {
 		products.forEach(product -> assertThat(product.name).isEqualTo("Sugar"));
 	}
 
+	@Test
+	void shouldSearchForNullValues() {
+		final List<Product> products = repository.findByName(null);
+
+		assertThat(products).hasSize(1);
+		assertThat(products.get(0).getId()).isEqualTo("6");
+	}
+
+	@Test
+	void shouldDeleteWithNullValues() {
+		repository.deleteByName(null);
+
+		long count = repository.count();
+		assertThat(count).isEqualTo(5);
+	}
+
 	/**
 	 * @author Mohsin Husen
 	 * @author Artur Konczak
@@ -256,27 +272,13 @@ class QueryKeywordsTests {
 
 		@Id private String id;
 
-		private List<String> title;
-
 		private String name;
-
-		private String description;
 
 		@Field(type = FieldType.Keyword) private String text;
 
-		private List<String> categories;
-
-		private Float weight;
-
 		@Field(type = FieldType.Float) private Float price;
 
-		private Integer popularity;
-
 		private boolean available;
-
-		private String location;
-
-		private Date lastModified;
 
 		@Field(name = "sort-name", type = FieldType.Keyword) private String sortName;
 	}
@@ -285,6 +287,8 @@ class QueryKeywordsTests {
 	 * Created by akonczak on 04/09/15.
 	 */
 	interface ProductRepository extends ElasticsearchRepository<Product, String> {
+
+		List<Product> findByName(@Nullable String name);
 
 		List<Product> findByNameAndText(String name, String text);
 
@@ -331,6 +335,8 @@ class QueryKeywordsTests {
 		List<Product> findFirst2ByName(String name);
 
 		List<Product> findTop2ByName(String name);
+
+		void deleteByName(@Nullable String name);
 	}
 
 }
