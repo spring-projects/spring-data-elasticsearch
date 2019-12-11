@@ -108,12 +108,12 @@ public class ReactiveElasticsearchTemplateUnitTests {
 	}
 
 	@Test // DATAES-504, DATAES-518
-	public void findShouldFallBackToDefaultIndexOptionsIfNotSet() {
+	public void searchShouldFallBackToDefaultIndexOptionsIfNotSet() {
 
 		ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
 		when(client.search(captor.capture())).thenReturn(Flux.empty());
 
-		template.find(new CriteriaQuery(new Criteria("*")).setPageable(PageRequest.of(0, 10)), SampleEntity.class) //
+		template.search(new CriteriaQuery(new Criteria("*")).setPageable(PageRequest.of(0, 10)), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -121,7 +121,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 	}
 
 	@Test // DATAES-504, DATAES-518
-	public void findShouldApplyIndexOptionsIfSet() {
+	public void searchShouldApplyIndexOptionsIfSet() {
 
 		ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
 		when(client.search(captor.capture())).thenReturn(Flux.empty());
@@ -129,7 +129,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		template.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
 
 		Query query = new CriteriaQuery(new Criteria("*")).setPageable(PageRequest.of(0, 10));
-		template.find(query, SampleEntity.class, index) //
+		template.search(query, SampleEntity.class, index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -137,13 +137,13 @@ public class ReactiveElasticsearchTemplateUnitTests {
 	}
 
 	@Test // DATAES-504
-	public void findShouldApplyPaginationIfSet() {
+	public void searchShouldApplyPaginationIfSet() {
 
 		ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
 		when(client.search(captor.capture())).thenReturn(Flux.empty());
 
 		Query query = new CriteriaQuery(new Criteria("*")).setPageable(PageRequest.of(2, 50));
-		template.find(query, SampleEntity.class, index) //
+		template.search(query, SampleEntity.class, index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -152,12 +152,12 @@ public class ReactiveElasticsearchTemplateUnitTests {
 	}
 
 	@Test // DATAES-504, DATAES-518
-	public void findShouldUseScrollIfPaginationNotSet() {
+	public void searchShouldUseScrollIfPaginationNotSet() {
 
 		ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
 		when(client.scroll(captor.capture())).thenReturn(Flux.empty());
 
-		template.find(new CriteriaQuery(new Criteria("*")).setPageable(Pageable.unpaged()), SampleEntity.class) //
+		template.search(new CriteriaQuery(new Criteria("*")).setPageable(Pageable.unpaged()), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 

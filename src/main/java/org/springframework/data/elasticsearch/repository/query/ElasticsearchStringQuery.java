@@ -20,8 +20,9 @@ import java.util.regex.Pattern;
 
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.util.Assert;
@@ -71,17 +72,23 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		StringQuery stringQuery = createQuery(accessor);
 		Class<?> clazz = queryMethod.getEntityInformation().getJavaType();
 		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
+
+		Object result = null;
+
 		if (queryMethod.isPageQuery()) {
 			stringQuery.setPageable(accessor.getPageable());
-			return elasticsearchOperations.queryForPage(stringQuery, clazz, index);
+			result = elasticsearchOperations.searchForPage(stringQuery, clazz, index);
 		} else if (queryMethod.isCollectionQuery()) {
 			if (accessor.getPageable().isPaged()) {
 				stringQuery.setPageable(accessor.getPageable());
 			}
-			return elasticsearchOperations.queryForList(stringQuery, clazz, index);
+			result = elasticsearchOperations.search(stringQuery, clazz, index);
+		} else {
+			result = elasticsearchOperations.searchOne(stringQuery, clazz, index);
 		}
 
-		return elasticsearchOperations.queryForObject(stringQuery, clazz, index);
+		return SearchHitSupport.unwrapSearchHits(result);
+
 	}
 
 	protected StringQuery createQuery(ParametersParameterAccessor parameterAccessor) {

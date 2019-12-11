@@ -25,7 +25,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 import org.elasticsearch.ElasticsearchException;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,7 +89,7 @@ public class LogEntityTests {
 
 		// when
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("ip", "10.10.10.1")).build();
-		List<LogEntity> entities = operations.queryForList(searchQuery, LogEntity.class, index);
+		SearchHits<LogEntity> entities = operations.search(searchQuery, LogEntity.class, index);
 
 		// then
 		assertThat(entities).isNotNull().hasSize(1);
@@ -103,7 +102,7 @@ public class LogEntityTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("ip", "10.10.10")).build();
 
 		assertThatThrownBy(() -> {
-			List<LogEntity> entities = operations.queryForList(searchQuery, LogEntity.class, index);
+			SearchHits<LogEntity> entities = operations.search(searchQuery, LogEntity.class, index);
 		}).isInstanceOf(ElasticsearchException.class);
 	}
 
@@ -113,7 +112,7 @@ public class LogEntityTests {
 		// when
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(rangeQuery("ip").from("10.10.10.1").to("10.10.10.3")).build();
-		List<LogEntity> entities = operations.queryForList(searchQuery, LogEntity.class, index);
+		SearchHits<LogEntity> entities = operations.search(searchQuery, LogEntity.class, index);
 
 		// then
 		assertThat(entities).isNotNull().hasSize(3);

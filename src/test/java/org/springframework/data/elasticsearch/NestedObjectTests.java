@@ -45,6 +45,9 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -131,7 +134,7 @@ public class NestedObjectTests {
 				boolQuery().must(termQuery("car.name", "saturn")).must(termQuery("car.model", "imprezza")), ScoreMode.None);
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
-		List<Person> persons = elasticsearchTemplate.queryForList(searchQuery, Person.class, index);
+		SearchHits<Person> persons = elasticsearchTemplate.search(searchQuery, Person.class, index);
 
 		assertThat(persons).hasSize(1);
 	}
@@ -193,11 +196,11 @@ public class NestedObjectTests {
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
 
-		Page<PersonMultipleLevelNested> personIndexed = elasticsearchTemplate.queryForPage(searchQuery,
+		Page<SearchHit<PersonMultipleLevelNested>> personIndexed = elasticsearchTemplate.searchForPage(searchQuery,
 				PersonMultipleLevelNested.class, index);
 		assertThat(personIndexed).isNotNull();
 		assertThat(personIndexed.getTotalElements()).isEqualTo(1);
-		assertThat(personIndexed.getContent().get(0).getId()).isEqualTo("1");
+		assertThat(personIndexed.getContent().get(0).getContent().getId()).isEqualTo("1");
 	}
 
 	private List<IndexQuery> createPerson() {
@@ -330,7 +333,7 @@ public class NestedObjectTests {
 		QueryBuilder builder = nestedQuery("books", boolQuery().must(termQuery("books.name", "java")), ScoreMode.None);
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
-		List<Person> persons = elasticsearchTemplate.queryForList(searchQuery, Person.class, index);
+		SearchHits<Person> persons = elasticsearchTemplate.search(searchQuery, Person.class, index);
 
 		// then
 		assertThat(persons).hasSize(1);
@@ -378,10 +381,10 @@ public class NestedObjectTests {
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(nestedQuery("buckets", termQuery("buckets.1", "test3"), ScoreMode.None)).build();
-		Page<Book> books = elasticsearchTemplate.queryForPage(searchQuery, Book.class, index);
+		AggregatedPage<SearchHit<Book>> books = elasticsearchTemplate.searchForPage(searchQuery, Book.class, index);
 
 		assertThat(books.getContent()).hasSize(1);
-		assertThat(books.getContent().get(0).getId()).isEqualTo(book2.getId());
+		assertThat(books.getContent().get(0).getContent().getId()).isEqualTo(book2.getId());
 	}
 
 	@Setter

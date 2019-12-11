@@ -51,9 +51,11 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
@@ -80,28 +82,31 @@ import org.springframework.test.context.ContextConfiguration;
 @ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
 public class MappingBuilderTests extends MappingContextBaseTests {
 
-	@Autowired private ElasticsearchOperations elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
 
-		elasticsearchTemplate.deleteIndex(StockPrice.class);
-		elasticsearchTemplate.deleteIndex(SimpleRecursiveEntity.class);
-		elasticsearchTemplate.deleteIndex(StockPrice.class);
-		elasticsearchTemplate.deleteIndex(SampleInheritedEntity.class);
-		elasticsearchTemplate.deleteIndex(User.class);
-		elasticsearchTemplate.deleteIndex(Group.class);
-		elasticsearchTemplate.deleteIndex(Book.class);
-		elasticsearchTemplate.deleteIndex(NormalizerEntity.class);
-		elasticsearchTemplate.deleteIndex(CopyToEntity.class);
+		indexOperations = operations.getIndexOperations();
+
+		indexOperations.deleteIndex(StockPrice.class);
+		indexOperations.deleteIndex(SimpleRecursiveEntity.class);
+		indexOperations.deleteIndex(StockPrice.class);
+		indexOperations.deleteIndex(SampleInheritedEntity.class);
+		indexOperations.deleteIndex(User.class);
+		indexOperations.deleteIndex(Group.class);
+		indexOperations.deleteIndex(Book.class);
+		indexOperations.deleteIndex(NormalizerEntity.class);
+		indexOperations.deleteIndex(CopyToEntity.class);
 	}
 
 	@Test
 	public void shouldNotFailOnCircularReference() {
 
-		elasticsearchTemplate.createIndex(SimpleRecursiveEntity.class);
-		elasticsearchTemplate.putMapping(SimpleRecursiveEntity.class);
-		elasticsearchTemplate.refresh(SimpleRecursiveEntity.class);
+		indexOperations.createIndex(SimpleRecursiveEntity.class);
+		indexOperations.putMapping(SimpleRecursiveEntity.class);
+		indexOperations.refresh(SimpleRecursiveEntity.class);
 	}
 
 	@Test // DATAES-568
@@ -134,26 +139,26 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		// Given
 
 		// When
-		elasticsearchTemplate.createIndex(StockPrice.class);
-		elasticsearchTemplate.putMapping(StockPrice.class);
+		indexOperations.createIndex(StockPrice.class);
+		indexOperations.putMapping(StockPrice.class);
 		String symbol = "AU";
 		double price = 2.34;
 		String id = "abc";
 
-		IndexCoordinates index = IndexCoordinates.of("test-index-stock-mapping-builder").withTypes( "price");
-		elasticsearchTemplate.index(buildIndex(StockPrice.builder() //
+		IndexCoordinates index = IndexCoordinates.of("test-index-stock-mapping-builder").withTypes("price");
+		operations.index(buildIndex(StockPrice.builder() //
 				.id(id) //
 				.symbol(symbol) //
 				.price(BigDecimal.valueOf(price)) //
 				.build()), index);
-		elasticsearchTemplate.refresh(StockPrice.class);
+		indexOperations.refresh(StockPrice.class);
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		List<StockPrice> result = elasticsearchTemplate.queryForList(searchQuery, StockPrice.class, index);
+		SearchHits<StockPrice> result = operations.search(searchQuery, StockPrice.class, index);
 
 		// Then
 		assertThat(result).hasSize(1);
-		StockPrice entry = result.get(0);
+		StockPrice entry = result.getSearchHit(0).getContent();
 		assertThat(entry.getSymbol()).isEqualTo(symbol);
 		assertThat(entry.getPrice()).isCloseTo(BigDecimal.valueOf(price), Percentage.withPercentage(0.01));
 	}
@@ -186,24 +191,23 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		// given
 
 		// when
-		elasticsearchTemplate.createIndex(SampleInheritedEntity.class);
-		elasticsearchTemplate.putMapping(SampleInheritedEntity.class);
+		indexOperations.createIndex(SampleInheritedEntity.class);
+		indexOperations.putMapping(SampleInheritedEntity.class);
 		Date createdDate = new Date();
 		String message = "msg";
 		String id = "abc";
-		IndexCoordinates index = IndexCoordinates.of("test-index-sample-inherited-mapping-builder").withTypes( "mapping");
-		elasticsearchTemplate.index(
-				new SampleInheritedEntityBuilder(id).createdDate(createdDate).message(message).buildIndex(),
+		IndexCoordinates index = IndexCoordinates.of("test-index-sample-inherited-mapping-builder").withTypes("mapping");
+		operations.index(new SampleInheritedEntityBuilder(id).createdDate(createdDate).message(message).buildIndex(),
 				index);
-		elasticsearchTemplate.refresh(SampleInheritedEntity.class);
+		operations.refresh(SampleInheritedEntity.class);
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		List<SampleInheritedEntity> result = elasticsearchTemplate.queryForList(searchQuery, SampleInheritedEntity.class, index);
+		SearchHits<SampleInheritedEntity> result = operations.search(searchQuery, SampleInheritedEntity.class, index);
 
 		// then
 		assertThat(result).hasSize(1);
 
-		SampleInheritedEntity entry = result.get(0);
+		SampleInheritedEntity entry = result.getSearchHit(0).getContent();
 		assertThat(entry.getCreatedDate()).isEqualTo(createdDate);
 		assertThat(entry.getMessage()).isEqualTo(message);
 	}
@@ -228,10 +232,10 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldHandleReverseRelationship() {
 
 		// given
-		elasticsearchTemplate.createIndex(User.class);
-		elasticsearchTemplate.putMapping(User.class);
-		elasticsearchTemplate.createIndex(Group.class);
-		elasticsearchTemplate.putMapping(Group.class);
+		indexOperations.createIndex(User.class);
+		indexOperations.putMapping(User.class);
+		indexOperations.createIndex(Group.class);
+		indexOperations.putMapping(Group.class);
 
 		// when
 
@@ -242,8 +246,8 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldMapBooks() {
 
 		// given
-		elasticsearchTemplate.createIndex(Book.class);
-		elasticsearchTemplate.putMapping(Book.class);
+		indexOperations.createIndex(Book.class);
+		indexOperations.putMapping(Book.class);
 
 		// when
 
@@ -254,11 +258,11 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldUseBothAnalyzer() {
 
 		// given
-		elasticsearchTemplate.createIndex(Book.class);
-		elasticsearchTemplate.putMapping(Book.class);
+		indexOperations.createIndex(Book.class);
+		indexOperations.putMapping(Book.class);
 
 		// when
-		Map mapping = elasticsearchTemplate.getMapping(Book.class);
+		Map mapping = operations.getMapping(Book.class);
 		Map descriptionMapping = (Map) ((Map) mapping.get("properties")).get("description");
 		Map prefixDescription = (Map) ((Map) descriptionMapping.get("fields")).get("prefix");
 
@@ -275,11 +279,11 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldUseKeywordNormalizer() {
 
 		// given
-		elasticsearchTemplate.createIndex(NormalizerEntity.class);
-		elasticsearchTemplate.putMapping(NormalizerEntity.class);
+		operations.createIndex(NormalizerEntity.class);
+		operations.putMapping(NormalizerEntity.class);
 
 		// when
-		Map mapping = elasticsearchTemplate.getMapping(NormalizerEntity.class);
+		Map mapping = operations.getMapping(NormalizerEntity.class);
 		Map properties = (Map) mapping.get("properties");
 		Map fieldName = (Map) properties.get("name");
 		Map fieldDescriptionLowerCase = (Map) ((Map) ((Map) properties.get("description")).get("fields")).get("lower_case");
@@ -295,11 +299,11 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldUseCopyTo() {
 
 		// given
-		elasticsearchTemplate.createIndex(CopyToEntity.class);
-		elasticsearchTemplate.putMapping(CopyToEntity.class);
+		operations.createIndex(CopyToEntity.class);
+		operations.putMapping(CopyToEntity.class);
 
 		// when
-		Map mapping = elasticsearchTemplate.getMapping(CopyToEntity.class);
+		Map mapping = operations.getMapping(CopyToEntity.class);
 		Map properties = (Map) mapping.get("properties");
 		Map fieldFirstName = (Map) properties.get("firstName");
 		Map fieldLastName = (Map) properties.get("lastName");

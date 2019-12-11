@@ -15,12 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 
@@ -42,8 +42,10 @@ public interface ReactiveSearchOperations {
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @param <T>
-	 * @return a {@link Flux} emitting matching entities one by one.
+	 * @return a {@link Flux} emitting matching entities one by one wrapped in a {@link SearchHit}.
+	 * @deprecated since 4.0, use {@link #search(Query, Class)}.
 	 */
+	@Deprecated
 	default <T> Flux<T> find(Query query, Class<T> entityType) {
 		return find(query, entityType, entityType);
 	}
@@ -58,21 +60,12 @@ public interface ReactiveSearchOperations {
 	 * @param entityType The entity type for mapping the query. Must not be {@literal null}.
 	 * @param returnType The mapping target type. Must not be {@literal null}. Th
 	 * @param <T>
-	 * @return a {@link Flux} emitting matching entities one by one.
+	 * @return a {@link Flux} emitting matching entities one by one wrapped in a {@link SearchHit}.
+	 * @deprecated since 4.0, use {@link #search(Query, Class, Class)}.
 	 */
-	 <T> Flux<T> find(Query query, Class<?> entityType, Class<T> returnType);
-
-	/**
-	 * Search the index for entities matching the given {@link Query query}.
-	 *
-	 * @param query must not be {@literal null}.
-	 * @param entityType must not be {@literal null}.
-	 * @param index the target index, must not be {@literal null}
-	 * @param <T>
-	 * @returnm a {@link Flux} emitting matching entities one by one.
-	 */
-	default <T> Flux<T> find(Query query, Class<T> entityType, IndexCoordinates index) {
-		return find(query, entityType, entityType, index);
+	@Deprecated
+	default <T> Flux<T> find(Query query, Class<?> entityType, Class<T> returnType) {
+		return search(query, entityType, returnType).map(SearchHit::getContent);
 	}
 
 	/**
@@ -80,12 +73,32 @@ public interface ReactiveSearchOperations {
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
+	 * @param index the target index, must not be {@literal null}
+	 * @param <T>
+	 * @return a {@link Flux} emitting matching entities one by one wrapped in a {@link SearchHit}.
+	 * @deprecated since 4.0, use {@link #search(Query, Class, IndexCoordinates)}
+	 */
+	@Deprecated
+	default <T> Flux<T> find(Query query, Class<T> entityType, IndexCoordinates index) {
+		return find(query, entityType, entityType, index);
+	}
+
+	/**
+	 * Search the index for entities matching the given {@link Query query}.
+	 *
+	 * @param <T>
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
 	 * @param resultType the projection result type.
 	 * @param index the target index, must not be {@literal null}
 	 * @param <T>
-	 * @return a {@link Flux} emitting matching entities one by one.
+	 * @return a {@link Flux} emitting matching entities one by one wrapped in a {@link SearchHit}.
+	 * @deprecated since 4.0, use {@link #search(Query, Class, Class, IndexCoordinates)}.
 	 */
-	<T> Flux<T> find(Query query, Class<?> entityType, Class<T> resultType, IndexCoordinates index);
+	@Deprecated
+	default <T> Flux<T> find(Query query, Class<?> entityType, Class<T> resultType, IndexCoordinates index) {
+		return search(query, entityType, resultType, index).map(SearchHit::getContent);
+	}
 
 	/**
 	 * Count the number of documents matching the given {@link Query}.
@@ -116,4 +129,58 @@ public interface ReactiveSearchOperations {
 	 */
 	Mono<Long> count(Query query, Class<?> entityType, IndexCoordinates index);
 
+	/**
+	 * Search the index for entities matching the given {@link Query query}. <br />
+	 * {@link Pageable#isUnpaged() Unpaged} queries may overrule elasticsearch server defaults for page size by either *
+	 * delegating to the scroll API or using a max {@link org.elasticsearch.search.builder.SearchSourceBuilder#size(int) *
+	 * size}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType The entity type for mapping the query. Must not be {@literal null}.
+	 * @param returnType The mapping target type. Must not be {@literal null}. Th
+	 * @param <T>
+	 * @return a {@link Flux} emitting matching entities one by one wrapped in a {@link SearchHit}.
+	 */
+	<T> Flux<SearchHit<T>> search(Query query, Class<?> entityType, Class<T> returnType);
+
+	/**
+	 * Search the index for entities matching the given {@link Query query}. <br />
+	 * {@link Pageable#isUnpaged() Unpaged} queries may overrule elasticsearch server defaults for page size by either
+	 * delegating to the scroll API or using a max {@link org.elasticsearch.search.builder.SearchSourceBuilder#size(int)
+	 * size}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param <T>
+	 * @return a {@link Flux} emitting matching entities one by one wrapped in a {@link SearchHit}.
+	 */
+	default <T> Flux<SearchHit<T>> search(Query query, Class<T> entityType) {
+		return search(query, entityType, entityType);
+	}
+
+	/**
+	 * Search the index for entities matching the given {@link Query query}.
+	 *
+	 * @param <T>
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param resultType the projection result type.
+	 * @param index the target index, must not be {@literal null}
+	 * @param <T>
+	 * @return a {@link Flux} emitting matching entities one by one wrapped in a {@link SearchHit}.
+	 */
+	<T> Flux<SearchHit<T>> search(Query query, Class<?> entityType, Class<T> resultType, IndexCoordinates index);
+
+	/**
+	 * Search the index for entities matching the given {@link Query query}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param index the target index, must not be {@literal null}
+	 * @param <T>
+	 * @return a {@link Flux} emitting matching entities one by one wrapped in a {@link SearchHit}.
+	 */
+	default <T> Flux<SearchHit<T>> search(Query query, Class<T> entityType, IndexCoordinates index) {
+		return search(query, entityType, entityType, index);
+	}
 }

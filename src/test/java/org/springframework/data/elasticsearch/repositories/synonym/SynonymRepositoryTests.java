@@ -19,8 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import lombok.Data;
 
-import java.util.List;
-
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +30,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
@@ -77,12 +76,11 @@ public class SynonymRepositoryTests {
 		repository.save(entry1);
 		repository.save(entry2);
 
-		// when
-
+		// whe
 		// then
 		assertThat(repository.count()).isEqualTo(2L);
 
-		List<SynonymEntity> synonymEntities = operations.queryForList(
+		SearchHits<SynonymEntity> synonymEntities = operations.search(
 				new NativeSearchQueryBuilder().withQuery(QueryBuilders.termQuery("text", "british")).build(),
 				SynonymEntity.class, IndexCoordinates.of("test-index-synonym").withTypes("synonym-type"));
 		assertThat(synonymEntities).hasSize(1);
