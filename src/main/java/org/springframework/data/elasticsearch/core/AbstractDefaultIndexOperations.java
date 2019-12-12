@@ -20,7 +20,9 @@ import static org.springframework.util.StringUtils.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.common.collect.MapBuilder;
+import org.elasticsearch.common.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.ElasticsearchException;
@@ -36,6 +38,7 @@ import org.springframework.util.StringUtils;
  * Base implementation of {@link IndexOperations} common to Transport and Rest based Implementations of IndexOperations.
  * 
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  * @since 4.0
  */
 abstract class AbstractDefaultIndexOperations implements IndexOperations {
@@ -112,8 +115,13 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
-	public Map<String, Object> getSetting(Class<?> clazz) {
-		return getSetting(getRequiredPersistentEntity(clazz).getIndexCoordinates().getIndexName());
+	public Map<String, Object> getSettings(Class<?> clazz) {
+		return getSettings(clazz, false);
+	}
+
+	@Override
+	public Map<String, Object> getSettings(Class<?> clazz, boolean includeDefaults) {
+		return getSettings(getRequiredPersistentEntity(clazz).getIndexCoordinates().getIndexName(), includeDefaults);
 	}
 
 	@Override
@@ -165,6 +173,27 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 	public IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {
 		return getRequiredPersistentEntity(clazz).getIndexCoordinates();
+	}
+
+	protected Map<String, Object> convertSettingsResponseToMap(GetSettingsResponse response, String indexName) {
+
+		Map<String, Object> settings = new HashMap<>();
+
+		if (!response.getIndexToDefaultSettings().isEmpty()) {
+			Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);
+			for (String key : defaultSettings.keySet()) {
+				settings.put(key, defaultSettings.get(key));
+			}
+		}
+
+		if (!response.getIndexToSettings().isEmpty()) {
+			Settings customSettings = response.getIndexToSettings().get(indexName);
+			for (String key : customSettings.keySet()) {
+				settings.put(key, customSettings.get(key));
+			}
+		}
+
+		return settings;
 	}
 	// endregion
 

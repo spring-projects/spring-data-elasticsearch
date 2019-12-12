@@ -269,11 +269,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 *
 	 * @param indexName the name of the index
 	 * @return the settings
-	 * @deprecated since 4.0, use {@link IndexOperations#getSetting(String)} )} instead}
+	 * @deprecated since 4.0, use {@link IndexOperations#getSettings(String)} )} instead}
 	 */
 	@Deprecated
 	default Map<String, Object> getSetting(String indexName) {
-		return getIndexOperations().getSetting(indexName);
+		return getIndexOperations().getSettings(indexName);
 	}
 
 	/**
@@ -282,11 +282,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @param clazz The entity class, must be annotated with
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @return the settings
-	 * @deprecated since 4.0, use {@link IndexOperations#getSetting(Class)} instead}
+	 * @deprecated since 4.0, use {@link IndexOperations#getSettings(Class)} instead}
 	 */
 	@Deprecated
 	default Map<String, Object> getSetting(Class<?> clazz) {
-		return getIndexOperations().getSetting(clazz);
+		return getIndexOperations().getSettings(clazz);
 	}
 
 	/**
