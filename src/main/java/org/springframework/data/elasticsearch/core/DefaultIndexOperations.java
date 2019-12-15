@@ -23,13 +23,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Response;
@@ -37,10 +38,6 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.xcontent.DeprecationHandler;
-import org.elasticsearch.common.xcontent.NamedXContentRegistry;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.client.support.AliasData;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -56,6 +53,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * {@link IndexOperations} implementation using the RestClient.
  * 
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  * @since 4.0
  */
 class DefaultIndexOperations extends AbstractDefaultIndexOperations implements IndexOperations {
@@ -176,21 +174,27 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public Map getSetting(String indexName) {
+	public Map<String, Object> getSettings(String indexName) {
+		return getSettings(indexName, false);
+	}
+
+	@Override
+	public Map<String, Object> getSettings(String indexName, boolean includeDefaults) {
 
 		Assert.notNull(indexName, "No index defined for getSettings");
 
-		ObjectMapper objMapper = new ObjectMapper();
-		Map settings = null;
-		RestClient restClient = client.getLowLevelClient();
-		try {
-			Response response = restClient.performRequest(new Request("GET", "/" + indexName + "/_settings"));
-			settings = convertSettingResponse(EntityUtils.toString(response.getEntity()), indexName);
+		GetSettingsRequest request = new GetSettingsRequest() //
+				.indices(indexName) //
+				.includeDefaults(includeDefaults);
 
-		} catch (Exception e) {
-			throw new ElasticsearchException("Error while getting settings for indexName : " + indexName, e);
+		try {
+			GetSettingsResponse response = client.indices() //
+					.getSettings(request, RequestOptions.DEFAULT);
+
+			return convertSettingsResponseToMap(response, indexName);
+		} catch (IOException e) {
+			throw new ElasticsearchException("failed to get settings for index: " + indexName, e);
 		}
-		return settings;
 	}
 
 	@Override
@@ -258,24 +262,5 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 		}
 	}
 
-	private Map<String, String> convertSettingResponse(String settingResponse, String indexName) {
-		ObjectMapper mapper = new ObjectMapper();
-
-		try {
-			Settings settings = Settings.fromXContent(XContentType.JSON.xContent().createParser(NamedXContentRegistry.EMPTY,
-					DeprecationHandler.THROW_UNSUPPORTED_OPERATION, settingResponse));
-			String prefix = indexName + ".settings.";
-			// Backwards compatibility. TODO Change to return Settings object.
-			Map<String, String> result = new HashMap<String, String>();
-			Set<String> keySet = settings.keySet();
-			for (String key : keySet) {
-				result.put(key.substring(prefix.length()), settings.get(key));
-			}
-			return result;
-		} catch (IOException e) {
-			throw new ElasticsearchException("Could not map alias response : " + settingResponse, e);
-		}
-
-	}
 	// endregion
 }

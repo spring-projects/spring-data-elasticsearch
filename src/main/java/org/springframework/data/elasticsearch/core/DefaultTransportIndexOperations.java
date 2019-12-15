@@ -19,7 +19,6 @@ import static org.elasticsearch.client.Requests.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
@@ -28,9 +27,9 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
-import org.elasticsearch.common.settings.Settings;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -41,6 +40,7 @@ import org.springframework.util.Assert;
  * {@link IndexOperations} implementation using the TransportClient.
  *
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  * @since 4.0
  */
 class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations implements IndexOperations {
@@ -122,13 +122,25 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	public Map<String, Object> getSetting(String indexName) {
+	public Map<String, Object> getSettings(String indexName) {
+		return getSettings(indexName, false);
+	}
+
+	@Override
+	public Map<String, Object> getSettings(String indexName, boolean includeDefaults) {
 
 		Assert.notNull(indexName, "No index defined for getSettings");
 
-		Settings settings = client.admin().indices().getSettings(new GetSettingsRequest()).actionGet().getIndexToSettings()
-				.get(indexName);
-		return settings.keySet().stream().collect(Collectors.toMap((key) -> key, (key) -> settings.get(key)));
+		GetSettingsRequest request = new GetSettingsRequest() //
+				.indices(indexName) //
+				.includeDefaults(includeDefaults);
+
+		GetSettingsResponse response = client.admin() //
+				.indices() //
+				.getSettings(request) //
+				.actionGet();
+
+		return convertSettingsResponseToMap(response, indexName);
 	}
 
 	@Override
@@ -138,4 +150,5 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 		client.admin().indices().refresh(refreshRequest(index.getIndexNames())).actionGet();
 	}
+
 }

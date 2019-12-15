@@ -27,6 +27,7 @@ import org.springframework.data.elasticsearch.core.query.AliasQuery;
  * <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices.html">Elasticsearch Index APIs</a>.
  *
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  * @since 4.0
  */
 public interface IndexOperations {
@@ -188,7 +189,16 @@ public interface IndexOperations {
 	 * @param indexName the name of the index
 	 * @return the settings
 	 */
-	Map<String, Object> getSetting(String indexName);
+	Map<String, Object> getSettings(String indexName);
+
+	/**
+	 * Get settings for a given indexName.
+	 *
+	 * @param indexName the name of the index
+	 * @param includeDefaults whether or not to include all the default settings
+	 * @return the settings
+	 */
+	Map<String, Object> getSettings(String indexName, boolean includeDefaults);
 
 	/**
 	 * Get settings for a given class.
@@ -197,7 +207,17 @@ public interface IndexOperations {
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @return the settings
 	 */
-	Map<String, Object> getSetting(Class<?> clazz);
+	Map<String, Object> getSettings(Class<?> clazz);
+
+	/**
+	 * Get settings for a given class.
+	 *
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @param includeDefaults whether or not to include all the default settings
+	 * @return the settings
+	 */
+	Map<String, Object> getSettings(Class<?> clazz, boolean includeDefaults);
 
 	/**
 	 * Refresh the index(es).
