@@ -57,7 +57,7 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 
 	public static class TestNode extends Node {
 
-		private static final String DEFAULT_NODE_NAME = "spring-data-elasticsearch-test-node";
+		private static final String DEFAULT_NODE_NAME = "spring-data-elasticsearch-nodeclientfactorybean-test";
 
 		public TestNode(Settings preparedSettings, Collection<Class<? extends Plugin>> classpathPlugins) {
 
@@ -151,13 +151,12 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 	public void destroy() throws Exception {
 		try {
 			// NodeClient.close() is a noop, no need to call it here
+			nodeClient = null;
 			logger.info("Closing elasticSearch node");
-			// closing the Node causes tests to fail in the pipeline build and on some
-			// "mvn test" runs, there seem still to be tests relying on a running instance that
-			// is not properly set up.
-//			if (node != null) {
-//				node.close();
-//			}
+			if (node != null) {
+				node.close();
+				node = null;
+			}
 		} catch (final Exception e) {
 			logger.error("Error closing ElasticSearch client: ", e);
 		}
