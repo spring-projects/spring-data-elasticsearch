@@ -142,7 +142,7 @@ public class DocumentAdapters {
 		BytesReference sourceRef = source.getSourceRef();
 
 		if (sourceRef == null || sourceRef.length() == 0) {
-			return new SearchDocumentAdapter(source.getScore(), source.getFields(),
+			return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(),
 					fromDocumentFields(source, source.getId(), source.getVersion()));
 		}
 
@@ -153,7 +153,7 @@ public class DocumentAdapters {
 			document.setVersion(source.getVersion());
 		}
 
-		return new SearchDocumentAdapter(source.getScore(), source.getFields(), document);
+		return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(), document);
 	}
 
 	/**
@@ -438,11 +438,13 @@ public class DocumentAdapters {
 	static class SearchDocumentAdapter implements SearchDocument {
 
 		private final float score;
+		private final Object[] sortValues;
 		private final Map<String, List<Object>> fields = new HashMap<>();
 		private final Document delegate;
 
-		SearchDocumentAdapter(float score, Map<String, DocumentField> fields, Document delegate) {
+		SearchDocumentAdapter(float score, Object[] sortValues, Map<String, DocumentField> fields, Document delegate) {
 			this.score = score;
+			this.sortValues = sortValues;
 			this.delegate = delegate;
 			fields.forEach((name, documentField) -> this.fields.put(name, documentField.getValues()));
 		}
@@ -474,6 +476,15 @@ public class DocumentAdapters {
 		@Override
 		public Map<String, List<Object>> getFields() {
 			return fields;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.document.SearchDocument#getSortValues()
+		 */
+		@Override
+		public Object[] getSortValues() {
+			return sortValues;
 		}
 
 		/*

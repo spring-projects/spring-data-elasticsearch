@@ -18,6 +18,8 @@ package org.springframework.data.elasticsearch.core.document;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.lang.Nullable;
+
 /**
  * Extension to {@link Document} exposing a search response related data.
  *
@@ -45,11 +47,20 @@ public interface SearchDocument extends Document {
 	 * 
 	 * @param name the field name
 	 */
+	@Nullable
 	default <V> V getFieldValue(final String name) {
 		List<Object> values = getFields().get(name);
 		if (values == null || values.isEmpty()) {
 			return null;
 		}
 		return (V) values.get(0);
+	}
+
+	/**
+	 * @return the sort values for the search hit
+	 */
+	@Nullable
+	default Object[] getSortValues() {
+		return null;
 	}
 }

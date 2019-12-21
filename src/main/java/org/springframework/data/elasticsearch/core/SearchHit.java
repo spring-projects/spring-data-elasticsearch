@@ -15,6 +15,11 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.lang.Nullable;
 
 /**
@@ -28,11 +33,13 @@ public class SearchHit<T> {
 
 	private final String id;
 	private final float score;
+	private final List<Object> sortValues;
 	private final T content;
 
-	public SearchHit(@Nullable String id, float score, T content) {
+	public SearchHit(@Nullable String id, float score, Object[] sortValues, T content) {
 		this.id = id;
 		this.score = score;
+		this.sortValues = (sortValues != null) ? Arrays.asList(sortValues) : new ArrayList<>();
 		this.content = content;
 	}
 
@@ -55,12 +62,16 @@ public class SearchHit<T> {
 		return content;
 	}
 
+	/**
+	 * @return the sort values if the query had a sort criterion.
+	 */
+	public List<Object> getSortValues() {
+		return Collections.unmodifiableList(sortValues);
+	}
+
 	@Override
 	public String toString() {
-		return "SearchHit{" +
-				"id='" + id + '\'' +
-				", score=" + score +
-				", content=" + content +
-				'}';
+		return "SearchHit{" + "id='" + id + '\'' + ", score=" + score + ", sortValues=" + sortValues + ", content="
+				+ content + '}';
 	}
 }

@@ -128,6 +128,9 @@ public abstract class ElasticsearchTemplateTests {
 
 		indexOperations.createIndex(SampleEntityUUIDKeyed.class);
 		indexOperations.putMapping(SampleEntityUUIDKeyed.class);
+
+		indexOperations.createIndex(SearchHitsEntity.class);
+		indexOperations.putMapping(SearchHitsEntity.class);
 	}
 
 	@AfterEach
@@ -146,6 +149,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.deleteIndex(INDEX_1_NAME);
 		indexOperations.deleteIndex(INDEX_2_NAME);
 		indexOperations.deleteIndex(INDEX_3_NAME);
+		indexOperations.deleteIndex(SearchHitsEntity.class);
 	}
 
 	@Test // DATAES-106
@@ -2856,6 +2860,41 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(map).containsKey("index.max_result_window");
 	}
 
+	@Test // DATAES-714
+	void shouldReturnSortFieldsInSearchHits() {
+		IndexCoordinates index = IndexCoordinates.of("test-index-searchhits-entity-template");
+		SearchHitsEntity entity = SearchHitsEntity.builder().id("1").number(1000L).keyword("thousands").build();
+		IndexQuery indexQuery = new IndexQueryBuilder().withId(entity.getId()).withObject(entity).build();
+		operations.index(indexQuery, index);
+		indexOperations.refresh(index);
+
+		NativeSearchQuery query = new NativeSearchQueryBuilder() //
+				.withQuery(matchAllQuery()) //
+				.withSort(new FieldSortBuilder("keyword").order(SortOrder.ASC))
+				.withSort(new FieldSortBuilder("number").order(SortOrder.DESC)).build();
+
+		SearchHits<SearchHitsEntity> searchHits = operations.search(query, SearchHitsEntity.class, index);
+
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.getSearchHits()).hasSize(1);
+
+		SearchHit<SearchHitsEntity> searchHit = searchHits.getSearchHit(0);
+		List<Object> sortValues = searchHit.getSortValues();
+		assertThat(sortValues).hasSize(2);
+		assertThat(sortValues.get(0)).isInstanceOf(String.class).isEqualTo("thousands");
+		// transport client returns Long, rest client Integer
+		java.lang.Object o = sortValues.get(1);
+		if (o instanceof Integer) {
+			Integer i = (Integer) o;
+			assertThat(o).isInstanceOf(Integer.class).isEqualTo(1000);
+		} else if (o instanceof Long) {
+			Long l = (Long) o;
+			assertThat(o).isInstanceOf(Long.class).isEqualTo(1000L);
+		} else {
+			fail("unexpected object type " + o);
+		}
+	}
+
 	protected RequestFactory getRequestFactory() {
 		return ((AbstractElasticsearchTemplate) operations).getRequestFactory();
 	}
@@ -3005,6 +3044,16 @@ public abstract class ElasticsearchTemplateTests {
 				this.someField = someField;
 			}
 		}
+	}
+
+	@Data
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-searchhits-entity-template")
+	static class SearchHitsEntity {
+		@Id private String id;
+		@Field(type = FieldType.Long) Long number;
+		@Field(type = FieldType.Keyword) String keyword;
 	}
 
 }
