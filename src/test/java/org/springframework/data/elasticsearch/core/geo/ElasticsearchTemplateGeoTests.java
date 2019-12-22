@@ -39,6 +39,8 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
@@ -139,12 +141,12 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("location").within(new GeoPoint(45.7806d, 3.0875d), "20km"));
 
 		// when
-		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria = operations.queryForList(geoLocationCriteriaQuery,
+		SearchHits<AuthorMarkerEntity> geoAuthorsForGeoCriteria = operations.search(geoLocationCriteriaQuery,
 				AuthorMarkerEntity.class, authorMarkerIndex);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria).hasSize(1);
-		assertThat(geoAuthorsForGeoCriteria.get(0).getName()).isEqualTo("Franck Marchand");
+		assertThat(geoAuthorsForGeoCriteria.getSearchHit(0).getContent().getName()).isEqualTo("Franck Marchand");
 	}
 
 	@Test
@@ -156,12 +158,12 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("name").is("Mohsin Husen").and("location").within(new GeoPoint(51.5171d, 0.1062d), "20km"));
 
 		// when
-		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria2 = operations.queryForList(geoLocationCriteriaQuery2,
+		SearchHits<AuthorMarkerEntity> geoAuthorsForGeoCriteria2 = operations.search(geoLocationCriteriaQuery2,
 				AuthorMarkerEntity.class, authorMarkerIndex);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria2).hasSize(1);
-		assertThat(geoAuthorsForGeoCriteria2.get(0).getName()).isEqualTo("Mohsin Husen");
+		assertThat(geoAuthorsForGeoCriteria2.getSearchHit(0).getContent().getName()).isEqualTo("Mohsin Husen");
 	}
 
 	@Test
@@ -172,7 +174,7 @@ public class ElasticsearchTemplateGeoTests {
 		CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(
 				new Criteria("locationAsString").within(new GeoPoint(51.000000, 0.100000), "1km"));
 		// when
-		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.queryForList(geoLocationCriteriaQuery,
+		SearchHits<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.search(geoLocationCriteriaQuery,
 				LocationMarkerEntity.class, locationMarkerIndex);
 
 		// then
@@ -188,7 +190,7 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("locationAsArray").within(new GeoPoint(51.001000, 0.10100), "1km"));
 
 		// when
-		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.queryForList(geoLocationCriteriaQuery,
+		SearchHits<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.search(geoLocationCriteriaQuery,
 				LocationMarkerEntity.class, locationMarkerIndex);
 
 		// then
@@ -203,7 +205,7 @@ public class ElasticsearchTemplateGeoTests {
 		CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(
 				new Criteria("locationAsArray").within("51.001000, 0.10100", "1km"));
 		// when
-		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.queryForList(geoLocationCriteriaQuery,
+		SearchHits<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.search(geoLocationCriteriaQuery,
 				LocationMarkerEntity.class, locationMarkerIndex);
 
 		// then
@@ -218,7 +220,7 @@ public class ElasticsearchTemplateGeoTests {
 		CriteriaQuery geoLocationCriteriaQuery = new CriteriaQuery(new Criteria("locationAsArray").within("u1044", "3km"));
 
 		// when
-		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.queryForList(geoLocationCriteriaQuery,
+		SearchHits<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.search(geoLocationCriteriaQuery,
 				LocationMarkerEntity.class, locationMarkerIndex);
 
 		// then
@@ -234,7 +236,7 @@ public class ElasticsearchTemplateGeoTests {
 				.withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsArray").setCorners(52, -1, 50, 1));
 
 		// when
-		List<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.queryForList(queryBuilder.build(),
+		SearchHits<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.search(queryBuilder.build(),
 				LocationMarkerEntity.class, locationMarkerIndex);
 
 		// then
@@ -250,12 +252,12 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("location").boundedBy(new GeoBox(new GeoPoint(53.5171d, 0), new GeoPoint(49.5171d, 0.2062d))));
 
 		// when
-		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.queryForList(geoLocationCriteriaQuery3,
+		SearchHits<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.search(geoLocationCriteriaQuery3,
 				AuthorMarkerEntity.class, authorMarkerIndex);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria3).hasSize(2);
-		assertThat(geoAuthorsForGeoCriteria3.stream().map(AuthorMarkerEntity::getName))
+		assertThat(geoAuthorsForGeoCriteria3.stream().map(SearchHit::getContent).map(AuthorMarkerEntity::getName))
 				.containsExactlyInAnyOrder("Mohsin Husen", "Rizwan Idrees");
 	}
 
@@ -268,12 +270,12 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("location").boundedBy(Geohash.stringEncode(0, 53.5171d), Geohash.stringEncode(0.2062d, 49.5171d)));
 
 		// when
-		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.queryForList(geoLocationCriteriaQuery3,
+		SearchHits<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.search(geoLocationCriteriaQuery3,
 				AuthorMarkerEntity.class, authorMarkerIndex);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria3).hasSize(2);
-		assertThat(geoAuthorsForGeoCriteria3.stream().map(AuthorMarkerEntity::getName))
+		assertThat(geoAuthorsForGeoCriteria3.stream().map(SearchHit::getContent).map(AuthorMarkerEntity::getName))
 				.containsExactlyInAnyOrder("Mohsin Husen", "Rizwan Idrees");
 	}
 
@@ -286,12 +288,12 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("location").boundedBy(new GeoPoint(53.5171d, 0), new GeoPoint(49.5171d, 0.2062d)));
 
 		// when
-		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.queryForList(geoLocationCriteriaQuery3,
+		SearchHits<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.search(geoLocationCriteriaQuery3,
 				AuthorMarkerEntity.class, authorMarkerIndex);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria3).hasSize(2);
-		assertThat(geoAuthorsForGeoCriteria3.stream().map(AuthorMarkerEntity::getName))
+		assertThat(geoAuthorsForGeoCriteria3.stream().map(SearchHit::getContent).map(AuthorMarkerEntity::getName))
 				.containsExactlyInAnyOrder("Mohsin Husen", "Rizwan Idrees");
 	}
 
@@ -304,12 +306,12 @@ public class ElasticsearchTemplateGeoTests {
 				new Criteria("location").boundedBy(new Point(53.5171d, 0), new Point(49.5171d, 0.2062d)));
 
 		// when
-		List<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.queryForList(geoLocationCriteriaQuery3,
+		SearchHits<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.search(geoLocationCriteriaQuery3,
 				AuthorMarkerEntity.class, authorMarkerIndex);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria3).hasSize(2);
-		assertThat(geoAuthorsForGeoCriteria3.stream().map(AuthorMarkerEntity::getName))
+		assertThat(geoAuthorsForGeoCriteria3.stream().map(SearchHit::getContent).map(AuthorMarkerEntity::getName))
 				.containsExactlyInAnyOrder("Mohsin Husen", "Rizwan Idrees");
 	}
 
@@ -332,17 +334,17 @@ public class ElasticsearchTemplateGeoTests {
 				.withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsGeoHash").setCorners("u10j46mkfek"));
 
 		// when
-		List<LocationMarkerEntity> result1 = operations.queryForList(location1.build(), LocationMarkerEntity.class,
+		SearchHits<LocationMarkerEntity> result1 = operations.search(location1.build(), LocationMarkerEntity.class,
 				locationMarkerIndex);
-		List<LocationMarkerEntity> result2 = operations.queryForList(location2.build(), LocationMarkerEntity.class,
+		SearchHits<LocationMarkerEntity> result2 = operations.search(location2.build(), LocationMarkerEntity.class,
 				locationMarkerIndex);
-		List<LocationMarkerEntity> result3 = operations.queryForList(location3.build(), LocationMarkerEntity.class,
+		SearchHits<LocationMarkerEntity> result3 = operations.search(location3.build(), LocationMarkerEntity.class,
 				locationMarkerIndex);
-		List<LocationMarkerEntity> result4 = operations.queryForList(location4.build(), LocationMarkerEntity.class,
+		SearchHits<LocationMarkerEntity> result4 = operations.search(location4.build(), LocationMarkerEntity.class,
 				locationMarkerIndex);
-		List<LocationMarkerEntity> result5 = operations.queryForList(location5.build(), LocationMarkerEntity.class,
+		SearchHits<LocationMarkerEntity> result5 = operations.search(location5.build(), LocationMarkerEntity.class,
 				locationMarkerIndex);
-		List<LocationMarkerEntity> result11 = operations.queryForList(location11.build(), LocationMarkerEntity.class,
+		SearchHits<LocationMarkerEntity> result11 = operations.search(location11.build(), LocationMarkerEntity.class,
 				locationMarkerIndex);
 
 		// then

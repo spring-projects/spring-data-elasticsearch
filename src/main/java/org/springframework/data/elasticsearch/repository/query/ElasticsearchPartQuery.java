@@ -17,14 +17,14 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.repository.query.parser.ElasticsearchQueryCreator;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -54,24 +54,24 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 
 	@Override
 	public Object execute(Object[] parameters) {
-
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
 		CriteriaQuery query = createQuery(accessor);
 		Assert.notNull(query, "unsupported query");
 		Class<?> clazz = queryMethod.getEntityInformation().getJavaType();
 		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
 
+		Object result = null;
+
 		if (tree.isLimiting()) {
 			query.setMaxResults(tree.getMaxResults());
 		}
 
 		if (tree.isDelete()) {
-			Object result = countOrGetDocumentsForDelete(query, accessor);
+			result = countOrGetDocumentsForDelete(query, accessor);
 			elasticsearchOperations.delete(query, clazz, index);
-			return result;
 		} else if (queryMethod.isPageQuery()) {
 			query.setPageable(accessor.getPageable());
-			return elasticsearchOperations.queryForPage(query, clazz, index);
+			result = elasticsearchOperations.searchForPage(query, clazz, index);
 		} else if (queryMethod.isStreamQuery()) {
 			Class<?> entityType = clazz;
 			if (accessor.getPageable().isUnpaged()) {
@@ -79,44 +79,41 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 			} else {
 				query.setPageable(accessor.getPageable());
 			}
-			return StreamUtils
-					.createStreamFromIterator((CloseableIterator<Object>) elasticsearchOperations.stream(query, entityType, index));
+			result = StreamUtils.createStreamFromIterator(elasticsearchOperations.stream(query, entityType, index));
 		} else if (queryMethod.isCollectionQuery()) {
 
 			if (accessor.getPageable().isUnpaged()) {
-
-				int itemCount = (int) elasticsearchOperations.count(query, clazz,
-						index);
+				int itemCount = (int) elasticsearchOperations.count(query, clazz, index);
 				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 			} else {
 				query.setPageable(accessor.getPageable());
 			}
 
-			return elasticsearchOperations.queryForList(query, clazz, index);
+			result = elasticsearchOperations.search(query, clazz, index);
 		} else if (tree.isCountProjection()) {
-			return elasticsearchOperations.count(query, clazz, index);
+			result = elasticsearchOperations.count(query, clazz, index);
+		} else {
+			result = elasticsearchOperations.searchOne(query, clazz, index);
 		}
 
-		return elasticsearchOperations.queryForObject(query, clazz, index);
+		return SearchHitSupport.unwrapSearchHits(result);
 	}
 
 	private Object countOrGetDocumentsForDelete(CriteriaQuery query, ParametersParameterAccessor accessor) {
 
 		Object result = null;
 		Class<?> clazz = queryMethod.getEntityInformation().getJavaType();
-		IndexCoordinates index = elasticsearchOperations
-				.getIndexCoordinatesFor(clazz);
+		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
 
 		if (queryMethod.isCollectionQuery()) {
 
 			if (accessor.getPageable().isUnpaged()) {
-				int itemCount = (int) elasticsearchOperations.count(query, clazz,
-						index);
+				int itemCount = (int) elasticsearchOperations.count(query, clazz, index);
 				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 			} else {
 				query.setPageable(accessor.getPageable());
 			}
-			result = elasticsearchOperations.queryForList(query, clazz, index);
+			result = elasticsearchOperations.search(query, clazz, index);
 		}
 
 		if (ClassUtils.isAssignable(Number.class, queryMethod.getReturnedObjectType())) {

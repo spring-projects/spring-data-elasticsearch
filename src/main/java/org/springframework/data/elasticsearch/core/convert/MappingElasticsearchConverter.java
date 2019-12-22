@@ -17,17 +17,8 @@ package org.springframework.data.elasticsearch.core.convert;
 
 import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeansException;
@@ -44,6 +35,7 @@ import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -588,7 +580,11 @@ public class MappingElasticsearchConverter
 
 	@Override
 	@Nullable
-	public <T> T mapDocument(Document document, Class<T> type) {
+	public <T> T mapDocument(@Nullable Document document, Class<T> type) {
+
+		if (document == null) {
+			return null;
+		}
 
 		Object mappedResult = read(type, document);
 
@@ -599,6 +595,15 @@ public class MappingElasticsearchConverter
 		return type.isInterface() || !ClassUtils.isAssignableValue(type, mappedResult)
 				? getProjectionFactory().createProjection(type, mappedResult)
 				: type.cast(mappedResult);
+	}
+
+	@Override
+	public <T> SearchHit<T> read(Class<T> type, SearchDocument searchDocument) {
+		String id = searchDocument.hasId() ? searchDocument.getId() : null;
+		float score = searchDocument.getScore();
+		T content = mapDocument(searchDocument, type);
+
+		return new SearchHit<T>(id, score, content);
 	}
 
 	@Override
@@ -697,12 +702,14 @@ public class MappingElasticsearchConverter
 	}
 
 	@Override
-	public <T> AggregatedPage<T> mapResults(SearchDocumentResponse response, Class<T> type, Pageable pageable) {
+	public <T> AggregatedPage<SearchHit<T>> mapResults(SearchDocumentResponse response, Class<T> type,
+			Pageable pageable) {
 
-		List<T> results = response.getSearchDocuments().stream() //
-				.map(searchDocument -> mapDocument(searchDocument, type)).collect(Collectors.toList());
+		List<SearchHit<T>> results = response.getSearchDocuments().stream() //
+				.map(searchDocument -> read(type, searchDocument)) //
+				.collect(Collectors.toList());
 
-		return new AggregatedPageImpl<T>(results, pageable, response);
+		return new AggregatedPageImpl<>(results, pageable, response);
 	}
 
 	private <T> void populateScriptFields(T result, SearchDocument searchDocument) {

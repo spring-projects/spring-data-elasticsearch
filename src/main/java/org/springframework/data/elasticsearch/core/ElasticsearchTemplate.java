@@ -203,21 +203,15 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> AggregatedPage<T> queryForPage(Query query, Class<T> clazz, IndexCoordinates index) {
+	public <T> AggregatedPage<SearchHit<T>> searchForPage(Query query, Class<T> clazz, IndexCoordinates index) {
 		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, clazz, index);
 		SearchResponse response = getSearchResponse(searchRequestBuilder);
 		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, query.getPageable());
 	}
 
 	@Override
-	public List<String> queryForIds(Query query, Class<?> clazz, IndexCoordinates index) {
-		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, clazz, index);
-		SearchResponse response = getSearchResponse(searchRequestBuilder);
-		return extractIds(response);
-	}
-
-	@Override
-	public <T> ScrolledPage<T> startScroll(long scrollTimeInMillis, Query query, Class<T> clazz, IndexCoordinates index) {
+	public <T> ScrolledPage<SearchHit<T>> searchScrollStart(long scrollTimeInMillis, Query query, Class<T> clazz,
+			IndexCoordinates index) {
 		Assert.notNull(query.getPageable(), "Query.pageable is required for scan & scroll");
 
 		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, clazz, index);
@@ -227,14 +221,15 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz) {
+	public <T> ScrolledPage<SearchHit<T>> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
+			Class<T> clazz) {
 		SearchResponse response = getSearchResponseWithTimeout(
 				client.prepareSearchScroll(scrollId).setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
 		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, Pageable.unpaged());
 	}
 
 	@Override
-	public void clearScroll(String scrollId) {
+	public void searchScrollClear(String scrollId) {
 		client.prepareClearScroll().addScrollId(scrollId).execute().actionGet();
 	}
 

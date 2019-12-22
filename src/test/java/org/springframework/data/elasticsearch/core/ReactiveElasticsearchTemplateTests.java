@@ -24,7 +24,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -54,6 +53,7 @@ import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -137,7 +137,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		restTemplate.refresh(SampleEntity.class);
 
-		List<SampleEntity> result = restTemplate.queryForList(
+		SearchHits<SampleEntity> result = restTemplate.search(
 				new CriteriaQuery(Criteria.where("message").is(sampleEntity.getMessage())), SampleEntity.class,
 				IndexCoordinates.of(DEFAULT_INDEX));
 		assertThat(result).hasSize(1);
@@ -311,38 +311,39 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-519
-	public void findShouldCompleteWhenIndexDoesNotExist() {
+	public void searchShouldCompleteWhenIndexDoesNotExist() {
 
 		template
-				.find(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
+				.search(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
 						IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
 
 	@Test // DATAES-504
-	public void findShouldApplyCriteria() {
+	public void searchShouldApplyCriteria() {
 
 		SampleEntity sampleEntity = randomEntity("some message");
 		index(sampleEntity);
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(Criteria.where("message").is("some message"));
 
-		template.find(criteriaQuery, SampleEntity.class) //
+		template.search(criteriaQuery, SampleEntity.class) //
+				.map(SearchHit::getContent) //
 				.as(StepVerifier::create) //
 				.expectNext(sampleEntity) //
 				.verifyComplete();
 	}
 
 	@Test // DATAES-504
-	public void findShouldReturnEmptyFluxIfNothingFound() {
+	public void searchShouldReturnEmptyFluxIfNothingFound() {
 
 		SampleEntity sampleEntity = randomEntity("some message");
 		index(sampleEntity);
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(Criteria.where("message").is("foo"));
 
-		template.find(criteriaQuery, SampleEntity.class) //
+		template.search(criteriaQuery, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
@@ -352,7 +353,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		index(randomEntity("test message"), randomEntity("test test"), randomEntity("some message"));
 
-		template.find(new StringQuery(matchAllQuery().toString()), SampleEntity.class) //
+		template.search(new StringQuery(matchAllQuery().toString()), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNextCount(3) //
 				.verifyComplete();
@@ -367,7 +368,8 @@ public class ReactiveElasticsearchTemplateTests {
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
 
-		template.find(query, SampleEntity.class) //
+		template.search(query, SampleEntity.class) //
+				.map(SearchHit::getContent) //
 				.as(StepVerifier::create) //
 				.expectNext(shouldMatch) //
 				.verifyComplete();
@@ -385,7 +387,8 @@ public class ReactiveElasticsearchTemplateTests {
 		CriteriaQuery query = new CriteriaQuery(
 				new Criteria("message").contains("some").and("message").contains("message"));
 
-		template.find(query, SampleEntity.class) //
+		template.search(query, SampleEntity.class) //
+				.map(SearchHit::getContent) //
 				.as(StepVerifier::create) //
 				.expectNext(sampleEntity3) //
 				.verifyComplete();
@@ -404,7 +407,8 @@ public class ReactiveElasticsearchTemplateTests {
 				new Criteria("message").contains("some").and("message").contains("message"));
 		queryWithValidPreference.setPreference("_local");
 
-		template.find(queryWithValidPreference, SampleEntity.class) //
+		template.search(queryWithValidPreference, SampleEntity.class) //
+				.map(SearchHit::getContent) //
 				.as(StepVerifier::create) //
 				.expectNext(sampleEntity3) //
 				.verifyComplete();
@@ -423,7 +427,7 @@ public class ReactiveElasticsearchTemplateTests {
 				new Criteria("message").contains("some").and("message").contains("message"));
 		queryWithInvalidPreference.setPreference("_only_nodes:oops");
 
-		template.find(queryWithInvalidPreference, SampleEntity.class) //
+		template.search(queryWithInvalidPreference, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectError(ElasticsearchStatusException.class).verify();
 	}
@@ -440,14 +444,15 @@ public class ReactiveElasticsearchTemplateTests {
 		CriteriaQuery query = new CriteriaQuery(
 				new Criteria("message").contains("some").and("message").contains("message"));
 
-		template.find(query, SampleEntity.class, Message.class) //
+		template.search(query, SampleEntity.class, Message.class) //
+				.map(SearchHit::getContent) //
 				.as(StepVerifier::create) //
 				.expectNext(new Message(sampleEntity3.getMessage())) //
 				.verifyComplete();
 	}
 
 	@Test // DATAES-518
-	public void findShouldApplyPagingCorrectly() {
+	public void searchShouldApplyPagingCorrectly() {
 
 		List<SampleEntity> source = IntStream.range(0, 100).mapToObj(it -> randomEntity("entity - " + it))
 				.collect(Collectors.toList());
@@ -458,7 +463,7 @@ public class ReactiveElasticsearchTemplateTests {
 				.addSort(Sort.by("message"))//
 				.setPageable(PageRequest.of(0, 20));
 
-		template.find(query, SampleEntity.class).as(StepVerifier::create) //
+		template.search(query, SampleEntity.class).as(StepVerifier::create) //
 				.expectNextCount(20) //
 				.verifyComplete();
 	}
@@ -475,7 +480,7 @@ public class ReactiveElasticsearchTemplateTests {
 				.addSort(Sort.by("message"))//
 				.setPageable(Pageable.unpaged());
 
-		template.find(query, SampleEntity.class).as(StepVerifier::create) //
+		template.search(query, SampleEntity.class).as(StepVerifier::create) //
 				.expectNextCount(100) //
 				.verifyComplete();
 	}
@@ -682,7 +687,7 @@ public class ReactiveElasticsearchTemplateTests {
 				.withPageable(PageRequest.of(0, 25)) //
 				.build();
 
-		template.find(query, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+		template.search(query, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
 				.as(StepVerifier::create) //
 				.expectNextCount(2) //
 				.verifyComplete();

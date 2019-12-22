@@ -1333,6 +1333,20 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat(stream.count()).isEqualTo(10L);
 	}
 
+	@Test // DATAES-672
+	void streamMethodShouldNotReturnSearchHits() {
+		// given
+		List<SampleEntity> entities = createSampleEntities("abc", 2);
+		repository.saveAll(entities);
+
+		// when
+		Stream<SampleEntity> stream = streamingRepository.findByType("abc");
+
+		// then
+		assertThat(stream).isNotNull();
+		stream.forEach(o -> assertThat(o).isInstanceOf(SampleEntity.class));
+	}
+
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
 
 		List<SampleEntity> entities = new ArrayList<>();

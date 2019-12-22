@@ -19,8 +19,10 @@ import java.util.List;
 
 import org.springframework.data.convert.EntityConverter;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -57,7 +59,8 @@ public interface ElasticsearchConverter
 		return getConversionService().convert(idValue, String.class);
 	}
 
-	<T> AggregatedPage<T> mapResults(SearchDocumentResponse response, Class<T> clazz, Pageable pageable);
+	<T> AggregatedPage<SearchHit<T>> mapResults(SearchDocumentResponse response, Class<T> clazz,
+			@Nullable Pageable pageable);
 
 	/**
 	 * Get the configured {@link ProjectionFactory}. <br />
@@ -72,14 +75,25 @@ public interface ElasticsearchConverter
 	/**
 	 * Map a single {@link Document} to an instance of the given type.
 	 *
-	 * @param document must not be {@literal null}.
+	 * @param document the document to map
 	 * @param type must not be {@literal null}.
 	 * @param <T>
-	 * @return can be {@literal null} if the {@link Document#isEmpty()} is true.
+	 * @return can be {@literal null} if the document is null or {@link Document#isEmpty()} is true.
 	 * @since 4.0
 	 */
 	@Nullable
-	<T> T mapDocument(Document document, Class<T> type);
+	<T> T mapDocument(@Nullable Document document, Class<T> type);
+
+	/**
+	 * builds a {@link SearchHit} from a {@link SearchDocument}.
+	 * 
+	 * @param searchDocument must not be {@literal null}
+	 * @param <T> the clazz of the type, must not be {@literal null}.
+	 * @param type the type of the returned data, must not be {@literal null}.
+	 * @return SearchHit with all available information filled in
+	 * @since 4.0
+	 */
+	<T> SearchHit<T> read(Class<T> type, SearchDocument searchDocument);
 
 	/**
 	 * Map a list of {@link Document}s to alist of instance of the given type.

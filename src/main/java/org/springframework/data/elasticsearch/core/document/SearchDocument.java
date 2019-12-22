@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Extension to {@link Document} exposing a search {@link #getScore() score}.
+ * Extension to {@link Document} exposing a search response related data.
  *
  * @author Mark Paluch
  * @author Peter-Josef Meisch

@@ -35,12 +35,13 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.DocumentOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
-import org.springframework.data.elasticsearch.core.SearchOperations;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHitSupport;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -113,8 +114,8 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	private boolean createIndexAndMapping() {
 
-		final ElasticsearchPersistentEntity<?> entity = operations.getElasticsearchConverter()
-				.getMappingContext().getRequiredPersistentEntity(getEntityClass());
+		final ElasticsearchPersistentEntity<?> entity = operations.getElasticsearchConverter().getMappingContext()
+				.getRequiredPersistentEntity(getEntityClass());
 		return entity.isCreateIndexAndMapping();
 	}
 
@@ -138,7 +139,8 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	@Override
 	public Page<T> findAll(Pageable pageable) {
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withPageable(pageable).build();
-		return operations.queryForPage(query, getEntityClass(), getIndexCoordinates());
+		AggregatedPage<SearchHit<T>> page = operations.searchForPage(query, getEntityClass(), getIndexCoordinates());
+		return unwrapSearchHits(page);
 	}
 
 	@Override
@@ -150,7 +152,12 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		}
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, itemCount, sort)).build();
-		return operations.queryForPage(query, getEntityClass(), getIndexCoordinates());
+		AggregatedPage<SearchHit<T>> page = operations.searchForPage(query, getEntityClass(), getIndexCoordinates());
+		return unwrapSearchHits(page);
+	}
+
+	private Page<T> unwrapSearchHits(AggregatedPage<SearchHit<T>> page) {
+		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
 	}
 
 	@Override
@@ -219,18 +226,21 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 			return new PageImpl<>(Collections.<T> emptyList());
 		}
 		searchQuery.setPageable(PageRequest.of(0, count));
-		return operations.queryForPage(searchQuery, getEntityClass(), getIndexCoordinates());
+		AggregatedPage<SearchHit<T>> page = operations.searchForPage(searchQuery, getEntityClass(), getIndexCoordinates());
+		return unwrapSearchHits(page);
 	}
 
 	@Override
 	public Page<T> search(QueryBuilder query, Pageable pageable) {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(query).withPageable(pageable).build();
-		return operations.queryForPage(searchQuery, getEntityClass(), getIndexCoordinates());
+		AggregatedPage<SearchHit<T>> page = operations.searchForPage(searchQuery, getEntityClass(), getIndexCoordinates());
+		return unwrapSearchHits(page);
 	}
 
 	@Override
 	public Page<T> search(Query query) {
-		return operations.queryForPage(query, getEntityClass(), getIndexCoordinates());
+		AggregatedPage<SearchHit<T>> page = operations.searchForPage(query, getEntityClass(), getIndexCoordinates());
+		return unwrapSearchHits(page);
 	}
 
 	@Override
@@ -245,7 +255,8 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 			query.addFields(fields);
 		}
 
-		return operations.moreLikeThis(query, getEntityClass(), getIndexCoordinates());
+		AggregatedPage<SearchHit<T>> page = operations.search(query, getEntityClass(), getIndexCoordinates());
+		return unwrapSearchHits(page);
 	}
 
 	@Override

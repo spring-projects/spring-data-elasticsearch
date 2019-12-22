@@ -87,25 +87,25 @@ public class AggregatedPageImpl<T> extends PageImpl<T> implements AggregatedPage
 	}
 
 	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, Aggregations aggregations, float maxScore) {
-		this(content, pageable, total, aggregations);
+		this(content, pageableOrUnpaged(pageable), total, aggregations);
 		this.maxScore = maxScore;
 	}
 
 	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, Aggregations aggregations,
 			String scrollId) {
-		this(content, pageable, total, aggregations);
+		this(content, pageableOrUnpaged(pageable), total, aggregations);
 		this.scrollId = scrollId;
 	}
 
 	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, Aggregations aggregations, String scrollId,
 			float maxScore) {
-		this(content, pageable, total, aggregations, scrollId);
+		this(content, pageableOrUnpaged(pageable), total, aggregations, scrollId);
 		this.maxScore = maxScore;
 	}
 
 	public AggregatedPageImpl(List<T> content, Pageable pageable, SearchDocumentResponse response) {
-		this(content, pageable, response.getTotalHits(), response.getAggregations(), response.getScrollId(),
-				response.getMaxScore());
+		this(content, pageableOrUnpaged(pageable), response.getTotalHits(), response.getAggregations(),
+				response.getScrollId(), response.getMaxScore());
 	}
 
 	@Override

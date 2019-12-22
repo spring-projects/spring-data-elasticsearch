@@ -238,7 +238,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> AggregatedPage<T> queryForPage(Query query, Class<T> clazz, IndexCoordinates index) {
+	public <T> AggregatedPage<SearchHit<T>> searchForPage(Query query, Class<T> clazz, IndexCoordinates index) {
 		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
 		SearchResponse response;
 		try {
@@ -250,18 +250,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public List<String> queryForIds(Query query, Class<?> clazz, IndexCoordinates index) {
-		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
-		try {
-			SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
-			return extractIds(response);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error for search request: " + searchRequest.toString(), e);
-		}
-	}
-
-	@Override
-	public <T> ScrolledPage<T> startScroll(long scrollTimeInMillis, Query query, Class<T> clazz, IndexCoordinates index) {
+	public <T> ScrolledPage<SearchHit<T>> searchScrollStart(long scrollTimeInMillis, Query query, Class<T> clazz,
+			IndexCoordinates index) {
 
 		Assert.notNull(query.getPageable(), "Query.pageable is required for scan & scroll");
 
@@ -276,7 +266,9 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		}
 	}
 
-	public <T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz) {
+	@Override
+	public <T> ScrolledPage<SearchHit<T>> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
+			Class<T> clazz) {
 		SearchScrollRequest request = new SearchScrollRequest(scrollId);
 		request.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
 		SearchResponse response;
@@ -289,7 +281,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public void clearScroll(String scrollId) {
+	public void searchScrollClear(String scrollId) {
 		ClearScrollRequest request = new ClearScrollRequest();
 		request.addScrollId(scrollId);
 		try {

@@ -42,6 +42,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -93,7 +94,7 @@ public class CriteriaQueryTests {
 				new Criteria("message").contains("test").and("message").contains("some"));
 
 		// when
-		SampleEntity sampleEntity1 = operations.queryForObject(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity1 = operations.searchOne(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(sampleEntity1).isNotNull();
@@ -136,7 +137,7 @@ public class CriteriaQueryTests {
 				new Criteria("message").contains("some").or("message").contains("test"));
 
 		// when
-		Page<SampleEntity> page = operations.queryForPage(criteriaQuery, SampleEntity.class, index);
+		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(page).isNotNull();
@@ -167,7 +168,7 @@ public class CriteriaQueryTests {
 
 		// when
 
-		Page<SampleEntity> page = operations.queryForPage(criteriaQuery, SampleEntity.class, index);
+		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(page).isNotNull();
@@ -198,7 +199,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria().or(new Criteria("message").contains("some")));
 
 		// when
-		Page<SampleEntity> page = operations.queryForPage(criteriaQuery, SampleEntity.class, index);
+		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(page).isNotNull();
@@ -227,7 +228,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("some message"));
 
 		// when
-		Page<SampleEntity> page = operations.queryForPage(criteriaQuery, SampleEntity.class, index);
+		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
@@ -269,7 +270,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("some message"));
 
 		// when
-		Page<SampleEntity> page = operations.queryForPage(criteriaQuery, SampleEntity.class, index);
+		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
@@ -312,7 +313,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
 
 		// when
-		SampleEntity sampleEntity = operations.queryForObject(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
@@ -354,7 +355,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
 
 		// when
-		SampleEntity sampleEntity = operations.queryForObject(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
@@ -395,7 +396,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("contains"));
 
 		// when
-		SampleEntity sampleEntity = operations.queryForObject(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
@@ -436,7 +437,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").expression("+elasticsearch || test"));
 
 		// when
-		SampleEntity sampleEntity = operations.queryForObject(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
@@ -478,7 +479,7 @@ public class CriteriaQueryTests {
 				new Criteria("message").startsWith("some").endsWith("search").contains("message").is("some message search"));
 
 		// when
-		SampleEntity sampleEntity = operations.queryForObject(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
@@ -519,12 +520,12 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("foo").not());
 
 		// when
-		Page<SampleEntity> page = operations.queryForPage(criteriaQuery, SampleEntity.class, index);
+		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(criteriaQuery.getCriteria().isNegating()).isTrue();
 		assertThat(page).isNotNull();
-		assertThat(page.iterator().next().getMessage()).doesNotContain("foo");
+		assertThat(page.iterator().next().getContent().getMessage()).doesNotContain("foo");
 	}
 
 	@Test
@@ -563,7 +564,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(100, 150));
 
 		// when
-		SampleEntity sampleEntity = operations.queryForObject(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(sampleEntity).isNotNull();
@@ -605,7 +606,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(350, null));
 
 		// when
-		Page<SampleEntity> page = operations.queryForPage(criteriaQuery, SampleEntity.class, index);
+		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(page).isNotNull();
@@ -648,7 +649,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(null, 550));
 
 		// when
-		Page<SampleEntity> page = operations.queryForPage(criteriaQuery, SampleEntity.class, index);
+		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(page).isNotNull();
@@ -691,7 +692,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").lessThanEqual(750));
 
 		// when
-		Page<SampleEntity> page = operations.queryForPage(criteriaQuery, SampleEntity.class, index);
+		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(page).isNotNull();
@@ -734,7 +735,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").greaterThanEqual(950));
 
 		// when
-		Page<SampleEntity> page = operations.queryForPage(criteriaQuery, SampleEntity.class, index);
+		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(page).isNotNull();
@@ -777,7 +778,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("foo").boost(1));
 
 		// when
-		Page<SampleEntity> page = operations.queryForPage(criteriaQuery, SampleEntity.class, index);
+		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
@@ -800,11 +801,11 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").contains("a").or(new Criteria("message").contains("b")));
 		criteriaQuery.setMinScore(2.0F);
-		Page<SampleEntity> page = operations.queryForPage(criteriaQuery, SampleEntity.class, index);
+		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(page.getTotalElements()).isEqualTo(1);
-		assertThat(page.getContent().get(0).getMessage()).isEqualTo("ab");
+		assertThat(page.getContent().get(0).getContent().getMessage()).isEqualTo("ab");
 	}
 
 	@Test // DATAES-213
@@ -826,7 +827,7 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("Hello World!"));
 
 		// when
-		SampleEntity sampleEntity1 = operations.queryForObject(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity1 = operations.searchOne(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(sampleEntity1).isNotNull();

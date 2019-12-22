@@ -14,13 +14,12 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
-import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
@@ -98,26 +97,29 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	public <T> CloseableIterator<T> stream(Query query, Class<T> clazz, IndexCoordinates index) {
 		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
 		return StreamQueries.streamResults(startScroll(scrollTimeInMillis, query, clazz, index),
-				scrollId -> continueScroll(scrollId, scrollTimeInMillis, clazz), this::clearScroll);
+				scrollId -> continueScroll(scrollId, scrollTimeInMillis, clazz), this::searchScrollClear);
 	}
 
 	@Override
-	public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz, IndexCoordinates index) {
+	public <T> CloseableIterator<SearchHit<T>> searchForStream(Query query, Class<T> clazz, IndexCoordinates index) {
+		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
+		return StreamQueries.streamResults(searchScrollStart(scrollTimeInMillis, query, clazz, index),
+				scrollId -> searchScrollContinue(scrollId, scrollTimeInMillis, clazz), this::searchScrollClear);
+	}
+
+	@Override
+	public <T> AggregatedPage<SearchHit<T>> search(MoreLikeThisQuery query, Class<T> clazz, IndexCoordinates index) {
 
 		Assert.notNull(query.getId(), "No document id defined for MoreLikeThisQuery");
 
 		MoreLikeThisQueryBuilder moreLikeThisQueryBuilder = requestFactory.moreLikeThisQueryBuilder(query, index);
 
-		return queryForPage(new NativeSearchQueryBuilder().withQuery(moreLikeThisQueryBuilder).build(), clazz, index);
+		return searchForPage(new NativeSearchQueryBuilder().withQuery(moreLikeThisQueryBuilder).build(), clazz, index);
 	}
 
 	@Override
-	public <T> List<T> queryForList(Query query, Class<T> clazz, IndexCoordinates index) {
-		return queryForPage(query, clazz, index).getContent();
-	}
-
-	@Override
-	public <T> List<Page<T>> queryForPage(List<? extends Query> queries, Class<T> clazz, IndexCoordinates index) {
+	public <T> List<AggregatedPage<SearchHit<T>>> multiSearchForPage(List<? extends Query> queries, Class<T> clazz,
+			IndexCoordinates index) {
 		MultiSearchRequest request = new MultiSearchRequest();
 		for (Query query : queries) {
 			request.add(requestFactory.searchRequest(query, clazz, index));
@@ -126,7 +128,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public List<Page<?>> queryForPage(List<? extends Query> queries, List<Class<?>> classes, IndexCoordinates index) {
+	public List<AggregatedPage<? extends SearchHit<?>>> multiSearchForPage(List<? extends Query> queries,
+			List<Class<?>> classes, IndexCoordinates index) {
 		MultiSearchRequest request = new MultiSearchRequest();
 		Iterator<Class<?>> it = classes.iterator();
 		for (Query query : queries) {
@@ -135,9 +138,10 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		return doMultiSearch(queries, classes, request);
 	}
 
-	private <T> List<Page<T>> doMultiSearch(List<? extends Query> queries, Class<T> clazz, MultiSearchRequest request) {
+	private <T> List<AggregatedPage<SearchHit<T>>> doMultiSearch(List<? extends Query> queries, Class<T> clazz,
+			MultiSearchRequest request) {
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
-		List<Page<T>> res = new ArrayList<>(queries.size());
+		List<AggregatedPage<SearchHit<T>>> res = new ArrayList<>(queries.size());
 		int c = 0;
 		for (Query query : queries) {
 			res.add(elasticsearchConverter.mapResults(SearchDocumentResponse.from(items[c++].getResponse()), clazz,
@@ -146,10 +150,10 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		return res;
 	}
 
-	private List<Page<?>> doMultiSearch(List<? extends Query> queries, List<Class<?>> classes,
-			MultiSearchRequest request) {
+	private List<AggregatedPage<? extends SearchHit<?>>> doMultiSearch(List<? extends Query> queries,
+			List<Class<?>> classes, MultiSearchRequest request) {
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
-		List<Page<?>> res = new ArrayList<>(queries.size());
+		List<AggregatedPage<? extends SearchHit<?>>> res = new ArrayList<>(queries.size());
 		int c = 0;
 		Iterator<Class<?>> it = classes.iterator();
 		for (Query query : queries) {
@@ -160,17 +164,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	abstract protected MultiSearchResponse.Item[] getMultiSearchResult(MultiSearchRequest request);
-
-	protected List<String> extractIds(SearchResponse response) {
-		List<String> ids = new ArrayList<>();
-		for (SearchHit hit : response.getHits()) {
-			if (hit != null) {
-				ids.add(hit.getId());
-			}
-		}
-		return ids;
-	}
-
 	// endregion
 
 	// region Helper methods
@@ -195,7 +188,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	public abstract SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index);
 
 	/**
-	 * @param clazz
+	 * @param clazz the entity class
 	 * @return the IndexCoordinates defined on the entity.
 	 * @since 4.0
 	 */

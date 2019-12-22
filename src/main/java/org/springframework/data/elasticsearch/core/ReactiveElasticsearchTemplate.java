@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.elasticsearch.index.VersionType.*;
 
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -41,7 +40,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.WrapperQueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
@@ -57,8 +55,10 @@ import org.springframework.data.elasticsearch.core.EntityOperations.Entity;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
+import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
@@ -417,22 +417,18 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	// endregion
 
 	// region SearchOperations
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#find(Query, Class, Class, IndexCoordinates)
-	 */
 	@Override
-	public <T> Flux<T> find(Query query, Class<?> entityType, Class<T> resultType, IndexCoordinates index) {
+	public <T> Flux<SearchHit<T>> search(Query query, Class<?> entityType, Class<T> resultType, IndexCoordinates index) {
 
-		return doFind(query, entityType, index).map(it -> converter.mapDocument(DocumentAdapters.from(it), resultType));
+		return doFind(query, entityType, index).map(searchDocument -> converter.read(resultType, searchDocument));
 	}
 
 	@Override
-	public <T> Flux<T> find(Query query, Class<?> entityType, Class<T> returnType) {
-		return find(query, entityType, returnType, getIndexCoordinatesFor(entityType));
+	public <T> Flux<SearchHit<T>> search(Query query, Class<?> entityType, Class<T> returnType) {
+		return search(query, entityType, returnType, getIndexCoordinatesFor(entityType));
 	}
 
-	private Flux<SearchHit> doFind(Query query, Class<?> clazz, IndexCoordinates index) {
+	private Flux<SearchDocument> doFind(Query query, Class<?> clazz, IndexCoordinates index) {
 
 		return Flux.defer(() -> {
 			SearchRequest request = requestFactory.searchRequest(query, clazz, index);
@@ -510,15 +506,15 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * Customization hook on the actual execution result {@link Publisher}. <br />
 	 *
 	 * @param request the already prepared {@link SearchRequest} ready to be executed.
-	 * @return a {@link Flux} emitting the result of the operation.
+	 * @return a {@link Flux} emitting the result of the operation converted to {@link SearchDocument}s.
 	 */
-	protected Flux<SearchHit> doFind(SearchRequest request) {
+	protected Flux<SearchDocument> doFind(SearchRequest request) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
 			QUERY_LOGGER.debug("Executing doFind: {}", request);
 		}
 
-		return Flux.from(execute(client -> client.search(request))) //
+		return Flux.from(execute(client -> client.search(request))).map(DocumentAdapters::from) //
 				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
 	}
 
@@ -542,16 +538,16 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * Customization hook on the actual execution result {@link Publisher}. <br />
 	 *
 	 * @param request the already prepared {@link SearchRequest} ready to be executed.
-	 * @return a {@link Flux} emitting the result of the operation.
+	 * @return a {@link Flux} emitting the result of the operation converted to {@link SearchDocument}s.
 	 */
-	protected Flux<SearchHit> doScroll(SearchRequest request) {
+	protected Flux<SearchDocument> doScroll(SearchRequest request) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
 			QUERY_LOGGER.debug("Executing doScroll: {}", request);
 		}
 
 		return Flux.from(execute(client -> client.scroll(request))) //
-				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
+				.map(DocumentAdapters::from).onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
 	}
 
 	@Nullable

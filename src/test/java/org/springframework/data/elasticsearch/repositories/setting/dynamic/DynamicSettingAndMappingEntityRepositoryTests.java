@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repositories.setting.dynamic;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -32,6 +31,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
@@ -109,13 +109,14 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		IndexCoordinates index = IndexCoordinates.of("test-index-dynamic-setting-and-mapping")
 				.withTypes("test-setting-type");
 		long count = operations.count(searchQuery, DynamicSettingAndMappingEntity.class, index);
-		List<DynamicSettingAndMappingEntity> entityList = operations.queryForList(searchQuery,
+		SearchHits<DynamicSettingAndMappingEntity> entityList = operations.search(searchQuery,
 				DynamicSettingAndMappingEntity.class, index);
 
 		// then
 		assertThat(count).isEqualTo(1L);
 		assertThat(entityList).isNotNull().hasSize(1);
-		assertThat(entityList.get(0).getEmail()).isEqualTo(dynamicSettingAndMappingEntity1.getEmail());
+		assertThat(entityList.getSearchHit(0).getContent().getEmail())
+				.isEqualTo(dynamicSettingAndMappingEntity1.getEmail());
 	}
 
 	@Test

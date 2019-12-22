@@ -20,10 +20,11 @@ import reactor.core.publisher.Mono;
 
 import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.repository.query.ReactiveElasticsearchQueryExecution.ResultProcessingConverter;
 import org.springframework.data.elasticsearch.repository.query.ReactiveElasticsearchQueryExecution.ResultProcessingExecution;
@@ -56,10 +57,12 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.RepositoryQuery#execute(java.lang.Object[])
 	 */
+	@Override
 	public Object execute(Object[] parameters) {
 
-		return queryMethod.hasReactiveWrapperParameter() ? executeDeferred(parameters)
+		Object result = queryMethod.hasReactiveWrapperParameter() ? executeDeferred(parameters)
 				: execute(new ReactiveElasticsearchParametersParameterAccessor(queryMethod, parameters));
+		return SearchHitSupport.unwrapSearchHits(result);
 	}
 
 	private Object executeDeferred(Object[] parameters) {
@@ -116,10 +119,10 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 			return (query, type, targetType, indexCoordinates) -> operations.count(query, type, indexCoordinates)
 					.map(count -> count > 0);
 		} else if (queryMethod.isCollectionQuery()) {
-			return (query, type, targetType, indexCoordinates) -> operations.find(query.setPageable(accessor.getPageable()),
+			return (query, type, targetType, indexCoordinates) -> operations.search(query.setPageable(accessor.getPageable()),
 					type, targetType, indexCoordinates);
 		} else {
-			return (query, type, targetType, indexCoordinates) -> operations.find(query, type, targetType, indexCoordinates);
+			return (query, type, targetType, indexCoordinates) -> operations.search(query, type, targetType, indexCoordinates);
 		}
 	}
 
