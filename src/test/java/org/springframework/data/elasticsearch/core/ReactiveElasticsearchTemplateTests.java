@@ -40,6 +40,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -690,6 +692,27 @@ public class ReactiveElasticsearchTemplateTests {
 		template.search(query, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
 				.as(StepVerifier::create) //
 				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldReturnSortFields() {
+		SampleEntity entity = randomEntity("test message");
+		entity.rate = 42;
+		index(entity);
+
+		NativeSearchQuery query = new NativeSearchQueryBuilder() //
+				.withQuery(matchAllQuery()) //
+				.withSort(new FieldSortBuilder("rate").order(SortOrder.DESC)) //
+				.build();
+
+		template.search(query, SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+					List<Object> sortValues = it.getSortValues();
+					assertThat(sortValues).hasSize(1);
+					assertThat(sortValues.get(0)).isEqualTo(42);
+				}) //
 				.verifyComplete();
 	}
 
