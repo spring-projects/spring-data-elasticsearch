@@ -1,6 +1,18 @@
 [[new-features]]
 = What's new
 
+[[new-features.4-0-0]]
+== New in Spring Data Elasticsearch 4.0
+
+* Uses Spring 5.2.
+* Upgrade to Elasticsearch 7.4.1.
+* Deprecation of `TransportClient` usage.
+* Implements most of the mapping-types available for the index mappings.
+* Removal of the Jackson `ObjectMapper`, now using the <<elasticsearch.mapping.meta-model,MappingElasticsearchConverter>>
+* Cleanup of the API in the `*Operations` interfaces, grouping and renaming methods so that they match the Elasticsearch API, deprecating the old methods, aligning with other Spring Data modules.
+* Introduction of `SearchHit<T>` class to represent a found document together with the relevant result metadata for this document (i.e. _sortValues_).
+* Introduction of the `SearchHits<T>` class to represent a whole search result together with the metadata for the complete search result (i.e. _max_score_).
+
 [[new-features.3-2-0]]
 == New in Spring Data Elasticsearch 3.2
 

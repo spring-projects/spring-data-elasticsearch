@@ -1,10 +1,18 @@
 [[elasticsearch.operations]]
 = Elasticsearch Operations
 
-Spring Data Elasticsearch uses two interfaces to define the operations that can be called against an Elasticsearch index. These are `ElasticsearchOperations` and `ReactiveElasticsearchOperations`. Whereas the first is used with the classic synchronous implementations, the second one uses reactive infrastructure.
+Spring Data Elasticsearch uses several interfaces to define the operations that can be called against an Elasticsearch index (for a description of the reactive interfaces see <<elasticsearch.reactive.operations>>).
+
+* `IndexOperations` defines actions on index level like creating or deleting an index.
+* `DocumentOperations` defines actions to store, update and retrieve entities based on their id.
+* `SearchOperations` define the actions to search for multiple entities using queries
+* `ElasticsearchOperations` combines the `DocumentOperations` and `SearchOperations` interfaces.
+
+These interfaces correspond to the structuring of the https://www.elastic.co/guide/en/elasticsearch/reference/current/rest-apis.html[Elasticsearch API].
 
 The default implementations of the interfaces offer:
 
+* index management functionality.
 * Read/Write mapping support for domain types.
 * A rich query and criteria api.
 * Resource management and Exception translation.
@@ -35,21 +43,10 @@ public class TransportClientConfig extends ElasticsearchConfigurationSupport {
   public ElasticsearchTemplate elasticsearchTemplate() throws UnknownHostException { <2>
   	return new ElasticsearchTemplate(elasticsearchClient(), entityMapper());
   }
-
-  // use the ElasticsearchEntityMapper
-  @Bean
-  @Override
-  public EntityMapper entityMapper() {                                               <3>
-    ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
-  	  new DefaultConversionService());
-    entityMapper.setConversions(elasticsearchCustomConversions());
-    return entityMapper;
-  }
 }
 ----
-<1> Setting up the <<elasticsearch.clients.transport>>. Deprecatedas of version 4.0.
+<1> Setting up the <<elasticsearch.clients.transport>>. Deprecated as of version 4.0.
 <2> Creating the `ElasticsearchTemplate` bean, offering both names, _elasticsearchOperations_ and _elasticsearchTemplate_.
-<3> Using the <<elasticsearch.mapping.meta-model>> ElasticsearchMapper.
 ====
 
 [[elasticsearch.operations.resttemplate]]
@@ -69,29 +66,16 @@ public class RestClientConfig extends AbstractElasticsearchConfiguration {
   }
 
   // no special bean creation needed                       <2>
-
-  // use the ElasticsearchEntityMapper
-  @Bean
-  @Override
-  public EntityMapper entityMapper() {                     <3>
-    ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(elasticsearchMappingContext(),
-        new DefaultConversionService());
-    entityMapper.setConversions(elasticsearchCustomConversions());
-
-    return entityMapper;
-  }
 }
 ----
 <1> Setting up the <<elasticsearch.clients.rest>>.
 <2> The base class `AbstractElasticsearchConfiguration` already provides the `elasticsearchTemplate` bean.
-<3> Using the <<elasticsearch.mapping.meta-model>> ElasticsearchMapper.
 ====
 
 [[elasticsearch.operations.usage]]
 == Usage examples
 
-As both `ElasticsearchTemplate` and `ElasticsearchRestTemplate` implement the `ElasticsearchOperations` interface, the code to use them is not different. The example shows how to use an injected `ElasticsearchOperations` instance in a Spring REST controller. The decision, if this is using the `TransportClient` or the `RestClient` is made by providing the
- corresponding Bean with one of the configurations shown above.
+As both `ElasticsearchTemplate` and `ElasticsearchRestTemplate` implement the `ElasticsearchOperations` interface, the code to use them is not different. The example shows how to use an injected `ElasticsearchOperations` instance in a Spring REST controller. The decision, if this is using the `TransportClient` or the `RestClient` is made by providing the corresponding Bean with one of the configurations shown above.
 
 .ElasticsearchOperations usage
 ====
@@ -135,3 +119,26 @@ public class TestController {
 To see the full possibilities of `ElasticsearchOperations` please refer to the API documentation.
 
 include::reactive-elasticsearch-operations.adoc[leveloffset=+1]
+
+[[elasticsearch.operations.searchresulttypes]]
+== Search Result Types
+
+When a document is retrieved with the methods of the  `DocumentOperations` interface, just the found entity will be returned. When searching with the methods of the `SearchOperations` interface, additional information is available for each entity, for example the _score_ or the _sortValues_ of the found entity.
+
+In order to return this information, each entity is wrapped in a `SearchHit` object that contains this entity-specific additional information. These `SearchHit` objects themselves are returned within a `SearchHits` object which additionally contains informations about the whole search ike the _maxScore_ or requested aggregations.
+
+.SearchHit<T>
+Contains the following information:
+
+* Id
+* Score
+* Sort Values
+* the retrieved entity of type <T>
+
+.SearchHits<T>
+Contains the following information:
+
+* Number of total hits
+* Maximum score
+* A list of `SearchHit<T>` objects
+

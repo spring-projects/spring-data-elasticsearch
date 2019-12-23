@@ -11,27 +11,30 @@ Filter Builder improves query speed.
 ====
 [source,java]
 ----
-private ElasticsearchTemplate elasticsearchTemplate;
+private ElasticsearchOperations operations;
+
+IndexCoordinates index = IndexCoordinates.of("sample-index");
 
 SearchQuery searchQuery = new NativeSearchQueryBuilder()
   .withQuery(matchAllQuery())
   .withFilter(boolFilter().must(termFilter("id", documentId)))
   .build();
   
-Page<SampleEntity> sampleEntities =
-  elasticsearchTemplate.queryForPage(searchQuery,SampleEntity.class);
+Page<SampleEntity> sampleEntities = operations.searchForPage(searchQuery, SampleEntity.class, index);
 ----
 ====
 
 [[elasticsearch.scroll]]
 == Using Scroll For Big Result Set
 
-Elasticsearch has a scroll API for getting big result set in chunks. `ElasticsearchTemplate` has startScroll and continueScroll methods that can be used as below.
+Elasticsearch has a scroll API for getting big result set in chunks. `ElasticsearchOperations` has startScroll and continueScroll methods that can be used as below.
 
 .Using startScroll and continueScroll
 ====
 [source,java]
 ----
+IndexCoordinates index = IndexCoordinates.of("sample-index");
+
 SearchQuery searchQuery = new NativeSearchQueryBuilder()
   .withQuery(matchAllQuery())
   .withIndices(INDEX_NAME)
@@ -40,25 +43,27 @@ SearchQuery searchQuery = new NativeSearchQueryBuilder()
   .withPageable(PageRequest.of(0, 10))
   .build();
 
-ScrolledPage<SampleEntity> scroll = elasticsearchTemplate.startScroll(1000, searchQuery, SampleEntity.class);
+ScrolledPage<SampleEntity> scroll = operations.startScroll(1000, searchQuery, SampleEntity.class, index);
 
 String scrollId = scroll.getScrollId();
 List<SampleEntity> sampleEntities = new ArrayList<>();
 while (scroll.hasContent()) {
   sampleEntities.addAll(scroll.getContent());
   scrollId = scroll.getScrollId();
-  scroll = elasticsearchTemplate.continueScroll(scrollId, 1000, SampleEntity.class);
+  scroll = operations.continueScroll(scrollId, 1000, SampleEntity.class);
 }
-elasticsearchTemplate.clearScroll(scrollId);
+operations.clearScroll(scrollId);
 ----
 ====
 
-`ElasticsearchTemplate` additionally has the stream method which wraps the scan and scroll operations into a CloseableIterator.
+`ElasticsearchOperations` additionally has the stream method which wraps the scan and scroll operations into a CloseableIterator.
 
 .Using stream
 ====
 [source,java]
 ----
+IndexCoordinates index = IndexCoordinates.of("sample-index");
+
 SearchQuery searchQuery = new NativeSearchQueryBuilder()
   .withQuery(matchAllQuery())
   .withIndices(INDEX_NAME)
@@ -67,7 +72,7 @@ SearchQuery searchQuery = new NativeSearchQueryBuilder()
   .withPageable(PageRequest.of(0, 10))
   .build();
 
-CloseableIterator<SampleEntity> stream = elasticsearchTemplate.stream(searchQuery, SampleEntity.class);
+CloseableIterator<SampleEntity> stream = elasticsearchTemplate.stream(searchQuery, SampleEntity.class, index);
 
 List<SampleEntity> sampleEntities = new ArrayList<>();
 while (stream.hasNext()) {
