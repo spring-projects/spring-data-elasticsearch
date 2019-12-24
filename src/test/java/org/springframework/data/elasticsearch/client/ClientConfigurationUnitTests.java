@@ -20,12 +20,14 @@ import static org.mockito.Mockito.*;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
+import java.util.function.Function;
 
 import javax.net.ssl.SSLContext;
 
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Unit tests for {@link ClientConfiguration}.
@@ -141,6 +143,26 @@ public class ClientConfigurationUnitTests {
 		assertThat(clientConfiguration.getConnectTimeout()).isEqualTo(Duration.ofSeconds(10));
 		assertThat(clientConfiguration.getSocketTimeout()).isEqualTo(Duration.ofSeconds(5));
 		assertThat(clientConfiguration.getHostNameVerifier()).contains(NoopHostnameVerifier.INSTANCE);
+	}
+
+	@Test // DATAES-719
+	void shouldHaveDefaultWebClientConfigurer() {
+		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
+				.connectedTo("foo", "bar") //
+				.build();
+
+		assertThat(clientConfiguration.getWebClientConfigurer()).isEqualTo(Function.identity());
+	}
+
+	@Test // DATAES-719
+	void shouldUseConfiguredWebClientConfigurer() {
+		Function<WebClient, WebClient> webClientConfigurer = webClient -> webClient;
+		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
+				.connectedTo("foo", "bar") //
+				.withWebClientConfigurer(webClientConfigurer) //
+				.build();
+
+		assertThat(clientConfiguration.getWebClientConfigurer()).isEqualTo(webClientConfigurer);
 	}
 
 	private static String buildBasicAuth(String username, String password) {
