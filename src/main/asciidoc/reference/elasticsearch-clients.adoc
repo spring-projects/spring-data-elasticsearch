@@ -3,13 +3,13 @@
 
 This chapter illustrates configuration and usage of supported Elasticsearch client implementations.
 
-Spring data Elasticsearch operates upon an Elasticsearch client that is connected to a single Elasticsearch node or a cluster. Although the Elasticsearch Client can be used to work with the cluster,  applications using Spring Data Elasticsearch normally use the higher level abstractions of <<elasticsearch.operations>> and <<elasticsearch.repositories>>.
+Spring Data Elasticsearch operates upon an Elasticsearch client that is connected to a single Elasticsearch node or a cluster. Although the Elasticsearch Client can be used to work with the cluster, applications using Spring Data Elasticsearch normally use the higher level abstractions of <<elasticsearch.operations>> and <<elasticsearch.repositories>>.
 
 [[elasticsearch.clients.transport]]
 == Transport Client
 
 WARNING: The well known `TransportClient` is deprecated as of Elasticsearch 7 and will be removed in Elasticsearch 8. (https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/transport-client.html[see the Elasticsearch documentation]). Spring Data Elasticsearch will support the `TransportClient` as long as it is available in the used
-Elasticsearch <<elasticsearch.versions,version>>.
+Elasticsearch <<elasticsearch.versions,version>> but has deprecated the classes using it since version 4.0.
 
 We strongly recommend to use the <<elasticsearch.clients.rest>> instead of the `TransportClient`.
 
@@ -17,18 +17,21 @@ We strongly recommend to use the <<elasticsearch.clients.rest>> instead of the `
 ====
 [source,java]
 ----
-static class Config {
+@Configuration
+public class TransportClientConfig extends ElasticsearchConfigurationSupport {
 
-  @Bean
-  Client client() {
-  	Settings settings = Settings.builder()
-  	  .put("cluster.name", "elasticsearch")   <1>
-      .build();
-  	TransportClient client = new PreBuiltTransportClient(settings);
-    client.addTransportAddress(new TransportAddress(InetAddress.getByName("127.0.0.1")
-      , 9300));                               <2>
-    return client;
-  }
+    @Bean
+    public Client elasticsearchClient() throws UnknownHostException {
+        Settings settings = Settings.builder().put("cluster.name", "elasticsearch").build();        <1>
+        TransportClient client = new PreBuiltTransportClient(settings);
+        client.addTransportAddress(new TransportAddress(InetAddress.getByName("127.0.0.1"), 9300)); <2>
+        return client;
+    }
+
+    @Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
+    public ElasticsearchTemplate elasticsearchTemplate() throws UnknownHostException {
+        return new ElasticsearchTemplate(elasticsearchClient());
+    }
 }
 
 // ...
@@ -46,7 +49,7 @@ IndexResponse response = client.index(request);
 [[elasticsearch.clients.rest]]
 == High Level REST Client
 
-The Java High Level REST Client now is the default client of Elasticsearch, it provides a straight forward replacement for the `TransportClient` as it accepts and returns
+The Java High Level REST Client is the default client of Elasticsearch, it provides a straight forward replacement for the `TransportClient` as it accepts and returns
 the very same request/response objects and therefore depends on the Elasticsearch core project.
 Asynchronous calls are operated upon a client managed thread pool and require a callback to be notified when the request is done.
 
@@ -54,18 +57,19 @@ Asynchronous calls are operated upon a client managed thread pool and require a 
 ====
 [source,java]
 ----
-import org.springframework.beans.factory.annotation.Autowired;@Configuration
-static class Config {
+@Configuration
+public class RestClientConfig extends AbstractElasticsearchConfiguration {
 
-  @Bean
-  RestHighLevelClient client() {
+    @Override
+    @Bean
+    public RestHighLevelClient elasticsearchClient() {
 
-    ClientConfiguration clientConfiguration = ClientConfiguration.builder() <1>
-      .connectedTo("localhost:9200", "localhost:9201")
-      .build();
+        final ClientConfiguration clientConfiguration = ClientConfiguration.builder()  <1>
+            .connectedTo("localhost:9200")
+            .build();
 
-    return RestClients.create(clientConfiguration).rest();                  <2>
-  }
+        return RestClients.create(clientConfiguration).rest();                         <2>
+    }
 }
 
 // ...
@@ -73,7 +77,7 @@ static class Config {
   @Autowired
   RestHighLevelClient highLevelClient;
 
-  RestClient lowLevelClient = highLevelClient.lowLevelClient();             <3>
+  RestClient lowLevelClient = highLevelClient.lowLevelClient();                        <3>
 
 // ...
 
@@ -138,27 +142,31 @@ Client behaviour can be changed via the `ClientConfiguration` that allows to set
 [source,java]
 ----
 // optional if Basic Auhtentication is needed
-HttpHeaders defaultHeaders = new HttpHeaders();
-defaultHeaders.setBasicAuth(USER_NAME, USER_PASS);                      <1>
+HttpHeaders httpHeaders = new HttpHeaders();
+httpHeaders.add("es-security-runas-user", "some-user")                  <1>
 
 ClientConfiguration clientConfiguration = ClientConfiguration.builder()
   .connectedTo("localhost:9200", "localhost:9291")                      <2>
-  .withConnectTimeout(Duration.ofSeconds(5))                            <3>
-  .withSocketTimeout(Duration.ofSeconds(3))                             <4>
-  .useSsl()                                                             <5>
-  .withDefaultHeaders(defaultHeaders)                                   <6>
-  .withBasicAuth(username, password)                                    <7>
+  .withProxy("localhost:8888")                                          <3>
+  .withPathPrefix("ela")                                                <4>
+  .withConnectTimeout(Duration.ofSeconds(5))                            <5>
+  .withSocketTimeout(Duration.ofSeconds(3))                             <6>
+  .useSsl()                                                             <7>
+  .withDefaultHeaders(defaultHeaders)                                   <8>
+  .withBasicAuth(username, password)                                    <9>
   . // ... other options
   .build();
 
 ----
 <1> Define default headers, if they need to be customized
 <2> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
-<3> Set the connection timeout. Default is 10 sec.
-<4> Set the socket timeout. Default is 5 sec.
-<5> Optionally enable SSL.
-<6> Optionally set headers.
-<7> Add basic authentication.
+<3> Optionally set a proxy footnote:notreactive[not yet implemented for the reactive client].
+<4> Optionally set a path prefix, mostly used when different clusters a behind some reverse proxy.
+<5> Set the connection timeout. Default is 10 sec.
+<6> Set the socket timeout. Default is 5 sec.
+<7> Optionally enable SSL.
+<8> Optionally set headers.
+<9> Add basic authentication.
 ====
 
 [[elasticsearch.clients.logging]]

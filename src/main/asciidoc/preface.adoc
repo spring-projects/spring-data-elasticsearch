@@ -3,7 +3,7 @@
 
 The Spring Data Elasticsearch project applies core Spring concepts to the development of solutions using the Elasticsearch Search Engine. It provides:
 
-* _Templates_ as a high-level abstraction for storing, querying, sorting and faceting documents.
+* _Templates_ as a high-level abstraction for storing, searching, sorting documents and building aggregations.
 * _Repositories_ which for example enable the user to express queries by defining interfaces having customized method names (for basic information about repositories see <<repositories>>).
 
 You will notice similarities to the Spring data solr and mongodb support in the Spring Framework.
@@ -34,11 +34,12 @@ Requires an installation of https://www.elastic.co/products/elasticsearch[Elasti
 The following table shows the Elasticsearch versions that are used by Spring Data release trains and version of Spring Data Elasticsearch included in that, as well as the Spring Boot versions refering to that particular Spring Data release train:
 [cols="^,^,^,^",options="header"]
 |===
-|Spring Data Release Train |Spring Data Elasticsearch |Elasticsearch | Spring Boot
-|Moorefootnote:cdv[Currently in development] |3.2.xfootnote:cdv[]|6.8.1 |2.2.0footnote:cdv[]
-|Lovelace |3.1.x |6.2.2|2.1.x
-|Kayfootnote:oom[Out of maintenance]|3.0.xfootnote:oom[] |5.5.0 |2.0.xfootnote:oom[]
-|Ingallsfootnote:oom[]|2.1.xfootnote:oom[] |2.4.0 |1.5.xfootnote:oom[]
+| Spring Data Release Train |Spring Data Elasticsearch |Elasticsearch | Spring Boot
+| Neumannfootnote:cdv[Currently in development] |4.0.xfootnote:cdv[]|7.4.1 |2.3.xfootnote:cdv[]
+| Moore | 3.2.x |6.8.4 | 2.2.x
+| Lovelace | 3.1.x | 6.2.2 |2.1.x
+| Kayfootnote:oom[Out of maintenance] | 3.0.xfootnote:oom[] | 5.5.0 | 2.0.xfootnote:oom[]
+| Ingallsfootnote:oom[] | 2.1.xfootnote:oom[] | 2.4.0 | 1.5.xfootnote:oom[]
 |===
 
 Support for upcoming versions of Elasticsearch is being tracked and general compatibility should be given assuming the usage of the <<elasticsearch.clients.rest,high-level REST client>>.

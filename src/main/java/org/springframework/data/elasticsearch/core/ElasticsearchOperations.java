@@ -25,8 +25,8 @@ import org.springframework.data.elasticsearch.core.query.AliasQuery;
 
 /**
  * ElasticsearchOperations. Since 4.0 this interface only contains common helper functions, the other methods have been
- * moved to the different interfaces that are extended by ElasticsearchOperations. The interfaces now reflect the <a
- * href="https://www.elastic.co/guide/en/elasticsearch/reference/current/rest-apis.html>REST API structure</a> of
+ * moved to the different interfaces that are extended by ElasticsearchOperations. The interfaces now reflect the
+ * <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/rest-apis.html">REST API structure</a> of
  * Elasticsearch.
  *
  * @author Rizwan Idrees
