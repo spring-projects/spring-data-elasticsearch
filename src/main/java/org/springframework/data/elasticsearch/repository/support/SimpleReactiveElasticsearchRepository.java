@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.reactivestreams.Publisher;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.Query;
@@ -47,8 +48,8 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	@Override
 	public Flux<T> findAll(Sort sort) {
 
-		return elasticsearchOperations.find(Query.findAll().addSort(sort), entityInformation.getJavaType(),
-				entityInformation.getIndexName(), entityInformation.getType());
+		return elasticsearchOperations.find(Query.findAll().addSort(sort).setPageable(Pageable.unpaged()),
+				entityInformation.getJavaType(), entityInformation.getIndexName(), entityInformation.getType());
 	}
 
 	@Override
@@ -105,7 +106,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	@Override
 	public Flux<T> findAll() {
 
-		return elasticsearchOperations.find(Query.findAll(), entityInformation.getJavaType(),
+		return elasticsearchOperations.find(Query.findAll().setPageable(Pageable.unpaged()), entityInformation.getJavaType(),
 				entityInformation.getIndexName(), entityInformation.getType());
 	}
 
