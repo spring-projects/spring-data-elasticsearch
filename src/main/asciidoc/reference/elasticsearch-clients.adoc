@@ -104,8 +104,15 @@ static class Config {
   @Bean
   ReactiveElasticsearchClient client() {
 
-    ClientConfiguration clientConfiguration = ClientConfiguration.builder() <1>
+    ClientConfiguration clientConfiguration = ClientConfiguration.builder()   <1>
       .connectedTo("localhost:9200", "localhost:9291")
+      .withWebClientConfigurer(webClient -> {                                 <2>
+        ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
+            .codecs(configurer -> configurer.defaultCodecs()
+                .maxInMemorySize(-1))
+            .build();
+        return webClient.mutate().exchangeStrategies(exchangeStrategies).build();
+       })
       .build();
 
     return ReactiveRestClients.create(clientConfiguration);
@@ -124,6 +131,7 @@ Mono<IndexResponse> response = client.index(request ->
 );
 ----
 <1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
+<2> when configuring a reactive client, the `withWebClientConfigurer` hook can be used to customize the WebClient.
 ====
 
 NOTE: The ReactiveClient response, especially for search operations, is bound to the `from` (offset) & `size` (limit) options of the request.
