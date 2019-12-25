@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.core.query.Query.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,6 +34,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
@@ -151,6 +153,20 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 				SampleEntity.builder().id("id-three").build());
 
 		repository.findById("does-not-exist").as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-720
+	public void findAllShouldReturnAllElements() {
+		// make sure to be above the default page size of the Query interface
+		int count = DEFAULT_PAGE_SIZE * 2;
+		bulkIndex(IntStream.range(1, count + 1) //
+				.mapToObj(it -> SampleEntity.builder().id(String.valueOf(it)).build()) //
+				.toArray(SampleEntity[]::new));
+
+		repository.findAll() //
+				.as(StepVerifier::create) //
+				.expectNextCount(count) //
 				.verifyComplete();
 	}
 
