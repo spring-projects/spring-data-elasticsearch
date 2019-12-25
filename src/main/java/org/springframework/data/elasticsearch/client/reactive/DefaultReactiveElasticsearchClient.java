@@ -226,7 +226,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 			provider = provider.withPathPrefix(clientConfiguration.getPathPrefix());
 		}
 
-		return provider.withDefaultHeaders(clientConfiguration.getDefaultHeaders());
+		provider = provider.withDefaultHeaders(clientConfiguration.getDefaultHeaders()) //
+				.withWebClientConfigurer(clientConfiguration.getWebClientConfigurer());
+		return provider;
 	}
 
 	/*

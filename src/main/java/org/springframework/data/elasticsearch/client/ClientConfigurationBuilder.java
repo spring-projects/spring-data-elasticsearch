@@ -20,6 +20,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.net.ssl.HostnameVerifier;
@@ -31,6 +32,7 @@ import org.springframework.data.elasticsearch.client.ClientConfiguration.Termina
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Default builder implementation for {@link ClientConfiguration}.
@@ -56,6 +58,7 @@ class ClientConfigurationBuilder
 	private String password;
 	private String pathPrefix;
 	private String proxy;
+	private Function<WebClient, WebClient> webClientConfigurer;
 
 	/*
 	 * (non-Javadoc)
@@ -187,9 +190,17 @@ class ClientConfigurationBuilder
 
 	@Override
 	public TerminalClientConfigurationBuilder withPathPrefix(String pathPrefix) {
-
 		this.pathPrefix = pathPrefix;
 
+		return this;
+	}
+
+	@Override
+	public TerminalClientConfigurationBuilder withWebClientConfigurer(Function<WebClient, WebClient> webClientConfigurer) {
+
+		Assert.notNull(webClientConfigurer, "webClientConfigurer must not be null");
+
+		this.webClientConfigurer = webClientConfigurer;
 		return this;
 	}
 
@@ -208,7 +219,7 @@ class ClientConfigurationBuilder
 		}
 
 		return new DefaultClientConfiguration(hosts, headers, useSsl, sslContext, soTimeout, connectTimeout, pathPrefix,
-				hostnameVerifier, proxy);
+				hostnameVerifier, proxy, webClientConfigurer);
 	}
 
 	private static InetSocketAddress parse(String hostAndPort) {

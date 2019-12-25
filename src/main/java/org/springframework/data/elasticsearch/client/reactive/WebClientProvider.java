@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client.reactive;
 
 import java.net.InetSocketAddress;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.reactive.ClientHttpConnector;
@@ -100,7 +101,7 @@ public interface WebClientProvider {
 
 	/**
 	 * Obtain the {@link String pathPrefix} to be used.
-	 * 
+	 *
 	 * @return the pathPrefix if set.
 	 * @since 3.2.4
 	 */
@@ -124,10 +125,18 @@ public interface WebClientProvider {
 
 	/**
 	 * Create a new instance of {@link WebClientProvider} where HTTP requests are called with the given path prefix.
-	 * 
+	 *
 	 * @param pathPrefix Path prefix to add to requests
 	 * @return new instance of {@link WebClientProvider}
 	 * @since 3.2.4
 	 */
 	WebClientProvider withPathPrefix(String pathPrefix);
+
+	/**
+	 * Create a new instance of {@link WebClientProvider} calling the given {@link Function} to configure the {@link WebClient}.
+	 * @param webClientConfigurer configuration function
+	 * @return new instance of {@link WebClientProvider}
+	 * @since 3.2.4
+	 */
+	WebClientProvider withWebClientConfigurer(Function<WebClient, WebClient> webClientConfigurer);
 }

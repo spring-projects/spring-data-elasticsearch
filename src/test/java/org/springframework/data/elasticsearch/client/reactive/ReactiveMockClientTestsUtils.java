@@ -277,6 +277,11 @@ public class ReactiveMockClientTestsUtils {
 			throw new UnsupportedOperationException();
 		}
 
+		@Override
+		public WebClientProvider withWebClientConfigurer(Function<WebClient, WebClient> webClientConfigurer) {
+			throw new UnsupportedOperationException("not implemented");
+		}
+
 		public Send when(String host) {
 			InetSocketAddress inetSocketAddress = getInetSocketAddress(host);
 			return new CallbackImpl(get(host), headersUriSpecMap.get(inetSocketAddress),

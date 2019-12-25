@@ -20,11 +20,13 @@ import java.net.SocketAddress;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Configuration interface exposing common client configuration properties for Elasticsearch clients.
@@ -160,6 +162,11 @@ public interface ClientConfiguration {
 	 * @since 3.2.4
 	 */
 	Optional<String> getProxy();
+
+	/**
+	 * @return the function for configuring a WebClient.
+	 */
+	Function<WebClient, WebClient> getWebClientConfigurer();
 
 	/**
 	 * @author Christoph Strobl
@@ -314,9 +321,17 @@ public interface ClientConfiguration {
 
 		/**
 		 * @param proxy a proxy formatted as String {@literal host:port}.
-		 * @return the {@link MaybeSecureClientConfigurationBuilder}.
+		 * @return the {@link TerminalClientConfigurationBuilder}.
 		 */
-		MaybeSecureClientConfigurationBuilder withProxy(String proxy);
+		TerminalClientConfigurationBuilder withProxy(String proxy);
+
+		/**
+		 * set customization hook in case of a reactive configuration
+		 * 
+		 * @param webClientConfigurer function to configure the WebClient
+		 * @return the {@link TerminalClientConfigurationBuilder}.
+		 */
+		TerminalClientConfigurationBuilder withWebClientConfigurer(Function<WebClient, WebClient> webClientConfigurer);
 
 		/**
 		 * Build the {@link ClientConfiguration} object.
