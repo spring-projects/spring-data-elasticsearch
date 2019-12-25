@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.repository.query;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
@@ -71,7 +72,8 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 			elasticsearchOperations.delete(query, clazz, index);
 		} else if (queryMethod.isPageQuery()) {
 			query.setPageable(accessor.getPageable());
-			result = elasticsearchOperations.searchForPage(query, clazz, index);
+			SearchHits<?> searchHits = elasticsearchOperations.search(query, clazz, index);
+			result = SearchHitSupport.page(searchHits, query.getPageable());
 		} else if (queryMethod.isStreamQuery()) {
 			Class<?> entityType = clazz;
 			if (accessor.getPageable().isUnpaged()) {

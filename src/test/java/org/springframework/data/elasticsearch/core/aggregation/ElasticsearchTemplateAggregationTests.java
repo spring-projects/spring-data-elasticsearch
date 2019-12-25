@@ -42,6 +42,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.ResultsExtractor;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -120,12 +121,9 @@ public class ElasticsearchTemplateAggregationTests {
 				.addAggregation(terms("subjects").field("subject")) //
 				.build();
 		// when
-		Aggregations aggregations = operations.query(searchQuery, new ResultsExtractor<Aggregations>() {
-			@Override
-			public Aggregations extract(SearchResponse response) {
-				return response.getAggregations();
-			}
-		}, null, IndexCoordinates.of(INDEX_NAME).withTypes("article"));
+		SearchHits<ArticleEntity> searchHits = operations.search(searchQuery, ArticleEntity.class, IndexCoordinates.of(INDEX_NAME));
+		Aggregations aggregations = searchHits.getAggregations();
+
 		// then
 		assertThat(aggregations).isNotNull();
 		assertThat(aggregations.asMap().get("subjects")).isNotNull();

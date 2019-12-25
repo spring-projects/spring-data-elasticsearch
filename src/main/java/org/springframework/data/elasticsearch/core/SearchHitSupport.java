@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 
@@ -80,5 +81,17 @@ public final class SearchHitSupport {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Builds an {@link AggregatedPage} with the {@link SearchHit} objects from a {@link SearchHits} object.
+	 * 
+	 * @param searchHits, must not be {@literal null}.
+	 * @param pageable, must not be {@literal null}.
+	 * @return the created Page
+	 */
+	public static <T> AggregatedPage<SearchHit<T>> page(SearchHits<T> searchHits, Pageable pageable) {
+		return new AggregatedPageImpl<>(searchHits.getSearchHits(), pageable, searchHits.getTotalHits(),
+				searchHits.getAggregations(), searchHits.getScrollId(), searchHits.getMaxScore());
 	}
 }

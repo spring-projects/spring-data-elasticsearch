@@ -21,6 +21,7 @@ import java.util.regex.Pattern;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
@@ -77,7 +78,8 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 
 		if (queryMethod.isPageQuery()) {
 			stringQuery.setPageable(accessor.getPageable());
-			result = elasticsearchOperations.searchForPage(stringQuery, clazz, index);
+			SearchHits<?> searchHits = elasticsearchOperations.search(stringQuery, clazz, index);
+			result = SearchHitSupport.page(searchHits, stringQuery.getPageable());
 		} else if (queryMethod.isCollectionQuery()) {
 			if (accessor.getPageable().isPaged()) {
 				stringQuery.setPageable(accessor.getPageable());

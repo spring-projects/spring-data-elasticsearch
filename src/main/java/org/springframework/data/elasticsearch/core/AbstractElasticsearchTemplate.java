@@ -19,7 +19,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.elasticsearch.ElasticsearchException;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
@@ -108,57 +107,47 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public <T> AggregatedPage<SearchHit<T>> search(MoreLikeThisQuery query, Class<T> clazz, IndexCoordinates index) {
+	public <T> SearchHits<T> search(MoreLikeThisQuery query, Class<T> clazz, IndexCoordinates index) {
 
 		Assert.notNull(query.getId(), "No document id defined for MoreLikeThisQuery");
 
 		MoreLikeThisQueryBuilder moreLikeThisQueryBuilder = requestFactory.moreLikeThisQueryBuilder(query, index);
-
-		return searchForPage(new NativeSearchQueryBuilder().withQuery(moreLikeThisQueryBuilder).build(), clazz, index);
+		return search(new NativeSearchQueryBuilder().withQuery(moreLikeThisQueryBuilder).build(), clazz, index);
 	}
 
 	@Override
-	public <T> List<AggregatedPage<SearchHit<T>>> multiSearchForPage(List<? extends Query> queries, Class<T> clazz,
-			IndexCoordinates index) {
+	public <T> List<SearchHits<T>> multiSearch(List<? extends Query> queries, Class<T> clazz, IndexCoordinates index) {
 		MultiSearchRequest request = new MultiSearchRequest();
 		for (Query query : queries) {
 			request.add(requestFactory.searchRequest(query, clazz, index));
 		}
-		return doMultiSearch(queries, clazz, request);
+
+		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
+
+		List<SearchHits<T>> res = new ArrayList<>(queries.size());
+		int c = 0;
+		for (Query query : queries) {
+			res.add(elasticsearchConverter.read(clazz, SearchDocumentResponse.from(items[c++].getResponse())));
+		}
+		return res;
 	}
 
 	@Override
-	public List<AggregatedPage<? extends SearchHit<?>>> multiSearchForPage(List<? extends Query> queries,
-			List<Class<?>> classes, IndexCoordinates index) {
+	public List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes,
+			IndexCoordinates index) {
 		MultiSearchRequest request = new MultiSearchRequest();
 		Iterator<Class<?>> it = classes.iterator();
 		for (Query query : queries) {
 			request.add(requestFactory.searchRequest(query, it.next(), index));
 		}
-		return doMultiSearch(queries, classes, request);
-	}
 
-	private <T> List<AggregatedPage<SearchHit<T>>> doMultiSearch(List<? extends Query> queries, Class<T> clazz,
-			MultiSearchRequest request) {
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
-		List<AggregatedPage<SearchHit<T>>> res = new ArrayList<>(queries.size());
-		int c = 0;
-		for (Query query : queries) {
-			res.add(elasticsearchConverter.mapResults(SearchDocumentResponse.from(items[c++].getResponse()), clazz,
-					query.getPageable()));
-		}
-		return res;
-	}
 
-	private List<AggregatedPage<? extends SearchHit<?>>> doMultiSearch(List<? extends Query> queries,
-			List<Class<?>> classes, MultiSearchRequest request) {
-		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
-		List<AggregatedPage<? extends SearchHit<?>>> res = new ArrayList<>(queries.size());
+		List<SearchHits<?>> res = new ArrayList<>(queries.size());
 		int c = 0;
-		Iterator<Class<?>> it = classes.iterator();
+		Iterator<Class<?>> it1 = classes.iterator();
 		for (Query query : queries) {
-			res.add(elasticsearchConverter.mapResults(SearchDocumentResponse.from(items[c++].getResponse()), it.next(),
-					query.getPageable()));
+			res.add(elasticsearchConverter.read(it1.next(), SearchDocumentResponse.from(items[c++].getResponse())));
 		}
 		return res;
 	}

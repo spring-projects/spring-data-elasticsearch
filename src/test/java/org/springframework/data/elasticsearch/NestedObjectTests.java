@@ -38,16 +38,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -196,11 +193,11 @@ public class NestedObjectTests {
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
 
-		Page<SearchHit<PersonMultipleLevelNested>> personIndexed = elasticsearchTemplate.searchForPage(searchQuery,
+		SearchHits<PersonMultipleLevelNested> personIndexed = elasticsearchTemplate.search(searchQuery,
 				PersonMultipleLevelNested.class, index);
 		assertThat(personIndexed).isNotNull();
-		assertThat(personIndexed.getTotalElements()).isEqualTo(1);
-		assertThat(personIndexed.getContent().get(0).getContent().getId()).isEqualTo("1");
+		assertThat(personIndexed.getTotalHits()).isEqualTo(1);
+		assertThat(personIndexed.getSearchHit(0).getContent().getId()).isEqualTo("1");
 	}
 
 	private List<IndexQuery> createPerson() {
@@ -381,10 +378,10 @@ public class NestedObjectTests {
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(nestedQuery("buckets", termQuery("buckets.1", "test3"), ScoreMode.None)).build();
-		AggregatedPage<SearchHit<Book>> books = elasticsearchTemplate.searchForPage(searchQuery, Book.class, index);
+		SearchHits<Book> books = elasticsearchTemplate.search(searchQuery, Book.class, index);
 
-		assertThat(books.getContent()).hasSize(1);
-		assertThat(books.getContent().get(0).getContent().getId()).isEqualTo(book2.getId());
+		assertThat(books.getSearchHits()).hasSize(1);
+		assertThat(books.getSearchHit(0).getContent().getId()).isEqualTo(book2.getId());
 	}
 
 	@Setter

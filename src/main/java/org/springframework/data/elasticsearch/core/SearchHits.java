@@ -18,9 +18,10 @@ package org.springframework.data.elasticsearch.core;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Stream;
 
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.data.util.Streamable;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -33,22 +34,28 @@ import org.springframework.util.StringUtils;
  */
 public class SearchHits<T> implements Streamable<SearchHit<T>> {
 
-	private final List<? extends SearchHit<T>> searchHits;
 	private final long totalHits;
 	private final float maxScore;
+	private final String scrollId;
+	private final List<? extends SearchHit<T>> searchHits;
+	private final Aggregations aggregations;
 
 	/**
-	 * @param searchHits must not be {@literal null}
 	 * @param totalHits
 	 * @param maxScore
+	 * @param searchHits must not be {@literal null}
+	 * @param aggregations
 	 */
-	public SearchHits(List<? extends SearchHit<T>> searchHits, long totalHits, float maxScore) {
-		this.totalHits = totalHits;
-		this.maxScore = maxScore;
+	public SearchHits(long totalHits, float maxScore, @Nullable String scrollId,  List<? extends SearchHit<T>> searchHits,
+			@Nullable Aggregations aggregations) {
 
 		Assert.notNull(searchHits, "searchHits must not be null");
 
+		this.totalHits = totalHits;
+		this.maxScore = maxScore;
+		this.scrollId = scrollId;
 		this.searchHits = searchHits;
+		this.aggregations = aggregations;
 	}
 
 	@Override
@@ -56,20 +63,34 @@ public class SearchHits<T> implements Streamable<SearchHit<T>> {
 		return (Iterator<SearchHit<T>>) searchHits.iterator();
 	}
 
+	/**
+	 * @return the number of total hits.
+	 */
 	// region getter
+	public long getTotalHits() {
+		return totalHits;
+	}
+
+	/**
+	 * @return the maximum score
+	 */
+	public float getMaxScore() {
+		return maxScore;
+	}
+
+	/**
+	 * @return the scroll id
+	 */
+	@Nullable
+	public String getScrollId() {
+		return scrollId;
+	}
+
 	/**
 	 * @return the contained {@link SearchHit}s.
 	 */
 	public List<SearchHit<T>> getSearchHits() {
 		return Collections.unmodifiableList(searchHits);
-	}
-
-	public long getTotalHits() {
-		return totalHits;
-	}
-
-	public float getMaxScore() {
-		return maxScore;
 	}
 	// endregion
 
@@ -86,7 +107,30 @@ public class SearchHits<T> implements Streamable<SearchHit<T>> {
 
 	@Override
 	public String toString() {
-		return "SearchHits{" + "totalHits=" + totalHits + ", maxScore=" + maxScore + ", searchHits="
-				+ StringUtils.collectionToCommaDelimitedString(searchHits) + '}';
+		return "SearchHits{" +
+				"totalHits=" + totalHits +
+				", maxScore=" + maxScore +
+				", scrollId='" + scrollId + '\'' +
+				", searchHits=" + StringUtils.collectionToCommaDelimitedString(searchHits) +
+				", aggregations=" + aggregations +
+				'}';
 	}
+
+	/**
+	 * @return true if aggregations are available
+	 */
+	// region aggregations
+	public boolean hasAggregations() {
+		return aggregations != null;
+	}
+
+	/**
+	 * @return the aggregations.
+	 */
+	@Nullable
+	public Aggregations getAggregations() {
+		return aggregations;
+	}
+	// endregion
+
 }
