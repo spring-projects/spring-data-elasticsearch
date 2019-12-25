@@ -61,6 +61,7 @@ import org.springframework.web.util.UriBuilder;
  * @author Christoph Strobl
  * @author Huw Ayling-Miller
  * @author Henrique Amaral
+ * @author Peter-Josef Meisch
  */
 public class ReactiveMockClientTestsUtils {
 
@@ -274,6 +275,11 @@ public class ReactiveMockClientTestsUtils {
 		@Override
 		public WebClientProvider withPathPrefix(String pathPrefix) {
 			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public WebClientProvider withWebClientConfigurer(Function<WebClient, WebClient> webClientConfigurer) {
+			throw new UnsupportedOperationException("not implemented");
 		}
 
 		public Send when(String host) {

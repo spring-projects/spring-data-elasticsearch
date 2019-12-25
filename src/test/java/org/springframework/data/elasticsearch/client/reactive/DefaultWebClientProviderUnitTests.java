@@ -18,12 +18,15 @@ package org.springframework.data.elasticsearch.client.reactive;
 import static org.assertj.core.api.Assertions.*;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  */
 public class DefaultWebClientProviderUnitTests {
 
@@ -39,5 +42,19 @@ public class DefaultWebClientProviderUnitTests {
 
 		assertThat(shouldBeCachedInstanceOfClient1).isSameAs(client1);
 		assertThat(notClient1ButAnotherInstance).isNotSameAs(client1);
+	}
+
+	@Test // DATAES-719
+	void shouldCallWebClientConfigurer() {
+		AtomicReference<Boolean> configurerCalled = new AtomicReference<>(false);
+		Function<WebClient, WebClient> configurer = webClient -> {
+			configurerCalled.set(true);
+			return webClient;
+		};
+		WebClientProvider provider = new DefaultWebClientProvider("http", null).withWebClientConfigurer(configurer);
+
+		provider.get(InetSocketAddress.createUnresolved("localhost", 9200));
+
+		assertThat(configurerCalled).hasValue(true);
 	}
 }

@@ -21,12 +21,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Default {@link ClientConfiguration} implementation.
@@ -34,6 +36,7 @@ import org.springframework.lang.Nullable;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Huw Ayling-Miller
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 class DefaultClientConfiguration implements ClientConfiguration {
@@ -47,10 +50,11 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	private final String pathPrefix;
 	private final @Nullable HostnameVerifier hostnameVerifier;
 	private final String proxy;
+	private final Function<WebClient, WebClient> webClientConfigurer;
 
 	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
 			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout, @Nullable String pathPrefix,
-			@Nullable HostnameVerifier hostnameVerifier, String proxy) {
+			@Nullable HostnameVerifier hostnameVerifier, String proxy, Function<WebClient, WebClient> webClientConfigurer) {
 
 		this.hosts = Collections.unmodifiableList(new ArrayList<>(hosts));
 		this.headers = new HttpHeaders(headers);
@@ -61,86 +65,56 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		this.pathPrefix = pathPrefix;
 		this.hostnameVerifier = hostnameVerifier;
 		this.proxy = proxy;
+		this.webClientConfigurer = webClientConfigurer;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getEndpoints()
-	 */
 	@Override
 	public List<InetSocketAddress> getEndpoints() {
 		return this.hosts;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getDefaultHeaders()
-	 */
 	@Override
 	public HttpHeaders getDefaultHeaders() {
 		return this.headers;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#useSsl()
-	 */
 	@Override
 	public boolean useSsl() {
 		return this.useSsl;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getSslContext()
-	 */
 	@Override
 	public Optional<SSLContext> getSslContext() {
 		return Optional.ofNullable(this.sslContext);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getHostNameVerifier()
-	 */
 	@Override
 	public Optional<HostnameVerifier> getHostNameVerifier() {
 		return Optional.ofNullable(this.hostnameVerifier);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getConnectTimeout()
-	 */
 	@Override
 	public Duration getConnectTimeout() {
 		return this.connectTimeout;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getSocketTimeout()
-	 */
 	@Override
 	public Duration getSocketTimeout() {
 		return this.soTimeout;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getPathPrefix()
-	 */
 	@Override
 	public String getPathPrefix() {
 		return this.pathPrefix;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration#getProxy()
-	 */
 	@Override
 	public Optional<String> getProxy() {
 		return Optional.ofNullable(proxy);
+	}
+
+	@Override
+	public Function<WebClient, WebClient> getWebClientConfigurer() {
+		return webClientConfigurer != null ? webClientConfigurer : Function.identity();
 	}
 }
