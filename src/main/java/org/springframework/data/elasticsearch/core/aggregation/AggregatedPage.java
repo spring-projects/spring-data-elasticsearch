@@ -9,7 +9,9 @@ import org.springframework.data.elasticsearch.core.ScrolledPage;
  * @author Petar Tahchiev
  * @author Sascha Woo
  * @author Peter-Josef Meisch
+ * @deprecated since 4.0, use {@link org.springframework.data.elasticsearch.core.SearchHits} to return values.
  */
+@Deprecated
 public interface AggregatedPage<T> extends ScrolledPage<T>, ScoredPage<T> {
 
 	boolean hasAggregations();

@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,8 +60,7 @@ public interface SearchOperations {
 	 */
 	long count(Query query, @Nullable Class<?> clazz, IndexCoordinates index);
 
-	<T> T query(Query query, ResultsExtractor<T> resultsExtractor, Class<T> clazz, IndexCoordinates index);
-
+	// region deprecated
 	/**
 	 * Execute the query against elasticsearch and return the first returned object.
 	 *
@@ -82,11 +82,13 @@ public interface SearchOperations {
 	 * @param clazz the entity clazz used for property mapping
 	 * @param index the index to run the query against
 	 * @return a page with aggregations
-	 * @deprecated since 4.0, use {@link #searchForPage(Query, Class, IndexCoordinates)}.
+	 * @deprecated since 4.0, use {@link #search(Query, Class, IndexCoordinates)}.
 	 */
 	@Deprecated
 	default <T> AggregatedPage<T> queryForPage(Query query, Class<T> clazz, IndexCoordinates index) {
-		return (AggregatedPage<T>) SearchHitSupport.unwrapSearchHits(searchForPage(query, clazz, index));
+		SearchHits<T> searchHits = search(query, clazz, index);
+		AggregatedPage<SearchHit<T>> aggregatedPage = SearchHitSupport.page(searchHits, query.getPageable());
+		return (AggregatedPage<T>) SearchHitSupport.unwrapSearchHits(aggregatedPage);
 	}
 
 	/**
@@ -96,13 +98,19 @@ public interface SearchOperations {
 	 * @param clazz the entity clazz used for property mapping
 	 * @param index the index to run the query against
 	 * @return list of pages with the results
-	 * @deprecated since 4.0, use {@link #multiSearchForPage(List, Class, IndexCoordinates)}.
+	 * @deprecated since 4.0, use {@link #multiSearch(List, Class, IndexCoordinates)}.
 	 */
 	@Deprecated
 	default <T> List<Page<T>> queryForPage(List<? extends Query> queries, Class<T> clazz, IndexCoordinates index) {
-		return multiSearchForPage(queries, clazz, index).stream() //
-				.map(page -> (Page<T>) SearchHitSupport.unwrapSearchHits(page)) //
-				.collect(Collectors.toList());
+		List<Page<T>> pageList = new ArrayList<>();
+		List<SearchHits<T>> searchHitsList = multiSearch(queries, clazz, index);
+		Iterator<? extends Query> qit = queries.iterator();
+		searchHitsList.forEach(searchHits -> {
+			AggregatedPage<SearchHit<T>> aggregatedPage = SearchHitSupport.page(searchHits, qit.next().getPageable());
+			Page<T> page = (Page<T>) SearchHitSupport.unwrapSearchHits(aggregatedPage);
+			pageList.add(page);
+		});
+		return pageList;
 	}
 
 	/**
@@ -112,14 +120,22 @@ public interface SearchOperations {
 	 * @param classes the entity classes used for the queries
 	 * @param index the index to run the query against
 	 * @return list of pages with the results
-	 * @deprecated since 4.0, use {@link #multiSearchForPage(List, List, IndexCoordinates)}.
+	 * @deprecated since 4.0, use {@link #multiSearch(List, List, IndexCoordinates)}.
 	 */
 	@Deprecated
 	default List<AggregatedPage<?>> queryForPage(List<? extends Query> queries, List<Class<?>> classes,
 			IndexCoordinates index) {
-		return multiSearchForPage(queries, classes, index).stream() //
-				.map(page -> (AggregatedPage<?>) SearchHitSupport.unwrapSearchHits(page)) //
-				.collect(Collectors.toList());
+		List<AggregatedPage<?>> pageList = new ArrayList<>();
+		List<SearchHits<?>> searchHitsList = multiSearch(queries, classes, index);
+		Iterator<? extends Query> qit = queries.iterator();
+		searchHitsList.forEach(searchHits -> {
+			AggregatedPage<? extends SearchHit<?>> aggregatedPage = SearchHitSupport.page(searchHits,
+					qit.next().getPageable());
+			AggregatedPage<?> page = (AggregatedPage<?>) SearchHitSupport.unwrapSearchHits(aggregatedPage);
+			pageList.add(page);
+		});
+
+		return pageList;
 	}
 
 	/**
@@ -219,7 +235,7 @@ public interface SearchOperations {
 	 * @param scrollTimeInMillis duration of the scroll time
 	 * @param clazz The class of entity to retrieve.
 	 * @return scrolled page result
-	 * @deprecated since 4.0, use {@link #searchScrollStart(long, Query, Class, IndexCoordinates)}.
+	 * @deprecated since 4.0, use {@link #searchScrollContinue(String, long, Class)}.
 	 */
 	@Deprecated
 	default <T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz) {
@@ -250,8 +266,11 @@ public interface SearchOperations {
 	 */
 	@Deprecated
 	default <T> AggregatedPage<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz, IndexCoordinates index) {
-		return (AggregatedPage<T>) SearchHitSupport.unwrapSearchHits(search(query, clazz, index));
+		SearchHits<T> searchHits = search(query, clazz, index);
+		AggregatedPage<SearchHit<T>> aggregatedPage = SearchHitSupport.page(searchHits, query.getPageable());
+		return (AggregatedPage<T>) SearchHitSupport.unwrapSearchHits(aggregatedPage);
 	}
+	// endregion
 
 	/**
 	 * Execute the query against elasticsearch and return the first returned object.
@@ -263,41 +282,30 @@ public interface SearchOperations {
 	 */
 	@Nullable
 	default <T> SearchHit<T> searchOne(Query query, Class<T> clazz, IndexCoordinates index) {
-		List<SearchHit<T>> content = searchForPage(query, clazz, index).getContent();
+		List<SearchHit<T>> content = search(query, clazz, index).getSearchHits();
 		return content.isEmpty() ? null : content.get(0);
 	}
 
 	/**
-	 * Execute the query against elasticsearch and return result as {@link AggregatedPage}.
+	 * Execute the multi search query against elasticsearch and return result as {@link List} of {@link SearchHits}.
 	 *
-	 * @param query the query to execute
+	 * @param queries the queries to execute
 	 * @param clazz the entity clazz used for property mapping
 	 * @param index the index to run the query against
-	 * @return a page with aggregations
+	 * @param <T> element return type
+	 * @return list of SearchHits
 	 */
-	<T> AggregatedPage<SearchHit<T>> searchForPage(Query query, Class<T> clazz, IndexCoordinates index);
+	<T> List<SearchHits<T>> multiSearch(List<? extends Query> queries, Class<T> clazz, IndexCoordinates index);
 
 	/**
-	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link AggregatedPage}
+	 * Execute the multi search query against elasticsearch and return result as {@link List} of {@link SearchHits}.
 	 *
-	 * @param queries the queries
-	 * @param clazz the entity clazz used for property mapping
+	 * @param queries the queries to execute
+	 * @param classes the entity classes used for property mapping
 	 * @param index the index to run the query against
-	 * @return list of pages with the results
+	 * @return list of SearchHits
 	 */
-	<T> List<AggregatedPage<SearchHit<T>>> multiSearchForPage(List<? extends Query> queries, Class<T> clazz,
-			IndexCoordinates index);
-
-	/**
-	 * Execute the multi-search against elasticsearch and return result as {@link List} of {@link AggregatedPage}
-	 *
-	 * @param queries the queries
-	 * @param classes the entity classes used for the queries
-	 * @param index the index to run the query against
-	 * @return list of pages with the results
-	 */
-	List<AggregatedPage<? extends SearchHit<?>>> multiSearchForPage(List<? extends Query> queries, List<Class<?>> classes,
-			IndexCoordinates index);
+	List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes, IndexCoordinates index);
 
 	/**
 	 * Execute the criteria query against elasticsearch and return result as {@link SearchHits}
@@ -308,42 +316,7 @@ public interface SearchOperations {
 	 * @param index the index to run the query against
 	 * @return SearchHits containing the list of found objects
 	 */
-	default <T> SearchHits<T> search(Query query, Class<T> clazz, IndexCoordinates index) {
-		AggregatedPage<SearchHit<T>> aggregatedPage = searchForPage(query, clazz, index);
-		return new SearchHits<>(aggregatedPage.getContent(), aggregatedPage.getTotalElements(),
-				aggregatedPage.getMaxScore());
-	}
-
-	/**
-	 * Execute the multi search query against elasticsearch and return result as {@link List} of {@link SearchHits}.
-	 *
-	 * @param queries the queries to execute
-	 * @param clazz the entity clazz used for property mapping
-	 * @param index the index to run the query against
-	 * @param <T> element return type
-	 * @return list of SearchHits
-	 */
-	default <T> List<SearchHits<T>> multiSearch(List<Query> queries, Class<T> clazz, IndexCoordinates index) {
-		return multiSearchForPage(queries, clazz, index).stream()
-				.map(page -> new SearchHits<T>(page.getContent(), page.getTotalElements(), page.getMaxScore()))
-				.collect(Collectors.toList());
-	}
-
-	/**
-	 * Execute the multi search query against elasticsearch and return result as {@link List} of {@link SearchHits}.
-	 *
-	 * @param queries the queries to execute
-	 * @param classes the entity classes used for property mapping
-	 * @param index the index to run the query against
-	 * @return list of SearchHits
-	 */
-	default List<SearchHits<?>> multiSearch(List<Query> queries, List<Class<?>> classes, IndexCoordinates index) {
-		List<SearchHits<?>> searchHitsList = new ArrayList<>();
-		multiSearchForPage(queries, classes, index).forEach(page -> {
-			searchHitsList.add(new SearchHits(page.getContent(), page.getTotalElements(), page.getMaxScore()));
-		});
-		return searchHitsList;
-	}
+	<T> SearchHits<T> search(Query query, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * more like this query to search for documents that are "like" a specific document.
@@ -352,9 +325,9 @@ public interface SearchOperations {
 	 * @param query the query to execute
 	 * @param clazz the entity clazz used for property mapping
 	 * @param index the index to run the query against
-	 * @return page with the results
+	 * @return SearchHits containing the list of found objects
 	 */
-	<T> AggregatedPage<SearchHit<T>> search(MoreLikeThisQuery query, Class<T> clazz, IndexCoordinates index);
+	<T> SearchHits<T> search(MoreLikeThisQuery query, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Returns scrolled page for given query
@@ -377,7 +350,7 @@ public interface SearchOperations {
 	 * @return scrolled page result
 	 */
 	<T> ScrolledPage<SearchHit<T>> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
-														Class<T> clazz);
+			Class<T> clazz);
 
 	/**
 	 * Clears the search contexts associated with specified scroll ids.

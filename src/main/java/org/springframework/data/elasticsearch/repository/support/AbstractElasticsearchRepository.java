@@ -39,6 +39,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -139,8 +140,9 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	@Override
 	public Page<T> findAll(Pageable pageable) {
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withPageable(pageable).build();
-		AggregatedPage<SearchHit<T>> page = operations.searchForPage(query, getEntityClass(), getIndexCoordinates());
-		return unwrapSearchHits(page);
+		SearchHits<T> searchHits = operations.search(query, getEntityClass(), getIndexCoordinates());
+		AggregatedPage<SearchHit<T>> page = SearchHitSupport.page(searchHits, query.getPageable());
+		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
 	}
 
 	@Override
@@ -152,12 +154,9 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		}
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, itemCount, sort)).build();
-		AggregatedPage<SearchHit<T>> page = operations.searchForPage(query, getEntityClass(), getIndexCoordinates());
-		return unwrapSearchHits(page);
-	}
-
-	private Page<T> unwrapSearchHits(AggregatedPage<SearchHit<T>> page) {
-		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
+		List<SearchHit<T>> searchHitList = operations.search(query, getEntityClass(), getIndexCoordinates())
+				.getSearchHits();
+		return (List<T>) SearchHitSupport.unwrapSearchHits(searchHitList);
 	}
 
 	@Override
@@ -226,21 +225,24 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 			return new PageImpl<>(Collections.<T> emptyList());
 		}
 		searchQuery.setPageable(PageRequest.of(0, count));
-		AggregatedPage<SearchHit<T>> page = operations.searchForPage(searchQuery, getEntityClass(), getIndexCoordinates());
-		return unwrapSearchHits(page);
+		SearchHits<T> searchHits = operations.search(searchQuery, getEntityClass(), getIndexCoordinates());
+		AggregatedPage<SearchHit<T>> page = SearchHitSupport.page(searchHits, searchQuery.getPageable());
+		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
 	}
 
 	@Override
 	public Page<T> search(QueryBuilder query, Pageable pageable) {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(query).withPageable(pageable).build();
-		AggregatedPage<SearchHit<T>> page = operations.searchForPage(searchQuery, getEntityClass(), getIndexCoordinates());
-		return unwrapSearchHits(page);
+		SearchHits<T> searchHits = operations.search(searchQuery, getEntityClass(), getIndexCoordinates());
+		AggregatedPage<SearchHit<T>> page = SearchHitSupport.page(searchHits, searchQuery.getPageable());
+		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
 	}
 
 	@Override
 	public Page<T> search(Query query) {
-		AggregatedPage<SearchHit<T>> page = operations.searchForPage(query, getEntityClass(), getIndexCoordinates());
-		return unwrapSearchHits(page);
+		SearchHits<T> searchHits = operations.search(query, getEntityClass(), getIndexCoordinates());
+		AggregatedPage<SearchHit<T>> page = SearchHitSupport.page(searchHits, query.getPageable());
+		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
 	}
 
 	@Override
@@ -255,8 +257,9 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 			query.addFields(fields);
 		}
 
-		AggregatedPage<SearchHit<T>> page = operations.search(query, getEntityClass(), getIndexCoordinates());
-		return unwrapSearchHits(page);
+		SearchHits<T> searchHits = operations.search(query, getEntityClass(), getIndexCoordinates());
+		AggregatedPage<SearchHit<T>> page = SearchHitSupport.page(searchHits, pageable);
+		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
 	}
 
 	@Override

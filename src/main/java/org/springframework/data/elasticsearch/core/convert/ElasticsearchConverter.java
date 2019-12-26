@@ -20,6 +20,7 @@ import java.util.List;
 import org.springframework.data.convert.EntityConverter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
@@ -85,11 +86,21 @@ public interface ElasticsearchConverter
 	<T> T mapDocument(@Nullable Document document, Class<T> type);
 
 	/**
-	 * builds a {@link SearchHit} from a {@link SearchDocument}.
-	 * 
-	 * @param searchDocument must not be {@literal null}
+	 * builds a {@link SearchHits} from a {@link SearchDocumentResponse}.
 	 * @param <T> the clazz of the type, must not be {@literal null}.
 	 * @param type the type of the returned data, must not be {@literal null}.
+	 * @param searchDocumentResponse the response to read from, must not be {@literal null}.
+	 * @return a SearchHits object
+	 * @since 4.0
+	 */
+	<T> SearchHits<T> read(Class<T> type, SearchDocumentResponse searchDocumentResponse);
+
+	/**
+	 * builds a {@link SearchHit} from a {@link SearchDocument}.
+	 *
+	 * @param <T> the clazz of the type, must not be {@literal null}.
+	 * @param type the type of the returned data, must not be {@literal null}.
+	 * @param searchDocument must not be {@literal null}
 	 * @return SearchHit with all available information filled in
 	 * @since 4.0
 	 */
@@ -108,7 +119,7 @@ public interface ElasticsearchConverter
 
 	/**
 	 * Map an object to a {@link Document}.
-	 * 
+	 *
 	 * @param source
 	 * @return will not be {@literal null}.
 	 */

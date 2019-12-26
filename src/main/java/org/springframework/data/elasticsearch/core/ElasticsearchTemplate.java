@@ -196,17 +196,10 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> T query(Query query, ResultsExtractor<T> resultsExtractor, Class<T> clazz, IndexCoordinates index) {
+	public <T> SearchHits<T> search(Query query, Class<T> clazz, IndexCoordinates index) {
 		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, clazz, index);
 		SearchResponse response = getSearchResponse(searchRequestBuilder);
-		return resultsExtractor.extract(response);
-	}
-
-	@Override
-	public <T> AggregatedPage<SearchHit<T>> searchForPage(Query query, Class<T> clazz, IndexCoordinates index) {
-		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, clazz, index);
-		SearchResponse response = getSearchResponse(searchRequestBuilder);
-		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, query.getPageable());
+		return elasticsearchConverter.read(clazz, SearchDocumentResponse.from(response));
 	}
 
 	@Override

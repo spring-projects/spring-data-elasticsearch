@@ -37,12 +37,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
-import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -137,11 +137,11 @@ public class CriteriaQueryTests {
 				new Criteria("message").contains("some").or("message").contains("test"));
 
 		// when
-		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
-		assertThat(page).isNotNull();
-		assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
 
 	@Test
@@ -168,14 +168,13 @@ public class CriteriaQueryTests {
 
 		// when
 
-		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
-		assertThat(page).isNotNull();
-		assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
 
-	// @Ignore("DATAES-30")
 	@Test
 	public void shouldPerformOrOperationWithinCriteria() {
 
@@ -199,11 +198,11 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria().or(new Criteria("message").contains("some")));
 
 		// when
-		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
-		assertThat(page).isNotNull();
-		assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
 
 	@Test
@@ -228,11 +227,11 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("some message"));
 
 		// when
-		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
-		assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
+		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
 
 	@Test
@@ -270,11 +269,11 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("some message"));
 
 		// when
-		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
-		assertThat(page.getTotalElements()).isEqualTo(1);
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 	}
 
 	@Test
@@ -520,12 +519,12 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("foo").not());
 
 		// when
-		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(criteriaQuery.getCriteria().isNegating()).isTrue();
-		assertThat(page).isNotNull();
-		assertThat(page.iterator().next().getContent().getMessage()).doesNotContain("foo");
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.iterator().next().getContent().getMessage()).doesNotContain("foo");
 	}
 
 	@Test
@@ -606,11 +605,11 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(350, null));
 
 		// when
-		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
-		assertThat(page).isNotNull();
-		assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
 
 	@Test
@@ -649,11 +648,11 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(null, 550));
 
 		// when
-		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
-		assertThat(page).isNotNull();
-		assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
 
 	@Test
@@ -692,11 +691,11 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").lessThanEqual(750));
 
 		// when
-		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
-		assertThat(page).isNotNull();
-		assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
 
 	@Test
@@ -735,11 +734,11 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").greaterThanEqual(950));
 
 		// when
-		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
-		assertThat(page).isNotNull();
-		assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
 
 	@Test
@@ -778,10 +777,10 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("foo").boost(1));
 
 		// when
-		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
-		assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
+		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
 
 	@Test
@@ -801,11 +800,11 @@ public class CriteriaQueryTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").contains("a").or(new Criteria("message").contains("b")));
 		criteriaQuery.setMinScore(2.0F);
-		Page<SearchHit<SampleEntity>> page = operations.searchForPage(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
-		assertThat(page.getTotalElements()).isEqualTo(1);
-		assertThat(page.getContent().get(0).getContent().getMessage()).isEqualTo("ab");
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		assertThat(searchHits.getSearchHit(0).getContent().getMessage()).isEqualTo("ab");
 	}
 
 	@Test // DATAES-213

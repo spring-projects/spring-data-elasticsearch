@@ -22,7 +22,9 @@ import org.springframework.data.domain.Page;
  * 
  * @param <T>
  * @author Sascha Woo
+ * @deprecated since 4.0, use {@link org.springframework.data.elasticsearch.core.SearchHits} to return values.
  */
+@Deprecated
 public interface ScoredPage<T> extends Page<T> {
 
 	float getMaxScore();

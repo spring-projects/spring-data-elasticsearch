@@ -226,19 +226,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> T query(Query query, ResultsExtractor<T> resultsExtractor, @Nullable Class<T> clazz,
-			IndexCoordinates index) {
-		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
-		try {
-			SearchResponse result = client.search(searchRequest, RequestOptions.DEFAULT);
-			return resultsExtractor.extract(result);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error for search request: " + searchRequest.toString(), e);
-		}
-	}
-
-	@Override
-	public <T> AggregatedPage<SearchHit<T>> searchForPage(Query query, Class<T> clazz, IndexCoordinates index) {
+	public <T> SearchHits<T> search(Query query, Class<T> clazz, IndexCoordinates index) {
 		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
 		SearchResponse response;
 		try {
@@ -246,7 +234,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error for search request: " + searchRequest.toString(), e);
 		}
-		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, query.getPageable());
+		return elasticsearchConverter.read(clazz, SearchDocumentResponse.from(response));
 	}
 
 	@Override

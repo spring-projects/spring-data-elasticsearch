@@ -17,10 +17,20 @@ package org.springframework.data.elasticsearch.core.convert;
 
 import lombok.RequiredArgsConstructor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -36,6 +46,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -152,11 +163,6 @@ public class MappingElasticsearchConverter
 	@SuppressWarnings("unchecked")
 	@Nullable
 	protected <R> R doRead(Document source, TypeInformation<R> typeHint) {
-
-		if (source == null) {
-			return null;
-		}
-
 		typeHint = (TypeInformation<R>) typeMapper.readType(source, typeHint);
 
 		if (conversions.hasCustomReadTarget(Map.class, typeHint.getType())) {
@@ -598,7 +604,27 @@ public class MappingElasticsearchConverter
 	}
 
 	@Override
+	public <T> SearchHits<T> read(Class<T> type, SearchDocumentResponse searchDocumentResponse) {
+
+		Assert.notNull(type, "type must not be null");
+		Assert.notNull(searchDocumentResponse, "searchDocumentResponse must not be null");
+
+		long totalHits = searchDocumentResponse.getTotalHits();
+		float maxScore = searchDocumentResponse.getMaxScore();
+		String scrollId = searchDocumentResponse.getScrollId();
+		List<SearchHit<T>> searchHits = searchDocumentResponse.getSearchDocuments().stream() //
+				.map(searchDocument -> read(type, searchDocument)) //
+				.collect(Collectors.toList());
+		Aggregations aggregations = searchDocumentResponse.getAggregations();
+		return new SearchHits<T>(totalHits, maxScore, scrollId, searchHits, aggregations);
+	}
+
+	@Override
 	public <T> SearchHit<T> read(Class<T> type, SearchDocument searchDocument) {
+
+		Assert.notNull(type, "type must not be null");
+		Assert.notNull(searchDocument, "searchDocument must not be null");
+
 		String id = searchDocument.hasId() ? searchDocument.getId() : null;
 		float score = searchDocument.getScore();
 		Object[] sortValues = searchDocument.getSortValues();
