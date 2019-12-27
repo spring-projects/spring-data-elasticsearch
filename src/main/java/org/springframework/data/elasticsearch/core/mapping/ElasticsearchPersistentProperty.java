@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.lang.Nullable;
 
 /**
  * ElasticsearchPersistentProperty
@@ -59,6 +60,19 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 * @since 3.1
 	 */
 	boolean isParentProperty();
+
+	/**
+	 * @return true if an {@link ElasticsearchPersistentPropertyConverter} is available for this instance.
+	 * @since 4.0
+	 */
+	boolean hasPropertyConverter();
+
+	/**
+	 * @return the {@link ElasticsearchPersistentPropertyConverter} for this instance.
+	 * @since 4.0
+	 */
+	@Nullable
+	ElasticsearchPersistentPropertyConverter getPropertyConverter();
 
 	public enum PropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
 

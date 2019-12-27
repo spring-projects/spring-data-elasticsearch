@@ -53,6 +53,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	private final boolean isParent;
 	private final boolean isId;
 	private final @Nullable String annotatedFieldName;
+	private ElasticsearchPersistentPropertyConverter propertyConverter;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
 			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
@@ -80,37 +81,50 @@ public class SimpleElasticsearchPersistentProperty extends
 		initDateConverter();
 	}
 
+	@Override
+	public boolean hasPropertyConverter() {
+		return propertyConverter != null;
+	}
+
+	@Override
+	public ElasticsearchPersistentPropertyConverter getPropertyConverter() {
+		return propertyConverter;
+	}
+
+	/**
+	 * Initializes an {@link ElasticsearchPersistentPropertyConverter} if this property is annotated as a Field with type
+	 * {@link FieldType#Date}, has a {@link DateFormat} set and if the type of the property is one of the Java8 temporal
+	 * classes.
+	 */
 	private void initDateConverter() {
 		Field field = findAnnotation(Field.class);
 		if (field != null && field.type() == FieldType.Date && TemporalAccessor.class.isAssignableFrom(getType())) {
 			DateFormat dateFormat = field.format();
 
-			ElasticsearchDateConverter elasticsearchDateConverter = null;
+			ElasticsearchDateConverter converter = null;
 
-			if (dateFormat != DateFormat.none && dateFormat != DateFormat.custom) {
-				elasticsearchDateConverter = ElasticsearchDateConverter.of(dateFormat);
-			} else if (dateFormat == DateFormat.custom) {
+			if (dateFormat == DateFormat.custom) {
 				String pattern = field.pattern();
 
 				if (StringUtils.hasLength(pattern)) {
-					elasticsearchDateConverter = ElasticsearchDateConverter.of(pattern);
+					converter = ElasticsearchDateConverter.of(pattern);
 				}
+			} else if (dateFormat != DateFormat.none) {
+				converter = ElasticsearchDateConverter.of(dateFormat);
 			}
 
-			if (elasticsearchDateConverter != null) {
-				ElasticsearchDateConverter finalElasticsearchDateConverter = elasticsearchDateConverter;
-
-				// todo DATAES-716 save to field
-				ElasticsearchPersistentPropertyConverter propertyConverter = new ElasticsearchPersistentPropertyConverter() {
-
+			if (converter != null) {
+				ElasticsearchDateConverter dateConverter = converter;
+				propertyConverter = new ElasticsearchPersistentPropertyConverter() {
 					@Override
 					public String write(Object property) {
-						return finalElasticsearchDateConverter.format(((TemporalAccessor) property));
+						return dateConverter.format((TemporalAccessor) property);
 					}
 
+					@SuppressWarnings("unchecked")
 					@Override
 					public Object read(String s) {
-						return finalElasticsearchDateConverter.parse(s, (Class<? extends TemporalAccessor>) getType());
+						return dateConverter.parse(s, (Class<? extends TemporalAccessor>) getType());
 					}
 				};
 			}
