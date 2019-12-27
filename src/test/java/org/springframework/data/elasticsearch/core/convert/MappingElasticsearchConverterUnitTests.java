@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.convert;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,16 +27,17 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.ConversionService;
@@ -47,6 +49,9 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -294,7 +299,7 @@ public class MappingElasticsearchConverterUnitTests {
 	public void writesNestedEntity() {
 
 		Person person = new Person();
-		person.birthdate = new Date();
+		person.birthdate = LocalDate.now();
 		person.gender = Gender.MAN;
 		person.address = observatoryRoad;
 
@@ -574,6 +579,39 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(target.address).isEqualTo(bigBunsCafe);
 	}
 
+	@Test // DATAES-716
+	void shouldWriteLocalDate() throws JSONException {
+		Person person = new Person();
+		person.id = "4711";
+		person.birthdate = LocalDate.of(2000, 8, 22);
+		person.gender = Gender.MAN;
+
+		String expected = '{' + //
+				"  \"id\": \"4711\"," + //
+				"  \"birthdate\": \"22.08.2000\"," + //
+				"  \"gender\": \"MAN\"" + //
+				'}';
+		Document document = Document.create();
+		mappingElasticsearchConverter.write(person, document);
+		String json = document.toJson();
+
+		assertEquals(expected, json, false);
+	}
+
+	@Test
+	void shouldReadLocalDate() {
+		Document document = Document.create();
+		document.put("id", "4711");
+		document.put("birthdate", "22.08.2000");
+		document.put("gender", "MAN");
+
+		Person person = mappingElasticsearchConverter.read(Person.class, document);
+
+		assertThat(person.getId()).isEqualTo("4711");
+		assertThat(person.getBirthdate()).isEqualTo(LocalDate.of(2000, 8, 22));
+		assertThat(person.getGender()).isEqualTo(Gender.MAN);
+	}
+
 	private String pointTemplate(String name, Point point) {
 		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
 	}
@@ -598,7 +636,7 @@ public class MappingElasticsearchConverterUnitTests {
 
 		@Id String id;
 		String name;
-		Date birthdate;
+		@Field(type = FieldType.Date, format = DateFormat.custom, pattern = "dd.MM.yyyy") LocalDate birthdate;
 		Gender gender;
 		Address address;
 
@@ -759,5 +797,4 @@ public class MappingElasticsearchConverterUnitTests {
 
 		@GeoPointField private double[] pointD;
 	}
-
 }

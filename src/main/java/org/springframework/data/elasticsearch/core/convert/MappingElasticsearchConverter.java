@@ -52,6 +52,7 @@ import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -308,7 +309,9 @@ public class MappingElasticsearchConverter
 			return null;
 		}
 
-		// TODO DATAES-716 check for custom property converter
+		if (property.hasPropertyConverter() && String.class.isAssignableFrom(source.getClass())) {
+			source = property.getPropertyConverter().read((String) source);
+		}
 
 		Class<R> rawType = targetType.getType();
 		if (conversions.hasCustomReadTarget(source.getClass(), rawType)) {
@@ -494,12 +497,15 @@ public class MappingElasticsearchConverter
 				continue;
 			}
 
-			// TODO DATAES-716 check for custom property converter
-
 			Object value = accessor.getProperty(property);
 
 			if (value == null) {
 				continue;
+			}
+
+			if (property.hasPropertyConverter()) {
+				ElasticsearchPersistentPropertyConverter propertyConverter = property.getPropertyConverter();
+				value = propertyConverter.write(value);
 			}
 
 			if (!isSimpleType(value)) {
