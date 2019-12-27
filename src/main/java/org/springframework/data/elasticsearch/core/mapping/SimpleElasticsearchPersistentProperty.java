@@ -15,12 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Score;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
@@ -71,6 +75,45 @@ public class SimpleElasticsearchPersistentProperty extends
 
 		if (isParent && !getType().equals(String.class)) {
 			throw new MappingException(String.format("Parent property %s must be of type String!", property.getName()));
+		}
+
+		initDateConverter();
+	}
+
+	private void initDateConverter() {
+		Field field = findAnnotation(Field.class);
+		if (field != null && field.type() == FieldType.Date && TemporalAccessor.class.isAssignableFrom(getType())) {
+			DateFormat dateFormat = field.format();
+
+			ElasticsearchDateConverter elasticsearchDateConverter = null;
+
+			if (dateFormat != DateFormat.none && dateFormat != DateFormat.custom) {
+				elasticsearchDateConverter = ElasticsearchDateConverter.of(dateFormat);
+			} else if (dateFormat == DateFormat.custom) {
+				String pattern = field.pattern();
+
+				if (StringUtils.hasLength(pattern)) {
+					elasticsearchDateConverter = ElasticsearchDateConverter.of(pattern);
+				}
+			}
+
+			if (elasticsearchDateConverter != null) {
+				ElasticsearchDateConverter finalElasticsearchDateConverter = elasticsearchDateConverter;
+
+				// todo DATAES-716 save to field
+				ElasticsearchPersistentPropertyConverter propertyConverter = new ElasticsearchPersistentPropertyConverter() {
+
+					@Override
+					public String write(Object property) {
+						return finalElasticsearchDateConverter.format(((TemporalAccessor) property));
+					}
+
+					@Override
+					public Object read(String s) {
+						return finalElasticsearchDateConverter.parse(s, (Class<? extends TemporalAccessor>) getType());
+					}
+				};
+			}
 		}
 	}
 

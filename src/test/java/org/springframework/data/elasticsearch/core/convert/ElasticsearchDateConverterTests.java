@@ -12,7 +12,7 @@ import org.springframework.data.elasticsearch.annotations.DateFormat;
 /**
  * @author Peter-Josef Meisch
  */
-class ElasticsearchDateConverterTest {
+class ElasticsearchDateConverterTests {
 
 	@ParameterizedTest
 	@EnumSource(DateFormat.class)
