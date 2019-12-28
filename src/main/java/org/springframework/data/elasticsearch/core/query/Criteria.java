@@ -624,6 +624,7 @@ public class Criteria {
 	public static class CriteriaEntry {
 
 		private OperationKey key;
+
 		private Object value;
 
 		CriteriaEntry(OperationKey key, Object value) {
@@ -633,6 +634,10 @@ public class Criteria {
 
 		public OperationKey getKey() {
 			return key;
+		}
+
+		public void setValue(Object value) {
+			this.value = value;
 		}
 
 		public Object getValue() {

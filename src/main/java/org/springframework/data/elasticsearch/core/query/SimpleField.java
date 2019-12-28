@@ -15,17 +15,26 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.springframework.util.Assert;
+
 /**
  * The most trivial implementation of a Field
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Peter-Josef Meisch
  */
 public class SimpleField implements Field {
 
-	private final String name;
+	private String name;
 
 	public SimpleField(String name) {
+		setName(name);
+	}
+
+	@Override
+	public void setName(String name) {
+		Assert.notNull(name, "name must not be null");
 		this.name = name;
 	}
 

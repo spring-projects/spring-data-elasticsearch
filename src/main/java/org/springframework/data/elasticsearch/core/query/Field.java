@@ -20,13 +20,11 @@ package org.springframework.data.elasticsearch.core.query;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Peter-Josef Meisch
  */
 public interface Field {
 
-	/**
-	 * Get the name of the field used in schema.xml of elasticsearch server
-	 *
-	 * @return
-	 */
+	void setName(String name);
+
 	String getName();
 }

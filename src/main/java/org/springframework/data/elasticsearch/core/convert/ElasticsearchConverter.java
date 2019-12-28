@@ -28,6 +28,7 @@ import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.lang.Nullable;
@@ -101,7 +102,7 @@ public interface ElasticsearchConverter
 	<T> SearchHit<T> read(Class<T> type, SearchDocument searchDocument);
 
 	<T> AggregatedPage<SearchHit<T>> mapResults(SearchDocumentResponse response, Class<T> clazz,
-												@Nullable Pageable pageable);
+			@Nullable Pageable pageable);
 
 	// endregion
 
@@ -136,5 +137,17 @@ public interface ElasticsearchConverter
 		write(source, target);
 		return target;
 	}
+	// endregion
+
+	/**
+	 * Updates a query by renaming the property names in the query to the correct mapped field names and the values to the
+	 * converted values if the {@link ElasticsearchPersistentProperty} for a property has a
+	 * {@link org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter}.
+	 * 
+	 * @param criteriaQuery the query that is internally updated
+	 * @param type the class of the object that is searched with the query
+	 */
+	// region query
+	void updateQuery(CriteriaQuery criteriaQuery, Class<?> type);
 	// endregion
 }

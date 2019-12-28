@@ -53,6 +53,7 @@ import org.springframework.data.elasticsearch.core.document.SearchDocumentRespon
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -726,7 +727,38 @@ public class MappingElasticsearchConverter
 	private boolean isSimpleType(Class<?> type) {
 		return conversions.isSimpleType(type);
 	}
+	// endregion
 
+	// region queries
+	public void updateQuery(CriteriaQuery criteriaQuery, Class<?> type) {
+		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(type);
+
+		if (persistentEntity != null) {
+			criteriaQuery.getCriteria().getCriteriaChain().forEach(criteria -> {
+				String name = criteria.getField().getName();
+				ElasticsearchPersistentProperty property = persistentEntity.getPersistentProperty(name);
+
+				if (property != null && property.getName().equals(name)) {
+					criteria.getField().setName(property.getFieldName());
+
+					if (property.hasPropertyConverter()) {
+						ElasticsearchPersistentPropertyConverter propertyConverter = property.getPropertyConverter();
+						criteria.getQueryCriteriaEntries().forEach(criteriaEntry -> {
+							Object value = criteriaEntry.getValue();
+							if (value.getClass().isArray()) {
+								Object[] objects = (Object[]) value;
+								for (int i = 0; i < objects.length; i++) {
+									objects[i] = propertyConverter.write(objects[i]);
+								}
+							} else {
+								criteriaEntry.setValue(propertyConverter.write(value));
+							}
+						});
+					}
+				}
+			});
+		}
+	}
 	// endregion
 
 	static class MapValueAccessor {
