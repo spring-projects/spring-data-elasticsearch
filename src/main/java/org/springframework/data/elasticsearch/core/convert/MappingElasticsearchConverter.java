@@ -642,7 +642,6 @@ public class MappingElasticsearchConverter
 		}
 		return target;
 	}
-
 	// endregion
 
 	// region helper methods

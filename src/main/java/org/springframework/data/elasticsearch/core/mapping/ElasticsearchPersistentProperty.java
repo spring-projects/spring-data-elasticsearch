@@ -84,7 +84,8 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	}
 
 	/**
-	 * when building CriteriaQueries use the name; the fieldname is set later with {@link org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter}.
+	 * when building CriteriaQueries use the name; the fieldname is set later with
+	 * {@link org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter}.
 	 */
 	enum QueryPropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
 
