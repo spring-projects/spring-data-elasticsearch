@@ -730,8 +730,9 @@ public class MappingElasticsearchConverter
 	// endregion
 
 	// region queries
-	public void updateQuery(CriteriaQuery criteriaQuery, Class<?> type) {
-		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(type);
+	@Override
+	public void updateQuery(CriteriaQuery criteriaQuery, Class<?> domainClass) {
+		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(domainClass);
 
 		if (persistentEntity != null) {
 			criteriaQuery.getCriteria().getCriteriaChain().forEach(criteria -> {

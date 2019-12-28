@@ -145,9 +145,9 @@ public interface ElasticsearchConverter
 	 * {@link org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter}.
 	 * 
 	 * @param criteriaQuery the query that is internally updated
-	 * @param type the class of the object that is searched with the query
+	 * @param domainClass the class of the object that is searched with the query
 	 */
 	// region query
-	void updateQuery(CriteriaQuery criteriaQuery, Class<?> type);
+	void updateQuery(CriteriaQuery criteriaQuery, Class<?> domainClass);
 	// endregion
 }
