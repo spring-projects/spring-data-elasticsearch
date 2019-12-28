@@ -33,6 +33,7 @@ import java.lang.Boolean;
 import java.lang.Double;
 import java.lang.Integer;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -957,7 +958,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		@Field(copyTo = { "foo", "bar" }) private String copyTo;
 		@Field(ignoreAbove = 42) private String ignoreAbove;
 		@Field(type = FieldType.Integer) private String type;
-		@Field(type = FieldType.Date, format = DateFormat.custom, pattern = "YYYYMMDD") private String date;
+		@Field(type = FieldType.Date, format = DateFormat.custom, pattern = "YYYYMMDD") private LocalDate date;
 		@Field(analyzer = "ana", searchAnalyzer = "sana", normalizer = "norma") private String analyzers;
 		@Field(type = Keyword, docValues = true) private String docValuesTrue;
 		@Field(type = Keyword, docValues = false) private String docValuesFalse;

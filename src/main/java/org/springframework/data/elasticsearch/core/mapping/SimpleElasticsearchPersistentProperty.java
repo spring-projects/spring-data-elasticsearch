@@ -15,12 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Score;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
@@ -49,6 +53,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	private final boolean isParent;
 	private final boolean isId;
 	private final @Nullable String annotatedFieldName;
+	private ElasticsearchPersistentPropertyConverter propertyConverter;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
 			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
@@ -71,6 +76,58 @@ public class SimpleElasticsearchPersistentProperty extends
 
 		if (isParent && !getType().equals(String.class)) {
 			throw new MappingException(String.format("Parent property %s must be of type String!", property.getName()));
+		}
+
+		initDateConverter();
+	}
+
+	@Override
+	public boolean hasPropertyConverter() {
+		return propertyConverter != null;
+	}
+
+	@Override
+	public ElasticsearchPersistentPropertyConverter getPropertyConverter() {
+		return propertyConverter;
+	}
+
+	/**
+	 * Initializes an {@link ElasticsearchPersistentPropertyConverter} if this property is annotated as a Field with type
+	 * {@link FieldType#Date}, has a {@link DateFormat} set and if the type of the property is one of the Java8 temporal
+	 * classes.
+	 */
+	private void initDateConverter() {
+		Field field = findAnnotation(Field.class);
+		if (field != null && field.type() == FieldType.Date && TemporalAccessor.class.isAssignableFrom(getType())) {
+			DateFormat dateFormat = field.format();
+
+			ElasticsearchDateConverter converter = null;
+
+			if (dateFormat == DateFormat.custom) {
+				String pattern = field.pattern();
+
+				if (StringUtils.hasLength(pattern)) {
+					converter = ElasticsearchDateConverter.of(pattern);
+				}
+			} else if (dateFormat != DateFormat.none) {
+				converter = ElasticsearchDateConverter.of(dateFormat);
+			}
+
+			if (converter != null) {
+				ElasticsearchDateConverter dateConverter = converter;
+				propertyConverter = new ElasticsearchPersistentPropertyConverter() {
+					@Override
+					public String write(Object property) {
+						return dateConverter.format((TemporalAccessor) property);
+					}
+
+					@SuppressWarnings("unchecked")
+					@Override
+					public Object read(String s) {
+						return dateConverter.parse(s, (Class<? extends TemporalAccessor>) getType());
+					}
+				};
+			}
 		}
 	}
 

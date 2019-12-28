@@ -65,7 +65,8 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 		PersistentPropertyPath<ElasticsearchPersistentProperty> path = context
 				.getPersistentPropertyPath(part.getProperty());
 		return new CriteriaQuery(from(part,
-				new Criteria(path.toDotPath(ElasticsearchPersistentProperty.PropertyToFieldNameConverter.INSTANCE)), iterator));
+				new Criteria(path.toDotPath(ElasticsearchPersistentProperty.QueryPropertyToFieldNameConverter.INSTANCE)),
+				iterator));
 	}
 
 	@Override
@@ -76,7 +77,8 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 		PersistentPropertyPath<ElasticsearchPersistentProperty> path = context
 				.getPersistentPropertyPath(part.getProperty());
 		return base.addCriteria(from(part,
-				new Criteria(path.toDotPath(ElasticsearchPersistentProperty.PropertyToFieldNameConverter.INSTANCE)), iterator));
+				new Criteria(path.toDotPath(ElasticsearchPersistentProperty.QueryPropertyToFieldNameConverter.INSTANCE)),
+				iterator));
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,38 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core.query;
-
-import org.springframework.util.Assert;
+package org.springframework.data.elasticsearch.core.convert;
 
 /**
- * The most trivial implementation of a Field
- *
- * @author Rizwan Idrees
- * @author Mohsin Husen
  * @author Peter-Josef Meisch
  */
-public class SimpleField implements Field {
-
-	private String name;
-
-	public SimpleField(String name) {
-		setName(name);
+public class ConversionException extends RuntimeException {
+	public ConversionException() {
+		super();
 	}
 
-	@Override
-	public void setName(String name) {
-		Assert.notNull(name, "name must not be null");
-		this.name = name;
+	public ConversionException(String message) {
+		super(message);
 	}
 
-	@Override
-	public String getName() {
-		return this.name;
+	public ConversionException(String message, Throwable cause) {
+		super(message, cause);
 	}
 
-	@Override
-	public String toString() {
-		return this.name;
+	public ConversionException(Throwable cause) {
+		super(cause);
+	}
+
+	protected ConversionException(String message, Throwable cause, boolean enableSuppression,
+			boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
 	}
 }

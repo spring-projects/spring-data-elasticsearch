@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
@@ -45,12 +46,14 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 	private static final int DEFAULT_STREAM_BATCH_SIZE = 500;
 
 	private final PartTree tree;
+	private final ElasticsearchConverter elasticsearchConverter;
 	private final MappingContext<?, ElasticsearchPersistentProperty> mappingContext;
 
 	public ElasticsearchPartQuery(ElasticsearchQueryMethod method, ElasticsearchOperations elasticsearchOperations) {
 		super(method, elasticsearchOperations);
 		this.tree = new PartTree(method.getName(), method.getEntityInformation().getJavaType());
-		this.mappingContext = elasticsearchOperations.getElasticsearchConverter().getMappingContext();
+		this.elasticsearchConverter = elasticsearchOperations.getElasticsearchConverter();
+		this.mappingContext = elasticsearchConverter.getMappingContext();
 	}
 
 	@Override
@@ -58,7 +61,10 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
 		CriteriaQuery query = createQuery(accessor);
 		Assert.notNull(query, "unsupported query");
+
 		Class<?> clazz = queryMethod.getEntityInformation().getJavaType();
+		elasticsearchConverter.updateQuery(query, clazz);
+
 		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
 
 		Object result = null;

@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import lombok.RequiredArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,6 +52,8 @@ import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -133,40 +133,86 @@ public class MappingElasticsearchConverter
 		this.conversions = conversions;
 	}
 
-	/**
-	 * Set the {@link ElasticsearchTypeMapper} to use for reading / writing type hints.
-	 *
-	 * @param typeMapper must not be {@literal null}.
-	 */
-	public void setTypeMapper(ElasticsearchTypeMapper typeMapper) {
-		this.typeMapper = typeMapper;
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
 	 */
 	@Override
 	public void afterPropertiesSet() {
-
 		DateFormatterRegistrar.addDateConverters(conversionService);
 		conversions.registerConvertersIn(conversionService);
 	}
 
-	@SuppressWarnings("unchecked")
+	// region read
+
+	@Override
+	public <T> AggregatedPage<SearchHit<T>> mapResults(SearchDocumentResponse response, Class<T> type,
+			Pageable pageable) {
+
+		List<SearchHit<T>> results = response.getSearchDocuments().stream() //
+				.map(searchDocument -> read(type, searchDocument)) //
+				.collect(Collectors.toList());
+
+		return new AggregatedPageImpl<>(results, pageable, response);
+	}
+
+	@Override
+	public <T> SearchHits<T> read(Class<T> type, SearchDocumentResponse searchDocumentResponse) {
+
+		Assert.notNull(type, "type must not be null");
+		Assert.notNull(searchDocumentResponse, "searchDocumentResponse must not be null");
+
+		long totalHits = searchDocumentResponse.getTotalHits();
+		float maxScore = searchDocumentResponse.getMaxScore();
+		String scrollId = searchDocumentResponse.getScrollId();
+		List<SearchHit<T>> searchHits = searchDocumentResponse.getSearchDocuments().stream() //
+				.map(searchDocument -> read(type, searchDocument)) //
+				.collect(Collectors.toList());
+		Aggregations aggregations = searchDocumentResponse.getAggregations();
+		return new SearchHits<T>(totalHits, maxScore, scrollId, searchHits, aggregations);
+	}
+
+	public <T> SearchHit<T> read(Class<T> type, SearchDocument searchDocument) {
+
+		Assert.notNull(type, "type must not be null");
+		Assert.notNull(searchDocument, "searchDocument must not be null");
+
+		String id = searchDocument.hasId() ? searchDocument.getId() : null;
+		float score = searchDocument.getScore();
+		Object[] sortValues = searchDocument.getSortValues();
+		T content = mapDocument(searchDocument, type);
+
+		return new SearchHit<T>(id, score, sortValues, content);
+	}
+
 	@Override
 	@Nullable
-	public <R> R read(Class<R> type, Document source) {
-		return doRead(source, ClassTypeInformation.from((Class<R>) ClassUtils.getUserClass(type)));
+	public <T> T mapDocument(@Nullable Document document, Class<T> type) {
+
+		if (document == null) {
+			return null;
+		}
+
+		T mappedResult = read(type, document);
+
+		return type.isInterface() || !ClassUtils.isAssignableValue(type, mappedResult)
+				? getProjectionFactory().createProjection(type, mappedResult)
+				: type.cast(mappedResult);
 	}
 
 	@SuppressWarnings("unchecked")
-	@Nullable
-	protected <R> R doRead(Document source, TypeInformation<R> typeHint) {
+	@Override
+	public <R> R read(Class<R> type, Document source) {
+		TypeInformation<R> typeHint = ClassTypeInformation.from((Class<R>) ClassUtils.getUserClass(type));
 		typeHint = (TypeInformation<R>) typeMapper.readType(source, typeHint);
 
 		if (conversions.hasCustomReadTarget(Map.class, typeHint.getType())) {
-			return conversionService.convert(source, typeHint.getType());
+			R converted = conversionService.convert(source, typeHint.getType());
+			if (converted == null) {
+				// EntityReader.read is defined as non nullable , so we cannot return null
+				throw new ConversionException("conversion service to type " + typeHint.getType().getName() + " returned null");
+			}
+			return converted;
 		}
 
 		if (typeHint.isMap() || ClassTypeInformation.OBJECT.equals(typeHint)) {
@@ -177,7 +223,6 @@ public class MappingElasticsearchConverter
 		return readEntity(entity, source);
 	}
 
-	@SuppressWarnings("unchecked")
 	protected <R> R readEntity(ElasticsearchPersistentEntity<?> entity, Map<String, Object> source) {
 
 		ElasticsearchPersistentEntity<?> targetEntity = computeClosestEntity(entity, source);
@@ -187,6 +232,7 @@ public class MappingElasticsearchConverter
 
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(targetEntity);
 
+		@SuppressWarnings("unchecked")
 		R instance = (R) instantiator.createInstance(targetEntity,
 				new PersistentEntityParameterValueProvider<>(targetEntity, propertyValueProvider, null));
 
@@ -248,7 +294,7 @@ public class MappingElasticsearchConverter
 
 			Object value = valueProvider.getPropertyValue(prop);
 			if (value != null) {
-				accessor.setProperty(prop, valueProvider.getPropertyValue(prop));
+				accessor.setProperty(prop, value);
 			}
 		}
 
@@ -256,6 +302,7 @@ public class MappingElasticsearchConverter
 	}
 
 	@SuppressWarnings("unchecked")
+	@Nullable
 	protected <R> R readValue(@Nullable Object source, ElasticsearchPersistentProperty property,
 			TypeInformation<R> targetType) {
 
@@ -263,11 +310,15 @@ public class MappingElasticsearchConverter
 			return null;
 		}
 
+		if (property.hasPropertyConverter() && String.class.isAssignableFrom(source.getClass())) {
+			source = property.getPropertyConverter().read((String) source);
+		}
+
 		Class<R> rawType = targetType.getType();
 		if (conversions.hasCustomReadTarget(source.getClass(), rawType)) {
 			return rawType.cast(conversionService.convert(source, rawType));
 		} else if (source instanceof List) {
-			return readCollectionValue((List) source, property, targetType);
+			return readCollectionValue((List<?>) source, property, targetType);
 		} else if (source instanceof Map) {
 			return readMapValue((Map<String, Object>) source, property, targetType);
 		}
@@ -276,10 +327,39 @@ public class MappingElasticsearchConverter
 	}
 
 	@SuppressWarnings("unchecked")
+	@Nullable
+	private <R> R readCollectionValue(@Nullable List<?> source, ElasticsearchPersistentProperty property,
+			TypeInformation<R> targetType) {
+
+		if (source == null) {
+			return null;
+		}
+
+		Collection<Object> target = createCollectionForValue(targetType, source.size());
+
+		for (Object value : source) {
+
+			if (isSimpleType(value)) {
+				target.add(
+						readSimpleValue(value, targetType.getComponentType() != null ? targetType.getComponentType() : targetType));
+			} else {
+
+				if (value instanceof List) {
+					target.add(readValue(value, property, property.getTypeInformation().getActualType()));
+				} else {
+					target.add(readEntity(computeGenericValueTypeForRead(property, value), (Map<String, Object>) value));
+				}
+			}
+		}
+
+		return (R) target;
+	}
+
+	@SuppressWarnings("unchecked")
 	private <R> R readMapValue(@Nullable Map<String, Object> source, ElasticsearchPersistentProperty property,
 			TypeInformation<R> targetType) {
 
-		TypeInformation information = typeMapper.readType(source);
+		TypeInformation<?> information = typeMapper.readType(source);
 		if (property.isEntity() && !property.isMap() || information != null) {
 
 			ElasticsearchPersistentEntity<?> targetEntity = information != null
@@ -300,9 +380,9 @@ public class MappingElasticsearchConverter
 
 				if (targetEntity.getTypeInformation().isMap()) {
 
-					Map<String, Object> valueMap = (Map) entry.getValue();
+					Map<String, Object> valueMap = (Map<String, Object>) entry.getValue();
 					if (typeMapper.containsTypeInformation(valueMap)) {
-						target.put(entry.getKey(), readEntity(targetEntity, (Map) entry.getValue()));
+						target.put(entry.getKey(), readEntity(targetEntity, valueMap));
 					} else {
 						target.put(entry.getKey(), readValue(valueMap, property, targetEntity.getTypeInformation()));
 					}
@@ -311,7 +391,7 @@ public class MappingElasticsearchConverter
 					target.put(entry.getKey(),
 							readValue(entry.getValue(), property, targetEntity.getTypeInformation().getActualType()));
 				} else {
-					target.put(entry.getKey(), readEntity(targetEntity, (Map) entry.getValue()));
+					target.put(entry.getKey(), readEntity(targetEntity, (Map<String, Object>) entry.getValue()));
 				}
 			}
 		}
@@ -319,40 +399,13 @@ public class MappingElasticsearchConverter
 		return (R) target;
 	}
 
-	@SuppressWarnings("unchecked")
-	private <R> R readCollectionValue(@Nullable List<?> source, ElasticsearchPersistentProperty property,
-			TypeInformation<R> targetType) {
-
-		if (source == null) {
-			return null;
-		}
-
-		Collection<Object> target = createCollectionForValue(targetType, source.size());
-
-		for (Object value : source) {
-
-			if (isSimpleType(value)) {
-				target.add(
-						readSimpleValue(value, targetType.getComponentType() != null ? targetType.getComponentType() : targetType));
-			} else {
-
-				if (value instanceof List) {
-					target.add(readValue(value, property, property.getTypeInformation().getActualType()));
-				} else {
-					target.add(readEntity(computeGenericValueTypeForRead(property, value), (Map) value));
-				}
-			}
-		}
-
-		return (R) target;
-	}
-
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Nullable
 	private Object readSimpleValue(@Nullable Object value, TypeInformation<?> targetType) {
 
 		Class<?> target = targetType.getType();
 
-		if (value == null || target == null || ClassUtils.isAssignableValue(target, value)) {
+		if (value == null || ClassUtils.isAssignableValue(target, value)) {
 			return value;
 		}
 
@@ -367,16 +420,38 @@ public class MappingElasticsearchConverter
 		return conversionService.convert(value, target);
 	}
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public void write(@Nullable Object source, Document sink) {
-
-		if (source == null) {
-			return;
+	private <T> void populateScriptFields(T result, SearchDocument searchDocument) {
+		Map<String, List<Object>> fields = searchDocument.getFields();
+		if (!fields.isEmpty()) {
+			for (java.lang.reflect.Field field : result.getClass().getDeclaredFields()) {
+				ScriptedField scriptedField = field.getAnnotation(ScriptedField.class);
+				if (scriptedField != null) {
+					String name = scriptedField.name().isEmpty() ? field.getName() : scriptedField.name();
+					Object value = searchDocument.getFieldValue(name);
+					if (value != null) {
+						field.setAccessible(true);
+						try {
+							field.set(result, value);
+						} catch (IllegalArgumentException e) {
+							throw new ElasticsearchException("failed to set scripted field: " + name + " with value: " + value, e);
+						} catch (IllegalAccessException e) {
+							throw new ElasticsearchException("failed to access scripted field: " + name, e);
+						}
+					}
+				}
+			}
 		}
+	}
+	// endregion
+
+	// region write
+	@Override
+	public void write(Object source, Document sink) {
+
+		Assert.notNull(source, "source to map must not be null");
 
 		if (source instanceof Map) {
-
+			// noinspection unchecked
 			sink.putAll((Map<String, Object>) source);
 			return;
 		}
@@ -388,41 +463,22 @@ public class MappingElasticsearchConverter
 			typeMapper.writeType(source.getClass(), sink);
 		}
 
-		doWrite(source, sink, type);
-	}
-
-	protected void doWrite(@Nullable Object source, Document sink, @Nullable TypeInformation<? extends Object> typeHint) {
-
-		if (source == null) {
-			return;
-		}
-
-		Class<?> entityType = source.getClass();
 		Optional<Class<?>> customTarget = conversions.getCustomWriteTarget(entityType, Map.class);
 
 		if (customTarget.isPresent()) {
-
 			sink.putAll(conversionService.convert(source, Map.class));
 			return;
 		}
 
-		if (typeHint != null) {
+		ElasticsearchPersistentEntity<?> entity = type.getType().equals(entityType)
+				? mappingContext.getRequiredPersistentEntity(type)
+				: mappingContext.getRequiredPersistentEntity(entityType);
 
-			ElasticsearchPersistentEntity<?> entity = typeHint.getType().equals(entityType)
-					? mappingContext.getRequiredPersistentEntity(typeHint)
-					: mappingContext.getRequiredPersistentEntity(entityType);
-
-			writeEntity(entity, source, sink, null);
-			return;
-		}
-
-		// write Entity
-		ElasticsearchPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(entityType);
 		writeEntity(entity, source, sink, null);
 	}
 
 	protected void writeEntity(ElasticsearchPersistentEntity<?> entity, Object source, Document sink,
-			@Nullable TypeInformation containingStructure) {
+			@Nullable TypeInformation<?> containingStructure) {
 
 		PersistentPropertyAccessor<?> accessor = entity.getPropertyAccessor(source);
 
@@ -448,10 +504,18 @@ public class MappingElasticsearchConverter
 				continue;
 			}
 
+			if (property.hasPropertyConverter()) {
+				ElasticsearchPersistentPropertyConverter propertyConverter = property.getPropertyConverter();
+				value = propertyConverter.write(value);
+			}
+
 			if (!isSimpleType(value)) {
 				writeProperty(property, value, sink);
 			} else {
-				sink.set(property, getWriteSimpleValue(value));
+				Object writeSimpleValue = getWriteSimpleValue(value);
+				if (writeSimpleValue != null) {
+					sink.set(property, writeSimpleValue);
+				}
 			}
 		}
 	}
@@ -461,7 +525,6 @@ public class MappingElasticsearchConverter
 		Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(value.getClass());
 
 		if (customWriteTarget.isPresent()) {
-
 			Class<?> writeTarget = customWriteTarget.get();
 			sink.set(property, conversionService.convert(value, writeTarget));
 			return;
@@ -484,12 +547,8 @@ public class MappingElasticsearchConverter
 		sink.set(property, getWriteComplexValue(property, typeHint, value));
 	}
 
+	@Nullable
 	protected Object getWriteSimpleValue(Object value) {
-
-		if (value == null) {
-			return null;
-		}
-
 		Optional<Class<?>> customTarget = conversions.getCustomWriteTarget(value.getClass());
 
 		if (customTarget.isPresent()) {
@@ -583,67 +642,30 @@ public class MappingElasticsearchConverter
 		}
 		return target;
 	}
+	// endregion
 
-	@Override
-	@Nullable
-	public <T> T mapDocument(@Nullable Document document, Class<T> type) {
+	// region helper methods
+	private Collection<Object> createCollectionForValue(TypeInformation<?> collectionTypeInformation, int size) {
 
-		if (document == null) {
-			return null;
-		}
+		Class<?> collectionType = collectionTypeInformation.isSubTypeOf(Collection.class) //
+				? collectionTypeInformation.getType() //
+				: List.class;
 
-		Object mappedResult = read(type, document);
+		TypeInformation<?> componentType = collectionTypeInformation.getComponentType() != null //
+				? collectionTypeInformation.getComponentType() //
+				: ClassTypeInformation.OBJECT;
 
-		if (mappedResult == null) {
-			return (T) null;
-		}
-
-		return type.isInterface() || !ClassUtils.isAssignableValue(type, mappedResult)
-				? getProjectionFactory().createProjection(type, mappedResult)
-				: type.cast(mappedResult);
+		return collectionTypeInformation.getType().isArray() //
+				? new ArrayList<>(size) //
+				: CollectionFactory.createCollection(collectionType, componentType.getType(), size);
 	}
 
-	@Override
-	public <T> SearchHits<T> read(Class<T> type, SearchDocumentResponse searchDocumentResponse) {
+	private ElasticsearchPersistentEntity<?> computeGenericValueTypeForRead(ElasticsearchPersistentProperty property,
+			Object value) {
 
-		Assert.notNull(type, "type must not be null");
-		Assert.notNull(searchDocumentResponse, "searchDocumentResponse must not be null");
-
-		long totalHits = searchDocumentResponse.getTotalHits();
-		float maxScore = searchDocumentResponse.getMaxScore();
-		String scrollId = searchDocumentResponse.getScrollId();
-		List<SearchHit<T>> searchHits = searchDocumentResponse.getSearchDocuments().stream() //
-				.map(searchDocument -> read(type, searchDocument)) //
-				.collect(Collectors.toList());
-		Aggregations aggregations = searchDocumentResponse.getAggregations();
-		return new SearchHits<T>(totalHits, maxScore, scrollId, searchHits, aggregations);
-	}
-
-	@Override
-	public <T> SearchHit<T> read(Class<T> type, SearchDocument searchDocument) {
-
-		Assert.notNull(type, "type must not be null");
-		Assert.notNull(searchDocument, "searchDocument must not be null");
-
-		String id = searchDocument.hasId() ? searchDocument.getId() : null;
-		float score = searchDocument.getScore();
-		Object[] sortValues = searchDocument.getSortValues();
-		T content = mapDocument(searchDocument, type);
-
-		return new SearchHit<T>(id, score, sortValues, content);
-	}
-
-	@Override
-	public <T> List<T> mapDocuments(List<Document> documents, Class<T> type) {
-		return documents.stream().map(it -> mapDocument(it, type)).collect(Collectors.toList());
-	}
-
-	@Override
-	public Document mapObject(Object source) {
-
-		Document target = Document.create();
-		write(source, target);
-		return target;
+		return ClassTypeInformation.OBJECT.equals(property.getTypeInformation().getActualType())
+				? mappingContext.getRequiredPersistentEntity(value.getClass())
+				: mappingContext.getRequiredPersistentEntity(property.getTypeInformation().getActualType());
 	}
 
 	private boolean requiresTypeHint(TypeInformation<?> type, Class<?> actualType,
@@ -697,29 +719,6 @@ public class MappingElasticsearchConverter
 		return mappingContext.getRequiredPersistentEntity(typeToUse);
 	}
 
-	private ElasticsearchPersistentEntity<?> computeGenericValueTypeForRead(ElasticsearchPersistentProperty property,
-			Object value) {
-
-		return ClassTypeInformation.OBJECT.equals(property.getTypeInformation().getActualType())
-				? mappingContext.getRequiredPersistentEntity(value.getClass())
-				: mappingContext.getRequiredPersistentEntity(property.getTypeInformation().getActualType());
-	}
-
-	private Collection<Object> createCollectionForValue(TypeInformation<?> collectionTypeInformation, int size) {
-
-		Class<?> collectionType = collectionTypeInformation.isSubTypeOf(Collection.class) //
-				? collectionTypeInformation.getType() //
-				: List.class;
-
-		TypeInformation<?> componentType = collectionTypeInformation.getComponentType() != null //
-				? collectionTypeInformation.getComponentType() //
-				: ClassTypeInformation.OBJECT;
-
-		return collectionTypeInformation.getType().isArray() //
-				? new ArrayList<>(size) //
-				: CollectionFactory.createCollection(collectionType, componentType.getType(), size);
-	}
-
 	private boolean isSimpleType(Object value) {
 		return isSimpleType(value.getClass());
 	}
@@ -727,40 +726,40 @@ public class MappingElasticsearchConverter
 	private boolean isSimpleType(Class<?> type) {
 		return conversions.isSimpleType(type);
 	}
+	// endregion
 
+	// region queries
 	@Override
-	public <T> AggregatedPage<SearchHit<T>> mapResults(SearchDocumentResponse response, Class<T> type,
-			Pageable pageable) {
+	public void updateQuery(CriteriaQuery criteriaQuery, Class<?> domainClass) {
+		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(domainClass);
 
-		List<SearchHit<T>> results = response.getSearchDocuments().stream() //
-				.map(searchDocument -> read(type, searchDocument)) //
-				.collect(Collectors.toList());
+		if (persistentEntity != null) {
+			criteriaQuery.getCriteria().getCriteriaChain().forEach(criteria -> {
+				String name = criteria.getField().getName();
+				ElasticsearchPersistentProperty property = persistentEntity.getPersistentProperty(name);
 
-		return new AggregatedPageImpl<>(results, pageable, response);
-	}
+				if (property != null && property.getName().equals(name)) {
+					criteria.getField().setName(property.getFieldName());
 
-	private <T> void populateScriptFields(T result, SearchDocument searchDocument) {
-		Map<String, List<Object>> fields = searchDocument.getFields();
-		if (!fields.isEmpty()) {
-			for (java.lang.reflect.Field field : result.getClass().getDeclaredFields()) {
-				ScriptedField scriptedField = field.getAnnotation(ScriptedField.class);
-				if (scriptedField != null) {
-					String name = scriptedField.name().isEmpty() ? field.getName() : scriptedField.name();
-					Object value = searchDocument.getFieldValue(name);
-					if (value != null) {
-						field.setAccessible(true);
-						try {
-							field.set(result, value);
-						} catch (IllegalArgumentException e) {
-							throw new ElasticsearchException("failed to set scripted field: " + name + " with value: " + value, e);
-						} catch (IllegalAccessException e) {
-							throw new ElasticsearchException("failed to access scripted field: " + name, e);
-						}
+					if (property.hasPropertyConverter()) {
+						ElasticsearchPersistentPropertyConverter propertyConverter = property.getPropertyConverter();
+						criteria.getQueryCriteriaEntries().forEach(criteriaEntry -> {
+							Object value = criteriaEntry.getValue();
+							if (value.getClass().isArray()) {
+								Object[] objects = (Object[]) value;
+								for (int i = 0; i < objects.length; i++) {
+									objects[i] = propertyConverter.write(objects[i]);
+								}
+							} else {
+								criteriaEntry.setValue(propertyConverter.write(value));
+							}
+						});
 					}
 				}
-			}
+			});
 		}
 	}
+	// endregion
 
 	static class MapValueAccessor {
 
@@ -770,6 +769,7 @@ public class MappingElasticsearchConverter
 			this.target = target;
 		}
 
+		@Nullable
 		public Object get(ElasticsearchPersistentProperty property) {
 
 			if (target instanceof Document) {
@@ -801,7 +801,7 @@ public class MappingElasticsearchConverter
 			Map<String, Object> source = target;
 			Object result = null;
 
-			while (source != null && parts.hasNext()) {
+			while (parts.hasNext()) {
 
 				result = source.get(parts.next());
 
@@ -826,21 +826,24 @@ public class MappingElasticsearchConverter
 			target.put(property.getFieldName(), value);
 		}
 
-		@SuppressWarnings("unchecked")
 		private Map<String, Object> getAsMap(Object result) {
 
 			if (result instanceof Map) {
-				return (Map) result;
+				// noinspection unchecked
+				return (Map<String, Object>) result;
 			}
 
 			throw new IllegalArgumentException(String.format("%s is not a Map.", result));
 		}
 	}
 
-	@RequiredArgsConstructor
 	class ElasticsearchPropertyValueProvider implements PropertyValueProvider<ElasticsearchPersistentProperty> {
 
 		final MapValueAccessor mapValueAccessor;
+
+		ElasticsearchPropertyValueProvider(MapValueAccessor mapValueAccessor) {
+			this.mapValueAccessor = mapValueAccessor;
+		}
 
 		@SuppressWarnings("unchecked")
 		@Override

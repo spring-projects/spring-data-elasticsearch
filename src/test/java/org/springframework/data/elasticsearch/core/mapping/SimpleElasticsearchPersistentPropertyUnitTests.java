@@ -17,8 +17,14 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
+
 import org.junit.jupiter.api.Test;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.mapping.MappingException;
 
@@ -62,6 +68,47 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(persistentProperty.getFieldName()).isEqualTo("by-value");
 	}
 
+	@Test
+	// DATAES-716
+	void shouldSetPropertyConverters() {
+		SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(DatesProperty.class);
+
+		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getRequiredPersistentProperty("date");
+		assertThat(persistentProperty.hasPropertyConverter()).isFalse();
+
+		persistentProperty = persistentEntity.getRequiredPersistentProperty("localDate");
+		assertThat(persistentProperty.hasPropertyConverter()).isTrue();
+		assertThat(persistentProperty.getPropertyConverter()).isNotNull();
+
+		persistentProperty = persistentEntity.getRequiredPersistentProperty("localDateTime");
+		assertThat(persistentProperty.hasPropertyConverter()).isTrue();
+		assertThat(persistentProperty.getPropertyConverter()).isNotNull();
+	}
+
+	@Test
+	// DATAES-716
+	void shouldConvertFromLocalDate() {
+		SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(DatesProperty.class);
+		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getRequiredPersistentProperty("localDate");
+		LocalDate localDate = LocalDate.of(2019, 12, 27);
+
+		String converted = persistentProperty.getPropertyConverter().write(localDate);
+
+		assertThat(converted).isEqualTo("27.12.2019");
+	}
+
+	@Test
+	// DATAES-716
+	void shouldConvertToLocalDate() {
+		SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(DatesProperty.class);
+		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getRequiredPersistentProperty("localDate");
+
+		Object converted = persistentProperty.getPropertyConverter().read("27.12.2019");
+
+		assertThat(converted).isInstanceOf(LocalDate.class);
+		assertThat(converted).isEqualTo(LocalDate.of(2019, 12, 27));
+	}
+
 	static class InvalidScoreProperty {
 		@Score String scoreProperty;
 	}
@@ -72,5 +119,11 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 
 	static class FieldValueProperty {
 		@Field(value = "by-value") String fieldProperty;
+	}
+
+	static class DatesProperty {
+		@Field(type = FieldType.Date, format = DateFormat.basic_date) Date date;
+		@Field(type = FieldType.Date, format = DateFormat.custom, pattern = "dd.MM.yyyy") LocalDate localDate;
+		@Field(type = FieldType.Date, format = DateFormat.basic_date_time) LocalDateTime localDateTime;
 	}
 }
