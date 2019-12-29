@@ -106,6 +106,7 @@ public class ReactiveElasticsearchRepositoryFactory extends ReactiveRepositoryFa
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getEntityInformation(java.lang.Class)
 	 */
+	@Override
 	public <T, ID> ElasticsearchEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
 		return getEntityInformation(domainClass, null);
 	}

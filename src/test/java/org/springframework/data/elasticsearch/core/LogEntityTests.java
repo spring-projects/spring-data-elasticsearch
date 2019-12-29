@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 import org.elasticsearch.ElasticsearchException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,11 +62,12 @@ public class LogEntityTests {
 
 	private final IndexCoordinates index = IndexCoordinates.of("test-index-log-core").withTypes("test-log-type");
 	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() throws ParseException {
-
-		IndexInitializer.init(operations, LogEntity.class);
+		indexOperations = operations.getIndexOperations();
+		IndexInitializer.init(indexOperations, LogEntity.class);
 
 		SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 		IndexQuery indexQuery1 = new LogEntityBuilder("1").action("update").date(dateFormatter.parse("2013-10-18 18:01"))
@@ -81,7 +83,12 @@ public class LogEntityTests {
 				.code(2).ip("10.10.10.4").buildIndex();
 
 		operations.bulkIndex(Arrays.asList(indexQuery1, indexQuery2, indexQuery3, indexQuery4), index);
-		operations.refresh(LogEntity.class);
+		indexOperations.refresh(LogEntity.class);
+	}
+
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex(LogEntity.class);
 	}
 
 	@Test // DATAES-66
@@ -122,7 +129,7 @@ public class LogEntityTests {
 	 * Simple type to test facets
 	 */
 	@Data
-	@Document(indexName = "test-index-log-core", type = "test-log-type", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-log-core", replicas = 0, refreshInterval = "-1")
 	static class LogEntity {
 
 		private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");

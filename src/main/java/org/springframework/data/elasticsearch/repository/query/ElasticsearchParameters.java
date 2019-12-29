@@ -26,6 +26,7 @@ import org.springframework.data.repository.query.Parameters;
 
 /**
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public class ElasticsearchParameters extends Parameters<ElasticsearchParameters, ElasticsearchParameter> {
@@ -55,26 +56,14 @@ public class ElasticsearchParameters extends Parameters<ElasticsearchParameters,
 	 */
 	class ElasticsearchParameter extends Parameter {
 
-		private final MethodParameter parameter;
-
 		/**
 		 * Creates a new {@link ElasticsearchParameter}.
 		 *
 		 * @param parameter must not be {@literal null}.
 		 */
 		ElasticsearchParameter(MethodParameter parameter) {
-
 			super(parameter);
-			this.parameter = parameter;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.Parameter#isSpecialParameter()
-		 */
-		@Override
-		public boolean isSpecialParameter() {
-			return super.isSpecialParameter();
-		}
 	}
 }

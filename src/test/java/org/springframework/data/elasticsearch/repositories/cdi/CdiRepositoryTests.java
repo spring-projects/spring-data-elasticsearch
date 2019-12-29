@@ -158,7 +158,7 @@ public class CdiRepositoryTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-product-cdi-repository", type = "test-product-type", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-product-cdi-repository", replicas = 0,
 			refreshInterval = "-1")
 	static class Product {
 
@@ -188,7 +188,7 @@ public class CdiRepositoryTests {
 	}
 
 	@Data
-	@Document(indexName = "test-index-person-cdi-repository", type = "user", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-person-cdi-repository", replicas = 0,
 			refreshInterval = "-1")
 	static class Person {
 
@@ -206,7 +206,7 @@ public class CdiRepositoryTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-book-cdi-repository", type = "book", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-book-cdi-repository", replicas = 0,
 			refreshInterval = "-1")
 	static class Book {
 

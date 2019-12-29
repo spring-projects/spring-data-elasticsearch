@@ -16,10 +16,12 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.util.Assert;
 
 /**
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public class SimpleElasticsearchEntityMetadata<T> implements ElasticsearchEntityMetadata<T> {
@@ -43,7 +45,7 @@ public class SimpleElasticsearchEntityMetadata<T> implements ElasticsearchEntity
 
 	@Override
 	public String getIndexTypeName() {
-		return entity.getIndexCoordinates().getTypeName();
+		return IndexCoordinates.TYPE;
 	}
 
 	@Override

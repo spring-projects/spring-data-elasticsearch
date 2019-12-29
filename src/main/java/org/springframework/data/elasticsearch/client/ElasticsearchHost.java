@@ -104,7 +104,7 @@ public class ElasticsearchHost {
 
 	@Override
 	public String toString() {
-		return "ElasticsearchHost(" + endpoint + ", " + state.name() + ")";
+		return "ElasticsearchHost(" + endpoint + ", " + state.name() + ')';
 	}
 
 	public enum State {

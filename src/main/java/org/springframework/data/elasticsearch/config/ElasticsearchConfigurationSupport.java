@@ -127,7 +127,7 @@ public class ElasticsearchConfigurationSupport {
 			return Collections.emptySet();
 		}
 
-		Set<Class<?>> initialEntitySet = new HashSet<Class<?>>();
+		Set<Class<?>> initialEntitySet = new HashSet<>();
 
 		if (StringUtils.hasText(basePackage)) {
 

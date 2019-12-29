@@ -83,7 +83,7 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(operations, SampleEntity.class);
+		IndexInitializer.init(operations.getIndexOperations(), SampleEntity.class);
 	}
 
 	@Test
@@ -112,8 +112,7 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 	}
 
 	@Data
-	@Document(indexName = "test-index-sample-config-not-nested", type = "test-type", shards = 1, replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-config-not-nested", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;
@@ -129,8 +128,7 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 	}
 
 	@Data
-	@Document(indexName = "test-index-uuid-keyed-config-not-nested", type = "test-type-uuid-keyed", shards = 1,
-			replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-uuid-keyed-config-not-nested", replicas = 0, refreshInterval = "-1")
 	static class SampleEntityUUIDKeyed {
 
 		@Id private UUID id;

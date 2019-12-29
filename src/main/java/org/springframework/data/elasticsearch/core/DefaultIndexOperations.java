@@ -26,9 +26,7 @@ import java.util.Map;
 
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.client.Request;
@@ -36,7 +34,9 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.client.support.AliasData;
@@ -121,13 +121,11 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 
 		RestClient restClient = client.getLowLevelClient();
 		try {
-			Request request = new Request("GET",
-					'/' + index.getIndexName() + "/_mapping/" + index.getTypeName() + "?include_type_name=true");
+			Request request = new Request("GET", '/' + index.getIndexName() + "/_mapping");
 			Response response = restClient.performRequest(request);
-			return convertMappingResponse(EntityUtils.toString(response.getEntity()), index.getTypeName());
+			return convertMappingResponse(EntityUtils.toString(response.getEntity()));
 		} catch (Exception e) {
-			throw new ElasticsearchException("Error while getting mapping for indexName : " + index.getIndexName()
-					+ " type : " + index.getTypeName() + ' ', e);
+			throw new ElasticsearchException("Error while getting mapping for indexName : " + index.getIndexName(), e);
 		}
 	}
 
@@ -210,14 +208,14 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	// region Helper methods
-	private Map<String, Object> convertMappingResponse(String mappingResponse, String type) {
+	private Map<String, Object> convertMappingResponse(String mappingResponse) {
 		ObjectMapper mapper = new ObjectMapper();
 
 		try {
 			Map<String, Object> result = null;
 			JsonNode node = mapper.readTree(mappingResponse);
 
-			node = node.findValue("mappings").findValue(type);
+			node = node.findValue("mappings");
 			result = mapper.readValue(mapper.writeValueAsString(node), HashMap.class);
 
 			return result;
@@ -248,7 +246,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 					new TypeReference<Map<String, AliasData>>() {});
 
 			Iterable<Map.Entry<String, AliasData>> aliasIter = aliasData.entrySet();
-			List<AliasMetaData> aliasMetaDataList = new ArrayList<AliasMetaData>();
+			List<AliasMetaData> aliasMetaDataList = new ArrayList<>();
 
 			for (Map.Entry<String, AliasData> aliasentry : aliasIter) {
 				AliasData data = aliasentry.getValue();
@@ -261,6 +259,5 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 			throw new ElasticsearchException("Could not map alias response : " + aliasResponse, e);
 		}
 	}
-
 	// endregion
 }

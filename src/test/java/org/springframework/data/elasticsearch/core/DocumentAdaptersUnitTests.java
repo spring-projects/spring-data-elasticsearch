@@ -45,7 +45,7 @@ public class DocumentAdaptersUnitTests {
 	public void shouldAdaptGetResponse() {
 
 		Map<String, DocumentField> fields = Collections.singletonMap("field",
-				new DocumentField("field", Arrays.asList("value")));
+				new DocumentField("field", Collections.singletonList("value")));
 
 		GetResult getResult = new GetResult("index", "type", "my-id", 1, 1, 42, true, null, fields, null);
 		GetResponse response = new GetResponse(getResult);
@@ -80,7 +80,7 @@ public class DocumentAdaptersUnitTests {
 	public void shouldAdaptSearchResponse() {
 
 		Map<String, DocumentField> fields = Collections.singletonMap("field",
-				new DocumentField("field", Arrays.asList("value")));
+				new DocumentField("field", Collections.singletonList("value")));
 
 		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields);
 		searchHit.score(42);
@@ -99,7 +99,7 @@ public class DocumentAdaptersUnitTests {
 
 		Map<String, DocumentField> fields = new LinkedHashMap<>();
 
-		fields.put("string", new DocumentField("string", Arrays.asList("value")));
+		fields.put("string", new DocumentField("string", Collections.singletonList("value")));
 		fields.put("bool", new DocumentField("bool", Arrays.asList(true, true, false)));
 
 		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields);
@@ -115,7 +115,7 @@ public class DocumentAdaptersUnitTests {
 
 		Map<String, DocumentField> fields = new LinkedHashMap<>();
 
-		fields.put("string", new DocumentField("string", Arrays.asList("value")));
+		fields.put("string", new DocumentField("string", Collections.singletonList("value")));
 		fields.put("bool", new DocumentField("bool", Arrays.asList(true, true, false)));
 		fields.put("null", new DocumentField("null", Collections.emptyList()));
 
@@ -133,7 +133,7 @@ public class DocumentAdaptersUnitTests {
 
 		Map<String, DocumentField> fields = new LinkedHashMap<>();
 
-		fields.put("string", new DocumentField("string", Arrays.asList("value")));
+		fields.put("string", new DocumentField("string", Collections.singletonList("value")));
 		fields.put("bool", new DocumentField("bool", Arrays.asList(true, true, false)));
 
 		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields);

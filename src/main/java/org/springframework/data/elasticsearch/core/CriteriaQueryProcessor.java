@@ -157,13 +157,13 @@ class CriteriaQueryProcessor {
 				query = queryStringQuery(searchText).field(fieldName).defaultOperator(AND);
 				break;
 			case CONTAINS:
-				query = queryStringQuery("*" + searchText + "*").field(fieldName).analyzeWildcard(true);
+				query = queryStringQuery('*' + searchText + '*').field(fieldName).analyzeWildcard(true);
 				break;
 			case STARTS_WITH:
-				query = queryStringQuery(searchText + "*").field(fieldName).analyzeWildcard(true);
+				query = queryStringQuery(searchText + '*').field(fieldName).analyzeWildcard(true);
 				break;
 			case ENDS_WITH:
-				query = queryStringQuery("*" + searchText).field(fieldName).analyzeWildcard(true);
+				query = queryStringQuery('*' + searchText).field(fieldName).analyzeWildcard(true);
 				break;
 			case EXPRESSION:
 				query = queryStringQuery(value.toString()).field(fieldName);

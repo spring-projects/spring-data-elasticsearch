@@ -81,13 +81,12 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 			SearchHits<?> searchHits = elasticsearchOperations.search(query, clazz, index);
 			result = SearchHitSupport.page(searchHits, query.getPageable());
 		} else if (queryMethod.isStreamQuery()) {
-			Class<?> entityType = clazz;
 			if (accessor.getPageable().isUnpaged()) {
 				query.setPageable(PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
 			} else {
 				query.setPageable(accessor.getPageable());
 			}
-			result = StreamUtils.createStreamFromIterator(elasticsearchOperations.stream(query, entityType, index));
+			result = StreamUtils.createStreamFromIterator(elasticsearchOperations.stream(query, clazz, index));
 		} else if (queryMethod.isCollectionQuery()) {
 
 			if (accessor.getPageable().isUnpaged()) {

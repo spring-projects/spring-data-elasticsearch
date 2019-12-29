@@ -26,6 +26,7 @@ import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +71,12 @@ public class ElasticsearchTemplateCompletionTests {
 
 		IndexInitializer.init(indexOperations, CompletionEntity.class);
 		IndexInitializer.init(indexOperations, AnnotatedCompletionEntity.class);
+	}
+
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex("test-index-annotated-completion");
+		indexOperations.deleteIndex("test-index-core-completion");
 	}
 
 	private void loadCompletionObjectEntities() {
@@ -237,7 +244,7 @@ public class ElasticsearchTemplateCompletionTests {
 	/**
 	 * @author Mewes Kochheim
 	 */
-	@Document(indexName = "test-index-core-completion", type = "completion-type", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-core-completion", replicas = 0,
 			refreshInterval = "-1")
 	static class CompletionEntity {
 
@@ -321,7 +328,7 @@ public class ElasticsearchTemplateCompletionTests {
 	/**
 	 * @author Mewes Kochheim
 	 */
-	@Document(indexName = "test-index-annotated-completion", type = "annotated-completion-type", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-annotated-completion", replicas = 0,
 			refreshInterval = "-1")
 	static class AnnotatedCompletionEntity {
 

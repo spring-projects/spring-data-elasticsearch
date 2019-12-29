@@ -71,7 +71,6 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 
 		assertThat(metadata.getJavaType()).isAssignableFrom(Person.class);
 		assertThat(metadata.getIndexName()).isEqualTo(INDEX_NAME);
-		assertThat(metadata.getIndexTypeName()).isEqualTo("user");
 	}
 
 	@Test // DATAES-519
@@ -85,19 +84,19 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 	}
 
 	@Test // DATAES-519
-	public void rejectsMonoPageableResult() throws Exception {
+	public void rejectsMonoPageableResult() {
 		assertThatThrownBy(() -> queryMethod(PersonRepository.class, "findMonoByName", String.class, Pageable.class))
 				.isInstanceOf(IllegalStateException.class);
 	}
 
 	@Test // DATAES-519
-	public void throwsExceptionOnWrappedPage() throws Exception {
+	public void throwsExceptionOnWrappedPage() {
 		assertThatThrownBy(() -> queryMethod(PersonRepository.class, "findMonoPageByName", String.class, Pageable.class))
 				.isInstanceOf(InvalidDataAccessApiUsageException.class);
 	}
 
 	@Test // DATAES-519
-	public void throwsExceptionOnWrappedSlice() throws Exception {
+	public void throwsExceptionOnWrappedSlice() {
 		assertThatThrownBy(() -> queryMethod(PersonRepository.class, "findMonoSliceByName", String.class, Pageable.class))
 				.isInstanceOf(InvalidDataAccessApiUsageException.class);
 	}
@@ -150,7 +149,7 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 	 * @author Artur Konczak
 	 */
 
-	@Document(indexName = INDEX_NAME, type = "user", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = INDEX_NAME, replicas = 0, refreshInterval = "-1")
 	static class Person {
 
 		@Id private String id;
@@ -204,7 +203,7 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-book-reactive-repository-query", type = "book", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-book-reactive-repository-query", replicas = 0,
 			refreshInterval = "-1")
 	static class Book {
 

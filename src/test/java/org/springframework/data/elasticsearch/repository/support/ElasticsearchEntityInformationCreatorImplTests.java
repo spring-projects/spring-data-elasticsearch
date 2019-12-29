@@ -45,16 +45,12 @@ public class ElasticsearchEntityInformationCreatorImplTests {
 
 	@Test
 	public void shouldThrowMappingExceptionOnMissingEntity() {
-		assertThatThrownBy(() -> {
-			entityInfoCreator.getEntityInformation(String.class);
-		}).isInstanceOf(MappingException.class);
+		assertThatThrownBy(() -> entityInfoCreator.getEntityInformation(String.class)).isInstanceOf(MappingException.class);
 	}
 
 	@Test
 	public void shouldThrowIllegalArgumentExceptionOnMissingIdAnnotation() {
-		assertThatThrownBy(() -> {
-			entityInfoCreator.getEntityInformation(EntityNoId.class);
-		}).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("No id property found");
+		assertThatThrownBy(() -> entityInfoCreator.getEntityInformation(EntityNoId.class)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("No id property found");
 	}
 
 	@Document(indexName = "whatever")

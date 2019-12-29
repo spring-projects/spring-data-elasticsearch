@@ -24,6 +24,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -99,7 +100,7 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@AfterEach
-	public void tearDown() {
+	public void after() {
 		deleteIndices();
 	}
 
@@ -110,7 +111,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@Test // DATAES-504
 	public void executeShouldProvideResource() {
 
-		Mono.from(template.execute(client -> client.ping())) //
+		Mono.from(template.execute(ReactiveElasticsearchClient::ping)) //
 				.as(StepVerifier::create) //
 				.expectNext(true) //
 				.verifyComplete();
@@ -456,10 +457,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@Test // DATAES-518
 	public void searchShouldApplyPagingCorrectly() {
 
-		List<SampleEntity> source = IntStream.range(0, 100).mapToObj(it -> randomEntity("entity - " + it))
-				.collect(Collectors.toList());
-
-		index(source.toArray(new SampleEntity[0]));
+		index(IntStream.range(0, 100).mapToObj(it -> randomEntity("entity - " + it)).toArray(SampleEntity[]::new));
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("entity")) //
 				.addSort(Sort.by("message"))//
@@ -473,10 +471,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@Test // DATAES-518
 	public void findWithoutPagingShouldReadAll() {
 
-		List<SampleEntity> source = IntStream.range(0, 100).mapToObj(it -> randomEntity("entity - " + it))
-				.collect(Collectors.toList());
-
-		index(source.toArray(new SampleEntity[0]));
+		index(IntStream.range(0, 100).mapToObj(it -> randomEntity("entity - " + it)).toArray(SampleEntity[]::new));
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("entity")) //
 				.addSort(Sort.by("message"))//
@@ -717,7 +712,7 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Data
-	@Document(indexName = "marvel", type = "characters")
+	@Document(indexName = "marvel")
 	static class Person {
 
 		private @Id String id;
@@ -780,7 +775,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@EqualsAndHashCode(exclude = "score")
-	@Document(indexName = DEFAULT_INDEX, type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = DEFAULT_INDEX, replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;

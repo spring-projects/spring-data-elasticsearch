@@ -103,6 +103,7 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @since 3.2
  */
+@SuppressWarnings("JavadocReference")
 public class RequestConverters {
 
 	private static final XContentType REQUEST_BODY_CONTENT_TYPE = XContentType.JSON;
@@ -364,7 +365,7 @@ public class RequestConverters {
 			XContentType upsertContentType = updateRequest.upsertRequest().getContentType();
 			if ((xContentType != null) && (xContentType != upsertContentType)) {
 				throw new IllegalStateException("Update request cannot have different content types for doc [" + xContentType
-						+ "]" + " and upsert [" + upsertContentType + "] documents");
+						+ ']' + " and upsert [" + upsertContentType + "] documents");
 			} else {
 				xContentType = upsertContentType;
 			}
@@ -460,7 +461,7 @@ public class RequestConverters {
 		return request;
 	}
 
-	public static Request explain(ExplainRequest explainRequest) throws IOException {
+	public static Request explain(ExplainRequest explainRequest) {
 		Request request = new Request(HttpMethod.GET.name(),
 				endpoint(explainRequest.index(), explainRequest.type(), explainRequest.id(), "_explain"));
 
@@ -482,7 +483,7 @@ public class RequestConverters {
 		return request;
 	}
 
-	public static Request rankEval(RankEvalRequest rankEvalRequest) throws IOException {
+	public static Request rankEval(RankEvalRequest rankEvalRequest) {
 		Request request = new Request(HttpMethod.GET.name(),
 				endpoint(rankEvalRequest.indices(), Strings.EMPTY_ARRAY, "_rank_eval"));
 
@@ -501,8 +502,7 @@ public class RequestConverters {
 		return prepareReindexRequest(reindexRequest, false);
 	}
 
-	private static Request prepareReindexRequest(ReindexRequest reindexRequest, boolean waitForCompletion)
-			throws IOException {
+	private static Request prepareReindexRequest(ReindexRequest reindexRequest, boolean waitForCompletion) {
 		String endpoint = new EndpointBuilder().addPathPart("_reindex").build();
 		Request request = new Request(HttpMethod.POST.name(), endpoint);
 		Params params = new Params(request).withWaitForCompletion(waitForCompletion).withRefresh(reindexRequest.isRefresh())
@@ -516,7 +516,7 @@ public class RequestConverters {
 		return request;
 	}
 
-	public static Request updateByQuery(UpdateByQueryRequest updateByQueryRequest) throws IOException {
+	public static Request updateByQuery(UpdateByQueryRequest updateByQueryRequest) {
 		String endpoint = endpoint(updateByQueryRequest.indices(), updateByQueryRequest.getDocTypes(), "_update_by_query");
 		Request request = new Request(HttpMethod.POST.name(), endpoint);
 		Params params = new Params(request).withRouting(updateByQueryRequest.getRouting())
@@ -541,7 +541,7 @@ public class RequestConverters {
 		return request;
 	}
 
-	public static Request deleteByQuery(DeleteByQueryRequest deleteByQueryRequest) throws IOException {
+	public static Request deleteByQuery(DeleteByQueryRequest deleteByQueryRequest) {
 		String endpoint = endpoint(deleteByQueryRequest.indices(), deleteByQueryRequest.getDocTypes(), "_delete_by_query");
 		Request request = new Request(HttpMethod.POST.name(), endpoint);
 		Params params = new Params(request).withRouting(deleteByQueryRequest.getRouting())
@@ -587,7 +587,7 @@ public class RequestConverters {
 		return request;
 	}
 
-	public static Request putScript(PutStoredScriptRequest putStoredScriptRequest) throws IOException {
+	public static Request putScript(PutStoredScriptRequest putStoredScriptRequest) {
 		String endpoint = new EndpointBuilder().addPathPartAsIs("_scripts").addPathPart(putStoredScriptRequest.id())
 				.build();
 		Request request = new Request(HttpMethod.POST.name(), endpoint);
@@ -601,7 +601,7 @@ public class RequestConverters {
 		return request;
 	}
 
-	public static Request analyze(AnalyzeRequest request) throws IOException {
+	public static Request analyze(AnalyzeRequest request) {
 		EndpointBuilder builder = new EndpointBuilder();
 		String index = request.index();
 		if (index != null) {
@@ -1145,7 +1145,7 @@ public class RequestConverters {
 		}
 		if (requestContentType != xContentType) {
 			throw new IllegalArgumentException("Mismatching content-type found for request with content-type ["
-					+ requestContentType + "], previous requests have content-type [" + xContentType + "]");
+					+ requestContentType + "], previous requests have content-type [" + xContentType + ']');
 		}
 		return xContentType;
 	}
@@ -1194,7 +1194,7 @@ public class RequestConverters {
 				// encode each part (e.g. index, type and id) separately before merging them into the path
 				// we prepend "/" to the path part to make this path absolute, otherwise there can be issues with
 				// paths that start with `-` or contain `:`
-				URI uri = new URI(null, null, null, -1, "/" + pathPart, null, null);
+				URI uri = new URI(null, null, null, -1, '/' + pathPart, null, null);
 				// manually encode any slash that each part may contain
 				return uri.getRawPath().substring(1).replaceAll("/", "%2F");
 			} catch (URISyntaxException e) {

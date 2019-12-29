@@ -60,6 +60,7 @@ class MultiNodeHostProvider implements HostProvider {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.reactive.HostProvider#clusterInfo()
 	 */
+	@Override
 	public Mono<ClusterInformation> clusterInfo() {
 		return nodes(null).map(this::updateNodeState).buffer(hosts.size())
 				.then(Mono.just(new ClusterInformation(new LinkedHashSet<>(this.hosts.values()))));

@@ -90,7 +90,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 		IndexCoordinates index = IndexCoordinates.of(indexName).withTypes(indexTypeName);
 
 		ReactiveElasticsearchQueryExecution execution = getExecution(parameterAccessor,
-				new ResultProcessingConverter(processor, elasticsearchOperations));
+				new ResultProcessingConverter(processor));
 
 		return execution.execute(query, processor.getReturnedType().getDomainType(), targetType, index);
 	}

@@ -30,13 +30,12 @@ import org.springframework.data.repository.query.parser.PartTree;
 public class ReactivePartTreeElasticsearchQuery extends AbstractReactiveElasticsearchRepositoryQuery {
 
 	private final PartTree tree;
-	private final ResultProcessor processor;
 
 	public ReactivePartTreeElasticsearchQuery(ReactiveElasticsearchQueryMethod queryMethod,
 			ReactiveElasticsearchOperations elasticsearchOperations) {
 		super(queryMethod, elasticsearchOperations);
 
-		this.processor = queryMethod.getResultProcessor();
+		ResultProcessor processor = queryMethod.getResultProcessor();
 		this.tree = new PartTree(queryMethod.getName(), processor.getReturnedType().getDomainType());
 	}
 

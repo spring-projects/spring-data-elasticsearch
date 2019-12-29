@@ -112,7 +112,7 @@ class ClusterConnection implements ExtensionContext.Store.CloseableResource {
 	}
 
 	@Override
-	public void close() throws Exception {
+	public void close() {
 
 		if (node != null) {
 			LOGGER.debug("closing node");

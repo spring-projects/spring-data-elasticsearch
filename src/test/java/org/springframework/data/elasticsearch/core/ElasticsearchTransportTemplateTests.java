@@ -59,11 +59,10 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		IndexRequest indexRequest = new IndexRequest();
 		indexRequest.source("{}", XContentType.JSON);
 		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5)).withIndexRequest(indexRequest).build();
-		assertThatThrownBy(() -> {
-			operations.update(updateQuery, index);
-		}).isInstanceOf(DocumentMissingException.class);
+		assertThatThrownBy(() -> operations.update(updateQuery, index)).isInstanceOf(DocumentMissingException.class);
 	}
 
+	@Override
 	@Test // DATAES-187
 	public void shouldUsePageableOffsetToSetFromInSearchRequest() {
 
@@ -88,7 +87,7 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 	}
 
 	@Data
-	@Document(indexName = "test-index-sample-core-transport-template", type = "test-type", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-sample-core-transport-template", replicas = 0,
 			refreshInterval = "-1")
 	static class SampleEntity {
 

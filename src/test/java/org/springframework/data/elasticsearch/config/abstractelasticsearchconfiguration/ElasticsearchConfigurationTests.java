@@ -65,7 +65,7 @@ public class ElasticsearchConfigurationTests {
 		assertThat(repository).isNotNull();
 	}
 
-	@Document(indexName = "test-index-config-abstractelasticsearchconfiguraiton", type = "test-type", createIndex = false)
+	@Document(indexName = "test-index-config-abstractelasticsearchconfiguraiton", createIndex = false)
 	static class CreateIndexFalseEntity {
 
 		@Id private String id;

@@ -27,23 +27,17 @@ class IndexCoordinatesTest {
 
 	@Test
 	void cannotBeInitializedWithNullIndexName() {
-		assertThatThrownBy(() -> {
-			IndexCoordinates.of(null);
-		}).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> IndexCoordinates.of(null)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
 	void cannotBeInitializedWithNullIndexNames() {
-		assertThatThrownBy(() -> {
-			IndexCoordinates.of((String[]) null);
-		}).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> IndexCoordinates.of((String[]) null)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
 	void cannotBeInitializedWithEmptyIndexNames() {
-		assertThatThrownBy(() -> {
-			IndexCoordinates.of(new String[] {});
-		}).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> IndexCoordinates.of(new String[] {})).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test

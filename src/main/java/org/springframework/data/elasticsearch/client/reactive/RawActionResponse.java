@@ -16,11 +16,8 @@
 package org.springframework.data.elasticsearch.client.reactive;
 
 import org.elasticsearch.common.io.stream.StreamOutput;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.elasticsearch.action.ActionResponse;
 

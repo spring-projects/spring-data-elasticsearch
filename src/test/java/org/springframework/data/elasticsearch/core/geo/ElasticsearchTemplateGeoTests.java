@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.elasticsearch.geometry.utils.Geohash;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +88,12 @@ public class ElasticsearchTemplateGeoTests {
 
 		IndexInitializer.init(indexOperations, AuthorMarkerEntity.class);
 		IndexInitializer.init(indexOperations, LocationMarkerEntity.class);
+	}
+
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex(AuthorMarkerEntity.class);
+		indexOperations.deleteIndex(LocationMarkerEntity.class);
 	}
 
 	private void loadClassBaseEntities() {
@@ -368,7 +375,7 @@ public class ElasticsearchTemplateGeoTests {
 	 * @author Mohsin Husen
 	 */
 	@Data
-	@Document(indexName = "test-index-author-marker-core-geo", type = "geo-class-point-type", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-author-marker-core-geo", replicas = 0,
 			refreshInterval = "-1")
 	static class AuthorMarkerEntity {
 
@@ -427,7 +434,7 @@ public class ElasticsearchTemplateGeoTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-location-marker-core-geo", type = "geo-annotation-point-type", shards = 1,
+	@Document(indexName = "test-index-location-marker-core-geo",
 			replicas = 0, refreshInterval = "-1")
 	static class LocationMarkerEntity {
 

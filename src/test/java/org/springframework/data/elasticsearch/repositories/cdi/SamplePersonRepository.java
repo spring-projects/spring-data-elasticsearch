@@ -19,7 +19,7 @@ import org.springframework.data.repository.Repository;
 
 /**
  * @author Mark Paluch
- * @see DATAES-113
+ * @see <a href="https://jira.spring.io/browse/DATAES-113">DATAES-113</a>
  */
 public interface SamplePersonRepository
 		extends Repository<CdiRepositoryTests.Person, Long>, SamplePersonRepositoryCustom {

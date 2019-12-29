@@ -35,7 +35,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.repository.Repository;
@@ -50,7 +50,7 @@ import org.springframework.test.context.ContextConfiguration;
 public class EnableNestedElasticsearchRepositoriesTests {
 
 	@Configuration
-	@Import({ ElasticsearchTemplateConfiguration.class })
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
 	@EnableElasticsearchRepositories(basePackages = { "org.springframework.data.elasticsearch.config.nested" },
 			considerNestedRepositories = true)
 	static class Config {}
@@ -64,8 +64,7 @@ public class EnableNestedElasticsearchRepositoriesTests {
 
 	@Data
 	@Builder
-	@Document(indexName = "test-index-sample-config-nested", type = "test-type", shards = 1, replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-config-nested", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;

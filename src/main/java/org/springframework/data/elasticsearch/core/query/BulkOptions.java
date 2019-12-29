@@ -20,12 +20,13 @@ import java.util.List;
 import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.common.unit.TimeValue;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.lang.Nullable;
 
 /**
  * Options that may be passed to an
- * {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations#bulkIndex(List, BulkOptions)} or
- * {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations#bulkUpdate(List, BulkOptions)} call. <br/>
+ * {@link org.springframework.data.elasticsearch.core.DocumentOperations#bulkIndex(List, BulkOptions, IndexCoordinates)} or
+ * {@link org.springframework.data.elasticsearch.core.DocumentOperations#bulkUpdate(List, BulkOptions, IndexCoordinates)} call. <br/>
  * Use {@link BulkOptions#builder()} to obtain a builder, then set the desired properties and call
  * {@link BulkOptionsBuilder#build()} to get the BulkOptions object.
  *

@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
@@ -76,11 +78,17 @@ public class UUIDElasticsearchRepositoryTests {
 	@Autowired private SampleUUIDKeyedElasticsearchRepository repository;
 
 	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
+		indexOperations = operations.getIndexOperations();
+		IndexInitializer.init(indexOperations, SampleEntityUUIDKeyed.class);
+	}
 
-		IndexInitializer.init(operations, SampleEntityUUIDKeyed.class);
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex(SampleEntityUUIDKeyed.class);
 	}
 
 	@Test
@@ -593,7 +601,7 @@ public class UUIDElasticsearchRepositoryTests {
 	@AllArgsConstructor
 	@Builder
 	@Data
-	@Document(indexName = "test-index-uuid-keyed", type = "test-type-uuid-keyed", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-uuid-keyed", replicas = 0,
 			refreshInterval = "-1")
 	static class SampleEntityUUIDKeyed {
 

@@ -56,8 +56,6 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.elasticsearch.core.query.Criteria;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
@@ -201,9 +199,7 @@ public class MappingElasticsearchConverterUnitTests {
 	public void shouldFailToInitializeGivenMappingContextIsNull() {
 
 		// given
-		assertThatThrownBy(() -> {
-			new MappingElasticsearchConverter(null);
-		}).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> new MappingElasticsearchConverter(null)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
@@ -233,7 +229,7 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	@Test // DATAES-530
-	public void shouldMapObjectToJsonString() throws IOException {
+	public void shouldMapObjectToJsonString() {
 		// Given
 
 		// When
@@ -245,7 +241,7 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	@Test // DATAES-530
-	public void shouldMapJsonStringToObject() throws IOException {
+	public void shouldMapJsonStringToObject() {
 		// Given
 
 		// When
@@ -258,7 +254,7 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	@Test // DATAES-530
-	public void shouldMapGeoPointElasticsearchNames() throws IOException {
+	public void shouldMapGeoPointElasticsearchNames() {
 		// given
 		Point point = new Point(10, 20);
 		String pointAsString = point.getX() + "," + point.getY();
@@ -277,7 +273,7 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	@Test // DATAES-530
-	public void ignoresReadOnlyProperties() throws IOException {
+	public void ignoresReadOnlyProperties() {
 
 		// given
 		Sample sample = new Sample();
@@ -311,7 +307,7 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	@Test // DATAES-530
-	public void writesConcreteList() throws IOException {
+	public void writesConcreteList() {
 
 		Person ginger = new Person();
 		ginger.id = "ginger";
@@ -324,7 +320,7 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	@Test // DATAES-530
-	public void writesInterfaceList() throws IOException {
+	public void writesInterfaceList() {
 
 		Inventory gun = new Gun("Glock 19", 33);
 		Inventory grenade = new Grenade("40 mm");
@@ -346,7 +342,7 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test // DATAES-530
 	public void readListOfConcreteTypesCorrectly() {
 
-		sarahAsMap.put("coWorkers", Arrays.asList(kyleAsMap));
+		sarahAsMap.put("coWorkers", Collections.singletonList(kyleAsMap));
 
 		Person target = mappingElasticsearchConverter.read(Person.class, sarahAsMap);
 
@@ -447,7 +443,7 @@ public class MappingElasticsearchConverterUnitTests {
 	public void readGenericListList() {
 
 		Document source = Document.create();
-		source.put("objectList", Arrays.asList(Arrays.asList(t800AsMap, gunAsMap)));
+		source.put("objectList", Collections.singletonList(Arrays.asList(t800AsMap, gunAsMap)));
 
 		Skynet target = mappingElasticsearchConverter.read(Skynet.class, source);
 
@@ -738,6 +734,7 @@ public class MappingElasticsearchConverterUnitTests {
 		String city;
 	}
 
+	@EqualsAndHashCode(callSuper = true)
 	@Data
 	static class Place extends Address {
 
@@ -789,7 +786,7 @@ public class MappingElasticsearchConverterUnitTests {
 	@AllArgsConstructor
 	@Builder
 	@org.springframework.data.elasticsearch.annotations.Document(indexName = "test-index-geo-core-entity-mapper",
-			type = "geo-test-index", shards = 1, replicas = 0, refreshInterval = "-1")
+			type = "geo-test-index", replicas = 0, refreshInterval = "-1")
 	static class GeoEntity {
 
 		@Id private String id;

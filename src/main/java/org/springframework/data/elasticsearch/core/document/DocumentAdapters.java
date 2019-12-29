@@ -372,9 +372,7 @@ public class DocumentAdapters {
 
 			Objects.requireNonNull(action);
 
-			documentFields.forEach(field -> {
-				action.accept(field.getName(), getValue(field));
-			});
+			documentFields.forEach(field -> action.accept(field.getName(), getValue(field)));
 		}
 
 		/*
@@ -719,7 +717,7 @@ public class DocumentAdapters {
 			String id = hasId() ? getId() : "?";
 			String version = hasVersion() ? Long.toString(getVersion()) : "?";
 
-			return getClass().getSimpleName() + "@" + id + "#" + version + " " + toJson();
+			return getClass().getSimpleName() + '@' + id + '#' + version + ' ' + toJson();
 		}
 	}
 }

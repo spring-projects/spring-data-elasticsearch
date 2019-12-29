@@ -19,11 +19,17 @@ import org.springframework.data.repository.core.EntityMetadata;
 
 /**
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public interface ElasticsearchEntityMetadata<T> extends EntityMetadata<T> {
 
 	String getIndexName();
 
+	/**
+	 * @return the type for the index
+	 * @deprecated since 4.0
+	 */
+	@Deprecated
 	String getIndexTypeName();
 }

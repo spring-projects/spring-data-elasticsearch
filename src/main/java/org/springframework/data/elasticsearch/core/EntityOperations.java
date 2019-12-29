@@ -99,8 +99,6 @@ class EntityOperations {
 	 * @param index index name override can be {@literal null}.
 	 * @param type index type override can be {@literal null}.
 	 * @return the {@link IndexCoordinates} containing index name and index type.
-	 * @see ElasticsearchPersistentEntity#getIndexName()
-	 * @see ElasticsearchPersistentEntity#getIndexType()
 	 */
 	IndexCoordinates determineIndex(Entity<?> entity, @Nullable String index, @Nullable String type) {
 		return determineIndex(entity.getPersistentEntity(), index, type);
@@ -116,12 +114,10 @@ class EntityOperations {
 	 * @param index index name override can be {@literal null}.
 	 * @param type index type override can be {@literal null}.
 	 * @return the {@link IndexCoordinates} containing index name and index type.
-	 * @see ElasticsearchPersistentEntity#getIndexName()
-	 * @see ElasticsearchPersistentEntity#getIndexType()
 	 */
 	IndexCoordinates determineIndex(ElasticsearchPersistentEntity<?> persistentEntity, @Nullable String index,
 			@Nullable String type) {
-		return IndexCoordinates.of(indexName(persistentEntity, index)).withTypes(typeName(persistentEntity, type));
+		return persistentEntity.getIndexCoordinates();
 	}
 
 	private static String indexName(@Nullable ElasticsearchPersistentEntity<?> entity, @Nullable String index) {
@@ -132,16 +128,6 @@ class EntityOperations {
 		}
 
 		return index;
-	}
-
-	private static String typeName(@Nullable ElasticsearchPersistentEntity<?> entity, @Nullable String type) {
-
-		if (StringUtils.isEmpty(type)) {
-			Assert.notNull(entity, "Cannot determine index type");
-			return entity.getIndexCoordinates().getTypeName();
-		}
-
-		return type;
 	}
 
 	/**
@@ -268,6 +254,7 @@ class EntityOperations {
 		 * @return the current version or {@literal null} in case it's uninitialized or the entity doesn't expose a version
 		 *         property.
 		 */
+		@Override
 		@Nullable
 		Number getVersion();
 	}

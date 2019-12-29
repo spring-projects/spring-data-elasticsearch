@@ -90,7 +90,7 @@ public class ElasticsearchStringQueryUnitTests {
 	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, String... args)
 			throws NoSuchMethodException {
 
-		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(size -> new Class[size]);
+		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
 		ElasticsearchQueryMethod queryMethod = getQueryMethod(methodName, argTypes);
 		ElasticsearchStringQuery elasticsearchStringQuery = queryForMethod(queryMethod);
 		return elasticsearchStringQuery.createQuery(new ElasticsearchParametersParameterAccessor(queryMethod, args));
@@ -123,7 +123,7 @@ public class ElasticsearchStringQueryUnitTests {
 	 * @author Artur Konczak
 	 */
 
-	@Document(indexName = "test-index-person-query-unittest", type = "user", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-person-query-unittest", replicas = 0,
 			refreshInterval = "-1")
 	static class Person {
 
@@ -178,7 +178,7 @@ public class ElasticsearchStringQueryUnitTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-book-query-unittest", type = "book", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-book-query-unittest", replicas = 0,
 			refreshInterval = "-1")
 	static class Book {
 

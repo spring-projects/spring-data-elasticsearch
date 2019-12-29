@@ -20,6 +20,7 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import lombok.Data;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
@@ -52,10 +54,17 @@ public class ComplexCustomMethodRepositoryTests {
 	@Autowired private ComplexElasticsearchRepository complexRepository;
 
 	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(operations, SampleEntity.class);
+		indexOperations = operations.getIndexOperations();
+		IndexInitializer.init(indexOperations, SampleEntity.class);
+	}
+
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex(SampleEntity.class);
 	}
 
 	@Test
@@ -71,8 +80,8 @@ public class ComplexCustomMethodRepositoryTests {
 	}
 
 	@Data
-	@Document(indexName = "test-index-sample-repositories-complex-custommethod-autowiring", type = "test-type",
-			shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-repositories-complex-custommethod-autowiring",
+			replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;

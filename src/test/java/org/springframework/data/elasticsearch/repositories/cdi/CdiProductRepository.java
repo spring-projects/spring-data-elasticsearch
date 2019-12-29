@@ -27,5 +27,6 @@ import org.springframework.data.repository.CrudRepository;
  */
 public interface CdiProductRepository extends CrudRepository<CdiRepositoryTests.Product, String> {
 
+	@Override
 	Optional<CdiRepositoryTests.Product> findById(String id);
 }

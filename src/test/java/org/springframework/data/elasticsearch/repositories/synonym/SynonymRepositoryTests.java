@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import lombok.Data;
 
 import org.elasticsearch.index.query.QueryBuilders;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
@@ -58,12 +60,18 @@ public class SynonymRepositoryTests {
 	@Autowired private SynonymRepository repository;
 
 	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(operations, SynonymEntity.class);
+		indexOperations = operations.getIndexOperations();
+		IndexInitializer.init(indexOperations, SynonymEntity.class);
 	}
 
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex(SynonymEntity.class);
+	}
 	@Test
 	public void shouldDo() {
 
@@ -90,7 +98,7 @@ public class SynonymRepositoryTests {
 	 * @author Mohsin Husen
 	 */
 	@Data
-	@Document(indexName = "test-index-synonym", type = "synonym-type")
+	@Document(indexName = "test-index-synonym")
 	@Setting(settingPath = "/synonyms/settings.json")
 	@Mapping(mappingPath = "/synonyms/mappings.json")
 	static class SynonymEntity {

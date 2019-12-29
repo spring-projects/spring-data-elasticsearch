@@ -67,6 +67,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	 * @return the {@link ElasticsearchEntityMetadata} for the query methods {@link #getReturnedObjectType() return type}.
 	 * @since 3.2
 	 */
+	@Override
 	public ElasticsearchEntityMetadata<?> getEntityInformation() {
 
 		if (metadata == null) {

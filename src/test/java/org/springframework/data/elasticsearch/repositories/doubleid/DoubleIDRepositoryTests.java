@@ -31,6 +31,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -57,16 +58,17 @@ public class DoubleIDRepositoryTests {
 	@Autowired private DoubleIDRepository repository;
 
 	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(operations, DoubleIDEntity.class);
+		indexOperations = operations.getIndexOperations();
+		IndexInitializer.init(indexOperations, DoubleIDEntity.class);
 	}
 
 	@AfterEach
 	public void after() {
-
-		operations.deleteIndex(DoubleIDEntity.class);
+		indexOperations.deleteIndex(DoubleIDEntity.class);
 	}
 
 	@Test
@@ -119,7 +121,7 @@ public class DoubleIDRepositoryTests {
 	 * @author Mohsin Husen
 	 */
 
-	@Document(indexName = "test-index-double-keyed-entity", type = "double-keyed-entity", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-double-keyed-entity", replicas = 0,
 			refreshInterval = "-1")
 	static class DoubleIDEntity {
 

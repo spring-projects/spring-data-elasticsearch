@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.repositories.spel;
 import static org.assertj.core.api.Assertions.*;
 
 import org.elasticsearch.index.query.QueryBuilders;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
@@ -53,10 +55,17 @@ public class SpELEntityTests {
 	@Autowired private SpELRepository repository;
 
 	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(operations, SpELEntity.class);
+		indexOperations = operations.getIndexOperations();
+		IndexInitializer.init(indexOperations, SpELEntity.class);
+	}
+
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex("test-index-abz-*");
 	}
 
 	@Test
@@ -94,7 +103,7 @@ public class SpELEntityTests {
 	 *
 	 * @author Artur Konczak
 	 */
-	@Document(indexName = "#{'test-index-abz'+'-'+'entity'}", type = "#{'my'+'Type'}", shards = 1, replicas = 0,
+	@Document(indexName = "#{'test-index-abz'+'-'+'entity'}", replicas = 0,
 			refreshInterval = "-1")
 	static class SpELEntity {
 

@@ -82,7 +82,7 @@ Consider the following:
 ====
 [source,java]
 ----
-@Document(indexName = "marvel", type = "characters")
+@Document(indexName = "marvel")
 public class Person {
 
   private @Id String id;

@@ -169,9 +169,10 @@ public class MappingElasticsearchConverter
 				.map(searchDocument -> read(type, searchDocument)) //
 				.collect(Collectors.toList());
 		Aggregations aggregations = searchDocumentResponse.getAggregations();
-		return new SearchHits<T>(totalHits, maxScore, scrollId, searchHits, aggregations);
+		return new SearchHits<>(totalHits, maxScore, scrollId, searchHits, aggregations);
 	}
 
+	@Override
 	public <T> SearchHit<T> read(Class<T> type, SearchDocument searchDocument) {
 
 		Assert.notNull(type, "type must not be null");
@@ -182,7 +183,7 @@ public class MappingElasticsearchConverter
 		Object[] sortValues = searchDocument.getSortValues();
 		T content = mapDocument(searchDocument, type);
 
-		return new SearchHit<T>(id, score, sortValues, content);
+		return new SearchHit<>(id, score, sortValues, content);
 	}
 
 	@Override

@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
@@ -66,13 +65,10 @@ public interface ReactiveElasticsearchQueryExecution {
 	final class ResultProcessingConverter implements Converter<Object, Object> {
 
 		private final ResultProcessor processor;
-		private final ReactiveElasticsearchOperations operations;
 
-		public ResultProcessingConverter(ResultProcessor processor, ReactiveElasticsearchOperations operations) {
+		public ResultProcessingConverter(ResultProcessor processor) {
 			Assert.notNull(processor, "processor must not be null");
-			Assert.notNull(operations, "operations must not be null");
 			this.processor = processor;
-			this.operations = operations;
 		}
 
 		/*

@@ -63,7 +63,7 @@ public class ElasticsearchNamespaceHandlerTests {
 		assertThat(context.getBean(RestClientFactoryBean.class)).isInstanceOf(RestClientFactoryBean.class);
 	}
 
-	@Document(indexName = "test-index-config-namespace", type = "test-type", createIndex = false)
+	@Document(indexName = "test-index-config-namespace", createIndex = false)
 	static class CreateIndexFalseEntity {
 
 		@Id private String id;

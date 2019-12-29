@@ -111,10 +111,10 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-568
-	public void testInfiniteLoopAvoidance() throws IOException, JSONException {
+	public void testInfiniteLoopAvoidance() throws JSONException {
 
-		String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\""
-				+ "type\":\"text\",\"index\":false," + "\"analyzer\":\"standard\"}}}}";
+		String expected = "{\"properties\":{\"message\":{\"store\":true,\""
+				+ "type\":\"text\",\"index\":false," + "\"analyzer\":\"standard\"}}}";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleTransientEntity.class);
 
@@ -122,10 +122,10 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-568
-	public void shouldUseValueFromAnnotationType() throws IOException, JSONException {
+	public void shouldUseValueFromAnnotationType() throws JSONException {
 
 		// Given
-		String expected = "{\"price\":{\"properties\":{\"price\":{\"type\":\"double\"}}}}";
+		String expected = "{\"properties\":{\"price\":{\"type\":\"double\"}}}";
 
 		// When
 		String mapping = getMappingBuilder().buildPropertyMapping(StockPrice.class);
@@ -165,9 +165,9 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-568
-	public void shouldCreateMappingForSpecifiedParentType() throws IOException, JSONException {
+	public void shouldCreateMappingForSpecifiedParentType() throws JSONException {
 
-		String expected = "{\"mapping\":{\"_parent\":{\"type\":\"parentType\"},\"properties\":{}}}";
+		String expected = "{\"_parent\":{\"type\":\"parentType\"},\"properties\":{}}";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(MinimalChildEntity.class);
 
@@ -175,11 +175,11 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-76
-	public void shouldBuildMappingWithSuperclass() throws IOException, JSONException {
+	public void shouldBuildMappingWithSuperclass() throws JSONException {
 
-		String expected = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,\""
+		String expected = "{\"properties\":{\"message\":{\"store\":true,\""
 				+ "type\":\"text\",\"index\":false,\"analyzer\":\"standard\"}" + ",\"createdDate\":{"
-				+ "\"type\":\"date\",\"index\":false}}}}";
+				+ "\"type\":\"date\",\"index\":false}}}";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleInheritedEntity.class);
 
@@ -214,12 +214,12 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-568
-	public void shouldBuildMappingsForGeoPoint() throws IOException, JSONException {
+	public void shouldBuildMappingsForGeoPoint() throws JSONException {
 
 		// given
-		String expected = "{\"geo-test-index\": {\"properties\": {" + "\"pointA\":{\"type\":\"geo_point\"},"
+		String expected = "{\"properties\": {" + "\"pointA\":{\"type\":\"geo_point\"},"
 				+ "\"pointB\":{\"type\":\"geo_point\"}," + "\"pointC\":{\"type\":\"geo_point\"},"
-				+ "\"pointD\":{\"type\":\"geo_point\"}" + "}}}";
+				+ "\"pointD\":{\"type\":\"geo_point\"}" + "}}";
 
 		// when
 		String mapping;
@@ -300,8 +300,8 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldUseCopyTo() {
 
 		// given
-		operations.createIndex(CopyToEntity.class);
-		operations.putMapping(CopyToEntity.class);
+		indexOperations.createIndex(CopyToEntity.class);
+		indexOperations.putMapping(CopyToEntity.class);
 
 		// when
 		Map mapping = operations.getMapping(CopyToEntity.class);
@@ -316,11 +316,11 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-568
-	public void shouldUseFieldNameOnId() throws IOException, JSONException {
+	public void shouldUseFieldNameOnId() throws JSONException {
 
 		// given
-		String expected = "{\"fieldname-type\":{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true}"
-				+ "}}}";
+		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true}"
+				+ "}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.IdEntity.class);
@@ -330,11 +330,11 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-568
-	public void shouldUseFieldNameOnText() throws IOException, JSONException {
+	public void shouldUseFieldNameOnText() throws JSONException {
 
 		// given
-		String expected = "{\"fieldname-type\":{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"text-property\":{\"type\":\"text\"}" + "}}}";
+		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
+				+ "\"text-property\":{\"type\":\"text\"}" + "}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.TextEntity.class);
@@ -344,11 +344,11 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-568
-	public void shouldUseFieldNameOnMapping() throws IOException, JSONException {
+	public void shouldUseFieldNameOnMapping() throws JSONException {
 
 		// given
-		String expected = "{\"fieldname-type\":{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"mapping-property\":{\"type\":\"string\",\"analyzer\":\"standard_lowercase_asciifolding\"}" + "}}}";
+		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
+				+ "\"mapping-property\":{\"type\":\"string\",\"analyzer\":\"standard_lowercase_asciifolding\"}" + "}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.MappingEntity.class);
@@ -358,11 +358,11 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-568
-	public void shouldUseFieldNameOnGeoPoint() throws IOException, JSONException {
+	public void shouldUseFieldNameOnGeoPoint() throws JSONException {
 
 		// given
-		String expected = "{\"fieldname-type\":{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"geopoint-property\":{\"type\":\"geo_point\"}" + "}}}";
+		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
+				+ "\"geopoint-property\":{\"type\":\"geo_point\"}" + "}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.GeoPointEntity.class);
@@ -372,11 +372,11 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-568
-	public void shouldUseFieldNameOnCircularEntity() throws IOException, JSONException {
+	public void shouldUseFieldNameOnCircularEntity() throws JSONException {
 
 		// given
-		String expected = "{\"fieldname-type\":{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"circular-property\":{\"type\":\"object\",\"properties\":{\"id-property\":{}}}" + "}}}";
+		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
+				+ "\"circular-property\":{\"type\":\"object\",\"properties\":{\"id-property\":{}}}" + "}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.CircularEntity.class);
@@ -386,12 +386,12 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-568
-	public void shouldUseFieldNameOnCompletion() throws IOException, JSONException {
+	public void shouldUseFieldNameOnCompletion() throws JSONException {
 
 		// given
-		String expected = "{\"fieldname-type\":{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
+		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
 				+ "\"completion-property\":{\"type\":\"completion\",\"max_input_length\":100,\"preserve_position_increments\":true,\"preserve_separators\":true,\"search_analyzer\":\"simple\",\"analyzer\":\"simple\"},\"completion-property\":{}"
-				+ "}}}";
+				+ "}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.CompletionEntity.class);
@@ -401,12 +401,11 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-568
-	public void shouldUseFieldNameOnMultiField() throws IOException, JSONException {
+	public void shouldUseFieldNameOnMultiField() throws JSONException {
 
 		// given
-		String expected = "{\"fieldname-type\":{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"multifield-property\":{\"type\":\"text\",\"analyzer\":\"whitespace\",\"fields\":{\"prefix\":{\"type\":\"text\",\"analyzer\":\"stop\",\"search_analyzer\":\"standard\"}}}"
-				+ "}}}";
+		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
+				+ "\"multifield-property\":{\"type\":\"text\",\"analyzer\":\"whitespace\",\"fields\":{\"prefix\":{\"type\":\"text\",\"analyzer\":\"stop\",\"search_analyzer\":\"standard\"}}}}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.MultiFieldEntity.class);
@@ -416,10 +415,10 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-639
-	public void shouldUseIgnoreAbove() throws IOException, JSONException {
+	public void shouldUseIgnoreAbove() throws JSONException {
 
 		// given
-		String expected = "{\"ignore-above-type\":{\"properties\":{\"message\":{\"type\":\"keyword\",\"ignore_above\":10}}}}";
+		String expected = "{\"properties\":{\"message\":{\"type\":\"keyword\",\"ignore_above\":10}}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(IgnoreAboveEntity.class);
@@ -429,9 +428,8 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test
-	public void shouldSetFieldMappingProperties() throws JSONException, IOException {
+	public void shouldSetFieldMappingProperties() throws JSONException {
 		String expected = "{\n" + //
-				"    \"fmp\": {\n" + //
 				"        \"properties\": {\n" + //
 				"            \"storeTrue\": {\n" + //
 				"                \"store\": true\n" + //
@@ -516,7 +514,6 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 				"                \"scaling_factor\": 100.0\n" + //
 				"            }\n" + //
 				"        }\n" + //
-				"    }\n" + //
 				"}\n"; //
 
 		// when
@@ -527,10 +524,9 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test
-	void shouldWriteDynamicMappingSettings() throws IOException, JSONException {
+	void shouldWriteDynamicMappingSettings() throws JSONException {
 
 		String expected = "{\n" + //
-				"  \"dms\": {\n" + //
 				"    \"dynamic\": \"false\",\n" + //
 				"    \"properties\": {\n" + //
 				"      \"author\": {\n" + //
@@ -539,7 +535,6 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 				"        \"properties\": {}\n" + //
 				"      }\n" + //
 				"    }\n" + //
-				"  }\n" + //
 				"}\n";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(ConfigureDynamicMappingEntity.class);
@@ -555,7 +550,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "ignore-above-index", type = "ignore-above-type")
+	@Document(indexName = "ignore-above-index")
 	static class IgnoreAboveEntity {
 
 		@Id private String id;
@@ -569,12 +564,12 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@SuppressWarnings("unused")
 	static class FieldNameEntity {
 
-		@Document(indexName = "fieldname-index", type = "fieldname-type")
+		@Document(indexName = "fieldname-index")
 		static class IdEntity {
 			@Id @Field("id-property") private String id;
 		}
 
-		@Document(indexName = "fieldname-index", type = "fieldname-type")
+		@Document(indexName = "fieldname-index")
 		static class TextEntity {
 
 			@Id @Field("id-property") private String id;
@@ -583,7 +578,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 			private String textProperty;
 		}
 
-		@Document(indexName = "fieldname-index", type = "fieldname-type")
+		@Document(indexName = "fieldname-index")
 		static class MappingEntity {
 
 			@Id @Field("id-property") private String id;
@@ -592,7 +587,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 			private byte[] mappingProperty;
 		}
 
-		@Document(indexName = "fieldname-index", type = "fieldname-type")
+		@Document(indexName = "fieldname-index")
 		static class GeoPointEntity {
 
 			@Id @Field("id-property") private String id;
@@ -600,7 +595,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 			@Field("geopoint-property") private GeoPoint geoPoint;
 		}
 
-		@Document(indexName = "fieldname-index", type = "fieldname-type")
+		@Document(indexName = "fieldname-index")
 		static class CircularEntity {
 
 			@Id @Field("id-property") private String id;
@@ -609,7 +604,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 			private CircularEntity circularProperty;
 		}
 
-		@Document(indexName = "fieldname-index", type = "fieldname-type")
+		@Document(indexName = "fieldname-index")
 		static class CompletionEntity {
 
 			@Id @Field("id-property") private String id;
@@ -618,7 +613,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 			private Completion suggest;
 		}
 
-		@Document(indexName = "fieldname-index", type = "fieldname-type")
+		@Document(indexName = "fieldname-index")
 		static class MultiFieldEntity {
 
 			@Id @Field("id-property") private String id;
@@ -635,7 +630,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	 *
 	 * @author Peter-Josef Meisch
 	 */
-	@Document(indexName = "test-index-minimal", type = "mapping")
+	@Document(indexName = "test-index-minimal")
 	static class MinimalChildEntity {
 
 		@Id private String id;
@@ -653,7 +648,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-book-mapping-builder", type = "book", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-book-mapping-builder", replicas = 0,
 			refreshInterval = "-1")
 	static class Book {
 
@@ -670,7 +665,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	 * @author Stuart Stevenson
 	 * @author Mohsin Husen
 	 */
-	@Document(indexName = "test-index-simple-recursive-mapping-builder", type = "circular-object", shards = 1,
+	@Document(indexName = "test-index-simple-recursive-mapping-builder",
 			replicas = 0, refreshInterval = "-1")
 	static class SimpleRecursiveEntity {
 
@@ -686,7 +681,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-copy-to-mapping-builder", type = "test", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-copy-to-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class CopyToEntity {
 
 		@Id private String id;
@@ -706,7 +701,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-normalizer-mapping-builder", type = "test", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-normalizer-mapping-builder", replicas = 0,
 			refreshInterval = "-1")
 	@Setting(settingPath = "/settings/test-normalizer.json")
 	static class NormalizerEntity {
@@ -748,7 +743,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	/**
 	 * @author Kevin Leturc
 	 */
-	@Document(indexName = "test-index-sample-inherited-mapping-builder", type = "mapping", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-sample-inherited-mapping-builder", replicas = 0,
 			refreshInterval = "-1")
 	static class SampleInheritedEntity extends AbstractInheritedEntity {
 
@@ -806,7 +801,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-stock-mapping-builder", type = "price", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-stock-mapping-builder", replicas = 0,
 			refreshInterval = "-1")
 	static class StockPrice {
 
@@ -846,7 +841,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	/**
 	 * @author Jakub Vavrik
 	 */
-	@Document(indexName = "test-index-recursive-mapping-mapping-builder", type = "mapping", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-recursive-mapping-mapping-builder", replicas = 0,
 			refreshInterval = "-1")
 	static class SampleTransientEntity {
 
@@ -882,7 +877,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 			}
 
 			public void setSomeField(SampleTransientEntity.NestedEntity someField) {
-				this.someField = someField;
+				NestedEntity.someField = someField;
 			}
 
 			public Boolean getSomething() {
@@ -903,7 +898,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-geo-mapping-builder", type = "geo-test-index", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-geo-mapping-builder", replicas = 0,
 			refreshInterval = "-1")
 	static class GeoEntity {
 
@@ -927,7 +922,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	/**
 	 * Created by akonczak on 21/08/2016.
 	 */
-	@Document(indexName = "test-index-user-mapping-builder", type = "user")
+	@Document(indexName = "test-index-user-mapping-builder")
 	static class User {
 		@Id private String id;
 
@@ -937,7 +932,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	/**
 	 * Created by akonczak on 21/08/2016.
 	 */
-	@Document(indexName = "test-index-group-mapping-builder", type = "group")
+	@Document(indexName = "test-index-group-mapping-builder")
 	static class Group {
 
 		@Id String id;
@@ -945,7 +940,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Nested, ignoreFields = { "groups" }) private Set<User> users = new HashSet<>();
 	}
 
-	@Document(indexName = "test-index-field-mapping-parameters", type = "fmp")
+	@Document(indexName = "test-index-field-mapping-parameters")
 	static class FieldMappingParameters {
 		@Field private String indexTrue;
 		@Field(index = false) private String indexFalse;
@@ -960,14 +955,14 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Integer) private String type;
 		@Field(type = FieldType.Date, format = DateFormat.custom, pattern = "YYYYMMDD") private LocalDate date;
 		@Field(analyzer = "ana", searchAnalyzer = "sana", normalizer = "norma") private String analyzers;
-		@Field(type = Keyword, docValues = true) private String docValuesTrue;
+		@Field(type = Keyword) private String docValuesTrue;
 		@Field(type = Keyword, docValues = false) private String docValuesFalse;
 		@Field(ignoreMalformed = true) private String ignoreMalformedTrue;
-		@Field(ignoreMalformed = false) private String ignoreMalformedFalse;
+		@Field() private String ignoreMalformedFalse;
 		@Field(indexOptions = IndexOptions.none) private String indexOptionsNone;
 		@Field(indexOptions = IndexOptions.positions) private String indexOptionsPositions;
 		@Field(indexPhrases = true) private String indexPhrasesTrue;
-		@Field(indexPhrases = false) private String indexPhrasesFalse;
+		@Field() private String indexPhrasesFalse;
 		@Field(indexPrefixes = @IndexPrefixes) private String defaultIndexPrefixes;
 		@Field(indexPrefixes = @IndexPrefixes(minChars = 1, maxChars = 10)) private String customIndexPrefixes;
 		@Field private String normsTrue;
@@ -982,7 +977,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Scaled_Float, scalingFactor = 100.0) Double scaledFloat;
 	}
 
-	@Document(indexName = "test-index-configure-dynamic-mapping", type = "dms")
+	@Document(indexName = "test-index-configure-dynamic-mapping")
 	@DynamicMapping(DynamicMappingValue.False)
 	static class ConfigureDynamicMappingEntity {
 

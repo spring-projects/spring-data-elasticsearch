@@ -79,6 +79,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	// endregion
 
 	// region DocumentOperations
+	@Override
 	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
 
 		Assert.notNull(query, "Query must not be null.");

@@ -237,6 +237,7 @@ public interface SearchOperations {
 	 * @return scrolled page result
 	 * @deprecated since 4.0, use {@link #searchScrollContinue(String, long, Class)}.
 	 */
+	@SuppressWarnings("unchecked")
 	@Deprecated
 	default <T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz) {
 		return (ScrolledPage<T>) SearchHitSupport

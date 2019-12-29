@@ -101,7 +101,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 				putMapping();
 			}
 		} catch (ElasticsearchException exception) {
-			LOGGER.error("failed to load elasticsearch nodes : {}", exception.getDetailedMessage());
+			LOGGER.warn("Cannot create index: {}", exception.getDetailedMessage());
 		}
 	}
 

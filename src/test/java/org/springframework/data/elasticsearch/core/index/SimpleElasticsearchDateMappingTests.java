@@ -38,13 +38,13 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
  */
 public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests {
 
-	private static final String EXPECTED_MAPPING = "{\"mapping\":{\"properties\":{\"message\":{\"store\":true,"
+	private static final String EXPECTED_MAPPING = "{\"properties\":{\"message\":{\"store\":true,"
 			+ "\"type\":\"text\",\"index\":false,\"analyzer\":\"standard\"},\"customFormatDate\":{\"type\":\"date\",\"format\":\"dd.MM.yyyy hh:mm\"},"
 			+ "\"defaultFormatDate\":{\"type\":\"date\"},\"basicFormatDate\":{\""
-			+ "type\":\"date\",\"format\":\"basic_date\"}}}}";
+			+ "type\":\"date\",\"format\":\"basic_date\"}}}";
 
 	@Test // DATAES-568
-	public void testCorrectDateMappings() throws IOException {
+	public void testCorrectDateMappings() {
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleDateMappingEntity.class);
 
@@ -55,7 +55,7 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 	 * @author Jakub Vavrik
 	 */
 	@Data
-	@Document(indexName = "test-index-date-mapping-core", type = "mapping", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-date-mapping-core", replicas = 0,
 			refreshInterval = "-1")
 	static class SampleDateMappingEntity {
 

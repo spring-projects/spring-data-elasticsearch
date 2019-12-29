@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
@@ -54,9 +56,16 @@ public class FieldDynamicMappingEntityRepositoryTests {
 
 	@Autowired private ElasticsearchOperations operations;
 
+	private IndexOperations indexOperations;
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(operations, FieldDynamicMappingEntity.class);
+		indexOperations = operations.getIndexOperations();
+		IndexInitializer.init(indexOperations, FieldDynamicMappingEntity.class);
+	}
+
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex(FieldDynamicMappingEntity.class);
 	}
 
 	@Test // DATAES-209
@@ -92,7 +101,7 @@ public class FieldDynamicMappingEntityRepositoryTests {
 	/**
 	 * @author Ted Liang
 	 */
-	@Document(indexName = "test-index-field-dynamic-mapping", type = "test-field-mapping-type")
+	@Document(indexName = "test-index-field-dynamic-mapping")
 	static class FieldDynamicMappingEntity {
 
 		@Id private String id;
