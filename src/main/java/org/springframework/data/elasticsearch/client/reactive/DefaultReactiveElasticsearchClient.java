@@ -440,6 +440,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.index.reindex.DeleteByQueryRequest)
 	 */
+	@Override
 	public Mono<BulkByScrollResponse> deleteBy(HttpHeaders headers, DeleteByQueryRequest deleteRequest) {
 
 		return sendRequest(deleteRequest, RequestCreator.deleteByQuery(), BulkByScrollResponse.class, headers) //
@@ -764,14 +765,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		static Function<DeleteByQueryRequest, Request> deleteByQuery() {
 
-			return request -> {
-
-				try {
-					return RequestConverters.deleteByQuery(request);
-				} catch (IOException e) {
-					throw new ElasticsearchException("Could not parse request", e);
-				}
-			};
+			return request -> RequestConverters.deleteByQuery(request);
 		}
 
 		static Function<BulkRequest, Request> bulk() {

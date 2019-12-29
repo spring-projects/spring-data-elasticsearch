@@ -129,10 +129,12 @@ public class ReactiveMockClientTestsUtils {
 			this.activeDefaultHost = activeDefaultHost;
 		}
 
+		@Override
 		public Mono<InetSocketAddress> lookupActiveHost() {
 			return delegate.lookupActiveHost();
 		}
 
+		@Override
 		public Mono<InetSocketAddress> lookupActiveHost(Verification verification) {
 
 			if (StringUtils.hasText(activeDefaultHost)) {
@@ -142,14 +144,17 @@ public class ReactiveMockClientTestsUtils {
 			return delegate.lookupActiveHost(verification);
 		}
 
+		@Override
 		public Mono<WebClient> getActive() {
 			return delegate.getActive();
 		}
 
+		@Override
 		public Mono<WebClient> getActive(Verification verification) {
 			return delegate.getActive(verification);
 		}
 
+		@Override
 		public WebClient createWebClient(InetSocketAddress endpoint) {
 			return delegate.createWebClient(endpoint);
 		}
@@ -210,6 +215,7 @@ public class ReactiveMockClientTestsUtils {
 			return get(getInetSocketAddress(host));
 		}
 
+		@Override
 		public WebClient get(InetSocketAddress endpoint) {
 
 			synchronized (lock) {

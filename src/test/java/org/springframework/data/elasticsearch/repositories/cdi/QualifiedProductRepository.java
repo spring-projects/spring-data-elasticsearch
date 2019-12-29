@@ -19,7 +19,7 @@ import org.springframework.data.repository.CrudRepository;
 
 /**
  * @author Mark Paluch
- * @see DATAES-234
+ * @see <a href="https://jira.spring.io/browse/DATAES-234">DATAES-234</a>
  */
 @PersonDB
 @OtherQualifier

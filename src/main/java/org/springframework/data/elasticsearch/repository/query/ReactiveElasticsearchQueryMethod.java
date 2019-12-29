@@ -38,6 +38,7 @@ import org.springframework.util.ClassUtils;
 
 /**
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
@@ -45,13 +46,10 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 	private static final ClassTypeInformation<Page> PAGE_TYPE = ClassTypeInformation.from(Page.class);
 	private static final ClassTypeInformation<Slice> SLICE_TYPE = ClassTypeInformation.from(Slice.class);
 
-	private final Method method;
-
 	public ReactiveElasticsearchQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
 
 		super(method, metadata, factory, mappingContext);
-		this.method = method;
 
 		if (hasParameterOfType(method, Pageable.class)) {
 

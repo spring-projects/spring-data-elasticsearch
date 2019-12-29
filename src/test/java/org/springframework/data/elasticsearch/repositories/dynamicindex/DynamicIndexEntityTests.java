@@ -73,7 +73,7 @@ public class DynamicIndexEntityTests {
 	}
 
 	@AfterEach
-	public void teardown() {
+	public void after() {
 		deleteIndexes();
 	}
 

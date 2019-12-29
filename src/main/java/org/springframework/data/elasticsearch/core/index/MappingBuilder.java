@@ -31,7 +31,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.elasticsearch.annotations.CompletionContext;
+import org.springframework.data.elasticsearch.annotations.CompletionField;
+import org.springframework.data.elasticsearch.annotations.DynamicMapping;
+import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.completion.Completion;
@@ -39,6 +49,7 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -95,31 +106,34 @@ public class MappingBuilder {
 	 * builds the Elasticsearch mapping for the given clazz.
 	 *
 	 * @return JSON string
-	 * @throws IOException
+	 * @throws ElasticsearchException on errors while building the mapping
 	 */
-	public String buildPropertyMapping(Class<?> clazz) throws IOException {
+	public String buildPropertyMapping(Class<?> clazz) throws ElasticsearchException {
 
-		ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext()
-				.getRequiredPersistentEntity(clazz);
+		try {
+			ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext()
+					.getRequiredPersistentEntity(clazz);
 
-		XContentBuilder builder = jsonBuilder().startObject().startObject(entity.getIndexCoordinates().getTypeName());
+			XContentBuilder builder = jsonBuilder().startObject();
 
-		// Dynamic templates
-		addDynamicTemplatesMapping(builder, entity);
+			// Dynamic templates
+			addDynamicTemplatesMapping(builder, entity);
 
-		// Parent
-		String parentType = entity.getParentType();
-		if (hasText(parentType)) {
-			builder.startObject(FIELD_PARENT).field(FIELD_PARAM_TYPE, parentType).endObject();
+			// Parent
+			String parentType = entity.getParentType();
+			if (hasText(parentType)) {
+				builder.startObject(FIELD_PARENT).field(FIELD_PARAM_TYPE, parentType).endObject();
+			}
+
+			mapEntity(builder, entity, true, "", false, FieldType.Auto, null, entity.findAnnotation(DynamicMapping.class));
+
+			builder.endObject() // root object
+					.close();
+
+			return builder.getOutputStream().toString();
+		} catch (MappingException | IOException e) {
+			throw new ElasticsearchException("could not build mapping", e);
 		}
-
-		mapEntity(builder, entity, true, "", false, FieldType.Auto, null, entity.findAnnotation(DynamicMapping.class));
-
-		builder.endObject() // indexType
-				.endObject() // root object
-				.close();
-
-		return builder.getOutputStream().toString();
 	}
 
 	private void mapEntity(XContentBuilder builder, @Nullable ElasticsearchPersistentEntity entity, boolean isRootObject,

@@ -52,7 +52,7 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	private Properties properties;
 
 	@Override
-	public void destroy() throws Exception {
+	public void destroy() {
 		try {
 			logger.info("Closing elasticSearch  client");
 			if (client != null) {
@@ -64,7 +64,7 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	}
 
 	@Override
-	public TransportClient getObject() throws Exception {
+	public TransportClient getObject() {
 		return client;
 	}
 
@@ -83,7 +83,7 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 		buildClient();
 	}
 
-	protected void buildClient() throws Exception {
+	protected void buildClient() {
 
 		client = new PreBuiltTransportClient(settings());
 

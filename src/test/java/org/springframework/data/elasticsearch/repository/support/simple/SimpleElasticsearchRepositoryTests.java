@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.elasticsearch.action.ActionRequestValidationException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,7 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
@@ -78,11 +80,18 @@ public class SimpleElasticsearchRepositoryTests {
 
 	@Autowired private SampleElasticsearchRepository repository;
 
-	@Autowired private ElasticsearchOperations elasticsearchOperations;
+	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(elasticsearchOperations, SampleEntity.class);
+		indexOperations = operations.getIndexOperations();
+		IndexInitializer.init(indexOperations, SampleEntity.class);
+	}
+
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex(SampleEntity.class);
 	}
 
 	@Test
@@ -698,7 +707,7 @@ public class SimpleElasticsearchRepositoryTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-sample-simple-repository", type = "test-type", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-sample-simple-repository", replicas = 0,
 			refreshInterval = "-1")
 	static class SampleEntity {
 

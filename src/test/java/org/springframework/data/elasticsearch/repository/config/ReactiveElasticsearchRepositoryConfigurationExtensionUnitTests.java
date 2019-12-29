@@ -100,7 +100,7 @@ public class ReactiveElasticsearchRepositoryConfigurationExtensionUnitTests {
 
 	}
 
-	@Document(indexName = "star-wars", type = "character")
+	@Document(indexName = "star-wars")
 	static class SwCharacter {}
 
 	static class Store {}

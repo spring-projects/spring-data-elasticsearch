@@ -27,7 +27,6 @@ import java.lang.Integer;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.junit.jupiter.api.AfterEach;
@@ -42,9 +41,9 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.ResultsExtractor;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
@@ -78,11 +77,12 @@ public class ElasticsearchTemplateAggregationTests {
 	static final String INDEX_NAME = "test-index-articles-core-aggregation";
 
 	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-
-		IndexInitializer.init(operations, ArticleEntity.class);
+		indexOperations = operations.getIndexOperations();
+		IndexInitializer.init(indexOperations, ArticleEntity.class);
 
 		IndexQuery article1 = new ArticleEntityBuilder("1").title("article four").subject("computing")
 				.addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addAuthor(JONATHAN_YAN).score(10)
@@ -107,8 +107,7 @@ public class ElasticsearchTemplateAggregationTests {
 
 	@AfterEach
 	public void after() {
-
-		operations.deleteIndex(ArticleEntity.class);
+		indexOperations.deleteIndex(ArticleEntity.class);
 	}
 
 	@Test
@@ -136,7 +135,7 @@ public class ElasticsearchTemplateAggregationTests {
 	 * @author Mohsin Husen
 	 */
 	@Data
-	@Document(indexName = "test-index-articles-core-aggregation", type = "article", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-articles-core-aggregation", replicas = 0,
 			refreshInterval = "-1")
 	static class ArticleEntity {
 
@@ -153,10 +152,6 @@ public class ElasticsearchTemplateAggregationTests {
 		@Field(type = Integer, store = true) private List<Integer> publishedYears = new ArrayList<>();
 
 		private int score;
-
-		private ArticleEntity() {
-
-		}
 
 		public ArticleEntity(String id) {
 			this.id = id;

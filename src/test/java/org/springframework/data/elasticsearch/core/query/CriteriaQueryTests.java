@@ -30,6 +30,7 @@ import java.lang.Long;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -65,14 +67,21 @@ public class CriteriaQueryTests {
 	private final IndexCoordinates index = IndexCoordinates.of("test-index-sample-core-query").withTypes("test-type");
 
 	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
+		indexOperations = operations.getIndexOperations();
 
-		operations.deleteIndex(SampleEntity.class);
-		operations.createIndex(SampleEntity.class);
-		operations.putMapping(SampleEntity.class);
-		operations.refresh(SampleEntity.class);
+		indexOperations.deleteIndex(SampleEntity.class);
+		indexOperations.createIndex(SampleEntity.class);
+		indexOperations.putMapping(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
+	}
+
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex(SampleEntity.class);
 	}
 
 	@Test
@@ -89,7 +98,7 @@ public class CriteriaQueryTests {
 		indexQuery.setId(documentId);
 		indexQuery.setObject(sampleEntity);
 		operations.index(indexQuery, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").contains("test").and("message").contains("some"));
 
@@ -132,7 +141,7 @@ public class CriteriaQueryTests {
 
 		indexQueries.add(indexQuery2);
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").contains("some").or("message").contains("test"));
 
@@ -163,7 +172,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria().and(new Criteria("message").contains("some")));
 
 		// when
@@ -194,7 +203,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria().or(new Criteria("message").contains("some")));
 
 		// when
@@ -223,7 +232,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("some message"));
 
 		// when
@@ -265,7 +274,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery2);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("some message"));
 
 		// when
@@ -307,7 +316,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery2);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		Criteria criteria = new Criteria("message").endsWith("end");
 		CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
 
@@ -349,7 +358,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery2);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		Criteria criteria = new Criteria("message").startsWith("start");
 		CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
 
@@ -391,7 +400,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery2);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("contains"));
 
 		// when
@@ -432,7 +441,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery2);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").expression("+elasticsearch || test"));
 
 		// when
@@ -473,7 +482,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery2);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").startsWith("some").endsWith("search").contains("message").is("some message search"));
 
@@ -515,7 +524,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery2);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("foo").not());
 
 		// when
@@ -559,7 +568,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery2);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(100, 150));
 
 		// when
@@ -601,7 +610,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery2);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(350, null));
 
 		// when
@@ -644,7 +653,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery2);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(null, 550));
 
 		// when
@@ -687,7 +696,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery2);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").lessThanEqual(750));
 
 		// when
@@ -730,7 +739,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery2);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").greaterThanEqual(950));
 
 		// when
@@ -773,7 +782,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery2);
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("foo").boost(1));
 
 		// when
@@ -794,7 +803,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(buildIndex(SampleEntity.builder().id("3").message("ac").build()));
 
 		operations.bulkIndex(indexQueries, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 
 		// when
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
@@ -821,7 +830,7 @@ public class CriteriaQueryTests {
 		indexQuery.setId(documentId);
 		indexQuery.setObject(sampleEntity);
 		operations.index(indexQuery, index);
-		operations.refresh(SampleEntity.class);
+		indexOperations.refresh(SampleEntity.class);
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("Hello World!"));
 
@@ -837,7 +846,7 @@ public class CriteriaQueryTests {
 	@Getter
 	@NoArgsConstructor
 	@AllArgsConstructor
-	@Document(indexName = "test-index-sample-core-query", type = "test-type", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-sample-core-query", replicas = 0,
 			refreshInterval = "-1")
 	static class SampleEntity {
 

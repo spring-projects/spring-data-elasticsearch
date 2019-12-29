@@ -87,15 +87,15 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	@Override
 	public Map<String, Object> getMapping(IndexCoordinates index) {
 
-		Assert.notNull(index, "No index defined for putMapping()");
+		Assert.notNull(index, "No index defined for getMapping()");
 
 		try {
-			return client.admin().indices()
-					.getMappings(new GetMappingsRequest().indices(index.getIndexNames()).types(index.getTypeNames())).actionGet()
-					.getMappings().get(index.getIndexName()).get(index.getTypeName()).getSourceAsMap();
+			return client.admin().indices().getMappings( //
+					new GetMappingsRequest().indices(index.getIndexNames())).actionGet() //
+					.getMappings().get(index.getIndexName()).get(IndexCoordinates.TYPE) //
+					.getSourceAsMap();
 		} catch (Exception e) {
-			throw new ElasticsearchException("Error while getting mapping for indexName : " + index.getIndexName()
-					+ " type : " + index.getTypeName() + ' ' + e.getMessage());
+			throw new ElasticsearchException("Error while getting mapping for indexName : " + index.getIndexName(), e);
 		}
 	}
 

@@ -31,6 +31,8 @@ import org.springframework.util.Assert;
  */
 public class IndexCoordinates {
 
+	public static final String TYPE = "_doc";
+
 	private final String[] indexNames;
 	private final String[] typeNames;
 

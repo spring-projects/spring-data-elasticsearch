@@ -41,7 +41,7 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 * Returns whether the current property is a <em>potential</em> score property of the owning
 	 * {@link ElasticsearchPersistentEntity}. This method is mainly used by {@link ElasticsearchPersistentEntity}
 	 * implementation to discover score property candidates on {@link ElasticsearchPersistentEntity} creation you should
-	 * rather call {@link ElasticsearchPersistentEntity#isScoreProperty(PersistentProperty)} to determine whether the
+	 * rather call {@link ElasticsearchPersistentEntity#getScoreProperty()} to determine whether the
 	 * current property is the score property of that {@link ElasticsearchPersistentEntity} under consideration.
 	 *
 	 * @return
@@ -53,7 +53,7 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 * Returns whether the current property is a <em>potential</em> parent property of the owning
 	 * {@link ElasticsearchPersistentEntity}. This method is mainly used by {@link ElasticsearchPersistentEntity}
 	 * implementation to discover parent property candidates on {@link ElasticsearchPersistentEntity} creation you should
-	 * rather call {@link ElasticsearchPersistentEntity#isParentProperty()} to determine whether the current property is
+	 * rather call {@link ElasticsearchPersistentEntity#getScoreProperty()} to determine whether the current property is
 	 * the parent property of that {@link ElasticsearchPersistentEntity} under consideration.
 	 *
 	 * @return
@@ -78,6 +78,7 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 
 		INSTANCE;
 
+		@Override
 		public String convert(ElasticsearchPersistentProperty source) {
 			return source.getFieldName();
 		}
@@ -91,6 +92,7 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 
 		INSTANCE;
 
+		@Override
 		public String convert(ElasticsearchPersistentProperty source) {
 			return source.getName();
 		}

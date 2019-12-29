@@ -16,19 +16,14 @@
 package org.springframework.data.elasticsearch.core.client.support;
 
 import lombok.Data;
-import lombok.Getter;
 
-import org.elasticsearch.cluster.metadata.AliasMetaData;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 public class AliasData {
 	String filter = null;
 	String routing = null;
 	String search_routing = null;
-	String index_routing= null;
+	String index_routing = null;
 }

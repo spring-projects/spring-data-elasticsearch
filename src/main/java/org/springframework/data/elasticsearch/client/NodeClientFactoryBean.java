@@ -81,7 +81,7 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 	}
 
 	@Override
-	public NodeClient getObject() throws Exception {
+	public NodeClient getObject() {
 		return nodeClient;
 	}
 
@@ -148,7 +148,7 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 	}
 
 	@Override
-	public void destroy() throws Exception {
+	public void destroy() {
 		try {
 			// NodeClient.close() is a noop, no need to call it here
 			nodeClient = null;

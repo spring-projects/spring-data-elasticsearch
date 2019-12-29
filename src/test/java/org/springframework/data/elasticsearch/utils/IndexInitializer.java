@@ -34,6 +34,7 @@ public class IndexInitializer {
 	 * @param clazz
 	 * @deprecated since 4.0, use {@link IndexInitializer#init(IndexOperations, Class)}
 	 */
+	@Deprecated
 	public static void init(ElasticsearchOperations operations, Class<?> clazz) {
 
 		operations.getIndexOperations().deleteIndex(clazz);

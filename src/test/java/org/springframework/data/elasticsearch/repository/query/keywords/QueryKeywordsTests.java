@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -64,12 +66,14 @@ class QueryKeywordsTests {
 
 	@Autowired private ProductRepository repository;
 
-	@Autowired private ElasticsearchOperations elasticsearchTemplate;
+	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
+		indexOperations = operations.getIndexOperations();
 
-		IndexInitializer.init(elasticsearchTemplate, Product.class);
+		IndexInitializer.init(indexOperations, Product.class);
 
 		Product product1 = Product.builder().id("1").name("Sugar").text("Cane sugar").price(1.0f).available(false)
 				.sortName("sort5").build();
@@ -85,6 +89,11 @@ class QueryKeywordsTests {
 				.sortName("sort0").build();
 
 		repository.saveAll(Arrays.asList(product1, product2, product3, product4, product5, product6));
+	}
+
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex(Product.class);
 	}
 
 	@Test
@@ -266,7 +275,7 @@ class QueryKeywordsTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-product-query-keywords", type = "test-product-type", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-product-query-keywords", replicas = 0,
 			refreshInterval = "-1")
 	static class Product {
 

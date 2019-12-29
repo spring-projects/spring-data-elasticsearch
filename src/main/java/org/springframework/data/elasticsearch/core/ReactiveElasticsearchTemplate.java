@@ -182,8 +182,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			Object id = entity.getId();
 
 			IndexRequest request = id != null
-					? new IndexRequest(index.getIndexName(), index.getTypeName(), converter.convertId(id))
-					: new IndexRequest(index.getIndexName(), index.getTypeName());
+					? new IndexRequest(index.getIndexName()).id(converter.convertId(id))
+					: new IndexRequest(index.getIndexName());
 
 			request.source(converter.mapObject(value).toJson(), Requests.INDEX_CONTENT_TYPE);
 
@@ -223,7 +223,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		return Mono.defer(() -> {
 
-			return doFindById(new GetRequest(index.getIndexName(), index.getTypeName(), id));
+			return doFindById(new GetRequest(index.getIndexName(), id));
 		});
 	}
 
@@ -241,7 +241,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	private Mono<Boolean> doExists(String id, ElasticsearchPersistentEntity<?> entity, @Nullable IndexCoordinates index) {
 
-		return Mono.defer(() -> doExists(new GetRequest(index.getIndexName(), index.getTypeName(), id)));
+		return Mono.defer(() -> doExists(new GetRequest(index.getIndexName(), id)));
 	}
 
 	/*
@@ -285,7 +285,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		return Mono.defer(() -> {
 
-			return doDelete(prepareDeleteRequest(source, new DeleteRequest(index.getIndexName(), index.getTypeName(), id)));
+			return doDelete(prepareDeleteRequest(source, new DeleteRequest(index.getIndexName(), id)));
 		});
 	}
 
@@ -312,7 +312,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		return Flux.defer(() -> {
 			DeleteByQueryRequest request = new DeleteByQueryRequest(index.getIndexNames());
-			request.types(index.getTypeNames());
 			request.setQuery(mappedQuery(query, entity));
 
 			return doDeleteBy(prepareDeleteByRequest(request));

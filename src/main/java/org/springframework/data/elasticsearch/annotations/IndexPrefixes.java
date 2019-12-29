@@ -20,8 +20,8 @@ package org.springframework.data.elasticsearch.annotations;
  * @since 4.0
  */
 public @interface IndexPrefixes {
-	static final int MIN_DEFAULT = 2;
-	static final int MAX_DEFAULT = 2;
+	int MIN_DEFAULT = 2;
+	int MAX_DEFAULT = 2;
 
 	int minChars() default MIN_DEFAULT;
 

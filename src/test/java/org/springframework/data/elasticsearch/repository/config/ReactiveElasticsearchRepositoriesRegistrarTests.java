@@ -72,7 +72,7 @@ public class ReactiveElasticsearchRepositoriesRegistrarTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-sample-reactive-repositories-registrar", type = "test-type", shards = 1,
+	@Document(indexName = "test-index-sample-reactive-repositories-registrar",
 			replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 

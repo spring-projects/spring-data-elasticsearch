@@ -34,7 +34,6 @@ import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClient
 import org.springframework.data.elasticsearch.support.SearchHitsUtil;
 import org.springframework.data.util.Version;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Strobl
@@ -115,7 +114,6 @@ public final class TestUtils {
 	private static class DocumentLookup implements OfType {
 
 		private String id;
-		private String type;
 
 		public DocumentLookup(String id) {
 			this.id = id;
@@ -126,9 +124,6 @@ public final class TestUtils {
 		public boolean existsIn(String index) {
 
 			GetRequest request = new GetRequest(index).id(id);
-			if (StringUtils.hasText(type)) {
-				request = request.type(type);
-			}
 			try (RestHighLevelClient client = restHighLevelClient()) {
 				return client.get(request, RequestOptions.DEFAULT).isExists();
 			}
@@ -136,7 +131,6 @@ public final class TestUtils {
 
 		@Override
 		public ExistsIn ofType(String type) {
-			this.type = type;
 			return this;
 		}
 	}

@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 
 /**

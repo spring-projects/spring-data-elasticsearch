@@ -66,7 +66,7 @@ class ClusterNodes implements Streamable<TransportAddress> {
 			Assert.hasText(host, () -> String.format("No host name given cluster node %s!", node));
 			Assert.hasText(port, () -> String.format("No port given in cluster node %s!", node));
 
-			return new TransportAddress(toInetAddress(host), Integer.valueOf(port));
+			return new TransportAddress(toInetAddress(host), Integer.parseInt(port));
 
 		}).collect(Collectors.toList());
 	}

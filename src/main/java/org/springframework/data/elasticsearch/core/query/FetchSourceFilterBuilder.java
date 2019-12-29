@@ -39,7 +39,6 @@ public class FetchSourceFilterBuilder {
 		if (includes == null) includes = new String[0];
 		if (excludes == null) excludes = new String[0];
 
-		SourceFilter sourceFilter = new FetchSourceFilter(includes, excludes);
-		return sourceFilter;
+		return new FetchSourceFilter(includes, excludes);
 	}
 }

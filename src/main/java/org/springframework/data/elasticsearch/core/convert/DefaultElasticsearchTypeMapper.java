@@ -84,6 +84,7 @@ public class DefaultElasticsearchTypeMapper extends DefaultTypeMapper<Map<String
 		 * (non-Javadoc)
 		 * @see org.springframework.data.convert.TypeAliasAccessor#readAliasFrom(java.lang.Object)
 		 */
+		@Override
 		public Alias readAliasFrom(Map<String, Object> source) {
 			return Alias.ofNullable(source.get(typeKey));
 		}
@@ -92,6 +93,7 @@ public class DefaultElasticsearchTypeMapper extends DefaultTypeMapper<Map<String
 		 * (non-Javadoc)
 		 * @see org.springframework.data.convert.TypeAliasAccessor#writeTypeTo(java.lang.Object, java.lang.Object)
 		 */
+		@Override
 		public void writeTypeTo(Map<String, Object> sink, Object alias) {
 
 			if (typeKey == null) {

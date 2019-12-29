@@ -35,7 +35,6 @@ import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
@@ -128,8 +127,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	public <T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index) {
 		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, query, index);
 		GetResponse response = getRequestBuilder.execute().actionGet();
-		T entity = elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);
-		return entity;
+		return elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);
 	}
 
 	@Override
@@ -163,7 +161,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public String delete(String id, IndexCoordinates index) {
-		return client.prepareDelete(index.getIndexName(), index.getTypeName(), id).execute().actionGet().getId();
+		return client.prepareDelete(index.getIndexName(), IndexCoordinates.TYPE, id).execute().actionGet().getId();
 	}
 
 	@Override

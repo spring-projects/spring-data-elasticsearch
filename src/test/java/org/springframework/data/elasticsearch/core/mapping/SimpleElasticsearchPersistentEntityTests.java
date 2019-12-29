@@ -39,7 +39,7 @@ import org.springframework.util.ReflectionUtils;
 public class SimpleElasticsearchPersistentEntityTests {
 
 	@Test
-	public void shouldThrowExceptionGivenVersionPropertyIsNotLong() throws NoSuchFieldException, IntrospectionException {
+	public void shouldThrowExceptionGivenVersionPropertyIsNotLong() {
 		// given
 		TypeInformation typeInformation = ClassTypeInformation.from(EntityWithWrongVersionType.class);
 		SimpleElasticsearchPersistentEntity<EntityWithWrongVersionType> entity = new SimpleElasticsearchPersistentEntity<>(
@@ -51,8 +51,7 @@ public class SimpleElasticsearchPersistentEntityTests {
 	}
 
 	@Test
-	public void shouldThrowExceptionGivenMultipleVersionPropertiesArePresent()
-			throws NoSuchFieldException, IntrospectionException {
+	public void shouldThrowExceptionGivenMultipleVersionPropertiesArePresent() {
 		// given
 		TypeInformation typeInformation = ClassTypeInformation.from(EntityWithMultipleVersionField.class);
 		SimpleElasticsearchPersistentEntity<EntityWithMultipleVersionField> entity = new SimpleElasticsearchPersistentEntity<>(

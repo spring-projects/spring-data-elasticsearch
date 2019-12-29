@@ -126,7 +126,7 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, String... args)
 			throws NoSuchMethodException {
 
-		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(size -> new Class[size]);
+		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
 		ReactiveElasticsearchQueryMethod queryMethod = getQueryMethod(methodName, argTypes);
 		ReactiveElasticsearchStringQuery elasticsearchStringQuery = queryForMethod(queryMethod);
 
@@ -175,7 +175,7 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 	 * @author Artur Konczak
 	 */
 
-	@Document(indexName = "test-index-person-reactive-repository-string-query", type = "user", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-person-reactive-repository-string-query", replicas = 0,
 			refreshInterval = "-1")
 	public class Person {
 
@@ -230,7 +230,7 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-book-reactive-repository-string-query", type = "book", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-book-reactive-repository-string-query", replicas = 0,
 			refreshInterval = "-1")
 	static class Book {
 

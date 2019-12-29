@@ -17,8 +17,8 @@
 package org.springframework.data.elasticsearch.repositories.cdi;
 
 /**
- * @see DATAES-113
  * @author Mark Paluch
+ * @see <a href="https://jira.spring.io/browse/DATAES-113">DATAES-113</a>
  */
 interface SamplePersonRepositoryCustom {
 

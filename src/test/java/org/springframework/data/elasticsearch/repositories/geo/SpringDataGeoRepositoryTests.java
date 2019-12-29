@@ -26,6 +26,7 @@ import lombok.Setter;
 import java.util.Locale;
 import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -62,12 +64,20 @@ public class SpringDataGeoRepositoryTests {
 	static class Config {}
 
 	@Autowired ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@Autowired SpringDataGeoRepository repository;
 
 	@BeforeEach
 	public void init() {
-		IndexInitializer.init(operations, GeoEntity.class);
+
+		indexOperations = operations.getIndexOperations();
+		IndexInitializer.init(indexOperations, GeoEntity.class);
+	}
+
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex(GeoEntity.class);
 	}
 
 	@Test
@@ -111,7 +121,7 @@ public class SpringDataGeoRepositoryTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-geo-repository", type = "geo-test-index", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-geo-repository", replicas = 0,
 			refreshInterval = "-1")
 	static class GeoEntity {
 

@@ -41,6 +41,7 @@ class StubParameterAccessor implements ElasticsearchParameterAccessor {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.ParameterAccessor#getPageable()
 	 */
+	@Override
 	public Pageable getPageable() {
 		return null;
 	}
@@ -49,6 +50,7 @@ class StubParameterAccessor implements ElasticsearchParameterAccessor {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.ParameterAccessor#getBindableValue(int)
 	 */
+	@Override
 	public Object getBindableValue(int index) {
 		return values[index];
 	}
@@ -57,6 +59,7 @@ class StubParameterAccessor implements ElasticsearchParameterAccessor {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.ParameterAccessor#hasBindableNullValue()
 	 */
+	@Override
 	public boolean hasBindableNullValue() {
 		return false;
 	}
@@ -65,6 +68,7 @@ class StubParameterAccessor implements ElasticsearchParameterAccessor {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.ParameterAccessor#getSort()
 	 */
+	@Override
 	public Sort getSort() {
 		return Sort.unsorted();
 	}
@@ -73,6 +77,7 @@ class StubParameterAccessor implements ElasticsearchParameterAccessor {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.ParameterAccessor#iterator()
 	 */
+	@Override
 	public Iterator<Object> iterator() {
 		return Arrays.asList(values).iterator();
 	}

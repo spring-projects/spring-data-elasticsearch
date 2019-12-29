@@ -41,7 +41,7 @@ public class RestClientFactoryBean implements FactoryBean<RestHighLevelClient>, 
 	static final String COMMA = ",";
 
 	@Override
-	public void destroy() throws Exception {
+	public void destroy() {
 		try {
 			log.info("Closing elasticSearch  client");
 			if (client != null) {
@@ -58,7 +58,7 @@ public class RestClientFactoryBean implements FactoryBean<RestHighLevelClient>, 
 	}
 
 	@Override
-	public RestHighLevelClient getObject() throws Exception {
+	public RestHighLevelClient getObject() {
 		return client;
 	}
 
@@ -75,7 +75,7 @@ public class RestClientFactoryBean implements FactoryBean<RestHighLevelClient>, 
 	protected void buildClient() throws Exception {
 
 		Assert.hasText(hosts, "[Assertion Failed] At least one host must be set.");
-		ArrayList<HttpHost> httpHosts = new ArrayList<HttpHost>();
+		ArrayList<HttpHost> httpHosts = new ArrayList<>();
 		for (String host : hosts.split(COMMA)) {
 			URL hostUrl = new URL(host);
 			httpHosts.add(new HttpHost(hostUrl.getHost(), hostUrl.getPort(), hostUrl.getProtocol()));

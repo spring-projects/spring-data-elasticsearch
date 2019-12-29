@@ -44,9 +44,7 @@ class ReactiveElasticsearchParametersParameterAccessor extends ElasticsearchPara
 
 		this.subscriptions = new ArrayList<>(values.length);
 
-		for (int i = 0; i < values.length; i++) {
-
-			Object value = values[i];
+		for (Object value : values) {
 
 			if (value == null || !ReactiveWrappers.supports(value.getClass())) {
 
@@ -95,6 +93,7 @@ class ReactiveElasticsearchParametersParameterAccessor extends ElasticsearchPara
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.ParametersParameterAccessor#getBindableValue(int)
 	 */
+	@Override
 	public Object getBindableValue(int index) {
 		return getValue(getParameters().getBindableParameter(index).getIndex());
 	}

@@ -258,7 +258,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-sample-core-reactive-template-Unit", type = "test-type", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-sample-core-reactive-template-Unit", replicas = 0,
 			refreshInterval = "-1")
 	static class SampleEntity {
 

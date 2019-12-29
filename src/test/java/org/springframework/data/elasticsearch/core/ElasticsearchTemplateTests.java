@@ -332,9 +332,7 @@ public abstract class ElasticsearchTemplateTests {
 				.withPreference("_only_nodes:oops").build();
 
 		// when
-		assertThatThrownBy(() -> {
-			operations.search(searchQueryWithInvalidPreference, SampleEntity.class, index);
-		}).isInstanceOf(Exception.class);
+		assertThatThrownBy(() -> operations.search(searchQueryWithInvalidPreference, SampleEntity.class, index)).isInstanceOf(Exception.class);
 	}
 
 	@Test // DATAES-422 - Add support for IndicesOptions in search queries
@@ -515,7 +513,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(typeQuery(TYPE_NAME));
+		deleteQuery.setQuery(termQuery("message", "foo"));
 
 		operations.delete(deleteQuery, IndexCoordinates.of("test-index-*").withTypes(TYPE_NAME));
 
@@ -1390,8 +1388,8 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.createIndex(INDEX_1_NAME);
 
 		// when
-
 		indexOperations.putMapping(IndexCoordinates.of(INDEX_1_NAME).withTypes(TYPE_NAME), entity);
+
 		// then
 		Map<String, Object> mapping = indexOperations.getMapping(IndexCoordinates.of(INDEX_1_NAME).withTypes(TYPE_NAME));
 		assertThat(mapping.get("properties")).isNotNull();
@@ -1441,7 +1439,7 @@ public abstract class ElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-227
-	public void shouldUseUpsertOnUpdate() throws IOException {
+	public void shouldUseUpsertOnUpdate() {
 
 		// given
 		Map<String, Object> doc = new HashMap<>();
@@ -1465,7 +1463,7 @@ public abstract class ElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-693
-	public void shouldReturnSourceWhenRequested() throws IOException {
+	public void shouldReturnSourceWhenRequested() {
 		// given
 		Map<String, Object> doc = new HashMap<>();
 		doc.put("id", "1");
@@ -1525,12 +1523,10 @@ public abstract class ElasticsearchTemplateTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withIndicesOptions(IndicesOptions.lenientExpandOpen()).build();
 
-		List<SearchHit<SampleEntity>> entities = new ArrayList<>();
-
 		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(scrollTimeInMillis, searchQuery,
 				SampleEntity.class, index);
 
-		entities.addAll(scroll.getContent());
+		List<SearchHit<SampleEntity>> entities = new ArrayList<>(scroll.getContent());
 
 		while (scroll.hasContent()) {
 			scroll = operations.searchScrollContinue(scroll.getScrollId(), scrollTimeInMillis, SampleEntity.class);
@@ -1858,9 +1854,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.refresh(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY));
 
 		// reindex with version one below
-		assertThatThrownBy(() -> {
-			operations.index(indexQueryBuilder.withVersion(entity.getVersion() - 1).build(), index);
-		}).hasMessageContaining("version").hasMessageContaining("conflict");
+		assertThatThrownBy(() -> operations.index(indexQueryBuilder.withVersion(entity.getVersion() - 1).build(), index)).hasMessageContaining("version").hasMessageContaining("conflict");
 	}
 
 	@Test
@@ -2140,9 +2134,7 @@ public abstract class ElasticsearchTemplateTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 
 		// when
-		assertThatThrownBy(() -> {
-			operations.count(criteriaQuery, (IndexCoordinates) null);
-		}).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> operations.count(criteriaQuery, (IndexCoordinates) null)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test // DATAES-67
@@ -2159,9 +2151,7 @@ public abstract class ElasticsearchTemplateTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
 		// when
-		assertThatThrownBy(() -> {
-			operations.count(searchQuery, (IndexCoordinates) null);
-		}).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> operations.count(searchQuery, (IndexCoordinates) null)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test // DATAES-71
@@ -2173,7 +2163,7 @@ public abstract class ElasticsearchTemplateTests {
 				+ "                \"analyzer\": {\n" + "                    \"emailAnalyzer\": {\n"
 				+ "                        \"type\": \"custom\",\n"
 				+ "                        \"tokenizer\": \"uax_url_email\"\n" + "                    }\n"
-				+ "                }\n" + "            }\n" + "        }\n" + "}";
+				+ "                }\n" + "            }\n" + "        }\n" + '}';
 
 		indexOperations.deleteIndex(INDEX_3_NAME);
 
@@ -2215,7 +2205,7 @@ public abstract class ElasticsearchTemplateTests {
 				+ "                \"analyzer\": {\n" + "                    \"emailAnalyzer\": {\n"
 				+ "                        \"type\": \"custom\",\n"
 				+ "                        \"tokenizer\": \"uax_url_email\"\n" + "                    }\n"
-				+ "                }\n" + "            }\n" + "        }\n" + "}";
+				+ "                }\n" + "            }\n" + "        }\n" + '}';
 
 		// when
 		indexOperations.deleteIndex(SampleEntity.class);
@@ -2798,7 +2788,7 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(aliases).isEmpty();
 	}
 
-	@Document(indexName = INDEX_2_NAME, replicas = 0, shards = 1)
+	@Document(indexName = INDEX_2_NAME, replicas = 0)
 	class ResultAggregator {
 
 		private String id;
@@ -2900,7 +2890,7 @@ public abstract class ElasticsearchTemplateTests {
 	@AllArgsConstructor
 	@EqualsAndHashCode(exclude = "score")
 	@Builder
-	@Document(indexName = INDEX_NAME_SAMPLE_ENTITY, type = "test-type", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = INDEX_NAME_SAMPLE_ENTITY, replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;
@@ -2923,7 +2913,7 @@ public abstract class ElasticsearchTemplateTests {
 	@Data
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-uuid-keyed-core-template", type = "test-type-uuid-keyed", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-uuid-keyed-core-template", replicas = 0,
 			refreshInterval = "-1")
 	private static class SampleEntityUUIDKeyed {
 
@@ -2945,7 +2935,7 @@ public abstract class ElasticsearchTemplateTests {
 	@Builder
 	@AllArgsConstructor
 	@NoArgsConstructor
-	@Document(indexName = "test-index-book-core-template", type = "book", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-book-core-template", replicas = 0,
 			refreshInterval = "-1")
 	static class Book {
 
@@ -2969,7 +2959,7 @@ public abstract class ElasticsearchTemplateTests {
 	@Builder
 	@AllArgsConstructor
 	@NoArgsConstructor
-	@Document(indexName = "test-index-version-core-template", type = "test-type", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-version-core-template", replicas = 0,
 			refreshInterval = "-1", versionType = VersionType.EXTERNAL_GTE)
 	private static class GTEVersionEntity {
 
@@ -2981,7 +2971,7 @@ public abstract class ElasticsearchTemplateTests {
 	}
 
 	@Data
-	@Document(indexName = "test-index-hetro1-core-template", type = "hetro", replicas = 0, shards = 1)
+	@Document(indexName = "test-index-hetro1-core-template", replicas = 0)
 	static class HetroEntity1 {
 
 		@Id private String id;
@@ -2996,7 +2986,7 @@ public abstract class ElasticsearchTemplateTests {
 	}
 
 	@Data
-	@Document(indexName = "test-index-hetro2-core-template", type = "hetro", replicas = 0, shards = 1)
+	@Document(indexName = "test-index-hetro2-core-template", replicas = 0)
 	static class HetroEntity2 {
 
 		@Id private String id;
@@ -3011,7 +3001,7 @@ public abstract class ElasticsearchTemplateTests {
 	}
 
 	@Data
-	@Document(indexName = "test-index-server-configuration", type = "test-type", useServerConfiguration = true,
+	@Document(indexName = "test-index-server-configuration", useServerConfiguration = true,
 			shards = 10, replicas = 10, refreshInterval = "-1")
 	private static class UseServerConfigurationEntity {
 
@@ -3021,7 +3011,7 @@ public abstract class ElasticsearchTemplateTests {
 	}
 
 	@Data
-	@Document(indexName = "test-index-sample-mapping", type = "mapping", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-mapping", replicas = 0, refreshInterval = "-1")
 	static class SampleMappingEntity {
 
 		@Id private String id;

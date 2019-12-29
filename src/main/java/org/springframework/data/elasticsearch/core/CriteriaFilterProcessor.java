@@ -20,10 +20,13 @@ import static org.springframework.data.elasticsearch.core.query.Criteria.*;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 
 import org.elasticsearch.common.geo.GeoDistance;
-import org.elasticsearch.index.query.*;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.GeoBoundingBoxQueryBuilder;
+import org.elasticsearch.index.query.GeoDistanceQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.Criteria;
@@ -39,28 +42,25 @@ import org.springframework.util.Assert;
  * @author Franck Marchand
  * @author Mohsin Husen
  * @author Artur Konczak
- *
+ * @author Peter-Josef Meisch
  */
 class CriteriaFilterProcessor {
-
 
 	QueryBuilder createFilterFromCriteria(Criteria criteria) {
 		List<QueryBuilder> fbList = new LinkedList<>();
 		QueryBuilder filter = null;
 
-		ListIterator<Criteria> chainIterator = criteria.getCriteriaChain().listIterator();
-
-		while (chainIterator.hasNext()) {
+		for (Criteria chainedCriteria : criteria.getCriteriaChain()) {
 			QueryBuilder fb = null;
-			Criteria chainedCriteria = chainIterator.next();
 			if (chainedCriteria.isOr()) {
 				fb = QueryBuilders.boolQuery();
-				for(QueryBuilder f: createFilterFragmentForCriteria(chainedCriteria)){
-					((BoolQueryBuilder)fb).should(f);
+				for (QueryBuilder f : createFilterFragmentForCriteria(chainedCriteria)) {
+					((BoolQueryBuilder) fb).should(f);
 				}
 				fbList.add(fb);
 			} else if (chainedCriteria.isNegating()) {
-				List<QueryBuilder> negationFilters = buildNegationFilter(criteria.getField().getName(), criteria.getFilterCriteriaEntries().iterator());
+				List<QueryBuilder> negationFilters = buildNegationFilter(criteria.getField().getName(),
+						criteria.getFilterCriteriaEntries().iterator());
 
 				if (!negationFilters.isEmpty()) {
 					fbList.addAll(negationFilters);
@@ -75,14 +75,13 @@ class CriteriaFilterProcessor {
 				filter = fbList.get(0);
 			} else {
 				filter = QueryBuilders.boolQuery();
-				for(QueryBuilder f: fbList) {
-					((BoolQueryBuilder)filter).must(f);
+				for (QueryBuilder f : fbList) {
+					((BoolQueryBuilder) filter).must(f);
 				}
 			}
 		}
 		return filter;
 	}
-
 
 	private List<QueryBuilder> createFilterFragmentForCriteria(Criteria chainedCriteria) {
 		Iterator<Criteria.CriteriaEntry> it = chainedCriteria.getFilterCriteriaEntries().iterator();
@@ -101,7 +100,6 @@ class CriteriaFilterProcessor {
 		return filterList;
 	}
 
-
 	private QueryBuilder processCriteriaEntry(OperationKey key, Object value, String fieldName) {
 		if (value == null) {
 			return null;
@@ -116,8 +114,10 @@ class CriteriaFilterProcessor {
 				Object[] valArray = (Object[]) value;
 				Assert.noNullElements(valArray, "Geo distance filter takes 2 not null elements array as parameter.");
 				Assert.isTrue(valArray.length == 2, "Geo distance filter takes a 2-elements array as parameter.");
-				Assert.isTrue(valArray[0] instanceof GeoPoint || valArray[0] instanceof String || valArray[0] instanceof Point, "First element of a geo distance filter must be a GeoPoint, a Point or a text");
-				Assert.isTrue(valArray[1] instanceof String || valArray[1] instanceof Distance, "Second element of a geo distance filter must be a text or a Distance");
+				Assert.isTrue(valArray[0] instanceof GeoPoint || valArray[0] instanceof String || valArray[0] instanceof Point,
+						"First element of a geo distance filter must be a GeoPoint, a Point or a text");
+				Assert.isTrue(valArray[1] instanceof String || valArray[1] instanceof Distance,
+						"Second element of a geo distance filter must be a text or a Distance");
 
 				StringBuilder dist = new StringBuilder();
 
@@ -129,15 +129,18 @@ class CriteriaFilterProcessor {
 
 				if (valArray[0] instanceof GeoPoint) {
 					GeoPoint loc = (GeoPoint) valArray[0];
-					geoDistanceQueryBuilder.point(loc.getLat(),loc.getLon()).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
+					geoDistanceQueryBuilder.point(loc.getLat(), loc.getLon()).distance(dist.toString())
+							.geoDistance(GeoDistance.PLANE);
 				} else if (valArray[0] instanceof Point) {
 					GeoPoint loc = GeoPoint.fromPoint((Point) valArray[0]);
-					geoDistanceQueryBuilder.point(loc.getLat(), loc.getLon()).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
+					geoDistanceQueryBuilder.point(loc.getLat(), loc.getLon()).distance(dist.toString())
+							.geoDistance(GeoDistance.PLANE);
 				} else {
 					String loc = (String) valArray[0];
 					if (loc.contains(",")) {
-						String c[] = loc.split(",");
-						geoDistanceQueryBuilder.point(Double.parseDouble(c[0]), Double.parseDouble(c[1])).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
+						String[] c = loc.split(",");
+						geoDistanceQueryBuilder.point(Double.parseDouble(c[0]), Double.parseDouble(c[1])).distance(dist.toString())
+								.geoDistance(GeoDistance.PLANE);
 					} else {
 						geoDistanceQueryBuilder.geohash(loc).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 					}
@@ -150,20 +153,22 @@ class CriteriaFilterProcessor {
 			case BBOX: {
 				filter = QueryBuilders.geoBoundingBoxQuery(fieldName);
 
-				Assert.isTrue(value instanceof Object[], "Value of a boundedBy filter should be an array of one or two values.");
+				Assert.isTrue(value instanceof Object[],
+						"Value of a boundedBy filter should be an array of one or two values.");
 				Object[] valArray = (Object[]) value;
 				Assert.noNullElements(valArray, "Geo boundedBy filter takes a not null element array as parameter.");
 
 				if (valArray.length == 1) {
-					//GeoEnvelop
+					// GeoEnvelop
 					oneParameterBBox((GeoBoundingBoxQueryBuilder) filter, valArray[0]);
 				} else if (valArray.length == 2) {
-					//2x GeoPoint
-					//2x text
+					// 2x GeoPoint
+					// 2x text
 					twoParameterBBox((GeoBoundingBoxQueryBuilder) filter, valArray);
 				} else {
-					//error
-					Assert.isTrue(false, "Geo distance filter takes a 1-elements array(GeoBox) or 2-elements array(GeoPoints or Strings(format lat,lon or geohash)).");
+					// error
+					Assert.isTrue(false,
+							"Geo distance filter takes a 1-elements array(GeoBox) or 2-elements array(GeoPoints or Strings(format lat,lon or geohash)).");
 				}
 				break;
 			}
@@ -171,7 +176,6 @@ class CriteriaFilterProcessor {
 
 		return filter;
 	}
-
 
 	/**
 	 * extract the distance string from a {@link org.springframework.data.geo.Distance} object.
@@ -196,7 +200,8 @@ class CriteriaFilterProcessor {
 	}
 
 	private void oneParameterBBox(GeoBoundingBoxQueryBuilder filter, Object value) {
-		Assert.isTrue(value instanceof GeoBox || value instanceof Box, "single-element of boundedBy filter must be type of GeoBox or Box");
+		Assert.isTrue(value instanceof GeoBox || value instanceof Box,
+				"single-element of boundedBy filter must be type of GeoBox or Box");
 
 		GeoBox geoBBox;
 		if (value instanceof Box) {
@@ -206,7 +211,8 @@ class CriteriaFilterProcessor {
 			geoBBox = (GeoBox) value;
 		}
 
-		filter.setCorners(geoBBox.getTopLeft().getLat(), geoBBox.getTopLeft().getLon(), geoBBox.getBottomRight().getLat(), geoBBox.getBottomRight().getLon());
+		filter.setCorners(geoBBox.getTopLeft().getLat(), geoBBox.getTopLeft().getLon(), geoBBox.getBottomRight().getLat(),
+				geoBBox.getBottomRight().getLon());
 	}
 
 	private static boolean isType(Object[] array, Class clazz) {
@@ -219,7 +225,8 @@ class CriteriaFilterProcessor {
 	}
 
 	private void twoParameterBBox(GeoBoundingBoxQueryBuilder filter, Object[] values) {
-		Assert.isTrue(isType(values, GeoPoint.class) || isType(values, String.class), " both elements of boundedBy filter must be type of GeoPoint or text(format lat,lon or geohash)");
+		Assert.isTrue(isType(values, GeoPoint.class) || isType(values, String.class),
+				" both elements of boundedBy filter must be type of GeoPoint or text(format lat,lon or geohash)");
 		if (values[0] instanceof GeoPoint) {
 			GeoPoint topLeft = (GeoPoint) values[0];
 			GeoPoint bottomRight = (GeoPoint) values[1];
@@ -236,7 +243,8 @@ class CriteriaFilterProcessor {
 
 		while (it.hasNext()) {
 			Criteria.CriteriaEntry criteriaEntry = it.next();
-			QueryBuilder notFilter = QueryBuilders.boolQuery().mustNot(processCriteriaEntry(criteriaEntry.getKey(), criteriaEntry.getValue(), fieldName));
+			QueryBuilder notFilter = QueryBuilders.boolQuery()
+					.mustNot(processCriteriaEntry(criteriaEntry.getKey(), criteriaEntry.getValue(), fieldName));
 			notFilterList.add(notFilter);
 		}
 

@@ -281,6 +281,6 @@ class MapDocument implements Document {
 		String id = hasId() ? getId() : "?";
 		String version = hasVersion() ? Long.toString(getVersion()) : "?";
 
-		return getClass().getSimpleName() + "@" + id + "#" + version + " " + toJson();
+		return getClass().getSimpleName() + '@' + id + '#' + version + ' ' + toJson();
 	}
 }

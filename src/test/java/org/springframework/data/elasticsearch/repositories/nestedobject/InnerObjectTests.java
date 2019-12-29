@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -65,10 +67,17 @@ public class InnerObjectTests {
 	@Autowired private SampleElasticSearchBookRepository bookRepository;
 
 	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(operations, Book.class);
+		indexOperations = operations.getIndexOperations();
+		IndexInitializer.init(indexOperations, Book.class);
+	}
+
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex(Book.class);
 	}
 
 	@Test
@@ -101,7 +110,7 @@ public class InnerObjectTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-book", type = "book", shards = 1, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-book", replicas = 0, refreshInterval = "-1")
 	static class Book {
 
 		@Id private String id;

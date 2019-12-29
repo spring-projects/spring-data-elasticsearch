@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import org.apache.commons.lang.math.RandomUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -56,10 +58,17 @@ public class IntegerIDRepositoryTests {
 	@Autowired private IntegerIDRepository repository;
 
 	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(operations, IntegerIDEntity.class);
+		indexOperations = operations.getIndexOperations();
+		IndexInitializer.init(indexOperations, IntegerIDEntity.class);
+	}
+
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex(IntegerIDEntity.class);
 	}
 
 	@Test
@@ -112,7 +121,7 @@ public class IntegerIDRepositoryTests {
 	 * @author Mohsin Husen
 	 */
 
-	@Document(indexName = "test-index-integer-keyed-entity", type = "integer-keyed-entity", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-integer-keyed-entity", replicas = 0,
 			refreshInterval = "-1")
 	static class IntegerIDEntity {
 

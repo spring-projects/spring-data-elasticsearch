@@ -24,6 +24,7 @@ import org.springframework.util.Assert;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  */
 public class CriteriaQuery extends AbstractQuery {
 
@@ -45,7 +46,7 @@ public class CriteriaQuery extends AbstractQuery {
 		this.addSort(pageable.getSort());
 	}
 
-	public static final Query fromQuery(CriteriaQuery source) {
+	public static Query fromQuery(CriteriaQuery source) {
 		return fromQuery(source, new CriteriaQuery());
 	}
 

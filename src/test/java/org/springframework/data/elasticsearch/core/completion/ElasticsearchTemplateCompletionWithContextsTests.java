@@ -33,6 +33,7 @@ import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.elasticsearch.search.suggest.completion.context.CategoryQueryContext;
 import org.elasticsearch.search.suggest.completion.context.ContextMapping;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +72,11 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 	@BeforeEach
 	void setup() {
 		indexOperations = operations.getIndexOperations();
+		indexOperations.deleteIndex(ContextCompletionEntity.class);
+	}
 
+	@AfterEach
+	void after() {
 		indexOperations.deleteIndex(ContextCompletionEntity.class);
 	}
 
@@ -238,7 +243,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 	 * @author Mewes Kochheim
 	 * @author Robert Gruendler
 	 */
-	@Document(indexName = "test-index-context-completion", type = "context-completion-type", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-context-completion", replicas = 0,
 			refreshInterval = "-1")
 	static class ContextCompletionEntity {
 

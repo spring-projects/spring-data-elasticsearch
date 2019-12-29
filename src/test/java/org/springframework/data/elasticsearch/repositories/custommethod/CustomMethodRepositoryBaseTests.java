@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -44,10 +46,13 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
@@ -69,6 +74,20 @@ public abstract class CustomMethodRepositoryBaseTests {
 	@Autowired private SampleCustomMethodRepository repository;
 
 	@Autowired private SampleStreamingCustomMethodRepository streamingRepository;
+
+	@Autowired private ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
+
+	@BeforeEach
+	public void before() {
+		indexOperations = operations.getIndexOperations();
+		IndexInitializer.init(indexOperations, SampleEntity.class);
+	}
+
+	@AfterEach
+	void after() {
+		indexOperations.deleteIndex(SampleEntity.class);
+	}
 
 	@Test
 	public void shouldExecuteCustomMethod() {
@@ -1367,7 +1386,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-sample-repositories-custo-method", type = "test-type", shards = 1, replicas = 0,
+	@Document(indexName = "test-index-sample-repositories-custo-method", replicas = 0,
 			refreshInterval = "-1")
 	static class SampleEntity {
 

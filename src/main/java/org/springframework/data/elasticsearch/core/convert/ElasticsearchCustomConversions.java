@@ -33,6 +33,7 @@ import org.springframework.util.NumberUtils;
  * Elasticsearch specific {@link CustomConversions}.
  *
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public class ElasticsearchCustomConversions extends CustomConversions {
@@ -42,9 +43,7 @@ public class ElasticsearchCustomConversions extends CustomConversions {
 
 	static {
 
-		List<Object> converters = new ArrayList<>();
-
-		converters.addAll(GeoConverters.getConvertersToRegister());
+		List<Object> converters = new ArrayList<>(GeoConverters.getConvertersToRegister());
 		converters.add(StringToUUIDConverter.INSTANCE);
 		converters.add(UUIDToStringConverter.INSTANCE);
 		converters.add(BigDecimalToDoubleConverter.INSTANCE);
