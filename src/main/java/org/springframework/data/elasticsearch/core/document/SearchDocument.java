@@ -63,4 +63,11 @@ public interface SearchDocument extends Document {
 	default Object[] getSortValues() {
 		return null;
 	}
+
+	/**
+	 * @return the highlightFields for the search hit.
+	 */
+	@Nullable
+	default Map<String, List<String>> getHighlightFields() {
+		return null;}
 }

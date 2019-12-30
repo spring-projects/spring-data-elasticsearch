@@ -18,9 +18,12 @@ package org.springframework.data.elasticsearch.core;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * Encapsulates the found data with additional information from the search.
@@ -35,11 +38,17 @@ public class SearchHit<T> {
 	private final float score;
 	private final List<Object> sortValues;
 	private final T content;
+	private final Map<String, List<String>> highlightFields = new LinkedHashMap<>();
 
-	public SearchHit(@Nullable String id, float score, Object[] sortValues, T content) {
+	public SearchHit(@Nullable String id, float score, @Nullable Object[] sortValues,
+			@Nullable Map<String, List<String>> highlightFields, T content) {
 		this.id = id;
 		this.score = score;
 		this.sortValues = (sortValues != null) ? Arrays.asList(sortValues) : new ArrayList<>();
+		if (highlightFields != null) {
+			this.highlightFields.putAll(highlightFields);
+		}
+
 		this.content = content;
 	}
 
@@ -69,9 +78,22 @@ public class SearchHit<T> {
 		return Collections.unmodifiableList(sortValues);
 	}
 
+	/**
+	 * gets the highlight values for a field.
+	 * 
+	 * @param field must not be {@literal null}
+	 * @return possibly empty List, never null
+	 */
+	public List<String> getHighlightField(String field) {
+
+		Assert.notNull(field, "field must not be null");
+
+		return Collections.unmodifiableList(highlightFields.getOrDefault(field, Collections.emptyList()));
+	}
+
 	@Override
 	public String toString() {
 		return "SearchHit{" + "id='" + id + '\'' + ", score=" + score + ", sortValues=" + sortValues + ", content="
-				+ content + '}';
+				+ content + ", highlightFields=" + highlightFields + '}';
 	}
 }

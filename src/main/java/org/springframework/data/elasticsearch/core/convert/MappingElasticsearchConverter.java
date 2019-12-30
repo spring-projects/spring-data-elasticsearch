@@ -181,9 +181,10 @@ public class MappingElasticsearchConverter
 		String id = searchDocument.hasId() ? searchDocument.getId() : null;
 		float score = searchDocument.getScore();
 		Object[] sortValues = searchDocument.getSortValues();
+		Map<String, List<String>> highlightFields = searchDocument.getHighlightFields();
 		T content = mapDocument(searchDocument, type);
 
-		return new SearchHit<>(id, score, sortValues, content);
+		return new SearchHit<T>(id, score, sortValues, highlightFields, content);
 	}
 
 	@Override

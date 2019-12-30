@@ -34,11 +34,13 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.document.DocumentField;
+import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -139,10 +141,14 @@ public class DocumentAdapters {
 
 		Assert.notNull(source, "SearchHit must not be null");
 
+		Map<String, List<String>> highlightFields = new HashMap<>(source.getHighlightFields().entrySet().stream() //
+				.collect(Collectors.toMap(Map.Entry::getKey,
+						entry -> Arrays.stream(entry.getValue().getFragments()).map(Text::string).collect(Collectors.toList()))));
+
 		BytesReference sourceRef = source.getSourceRef();
 
 		if (sourceRef == null || sourceRef.length() == 0) {
-			return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(),
+			return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(), highlightFields,
 					fromDocumentFields(source, source.getId(), source.getVersion()));
 		}
 
@@ -153,7 +159,8 @@ public class DocumentAdapters {
 			document.setVersion(source.getVersion());
 		}
 
-		return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(), document);
+		return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(), highlightFields,
+				document);
 	}
 
 	/**
@@ -195,7 +202,7 @@ public class DocumentAdapters {
 		 */
 		@Override
 		public boolean hasId() {
-			return id != null;
+			return StringUtils.hasLength(id);
 		}
 
 		/*
@@ -287,16 +294,14 @@ public class DocumentAdapters {
 		 * @see java.util.Map#get(java.lang.Object)
 		 */
 		@Override
+		@Nullable
 		public Object get(Object key) {
+			return documentFields.stream() //
+					.filter(documentField -> documentField.getName().equals(key)) //
+					.map(DocumentField::getValue)
+					.findFirst() //
+					.orElse(null); //
 
-			for (DocumentField documentField : documentFields) {
-				if (documentField.getName().equals(key)) {
-
-					return getValue(documentField);
-				}
-			}
-
-			return null;
 		}
 
 		/*
@@ -439,12 +444,16 @@ public class DocumentAdapters {
 		private final Object[] sortValues;
 		private final Map<String, List<Object>> fields = new HashMap<>();
 		private final Document delegate;
+		private final Map<String, List<String>> highlightFields = new HashMap<>();
 
-		SearchDocumentAdapter(float score, Object[] sortValues, Map<String, DocumentField> fields, Document delegate) {
+		SearchDocumentAdapter(float score, Object[] sortValues, Map<String, DocumentField> fields,
+				Map<String, List<String>> highlightFields, Document delegate) {
+
 			this.score = score;
 			this.sortValues = sortValues;
 			this.delegate = delegate;
 			fields.forEach((name, documentField) -> this.fields.put(name, documentField.getValues()));
+			this.highlightFields.putAll(highlightFields);
 		}
 
 		/*
@@ -483,6 +492,15 @@ public class DocumentAdapters {
 		@Override
 		public Object[] getSortValues() {
 			return sortValues;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.document.SearchDocument#getHighlightFields()
+		 */
+		@Override
+		public Map<String, List<String>> getHighlightFields() {
+			return highlightFields;
 		}
 
 		/*
@@ -672,10 +690,12 @@ public class DocumentAdapters {
 		 */
 		@Override
 		public boolean equals(Object o) {
-			if (this == o)
+			if (this == o) {
 				return true;
-			if (!(o instanceof SearchDocumentAdapter))
+			}
+			if (!(o instanceof SearchDocumentAdapter)) {
 				return false;
+			}
 			SearchDocumentAdapter that = (SearchDocumentAdapter) o;
 			return Float.compare(that.score, score) == 0 && delegate.equals(that.delegate);
 		}
