@@ -27,7 +27,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.io.IOException;
 import java.lang.Double;
 import java.lang.Integer;
 import java.lang.Long;
@@ -51,6 +50,7 @@ import org.elasticsearch.index.VersionType;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -148,6 +148,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.deleteIndex(INDEX_2_NAME);
 		indexOperations.deleteIndex(INDEX_3_NAME);
 		indexOperations.deleteIndex(SearchHitsEntity.class);
+		indexOperations.deleteIndex(HighlightEntity.class);
 	}
 
 	@Test // DATAES-106
@@ -332,7 +333,8 @@ public abstract class ElasticsearchTemplateTests {
 				.withPreference("_only_nodes:oops").build();
 
 		// when
-		assertThatThrownBy(() -> operations.search(searchQueryWithInvalidPreference, SampleEntity.class, index)).isInstanceOf(Exception.class);
+		assertThatThrownBy(() -> operations.search(searchQueryWithInvalidPreference, SampleEntity.class, index))
+				.isInstanceOf(Exception.class);
 	}
 
 	@Test // DATAES-422 - Add support for IndicesOptions in search queries
@@ -1854,7 +1856,8 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.refresh(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY));
 
 		// reindex with version one below
-		assertThatThrownBy(() -> operations.index(indexQueryBuilder.withVersion(entity.getVersion() - 1).build(), index)).hasMessageContaining("version").hasMessageContaining("conflict");
+		assertThatThrownBy(() -> operations.index(indexQueryBuilder.withVersion(entity.getVersion() - 1).build(), index))
+				.hasMessageContaining("version").hasMessageContaining("conflict");
 	}
 
 	@Test
@@ -2134,7 +2137,8 @@ public abstract class ElasticsearchTemplateTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 
 		// when
-		assertThatThrownBy(() -> operations.count(criteriaQuery, (IndexCoordinates) null)).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> operations.count(criteriaQuery, (IndexCoordinates) null))
+				.isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test // DATAES-67
@@ -2151,7 +2155,8 @@ public abstract class ElasticsearchTemplateTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
 		// when
-		assertThatThrownBy(() -> operations.count(searchQuery, (IndexCoordinates) null)).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> operations.count(searchQuery, (IndexCoordinates) null))
+				.isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test // DATAES-71
@@ -2881,6 +2886,34 @@ public abstract class ElasticsearchTemplateTests {
 		}
 	}
 
+	@Test // DATAES-715
+	void shouldReturnHighlightFieldsInSearchHit() {
+		IndexCoordinates index = IndexCoordinates.of("test-index-highlight-entity-template");
+		HighlightEntity entity = HighlightEntity.builder().id("1")
+				.message("This message is a long text which contains the word to search for "
+						+ "in two places, the first being near the beginning and the second near the end of the message")
+				.build();
+		IndexQuery indexQuery = new IndexQueryBuilder().withId(entity.getId()).withObject(entity).build();
+		operations.index(indexQuery, index);
+		indexOperations.refresh(index);
+
+		NativeSearchQuery query = new NativeSearchQueryBuilder() //
+				.withQuery(termQuery("message", "message")) //
+				.withHighlightFields(new HighlightBuilder.Field("message")) //
+				.build();
+
+		SearchHits<HighlightEntity> searchHits = operations.search(query, HighlightEntity.class, index);
+
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.getSearchHits()).hasSize(1);
+
+		SearchHit<HighlightEntity> searchHit = searchHits.getSearchHit(0);
+		List<String> highlightField = searchHit.getHighlightField("message");
+		assertThat(highlightField).hasSize(2);
+		assertThat(highlightField.get(0)).contains("<em>message</em>");
+		assertThat(highlightField.get(1)).contains("<em>message</em>");
+	}
+
 	protected RequestFactory getRequestFactory() {
 		return ((AbstractElasticsearchTemplate) operations).getRequestFactory();
 	}
@@ -2899,7 +2932,6 @@ public abstract class ElasticsearchTemplateTests {
 		private int rate;
 		@ScriptedField private Double scriptedRate;
 		private boolean available;
-		private String highlightedMessage;
 		private GeoPoint location;
 		@Version private Long version;
 		@Score private float score;
@@ -2913,8 +2945,7 @@ public abstract class ElasticsearchTemplateTests {
 	@Data
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-uuid-keyed-core-template", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-uuid-keyed-core-template", replicas = 0, refreshInterval = "-1")
 	private static class SampleEntityUUIDKeyed {
 
 		@Id private UUID id;
@@ -2923,10 +2954,7 @@ public abstract class ElasticsearchTemplateTests {
 		private int rate;
 		@ScriptedField private Long scriptedRate;
 		private boolean available;
-		private String highlightedMessage;
-
 		private GeoPoint location;
-
 		@Version private Long version;
 
 	}
@@ -2935,8 +2963,7 @@ public abstract class ElasticsearchTemplateTests {
 	@Builder
 	@AllArgsConstructor
 	@NoArgsConstructor
-	@Document(indexName = "test-index-book-core-template", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-book-core-template", replicas = 0, refreshInterval = "-1")
 	static class Book {
 
 		@Id private String id;
@@ -2950,7 +2977,6 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Data
 	static class Author {
-
 		private String id;
 		private String name;
 	}
@@ -2959,8 +2985,8 @@ public abstract class ElasticsearchTemplateTests {
 	@Builder
 	@AllArgsConstructor
 	@NoArgsConstructor
-	@Document(indexName = "test-index-version-core-template", replicas = 0,
-			refreshInterval = "-1", versionType = VersionType.EXTERNAL_GTE)
+	@Document(indexName = "test-index-version-core-template", replicas = 0, refreshInterval = "-1",
+			versionType = VersionType.EXTERNAL_GTE)
 	private static class GTEVersionEntity {
 
 		@Version private Long version;
@@ -3001,8 +3027,8 @@ public abstract class ElasticsearchTemplateTests {
 	}
 
 	@Data
-	@Document(indexName = "test-index-server-configuration", useServerConfiguration = true,
-			shards = 10, replicas = 10, refreshInterval = "-1")
+	@Document(indexName = "test-index-server-configuration", useServerConfiguration = true, shards = 10, replicas = 10,
+			refreshInterval = "-1")
 	private static class UseServerConfigurationEntity {
 
 		@Id private String id;
@@ -3042,4 +3068,12 @@ public abstract class ElasticsearchTemplateTests {
 		@Field(type = FieldType.Keyword) String keyword;
 	}
 
+	@Data
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = "test-index-highlight-entity-template")
+	static class HighlightEntity {
+		@Id private String id;
+		private String message;
+	}
 }
