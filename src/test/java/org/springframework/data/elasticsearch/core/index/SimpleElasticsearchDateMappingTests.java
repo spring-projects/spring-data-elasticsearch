@@ -21,6 +21,7 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import lombok.Data;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests {
 
 	private static final String EXPECTED_MAPPING = "{\"properties\":{\"message\":{\"store\":true,"
-			+ "\"type\":\"text\",\"index\":false,\"analyzer\":\"standard\"},\"customFormatDate\":{\"type\":\"date\",\"format\":\"dd.MM.yyyy hh:mm\"},"
+			+ "\"type\":\"text\",\"index\":false,\"analyzer\":\"standard\"},\"customFormatDate\":{\"type\":\"date\",\"format\":\"dd.MM.uuuu hh:mm\"},"
 			+ "\"defaultFormatDate\":{\"type\":\"date\"},\"basicFormatDate\":{\""
 			+ "type\":\"date\",\"format\":\"basic_date\"}}}";
 
@@ -64,10 +65,10 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
 
 		@Field(type = Date, format = DateFormat.custom,
-				pattern = "dd.MM.yyyy hh:mm") private java.util.Date customFormatDate;
+				pattern = "dd.MM.uuuu hh:mm") private LocalDateTime customFormatDate;
 
-		@Field(type = FieldType.Date) private Date defaultFormatDate;
+		@Field(type = FieldType.Date) private LocalDateTime defaultFormatDate;
 
-		@Field(type = FieldType.Date, format = DateFormat.basic_date) private Date basicFormatDate;
+		@Field(type = FieldType.Date, format = DateFormat.basic_date) private LocalDateTime basicFormatDate;
 	}
 }

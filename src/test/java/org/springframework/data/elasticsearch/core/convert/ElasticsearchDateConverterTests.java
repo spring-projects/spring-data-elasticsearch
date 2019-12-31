@@ -21,7 +21,7 @@ class ElasticsearchDateConverterTests {
 		if (dateFormat == DateFormat.none) {
 			return;
 		}
-		String pattern = (dateFormat != DateFormat.custom) ? dateFormat.name() : "dd.MM.yyyy";
+		String pattern = (dateFormat != DateFormat.custom) ? dateFormat.name() : "dd.MM.uuuu";
 
 		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(pattern);
 

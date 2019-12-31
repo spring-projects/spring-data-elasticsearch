@@ -643,7 +643,7 @@ public class MappingElasticsearchConverterUnitTests {
 		@Field(name = "first-name") String firstName;
 		@Field(name = "last-name") String lastName;
 		@Field(name = "birth-date", type = FieldType.Date, format = DateFormat.custom,
-				pattern = "dd.MM.yyyy") LocalDate birthDate;
+				pattern = "dd.MM.uuuu") LocalDate birthDate;
 		Gender gender;
 		Address address;
 

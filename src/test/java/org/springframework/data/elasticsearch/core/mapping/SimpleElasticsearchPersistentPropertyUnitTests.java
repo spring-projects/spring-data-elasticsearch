@@ -123,7 +123,7 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 
 	static class DatesProperty {
 		@Field(type = FieldType.Date, format = DateFormat.basic_date) Date date;
-		@Field(type = FieldType.Date, format = DateFormat.custom, pattern = "dd.MM.yyyy") LocalDate localDate;
+		@Field(type = FieldType.Date, format = DateFormat.custom, pattern = "dd.MM.uuuu") LocalDate localDate;
 		@Field(type = FieldType.Date, format = DateFormat.basic_date_time) LocalDateTime localDateTime;
 	}
 }
