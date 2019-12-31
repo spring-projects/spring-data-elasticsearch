@@ -77,6 +77,7 @@ import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
+import org.elasticsearch.index.mapper.MapperService;
 import org.elasticsearch.index.rankeval.RankEvalRequest;
 import org.elasticsearch.index.reindex.AbstractBulkByScrollRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
@@ -183,7 +184,9 @@ public class RequestConverters {
 						metadata.field("_index", action.index());
 					}
 					if (Strings.hasLength(action.type())) {
-						metadata.field("_type", action.type());
+						if (MapperService.SINGLE_MAPPING_NAME.equals(action.type()) == false) {
+							metadata.field("_type", action.type());
+						}
 					}
 					if (Strings.hasLength(action.id())) {
 						metadata.field("_id", action.id());
@@ -201,9 +204,12 @@ public class RequestConverters {
 							metadata.field("version_type", "external");
 						} else if (versionType == VersionType.EXTERNAL_GTE) {
 							metadata.field("version_type", "external_gte");
-						} else if (versionType == VersionType.FORCE) {
-							metadata.field("version_type", "force");
 						}
+					}
+
+					if (action.ifSeqNo() != SequenceNumbers.UNASSIGNED_SEQ_NO) {
+						metadata.field("if_seq_no", action.ifSeqNo());
+						metadata.field("if_primary_term", action.ifPrimaryTerm());
 					}
 
 					if (opType == DocWriteRequest.OpType.INDEX || opType == DocWriteRequest.OpType.CREATE) {
