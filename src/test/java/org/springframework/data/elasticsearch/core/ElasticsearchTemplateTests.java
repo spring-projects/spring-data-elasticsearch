@@ -192,7 +192,7 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(count).isEqualTo(1);
 	}
 
-	@Test
+	@Test // DATAES-722
 	public void shouldReturnObjectForGivenId() {
 
 		// given
@@ -289,7 +289,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		// then
 		assertThat(searchHits).isNotNull();
-		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		assertThat(searchHits.getTotalHitsRelation()).isEqualByComparingTo(SearchHits.TotalHitsRelation.EQUAL_TO);
 	}
 
 	@Test // DATAES-595

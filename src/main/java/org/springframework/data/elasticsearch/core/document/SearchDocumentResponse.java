@@ -20,14 +20,14 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.aggregations.Aggregations;
-import org.springframework.data.elasticsearch.support.SearchHitsUtil;
 import org.springframework.util.Assert;
 
 /**
  * This represents the complete search response from Elasticsearch, including the returned documents. Instances must be
- * created with the {@link #from(org.elasticsearch.action.search.SearchResponse)} method.
+ * created with the {@link #from(SearchResponse)} method.
  * 
  * @author Peter-Josef Meisch
  * @since 4.0
@@ -35,14 +35,16 @@ import org.springframework.util.Assert;
 public class SearchDocumentResponse {
 
 	private long totalHits;
+	private String totalHitsRelation;
 	private float maxScore;
 	private final String scrollId;
 	private final List<SearchDocument> searchDocuments;
 	private final Aggregations aggregations;
 
-	private SearchDocumentResponse(long totalHits, float maxScore, String scrollId, List<SearchDocument> searchDocuments,
-			Aggregations aggregations) {
+	private SearchDocumentResponse(long totalHits, String totalHitsRelation, float maxScore, String scrollId,
+								   List<SearchDocument> searchDocuments, Aggregations aggregations) {
 		this.totalHits = totalHits;
+		this.totalHitsRelation = totalHitsRelation;
 		this.maxScore = maxScore;
 		this.scrollId = scrollId;
 		this.searchDocuments = searchDocuments;
@@ -51,6 +53,10 @@ public class SearchDocumentResponse {
 
 	public long getTotalHits() {
 		return totalHits;
+	}
+
+	public String getTotalHitsRelation() {
+		return totalHitsRelation;
 	}
 
 	public float getMaxScore() {
@@ -70,23 +76,29 @@ public class SearchDocumentResponse {
 	}
 
 	/**
-	 * creates a SearchDocumentResponse from the {@link org.elasticsearch.action.search.SearchResponse}
+	 * creates a SearchDocumentResponse from the {@link SearchResponse}
 	 *
-	 * @param searchResponse must not be {@literal null}
-	 * @return
+	 * @param searchResponse
+	 * 		must not be {@literal null}
+	 * @return the SearchDocumentResponse
 	 */
 	public static SearchDocumentResponse from(SearchResponse searchResponse) {
 		Assert.notNull(searchResponse, "searchResponse must not be null");
 
-		long totalHits = SearchHitsUtil.getTotalCount(searchResponse.getHits());
+		TotalHits responseTotalHits = searchResponse.getHits().getTotalHits();
+		long totalHits = responseTotalHits.value;
+		String totalHitsRelation = responseTotalHits.relation.name();
+
 		float maxScore = searchResponse.getHits().getMaxScore();
 		String scrollId = searchResponse.getScrollId();
+
 		List<SearchDocument> searchDocuments = StreamSupport.stream(searchResponse.getHits().spliterator(), false) //
 				.filter(Objects::nonNull) //
 				.map(DocumentAdapters::from) //
 				.collect(Collectors.toList());
+
 		Aggregations aggregations = searchResponse.getAggregations();
 
-		return new SearchDocumentResponse(totalHits, maxScore, scrollId, searchDocuments, aggregations);
+		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, scrollId, searchDocuments, aggregations);
 	}
 }

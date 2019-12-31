@@ -169,7 +169,10 @@ public class MappingElasticsearchConverter
 				.map(searchDocument -> read(type, searchDocument)) //
 				.collect(Collectors.toList());
 		Aggregations aggregations = searchDocumentResponse.getAggregations();
-		return new SearchHits<>(totalHits, maxScore, scrollId, searchHits, aggregations);
+		SearchHits.TotalHitsRelation totalHitsRelation = SearchHits.TotalHitsRelation
+				.valueOf(searchDocumentResponse.getTotalHitsRelation());
+
+		return new SearchHits<>(totalHits, totalHitsRelation, maxScore, scrollId, searchHits, aggregations);
 	}
 
 	@Override
