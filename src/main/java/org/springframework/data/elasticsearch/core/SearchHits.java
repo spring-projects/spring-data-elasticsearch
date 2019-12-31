@@ -39,36 +39,48 @@ public class SearchHits<T> implements Streamable<SearchHit<T>> {
 	private final String scrollId;
 	private final List<? extends SearchHit<T>> searchHits;
 	private final Aggregations aggregations;
+	private final TotalHitsRelation totalHitsRelation;
 
 	/**
-	 * @param totalHits
-	 * @param maxScore
+	 * @param totalHits the number of total hits for the search
+	 * @param totalHitsRelation the relation {@see TotalHitsRelation}, must not be {@literal null}
+	 * @param maxScore the maximum score
+	 * @param scrollId the scroll id if available
 	 * @param searchHits must not be {@literal null}
-	 * @param aggregations
+	 * @param aggregations the aggregations if available
 	 */
-	public SearchHits(long totalHits, float maxScore, @Nullable String scrollId,  List<? extends SearchHit<T>> searchHits,
-			@Nullable Aggregations aggregations) {
+	public SearchHits(long totalHits, TotalHitsRelation totalHitsRelation, float maxScore, @Nullable String scrollId,
+			List<? extends SearchHit<T>> searchHits, @Nullable Aggregations aggregations) {
 
 		Assert.notNull(searchHits, "searchHits must not be null");
 
 		this.totalHits = totalHits;
+		this.totalHitsRelation = totalHitsRelation;
 		this.maxScore = maxScore;
 		this.scrollId = scrollId;
 		this.searchHits = searchHits;
 		this.aggregations = aggregations;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Iterator<SearchHit<T>> iterator() {
 		return (Iterator<SearchHit<T>>) searchHits.iterator();
 	}
 
+	// region getter
 	/**
 	 * @return the number of total hits.
 	 */
-	// region getter
 	public long getTotalHits() {
 		return totalHits;
+	}
+
+	/**
+	 * @return the relation for the total hits
+	 */
+	public TotalHitsRelation getTotalHitsRelation() {
+		return totalHitsRelation;
 	}
 
 	/**
@@ -107,19 +119,20 @@ public class SearchHits<T> implements Streamable<SearchHit<T>> {
 
 	@Override
 	public String toString() {
-		return "SearchHits{" +
-				"totalHits=" + totalHits +
-				", maxScore=" + maxScore +
-				", scrollId='" + scrollId + '\'' +
-				", searchHits=" + StringUtils.collectionToCommaDelimitedString(searchHits) +
-				", aggregations=" + aggregations +
+		return "SearchHits{" + //
+				"totalHits=" + totalHits + //
+				", totalHitsRelation=" + totalHitsRelation + //
+				", maxScore=" + maxScore + //
+				", scrollId='" + scrollId + '\'' + //
+				", searchHits={" + searchHits.size() + " elements}" + //
+				", aggregations=" + aggregations + //
 				'}';
 	}
 
+	// region aggregations
 	/**
 	 * @return true if aggregations are available
 	 */
-	// region aggregations
 	public boolean hasAggregations() {
 		return aggregations != null;
 	}
@@ -133,4 +146,12 @@ public class SearchHits<T> implements Streamable<SearchHit<T>> {
 	}
 	// endregion
 
+	/**
+	 * Enum to represent the relation that Elasticsearch returns for the totalHits value {@see <a href=
+	 * "https://www.elastic.co/guide/en/elasticsearch/reference/7.5/search-request-body.html#request-body-search-track-total-hits">Ekasticsearch
+	 * docs</a>}
+	 */
+	public enum TotalHitsRelation {
+		EQUAL_TO, GREATER_THAN_OR_EQUAL_TO
+	}
 }
