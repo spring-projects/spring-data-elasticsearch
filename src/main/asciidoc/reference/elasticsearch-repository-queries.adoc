@@ -8,7 +8,7 @@ The Elasticsearch module supports all basic query building feature as string que
 
 === Declared queries
 
-Deriving the query from the method name is not always sufficient and/or may result in unreadable method names. In this case one might make either use of `@Query` annotation (see <<elasticsearch.query-methods.at-query>> ).
+Deriving the query from the method name is not always sufficient and/or may result in unreadable method names. In this case one might make use of the `@Query` annotation (see <<elasticsearch.query-methods.at-query>> ).
 
 [[elasticsearch.query-methods.criterions]]
 == Query creation
@@ -29,12 +29,14 @@ The method name above will be translated into the following Elasticsearch json q
 
 [source]
 ----
-{ "bool" :
-    { "must" :
-        [
-            { "field" : {"name" : "?"} },
-            { "field" : {"price" : "?"} }
-        ]
+{
+    "query": {
+        "bool" : {
+            "must" : [
+                { "query_string" : { "query" : "?", "fields" : [ "name" ] } },
+                { "query_string" : { "query" : "?", "fields" : [ "price" ] } }
+            ]
+        }
     }
 }
 ----
@@ -48,80 +50,184 @@ A list of supported keywords for Elasticsearch is shown below.
 | Sample
 | Elasticsearch Query String| `And`
 | `findByNameAndPrice`
-| `{"bool" : {"must" : [ {"field" : {"name" : "?"}},
-                                        {"field" : {"price" : "?"}} ]}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+      { "query_string" : { "query" : "?", "fields" : [ "name" ] } },
+      { "query_string" : { "query" : "?", "fields" : [ "price" ] } }
+    ]
+  }
+}}`
 
 | `Or`
 | `findByNameOrPrice`
-| `{"bool" : {"should" : [ {"field" : {"name" : "?"}},
-                                        {"field" : {"price" : "?"}} ]}}`
+| `{ "query" : {
+"bool" : {
+"should" : [
+      { "query_string" : { "query" : "?", "fields" : [ "name" ] } },
+      { "query_string" : { "query" : "?", "fields" : [ "price" ] } }
+    ]
+  }
+}}`
 
 | `Is`
 | `findByName`
-| `{"bool" : {"must" : {"field" : {"name" : "?"}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+      { "query_string" : { "query" : "?", "fields" : [ "name" ] } }
+    ]
+  }
+}}`
 
 | `Not`
 | `findByNameNot`
-| `{"bool" : {"must_not" : {"field" : {"name" : "?"}}}}`
+| `{ "query" : {
+"bool" : {
+"must_not" : [
+      { "query_string" : { "query" : "?", "fields" : [ "name" ] } }
+    ]
+  }
+}}`
 
 | `Between`
 | `findByPriceBetween`
-| `{"bool" : {"must" : {"range" : {"price" : {"from" :
-                                        ?,"to" : ?,"include_lower" : true,"include_upper" : true}}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+    {"range" : {"price" : {"from" : ?, "to" : ?, "include_lower" : true, "include_upper" : true } } }
+    ]
+  }
+}}`
+
+| `LessThan`
+| `findByPriceLessThan`
+| `{ "query" : {
+"bool" : {
+"must" : [
+    {"range" : {"price" : {"from" : null, "to" : ?, "include_lower" : true, "include_upper" : false } } }
+    ]
+  }
+}}`
 
 | `LessThanEqual`
-| `findByPriceLessThan`
-| `{"bool" : {"must" : {"range" : {"price" : {"from" :
-                                        null,"to" : ?,"include_lower" : true,"include_upper" :
-                                        true}}}}}`
+| `findByPriceLessThanEqual`
+| `{ "query" : {
+"bool" : {
+"must" : [
+    {"range" : {"price" : {"from" : null, "to" : ?, "include_lower" : true, "include_upper" : true } } }
+    ]
+  }
+}}`
+
+| `GreaterThan`
+| `findByPriceGreaterThan`
+| `{ "query" : {
+"bool" : {
+"must" : [
+    {"range" : {"price" : {"from" : ?, "to" : null, "include_lower" : false, "include_upper" : true } } }
+    ]
+  }
+}}`
+
 
 | `GreaterThanEqual`
 | `findByPriceGreaterThan`
-| `{"bool" : {"must" : {"range" : {"price" : {"from" :
-                                        ?,"to" : null,"include_lower" : true,"include_upper" :
-                                        true}}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+    {"range" : {"price" : {"from" : ?, "to" : null, "include_lower" : true, "include_upper" : true } } }
+    ]
+  }
+}}`
 
 | `Before`
 | `findByPriceBefore`
-| `{"bool" : {"must" : {"range" : {"price" : {"from" :
-                                        null,"to" : ?,"include_lower" : true,"include_upper" :
-                                        true}}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+    {"range" : {"price" : {"from" : null, "to" : ?, "include_lower" : true, "include_upper" : true } } }
+    ]
+  }
+}}`
 
 | `After`
 | `findByPriceAfter`
-| `{"bool" : {"must" : {"range" : {"price" : {"from" :
-                                        ?,"to" : null,"include_lower" : true,"include_upper" :
-                                        true}}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+    {"range" : {"price" : {"from" : ?, "to" : null, "include_lower" : true, "include_upper" : true } } }
+    ]
+  }
+}}`
 
 | `Like`
 | `findByNameLike`
-| `{"bool" : {"must" : {"field" : {"name" : {"query" :
-                                        "?*","analyze_wildcard" : true}}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+      { "query_string" : { "query" : "?*", "fields" : [ "name" ] }, "analyze_wildcard": true }
+    ]
+  }
+}}`
 
 | `StartingWith`
 | `findByNameStartingWith`
-| `{"bool" : {"must" : {"field" : {"name" : {"query" :
-                                        "?*","analyze_wildcard" : true}}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+      { "query_string" : { "query" : "?*", "fields" : [ "name" ] }, "analyze_wildcard": true }
+    ]
+  }
+}}`
 
 | `EndingWith`
 | `findByNameEndingWith`
-| `{"bool" : {"must" : {"field" : {"name" : {"query" :
-                                        "*?","analyze_wildcard" : true}}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+      { "query_string" : { "query" : "*?", "fields" : [ "name" ] }, "analyze_wildcard": true }
+    ]
+  }
+}}`
 
 | `Contains/Containing`
 | `findByNameContaining`
-| `{"bool" : {"must" : {"field" : {"name" : {"query" :
-                                        "*?*","analyze_wildcard" : true}}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+      { "query_string" : { "query" : "\*?*", "fields" : [ "name" ] }, "analyze_wildcard": true }
+    ]
+  }
+}}`
 
 | `In`
 | `findByNameIn(Collection<String>names)`
-| `{"bool" : {"must" : {"bool" : {"should" : [ {"field" :
-                                        {"name" : "?"}}, {"field" : {"name" : "?"}} ]}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+      {"bool" : {"must" : [
+            {"terms" : {"name" : ["?","?"]}}
+          ]
+        }
+      }
+    ]
+  }
+}}`
 
 | `NotIn`
 | `findByNameNotIn(Collection<String>names)`
-| `{"bool" : {"must_not" : {"bool" : {"should" : {"field" :
-                                        {"name" : "?"}}}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+      {"bool" : {"must_not" : [
+            {"terms" : {"name" : ["?","?"]}}
+          ]
+        }
+      }
+    ]
+  }
+}}`
 
 | `Near`
 | `findByStoreNear`
@@ -129,16 +235,35 @@ A list of supported keywords for Elasticsearch is shown below.
 
 | `True`
 | `findByAvailableTrue`
-| `{"bool" : {"must" : {"field" : {"available" : true}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+      { "query_string" : { "query" : "true", "fields" : [ "available" ] } }
+    ]
+  }
+}}`
 
 | `False`
 | `findByAvailableFalse`
-| `{"bool" : {"must" : {"field" : {"available" : false}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+      { "query_string" : { "query" : "false", "fields" : [ "available" ] } }
+    ]
+  }
+}}`
 
 | `OrderBy`
 | `findByAvailableTrueOrderByNameDesc`
-| `{"sort" : [{ "name" : {"order" : "desc"} }],"bool" :
-                                        {"must" : {"field" : {"available" : true}}}}`
+| `{ "query" : {
+"bool" : {
+"must" : [
+      { "query_string" : { "query" : "true", "fields" : [ "available" ] } }
+    ]
+  }
+}, "sort":[{"name":{"order":"desc"}}]
+}`
+
 |===
 
 [[elasticsearch.query-methods.at-query]]
