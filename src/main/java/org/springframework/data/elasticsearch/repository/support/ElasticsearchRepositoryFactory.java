@@ -115,4 +115,9 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 			return new ElasticsearchPartQuery(queryMethod, elasticsearchOperations);
 		}
 	}
+
+	@Override
+	protected RepositoryMetadata getRepositoryMetadata(Class<?> repositoryInterface) {
+		return new ElasticsearchRepositoryMetadata(repositoryInterface);
+	}
 }

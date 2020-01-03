@@ -133,12 +133,15 @@ Contains the following information:
 * Id
 * Score
 * Sort Values
-* the retrieved entity of type <T>
+* Highligth fields
+* The retrieved entity of type <T>
 
 .SearchHits<T>
 Contains the following information:
 
 * Number of total hits
+* Total hits relation
 * Maximum score
 * A list of `SearchHit<T>` objects
+* Returned aggregations
 

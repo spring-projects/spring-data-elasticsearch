@@ -62,7 +62,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 
 		Object result = queryMethod.hasReactiveWrapperParameter() ? executeDeferred(parameters)
 				: execute(new ReactiveElasticsearchParametersParameterAccessor(queryMethod, parameters));
-		return SearchHitSupport.unwrapSearchHits(result);
+		return queryMethod.isNotSearchHitMethod() ? SearchHitSupport.unwrapSearchHits(result) : result;
 	}
 
 	private Object executeDeferred(Object[] parameters) {
@@ -122,7 +122,8 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 			return (query, type, targetType, indexCoordinates) -> operations.search(query.setPageable(accessor.getPageable()),
 					type, targetType, indexCoordinates);
 		} else {
-			return (query, type, targetType, indexCoordinates) -> operations.search(query, type, targetType, indexCoordinates);
+			return (query, type, targetType, indexCoordinates) -> operations.search(query, type, targetType,
+					indexCoordinates);
 		}
 	}
 

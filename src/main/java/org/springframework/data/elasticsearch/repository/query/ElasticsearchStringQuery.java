@@ -89,8 +89,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 			result = elasticsearchOperations.searchOne(stringQuery, clazz, index);
 		}
 
-		return SearchHitSupport.unwrapSearchHits(result);
-
+		return queryMethod.isNotSearchHitMethod() ? SearchHitSupport.unwrapSearchHits(result) : result;
 	}
 
 	protected StringQuery createQuery(ParametersParameterAccessor parameterAccessor) {
