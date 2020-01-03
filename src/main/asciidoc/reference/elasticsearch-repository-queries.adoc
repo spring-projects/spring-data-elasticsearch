@@ -266,6 +266,16 @@ A list of supported keywords for Elasticsearch is shown below.
 
 |===
 
+== Method return types
+
+Repository methods can be defined to have the following return types for returning multiple Elements:
+
+* `List<T>`
+* `Stream<T>`
+* `SearchHits<T>`
+* `List<SearchHits<T>>`
+* `Stream<>>SearchHit<T>>`
+
 [[elasticsearch.query-methods.at-query]]
 == Using @Query Annotation
 

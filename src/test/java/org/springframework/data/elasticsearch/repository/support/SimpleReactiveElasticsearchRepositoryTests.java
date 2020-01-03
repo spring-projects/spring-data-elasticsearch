@@ -23,7 +23,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.junit.jupiter.api.AfterEach;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -43,6 +42,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
@@ -62,6 +62,7 @@ import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.config.AbstractReactiveElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
@@ -181,7 +182,8 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 
 		repository.findAllById(Arrays.asList("id-one", "id-two")) //
 				.as(StepVerifier::create)//
-				.expectNextCount(2) //
+				.expectNextMatches(entity -> entity.getId().equals("id-one") || entity.getId().equals("id-two")) //
+				.expectNextMatches(entity -> entity.getId().equals("id-one") || entity.getId().equals("id-two")) //
 				.verifyComplete();
 	}
 
@@ -194,6 +196,34 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 
 		repository.findAllById(Arrays.asList("can't", "touch", "this")) //
 				.as(StepVerifier::create)//
+				.verifyComplete();
+	}
+
+	@Test // DATAES-717
+	void shouldReturnFluxOfSearchHit() throws IOException {
+
+		bulkIndex(SampleEntity.builder().id("id-one").message("message").build(), //
+				SampleEntity.builder().id("id-two").message("message").build(), //
+				SampleEntity.builder().id("id-three").message("message").build());
+
+		repository.queryByMessageWithString("message") //
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-717
+	void shouldReturnFluxOfSearchHitForStringQuery() throws IOException {
+
+		bulkIndex(SampleEntity.builder().id("id-one").message("message").build(), //
+				SampleEntity.builder().id("id-two").message("message").build(), //
+				SampleEntity.builder().id("id-three").message("message").build());
+
+		repository.queryAllByMessage("message") //
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
+				.expectNextCount(2) //
 				.verifyComplete();
 	}
 
@@ -504,6 +534,11 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 		Flux<SampleEntity> findAllByMessage(String message, Pageable pageable);
 
 		Flux<SampleEntity> findAllByMessage(Publisher<String> message);
+
+		Flux<SearchHit<SampleEntity>> queryAllByMessage(String message);
+
+		@Query("{\"bool\": {\"must\": [{\"term\": {\"message\": \"?0\"}}]}}")
+		Flux<SearchHit<SampleEntity>> queryByMessageWithString(String message);
 
 		@Query("{ \"bool\" : { \"must\" : { \"term\" : { \"message\" : \"?0\" } } } }")
 		Flux<SampleEntity> findAllViaAnnotatedQueryByMessageLike(String message);

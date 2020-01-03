@@ -35,11 +35,11 @@ import org.springframework.util.StringUtils;
 public class SearchHits<T> implements Streamable<SearchHit<T>> {
 
 	private final long totalHits;
+	private final TotalHitsRelation totalHitsRelation;
 	private final float maxScore;
 	private final String scrollId;
 	private final List<? extends SearchHit<T>> searchHits;
 	private final Aggregations aggregations;
-	private final TotalHitsRelation totalHitsRelation;
 
 	/**
 	 * @param totalHits the number of total hits for the search

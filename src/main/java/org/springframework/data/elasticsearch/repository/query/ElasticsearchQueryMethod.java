@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,14 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.util.Collection;
+import java.util.stream.Stream;
 
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
@@ -37,22 +42,25 @@ import org.springframework.util.ClassUtils;
  * @author Oliver Gierke
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
+	private final Method method; // private in base class, but needed here as well
 	private final Query queryAnnotation;
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	private @Nullable ElasticsearchEntityMetadata<?> metadata;
 
-	public ElasticsearchQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
+	public ElasticsearchQueryMethod(Method method, RepositoryMetadata repositoryMetadata, ProjectionFactory factory,
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
 
-		super(method, metadata, factory);
+		super(method, repositoryMetadata, factory);
 
 		Assert.notNull(mappingContext, "MappingContext must not be null!");
 
-		this.queryAnnotation = method.getAnnotation(Query.class);
+		this.method = method;
 		this.mappingContext = mappingContext;
+		this.queryAnnotation = method.getAnnotation(Query.class);
 	}
 
 	public boolean hasAnnotatedQuery() {
@@ -100,5 +108,53 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 
 	protected MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> getMappingContext() {
 		return mappingContext;
+	}
+
+	/**
+	 * checks whether the return type of the underlying method is a
+	 * {@link org.springframework.data.elasticsearch.core.SearchHits} or a collection of
+	 * {@link org.springframework.data.elasticsearch.core.SearchHit}.
+	 * 
+	 * @return true if the method has a {@link org.springframework.data.elasticsearch.core.SearchHit}t related return type
+	 * @since 4.0
+	 */
+	public boolean isSearchHitMethod() {
+		Class<?> methodReturnType = method.getReturnType();
+
+		if (SearchHits.class.isAssignableFrom(methodReturnType)) {
+			return true;
+		}
+
+		try {
+			// dealing with Collection<SearchHit<T>>, getting to T
+			ParameterizedType methodGenericReturnType = ((ParameterizedType) method.getGenericReturnType());
+			if (isAllowedGenericType(methodGenericReturnType)) {
+				ParameterizedType collectionTypeArgument = (ParameterizedType) methodGenericReturnType
+						.getActualTypeArguments()[0];
+				if (SearchHit.class.isAssignableFrom((Class<?>) collectionTypeArgument.getRawType())) {
+					return true;
+				}
+			}
+		} catch (Exception ignored) {}
+
+		return false;
+	}
+
+	protected boolean isAllowedGenericType(ParameterizedType methodGenericReturnType) {
+		return Collection.class.isAssignableFrom((Class<?>) methodGenericReturnType.getRawType())
+				|| Stream.class.isAssignableFrom((Class<?>) methodGenericReturnType.getRawType());
+	}
+
+	/**
+	 * checks whether the return type of the underlying method is a
+	 * {@link org.springframework.data.elasticsearch.core.SearchHits} or a collection of
+	 * {@link org.springframework.data.elasticsearch.core.SearchHit}.
+	 *
+	 * @return true if the method has not a {@link org.springframework.data.elasticsearch.core.SearchHit}t related return
+	 *         type
+	 * @since 4.0
+	 */
+	public boolean isNotSearchHitMethod() {
+		return !isSearchHitMethod();
 	}
 }

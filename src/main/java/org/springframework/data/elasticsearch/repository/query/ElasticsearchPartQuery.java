@@ -86,7 +86,7 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 			} else {
 				query.setPageable(accessor.getPageable());
 			}
-			result = StreamUtils.createStreamFromIterator(elasticsearchOperations.stream(query, clazz, index));
+			result = StreamUtils.createStreamFromIterator(elasticsearchOperations.searchForStream(query, clazz, index));
 		} else if (queryMethod.isCollectionQuery()) {
 
 			if (accessor.getPageable().isUnpaged()) {
@@ -97,13 +97,14 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 			}
 
 			result = elasticsearchOperations.search(query, clazz, index);
+
 		} else if (tree.isCountProjection()) {
 			result = elasticsearchOperations.count(query, clazz, index);
 		} else {
 			result = elasticsearchOperations.searchOne(query, clazz, index);
 		}
 
-		return SearchHitSupport.unwrapSearchHits(result);
+		return queryMethod.isNotSearchHitMethod() ? SearchHitSupport.unwrapSearchHits(result) : result;
 	}
 
 	private Object countOrGetDocumentsForDelete(CriteriaQuery query, ParametersParameterAccessor accessor) {

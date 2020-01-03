@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -429,6 +429,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	private Flux<SearchDocument> doFind(Query query, Class<?> clazz, IndexCoordinates index) {
 
+		if (query instanceof CriteriaQuery) {
+			converter.updateQuery((CriteriaQuery) query, clazz);
+		}
+
 		return Flux.defer(() -> {
 			SearchRequest request = requestFactory.searchRequest(query, clazz, index);
 
@@ -561,11 +565,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	private QueryBuilder mappedQuery(Query query, ElasticsearchPersistentEntity<?> entity) {
 
-		// TODO: we need to actually map the fields to the according field names!
-
 		QueryBuilder elasticsearchQuery = null;
 
 		if (query instanceof CriteriaQuery) {
+			converter.updateQuery((CriteriaQuery) query, entity.getType());
 			elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(((CriteriaQuery) query).getCriteria());
 		} else if (query instanceof StringQuery) {
 			elasticsearchQuery = new WrapperQueryBuilder(((StringQuery) query).getSource());
