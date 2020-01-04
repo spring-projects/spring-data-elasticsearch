@@ -23,7 +23,6 @@ import java.util.Collections;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.support.ElasticsearchRepositoryFactoryBean;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
@@ -99,7 +98,7 @@ public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurat
 	*/
 	@Override
 	protected Collection<Class<?>> getIdentifyingTypes() {
-		return Arrays.asList(ElasticsearchRepository.class, ElasticsearchCrudRepository.class);
+		return Arrays.asList(ElasticsearchRepository.class, ElasticsearchRepository.class);
 	}
 
 	/*

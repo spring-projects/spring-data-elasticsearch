@@ -37,7 +37,7 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
-import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
@@ -72,6 +72,7 @@ public class SynonymRepositoryTests {
 	void after() {
 		indexOperations.deleteIndex(SynonymEntity.class);
 	}
+
 	@Test
 	public void shouldDo() {
 
@@ -112,5 +113,5 @@ public class SynonymRepositoryTests {
 	 *
 	 * @author Artur Konczak
 	 */
-	interface SynonymRepository extends ElasticsearchCrudRepository<SynonymEntity, String> {}
+	interface SynonymRepository extends ElasticsearchRepository<SynonymEntity, String> {}
 }
