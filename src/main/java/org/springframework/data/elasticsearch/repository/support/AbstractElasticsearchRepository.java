@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +70,7 @@ import org.springframework.util.Assert;
  * @author Sascha Woo
  * @author Murali Chevuri
  * @author Peter-Josef Meisch
+ * @author Aleksei Arsenev
  */
 public abstract class AbstractElasticsearchRepository<T, ID> implements ElasticsearchRepository<T, ID> {
 
@@ -290,9 +292,19 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		Assert.notNull(entities, "Cannot delete 'null' list.");
 
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
+		IdsQueryBuilder idsQueryBuilder = idsQuery();
 		for (T entity : entities) {
-			doDelete(extractIdFromBean(entity), indexCoordinates);
+			ID id = extractIdFromBean(entity);
+			if (id != null) {
+				idsQueryBuilder.addIds(stringIdRepresentation(id));
+			}
 		}
+		if(idsQueryBuilder.ids().isEmpty()) {
+			return;
+		}
+		DeleteQuery deleteQuery = new DeleteQuery();
+		deleteQuery.setQuery(idsQueryBuilder);
+		operations.delete(deleteQuery, indexCoordinates);
 		indexOperations.refresh(indexCoordinates);
 	}
 
