@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.mapping;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.lang.Nullable;
 
@@ -46,7 +47,9 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 *
 	 * @return
 	 * @since 3.1
+	 * @deprecated since 4.0, use {@link SearchHit#getScore()} instead
 	 */
+	@Deprecated
 	boolean isScoreProperty();
 
 	/**
