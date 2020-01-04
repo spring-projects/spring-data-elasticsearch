@@ -63,7 +63,9 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	 *
 	 * @return false when {@link ElasticsearchPersistentEntity} does not define a score property.
 	 * @since 3.1
+	 * @deprecated since 4.0
 	 */
+	@Deprecated
 	boolean hasScoreProperty();
 
 	/**
@@ -73,7 +75,9 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	 * @return the score {@link ElasticsearchPersistentProperty} of the {@link PersistentEntity} or {@literal null} if not
 	 *         defined.
 	 * @since 3.1
+	 * @deprecated since 4.0
 	 */
 	@Nullable
+	@Deprecated
 	ElasticsearchPersistentProperty getScoreProperty();
 }

@@ -8,16 +8,21 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.springframework.data.annotation.ReadOnlyProperty;
+import org.springframework.data.elasticsearch.core.SearchHit;
 
 /**
  * Specifies that this field is used for storing the document score.
  * 
  * @author Sascha Woo
+ * @author Peter-Josef Meisch
  * @since 3.1
+ * @deprecated since 4.0, use {@link SearchHit#getScore()} instead
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 @Documented
 @Inherited
 @ReadOnlyProperty
-public @interface Score {}
+@Deprecated
+public @interface Score {
+}
