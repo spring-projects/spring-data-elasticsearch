@@ -39,7 +39,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
-import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
@@ -229,6 +229,6 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 	 * @author Mohsin Husen
 	 */
 	public interface DynamicSettingAndMappingEntityRepository
-			extends ElasticsearchCrudRepository<DynamicSettingAndMappingEntity, String> {}
+			extends ElasticsearchRepository<DynamicSettingAndMappingEntity, String> {}
 
 }

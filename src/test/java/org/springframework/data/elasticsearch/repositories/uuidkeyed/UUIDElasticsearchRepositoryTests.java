@@ -389,7 +389,6 @@ public class UUIDElasticsearchRepositoryTests {
 
 		// when
 		List<SampleEntityUUIDKeyed> result = repository.deleteByAvailable(true);
-		repository.refresh();
 
 		// then
 		assertThat(result).hasSize(2);
@@ -423,7 +422,6 @@ public class UUIDElasticsearchRepositoryTests {
 
 		// when
 		List<SampleEntityUUIDKeyed> result = repository.deleteByMessage("hello world 3");
-		repository.refresh();
 
 		// then
 		assertThat(result).hasSize(1);
@@ -457,7 +455,6 @@ public class UUIDElasticsearchRepositoryTests {
 
 		// when
 		repository.deleteByType("article");
-		repository.refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
@@ -478,7 +475,6 @@ public class UUIDElasticsearchRepositoryTests {
 
 		// when
 		repository.delete(sampleEntityUUIDKeyed);
-		repository.refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId.toString()))
@@ -601,8 +597,7 @@ public class UUIDElasticsearchRepositoryTests {
 	@AllArgsConstructor
 	@Builder
 	@Data
-	@Document(indexName = "test-index-uuid-keyed", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-uuid-keyed", replicas = 0, refreshInterval = "-1")
 	static class SampleEntityUUIDKeyed {
 
 		@Id private UUID id;

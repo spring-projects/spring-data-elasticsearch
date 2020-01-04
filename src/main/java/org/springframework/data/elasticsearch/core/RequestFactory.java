@@ -327,8 +327,13 @@ class RequestFactory {
 	public MoreLikeThisQueryBuilder moreLikeThisQueryBuilder(MoreLikeThisQuery query, IndexCoordinates index) {
 		MoreLikeThisQueryBuilder.Item item = new MoreLikeThisQueryBuilder.Item(index.getIndexName(), query.getId());
 
-		MoreLikeThisQueryBuilder moreLikeThisQueryBuilder = QueryBuilders
-				.moreLikeThisQuery(new MoreLikeThisQueryBuilder.Item[] { item });
+		String[] fields = null;
+		if (query.getFields() != null) {
+			fields = query.getFields().toArray(new String[] {});
+		}
+
+		MoreLikeThisQueryBuilder moreLikeThisQueryBuilder = QueryBuilders.moreLikeThisQuery(fields, null,
+				new MoreLikeThisQueryBuilder.Item[] { item });
 
 		if (query.getMinTermFreq() != null) {
 			moreLikeThisQueryBuilder.minTermFreq(query.getMinTermFreq());
@@ -361,6 +366,7 @@ class RequestFactory {
 		if (query.getBoostTerms() != null) {
 			moreLikeThisQueryBuilder.boostTerms(query.getBoostTerms());
 		}
+
 		return moreLikeThisQueryBuilder;
 	}
 

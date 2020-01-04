@@ -148,9 +148,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity.setVersion(System.currentTimeMillis());
 
 		// when
-		assertThatThrownBy(() -> {
-			repository.save(sampleEntity);
-		}).isInstanceOf(ActionRequestValidationException.class);
+		assertThatThrownBy(() -> repository.save(sampleEntity)).isInstanceOf(ActionRequestValidationException.class);
 	}
 
 	@Test
@@ -385,7 +383,6 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// when
 		long result = repository.deleteSampleEntityById(documentId);
-		repository.refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
@@ -422,7 +419,6 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// when
 		List<SampleEntity> result = repository.deleteByAvailable(true);
-		repository.refresh();
 
 		// then
 		assertThat(result).hasSize(2);
@@ -456,7 +452,6 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// when
 		List<SampleEntity> result = repository.deleteByMessage("hello world 3");
-		repository.refresh();
 
 		// then
 		assertThat(result).hasSize(1);
@@ -490,7 +485,6 @@ public class SimpleElasticsearchRepositoryTests {
 
 		// when
 		repository.deleteByType("article");
-		repository.refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
@@ -581,7 +575,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity.setMessage("some message");
 
 		// when
-		repository.index(sampleEntity);
+		repository.save(sampleEntity);
 
 		// then
 		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
@@ -707,8 +701,7 @@ public class SimpleElasticsearchRepositoryTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-sample-simple-repository", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-simple-repository", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;

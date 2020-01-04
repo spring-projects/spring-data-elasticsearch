@@ -32,7 +32,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
-import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.test.context.ContextConfiguration;
@@ -57,6 +57,7 @@ public class FieldDynamicMappingEntityRepositoryTests {
 	@Autowired private ElasticsearchOperations operations;
 
 	private IndexOperations indexOperations;
+
 	@BeforeEach
 	public void before() {
 		indexOperations = operations.getIndexOperations();
@@ -129,6 +130,6 @@ public class FieldDynamicMappingEntityRepositoryTests {
 	 * @author Ted Liang
 	 */
 	public interface FieldDynamicMappingEntityRepository
-			extends ElasticsearchCrudRepository<FieldDynamicMappingEntity, String> {}
+			extends ElasticsearchRepository<FieldDynamicMappingEntity, String> {}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,9 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  * @author Mohsin Husen
  * @author Oliver Gierke
  * @author Sascha Woo
+ * @author Peter-Josef Meisch
+ * @deprecated since 4.0, use {@link ElasticsearchRepository} instead
  */
+@Deprecated
 @NoRepositoryBean
-public interface ElasticsearchCrudRepository<T, ID> extends PagingAndSortingRepository<T, ID> {
-
-}
+public interface ElasticsearchCrudRepository<T, ID> extends PagingAndSortingRepository<T, ID> {}
