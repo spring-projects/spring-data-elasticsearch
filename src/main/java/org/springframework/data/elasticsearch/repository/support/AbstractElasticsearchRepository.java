@@ -299,11 +299,13 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 				idsQueryBuilder.addIds(stringIdRepresentation(id));
 			}
 		}
-		if(idsQueryBuilder.ids().isEmpty()) {
+
+		if (idsQueryBuilder.ids().isEmpty()) {
 			return;
 		}
 		DeleteQuery deleteQuery = new DeleteQuery();
 		deleteQuery.setQuery(idsQueryBuilder);
+
 		operations.delete(deleteQuery, indexCoordinates);
 		indexOperations.refresh(indexCoordinates);
 	}
