@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,32 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
-
-import java.lang.Long;
-import java.lang.Object;
-import java.net.ConnectException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
+import lombok.*;
 import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.AfterEach;
@@ -56,17 +33,26 @@ import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.Criteria;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersion;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.util.StringUtils;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.net.ConnectException;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
 
 /**
  * Integration tests for {@link ReactiveElasticsearchTemplate}.
@@ -76,6 +62,7 @@ import org.springframework.util.StringUtils;
  * @author Peter-Josef Meisch
  * @author Farid Azaza
  * @author Martin Choraine
+ * @author Aleksei Arsenev
  */
 @SpringIntegrationTest
 public class ReactiveElasticsearchTemplateTests {
@@ -708,6 +695,118 @@ public class ReactiveElasticsearchTemplateTests {
 					assertThat(sortValues).hasSize(1);
 					assertThat(sortValues.get(0)).isEqualTo(42);
 				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-623
+	public void shouldReturnObjectsForGivenIdsUsingMultiGet() {
+		SampleEntity entity1 = randomEntity("test message 1");
+		entity1.rate = 1;
+		index(entity1);
+		SampleEntity entity2 = randomEntity("test message 2");
+		entity2.rate = 2;
+		index(entity2);
+
+		NativeSearchQuery query = new NativeSearchQueryBuilder() //
+				.withIds(Arrays.asList(entity1.getId(), entity2.getId())) //
+				.build();
+
+		template.multiGet(query, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+				.as(StepVerifier::create) //
+				.expectNext(entity1, entity2) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-623
+	public void shouldReturnObjectsForGivenIdsUsingMultiGetWithFields() {
+		SampleEntity entity1 = randomEntity("test message 1");
+		entity1.rate = 1;
+		index(entity1);
+		SampleEntity entity2 = randomEntity("test message 2");
+		entity2.rate = 2;
+		index(entity2);
+
+		NativeSearchQuery query = new NativeSearchQueryBuilder() //
+				.withIds(Arrays.asList(entity1.getId(), entity2.getId())) //
+				.withFields("message") //
+				.build();
+
+		template.multiGet(query, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-623
+	public void shouldDoBulkIndex() {
+		SampleEntity entity1 = randomEntity("test message 1");
+		entity1.rate = 1;
+		SampleEntity entity2 = randomEntity("test message 2");
+		entity2.rate = 2;
+
+		List<IndexQuery> indexQueries = getIndexQueries(entity1, entity2);
+		template.bulkIndex(indexQueries, IndexCoordinates.of(DEFAULT_INDEX)).block();
+
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		template.search(searchQuery, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+				.as(StepVerifier::create) //
+				.expectNextMatches(hit -> entity1.equals(hit.getContent()) || entity2.equals(hit.getContent())) //
+				.expectNextMatches(hit -> entity1.equals(hit.getContent()) || entity2.equals(hit.getContent())) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-623
+	public void shouldDoBulkUpdate() {
+		SampleEntity entity1 = randomEntity("test message 1");
+		entity1.rate = 1;
+		index(entity1);
+		SampleEntity entity2 = randomEntity("test message 2");
+		entity2.rate = 2;
+		index(entity2);
+
+		IndexRequest indexRequest1 = new IndexRequest();
+		indexRequest1.source("message", "updated 1");
+		UpdateQuery updateQuery1 = new UpdateQueryBuilder() //
+				.withId(entity1.getId()) //
+				.withIndexRequest(indexRequest1).build();
+
+		IndexRequest indexRequest2 = new IndexRequest();
+		indexRequest2.source("message", "updated 2");
+		UpdateQuery updateQuery2 = new UpdateQueryBuilder() //
+				.withId(entity2.getId()) //
+				.withIndexRequest(indexRequest2).build();
+
+		List<UpdateQuery> queries = Arrays.asList(updateQuery1, updateQuery2);
+		template.bulkUpdate(queries, IndexCoordinates.of(DEFAULT_INDEX)).block();
+
+		NativeSearchQuery getQuery = new NativeSearchQueryBuilder() //
+				.withIds(Arrays.asList(entity1.getId(), entity2.getId())) //
+				.build();
+		template.multiGet(getQuery, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+				.as(StepVerifier::create) //
+				.expectNextMatches(entity -> entity.getMessage().equals("updated 1")) //
+				.expectNextMatches(entity -> entity.getMessage().equals("updated 2")) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-623
+	void shouldSaveAll() {
+		SampleEntity entity1 = randomEntity("test message 1");
+		entity1.rate = 1;
+		SampleEntity entity2 = randomEntity("test message 2");
+		entity2.rate = 2;
+
+		template.saveAll(Flux.fromArray(new SampleEntity[]{entity1, entity2}), IndexCoordinates.of(DEFAULT_INDEX)) //
+				.as(StepVerifier::create) //
+				.expectNext(entity1) //
+				.expectNext(entity2) //
+				.verifyComplete();
+
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		template.search(searchQuery, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+				.as(StepVerifier::create) //
+				.expectNextMatches(hit -> entity1.equals(hit.getContent()) || entity2.equals(hit.getContent())) //
+				.expectNextMatches(hit -> entity1.equals(hit.getContent()) || entity2.equals(hit.getContent())) //
 				.verifyComplete();
 	}
 

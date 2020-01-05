@@ -15,17 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.elasticsearch.index.VersionType.*;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
+import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -48,26 +43,32 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity;
 import org.springframework.data.elasticsearch.core.EntityOperations.Entity;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.elasticsearch.index.VersionType.EXTERNAL;
 
 /**
  * @author Christoph Strobl
@@ -76,6 +77,7 @@ import org.springframework.util.Assert;
  * @author Martin Choraine
  * @author Peter-Josef Meisch
  * @author Mathias Teier
+ * @author Aleksei Arsenev
  * @since 3.2
  */
 public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations {
@@ -135,6 +137,66 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return save(entity, getIndexCoordinatesFor(entity.getClass()));
 	}
 
+	@Override
+	public <T> Flux<T> saveAll(Publisher<T> entities, IndexCoordinates index) {
+
+		Assert.notNull(entities, "Entities must not be null!");
+
+		return Flux.from(entities) //
+				.map(t -> operations.forEntity(t, converter.getConversionService())) //
+				.collectList() //
+				.flatMapMany(adaptibleEntities -> {
+					Iterator<AdaptibleEntity<T>> iterator = adaptibleEntities.iterator();
+					List<IndexQuery> indexRequests = adaptibleEntities.stream() //
+							.map(e -> getIndexQuery(e.getBean(), e)) //
+							.collect(Collectors.toList());
+					return doBulkOperation(indexRequests, BulkOptions.defaultOptions(), index) //
+							.map(bulkItemResponse -> {
+								AdaptibleEntity<T> mappedEntity = iterator.next();
+								mappedEntity.populateIdIfNecessary(bulkItemResponse.getResponse().getId());
+								return mappedEntity.getBean();
+							});
+				});
+	}
+
+	@Override
+	public <T> Flux<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
+
+		Assert.notNull(index, "index must not be null");
+		Assert.notEmpty(query.getIds(), "No Id define for Query");
+
+		MultiGetRequest request = requestFactory.multiGetRequest(query, index);
+		return Flux.from(execute(cl -> cl.multiGet(request))) //
+				.handle((result, sink) -> {
+
+					Document document = DocumentAdapters.from(result);
+					if (document != null) {
+						T entity = getElasticsearchConverter().mapDocument(document, clazz);
+						if (entity != null) {
+							sink.next(entity);
+						}
+					}
+				});
+	}
+
+	@Override
+	public Mono<Void> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index) {
+
+		Assert.notNull(queries, "List of IndexQuery must not be null");
+		Assert.notNull(bulkOptions, "BulkOptions must not be null");
+
+		return doBulkOperation(queries, bulkOptions, index).then();
+	}
+
+	@Override
+	public Mono<Void> bulkUpdate(List<UpdateQuery> queries, BulkOptions bulkOptions, IndexCoordinates index) {
+
+		Assert.notNull(queries, "List of UpdateQuery must not be null");
+		Assert.notNull(bulkOptions, "BulkOptions must not be null");
+
+		return doBulkOperation(queries, bulkOptions, index).then();
+	}
+
 	/**
 	 * Customization hook on the actual execution result {@link Publisher}. <br />
 	 * You know what you're doing here? Well fair enough, go ahead on your own risk.
@@ -144,6 +206,32 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 */
 	protected Mono<IndexResponse> doIndex(IndexRequest request) {
 		return Mono.from(execute(client -> client.index(request)));
+	}
+
+	protected Flux<BulkItemResponse> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
+		BulkRequest bulkRequest = prepareWriteRequest(requestFactory.bulkRequest(queries, bulkOptions, index));
+		return client.bulk(bulkRequest) //
+				.onErrorMap(e -> new ElasticsearchException("Error while bulk for request: " + bulkRequest.toString(), e)) //
+				.flatMap(this::checkForBulkOperationFailure) //
+				.flatMapMany(response -> Flux.fromArray(response.getItems()));
+	}
+
+	protected Mono<BulkResponse> checkForBulkOperationFailure(BulkResponse bulkResponse) {
+
+		if (bulkResponse.hasFailures()) {
+			Map<String, String> failedDocuments = new HashMap<>();
+			for (BulkItemResponse item : bulkResponse.getItems()) {
+				if (item.isFailed())
+					failedDocuments.put(item.getId(), item.getFailureMessage());
+			}
+			ElasticsearchException exception = new ElasticsearchException(
+					"Bulk operation has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
+							+ failedDocuments + ']',
+					failedDocuments);
+			return Mono.error(exception);
+		} else {
+			return Mono.just(bulkResponse);
+		}
 	}
 
 	/**
@@ -178,27 +266,46 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	private Mono<IndexResponse> doIndex(Object value, AdaptibleEntity<?> entity, IndexCoordinates index) {
 
 		return Mono.defer(() -> {
-
-			Object id = entity.getId();
-
-			IndexRequest request = id != null
-					? new IndexRequest(index.getIndexName()).id(converter.convertId(id))
-					: new IndexRequest(index.getIndexName());
-
-			request.source(converter.mapObject(value).toJson(), Requests.INDEX_CONTENT_TYPE);
-
-			if (entity.isVersionedEntity()) {
-
-				Object version = entity.getVersion();
-				if (version != null) {
-					request.version(((Number) version).longValue());
-					request.versionType(EXTERNAL);
-				}
-			}
-
+			IndexRequest request = getIndexRequest(value, entity, index);
 			request = prepareIndexRequest(value, request);
 			return doIndex(request);
 		});
+	}
+
+	private IndexRequest getIndexRequest(Object value, AdaptibleEntity<?> entity, IndexCoordinates index) {
+		Object id = entity.getId();
+
+		IndexRequest request = id != null
+				? new IndexRequest(index.getIndexName()).id(converter.convertId(id))
+				: new IndexRequest(index.getIndexName());
+
+		request.source(converter.mapObject(value).toJson(), Requests.INDEX_CONTENT_TYPE);
+
+		if (entity.isVersionedEntity()) {
+
+			Number version = entity.getVersion();
+			if (version != null) {
+				request.version(version.longValue());
+				request.versionType(EXTERNAL);
+			}
+		}
+		return request;
+	}
+
+	private IndexQuery getIndexQuery(Object value, AdaptibleEntity<?> entity) {
+		Object id = entity.getId();
+		IndexQuery query = new IndexQuery();
+		if (id != null) {
+			query.setId(id.toString());
+		}
+		query.setObject(value);
+		if (entity.isVersionedEntity()) {
+			Number version = entity.getVersion();
+			if (version != null) {
+				query.setVersion(version.longValue());
+			}
+		}
+		return query;
 	}
 
 	@Override
