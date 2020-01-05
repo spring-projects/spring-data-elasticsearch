@@ -84,6 +84,10 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 		Query query = createQuery(
 				new ConvertingParameterAccessor(elasticsearchOperations.getElasticsearchConverter(), parameterAccessor));
 
+		if (queryMethod.hasAnnotatedHighlight()) {
+			query.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
+		}
+
 		Class<?> targetType = processor.getReturnedType().getTypeToRead();
 		String indexName = queryMethod.getEntityInformation().getIndexName();
 		String indexTypeName = queryMethod.getEntityInformation().getIndexTypeName();

@@ -46,6 +46,7 @@ public class ReactivePartTreeElasticsearchQuery extends AbstractReactiveElastics
 		if (tree.isLimiting()) {
 			query.setMaxResults(tree.getMaxResults());
 		}
+
 		return query;
 	}
 

@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -76,6 +77,11 @@ public class SearchHit<T> {
 	 */
 	public List<Object> getSortValues() {
 		return Collections.unmodifiableList(sortValues);
+	}
+
+	public Map<String, List<String>> getHighlightFields() {
+		return Collections.unmodifiableMap(highlightFields.entrySet().stream()
+				.collect(Collectors.toMap(Map.Entry::getKey, entry -> Collections.unmodifiableList(entry.getValue()))));
 	}
 
 	/**

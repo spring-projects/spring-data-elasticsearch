@@ -17,10 +17,10 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.beans.IntrospectionException;
-
 import org.junit.jupiter.api.Test;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.Property;
@@ -79,6 +79,21 @@ public class SimpleElasticsearchPersistentEntityTests {
 				.withMessageContaining("second");
 	}
 
+	@Test
+	void shouldFindPropertiesByMappedName() {
+
+		SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
+		SimpleElasticsearchPersistentEntity<?> persistentEntity = context
+				.getRequiredPersistentEntity(FieldNameEntity.class);
+
+		ElasticsearchPersistentProperty persistentProperty = persistentEntity
+				.getPersistentPropertyWithFieldName("renamed-field");
+
+		assertThat(persistentProperty).isNotNull();
+		assertThat(persistentProperty.getName()).isEqualTo("renamedField");
+		assertThat(persistentProperty.getFieldName()).isEqualTo("renamed-field");
+	}
+
 	private static SimpleElasticsearchPersistentProperty createProperty(SimpleElasticsearchPersistentEntity<?> entity,
 			String field) {
 
@@ -129,5 +144,10 @@ public class SimpleElasticsearchPersistentEntityTests {
 
 		@Score float first;
 		@Score float second;
+	}
+
+	private static class FieldNameEntity {
+		@Id private String id;
+		@Field(name = "renamed-field") private String renamedField;
 	}
 }

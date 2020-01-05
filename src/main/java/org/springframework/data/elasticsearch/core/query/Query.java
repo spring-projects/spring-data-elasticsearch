@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.query;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.IndicesOptions;
@@ -24,6 +25,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.Nullable;
 
 /**
  * Query
@@ -185,4 +187,19 @@ public interface Query {
 		return null;
 	}
 
+	/**
+	 * Sets the {@link HighlightQuery}.*
+	 * 
+	 * @param highlightQuery the query to set
+	 * @since 4.0
+	 */
+	void setHighlightQuery(@Nullable HighlightQuery highlightQuery);
+
+	/**
+	 * @return the optional set {@link HighlightQuery}.
+	 * @since 4.0
+	 */
+	default Optional<HighlightQuery> getHighlightQuery() {
+		return Optional.empty();
+	}
 }

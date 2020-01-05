@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,9 @@ package org.springframework.data.elasticsearch.core.mapping;
 import static org.springframework.util.StringUtils.*;
 
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.elasticsearch.index.VersionType;
 import org.springframework.beans.BeansException;
@@ -29,6 +32,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
 import org.springframework.data.util.TypeInformation;
@@ -48,6 +52,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Sascha Woo
  * @author Ivan Greene
+ * @author Peter-Josef Meisch
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
@@ -68,6 +73,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private @Nullable String settingPath;
 	private VersionType versionType;
 	private boolean createIndexAndMapping;
+	private final Map<String, ElasticsearchPersistentProperty> fieldNamePropertyCache = new ConcurrentHashMap<>();
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 
@@ -232,5 +238,23 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		// Do nothing to avoid the usage of ClassGeneratingPropertyAccessorFactory for now
 		// DATACMNS-1322 switches to proper immutability behavior which Spring Data Elasticsearch
 		// cannot yet implement
+	}
+
+	@Nullable
+	@Override
+	public ElasticsearchPersistentProperty getPersistentPropertyWithFieldName(String fieldName) {
+
+		Assert.notNull(fieldName, "fieldName must not be null");
+
+		return fieldNamePropertyCache.computeIfAbsent(fieldName, key -> {
+			AtomicReference<ElasticsearchPersistentProperty> propertyRef = new AtomicReference<>();
+			doWithProperties((PropertyHandler<ElasticsearchPersistentProperty>) property -> {
+				if (key.equals(property.getFieldName())) {
+					propertyRef.set(property);
+				}
+			});
+
+			return propertyRef.get();
+		});
 	}
 }

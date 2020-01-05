@@ -33,6 +33,7 @@ import java.lang.Long;
 import java.lang.Object;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -58,6 +59,8 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.Highlight;
+import org.springframework.data.elasticsearch.annotations.HighlightField;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
@@ -206,7 +209,7 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 				SampleEntity.builder().id("id-two").message("message").build(), //
 				SampleEntity.builder().id("id-three").message("message").build());
 
-		repository.queryByMessageWithString("message") //
+		repository.queryAllByMessage("message") //
 				.as(StepVerifier::create) //
 				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
 				.expectNextCount(2) //
@@ -220,9 +223,43 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 				SampleEntity.builder().id("id-two").message("message").build(), //
 				SampleEntity.builder().id("id-three").message("message").build());
 
-		repository.queryAllByMessage("message") //
+		repository.queryByMessageWithString("message") //
 				.as(StepVerifier::create) //
 				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-372
+	void shouldReturnHighlightsOnAnnotatedMethod() throws IOException {
+
+		bulkIndex(SampleEntity.builder().id("id-one").message("message").build(), //
+				SampleEntity.builder().id("id-two").message("message").build(), //
+				SampleEntity.builder().id("id-three").message("message").build());
+
+		repository.queryAllByMessage("message") //
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> {
+					List<String> hitHighlightField = searchHit.getHighlightField("message");
+					return hitHighlightField.size() == 1 && hitHighlightField.get(0).equals("<em>message</em>");
+				}) //
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-372
+	void shouldReturnHighlightsOnAnnotatedStringQueryMethod() throws IOException {
+
+		bulkIndex(SampleEntity.builder().id("id-one").message("message").build(), //
+				SampleEntity.builder().id("id-two").message("message").build(), //
+				SampleEntity.builder().id("id-three").message("message").build());
+
+		repository.queryByMessageWithString("message") //
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> {
+					List<String> hitHighlightField = searchHit.getHighlightField("message");
+					return hitHighlightField.size() == 1 && hitHighlightField.get(0).equals("<em>message</em>");
+				}) //
 				.expectNextCount(2) //
 				.verifyComplete();
 	}
@@ -535,9 +572,11 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 
 		Flux<SampleEntity> findAllByMessage(Publisher<String> message);
 
+		@Highlight(fields = { @HighlightField(name = "message") })
 		Flux<SearchHit<SampleEntity>> queryAllByMessage(String message);
 
 		@Query("{\"bool\": {\"must\": [{\"term\": {\"message\": \"?0\"}}]}}")
+		@Highlight(fields = { @HighlightField(name = "message") })
 		Flux<SearchHit<SampleEntity>> queryByMessageWithString(String message);
 
 		@Query("{ \"bool\" : { \"must\" : { \"term\" : { \"message\" : \"?0\" } } } }")

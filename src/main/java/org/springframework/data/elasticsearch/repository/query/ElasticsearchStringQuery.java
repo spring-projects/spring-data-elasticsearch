@@ -69,9 +69,17 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 
 	@Override
 	public Object execute(Object[] parameters) {
-		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
-		StringQuery stringQuery = createQuery(accessor);
 		Class<?> clazz = queryMethod.getEntityInformation().getJavaType();
+		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
+
+		StringQuery stringQuery = createQuery(accessor);
+
+		Assert.notNull(stringQuery, "unsupported query");
+
+		if (queryMethod.hasAnnotatedHighlight()) {
+			stringQuery.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
+		}
+
 		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
 
 		Object result = null;

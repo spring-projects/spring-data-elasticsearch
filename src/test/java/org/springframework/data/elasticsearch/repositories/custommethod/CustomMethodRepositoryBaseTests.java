@@ -46,6 +46,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.Highlight;
+import org.springframework.data.elasticsearch.annotations.HighlightField;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
@@ -1416,6 +1418,32 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat(searchHits.getTotalHits()).isEqualTo(20);
 	}
 
+	@Test // DATAES-372
+	void shouldReturnHighlightsOnAnnotatedMethod() {
+		List<SampleEntity> entities = createSampleEntities("abc", 2);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByType("abc");
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(2);
+		SearchHit<SampleEntity> searchHit = searchHits.getSearchHit(0);
+		assertThat(searchHit.getHighlightField("type")).hasSize(1).contains("<em>abc</em>");
+	}
+
+	@Test // DATAES-372
+	void shouldReturnHighlightsOnAnnotatedStringQueryMethod() {
+		List<SampleEntity> entities = createSampleEntities("abc", 2);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByString("abc");
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(2);
+		SearchHit<SampleEntity> searchHit = searchHits.getSearchHit(0);
+		assertThat(searchHit.getHighlightField("type")).hasSize(1).contains("<em>abc</em>");
+	}
+
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
 
 		List<SampleEntity> entities = new ArrayList<>();
@@ -1552,14 +1580,17 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 		long countByLocationNear(GeoPoint point, String distance);
 
+		@Highlight(fields = { @HighlightField(name = "type") })
 		SearchHits<SampleEntity> queryByType(String type);
 
 		@Query("{\"bool\": {\"must\": [{\"term\": {\"type\": \"?0\"}}]}}")
+		@Highlight(fields = { @HighlightField(name = "type") })
 		SearchHits<SampleEntity> queryByString(String type);
 
-		List<SearchHit<SampleEntity>> queryByMessage(String type);
+		List<SearchHit<SampleEntity>> queryByMessage(String message);
 
-		Stream<SearchHit<SampleEntity>> readByMessage(String type);
+		Stream<SearchHit<SampleEntity>> readByMessage(String message);
+
 	}
 
 	/**

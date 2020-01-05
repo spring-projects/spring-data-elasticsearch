@@ -21,15 +21,19 @@ import java.util.Collection;
 import java.util.stream.Stream;
 
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.query.HighlightQuery;
+import org.springframework.data.elasticsearch.core.query.HighlightQueryBuilder;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -46,10 +50,12 @@ import org.springframework.util.ClassUtils;
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
-	private final Method method; // private in base class, but needed here as well
-	private final Query queryAnnotation;
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	private @Nullable ElasticsearchEntityMetadata<?> metadata;
+	private final Method method; // private in base class, but needed here as well
+	private final Query queryAnnotation;
+	private final Highlight highlightAnnotation;
+	private final Lazy<HighlightQuery> highlightQueryLazy = Lazy.of(this::createAnnotatedHighlightQuery);
 
 	public ElasticsearchQueryMethod(Method method, RepositoryMetadata repositoryMetadata, ProjectionFactory factory,
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
@@ -61,6 +67,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		this.method = method;
 		this.mappingContext = mappingContext;
 		this.queryAnnotation = method.getAnnotation(Query.class);
+		this.highlightAnnotation = method.getAnnotation(Highlight.class);
 	}
 
 	public boolean hasAnnotatedQuery() {
@@ -69,6 +76,30 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 
 	public String getAnnotatedQuery() {
 		return (String) AnnotationUtils.getValue(queryAnnotation, "value");
+	}
+
+	/**
+	 * @return true if there is a {@link Highlight} annotation present.
+	 * @since 4.0
+	 */
+	public boolean hasAnnotatedHighlight() {
+		return highlightAnnotation != null;
+	}
+
+	/**
+	 * @return a {@link HighlightQuery} built from the {@link Highlight} annotation.
+	 * @throws IllegalArgumentException if no {@link Highlight} annotation is present on the method
+	 * @see #hasAnnotatedHighlight()
+	 */
+	public HighlightQuery getAnnotatedHighlightQuery() {
+
+		Assert.isTrue(hasAnnotatedHighlight(), "no Highlight annotation present on " + getName());
+
+		return highlightQueryLazy.get();
+	}
+
+	private HighlightQuery createAnnotatedHighlightQuery() {
+		return new HighlightQueryBuilder(mappingContext).getHighlightQuery(highlightAnnotation, getDomainClass());
 	}
 
 	/**

@@ -1,0 +1,34 @@
+{
+  "boundary_chars": "#+*",
+  "boundary_max_scan": 7,
+  "boundary_scanner": "CHARS",
+  "boundary_scanner_locale": "de-DE",
+  "encoder": "html",
+  "force_source": true,
+  "fragmenter": "span",
+  "fragment_size": 5,
+  "no_match_size": 2,
+  "number_of_fragments": 3,
+  "order": "score",
+  "phrase_limit": 42,
+  "pre_tags": [
+    "<ab>",
+    "<cd>"
+  ],
+  "post_tags": [
+    "</ab>",
+    "</cd>"
+  ],
+  "require_field_match": false,
+  "type": "plain",
+  "fields": {
+    "some-field": {
+      "fragment_offset": 3,
+      "number_of_fragments": 4,
+      "matched_fields": [
+        "some-field",
+        "other-field"
+      ]
+    }
+  }
+}

@@ -58,12 +58,18 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 
 	@Override
 	public Object execute(Object[] parameters) {
+		Class<?> clazz = queryMethod.getEntityInformation().getJavaType();
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
+
 		CriteriaQuery query = createQuery(accessor);
+
 		Assert.notNull(query, "unsupported query");
 
-		Class<?> clazz = queryMethod.getEntityInformation().getJavaType();
 		elasticsearchConverter.updateQuery(query, clazz);
+
+		if (queryMethod.hasAnnotatedHighlight()) {
+			query.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
+		}
 
 		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
 
