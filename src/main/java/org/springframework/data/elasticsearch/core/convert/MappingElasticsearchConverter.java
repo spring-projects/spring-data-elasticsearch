@@ -184,10 +184,29 @@ public class MappingElasticsearchConverter
 		String id = searchDocument.hasId() ? searchDocument.getId() : null;
 		float score = searchDocument.getScore();
 		Object[] sortValues = searchDocument.getSortValues();
-		Map<String, List<String>> highlightFields = searchDocument.getHighlightFields();
+		Map<String, List<String>> highlightFields = getHighlightsAndRemapFieldNames(type, searchDocument);
 		T content = mapDocument(searchDocument, type);
 
 		return new SearchHit<T>(id, score, sortValues, highlightFields, content);
+	}
+
+	@Nullable
+	private Map<String, List<String>> getHighlightsAndRemapFieldNames(Class<?> type, SearchDocument searchDocument) {
+		Map<String, List<String>> highlightFields = searchDocument.getHighlightFields();
+
+		if (highlightFields == null) {
+			return null;
+		}
+
+		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(type);
+		if (persistentEntity == null) {
+			return highlightFields;
+		}
+
+		return highlightFields.entrySet().stream().collect(Collectors.toMap(entry -> {
+			ElasticsearchPersistentProperty property = persistentEntity.getPersistentPropertyWithFieldName(entry.getKey());
+			return property != null ? property.getName() : entry.getKey();
+		}, Entry::getValue));
 	}
 
 	@Override

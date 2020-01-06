@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.mapping;
 
 import org.elasticsearch.index.VersionType;
+import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.lang.Nullable;
 
@@ -80,4 +81,15 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	@Nullable
 	@Deprecated
 	ElasticsearchPersistentProperty getScoreProperty();
+
+	/**
+	 * returns the {@link ElasticsearchPersistentProperty} with the given fieldName (may be set by the {@link Field}
+	 * annotation.
+	 *
+	 * @param fieldName to field name for the search, must not be {@literal null}
+	 * @return the found property, otherwise null
+	 * @since 4.0
+	 */
+	@Nullable
+	ElasticsearchPersistentProperty getPersistentPropertyWithFieldName(String fieldName);
 }

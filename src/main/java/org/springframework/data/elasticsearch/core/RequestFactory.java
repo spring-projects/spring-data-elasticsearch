@@ -241,20 +241,24 @@ class RequestFactory {
 	}
 
 	public HighlightBuilder highlightBuilder(Query query) {
-		HighlightBuilder highlightBuilder = null;
-		if (query instanceof NativeSearchQuery) {
-			NativeSearchQuery searchQuery = (NativeSearchQuery) query;
+		HighlightBuilder highlightBuilder = query.getHighlightQuery().map(HighlightQuery::getHighlightBuilder).orElse(null);
 
-			if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
-				highlightBuilder = searchQuery.getHighlightBuilder();
+		if (highlightBuilder == null) {
 
-				if (highlightBuilder == null) {
-					highlightBuilder = new HighlightBuilder();
-				}
+			if (query instanceof NativeSearchQuery) {
+				NativeSearchQuery searchQuery = (NativeSearchQuery) query;
 
-				if (searchQuery.getHighlightFields() != null) {
-					for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
-						highlightBuilder.field(highlightField);
+				if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
+					highlightBuilder = searchQuery.getHighlightBuilder();
+
+					if (highlightBuilder == null) {
+						highlightBuilder = new HighlightBuilder();
+					}
+
+					if (searchQuery.getHighlightFields() != null) {
+						for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
+							highlightBuilder.field(highlightField);
+						}
 					}
 				}
 			}

@@ -20,6 +20,7 @@ import static java.util.Collections.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.IndicesOptions;
@@ -52,6 +53,7 @@ abstract class AbstractQuery implements Query {
 	protected boolean trackScores;
 	protected String preference;
 	protected Integer maxResults;
+	protected HighlightQuery highlightQuery;
 
 	@Override
 	public Sort getSort() {
@@ -195,4 +197,15 @@ abstract class AbstractQuery implements Query {
 	public void setMaxResults(Integer maxResults) {
 		this.maxResults = maxResults;
 	}
+
+	@Override
+	public void setHighlightQuery(HighlightQuery highlightQuery) {
+		this.highlightQuery = highlightQuery;
+	}
+
+	@Override
+	public Optional<HighlightQuery> getHighlightQuery() {
+		return Optional.ofNullable(highlightQuery);
+	}
+
 }
