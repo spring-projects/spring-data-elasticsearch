@@ -15,17 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import org.springframework.util.Assert;
-
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -96,7 +95,9 @@ public interface ReactiveDocumentOperations {
 	 * @return a {@link Flux} emitting saved entities.
 	 */
 	default <T> Flux<T> saveAll(Iterable<T> entities, IndexCoordinates index) {
-		return saveAll(Flux.fromIterable(entities), index);
+		List<T> entityList = new ArrayList<>();
+		entities.forEach(entityList::add);
+		return saveAll(Mono.just(entityList), index);
 	}
 
 	/**
@@ -108,7 +109,7 @@ public interface ReactiveDocumentOperations {
 	 * @param <T>
 	 * @return a {@link Flux} emitting saved entities.
 	 */
-	<T> Flux<T> saveAll(Publisher<T> entities, IndexCoordinates index);
+	<T> Flux<T> saveAll(Mono<? extends Collection<? extends T>> entities, IndexCoordinates index);
 
 	/**
 	 * Execute a multiGet against elasticsearch for the given ids.
@@ -119,23 +120,6 @@ public interface ReactiveDocumentOperations {
 	 * @return flux with list of nullable objects
 	 */
 	<T> Flux<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
-
-	/**
-	 * Bulk index all objects. Will do save or update.
-	 *
-	 * @param queries the queries to execute in bulk
-	 */
-	default Mono<Void> bulkIndex(List<IndexQuery> queries, IndexCoordinates index) {
-		return bulkIndex(queries, BulkOptions.defaultOptions(), index);
-	}
-
-	/**
-	 * Bulk index all objects. Will do save or update.
-	 *
-	 * @param queries the queries to execute in bulk
-	 * @param bulkOptions options to be added to the bulk request
-	 */
-	Mono<Void> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index);
 
 	/**
 	 * Bulk update all objects. Will do update.

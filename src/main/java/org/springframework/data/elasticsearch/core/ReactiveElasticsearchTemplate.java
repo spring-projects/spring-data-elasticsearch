@@ -138,25 +138,27 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public <T> Flux<T> saveAll(Publisher<T> entities, IndexCoordinates index) {
+	public <T> Flux<T> saveAll(Mono<? extends Collection<? extends T>> entities, IndexCoordinates index) {
 
 		Assert.notNull(entities, "Entities must not be null!");
 
-		return Flux.from(entities) //
-				.map(t -> operations.forEntity(t, converter.getConversionService())) //
-				.collectList() //
-				.flatMapMany(adaptibleEntities -> {
-					Iterator<AdaptibleEntity<T>> iterator = adaptibleEntities.iterator();
-					List<IndexQuery> indexRequests = adaptibleEntities.stream() //
-							.map(e -> getIndexQuery(e.getBean(), e)) //
-							.collect(Collectors.toList());
-					return doBulkOperation(indexRequests, BulkOptions.defaultOptions(), index) //
-							.map(bulkItemResponse -> {
-								AdaptibleEntity<T> mappedEntity = iterator.next();
-								mappedEntity.populateIdIfNecessary(bulkItemResponse.getResponse().getId());
-								return mappedEntity.getBean();
-							});
-				});
+		return entities.flatMapMany(entityList -> {
+
+			List<AdaptibleEntity<? extends T>> adaptibleEntities = entityList.stream() //
+					.map(e -> operations.forEntity(e, converter.getConversionService())) //
+					.collect(Collectors.toList());
+			Iterator<AdaptibleEntity<? extends T>> iterator = adaptibleEntities.iterator();
+			List<IndexQuery> indexRequests = adaptibleEntities.stream() //
+					.map(e -> getIndexQuery(e.getBean(), e)) //
+					.collect(Collectors.toList());
+			return doBulkOperation(indexRequests, BulkOptions.defaultOptions(), index) //
+					.map(bulkItemResponse -> {
+
+						AdaptibleEntity<? extends T> mappedEntity = iterator.next();
+						mappedEntity.populateIdIfNecessary(bulkItemResponse.getResponse().getId());
+						return mappedEntity.getBean();
+					});
+		});
 	}
 
 	@Override
@@ -170,22 +172,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				.handle((result, sink) -> {
 
 					Document document = DocumentAdapters.from(result);
-					if (document != null) {
-						T entity = getElasticsearchConverter().mapDocument(document, clazz);
-						if (entity != null) {
-							sink.next(entity);
-						}
+					T entity = getElasticsearchConverter().mapDocument(document, clazz);
+					if (entity != null) {
+						sink.next(entity);
 					}
 				});
-	}
-
-	@Override
-	public Mono<Void> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index) {
-
-		Assert.notNull(queries, "List of IndexQuery must not be null");
-		Assert.notNull(bulkOptions, "BulkOptions must not be null");
-
-		return doBulkOperation(queries, bulkOptions, index).then();
 	}
 
 	@Override

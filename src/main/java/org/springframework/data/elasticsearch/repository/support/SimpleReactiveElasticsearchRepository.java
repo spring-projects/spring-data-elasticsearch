@@ -70,7 +70,8 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		Assert.notNull(entityStream, "EntityStream must not be null!");
 
-		return elasticsearchOperations.saveAll(entityStream, entityInformation.getIndexCoordinates());
+		return elasticsearchOperations
+				.saveAll(Flux.from(entityStream).collectList(), entityInformation.getIndexCoordinates());
 	}
 
 	@Override
@@ -160,21 +161,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public Mono<Void> deleteById(Publisher<ID> id) {
 
 		Assert.notNull(id, "Id must not be null!");
-		return Flux.from(id)//
-				.map(this::convertId)
-				.collectList()
-				.map(objects -> {
-
-					return new StringQuery(QueryBuilders.idsQuery() //
-							.addIds(objects.toArray(new String[0])) //
-							.toString());
-				}) //
-				.flatMap(query -> {
-
-					return elasticsearchOperations
-							.deleteBy(query, entityInformation.getJavaType(), entityInformation.getIndexCoordinates());
-				}) //
-				.then();
+		return Mono.from(id).flatMap(this::deleteById);
 	}
 
 	@Override
@@ -197,12 +184,13 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		Assert.notNull(entityStream, "EntityStream must not be null!");
 		return deleteById(Flux.from(entityStream) //
-				.handle((o, synchronousSink) -> {
+				.map(o -> {
 
 					ID id = entityInformation.getId(o);
-					if (id != null) {
-						synchronousSink.next(id);
+					if (id == null) {
+						throw new IllegalStateException("Entity id must not be null!");
 					}
+					return id;
 				}));
 	}
 
