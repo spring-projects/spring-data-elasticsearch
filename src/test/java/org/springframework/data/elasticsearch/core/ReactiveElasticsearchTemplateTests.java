@@ -738,24 +738,6 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-623
-	public void shouldDoBulkIndex() {
-		SampleEntity entity1 = randomEntity("test message 1");
-		entity1.rate = 1;
-		SampleEntity entity2 = randomEntity("test message 2");
-		entity2.rate = 2;
-
-		List<IndexQuery> indexQueries = getIndexQueries(entity1, entity2);
-		template.bulkIndex(indexQueries, IndexCoordinates.of(DEFAULT_INDEX)).block();
-
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		template.search(searchQuery, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
-				.as(StepVerifier::create) //
-				.expectNextMatches(hit -> entity1.equals(hit.getContent()) || entity2.equals(hit.getContent())) //
-				.expectNextMatches(hit -> entity1.equals(hit.getContent()) || entity2.equals(hit.getContent())) //
-				.verifyComplete();
-	}
-
-	@Test // DATAES-623
 	public void shouldDoBulkUpdate() {
 		SampleEntity entity1 = randomEntity("test message 1");
 		entity1.rate = 1;
@@ -796,7 +778,7 @@ public class ReactiveElasticsearchTemplateTests {
 		SampleEntity entity2 = randomEntity("test message 2");
 		entity2.rate = 2;
 
-		template.saveAll(Flux.fromArray(new SampleEntity[]{entity1, entity2}), IndexCoordinates.of(DEFAULT_INDEX)) //
+		template.saveAll(Mono.just(Arrays.asList(entity1, entity2)), IndexCoordinates.of(DEFAULT_INDEX)) //
 				.as(StepVerifier::create) //
 				.expectNext(entity1) //
 				.expectNext(entity2) //
