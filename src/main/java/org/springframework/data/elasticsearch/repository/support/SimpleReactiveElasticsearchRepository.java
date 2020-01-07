@@ -183,15 +183,28 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public Mono<Void> deleteAll(Publisher<? extends T> entityStream) {
 
 		Assert.notNull(entityStream, "EntityStream must not be null!");
-		return deleteById(Flux.from(entityStream) //
+		return Flux.from(entityStream) //
 				.map(o -> {
 
 					ID id = entityInformation.getId(o);
 					if (id == null) {
 						throw new IllegalStateException("Entity id must not be null!");
 					}
-					return id;
-				}));
+					return convertId(id);
+				})
+				.collectList()
+				.map(objects -> {
+
+					return new StringQuery(QueryBuilders.idsQuery() //
+							.addIds(objects.toArray(new String[0])) //
+							.toString());
+				}) //
+				.flatMap(query -> {
+
+					return elasticsearchOperations
+							.deleteBy(query, entityInformation.getJavaType(), entityInformation.getIndexCoordinates());
+				}) //
+				.then();
 	}
 
 	@Override
