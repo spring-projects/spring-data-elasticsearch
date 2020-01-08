@@ -552,6 +552,10 @@ class RequestFactory {
 
 		}
 
+		if (query.getTrackTotalHits()) {
+			sourceBuilder.trackTotalHits(query.getTrackTotalHits());
+		}
+
 		request.source(sourceBuilder);
 		return request;
 	}
@@ -712,6 +716,10 @@ class RequestFactory {
 
 		if (query instanceof NativeSearchQuery) {
 			prepareNativeSearch(searchRequestBuilder, (NativeSearchQuery) query);
+		}
+
+		if (query.getTrackTotalHits()) {
+			searchRequestBuilder.setTrackTotalHits(query.getTrackTotalHits());
 		}
 
 		return searchRequestBuilder;

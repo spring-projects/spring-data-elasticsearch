@@ -54,6 +54,7 @@ abstract class AbstractQuery implements Query {
 	protected String preference;
 	protected Integer maxResults;
 	protected HighlightQuery highlightQuery;
+	private boolean trackTotalHits = false;
 
 	@Override
 	public Sort getSort() {
@@ -208,4 +209,13 @@ abstract class AbstractQuery implements Query {
 		return Optional.ofNullable(highlightQuery);
 	}
 
+	@Override
+	public void setTrackTotalHits(boolean trackTotalHits) {
+		this.trackTotalHits = trackTotalHits;
+	}
+
+	@Override
+	public boolean getTrackTotalHits() {
+		return trackTotalHits;
+	}
 }
