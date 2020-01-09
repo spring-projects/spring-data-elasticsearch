@@ -202,4 +202,24 @@ public interface Query {
 	default Optional<HighlightQuery> getHighlightQuery() {
 		return Optional.empty();
 	}
+
+	/**
+	 * Sets the flag whether to set the Track_total_hits parameter on queries {@see <a href=
+	 * "https://www.elastic.co/guide/en/elasticsearch/reference/7.0/search-request-track-total-hits.html">Elasticseacrh
+	 * documentation</>}
+	 * 
+	 * @param trackTotalHits the value to set.
+	 * @since 4.0
+	 */
+	void setTrackTotalHits(boolean trackTotalHits);
+
+	/**
+	 * Sets the flag whether to set the Track_total_hits parameter on queries {@see <a href=
+	 * "https://www.elastic.co/guide/en/elasticsearch/reference/7.0/search-request-track-total-hits.html">Elasticseacrh
+	 * documentation</>}
+	 *
+	 * @return the set value.
+	 * @since 4.0
+	 */
+	boolean getTrackTotalHits();
 }
