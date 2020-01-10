@@ -212,8 +212,13 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	public long count(Query query, Class<?> clazz, IndexCoordinates index) {
 
+		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
+
+		final boolean trackTotalHits = query.getTrackTotalHits();
+		query.setTrackTotalHits(true);
 		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
+		query.setTrackTotalHits(trackTotalHits);
 
 		searchRequest.source().size(0);
 

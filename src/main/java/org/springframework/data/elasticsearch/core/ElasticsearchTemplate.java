@@ -185,9 +185,13 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	public long count(Query query, @Nullable Class<?> clazz, IndexCoordinates index) {
 
+		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
+		final boolean trackTotalHits = query.getTrackTotalHits();
+		query.setTrackTotalHits(true);
 		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, clazz, index);
+		query.setTrackTotalHits(trackTotalHits);
 		searchRequestBuilder.setSize(0);
 
 		return SearchHitsUtil.getTotalCount(getSearchResponse(searchRequestBuilder).getHits());

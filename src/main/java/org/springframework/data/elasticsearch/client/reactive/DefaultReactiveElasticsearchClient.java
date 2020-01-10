@@ -79,7 +79,6 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.core.CountRequest;
-import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
@@ -336,9 +335,10 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#count(org.springframework.http.HttpHeaders, org.elasticsearch.action.search.SearchRequest)
 	 */
 	@Override
-	public Mono<Long> count(HttpHeaders headers, CountRequest countRequest) {
-		return sendRequest(countRequest, RequestCreator.count(), CountResponse.class, headers) //
-				.map(CountResponse::getCount) //
+	public Mono<Long> count(HttpHeaders headers, SearchRequest searchRequest) {
+		return sendRequest(searchRequest, RequestCreator.search(), SearchResponse.class, headers) //
+				.map(SearchResponse::getHits) //
+				.map(searchHits -> searchHits.getTotalHits().value) //
 				.next();
 	}
 

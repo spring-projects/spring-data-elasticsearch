@@ -435,10 +435,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		return Flux.defer(() -> {
 			SearchRequest request = requestFactory.searchRequest(query, clazz, index);
-
-			if (indicesOptions != null) {
-				request.indicesOptions(indicesOptions);
-			}
+			request = prepareSearchRequest(request);
 
 			if (query.getPageable().isPaged() || query.isLimiting()) {
 				return doFind(request);
@@ -455,17 +452,18 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	@Override
 	public Mono<Long> count(Query query, Class<?> entityType, IndexCoordinates index) {
-		return doCount(query, getPersistentEntityFor(entityType), index);
+		return doCount(query, entityType, index);
 	}
 
-	private Mono<Long> doCount(Query query, ElasticsearchPersistentEntity<?> entity, IndexCoordinates index) {
+	private Mono<Long> doCount(Query query, Class<?> entityType, IndexCoordinates index) {
 		return Mono.defer(() -> {
 
-			CountRequest countRequest = buildCountRequest(query, entity, index);
-			CountRequest request = prepareCountRequest(countRequest);
+			SearchRequest request = requestFactory.searchRequest(query, entityType, index);
+			request = prepareSearchRequest(request);
+			request.source().size(0);
+			request.source().trackTotalHits(true);
 			return doCount(request);
 		});
-
 	}
 
 	private CountRequest buildCountRequest(Query query, ElasticsearchPersistentEntity<?> entity, IndexCoordinates index) {
@@ -524,17 +522,17 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	/**
 	 * Customization hook on the actual execution result {@link Publisher}. <br />
 	 *
-	 * @param request the already prepared {@link CountRequest} ready to be executed.
+	 * @param request the already prepared {@link SearchRequest} ready to be executed.
 	 * @return a {@link Mono} emitting the result of the operation.
 	 */
-	protected Mono<Long> doCount(CountRequest request) {
+	protected Mono<Long> doCount(SearchRequest request) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
 			QUERY_LOGGER.debug("Executing doCount: {}", request);
 		}
 
 		return Mono.from(execute(client -> client.count(request))) //
-				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
+				.onErrorResume(NoSuchIndexException.class, it -> Mono.just(0L));
 	}
 
 	/**
@@ -606,22 +604,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		}
 
 		return mappedSort;
-	}
-
-	/**
-	 * Customization hook to modify a generated {@link SearchRequest} prior to its execution. Eg. by setting the
-	 * {@link SearchRequest#indicesOptions(IndicesOptions) indices options} if applicable.
-	 *
-	 * @param request the generated {@link CountRequest}.
-	 * @return never {@literal null}.
-	 */
-	protected CountRequest prepareCountRequest(CountRequest request) {
-
-		if (indicesOptions == null) {
-			return request;
-		}
-
-		return request.indicesOptions(indicesOptions);
 	}
 
 	/**
