@@ -184,9 +184,9 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		Assert.notNull(entityStream, "EntityStream must not be null!");
 		return Flux.from(entityStream) //
-				.map(o -> {
+				.map(entity -> {
 
-					ID id = entityInformation.getId(o);
+					ID id = entityInformation.getId(entity);
 					if (id == null) {
 						throw new IllegalStateException("Entity id must not be null!");
 					}

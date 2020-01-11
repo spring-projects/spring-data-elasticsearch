@@ -164,15 +164,17 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	@Override
 	public <T> Flux<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
 
-		Assert.notNull(index, "index must not be null");
+		Assert.notNull(index, "Index must not be null");
+        Assert.notNull(clazz, "Class must not be null");
+        Assert.notNull(query, "Query must not be null");
 		Assert.notEmpty(query.getIds(), "No Id define for Query");
 
 		MultiGetRequest request = requestFactory.multiGetRequest(query, index);
-		return Flux.from(execute(cl -> cl.multiGet(request))) //
+		return Flux.from(execute(client -> client.multiGet(request))) //
 				.handle((result, sink) -> {
 
 					Document document = DocumentAdapters.from(result);
-					T entity = getElasticsearchConverter().mapDocument(document, clazz);
+					T entity = converter.mapDocument(document, clazz);
 					if (entity != null) {
 						sink.next(entity);
 					}
@@ -184,6 +186,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Assert.notNull(queries, "List of UpdateQuery must not be null");
 		Assert.notNull(bulkOptions, "BulkOptions must not be null");
+        Assert.notNull(index, "Index must not be null");
 
 		return doBulkOperation(queries, bulkOptions, index).then();
 	}
@@ -212,8 +215,9 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		if (bulkResponse.hasFailures()) {
 			Map<String, String> failedDocuments = new HashMap<>();
 			for (BulkItemResponse item : bulkResponse.getItems()) {
-				if (item.isFailed())
-					failedDocuments.put(item.getId(), item.getFailureMessage());
+				if (item.isFailed()) {
+                    failedDocuments.put(item.getId(), item.getFailureMessage());
+                }
 			}
 			ElasticsearchException exception = new ElasticsearchException(
 					"Bulk operation has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["

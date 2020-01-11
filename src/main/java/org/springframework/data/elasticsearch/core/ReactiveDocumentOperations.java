@@ -93,6 +93,7 @@ public interface ReactiveDocumentOperations {
 	 * @param index the target index, must not be {@literal null}
 	 * @param <T>
 	 * @return a {@link Flux} emitting saved entities.
+	 * @since 4.0
 	 */
 	default <T> Flux<T> saveAll(Iterable<T> entities, IndexCoordinates index) {
 		List<T> entityList = new ArrayList<>();
@@ -108,6 +109,7 @@ public interface ReactiveDocumentOperations {
 	 * @param index the target index, must not be {@literal null}
 	 * @param <T>
 	 * @return a {@link Flux} emitting saved entities.
+	 * @since 4.0
 	 */
 	<T> Flux<T> saveAll(Mono<? extends Collection<? extends T>> entities, IndexCoordinates index);
 
@@ -118,6 +120,7 @@ public interface ReactiveDocumentOperations {
 	 * @param clazz the type of the object to be returned
 	 * @param index the index(es) from which the objects are read.
 	 * @return flux with list of nullable objects
+	 * @since 4.0
 	 */
 	<T> Flux<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
 
@@ -125,6 +128,7 @@ public interface ReactiveDocumentOperations {
 	 * Bulk update all objects. Will do update.
 	 *
 	 * @param queries the queries to execute in bulk
+	 * @since 4.0
 	 */
 	default Mono<Void> bulkUpdate(List<UpdateQuery> queries, IndexCoordinates index) {
 		return bulkUpdate(queries, BulkOptions.defaultOptions(), index);
@@ -135,6 +139,7 @@ public interface ReactiveDocumentOperations {
 	 *
 	 * @param queries the queries to execute in bulk
 	 * @param bulkOptions options to be added to the bulk request
+	 * @since 4.0
 	 */
 	Mono<Void> bulkUpdate(List<UpdateQuery> queries, BulkOptions bulkOptions, IndexCoordinates index);
 
