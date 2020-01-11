@@ -25,6 +25,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.tcp.ProxyProvider;
 import reactor.netty.tcp.TcpClient;
 
 import java.io.IOException;
@@ -198,10 +199,20 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		}
 
 		if (!soTimeout.isNegative()) {
-
 			tcpClient = tcpClient.doOnConnected(connection -> connection //
 					.addHandlerLast(new ReadTimeoutHandler(soTimeout.toMillis(), TimeUnit.MILLISECONDS))
 					.addHandlerLast(new WriteTimeoutHandler(soTimeout.toMillis(), TimeUnit.MILLISECONDS)));
+		}
+
+		if (clientConfiguration.getProxy().isPresent()) {
+			String proxy = clientConfiguration.getProxy().get();
+			String[] hostPort = proxy.split(":");
+
+			if (hostPort.length != 2) {
+				throw new IllegalArgumentException("invalid proxy configuration " + proxy + ", should be \"host:port\"");
+			}
+			tcpClient = tcpClient.proxy(proxyOptions -> proxyOptions.type(ProxyProvider.Proxy.HTTP).host(hostPort[0])
+					.port(Integer.parseInt(hostPort[1])));
 		}
 
 		String scheme = "http";
