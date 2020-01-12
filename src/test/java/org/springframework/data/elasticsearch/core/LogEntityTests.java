@@ -62,11 +62,10 @@ public class LogEntityTests {
 
 	private final IndexCoordinates index = IndexCoordinates.of("test-index-log-core").withTypes("test-log-type");
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() throws ParseException {
-		indexOperations = operations.getIndexOperations();
 		IndexInitializer.init(indexOperations, LogEntity.class);
 
 		SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");

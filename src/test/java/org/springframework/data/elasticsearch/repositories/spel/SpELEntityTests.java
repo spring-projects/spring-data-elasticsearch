@@ -55,11 +55,10 @@ public class SpELEntityTests {
 	@Autowired private SpELRepository repository;
 
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations();
 		IndexInitializer.init(indexOperations, SpELEntity.class);
 	}
 
@@ -103,8 +102,7 @@ public class SpELEntityTests {
 	 *
 	 * @author Artur Konczak
 	 */
-	@Document(indexName = "#{'test-index-abz'+'-'+'entity'}", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "#{'test-index-abz'+'-'+'entity'}", replicas = 0, refreshInterval = "-1")
 	static class SpELEntity {
 
 		@Id private String id;

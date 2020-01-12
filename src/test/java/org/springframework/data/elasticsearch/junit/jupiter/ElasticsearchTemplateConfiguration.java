@@ -19,7 +19,9 @@ import org.elasticsearch.client.Client;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 
 /**
@@ -42,4 +44,8 @@ public class ElasticsearchTemplateConfiguration extends ElasticsearchConfigurati
 		return new ElasticsearchTemplate(elasticsearchClient, elasticsearchConverter);
 	}
 
+	@Bean
+	IndexOperations indexOperations(ElasticsearchOperations elasticsearchOperations) {
+		return elasticsearchOperations.getIndexOperations();
+	}
 }

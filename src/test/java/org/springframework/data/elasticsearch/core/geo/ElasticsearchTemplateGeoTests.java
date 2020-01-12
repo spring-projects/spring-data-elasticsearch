@@ -78,14 +78,10 @@ public class ElasticsearchTemplateGeoTests {
 			.withTypes("geo-class-point-type");
 
 	@Autowired private ElasticsearchOperations operations;
-
-	private IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-
-		indexOperations = operations.getIndexOperations();
-
 		IndexInitializer.init(indexOperations, AuthorMarkerEntity.class);
 		IndexInitializer.init(indexOperations, LocationMarkerEntity.class);
 	}
@@ -375,8 +371,7 @@ public class ElasticsearchTemplateGeoTests {
 	 * @author Mohsin Husen
 	 */
 	@Data
-	@Document(indexName = "test-index-author-marker-core-geo", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-author-marker-core-geo", replicas = 0, refreshInterval = "-1")
 	static class AuthorMarkerEntity {
 
 		@Id private String id;
@@ -434,8 +429,7 @@ public class ElasticsearchTemplateGeoTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-location-marker-core-geo",
-			replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-location-marker-core-geo", replicas = 0, refreshInterval = "-1")
 	static class LocationMarkerEntity {
 
 		@Id private String id;

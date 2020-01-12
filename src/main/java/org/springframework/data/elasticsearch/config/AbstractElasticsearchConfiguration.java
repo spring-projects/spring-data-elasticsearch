@@ -19,6 +19,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 
 /**
@@ -46,5 +47,10 @@ public abstract class AbstractElasticsearchConfiguration extends ElasticsearchCo
 	@Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
 	public ElasticsearchOperations elasticsearchOperations(ElasticsearchConverter elasticsearchConverter) {
 		return new ElasticsearchRestTemplate(elasticsearchClient(), elasticsearchConverter);
+	}
+
+	@Bean
+	public IndexOperations indexOperations(ElasticsearchOperations elasticsearchOperations) {
+		return elasticsearchOperations.getIndexOperations();
 	}
 }

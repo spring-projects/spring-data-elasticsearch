@@ -77,11 +77,10 @@ public class ElasticsearchTemplateAggregationTests {
 	static final String INDEX_NAME = "test-index-articles-core-aggregation";
 
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations();
 		IndexInitializer.init(indexOperations, ArticleEntity.class);
 
 		IndexQuery article1 = new ArticleEntityBuilder("1").title("article four").subject("computing")
@@ -120,7 +119,8 @@ public class ElasticsearchTemplateAggregationTests {
 				.addAggregation(terms("subjects").field("subject")) //
 				.build();
 		// when
-		SearchHits<ArticleEntity> searchHits = operations.search(searchQuery, ArticleEntity.class, IndexCoordinates.of(INDEX_NAME));
+		SearchHits<ArticleEntity> searchHits = operations.search(searchQuery, ArticleEntity.class,
+				IndexCoordinates.of(INDEX_NAME));
 		Aggregations aggregations = searchHits.getAggregations();
 
 		// then
@@ -135,8 +135,7 @@ public class ElasticsearchTemplateAggregationTests {
 	 * @author Mohsin Husen
 	 */
 	@Data
-	@Document(indexName = "test-index-articles-core-aggregation", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-articles-core-aggregation", replicas = 0, refreshInterval = "-1")
 	static class ArticleEntity {
 
 		@Id private String id;

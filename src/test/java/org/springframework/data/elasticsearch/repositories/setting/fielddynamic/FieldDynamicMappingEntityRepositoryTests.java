@@ -52,15 +52,11 @@ public class FieldDynamicMappingEntityRepositoryTests {
 	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
 
-	@Autowired private FieldDynamicMappingEntityRepository repository;
-
 	@Autowired private ElasticsearchOperations operations;
-
-	private IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations();
 		IndexInitializer.init(indexOperations, FieldDynamicMappingEntity.class);
 	}
 

@@ -81,11 +81,10 @@ public class SimpleElasticsearchRepositoryTests {
 	@Autowired private SampleElasticsearchRepository repository;
 
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations();
 		IndexInitializer.init(indexOperations, SampleEntity.class);
 	}
 

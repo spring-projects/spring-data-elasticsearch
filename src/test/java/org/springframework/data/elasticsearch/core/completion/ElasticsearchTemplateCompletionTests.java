@@ -62,13 +62,10 @@ public class ElasticsearchTemplateCompletionTests {
 	static class Config {}
 
 	@Autowired private ElasticsearchOperations operations;
-
-	IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	private void setup() {
-		indexOperations = operations.getIndexOperations();
-
 		IndexInitializer.init(indexOperations, CompletionEntity.class);
 		IndexInitializer.init(indexOperations, AnnotatedCompletionEntity.class);
 	}
@@ -244,8 +241,7 @@ public class ElasticsearchTemplateCompletionTests {
 	/**
 	 * @author Mewes Kochheim
 	 */
-	@Document(indexName = "test-index-core-completion", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-core-completion", replicas = 0, refreshInterval = "-1")
 	static class CompletionEntity {
 
 		@Id private String id;
@@ -328,8 +324,7 @@ public class ElasticsearchTemplateCompletionTests {
 	/**
 	 * @author Mewes Kochheim
 	 */
-	@Document(indexName = "test-index-annotated-completion", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-annotated-completion", replicas = 0, refreshInterval = "-1")
 	static class AnnotatedCompletionEntity {
 
 		@Id private String id;

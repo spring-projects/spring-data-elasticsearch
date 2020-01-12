@@ -37,7 +37,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -66,13 +65,10 @@ class QueryKeywordsTests {
 
 	@Autowired private ProductRepository repository;
 
-	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations();
-
 		IndexInitializer.init(indexOperations, Product.class);
 
 		Product product1 = Product.builder().id("1").name("Sugar").text("Cane sugar").price(1.0f).available(false)
@@ -275,8 +271,7 @@ class QueryKeywordsTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-product-query-keywords", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-product-query-keywords", replicas = 0, refreshInterval = "-1")
 	static class Product {
 
 		@Id private String id;
