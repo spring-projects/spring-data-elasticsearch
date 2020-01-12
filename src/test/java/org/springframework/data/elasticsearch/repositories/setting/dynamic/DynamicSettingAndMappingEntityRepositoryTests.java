@@ -61,13 +61,12 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 	static class Config {}
 
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@Autowired private DynamicSettingAndMappingEntityRepository repository;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations();
 		IndexInitializer.init(indexOperations, DynamicSettingAndMappingEntity.class);
 	}
 

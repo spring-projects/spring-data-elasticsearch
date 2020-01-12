@@ -68,11 +68,10 @@ import org.springframework.test.context.ContextConfiguration;
 public class NestedObjectTests {
 
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations();
 		IndexInitializer.init(indexOperations, Book.class);
 		IndexInitializer.init(indexOperations, Person.class);
 		IndexInitializer.init(indexOperations, PersonMultipleLevelNested.class);
@@ -388,8 +387,7 @@ public class NestedObjectTests {
 
 	@Setter
 	@Getter
-	@Document(indexName = "test-index-book-nested-objects", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-book-nested-objects", replicas = 0, refreshInterval = "-1")
 	static class Book {
 
 		@Id private String id;
@@ -427,8 +425,7 @@ public class NestedObjectTests {
 	 * @author Artur Konczak
 	 */
 	@Data
-	@Document(indexName = "test-index-person-multiple-level-nested", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-person-multiple-level-nested", replicas = 0, refreshInterval = "-1")
 	static class PersonMultipleLevelNested {
 
 		@Id private String id;

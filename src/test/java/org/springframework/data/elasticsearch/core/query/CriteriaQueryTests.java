@@ -67,12 +67,10 @@ public class CriteriaQueryTests {
 	private final IndexCoordinates index = IndexCoordinates.of("test-index-sample-core-query").withTypes("test-type");
 
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations();
-
 		indexOperations.deleteIndex(SampleEntity.class);
 		indexOperations.createIndex(SampleEntity.class);
 		indexOperations.putMapping(SampleEntity.class);
@@ -846,8 +844,7 @@ public class CriteriaQueryTests {
 	@Getter
 	@NoArgsConstructor
 	@AllArgsConstructor
-	@Document(indexName = "test-index-sample-core-query", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-core-query", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;

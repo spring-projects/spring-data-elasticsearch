@@ -36,11 +36,11 @@ public class IndexInitializer {
 	 */
 	@Deprecated
 	public static void init(ElasticsearchOperations operations, Class<?> clazz) {
-
-		operations.getIndexOperations().deleteIndex(clazz);
-		operations.getIndexOperations().createIndex(clazz);
-		operations.getIndexOperations().putMapping(clazz);
-		operations.getIndexOperations().refresh(clazz);
+		IndexOperations indexOperations = operations.getIndexOperations();
+		indexOperations.deleteIndex(clazz);
+		indexOperations.createIndex(clazz);
+		indexOperations.putMapping(clazz);
+		indexOperations.refresh(clazz);
 	}
 
 	/**
@@ -50,7 +50,6 @@ public class IndexInitializer {
 	 * @param clazz
 	 */
 	public static void init(IndexOperations operations, Class<?> clazz) {
-
 		operations.deleteIndex(clazz);
 		operations.createIndex(clazz);
 		operations.putMapping(clazz);

@@ -66,12 +66,10 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 	static class Config {}
 
 	@Autowired private ElasticsearchOperations operations;
-
-	private IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	void setup() {
-		indexOperations = operations.getIndexOperations();
 		indexOperations.deleteIndex(ContextCompletionEntity.class);
 	}
 
@@ -243,8 +241,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 	 * @author Mewes Kochheim
 	 * @author Robert Gruendler
 	 */
-	@Document(indexName = "test-index-context-completion", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-context-completion", replicas = 0, refreshInterval = "-1")
 	static class ContextCompletionEntity {
 
 		public static final String LANGUAGE_CATEGORY = "language";

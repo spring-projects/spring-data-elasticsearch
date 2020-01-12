@@ -29,7 +29,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -53,12 +52,10 @@ public class ComplexCustomMethodRepositoryTests {
 
 	@Autowired private ComplexElasticsearchRepository complexRepository;
 
-	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations();
 		IndexInitializer.init(indexOperations, SampleEntity.class);
 	}
 
@@ -80,8 +77,8 @@ public class ComplexCustomMethodRepositoryTests {
 	}
 
 	@Data
-	@Document(indexName = "test-index-sample-repositories-complex-custommethod-autowiring",
-			replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-repositories-complex-custommethod-autowiring", replicas = 0,
+			refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;

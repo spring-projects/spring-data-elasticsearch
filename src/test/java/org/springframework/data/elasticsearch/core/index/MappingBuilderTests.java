@@ -28,7 +28,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.IOException;
 import java.lang.Boolean;
 import java.lang.Double;
 import java.lang.Integer;
@@ -84,12 +83,10 @@ import org.springframework.test.context.ContextConfiguration;
 public class MappingBuilderTests extends MappingContextBaseTests {
 
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-
-		indexOperations = operations.getIndexOperations();
 
 		indexOperations.deleteIndex(StockPrice.class);
 		indexOperations.deleteIndex(SimpleRecursiveEntity.class);
@@ -113,8 +110,8 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@Test // DATAES-568
 	public void testInfiniteLoopAvoidance() throws JSONException {
 
-		String expected = "{\"properties\":{\"message\":{\"store\":true,\""
-				+ "type\":\"text\",\"index\":false," + "\"analyzer\":\"standard\"}}}";
+		String expected = "{\"properties\":{\"message\":{\"store\":true,\"" + "type\":\"text\",\"index\":false,"
+				+ "\"analyzer\":\"standard\"}}}";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleTransientEntity.class);
 
@@ -319,8 +316,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldUseFieldNameOnId() throws JSONException {
 
 		// given
-		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true}"
-				+ "}}";
+		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true}" + "}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.IdEntity.class);
@@ -648,8 +644,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-book-mapping-builder", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-book-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class Book {
 
 		@Id private String id;
@@ -665,8 +660,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	 * @author Stuart Stevenson
 	 * @author Mohsin Husen
 	 */
-	@Document(indexName = "test-index-simple-recursive-mapping-builder",
-			replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-simple-recursive-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class SimpleRecursiveEntity {
 
 		@Id private String id;
@@ -701,8 +695,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-normalizer-mapping-builder", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-normalizer-mapping-builder", replicas = 0, refreshInterval = "-1")
 	@Setting(settingPath = "/settings/test-normalizer.json")
 	static class NormalizerEntity {
 
@@ -743,8 +736,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	/**
 	 * @author Kevin Leturc
 	 */
-	@Document(indexName = "test-index-sample-inherited-mapping-builder", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-inherited-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class SampleInheritedEntity extends AbstractInheritedEntity {
 
 		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
@@ -801,8 +793,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-stock-mapping-builder", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-stock-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class StockPrice {
 
 		@Id private String id;
@@ -841,8 +832,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	/**
 	 * @author Jakub Vavrik
 	 */
-	@Document(indexName = "test-index-recursive-mapping-mapping-builder", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-recursive-mapping-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class SampleTransientEntity {
 
 		@Id private String id;
@@ -898,8 +888,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-geo-mapping-builder", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-geo-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class GeoEntity {
 
 		@Id private String id;
