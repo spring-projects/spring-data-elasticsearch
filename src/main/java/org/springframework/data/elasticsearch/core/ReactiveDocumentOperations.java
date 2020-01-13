@@ -16,16 +16,23 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.util.Assert;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import org.springframework.util.Assert;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * The reactive operations for the
  * <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs.html">Elasticsearch Document APIs</a>.
  *
  * @author Peter-Josef Meisch
+ * @author Aleksei Arsenev
  * @since 4.0
  */
 public interface ReactiveDocumentOperations {
@@ -77,6 +84,64 @@ public interface ReactiveDocumentOperations {
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
 	<T> Mono<T> save(T entity, IndexCoordinates index);
+
+	/**
+	 * Index entities under the given {@literal type} in the given {@literal index}. If the {@literal index} is
+	 * {@literal null} or empty the index name provided via entity metadata is used. Same for the {@literal type}.
+	 *
+	 * @param entities must not be {@literal null}.
+	 * @param index the target index, must not be {@literal null}
+	 * @param <T>
+	 * @return a {@link Flux} emitting saved entities.
+	 * @since 4.0
+	 */
+	default <T> Flux<T> saveAll(Iterable<T> entities, IndexCoordinates index) {
+		List<T> entityList = new ArrayList<>();
+		entities.forEach(entityList::add);
+		return saveAll(Mono.just(entityList), index);
+	}
+
+	/**
+	 * Index entities under the given {@literal type} in the given {@literal index}. If the {@literal index} is
+	 * {@literal null} or empty the index name provided via entity metadata is used. Same for the {@literal type}.
+	 *
+	 * @param entities must not be {@literal null}.
+	 * @param index the target index, must not be {@literal null}
+	 * @param <T>
+	 * @return a {@link Flux} emitting saved entities.
+	 * @since 4.0
+	 */
+	<T> Flux<T> saveAll(Mono<? extends Collection<? extends T>> entities, IndexCoordinates index);
+
+	/**
+	 * Execute a multiGet against elasticsearch for the given ids.
+	 *
+	 * @param query the query defining the ids of the objects to get
+	 * @param clazz the type of the object to be returned
+	 * @param index the index(es) from which the objects are read.
+	 * @return flux with list of nullable objects
+	 * @since 4.0
+	 */
+	<T> Flux<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
+
+	/**
+	 * Bulk update all objects. Will do update.
+	 *
+	 * @param queries the queries to execute in bulk
+	 * @since 4.0
+	 */
+	default Mono<Void> bulkUpdate(List<UpdateQuery> queries, IndexCoordinates index) {
+		return bulkUpdate(queries, BulkOptions.defaultOptions(), index);
+	}
+
+	/**
+	 * Bulk update all objects. Will do update.
+	 *
+	 * @param queries the queries to execute in bulk
+	 * @param bulkOptions options to be added to the bulk request
+	 * @since 4.0
+	 */
+	Mono<Void> bulkUpdate(List<UpdateQuery> queries, BulkOptions bulkOptions, IndexCoordinates index);
 
 	/**
 	 * Find the document with the given {@literal id} mapped onto the given {@literal entityType}.

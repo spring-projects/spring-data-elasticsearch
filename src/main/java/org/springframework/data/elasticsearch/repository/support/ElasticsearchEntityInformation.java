@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.repository.support;
 import org.elasticsearch.index.VersionType;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.repository.core.EntityInformation;
+import org.springframework.lang.Nullable;
 
 /**
  * @param <T>
@@ -27,6 +28,7 @@ import org.springframework.data.repository.core.EntityInformation;
  * @author Christoph Strobl
  * @author Ivan Greene
  * @author Peter-Josef Meisch
+ * @author Aleksei Arsenev
  */
 public interface ElasticsearchEntityInformation<T, ID> extends EntityInformation<T, ID> {
 
@@ -34,9 +36,11 @@ public interface ElasticsearchEntityInformation<T, ID> extends EntityInformation
 
 	IndexCoordinates getIndexCoordinates();
 
+	@Nullable
 	Long getVersion(T entity);
 
 	VersionType getVersionType();
 
+	@Nullable
 	String getParentId(T entity);
 }
