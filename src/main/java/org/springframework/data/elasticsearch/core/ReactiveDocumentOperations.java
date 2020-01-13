@@ -15,17 +15,18 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
-import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.BulkOptions;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.util.Assert;
 
 /**
  * The reactive operations for the
@@ -230,6 +231,7 @@ public interface ReactiveDocumentOperations {
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
 	Mono<String> deleteById(String id, Class<?> entityType, IndexCoordinates index);
+
 	/**
 	 * Delete the documents matching the given {@link Query} extracting index and type from entity metadata.
 	 *

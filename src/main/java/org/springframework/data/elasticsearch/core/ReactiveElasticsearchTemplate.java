@@ -15,6 +15,20 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.elasticsearch.index.VersionType.*;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -57,18 +71,17 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.BulkOptions;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.elasticsearch.index.VersionType.EXTERNAL;
 
 /**
  * @author Christoph Strobl
@@ -165,8 +178,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	public <T> Flux<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
 
 		Assert.notNull(index, "Index must not be null");
-        Assert.notNull(clazz, "Class must not be null");
-        Assert.notNull(query, "Query must not be null");
+		Assert.notNull(clazz, "Class must not be null");
+		Assert.notNull(query, "Query must not be null");
 		Assert.notEmpty(query.getIds(), "No Id define for Query");
 
 		MultiGetRequest request = requestFactory.multiGetRequest(query, index);
@@ -186,7 +199,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Assert.notNull(queries, "List of UpdateQuery must not be null");
 		Assert.notNull(bulkOptions, "BulkOptions must not be null");
-        Assert.notNull(index, "Index must not be null");
+		Assert.notNull(index, "Index must not be null");
 
 		return doBulkOperation(queries, bulkOptions, index).then();
 	}
@@ -215,9 +228,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		if (bulkResponse.hasFailures()) {
 			Map<String, String> failedDocuments = new HashMap<>();
 			for (BulkItemResponse item : bulkResponse.getItems()) {
+
 				if (item.isFailed()) {
-                    failedDocuments.put(item.getId(), item.getFailureMessage());
-                }
+					failedDocuments.put(item.getId(), item.getFailureMessage());
+				}
 			}
 			ElasticsearchException exception = new ElasticsearchException(
 					"Bulk operation has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
@@ -270,8 +284,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	private IndexRequest getIndexRequest(Object value, AdaptibleEntity<?> entity, IndexCoordinates index) {
 		Object id = entity.getId();
 
-		IndexRequest request = id != null
-				? new IndexRequest(index.getIndexName()).id(converter.convertId(id))
+		IndexRequest request = id != null ? new IndexRequest(index.getIndexName()).id(converter.convertId(id))
 				: new IndexRequest(index.getIndexName());
 
 		request.source(converter.mapObject(value).toJson(), Requests.INDEX_CONTENT_TYPE);
@@ -279,6 +292,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		if (entity.isVersionedEntity()) {
 
 			Number version = entity.getVersion();
+
 			if (version != null) {
 				request.version(version.longValue());
 				request.versionType(EXTERNAL);
@@ -294,8 +308,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			query.setId(id.toString());
 		}
 		query.setObject(value);
+
 		if (entity.isVersionedEntity()) {
 			Number version = entity.getVersion();
+
 			if (version != null) {
 				query.setVersion(version.longValue());
 			}
