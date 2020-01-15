@@ -1,6 +1,15 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.4.RELEASE (2020-01-15)
+---------------------------------------------
+* DATAES-725 - Update copyright years to 2020.
+* DATAES-720 - SimpleReactiveElasticsearchRepository findAll() returns only 10 elements.
+* DATAES-719 - Add customization hook for reactive WebClient.
+* DATAES-705 - Add support for PathPrefix  to clients in 3.2.x.
+* DATAES-704 - Release 3.2.4 (Moore SR4).
+
+
 Changes in version 3.1.15.RELEASE (2020-01-15)
 ----------------------------------------------
 * DATAES-725 - Update copyright years to 2020.
@@ -928,6 +937,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
