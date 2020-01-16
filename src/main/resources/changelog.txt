@@ -1,6 +1,60 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.0.M1 (2020-01-16)
+----------------------------------------
+* DATAES-727 - Use track_total_hits parameter for count queries.
+* DATAES-725 - Update copyright years to 2020.
+* DATAES-724 - Provide IndexOperations bean.
+* DATAES-723 - Cleanup ElasticsearchRepository interface.
+* DATAES-722 - Return total count relation in the SearchHits object.
+* DATAES-721 - Deprecation and Warnings cleanup.
+* DATAES-720 - SimpleReactiveElasticsearchRepository findAll() returns only 10 elements.
+* DATAES-719 - Add customization hook for reactive WebClient.
+* DATAES-718 - Deprecate @Score and scoreProperty.
+* DATAES-717 - Enable Repositories to return a SearchHits instance instead of a list.
+* DATAES-716 - Add Value mapping to the ElasticsearchMappingConverter.
+* DATAES-715 - Highlight results should be returned in the SearchHits.
+* DATAES-714 - Sort results should be returned in the SearchHits.
+* DATAES-713 - Transfer returned aggregations from the AggregatedPage to the SearchHits.
+* DATAES-711 - Update to Elasticsearch 7.5.
+* DATAES-709 - Add parameter to include default settings on setting request.
+* DATAES-702 - Travis CI builds currently broken.
+* DATAES-701 - Enable proxy support for the reactive rest template.
+* DATAES-700 - Enable proxy support for RestClient.
+* DATAES-697 - Query refactoring cleanup.
+* DATAES-693 - Support for source fetching in update operations.
+* DATAES-690 - Enable builds on JDK 11+.
+* DATAES-688 - Remove unneeded SearchQuery subinterface.
+* DATAES-684 - Implement Bulk Request for Reactive.
+* DATAES-680 - ReactiveElasticsearchTemplate should use the count API.
+* DATAES-677 - Update to Elasticsearch 7.4.1.
+* DATAES-676 - fix documentation to reflect the changes in API restructuring.
+* DATAES-675 - migrate tests to JUnit 5.
+* DATAES-673 - Create a Ssl Rest Client using SslContext and HostnameVerifier.
+* DATAES-672 - Introduce SearchHit to enrich an Entity type.
+* DATAES-671 - Missing indicesOptions support for scrolling queries.
+* DATAES-670 - fix version compatibility matrix in documentation.
+* DATAES-666 - Rebase branch 4.0.x onto master and merge it.
+* DATAES-665 - Javadoc not deployed.
+* DATAES-663 - Release 4.0 M1 (Neumann).
+* DATAES-661 - Support track_total_hits request parameter.
+* DATAES-659 - Move MappingElasticsearchConverter to correct package.
+* DATAES-658 - Update 4.0.x to ES 7.3.2.
+* DATAES-654 - Add Junit 5 support.
+* DATAES-651 - Fix regression from escaping.
+* DATAES-650 - Add support for pathPrefix to ClientConfiguration.
+* DATAES-647 - In and NotIn uses should instead of terms-query.
+* DATAES-639 - Add ignore_above mapping parameter support.
+* DATAES-638 - Remove redundant public modifiers in @MultiField.
+* DATAES-637 - Change branch 4.0. to use Elasticsearch 7.3.
+* DATAES-635 - Create branch 4.0.x and integrate the changes from the existing 4.x branch.
+* DATAES-634 - Rearrange methods in Template API.
+* DATAES-633 - Introduce value object to capture index type/index name.
+* DATAES-632 - Use single Query type in Template API methods.
+* DATAES-631 - Consolidate query objects.
+
+
 Changes in version 3.2.4.RELEASE (2020-01-15)
 ---------------------------------------------
 * DATAES-725 - Update copyright years to 2020.
@@ -937,6 +991,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
