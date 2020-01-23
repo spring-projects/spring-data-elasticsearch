@@ -41,6 +41,8 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
+import org.elasticsearch.common.geo.GeoDistance;
+import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -56,9 +58,11 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
 import org.elasticsearch.search.sort.ScoreSortBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortMode;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
@@ -771,17 +775,29 @@ class RequestFactory {
 					: null;
 			String fieldName = property != null ? property.getFieldName() : order.getProperty();
 
-			FieldSortBuilder sort = SortBuilders //
-					.fieldSort(fieldName) //
-					.order(sortOrder);
+			if (order instanceof GeoDistanceOrder) {
+				GeoDistanceOrder geoDistanceOrder = (GeoDistanceOrder) order;
 
-			if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
-				sort.missing("_first");
-			} else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
-				sort.missing("_last");
+				GeoDistanceSortBuilder sort = SortBuilders.geoDistanceSort(fieldName, geoDistanceOrder.getGeoPoint().getLat(),
+						geoDistanceOrder.getGeoPoint().getLon());
+
+				sort.geoDistance(GeoDistance.fromString(geoDistanceOrder.getDistanceType().name()));
+				sort.ignoreUnmapped(geoDistanceOrder.getIgnoreUnmapped());
+				sort.sortMode(SortMode.fromString(geoDistanceOrder.getMode().name()));
+				sort.unit(DistanceUnit.fromString(geoDistanceOrder.getUnit()));
+				return sort;
+			} else {
+				FieldSortBuilder sort = SortBuilders //
+						.fieldSort(fieldName) //
+						.order(sortOrder);
+
+				if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
+					sort.missing("_first");
+				} else if (order.getNullHandling() == Sort.NullHandling.NULLS_LAST) {
+					sort.missing("_last");
+				}
+				return sort;
 			}
-
-			return sort;
 		}
 	}
 

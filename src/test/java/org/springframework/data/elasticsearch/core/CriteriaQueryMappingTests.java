@@ -36,7 +36,7 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 /**
  * Tests for the mapping of {@link CriteriaQuery} by a
  * {@link org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter}. In the same package as
- * {@link CriteriaQueryProcessor} as this is needed to get the String represenation to assert.
+ * {@link CriteriaQueryProcessor} as this is needed to get the String representation to assert.
  * 
  * @author Peter-Josef Meisch
  */
@@ -59,8 +59,8 @@ public class CriteriaQueryMappingTests {
 	void shouldMapNamesAndConvertValuesInCriteriaQuery() throws JSONException {
 
 		// use POJO properties and types in the query building
-		CriteriaQuery criteriaQuery = new CriteriaQuery(
-				new Criteria("birthDate").between(LocalDate.of(1989, 11, 9), LocalDate.of(1990, 11, 9)).or("birthDate").is(LocalDate.of(2019, 12, 28)));
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("birthDate")
+				.between(LocalDate.of(1989, 11, 9), LocalDate.of(1990, 11, 9)).or("birthDate").is(LocalDate.of(2019, 12, 28)));
 
 		// mapped field name and converted parameter
 		String expected = '{' + //

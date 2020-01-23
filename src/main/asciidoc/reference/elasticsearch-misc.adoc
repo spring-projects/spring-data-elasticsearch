@@ -80,3 +80,17 @@ while (stream.hasNext()) {
 }
 ----
 ====
+
+[[elasticsearch.misc.sorts]]
+== Sort options
+
+In addition to the default sort options described <<repositories.paging-and-sorting>> Spring Data Elasticsearch has a `GeoDistanceOrder` class which can be used to have the result of a search operation ordered by geographical distance.
+
+If the class to be retrieved has a `GeoPoint` property named _location_, the following `Sort` would sort the results by distance to the given point:
+
+[source,java]
+----
+Sort.by(new GeoDistanceOrder("location", new GeoPoint(48.137154, 11.5761247)))
+----
+
+

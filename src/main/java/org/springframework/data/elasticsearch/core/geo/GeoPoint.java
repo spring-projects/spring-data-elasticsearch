@@ -22,6 +22,7 @@ import org.springframework.data.geo.Point;
  *
  * @author Franck Marchand
  * @author Mohsin Husen
+ * @author Peter-Josef Meisch
  */
 public class GeoPoint {
 
@@ -57,6 +58,14 @@ public class GeoPoint {
 
 	public static Point toPoint(GeoPoint point) {
 		return new Point(point.getLat(), point.getLon());
+	}
+
+	@Override
+	public String toString() {
+		return "GeoPoint{" +
+				"lat=" + lat +
+				", lon=" + lon +
+				'}';
 	}
 }
 
