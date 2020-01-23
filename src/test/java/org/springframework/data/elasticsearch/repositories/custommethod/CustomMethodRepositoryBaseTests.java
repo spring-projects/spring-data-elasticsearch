@@ -54,6 +54,7 @@ import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
@@ -1441,6 +1442,40 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat(searchHit.getHighlightField("type")).hasSize(1).contains("<em>abc</em>");
 	}
 
+	@Test // DATAES-734
+	void shouldUseGeoSortParameter() {
+		GeoPoint munich = new GeoPoint(48.137154, 11.5761247);
+		GeoPoint berlin = new GeoPoint(52.520008, 13.404954);
+		GeoPoint vienna = new GeoPoint(48.20849, 16.37208);
+		GeoPoint oslo = new GeoPoint(59.9127, 10.7461);
+
+		List<SampleEntity> entities = new ArrayList<>();
+
+		SampleEntity entity1 = new SampleEntity();
+		entity1.setId("berlin");
+		entity1.setLocation(berlin);
+		entities.add(entity1);
+
+		SampleEntity entity2 = new SampleEntity();
+		entity2.setId("vienna");
+		entity2.setLocation(vienna);
+		entities.add(entity2);
+
+		SampleEntity entity3 = new SampleEntity();
+		entity3.setId("oslo");
+		entity3.setLocation(oslo);
+		entities.add(entity3);
+
+		repository.saveAll(entities);
+
+		SearchHits<SampleEntity> searchHits = repository.searchBy(Sort.by(new GeoDistanceOrder("location", munich)));
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(3);
+		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo("vienna");
+		assertThat(searchHits.getSearchHit(1).getId()).isEqualTo("berlin");
+		assertThat(searchHits.getSearchHit(2).getId()).isEqualTo("oslo");
+	}
+
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
 
 		List<SampleEntity> entities = new ArrayList<>();
@@ -1588,6 +1623,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 		Stream<SearchHit<SampleEntity>> readByMessage(String message);
 
+		SearchHits<SampleEntity> searchBy(Sort sort);
 	}
 
 	/**
