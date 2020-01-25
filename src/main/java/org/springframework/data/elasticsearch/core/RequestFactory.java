@@ -560,6 +560,10 @@ class RequestFactory {
 			sourceBuilder.trackTotalHits(query.getTrackTotalHits());
 		}
 
+		if (StringUtils.hasLength(query.getRoute())) {
+			request.routing(query.getRoute());
+		}
+
 		request.source(sourceBuilder);
 		return request;
 	}
@@ -724,6 +728,10 @@ class RequestFactory {
 
 		if (query.getTrackTotalHits()) {
 			searchRequestBuilder.setTrackTotalHits(query.getTrackTotalHits());
+		}
+
+		if (StringUtils.hasLength(query.getRoute())) {
+			searchRequestBuilder.setRouting(query.getRoute());
 		}
 
 		return searchRequestBuilder;
