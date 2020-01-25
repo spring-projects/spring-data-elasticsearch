@@ -15,10 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import java.util.Collections;
 
+import org.elasticsearch.action.search.SearchRequest;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -101,6 +103,18 @@ class RequestFactoryTest {
 				.toString();
 
 		assertEquals(expected, searchRequest, false);
+	}
+
+	@Test // DATAES-449
+	void shouldAddRouting() throws JSONException {
+		String route = "route66";
+		CriteriaQuery query = new CriteriaQuery(new Criteria("lastName").is("Smith"));
+		query.setRoute(route);
+		converter.updateQuery(query, Person.class);
+
+		SearchRequest searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
+
+		assertThat(searchRequest.routing()).isEqualTo(route);
 	}
 
 	static class Person {
