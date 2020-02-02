@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -114,6 +115,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	// region DocumentOperations
 	@Override
 	public String index(IndexQuery query, IndexCoordinates index) {
+
+		if (query.getObject() != null) {
+			query.setObject(maybeCallBeforeIndex(query.getObject(), index));
+		}
+
 		IndexRequestBuilder indexRequestBuilder = requestFactory.indexRequestBuilder(client, query, index);
 		String documentId = indexRequestBuilder.execute().actionGet().getId();
 		// We should call this because we are not going through a mapper.
@@ -147,6 +153,12 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(queries, "List of IndexQuery must not be null");
 		Assert.notNull(bulkOptions, "BulkOptions must not be null");
 
+		queries.forEach(query -> {
+			if (query.getObject() != null) {
+				query.setObject(maybeCallBeforeIndex(query.getObject(), index));
+			}
+		});
+
 		doBulkOperation(queries, bulkOptions, index);
 	}
 
@@ -156,21 +168,26 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(queries, "List of UpdateQuery must not be null");
 		Assert.notNull(bulkOptions, "BulkOptions must not be null");
 
+		queries = queries.stream().map(query -> maybeCallBeforeUpdate(query, index)).collect(Collectors.toList());
+
 		doBulkOperation(queries, bulkOptions, index);
 	}
 
 	@Override
 	public String delete(String id, IndexCoordinates index) {
+		id = maybeCallBeforeDelete(id, index);
 		return client.prepareDelete(index.getIndexName(), IndexCoordinates.TYPE, id).execute().actionGet().getId();
 	}
 
 	@Override
 	public void delete(DeleteQuery deleteQuery, IndexCoordinates index) {
+		deleteQuery = maybeCallBeforeDelete(deleteQuery, index);
 		requestFactory.deleteByQueryRequestBuilder(client, deleteQuery, index).get();
 	}
 
 	@Override
 	public UpdateResponse update(UpdateQuery query, IndexCoordinates index) {
+		query = maybeCallBeforeUpdate(query, index);
 		UpdateRequestBuilder updateRequestBuilder = requestFactory.updateRequestBuilderFor(client, query, index);
 		return updateRequestBuilder.execute().actionGet();
 	}

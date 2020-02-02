@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -110,6 +111,11 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	// region DocumentOperations
 	@Override
 	public String index(IndexQuery query, IndexCoordinates index) {
+
+		if (query.getObject() != null) {
+			query.setObject(maybeCallBeforeIndex(query.getObject(), index));
+		}
+
 		IndexRequest request = requestFactory.indexRequest(query, index);
 		try {
 			String documentId = client.index(request, RequestOptions.DEFAULT).getId();
@@ -156,6 +162,12 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(queries, "List of IndexQuery must not be null");
 		Assert.notNull(bulkOptions, "BulkOptions must not be null");
 
+		queries.forEach(query -> {
+			if (query.getObject() != null) {
+				query.setObject(maybeCallBeforeIndex(query.getObject(), index));
+			}
+		});
+
 		doBulkOperation(queries, bulkOptions, index);
 	}
 
@@ -165,11 +177,14 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(queries, "List of UpdateQuery must not be null");
 		Assert.notNull(bulkOptions, "BulkOptions must not be null");
 
+		queries = queries.stream().map(query -> maybeCallBeforeUpdate(query, index)).collect(Collectors.toList());
+
 		doBulkOperation(queries, bulkOptions, index);
 	}
 
 	@Override
 	public String delete(String id, IndexCoordinates index) {
+		id = maybeCallBeforeDelete(id, index);
 		DeleteRequest request = new DeleteRequest(index.getIndexName(), id);
 		try {
 			return client.delete(request, RequestOptions.DEFAULT).getId();
@@ -180,6 +195,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public void delete(DeleteQuery deleteQuery, IndexCoordinates index) {
+		deleteQuery = maybeCallBeforeDelete(deleteQuery, index);
 		DeleteByQueryRequest deleteByQueryRequest = requestFactory.deleteByQueryRequest(deleteQuery, index);
 		try {
 			client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT);
@@ -190,6 +206,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public UpdateResponse update(UpdateQuery query, IndexCoordinates index) {
+		query = maybeCallBeforeUpdate(query, index);
 		UpdateRequest request = requestFactory.updateRequest(query, index);
 		try {
 			return client.update(request, RequestOptions.DEFAULT);

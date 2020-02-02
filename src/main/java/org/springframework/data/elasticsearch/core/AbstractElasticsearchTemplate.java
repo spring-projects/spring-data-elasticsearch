@@ -22,6 +22,10 @@ import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
+import org.springframework.data.elasticsearch.core.event.BeforeDeleteCallback;
+import org.springframework.data.elasticsearch.core.event.BeforeDeleteQueryCallback;
+import org.springframework.data.elasticsearch.core.event.BeforeIndexCallback;
+import org.springframework.data.elasticsearch.core.event.BeforeUpdateCallback;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -30,11 +34,14 @@ import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * AbstractElasticsearchTemplate
+ * code common to both {@link ElasticsearchRestTemplate} and {@link ElasticsearchRestTemplate}.
  *
  * @author Sascha Woo
  * @author Peter-Josef Meisch
@@ -44,6 +51,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	protected ElasticsearchConverter elasticsearchConverter;
 	protected RequestFactory requestFactory;
 	protected IndexOperations indexOperations;
+	private @Nullable EntityCallbacks entityCallbacks;
 
 	// region Initialization
 	protected void initialize(ElasticsearchConverter elasticsearchConverter, IndexOperations indexOperations) {
@@ -63,12 +71,27 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public void setApplicationContext(ApplicationContext context) throws BeansException {
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
 		if (elasticsearchConverter instanceof ApplicationContextAware) {
-			((ApplicationContextAware) elasticsearchConverter).setApplicationContext(context);
+			((ApplicationContextAware) elasticsearchConverter).setApplicationContext(applicationContext);
+		}
+
+		if (entityCallbacks == null) {
+			setEntityCallbacks(EntityCallbacks.create(applicationContext));
 		}
 	}
+
+	/**
+	 * Configure {@link EntityCallbacks} to pre-/post-process entities during persistence operations.
+	 *
+	 * @param entityCallbacks the callbacks to use
+	 * @since 4.0
+	 */
+	public void setEntityCallbacks(@Nullable EntityCallbacks entityCallbacks) {
+		this.entityCallbacks = entityCallbacks;
+	}
+
 	// endregion
 
 	// region getter/setter
@@ -217,5 +240,49 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	ElasticsearchPersistentEntity<?> getRequiredPersistentEntity(Class<?> clazz) {
 		return elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(clazz);
 	}
+	// endregion
+
+	// region events/callbacks
+	protected <T> T maybeCallBeforeIndex(T entity, IndexCoordinates index) {
+
+		if (entityCallbacks != null) {
+			return (T) entityCallbacks.callback(BeforeIndexCallback.class, entity, index);
+		}
+
+		return entity;
+	}
+
+	protected UpdateQuery maybeCallBeforeUpdate(UpdateQuery query, IndexCoordinates index) {
+
+		if (entityCallbacks != null) {
+			String id = query.getId();
+			BeforeUpdateCallback.UpdateInfo updateInfo = BeforeUpdateCallback.UpdateInfo
+					.of(query.getUpdateRequest().doc().sourceAsMap());
+			BeforeUpdateCallback.UpdateInfo updated = entityCallbacks.callback(BeforeUpdateCallback.class, updateInfo, id,
+					index);
+			query.getUpdateRequest().doc(updated.getUpdates());
+		}
+
+		return query;
+	}
+
+	protected String maybeCallBeforeDelete(String id, IndexCoordinates index) {
+
+		if (entityCallbacks != null) {
+			return entityCallbacks.callback(BeforeDeleteCallback.class, id, index);
+		}
+
+		return id;
+	}
+
+	protected DeleteQuery maybeCallBeforeDelete(DeleteQuery deleteQuery, IndexCoordinates index) {
+
+		if (entityCallbacks != null) {
+			return entityCallbacks.callback(BeforeDeleteQueryCallback.class, deleteQuery, index);
+		}
+
+		return deleteQuery;
+	}
+
 	// endregion
 }
