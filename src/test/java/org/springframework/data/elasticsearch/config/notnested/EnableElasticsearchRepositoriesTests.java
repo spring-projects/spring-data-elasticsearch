@@ -47,6 +47,7 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.data.repository.Repository;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -60,7 +61,7 @@ import org.springframework.test.context.ContextConfiguration;
 @ContextConfiguration(classes = { EnableElasticsearchRepositoriesTests.Config.class })
 public class EnableElasticsearchRepositoriesTests implements ApplicationContextAware {
 
-	ApplicationContext context;
+	@Nullable ApplicationContext context;
 
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {

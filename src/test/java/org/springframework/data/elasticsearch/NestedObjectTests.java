@@ -149,8 +149,7 @@ public class NestedObjectTests {
 		indexOperations.refresh(PersonMultipleLevelNested.class);
 
 		// then
-		GetQuery getQuery = new GetQuery();
-		getQuery.setId("1");
+		GetQuery getQuery = new GetQuery("1");
 		PersonMultipleLevelNested personIndexed = operations.get(getQuery, PersonMultipleLevelNested.class,
 				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes("user"));
 		assertThat(personIndexed).isNotNull();

@@ -17,17 +17,21 @@ package org.springframework.data.elasticsearch.repositories.cdi;
 
 import javax.inject.Inject;
 
+import org.springframework.lang.Nullable;
+
 /**
  * @author Mohsin Husen
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  */
 class CdiRepositoryClient {
 
-	private CdiProductRepository repository;
-	private SamplePersonRepository samplePersonRepository;
-	private QualifiedProductRepository qualifiedProductRepository;
+	@Nullable private CdiProductRepository repository;
+	@Nullable private SamplePersonRepository samplePersonRepository;
+	@Nullable private QualifiedProductRepository qualifiedProductRepository;
 
+	@Nullable
 	public CdiProductRepository getRepository() {
 		return repository;
 	}
@@ -37,6 +41,7 @@ class CdiRepositoryClient {
 		this.repository = repository;
 	}
 
+	@Nullable
 	public SamplePersonRepository getSamplePersonRepository() {
 		return samplePersonRepository;
 	}
@@ -46,6 +51,7 @@ class CdiRepositoryClient {
 		this.samplePersonRepository = samplePersonRepository;
 	}
 
+	@Nullable
 	public QualifiedProductRepository getQualifiedProductRepository() {
 		return qualifiedProductRepository;
 	}

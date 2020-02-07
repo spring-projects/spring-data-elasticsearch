@@ -1,5 +1,3 @@
-/**
- * Infrastructure for the Elasticsearch document-to-object mapping subsystem.
- */
 @org.springframework.lang.NonNullApi
+@org.springframework.lang.NonNullFields
 package org.springframework.data.elasticsearch.repository.query.parser;

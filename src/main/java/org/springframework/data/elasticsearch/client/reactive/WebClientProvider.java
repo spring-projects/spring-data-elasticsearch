@@ -105,6 +105,7 @@ public interface WebClientProvider {
 	 * @return the pathPrefix if set.
 	 * @since 4.0
 	 */
+	@Nullable
 	String getPathPrefix();
 
 	/**
@@ -133,7 +134,9 @@ public interface WebClientProvider {
 	WebClientProvider withPathPrefix(String pathPrefix);
 
 	/**
-	 * Create a new instance of {@link WebClientProvider} calling the given {@link Function} to configure the {@link WebClient}.
+	 * Create a new instance of {@link WebClientProvider} calling the given {@link Function} to configure the
+	 * {@link WebClient}.
+	 * 
 	 * @param webClientConfigurer configuration function
 	 * @return new instance of {@link WebClientProvider}
 	 * @since 4.0

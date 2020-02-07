@@ -53,7 +53,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	private final boolean isParent;
 	private final boolean isId;
 	private final @Nullable String annotatedFieldName;
-	private ElasticsearchPersistentPropertyConverter propertyConverter;
+	@Nullable private ElasticsearchPersistentPropertyConverter propertyConverter;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
 			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
@@ -86,6 +86,7 @@ public class SimpleElasticsearchPersistentProperty extends
 		return propertyConverter != null;
 	}
 
+	@Nullable
 	@Override
 	public ElasticsearchPersistentPropertyConverter getPropertyConverter() {
 		return propertyConverter;
@@ -167,7 +168,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	 */
 	@Override
 	protected Association<ElasticsearchPersistentProperty> createAssociation() {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	/*

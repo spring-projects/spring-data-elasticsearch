@@ -1,5 +1,3 @@
-/**
- * infrastructure to define the Elasticsearch mapping for an index.
- */
 @org.springframework.lang.NonNullApi
+@org.springframework.lang.NonNullFields
 package org.springframework.data.elasticsearch.core.index;

@@ -29,6 +29,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -57,7 +58,7 @@ public class Criteria {
 	private static final String OR_OPERATOR = " OR ";
 	private static final String AND_OPERATOR = " AND ";
 
-	private Field field;
+	private @Nullable Field field;
 	private float boost = Float.NaN;
 	private boolean negating = false;
 
@@ -84,8 +85,10 @@ public class Criteria {
 	 * @param field
 	 */
 	public Criteria(Field field) {
+
 		Assert.notNull(field, "Field for criteria must not be null");
 		Assert.hasText(field.getName(), "Field.name for criteria must not be null/empty");
+
 		this.criteriaChain.add(this);
 		this.field = field;
 	}
@@ -95,6 +98,7 @@ public class Criteria {
 	}
 
 	protected Criteria(List<Criteria> criteriaChain, Field field) {
+
 		Assert.notNull(criteriaChain, "CriteriaChain must not be null");
 		Assert.notNull(field, "Field for criteria must not be null");
 		Assert.hasText(field.getName(), "Field.name for criteria must not be null/empty");
@@ -525,6 +529,7 @@ public class Criteria {
 	 *
 	 * @return
 	 */
+	@Nullable
 	public Field getField() {
 		return this.field;
 	}

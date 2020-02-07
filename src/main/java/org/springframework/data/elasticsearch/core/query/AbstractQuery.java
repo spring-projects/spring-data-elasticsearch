@@ -26,6 +26,7 @@ import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -42,21 +43,22 @@ import org.springframework.util.Assert;
 abstract class AbstractQuery implements Query {
 
 	protected Pageable pageable = DEFAULT_PAGE;
-	protected Sort sort;
+	@Nullable protected Sort sort;
 	protected List<String> fields = new ArrayList<>();
-	protected SourceFilter sourceFilter;
+	@Nullable protected SourceFilter sourceFilter;
 	protected float minScore;
-	protected Collection<String> ids;
-	protected String route;
+	@Nullable protected Collection<String> ids;
+	@Nullable protected String route;
 	protected SearchType searchType = SearchType.DFS_QUERY_THEN_FETCH;
-	protected IndicesOptions indicesOptions;
+	@Nullable protected IndicesOptions indicesOptions;
 	protected boolean trackScores;
-	protected String preference;
-	protected Integer maxResults;
-	protected HighlightQuery highlightQuery;
+	@Nullable protected String preference;
+	@Nullable protected Integer maxResults;
+	@Nullable protected HighlightQuery highlightQuery;
 	private boolean trackTotalHits = false;
 
 	@Override
+	@Nullable
 	public Sort getSort() {
 		return this.sort;
 	}
@@ -90,6 +92,7 @@ abstract class AbstractQuery implements Query {
 		this.sourceFilter = sourceFilter;
 	}
 
+	@Nullable
 	@Override
 	public SourceFilter getSourceFilter() {
 		return sourceFilter;
@@ -120,6 +123,7 @@ abstract class AbstractQuery implements Query {
 		this.minScore = minScore;
 	}
 
+	@Nullable
 	@Override
 	public Collection<String> getIds() {
 		return ids;
@@ -129,6 +133,7 @@ abstract class AbstractQuery implements Query {
 		this.ids = ids;
 	}
 
+	@Nullable
 	@Override
 	public String getRoute() {
 		return route;
@@ -147,6 +152,7 @@ abstract class AbstractQuery implements Query {
 		return searchType;
 	}
 
+	@Nullable
 	@Override
 	public IndicesOptions getIndicesOptions() {
 		return indicesOptions;
@@ -175,6 +181,7 @@ abstract class AbstractQuery implements Query {
 		this.trackScores = trackScores;
 	}
 
+	@Nullable
 	@Override
 	public String getPreference() {
 		return preference;
@@ -190,6 +197,7 @@ abstract class AbstractQuery implements Query {
 		return maxResults != null;
 	}
 
+	@Nullable
 	@Override
 	public Integer getMaxResults() {
 		return maxResults;

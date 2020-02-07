@@ -43,7 +43,7 @@ class StubParameterAccessor implements ElasticsearchParameterAccessor {
 	 */
 	@Override
 	public Pageable getPageable() {
-		return null;
+		return Pageable.unpaged();
 	}
 
 	/*
@@ -104,8 +104,8 @@ class StubParameterAccessor implements ElasticsearchParameterAccessor {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.ParameterAccessor#findDynamicProjection()
 	 */
-    @Override
-    public Class<?> findDynamicProjection() {
-        return null;
-    }
+	@Override
+	public Class<?> findDynamicProjection() {
+		return null;
+	}
 }

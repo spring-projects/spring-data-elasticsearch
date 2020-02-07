@@ -71,7 +71,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private @Nullable ElasticsearchPersistentProperty parentIdProperty;
 	private @Nullable ElasticsearchPersistentProperty scoreProperty;
 	private @Nullable String settingPath;
-	private VersionType versionType;
+	private @Nullable VersionType versionType;
 	private boolean createIndexAndMapping;
 	private final Map<String, ElasticsearchPersistentProperty> fieldNamePropertyCache = new ConcurrentHashMap<>();
 
@@ -133,6 +133,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		return IndexCoordinates.of(getIndexName()).withTypes(getIndexType());
 	}
 
+	@Nullable
 	@Override
 	public String getIndexStoreType() {
 		return indexStoreType;
@@ -153,21 +154,25 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		return useServerConfiguration;
 	}
 
+	@Nullable
 	@Override
 	public String getRefreshInterval() {
 		return refreshInterval;
 	}
 
+	@Nullable
 	@Override
 	public String getParentType() {
 		return parentType;
 	}
 
+	@Nullable
 	@Override
 	public ElasticsearchPersistentProperty getParentIdProperty() {
 		return parentIdProperty;
 	}
 
+	@Nullable
 	@Override
 	public VersionType getVersionType() {
 		return versionType;

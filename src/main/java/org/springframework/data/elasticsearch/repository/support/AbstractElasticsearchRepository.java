@@ -79,10 +79,8 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	protected ElasticsearchOperations operations;
 	protected IndexOperations indexOperations;
 
-	protected Class<T> entityClass;
-	protected ElasticsearchEntityInformation<T, ID> entityInformation;
-
-	public AbstractElasticsearchRepository() {}
+	protected @Nullable Class<T> entityClass;
+	protected @Nullable ElasticsearchEntityInformation<T, ID> entityInformation;
 
 	public AbstractElasticsearchRepository(ElasticsearchOperations operations) {
 		Assert.notNull(operations, "ElasticsearchOperations must not be null.");
@@ -125,8 +123,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	@Override
 	public Optional<T> findById(ID id) {
-		GetQuery query = new GetQuery();
-		query.setId(stringIdRepresentation(id));
+		GetQuery query = new GetQuery(stringIdRepresentation(id));
 		return Optional.ofNullable(operations.get(query, getEntityClass(), getIndexCoordinates()));
 	}
 
@@ -250,9 +247,11 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Page<T> searchSimilar(T entity, String[] fields, Pageable pageable) {
+	public Page<T> searchSimilar(T entity, @Nullable String[] fields, Pageable pageable) {
+
 		Assert.notNull(entity, "Cannot search similar records for 'null'.");
 		Assert.notNull(pageable, "'pageable' cannot be 'null'");
+
 		MoreLikeThisQuery query = new MoreLikeThisQuery();
 		query.setId(stringIdRepresentation(extractIdFromBean(entity)));
 		query.setPageable(pageable);
@@ -395,7 +394,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		return stringIds;
 	}
 
-	protected abstract String stringIdRepresentation(@Nullable ID id);
+	protected abstract @Nullable String stringIdRepresentation(@Nullable ID id);
 
 	private Long extractVersionFromBean(T entity) {
 		return entityInformation.getVersion(entity);

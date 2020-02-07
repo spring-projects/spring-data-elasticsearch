@@ -27,6 +27,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.lang.Nullable;
 
 /**
  * Unit tests for {@link SimpleElasticsearchPersistentProperty}.
@@ -110,20 +111,20 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 	}
 
 	static class InvalidScoreProperty {
-		@Score String scoreProperty;
+		@Nullable @Score String scoreProperty;
 	}
 
 	static class FieldNameProperty {
-		@Field(name = "by-name") String fieldProperty;
+		@Nullable @Field(name = "by-name") String fieldProperty;
 	}
 
 	static class FieldValueProperty {
-		@Field(value = "by-value") String fieldProperty;
+		@Nullable @Field(value = "by-value") String fieldProperty;
 	}
 
 	static class DatesProperty {
-		@Field(type = FieldType.Date, format = DateFormat.basic_date) Date date;
-		@Field(type = FieldType.Date, format = DateFormat.custom, pattern = "dd.MM.uuuu") LocalDate localDate;
-		@Field(type = FieldType.Date, format = DateFormat.basic_date_time) LocalDateTime localDateTime;
+		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date) Date date;
+		@Nullable @Field(type = FieldType.Date, format = DateFormat.custom, pattern = "dd.MM.uuuu") LocalDate localDate;
+		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date_time) LocalDateTime localDateTime;
 	}
 }

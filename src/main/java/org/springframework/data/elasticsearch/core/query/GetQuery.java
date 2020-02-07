@@ -20,8 +20,13 @@ package org.springframework.data.elasticsearch.core.query;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Peter-Josef Meisch
  */
 public class GetQuery {
+
+	public GetQuery(String id) {
+		this.id = id;
+	}
 
 	private String id;
 
@@ -29,14 +34,7 @@ public class GetQuery {
 		return id;
 	}
 
-	public void setId(String id) {
-		this.id = id;
-	}
-
 	public static GetQuery getById(String id) {
-
-		GetQuery query = new GetQuery();
-		query.setId(id);
-		return query;
+		return new GetQuery(id);
 	}
 }

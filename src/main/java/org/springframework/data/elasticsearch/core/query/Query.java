@@ -81,6 +81,7 @@ public interface Query {
 	/**
 	 * @return null if not set
 	 */
+	@Nullable
 	Sort getSort();
 
 	/**
@@ -109,6 +110,7 @@ public interface Query {
 	 *
 	 * @return SourceFilter
 	 */
+	@Nullable
 	SourceFilter getSourceFilter();
 
 	/**
@@ -131,6 +133,7 @@ public interface Query {
 	 *
 	 * @return
 	 */
+	@Nullable
 	Collection<String> getIds();
 
 	/**
@@ -138,6 +141,7 @@ public interface Query {
 	 *
 	 * @return
 	 */
+	@Nullable
 	String getRoute();
 
 	/**
@@ -152,6 +156,7 @@ public interface Query {
 	 *
 	 * @return null if not set
 	 */
+	@Nullable
 	IndicesOptions getIndicesOptions();
 
 	/**
@@ -160,6 +165,7 @@ public interface Query {
 	 * @return
 	 * @since 3.2
 	 */
+	@Nullable
 	String getPreference();
 
 	/**
@@ -183,17 +189,18 @@ public interface Query {
 	 *
 	 * @since 4.0
 	 */
+	@Nullable
 	default Integer getMaxResults() {
 		return null;
 	}
 
 	/**
-	 * Sets the {@link HighlightQuery}.*
+	 * Sets the {@link HighlightQuery}.
 	 * 
 	 * @param highlightQuery the query to set
 	 * @since 4.0
 	 */
-	void setHighlightQuery(@Nullable HighlightQuery highlightQuery);
+	void setHighlightQuery(HighlightQuery highlightQuery);
 
 	/**
 	 * @return the optional set {@link HighlightQuery}.

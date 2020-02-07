@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -28,7 +29,7 @@ import org.springframework.util.Assert;
  */
 public class CriteriaQuery extends AbstractQuery {
 
-	private Criteria criteria;
+	private @Nullable Criteria criteria;
 
 	private CriteriaQuery() {}
 
@@ -51,9 +52,9 @@ public class CriteriaQuery extends AbstractQuery {
 	}
 
 	public static <T extends CriteriaQuery> T fromQuery(CriteriaQuery source, T destination) {
-		if (source == null || destination == null) {
-			return null;
-		}
+
+		Assert.notNull(source, "source must not be null");
+		Assert.notNull(destination, "destination must not be null");
 
 		if (source.getCriteria() != null) {
 			destination.addCriteria(source.getCriteria());
@@ -77,6 +78,7 @@ public class CriteriaQuery extends AbstractQuery {
 		return (T) this;
 	}
 
+	@Nullable
 	public Criteria getCriteria() {
 		return this.criteria;
 	}

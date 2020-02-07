@@ -27,6 +27,7 @@ import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -105,8 +106,9 @@ public class SimpleElasticsearchPersistentEntityTests {
 
 	private class EntityWithWrongVersionType {
 
-		@Version private String version;
+		@Nullable @Version private String version;
 
+		@Nullable
 		public String getVersion() {
 			return version;
 		}
@@ -118,9 +120,10 @@ public class SimpleElasticsearchPersistentEntityTests {
 
 	private class EntityWithMultipleVersionField {
 
-		@Version private Long version1;
-		@Version private Long version2;
+		@Nullable @Version private Long version1;
+		@Nullable @Version private Long version2;
 
+		@Nullable
 		public Long getVersion1() {
 			return version1;
 		}
@@ -129,6 +132,7 @@ public class SimpleElasticsearchPersistentEntityTests {
 			this.version1 = version1;
 		}
 
+		@Nullable
 		public Long getVersion2() {
 			return version2;
 		}
@@ -147,7 +151,7 @@ public class SimpleElasticsearchPersistentEntityTests {
 	}
 
 	private static class FieldNameEntity {
-		@Id private String id;
-		@Field(name = "renamed-field") private String renamedField;
+		@Nullable @Id private String id;
+		@Nullable @Field(name = "renamed-field") private String renamedField;
 	}
 }

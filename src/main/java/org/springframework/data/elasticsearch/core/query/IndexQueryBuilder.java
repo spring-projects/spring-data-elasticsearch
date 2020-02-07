@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.springframework.lang.Nullable;
+
 /**
  * IndexQuery Builder
  *
@@ -24,11 +26,11 @@ package org.springframework.data.elasticsearch.core.query;
  */
 public class IndexQueryBuilder {
 
-	private String id;
-	private Object object;
-	private Long version;
-	private String source;
-	private String parentId;
+	@Nullable private String id;
+	@Nullable private Object object;
+	@Nullable private Long version;
+	@Nullable private String source;
+	@Nullable private String parentId;
 
 	public IndexQueryBuilder withId(String id) {
 		this.id = id;

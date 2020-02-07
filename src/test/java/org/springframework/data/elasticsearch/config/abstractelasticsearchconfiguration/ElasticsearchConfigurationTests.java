@@ -28,6 +28,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -68,7 +69,7 @@ public class ElasticsearchConfigurationTests {
 	@Document(indexName = "test-index-config-abstractelasticsearchconfiguraiton", createIndex = false)
 	static class CreateIndexFalseEntity {
 
-		@Id private String id;
+		@Nullable @Id private String id;
 	}
 
 	interface CreateIndexFalseRepository extends ElasticsearchRepository<CreateIndexFalseEntity, String> {}

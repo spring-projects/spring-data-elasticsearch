@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import org.elasticsearch.action.update.UpdateRequest;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Rizwan Idrees
@@ -24,10 +25,11 @@ import org.elasticsearch.action.update.UpdateRequest;
  */
 public class UpdateQuery {
 
-	private String id;
-	private UpdateRequest updateRequest;
+	@Nullable private String id;
+	@Nullable private UpdateRequest updateRequest;
 	private boolean doUpsert;
 
+	@Nullable
 	public String getId() {
 		return id;
 	}
@@ -36,6 +38,7 @@ public class UpdateQuery {
 		this.id = id;
 	}
 
+	@Nullable
 	public UpdateRequest getUpdateRequest() {
 		return updateRequest;
 	}

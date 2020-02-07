@@ -21,6 +21,7 @@ import java.nio.charset.Charset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StreamUtils;
 
 /**
@@ -40,6 +41,7 @@ public abstract class ResourceUtil {
 	 * @param url
 	 * @return
 	 */
+	@Nullable
 	public static String readFileFromClasspath(String url) {
 
 		ClassPathResource classPathResource = new ClassPathResource(url);

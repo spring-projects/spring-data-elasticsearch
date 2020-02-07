@@ -865,8 +865,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		private final Object lock = new Object();
 
 		private final List<String> pastIds = new ArrayList<>(1);
-		private String scrollId;
+		@Nullable private String scrollId;
 
+		@Nullable
 		String getScrollId() {
 			return scrollId;
 		}

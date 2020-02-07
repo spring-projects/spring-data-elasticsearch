@@ -50,6 +50,7 @@ import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
@@ -123,18 +124,15 @@ public class ElasticsearchStringQueryUnitTests {
 	 * @author Artur Konczak
 	 */
 
-	@Document(indexName = "test-index-person-query-unittest", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-person-query-unittest", replicas = 0, refreshInterval = "-1")
 	static class Person {
 
-		@Id private String id;
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable @Field(type = FieldType.Nested) private List<Car> car;
+		@Nullable @Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
 
-		private String name;
-
-		@Field(type = FieldType.Nested) private List<Car> car;
-
-		@Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
-
+		@Nullable
 		public String getId() {
 			return id;
 		}
@@ -143,6 +141,7 @@ public class ElasticsearchStringQueryUnitTests {
 			this.id = id;
 		}
 
+		@Nullable
 		public String getName() {
 			return name;
 		}
@@ -151,6 +150,7 @@ public class ElasticsearchStringQueryUnitTests {
 			this.name = name;
 		}
 
+		@Nullable
 		public List<Car> getCar() {
 			return car;
 		}
@@ -159,6 +159,7 @@ public class ElasticsearchStringQueryUnitTests {
 			this.car = car;
 		}
 
+		@Nullable
 		public List<Book> getBooks() {
 			return books;
 		}
@@ -178,8 +179,7 @@ public class ElasticsearchStringQueryUnitTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-book-query-unittest", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-book-query-unittest", replicas = 0, refreshInterval = "-1")
 	static class Book {
 
 		@Id private String id;
@@ -229,9 +229,10 @@ public class ElasticsearchStringQueryUnitTests {
 	 */
 	static class Author {
 
-		private String id;
-		private String name;
+		@Nullable private String id;
+		@Nullable private String name;
 
+		@Nullable
 		public String getId() {
 			return id;
 		}
@@ -240,6 +241,7 @@ public class ElasticsearchStringQueryUnitTests {
 			this.id = id;
 		}
 
+		@Nullable
 		public String getName() {
 			return name;
 		}

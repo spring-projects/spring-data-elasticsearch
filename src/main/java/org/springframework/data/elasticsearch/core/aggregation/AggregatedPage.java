@@ -4,6 +4,7 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.data.elasticsearch.core.ScoredPage;
 import org.springframework.data.elasticsearch.core.ScrolledPage;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Petar Tahchiev
@@ -16,7 +17,7 @@ public interface AggregatedPage<T> extends ScrolledPage<T>, ScoredPage<T> {
 
 	boolean hasAggregations();
 
-	Aggregations getAggregations();
+	@Nullable Aggregations getAggregations();
 
-	Aggregation getAggregation(String name);
+	@Nullable Aggregation getAggregation(String name);
 }

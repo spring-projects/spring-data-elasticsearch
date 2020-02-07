@@ -41,20 +41,24 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 
 	boolean isUseServerConfiguration();
 
+	@Nullable
 	String getRefreshInterval();
 
+	@Nullable
 	String getIndexStoreType();
 
 	@Override
 	ElasticsearchPersistentProperty getVersionProperty();
 
+	@Nullable
 	String getParentType();
 
+	@Nullable
 	ElasticsearchPersistentProperty getParentIdProperty();
 
 	String settingPath();
 
-	VersionType getVersionType();
+	@Nullable VersionType getVersionType();
 
 	boolean isCreateIndexAndMapping();
 

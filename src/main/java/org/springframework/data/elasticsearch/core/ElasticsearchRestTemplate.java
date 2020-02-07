@@ -93,10 +93,12 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	// region Initialization
 	public ElasticsearchRestTemplate(RestHighLevelClient client) {
+		this.client = client;
 		initialize(client, createElasticsearchConverter());
 	}
 
 	public ElasticsearchRestTemplate(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter) {
+		this.client = client;
 		initialize(client, elasticsearchConverter);
 	}
 
@@ -210,7 +212,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	// region SearchOperations
 	@Override
-	public long count(Query query, Class<?> clazz, IndexCoordinates index) {
+	public long count(Query query,@Nullable Class<?> clazz, IndexCoordinates index) {
 
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");

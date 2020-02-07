@@ -41,6 +41,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Mohsin Husen
@@ -50,7 +51,7 @@ import org.springframework.data.elasticsearch.annotations.MultiField;
  */
 public class CdiRepositoryTests {
 
-	private static CdiTestContainer cdiContainer;
+	@Nullable private static CdiTestContainer cdiContainer;
 	private CdiProductRepository repository;
 	private SamplePersonRepository personRepository;
 	private QualifiedProductRepository qualifiedProductRepository;
@@ -158,8 +159,7 @@ public class CdiRepositoryTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-product-cdi-repository", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-product-cdi-repository", replicas = 0, refreshInterval = "-1")
 	static class Product {
 
 		@Id private String id;
@@ -188,8 +188,7 @@ public class CdiRepositoryTests {
 	}
 
 	@Data
-	@Document(indexName = "test-index-person-cdi-repository", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-person-cdi-repository", replicas = 0, refreshInterval = "-1")
 	static class Person {
 
 		@Id private String id;
@@ -206,8 +205,7 @@ public class CdiRepositoryTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-book-cdi-repository", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-book-cdi-repository", replicas = 0, refreshInterval = "-1")
 	static class Book {
 
 		@Id private String id;

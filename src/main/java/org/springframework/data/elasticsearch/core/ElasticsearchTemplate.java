@@ -83,14 +83,16 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
 
 	private Client client;
-	private String searchTimeout;
+	@Nullable private String searchTimeout;
 
 	// region Initialization
 	public ElasticsearchTemplate(Client client) {
+		this.client = client;
 		initialize(client, createElasticsearchConverter());
 	}
 
 	public ElasticsearchTemplate(Client client, ElasticsearchConverter elasticsearchConverter) {
+		this.client = client;
 		initialize(client, elasticsearchConverter);
 	}
 
@@ -102,6 +104,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	// endregion
 
 	// region getter/setter
+	@Nullable
 	public String getSearchTimeout() {
 		return searchTimeout;
 	}

@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.query;
 
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Rizwan Idrees
@@ -25,9 +26,9 @@ import org.elasticsearch.action.update.UpdateRequest;
  */
 public class UpdateQueryBuilder {
 
-	private String id;
-	private UpdateRequest updateRequest;
-	private IndexRequest indexRequest;
+	@Nullable private String id;
+	@Nullable private UpdateRequest updateRequest;
+	@Nullable private IndexRequest indexRequest;
 	private boolean doUpsert;
 
 	public UpdateQueryBuilder withId(String id) {

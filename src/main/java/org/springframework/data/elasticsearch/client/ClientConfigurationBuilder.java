@@ -54,11 +54,11 @@ class ClientConfigurationBuilder
 	private @Nullable HostnameVerifier hostnameVerifier;
 	private Duration connectTimeout = Duration.ofSeconds(10);
 	private Duration soTimeout = Duration.ofSeconds(5);
-	private String username;
-	private String password;
-	private String pathPrefix;
-	private String proxy;
-	private Function<WebClient, WebClient> webClientConfigurer;
+	private @Nullable String username;
+	private @Nullable String password;
+	private @Nullable String pathPrefix;
+	private @Nullable String proxy;
+	private @Nullable Function<WebClient, WebClient> webClientConfigurer;
 
 	/*
 	 * (non-Javadoc)

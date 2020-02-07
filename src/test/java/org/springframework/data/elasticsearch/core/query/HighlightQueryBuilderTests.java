@@ -30,6 +30,7 @@ import org.springframework.data.elasticsearch.annotations.HighlightField;
 import org.springframework.data.elasticsearch.annotations.HighlightParameters;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -117,10 +118,11 @@ class HighlightQueryBuilderTests {
 
 	@Document(indexName = "dont-care")
 	private static class HighlightEntity {
-		@Id private String id;
-		@Field(name = "some-field") private String someField;
-		@Field(name = "other-field") private String otherField;
+		@Nullable @Id private String id;
+		@Nullable @Field(name = "some-field") private String someField;
+		@Nullable @Field(name = "other-field") private String otherField;
 
+		@Nullable
 		public String getId() {
 			return id;
 		}
@@ -129,6 +131,7 @@ class HighlightQueryBuilderTests {
 			this.id = id;
 		}
 
+		@Nullable
 		public String getSomeField() {
 			return someField;
 		}

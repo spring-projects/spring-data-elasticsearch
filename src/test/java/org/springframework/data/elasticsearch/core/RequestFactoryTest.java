@@ -35,14 +35,15 @@ import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMa
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
  */
 class RequestFactoryTest {
 
-	private static RequestFactory requestFactory;
-	private static MappingElasticsearchConverter converter;
+	@Nullable private static RequestFactory requestFactory;
+	@Nullable private static MappingElasticsearchConverter converter;
 
 	@BeforeAll
 
@@ -118,8 +119,8 @@ class RequestFactoryTest {
 	}
 
 	static class Person {
-		@Id String id;
-		@Field(name = "last-name") String lastName;
-		@Field(name = "current-location") GeoPoint location;
+		@Nullable @Id String id;
+		@Nullable @Field(name = "last-name") String lastName;
+		@Nullable @Field(name = "current-location") GeoPoint location;
 	}
 }

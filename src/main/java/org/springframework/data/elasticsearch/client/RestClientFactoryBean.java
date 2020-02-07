@@ -25,18 +25,21 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.FactoryBeanNotInitializedException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
  * RestClientFactoryBean
  *
  * @author Don Wellington
+ * @author Peter-Josef Meisch
  */
 @Slf4j
 public class RestClientFactoryBean implements FactoryBean<RestHighLevelClient>, InitializingBean, DisposableBean {
 
-	private RestHighLevelClient client;
+	private @Nullable RestHighLevelClient client;
 	private String hosts = "http://localhost:9200";
 	static final String COMMA = ",";
 
@@ -59,6 +62,11 @@ public class RestClientFactoryBean implements FactoryBean<RestHighLevelClient>, 
 
 	@Override
 	public RestHighLevelClient getObject() {
+
+		if (client == null) {
+			throw new FactoryBeanNotInitializedException();
+		}
+
 		return client;
 	}
 
@@ -75,6 +83,7 @@ public class RestClientFactoryBean implements FactoryBean<RestHighLevelClient>, 
 	protected void buildClient() throws Exception {
 
 		Assert.hasText(hosts, "[Assertion Failed] At least one host must be set.");
+
 		ArrayList<HttpHost> httpHosts = new ArrayList<>();
 		for (String host : hosts.split(COMMA)) {
 			URL hostUrl = new URL(host);

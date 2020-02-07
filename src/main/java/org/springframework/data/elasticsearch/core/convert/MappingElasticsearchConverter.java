@@ -147,7 +147,7 @@ public class MappingElasticsearchConverter
 
 	@Override
 	public <T> AggregatedPage<SearchHit<T>> mapResults(SearchDocumentResponse response, Class<T> type,
-			Pageable pageable) {
+			@Nullable Pageable pageable) {
 
 		List<SearchHit<T>> results = response.getSearchDocuments().stream() //
 				.map(searchDocument -> read(type, searchDocument)) //
@@ -653,6 +653,7 @@ public class MappingElasticsearchConverter
 			collectionSource.map(it -> {
 
 				if (it == null) {
+					//noinspection ReturnOfNull
 					return null;
 				}
 
