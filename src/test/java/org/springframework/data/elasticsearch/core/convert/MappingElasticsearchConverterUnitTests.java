@@ -108,7 +108,7 @@ public class MappingElasticsearchConverterUnitTests {
 
 		mappingElasticsearchConverter = new MappingElasticsearchConverter(mappingContext, new GenericConversionService());
 		mappingElasticsearchConverter.setConversions(
-				new ElasticsearchCustomConversions(Arrays.asList(new ShotGunToMapConverter(), new MapToShotGunConverter())));
+				ElasticsearchCustomConversions.of(Arrays.asList(new ShotGunToMapConverter(), new MapToShotGunConverter())));
 		mappingElasticsearchConverter.afterPropertiesSet();
 
 		sarahConnor = new Person();

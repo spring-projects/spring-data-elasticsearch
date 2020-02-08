@@ -31,11 +31,12 @@ import org.springframework.util.NumberUtils;
  * Set of {@link Converter converters} specific to Elasticsearch Geo types.
  *
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 class GeoConverters {
 
-	static Collection<Object> getConvertersToRegister() {
+	static Collection<Converter<?, ?>> getConvertersToRegister() {
 
 		return Arrays.asList(PointToMapConverter.INSTANCE, MapToPointConverter.INSTANCE, GeoPointToMapConverter.INSTANCE,
 				MapToGeoPointConverter.INSTANCE);
@@ -50,7 +51,7 @@ class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public Map convert(Point source) {
+		public Map<String, Object> convert(Point source) {
 
 			Map<String, Object> target = new LinkedHashMap<>();
 			target.put("lat", source.getX());
@@ -68,7 +69,7 @@ class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public Map convert(GeoPoint source) {
+		public Map<String, Object> convert(GeoPoint source) {
 			Map<String, Object> target = new LinkedHashMap<>();
 			target.put("lat", source.getLat());
 			target.put("lon", source.getLon());
@@ -85,7 +86,7 @@ class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public Point convert(Map source) {
+		public Point convert(Map<String, Object> source) {
 			Double x = NumberUtils.convertNumberToTargetClass((Number) source.get("lat"), Double.class);
 			Double y = NumberUtils.convertNumberToTargetClass((Number) source.get("lon"), Double.class);
 
@@ -102,7 +103,7 @@ class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoPoint convert(Map source) {
+		public GeoPoint convert(Map<String, Object> source) {
 			Double x = NumberUtils.convertNumberToTargetClass((Number) source.get("lat"), Double.class);
 			Double y = NumberUtils.convertNumberToTargetClass((Number) source.get("lon"), Double.class);
 
