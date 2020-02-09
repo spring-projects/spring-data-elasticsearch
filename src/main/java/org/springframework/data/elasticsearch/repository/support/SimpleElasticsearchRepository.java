@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import java.util.Objects;
-
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.lang.Nullable;
 
@@ -43,6 +41,6 @@ public class SimpleElasticsearchRepository<T, ID> extends AbstractElasticsearchR
 
 	@Override
 	protected @Nullable String stringIdRepresentation(@Nullable ID id) {
-		return Objects.toString(id, null);
+		return operations.stringIdRepresentation(id);
 	}
 }

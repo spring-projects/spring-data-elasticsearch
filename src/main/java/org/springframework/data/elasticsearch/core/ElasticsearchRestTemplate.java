@@ -127,6 +127,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
+	@Nullable
 	public <T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index) {
 		GetRequest request = requestFactory.getRequest(query, index);
 		try {
@@ -153,12 +154,12 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public void bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index) {
+	public List<String> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index) {
 
 		Assert.notNull(queries, "List of IndexQuery must not be null");
 		Assert.notNull(bulkOptions, "BulkOptions must not be null");
 
-		doBulkOperation(queries, bulkOptions, index);
+		return doBulkOperation(queries, bulkOptions, index);
 	}
 
 	@Override
@@ -200,10 +201,10 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		}
 	}
 
-	private void doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
+	private List<String> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
 		BulkRequest bulkRequest = requestFactory.bulkRequest(queries, bulkOptions, index);
 		try {
-			checkForBulkOperationFailure(client.bulk(bulkRequest, RequestOptions.DEFAULT));
+			return checkForBulkOperationFailure(client.bulk(bulkRequest, RequestOptions.DEFAULT));
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while bulk for request: " + bulkRequest.toString(), e);
 		}
@@ -212,7 +213,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	// region SearchOperations
 	@Override
-	public long count(Query query,@Nullable Class<?> clazz, IndexCoordinates index) {
+	public long count(Query query, @Nullable Class<?> clazz, IndexCoordinates index) {
 
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");

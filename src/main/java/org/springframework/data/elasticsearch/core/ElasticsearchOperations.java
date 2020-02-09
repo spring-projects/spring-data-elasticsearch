@@ -17,11 +17,13 @@ package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.lang.Nullable;
 
 /**
  * ElasticsearchOperations. Since 4.0 this interface only contains common helper functions, the other methods have been
@@ -310,6 +312,20 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	@Deprecated
 	default void refresh(Class<?> clazz) {
 		getIndexOperations().refresh(clazz);
+	}
+	// endregion
+
+	// region helper
+	/**
+	 * gets the String representation for an id.
+	 * 
+	 * @param id
+	 * @return
+	 * @since 4.0
+	 */
+	@Nullable
+	default String stringIdRepresentation(@Nullable Object id) {
+		return Objects.toString(id, null);
 	}
 	// endregion
 }
