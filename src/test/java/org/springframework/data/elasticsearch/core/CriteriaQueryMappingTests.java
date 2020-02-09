@@ -32,6 +32,7 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.lang.Nullable;
 
 /**
  * Tests for the mapping of {@link CriteriaQuery} by a
@@ -95,10 +96,10 @@ public class CriteriaQueryMappingTests {
 	}
 
 	static class Person {
-		@Id String id;
-		@Field(name = "first-name") String firstName;
-		@Field(name = "last-name") String lastName;
-		@Field(name = "birth-date", type = FieldType.Date, format = DateFormat.custom,
+		@Nullable @Id String id;
+		@Nullable @Field(name = "first-name") String firstName;
+		@Nullable @Field(name = "last-name") String lastName;
+		@Nullable @Field(name = "birth-date", type = FieldType.Date, format = DateFormat.custom,
 				pattern = "dd.MM.uuuu") LocalDate birthDate;
 	}
 }

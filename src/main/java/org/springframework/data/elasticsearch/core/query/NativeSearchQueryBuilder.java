@@ -29,6 +29,7 @@ import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.Nullable;
 
 /**
  * NativeSearchQuery
@@ -46,25 +47,25 @@ import org.springframework.data.domain.Pageable;
  */
 public class NativeSearchQueryBuilder {
 
-	private QueryBuilder queryBuilder;
-	private QueryBuilder filterBuilder;
+	@Nullable private QueryBuilder queryBuilder;
+	@Nullable private QueryBuilder filterBuilder;
 	private List<ScriptField> scriptFields = new ArrayList<>();
 	private List<SortBuilder> sortBuilders = new ArrayList<>();
 	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<>();
-	private HighlightBuilder highlightBuilder;
-	private HighlightBuilder.Field[] highlightFields;
+	@Nullable private HighlightBuilder highlightBuilder;
+	@Nullable private HighlightBuilder.Field[] highlightFields;
 	private Pageable pageable = Pageable.unpaged();
-	private String[] fields;
-	private SourceFilter sourceFilter;
-	private CollapseBuilder collapseBuilder;
-	private List<IndexBoost> indicesBoost;
+	@Nullable private String[] fields;
+	@Nullable private SourceFilter sourceFilter;
+	@Nullable private CollapseBuilder collapseBuilder;
+	@Nullable private List<IndexBoost> indicesBoost;
 	private float minScore;
 	private boolean trackScores;
-	private Collection<String> ids;
-	private String route;
-	private SearchType searchType;
-	private IndicesOptions indicesOptions;
-	private String preference;
+	@Nullable private Collection<String> ids;
+	@Nullable private String route;
+	@Nullable private SearchType searchType;
+	@Nullable private IndicesOptions indicesOptions;
+	@Nullable private String preference;
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;

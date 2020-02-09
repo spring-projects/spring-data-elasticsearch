@@ -124,6 +124,7 @@ public class DocumentAdapters {
 
 		Assert.notNull(source, "MultiGetResponse must not be null");
 
+		//noinspection ReturnOfNull
 		return Arrays.stream(source.getResponses()) //
 				.map(itemResponse -> itemResponse.isFailed() ? null : DocumentAdapters.from(itemResponse.getResponse())) //
 				.filter(Objects::nonNull).collect(Collectors.toList());

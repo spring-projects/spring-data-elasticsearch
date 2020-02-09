@@ -51,6 +51,7 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -216,10 +217,11 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 	 */
 	static class NonDocumentEntity {
 
-		@Id private String someId;
-		private String someField1;
-		private String someField2;
+		@Nullable @Id private String someId;
+		@Nullable private String someField1;
+		@Nullable private String someField2;
 
+		@Nullable
 		public String getSomeField1() {
 			return someField1;
 		}
@@ -228,6 +230,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 			this.someField1 = someField1;
 		}
 
+		@Nullable
 		public String getSomeField2() {
 			return someField2;
 		}
@@ -245,10 +248,10 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 	static class ContextCompletionEntity {
 
 		public static final String LANGUAGE_CATEGORY = "language";
-		@Id private String id;
-		private String name;
+		@Nullable @Id private String id;
+		@Nullable private String name;
 
-		@CompletionField(maxInputLength = 100, contexts = {
+		@Nullable @CompletionField(maxInputLength = 100, contexts = {
 				@CompletionContext(name = LANGUAGE_CATEGORY, type = ContextMapping.Type.CATEGORY) }) private Completion suggest;
 
 		private ContextCompletionEntity() {}
@@ -257,6 +260,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 			this.id = id;
 		}
 
+		@Nullable
 		public String getId() {
 			return id;
 		}
@@ -265,6 +269,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 			this.id = id;
 		}
 
+		@Nullable
 		public String getName() {
 			return name;
 		}
@@ -273,6 +278,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 			this.name = name;
 		}
 
+		@Nullable
 		public Completion getSuggest() {
 			return suggest;
 		}

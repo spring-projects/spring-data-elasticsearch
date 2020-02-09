@@ -18,6 +18,8 @@ package org.springframework.data.elasticsearch.core.query;
 import java.util.Map;
 
 import org.elasticsearch.index.query.QueryBuilder;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * @author Mohsin Husen
@@ -25,12 +27,12 @@ import org.elasticsearch.index.query.QueryBuilder;
  */
 public class AliasBuilder {
 
-	private String aliasName;
-	private QueryBuilder filterBuilder;
-	private Map<String, Object> filter;
-	private String searchRouting;
-	private String indexRouting;
-	private String routing;
+	@Nullable private String aliasName;
+	@Nullable private QueryBuilder filterBuilder;
+	@Nullable private Map<String, Object> filter;
+	@Nullable private String searchRouting;
+	@Nullable private String indexRouting;
+	@Nullable private String routing;
 
 	public AliasBuilder withAliasName(String aliasName) {
 		this.aliasName = aliasName;
@@ -63,8 +65,10 @@ public class AliasBuilder {
 	}
 
 	public AliasQuery build() {
-		AliasQuery aliasQuery = new AliasQuery();
-		aliasQuery.setAliasName(aliasName);
+
+		Assert.notNull(aliasName, "aliasName must not be null");
+
+		AliasQuery aliasQuery = new AliasQuery(aliasName);
 		aliasQuery.setFilterBuilder(filterBuilder);
 		aliasQuery.setFilter(filter);
 		aliasQuery.setSearchRouting(searchRouting);

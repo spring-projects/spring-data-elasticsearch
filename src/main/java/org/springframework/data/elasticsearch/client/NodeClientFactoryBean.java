@@ -32,7 +32,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.FactoryBeanNotInitializedException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -48,12 +50,12 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 	private static final Logger logger = LoggerFactory.getLogger(NodeClientFactoryBean.class);
 	private boolean local;
 	private boolean enableHttp;
-	private String clusterName;
-	private Node node;
-	private NodeClient nodeClient;
-	private String pathData;
-	private String pathHome;
-	private String pathConfiguration;
+	private @Nullable String clusterName;
+	private @Nullable Node node;
+	private @Nullable NodeClient nodeClient;
+	private @Nullable String pathData;
+	private @Nullable String pathHome;
+	private @Nullable String pathConfiguration;
 
 	public static class TestNode extends Node {
 
@@ -82,6 +84,11 @@ public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingB
 
 	@Override
 	public NodeClient getObject() {
+
+		if (nodeClient == null) {
+			throw new FactoryBeanNotInitializedException();
+		}
+
 		return nodeClient;
 	}
 

@@ -48,6 +48,7 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
@@ -152,14 +153,15 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 	@Document(indexName = INDEX_NAME, replicas = 0, refreshInterval = "-1")
 	static class Person {
 
-		@Id private String id;
+		@Nullable @Id private String id;
 
-		private String name;
+		@Nullable private String name;
 
-		@Field(type = FieldType.Nested) private List<Car> car;
+		@Nullable @Field(type = FieldType.Nested) private List<Car> car;
 
-		@Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
+		@Nullable @Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
 
+		@Nullable
 		public String getId() {
 			return id;
 		}
@@ -168,6 +170,7 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 			this.id = id;
 		}
 
+		@Nullable
 		public String getName() {
 			return name;
 		}
@@ -176,6 +179,7 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 			this.name = name;
 		}
 
+		@Nullable
 		public List<Car> getCar() {
 			return car;
 		}
@@ -184,6 +188,7 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 			this.car = car;
 		}
 
+		@Nullable
 		public List<Book> getBooks() {
 			return books;
 		}
@@ -203,8 +208,7 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-book-reactive-repository-query", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-book-reactive-repository-query", replicas = 0, refreshInterval = "-1")
 	static class Book {
 
 		@Id private String id;
@@ -254,9 +258,10 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 	 */
 	static class Author {
 
-		private String id;
-		private String name;
+		@Nullable private String id;
+		@Nullable private String name;
 
+		@Nullable
 		public String getId() {
 			return id;
 		}
@@ -265,6 +270,7 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 			this.id = id;
 		}
 
+		@Nullable
 		public String getName() {
 			return name;
 		}

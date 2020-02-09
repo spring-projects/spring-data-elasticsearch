@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,6 +28,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -46,8 +46,7 @@ public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests 
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleDynamicTemplatesEntity.class);
 
-		String EXPECTED_MAPPING_ONE = "{\"dynamic_templates\":"
-				+ "[{\"with_custom_analyzer\":{"
+		String EXPECTED_MAPPING_ONE = "{\"dynamic_templates\":" + "[{\"with_custom_analyzer\":{"
 				+ "\"mapping\":{\"type\":\"string\",\"analyzer\":\"standard_lowercase_asciifolding\"},"
 				+ "\"path_match\":\"names.*\"}}]," + "\"properties\":{\"names\":{\"type\":\"object\"}}}";
 
@@ -58,8 +57,7 @@ public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests 
 	public void testCorrectDynamicTemplatesMappingsTwo() {
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleDynamicTemplatesEntityTwo.class);
-		String EXPECTED_MAPPING_TWO = "{\"dynamic_templates\":"
-				+ "[{\"with_custom_analyzer\":{"
+		String EXPECTED_MAPPING_TWO = "{\"dynamic_templates\":" + "[{\"with_custom_analyzer\":{"
 				+ "\"mapping\":{\"type\":\"string\",\"analyzer\":\"standard_lowercase_asciifolding\"},"
 				+ "\"path_match\":\"names.*\"}}," + "{\"participantA1_with_custom_analyzer\":{"
 				+ "\"mapping\":{\"type\":\"string\",\"analyzer\":\"standard_lowercase_asciifolding\"},"
@@ -71,27 +69,25 @@ public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests 
 	/**
 	 * @author Petr Kukral
 	 */
-	@Document(indexName = "test-dynamictemplates", indexStoreType = "memory",
-			replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-dynamictemplates", indexStoreType = "memory", replicas = 0, refreshInterval = "-1")
 	@DynamicTemplates(mappingPath = "/mappings/test-dynamic_templates_mappings.json")
 	static class SampleDynamicTemplatesEntity {
 
-		@Id private String id;
+		@Nullable @Id private String id;
 
-		@Field(type = FieldType.Object) private Map<String, String> names = new HashMap<>();
+		@Nullable @Field(type = FieldType.Object) private Map<String, String> names = new HashMap<>();
 	}
 
 	/**
 	 * @author Petr Kukral
 	 */
-	@Document(indexName = "test-dynamictemplates", indexStoreType = "memory",
-			replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-dynamictemplates", indexStoreType = "memory", replicas = 0, refreshInterval = "-1")
 	@DynamicTemplates(mappingPath = "/mappings/test-dynamic_templates_mappings_two.json")
 	static class SampleDynamicTemplatesEntityTwo {
 
-		@Id private String id;
+		@Nullable @Id private String id;
 
-		@Field(type = FieldType.Object) private Map<String, String> names = new HashMap<>();
+		@Nullable @Field(type = FieldType.Object) private Map<String, String> names = new HashMap<>();
 	}
 
 }

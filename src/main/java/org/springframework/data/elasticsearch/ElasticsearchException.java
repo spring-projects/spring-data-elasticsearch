@@ -17,15 +17,18 @@ package org.springframework.data.elasticsearch;
 
 import java.util.Map;
 
+import org.springframework.lang.Nullable;
+
 /**
  * ElasticsearchException
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Peter-Josef Meisch
  */
 public class ElasticsearchException extends RuntimeException {
 
-	private Map<String, String> failedDocuments;
+	@Nullable private Map<String, String> failedDocuments;
 
 	public ElasticsearchException(String message) {
 		super(message);
@@ -45,6 +48,7 @@ public class ElasticsearchException extends RuntimeException {
 		this.failedDocuments = failedDocuments;
 	}
 
+	@Nullable
 	public Map<String, String> getFailedDocuments() {
 		return failedDocuments;
 	}

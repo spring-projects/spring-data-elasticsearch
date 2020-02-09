@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.springframework.lang.Nullable;
+
 /**
  * IndexQuery
  *
@@ -25,12 +27,13 @@ package org.springframework.data.elasticsearch.core.query;
 
 public class IndexQuery {
 
-	private String id;
-	private Object object;
-	private Long version;
-	private String source;
-	private String parentId;
+	@Nullable private String id;
+	@Nullable private Object object;
+	@Nullable private Long version;
+	@Nullable private String source;
+	@Nullable private String parentId;
 
+	@Nullable
 	public String getId() {
 		return id;
 	}
@@ -39,6 +42,7 @@ public class IndexQuery {
 		this.id = id;
 	}
 
+	@Nullable
 	public Object getObject() {
 		return object;
 	}
@@ -47,6 +51,7 @@ public class IndexQuery {
 		this.object = object;
 	}
 
+	@Nullable
 	public Long getVersion() {
 		return version;
 	}
@@ -55,6 +60,7 @@ public class IndexQuery {
 		this.version = version;
 	}
 
+	@Nullable
 	public String getSource() {
 		return source;
 	}
@@ -63,6 +69,7 @@ public class IndexQuery {
 		this.source = source;
 	}
 
+	@Nullable
 	public String getParentId() {
 		return parentId;
 	}

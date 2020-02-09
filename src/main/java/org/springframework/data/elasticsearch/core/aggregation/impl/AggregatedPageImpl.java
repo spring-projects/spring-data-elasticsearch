@@ -25,6 +25,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Petar Tahchiev
@@ -35,8 +36,8 @@ import org.springframework.data.elasticsearch.core.document.SearchDocumentRespon
  */
 public class AggregatedPageImpl<T> extends PageImpl<T> implements AggregatedPage<T> {
 
-	private Aggregations aggregations;
-	private String scrollId;
+	@Nullable private Aggregations aggregations;
+	@Nullable private String scrollId;
 	private float maxScore;
 
 	private static Pageable pageableOrUnpaged(Pageable pageable) {
@@ -114,15 +115,18 @@ public class AggregatedPageImpl<T> extends PageImpl<T> implements AggregatedPage
 	}
 
 	@Override
+	@Nullable
 	public Aggregations getAggregations() {
 		return aggregations;
 	}
 
 	@Override
+	@Nullable
 	public Aggregation getAggregation(String name) {
 		return aggregations == null ? null : aggregations.get(name);
 	}
 
+	@Nullable
 	@Override
 	public String getScrollId() {
 		return scrollId;

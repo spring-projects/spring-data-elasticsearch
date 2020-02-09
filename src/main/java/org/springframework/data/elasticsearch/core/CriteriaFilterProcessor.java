@@ -34,6 +34,7 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -100,7 +101,9 @@ class CriteriaFilterProcessor {
 		return filterList;
 	}
 
+	@Nullable
 	private QueryBuilder processCriteriaEntry(OperationKey key, Object value, String fieldName) {
+
 		if (value == null) {
 			return null;
 		}

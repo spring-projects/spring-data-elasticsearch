@@ -30,6 +30,7 @@ import org.apache.lucene.queryparser.flexible.standard.QueryParserUtil;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -46,8 +47,8 @@ import org.springframework.util.Assert;
 class CriteriaQueryProcessor {
 
 	QueryBuilder createQueryFromCriteria(Criteria criteria) {
-		if (criteria == null)
-			return null;
+
+		Assert.notNull(criteria, "criteria must not be null");
 
 		List<QueryBuilder> shouldQueryBuilderList = new LinkedList<>();
 		List<QueryBuilder> mustNotQueryBuilderList = new LinkedList<>();
@@ -109,6 +110,7 @@ class CriteriaQueryProcessor {
 		return query;
 	}
 
+	@Nullable
 	private QueryBuilder createQueryFragmentForCriteria(Criteria chainedCriteria) {
 		if (chainedCriteria.getQueryCriteriaEntries().isEmpty())
 			return null;
@@ -135,6 +137,7 @@ class CriteriaQueryProcessor {
 		return query;
 	}
 
+	@Nullable
 	private QueryBuilder processCriteriaEntry(Criteria.CriteriaEntry entry, String fieldName) {
 		OperationKey key = entry.getKey();
 		Object value = entry.getValue();

@@ -26,7 +26,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,6 +60,7 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.lang.Nullable;
 
 /**
  * Unit tests for {@link MappingElasticsearchConverter}.
@@ -629,10 +629,10 @@ public class MappingElasticsearchConverterUnitTests {
 
 	public static class Sample {
 
-		public @ReadOnlyProperty String readOnly;
-		public @Transient String annotatedTransientProperty;
-		public transient String javaTransientProperty;
-		public String property;
+		@Nullable public @ReadOnlyProperty String readOnly;
+		@Nullable public @Transient String annotatedTransientProperty;
+		@Nullable public transient String javaTransientProperty;
+		@Nullable public String property;
 	}
 
 	@Data

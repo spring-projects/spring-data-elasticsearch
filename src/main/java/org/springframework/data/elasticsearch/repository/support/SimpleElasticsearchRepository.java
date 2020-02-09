@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.repository.support;
 import java.util.Objects;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.lang.Nullable;
 
 /**
  * Elasticsearch specific repository implementation. Likely to be used as target within
@@ -27,12 +28,9 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
  * @author Mohsin Husen
  * @author Ryan Henszey
  * @author Sascha Woo
+ * @author Peter-Josef Meisch
  */
 public class SimpleElasticsearchRepository<T, ID> extends AbstractElasticsearchRepository<T, ID> {
-
-	public SimpleElasticsearchRepository() {
-		super();
-	}
 
 	public SimpleElasticsearchRepository(ElasticsearchEntityInformation<T, ID> metadata,
 			ElasticsearchOperations elasticsearchOperations) {
@@ -44,7 +42,7 @@ public class SimpleElasticsearchRepository<T, ID> extends AbstractElasticsearchR
 	}
 
 	@Override
-	protected String stringIdRepresentation(ID id) {
+	protected @Nullable String stringIdRepresentation(@Nullable ID id) {
 		return Objects.toString(id, null);
 	}
 }

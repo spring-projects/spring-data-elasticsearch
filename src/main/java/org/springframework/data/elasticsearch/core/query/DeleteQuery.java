@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import org.elasticsearch.index.query.QueryBuilder;
+import org.springframework.lang.Nullable;
 
 /**
  * DeleteQuery
@@ -26,10 +27,11 @@ import org.elasticsearch.index.query.QueryBuilder;
  */
 public class DeleteQuery {
 
-	private QueryBuilder query;
-	private Integer pageSize;
-	private Long scrollTimeInMillis;
+	@Nullable private QueryBuilder query;
+	@Nullable private Integer pageSize;
+	@Nullable private Long scrollTimeInMillis;
 
+	@Nullable
 	public QueryBuilder getQuery() {
 		return query;
 	}
@@ -38,6 +40,7 @@ public class DeleteQuery {
 		this.query = query;
 	}
 
+	@Nullable
 	public Integer getPageSize() {
 		return pageSize;
 	}
@@ -46,6 +49,7 @@ public class DeleteQuery {
 		this.pageSize = pageSize;
 	}
 
+	@Nullable
 	public Long getScrollTimeInMillis() {
 		return scrollTimeInMillis;
 	}

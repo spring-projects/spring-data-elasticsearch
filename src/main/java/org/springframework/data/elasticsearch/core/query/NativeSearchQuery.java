@@ -24,6 +24,7 @@ import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
+import org.springframework.lang.Nullable;
 
 /**
  * NativeSearchQuery
@@ -38,14 +39,14 @@ import org.elasticsearch.search.sort.SortBuilder;
 public class NativeSearchQuery extends AbstractQuery {
 
 	private QueryBuilder query;
-	private QueryBuilder filter;
-	private List<SortBuilder> sorts;
+	@Nullable private QueryBuilder filter;
+	@Nullable private List<SortBuilder> sorts;
 	private final List<ScriptField> scriptFields = new ArrayList<>();
-	private CollapseBuilder collapseBuilder;
-	private List<AbstractAggregationBuilder> aggregations;
-	private HighlightBuilder highlightBuilder;
-	private HighlightBuilder.Field[] highlightFields;
-	private List<IndexBoost> indicesBoost;
+	@Nullable private CollapseBuilder collapseBuilder;
+	@Nullable private List<AbstractAggregationBuilder> aggregations;
+	@Nullable private HighlightBuilder highlightBuilder;
+	@Nullable private HighlightBuilder.Field[] highlightFields;
+	@Nullable private List<IndexBoost> indicesBoost;
 
 	public NativeSearchQuery(QueryBuilder query) {
 
@@ -88,6 +89,7 @@ public class NativeSearchQuery extends AbstractQuery {
 		return query;
 	}
 
+	@Nullable
 	public QueryBuilder getFilter() {
 		return filter;
 	}
@@ -96,6 +98,7 @@ public class NativeSearchQuery extends AbstractQuery {
 		return sorts;
 	}
 
+	@Nullable
 	public HighlightBuilder getHighlightBuilder() {
 		return highlightBuilder;
 	}
@@ -116,6 +119,7 @@ public class NativeSearchQuery extends AbstractQuery {
 		scriptFields.addAll(Arrays.asList(scriptField));
 	}
 
+	@Nullable
 	public CollapseBuilder getCollapseBuilder() {
 		return collapseBuilder;
 	}
@@ -124,6 +128,7 @@ public class NativeSearchQuery extends AbstractQuery {
 		this.collapseBuilder = collapseBuilder;
 	}
 
+	@Nullable
 	public List<AbstractAggregationBuilder> getAggregations() {
 		return aggregations;
 	}
@@ -141,6 +146,7 @@ public class NativeSearchQuery extends AbstractQuery {
 		this.aggregations = aggregations;
 	}
 
+	@Nullable
 	public List<IndexBoost> getIndicesBoost() {
 		return indicesBoost;
 	}

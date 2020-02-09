@@ -29,12 +29,15 @@ public class SimpleField implements Field {
 	private String name;
 
 	public SimpleField(String name) {
-		setName(name);
+		Assert.notNull(name, "name must not be null");
+
+		this.name = name;
 	}
 
 	@Override
 	public void setName(String name) {
 		Assert.notNull(name, "name must not be null");
+
 		this.name = name;
 	}
 

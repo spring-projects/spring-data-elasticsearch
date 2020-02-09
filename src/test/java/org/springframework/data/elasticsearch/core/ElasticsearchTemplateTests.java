@@ -76,6 +76,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.lang.Nullable;
 
 /**
  * Base for testing rest/transport templates. Contains the test common to both implementing classes.
@@ -199,8 +200,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.index(indexQuery, index);
 
 		// when
-		GetQuery getQuery = new GetQuery();
-		getQuery.setId(documentId);
+		GetQuery getQuery = new GetQuery(documentId);
 		SampleEntity sampleEntity1 = operations.get(getQuery, SampleEntity.class, index);
 
 		// then
@@ -415,8 +415,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.bulkUpdate(queries, index);
 
 		// then
-		GetQuery getQuery = new GetQuery();
-		getQuery.setId(documentId);
+		GetQuery getQuery = new GetQuery(documentId);
 		SampleEntity indexedEntity = operations.get(getQuery, SampleEntity.class, index);
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
@@ -1431,8 +1430,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.update(updateQuery, index);
 
 		// then
-		GetQuery getQuery = new GetQuery();
-		getQuery.setId(documentId);
+		GetQuery getQuery = new GetQuery(documentId);
 		SampleEntity indexedEntity = operations.get(getQuery, SampleEntity.class, index);
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
@@ -1497,8 +1495,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.update(updateQuery, index);
 
 		// then
-		GetQuery getQuery = new GetQuery();
-		getQuery.setId(documentId);
+		GetQuery getQuery = new GetQuery(documentId);
 		SampleEntity indexedEntity = operations.get(getQuery, SampleEntity.class, index);
 		assertThat(indexedEntity.getMessage()).isEqualTo(message);
 	}
@@ -1741,8 +1738,7 @@ public abstract class ElasticsearchTemplateTests {
 		// then
 		assertThat(sampleEntity.getId()).isEqualTo(documentId);
 
-		GetQuery getQuery = new GetQuery();
-		getQuery.setId(documentId);
+		GetQuery getQuery = new GetQuery(documentId);
 		SampleEntity result = operations.get(getQuery, SampleEntity.class, index);
 		assertThat(result.getId()).isEqualTo(documentId);
 	}
@@ -3043,8 +3039,10 @@ public abstract class ElasticsearchTemplateTests {
 
 		static class NestedEntity {
 
+			@Nullable
 			@Field(type = Text) private String someField;
 
+			@Nullable
 			public String getSomeField() {
 				return someField;
 			}

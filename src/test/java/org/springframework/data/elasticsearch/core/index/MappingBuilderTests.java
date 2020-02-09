@@ -65,6 +65,7 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -562,59 +563,59 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		@Document(indexName = "fieldname-index")
 		static class IdEntity {
-			@Id @Field("id-property") private String id;
+			@Nullable @Id @Field("id-property") private String id;
 		}
 
 		@Document(indexName = "fieldname-index")
 		static class TextEntity {
 
-			@Id @Field("id-property") private String id;
+			@Nullable @Id @Field("id-property") private String id;
 
 			@Field(name = "text-property", type = FieldType.Text) //
-			private String textProperty;
+			@Nullable private String textProperty;
 		}
 
 		@Document(indexName = "fieldname-index")
 		static class MappingEntity {
 
-			@Id @Field("id-property") private String id;
+			@Nullable @Id @Field("id-property") private String id;
 
 			@Field("mapping-property") @Mapping(mappingPath = "/mappings/test-field-analyzed-mappings.json") //
-			private byte[] mappingProperty;
+			@Nullable private byte[] mappingProperty;
 		}
 
 		@Document(indexName = "fieldname-index")
 		static class GeoPointEntity {
 
-			@Id @Field("id-property") private String id;
+			@Nullable @Id @Field("id-property") private String id;
 
-			@Field("geopoint-property") private GeoPoint geoPoint;
+			@Nullable @Field("geopoint-property") private GeoPoint geoPoint;
 		}
 
 		@Document(indexName = "fieldname-index")
 		static class CircularEntity {
 
-			@Id @Field("id-property") private String id;
+			@Nullable @Id @Field("id-property") private String id;
 
-			@Field(name = "circular-property", type = FieldType.Object, ignoreFields = { "circular-property" }) //
+			@Nullable @Field(name = "circular-property", type = FieldType.Object, ignoreFields = { "circular-property" }) //
 			private CircularEntity circularProperty;
 		}
 
 		@Document(indexName = "fieldname-index")
 		static class CompletionEntity {
 
-			@Id @Field("id-property") private String id;
+			@Nullable @Id @Field("id-property") private String id;
 
-			@Field("completion-property") @CompletionField(maxInputLength = 100) //
+			@Nullable @Field("completion-property") @CompletionField(maxInputLength = 100) //
 			private Completion suggest;
 		}
 
 		@Document(indexName = "fieldname-index")
 		static class MultiFieldEntity {
 
-			@Id @Field("id-property") private String id;
+			@Nullable @Id @Field("id-property") private String id;
 
-			@Field("multifield-property") //
+			@Nullable @Field("multifield-property") //
 			@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"), otherFields = {
 					@InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop", searchAnalyzer = "standard") }) //
 			private String description;
@@ -629,9 +630,9 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@Document(indexName = "test-index-minimal")
 	static class MinimalChildEntity {
 
-		@Id private String id;
+		@Nullable @Id private String id;
 
-		@Parent(type = "parentType") private String parentId;
+		@Nullable @Parent(type = "parentType") private String parentId;
 	}
 
 	/**
@@ -663,8 +664,9 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@Document(indexName = "test-index-simple-recursive-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class SimpleRecursiveEntity {
 
-		@Id private String id;
-		@Field(type = FieldType.Object, ignoreFields = { "circularObject" }) private SimpleRecursiveEntity circularObject;
+		@Nullable @Id private String id;
+		@Nullable @Field(type = FieldType.Object,
+				ignoreFields = { "circularObject" }) private SimpleRecursiveEntity circularObject;
 	}
 
 	/**
@@ -713,9 +715,10 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	 */
 	static class Author {
 
-		private String id;
-		private String name;
+		@Nullable private String id;
+		@Nullable private String name;
 
+		@Nullable
 		public String getId() {
 			return id;
 		}
@@ -724,6 +727,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 			this.id = id;
 		}
 
+		@Nullable
 		public String getName() {
 			return name;
 		}
@@ -739,8 +743,9 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@Document(indexName = "test-index-sample-inherited-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class SampleInheritedEntity extends AbstractInheritedEntity {
 
-		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
+		@Nullable @Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
 
+		@Nullable
 		public String getMessage() {
 			return message;
 		}
@@ -808,10 +813,11 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	 */
 	static class AbstractInheritedEntity {
 
-		@Id private String id;
+		@Nullable @Id private String id;
 
-		@Field(type = FieldType.Date, index = false) private Date createdDate;
+		@Nullable @Field(type = FieldType.Date, index = false) private Date createdDate;
 
+		@Nullable
 		public String getId() {
 			return id;
 		}
@@ -820,6 +826,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 			this.id = id;
 		}
 
+		@Nullable
 		public Date getCreatedDate() {
 			return createdDate;
 		}
@@ -835,12 +842,13 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@Document(indexName = "test-index-recursive-mapping-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class SampleTransientEntity {
 
-		@Id private String id;
+		@Nullable @Id private String id;
 
-		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
+		@Nullable @Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
 
-		@Transient private SampleTransientEntity.NestedEntity nested;
+		@Nullable @Transient private SampleTransientEntity.NestedEntity nested;
 
+		@Nullable
 		public String getId() {
 			return id;
 		}
@@ -849,6 +857,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 			this.id = id;
 		}
 
+		@Nullable
 		public String getMessage() {
 			return message;
 		}
@@ -860,7 +869,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		static class NestedEntity {
 
 			@Field private static SampleTransientEntity.NestedEntity someField = new SampleTransientEntity.NestedEntity();
-			@Field private Boolean something;
+			@Nullable @Field private Boolean something;
 
 			public SampleTransientEntity.NestedEntity getSomeField() {
 				return someField;
@@ -870,6 +879,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 				NestedEntity.someField = someField;
 			}
 
+			@Nullable
 			public Boolean getSomething() {
 				return something;
 			}
@@ -913,7 +923,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	 */
 	@Document(indexName = "test-index-user-mapping-builder")
 	static class User {
-		@Id private String id;
+		@Nullable @Id private String id;
 
 		@Field(type = FieldType.Nested, ignoreFields = { "users" }) private Set<Group> groups = new HashSet<>();
 	}
@@ -924,54 +934,55 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@Document(indexName = "test-index-group-mapping-builder")
 	static class Group {
 
-		@Id String id;
+		@Nullable @Id String id;
 
 		@Field(type = FieldType.Nested, ignoreFields = { "groups" }) private Set<User> users = new HashSet<>();
 	}
 
 	@Document(indexName = "test-index-field-mapping-parameters")
 	static class FieldMappingParameters {
-		@Field private String indexTrue;
-		@Field(index = false) private String indexFalse;
-		@Field(store = true) private String storeTrue;
-		@Field private String storeFalse;
-		@Field private String coerceTrue;
-		@Field(coerce = false) private String coerceFalse;
-		@Field(fielddata = true) private String fielddataTrue;
-		@Field private String fielddataFalse;
-		@Field(copyTo = { "foo", "bar" }) private String copyTo;
-		@Field(ignoreAbove = 42) private String ignoreAbove;
-		@Field(type = FieldType.Integer) private String type;
-		@Field(type = FieldType.Date, format = DateFormat.custom, pattern = "YYYYMMDD") private LocalDate date;
-		@Field(analyzer = "ana", searchAnalyzer = "sana", normalizer = "norma") private String analyzers;
-		@Field(type = Keyword) private String docValuesTrue;
-		@Field(type = Keyword, docValues = false) private String docValuesFalse;
-		@Field(ignoreMalformed = true) private String ignoreMalformedTrue;
-		@Field() private String ignoreMalformedFalse;
-		@Field(indexOptions = IndexOptions.none) private String indexOptionsNone;
-		@Field(indexOptions = IndexOptions.positions) private String indexOptionsPositions;
-		@Field(indexPhrases = true) private String indexPhrasesTrue;
-		@Field() private String indexPhrasesFalse;
-		@Field(indexPrefixes = @IndexPrefixes) private String defaultIndexPrefixes;
-		@Field(indexPrefixes = @IndexPrefixes(minChars = 1, maxChars = 10)) private String customIndexPrefixes;
-		@Field private String normsTrue;
-		@Field(norms = false) private String normsFalse;
-		@Field private String nullValueNotSet;
-		@Field(nullValue = "NULLNULL") private String nullValueSet;
-		@Field(positionIncrementGap = 42) private String positionIncrementGap;
-		@Field private String similarityDefault;
-		@Field(similarity = Similarity.Boolean) private String similarityBoolean;
-		@Field private String termVectorDefault;
-		@Field(termVector = TermVector.with_offsets) private String termVectorWithOffsets;
-		@Field(type = FieldType.Scaled_Float, scalingFactor = 100.0) Double scaledFloat;
+		@Nullable @Field private String indexTrue;
+		@Nullable @Field(index = false) private String indexFalse;
+		@Nullable @Field(store = true) private String storeTrue;
+		@Nullable @Field private String storeFalse;
+		@Nullable @Field private String coerceTrue;
+		@Nullable @Field(coerce = false) private String coerceFalse;
+		@Nullable @Field(fielddata = true) private String fielddataTrue;
+		@Nullable @Field private String fielddataFalse;
+		@Nullable @Field(copyTo = { "foo", "bar" }) private String copyTo;
+		@Nullable @Field(ignoreAbove = 42) private String ignoreAbove;
+		@Nullable @Field(type = FieldType.Integer) private String type;
+		@Nullable @Field(type = FieldType.Date, format = DateFormat.custom, pattern = "YYYYMMDD") private LocalDate date;
+		@Nullable @Field(analyzer = "ana", searchAnalyzer = "sana", normalizer = "norma") private String analyzers;
+		@Nullable @Field(type = Keyword) private String docValuesTrue;
+		@Nullable @Field(type = Keyword, docValues = false) private String docValuesFalse;
+		@Nullable @Field(ignoreMalformed = true) private String ignoreMalformedTrue;
+		@Nullable @Field() private String ignoreMalformedFalse;
+		@Nullable @Field(indexOptions = IndexOptions.none) private String indexOptionsNone;
+		@Nullable @Field(indexOptions = IndexOptions.positions) private String indexOptionsPositions;
+		@Nullable @Field(indexPhrases = true) private String indexPhrasesTrue;
+		@Nullable @Field() private String indexPhrasesFalse;
+		@Nullable @Field(indexPrefixes = @IndexPrefixes) private String defaultIndexPrefixes;
+		@Nullable @Field(indexPrefixes = @IndexPrefixes(minChars = 1, maxChars = 10)) private String customIndexPrefixes;
+		@Nullable @Field private String normsTrue;
+		@Nullable @Field(norms = false) private String normsFalse;
+		@Nullable @Field private String nullValueNotSet;
+		@Nullable @Field(nullValue = "NULLNULL") private String nullValueSet;
+		@Nullable @Field(positionIncrementGap = 42) private String positionIncrementGap;
+		@Nullable @Field private String similarityDefault;
+		@Nullable @Field(similarity = Similarity.Boolean) private String similarityBoolean;
+		@Nullable @Field private String termVectorDefault;
+		@Nullable @Field(termVector = TermVector.with_offsets) private String termVectorWithOffsets;
+		@Nullable @Field(type = FieldType.Scaled_Float, scalingFactor = 100.0) Double scaledFloat;
 	}
 
 	@Document(indexName = "test-index-configure-dynamic-mapping")
 	@DynamicMapping(DynamicMappingValue.False)
 	static class ConfigureDynamicMappingEntity {
 
-		@DynamicMapping(DynamicMappingValue.Strict) @Field(type = FieldType.Object) private Author author;
+		@Nullable @DynamicMapping(DynamicMappingValue.Strict) @Field(type = FieldType.Object) private Author author;
 
+		@Nullable
 		public Author getAuthor() {
 			return author;
 		}

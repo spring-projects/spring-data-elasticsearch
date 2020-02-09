@@ -24,7 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.FactoryBeanNotInitializedException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 
 /**
  * TransportClientFactoryBean
@@ -48,8 +50,8 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 	private Boolean clientIgnoreClusterName = Boolean.FALSE;
 	private String clientPingTimeout = "5s";
 	private String clientNodesSamplerInterval = "5s";
-	private TransportClient client;
-	private Properties properties;
+	private @Nullable TransportClient client;
+	private @Nullable Properties properties;
 
 	@Override
 	public void destroy() {
@@ -65,6 +67,10 @@ public class TransportClientFactoryBean implements FactoryBean<TransportClient>,
 
 	@Override
 	public TransportClient getObject() {
+
+		if (clientTransportSniff == null) {
+			throw new FactoryBeanNotInitializedException();
+		}
 		return client;
 	}
 

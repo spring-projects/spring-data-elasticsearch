@@ -867,6 +867,7 @@ class RequestFactory {
 		return clazz != null ? elasticsearchConverter.getMappingContext().getPersistentEntity(clazz) : null;
 	}
 
+	@Nullable
 	private String getPersistentEntityId(Object entity) {
 
 		Object identifier = elasticsearchConverter.getMappingContext() //

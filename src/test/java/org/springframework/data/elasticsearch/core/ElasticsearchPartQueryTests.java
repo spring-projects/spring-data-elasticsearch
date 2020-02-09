@@ -44,6 +44,7 @@ import org.springframework.data.elasticsearch.repository.query.ElasticsearchQuer
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
+import org.springframework.lang.Nullable;
 
 /**
  * Tests for {@link ElasticsearchPartQuery}. Resides in the core package, as we need an instance of the
@@ -549,11 +550,12 @@ class ElasticsearchPartQueryTests {
 	}
 
 	static class Book {
-		@Id private String id;
-		private String name;
-		private Integer price;
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable private Integer price;
 		@Field(type = FieldType.Boolean) private boolean available;
 
+		@Nullable
 		public String getId() {
 			return id;
 		}
@@ -562,6 +564,7 @@ class ElasticsearchPartQueryTests {
 			this.id = id;
 		}
 
+		@Nullable
 		public String getName() {
 			return name;
 		}
@@ -570,6 +573,7 @@ class ElasticsearchPartQueryTests {
 			this.name = name;
 		}
 
+		@Nullable
 		public Integer getPrice() {
 			return price;
 		}

@@ -31,6 +31,7 @@ import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -41,9 +42,9 @@ import org.springframework.util.Assert;
  */
 public abstract class AbstractElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
-	protected ElasticsearchConverter elasticsearchConverter;
-	protected RequestFactory requestFactory;
-	protected IndexOperations indexOperations;
+	protected @Nullable ElasticsearchConverter elasticsearchConverter;
+	protected @Nullable RequestFactory requestFactory;
+	protected @Nullable IndexOperations indexOperations;
 
 	// region Initialization
 	protected void initialize(ElasticsearchConverter elasticsearchConverter, IndexOperations indexOperations) {
@@ -74,6 +75,9 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	// region getter/setter
 	@Override
 	public IndexOperations getIndexOperations() {
+
+		Assert.notNull("indexOperations are not initialized");
+
 		return indexOperations;
 	}
 	// endregion
@@ -159,6 +163,9 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	// region Helper methods
 	@Override
 	public ElasticsearchConverter getElasticsearchConverter() {
+
+		Assert.notNull(elasticsearchConverter, "elasticsearchConverter is not initialized.");
+
 		return elasticsearchConverter;
 	}
 
@@ -166,6 +173,9 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	 * @since 4.0
 	 */
 	public RequestFactory getRequestFactory() {
+
+		Assert.notNull(requestFactory, "requestfactory not initialized");
+
 		return requestFactory;
 	}
 
