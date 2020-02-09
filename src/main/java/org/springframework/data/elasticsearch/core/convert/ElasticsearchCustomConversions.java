@@ -39,11 +39,11 @@ import org.springframework.util.NumberUtils;
 public class ElasticsearchCustomConversions extends CustomConversions {
 
 	private static final StoreConversions STORE_CONVERSIONS;
-	private static final List<Object> STORE_CONVERTERS;
+	private static final List<Converter<?, ?>> STORE_CONVERTERS;
 
 	static {
 
-		List<Object> converters = new ArrayList<>(GeoConverters.getConvertersToRegister());
+		List<Converter<?, ?>> converters = new ArrayList<>();
 		converters.add(StringToUUIDConverter.INSTANCE);
 		converters.add(UUIDToStringConverter.INSTANCE);
 		converters.add(BigDecimalToDoubleConverter.INSTANCE);
@@ -58,8 +58,14 @@ public class ElasticsearchCustomConversions extends CustomConversions {
 	 *
 	 * @param converters must not be {@literal null}.
 	 */
-	public ElasticsearchCustomConversions(Collection<?> converters) {
-		super(STORE_CONVERSIONS, converters);
+	public static ElasticsearchCustomConversions of(Collection<Converter<?, ?>> converters) {
+		List<Converter<?, ?>> userConverters = new ArrayList<>(GeoConverters.getConvertersToRegister());
+		userConverters.addAll(converters);
+		return new ElasticsearchCustomConversions(STORE_CONVERSIONS, userConverters);
+	}
+
+	private ElasticsearchCustomConversions(StoreConversions storeConversions, Collection<?> converters) {
+		super(storeConversions, converters);
 	}
 
 	/**

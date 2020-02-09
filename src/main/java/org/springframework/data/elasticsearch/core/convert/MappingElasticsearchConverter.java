@@ -85,7 +85,7 @@ public class MappingElasticsearchConverter
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	private final GenericConversionService conversionService;
 
-	private CustomConversions conversions = new ElasticsearchCustomConversions(Collections.emptyList());
+	private CustomConversions conversions = ElasticsearchCustomConversions.of(Collections.emptyList());
 	private EntityInstantiators instantiators = new EntityInstantiators();
 
 	private ElasticsearchTypeMapper typeMapper;
