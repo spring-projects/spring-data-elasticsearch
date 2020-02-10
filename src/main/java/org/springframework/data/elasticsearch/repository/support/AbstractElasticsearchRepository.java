@@ -176,34 +176,35 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	@Override
 	public <S extends T> S save(S entity) {
+
 		Assert.notNull(entity, "Cannot save 'null' entity.");
-		operations.index(createIndexQuery(entity), getIndexCoordinates());
+
+		operations.save(entity, getIndexCoordinates());
 		indexOperations.refresh(getIndexCoordinates());
 		return entity;
 	}
 
 	public <S extends T> List<S> save(List<S> entities) {
+
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
+
 		return Streamable.of(saveAll(entities)).stream().collect(Collectors.toList());
 	}
 
 	@Override
 	public <S extends T> S indexWithoutRefresh(S entity) {
 		Assert.notNull(entity, "Cannot save 'null' entity.");
-		operations.index(createIndexQuery(entity), getIndexCoordinates());
+		operations.save(entity);
 		return entity;
 	}
 
 	@Override
 	public <S extends T> Iterable<S> saveAll(Iterable<S> entities) {
-		Assert.notNull(entities, "Cannot insert 'null' as a List.");
-		List<IndexQuery> queries = Streamable.of(entities).stream().map(this::createIndexQuery)
-				.collect(Collectors.toList());
 
-		if (!queries.isEmpty()) {
-			operations.bulkIndex(queries, getIndexCoordinates());
-			indexOperations.refresh(getIndexCoordinates());
-		}
+		Assert.notNull(entities, "Cannot insert 'null' as a List.");
+
+		operations.save(entities, getIndexCoordinates());
+		indexOperations.refresh(getIndexCoordinates());
 
 		return entities;
 	}
@@ -329,14 +330,6 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		indexOperations.refresh(getEntityClass());
 	}
 
-	private IndexQuery createIndexQuery(T entity) {
-		IndexQuery query = new IndexQuery();
-		query.setObject(entity);
-		query.setId(stringIdRepresentation(extractIdFromBean(entity)));
-		query.setVersion(extractVersionFromBean(entity));
-		query.setParentId(extractParentIdFromBean(entity));
-		return query;
-	}
 
 	@SuppressWarnings("unchecked")
 	private Class<T> resolveReturnedClassFromGenericType() {
@@ -396,13 +389,6 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	protected abstract @Nullable String stringIdRepresentation(@Nullable ID id);
 
-	private Long extractVersionFromBean(T entity) {
-		return entityInformation.getVersion(entity);
-	}
-
-	private String extractParentIdFromBean(T entity) {
-		return entityInformation.getParentId(entity);
-	}
 
 	private IndexCoordinates getIndexCoordinates() {
 		return operations.getIndexCoordinatesFor(getEntityClass());

@@ -127,6 +127,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
+	@Nullable
 	public <T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index) {
 		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, query, index);
 		GetResponse response = getRequestBuilder.execute().actionGet();
@@ -145,12 +146,12 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public void bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index) {
+	public List<String> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index) {
 
 		Assert.notNull(queries, "List of IndexQuery must not be null");
 		Assert.notNull(bulkOptions, "BulkOptions must not be null");
 
-		doBulkOperation(queries, bulkOptions, index);
+		return doBulkOperation(queries, bulkOptions, index);
 	}
 
 	@Override
@@ -178,9 +179,9 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		return updateRequestBuilder.execute().actionGet();
 	}
 
-	private void doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
+	private List<String> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
 		BulkRequestBuilder bulkRequest = requestFactory.bulkRequestBuilder(client, queries, bulkOptions, index);
-		checkForBulkOperationFailure(bulkRequest.execute().actionGet());
+		return checkForBulkOperationFailure(bulkRequest.execute().actionGet());
 	}
 	// endregion
 

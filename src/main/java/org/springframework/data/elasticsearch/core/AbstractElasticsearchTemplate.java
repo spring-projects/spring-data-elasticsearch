@@ -1,10 +1,13 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -27,10 +30,13 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -83,6 +89,68 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	// endregion
 
 	// region DocumentOperations
+
+	@Override
+	public <T> T save(T entity) {
+
+		Assert.notNull(entity, "entity must not be null");
+
+		return save(entity, getIndexCoordinatesFor(entity.getClass()));
+	}
+
+	@Override
+	public <T> T save(T entity, IndexCoordinates index) {
+
+		Assert.notNull(entity, "entity must not be null");
+		Assert.notNull(index, "index must not be null");
+
+		index(getIndexQuery(entity), index);
+		return entity;
+	}
+
+	@Override
+	public <T> Iterable<T> save(Iterable<T> entities) {
+
+		Assert.notNull(entities, "entities must not be null");
+
+		Iterator<T> iterator = entities.iterator();
+		if (iterator.hasNext()) {
+			return save(entities, getIndexCoordinatesFor(iterator.next().getClass()));
+		}
+
+		return entities;
+	}
+
+	@Override
+	public <T> Iterable<T> save(Iterable<T> entities, IndexCoordinates index) {
+
+		Assert.notNull(entities, "entities must not be null");
+		Assert.notNull(index, "index must not be null");
+
+		List<IndexQuery> indexQueries = Streamable.of(entities).stream().map(this::getIndexQuery)
+				.collect(Collectors.toList());
+
+		if (!indexQueries.isEmpty()) {
+			List<String> ids = bulkIndex(indexQueries, index);
+			Iterator<String> idIterator = ids.iterator();
+			entities.forEach(entity -> {
+				setPersistentEntityId(entity, idIterator.next());
+			});
+		}
+
+		return entities;
+	}
+
+	@Override
+	public <T> Iterable<T> save(T... entities) {
+		return save(Arrays.asList(entities));
+	}
+
+	@Override
+	public <T> Iterable<T> save(IndexCoordinates index, T... entities) {
+		return save(Arrays.asList(entities), index);
+	}
+
 	@Override
 	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
 
@@ -197,7 +265,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		return getRequiredPersistentEntity(clazz).getIndexCoordinates();
 	}
 
-	protected void checkForBulkOperationFailure(BulkResponse bulkResponse) {
+	/**
+	 * @param bulkResponse
+	 * @return the list of the item id's
+	 */
+	protected List<String> checkForBulkOperationFailure(BulkResponse bulkResponse) {
 
 		if (bulkResponse.hasFailures()) {
 			Map<String, String> failedDocuments = new HashMap<>();
@@ -211,6 +283,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 							+ failedDocuments + ']',
 					failedDocuments);
 		}
+
+		return Stream.of(bulkResponse.getItems()).map(BulkItemResponse::getId).collect(Collectors.toList());
 	}
 
 	protected void setPersistentEntityId(Object entity, String id) {
@@ -227,5 +301,39 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	ElasticsearchPersistentEntity<?> getRequiredPersistentEntity(Class<?> clazz) {
 		return elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(clazz);
 	}
+
+	@Nullable
+	private String getEntityId(Object entity) {
+		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
+		ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
+
+		if (idProperty != null) {
+			return stringIdRepresentation(persistentEntity.getPropertyAccessor(entity).getProperty(idProperty));
+		}
+
+		return null;
+	}
+
+	@Nullable
+	private Long getEntityVersion(Object entity) {
+		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
+		ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
+
+		if (versionProperty != null) {
+			Object version = persistentEntity.getPropertyAccessor(entity).getProperty(versionProperty);
+
+			if (version != null && Long.class.isAssignableFrom(version.getClass())) {
+				return ((Long) version);
+			}
+		}
+
+		return null;
+	}
+
+	private <T> IndexQuery getIndexQuery(T entity) {
+		return new IndexQueryBuilder().withObject(entity).withId(getEntityId(entity)).withVersion(getEntityVersion(entity))
+				.build();
+	}
+
 	// endregion
 }

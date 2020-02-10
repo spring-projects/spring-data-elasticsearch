@@ -25,6 +25,7 @@ import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.lang.Nullable;
 
 /**
  * The operations for the
@@ -34,6 +35,63 @@ import org.springframework.data.elasticsearch.core.query.UpdateQuery;
  * @since 4.0
  */
 public interface DocumentOperations {
+
+	/**
+	 * Saves an entity to the index specified in the entity's Document annotation
+	 * 
+	 * @param entity the entity to save, must not be {@literal null}
+	 * @param <T> the entity type
+	 * @return the saved entity
+	 */
+	<T> T save(T entity);
+
+	/**
+	 * Saves an entity to the index specified in the entity's Document annotation
+	 * 
+	 * @param entity the entity to save, must not be {@literal null}
+	 * @param index the index to save the entity in, must not be {@literal null}
+	 * @param <T> the entity type
+	 * @return the saved entity
+	 */
+	<T> T save(T entity, IndexCoordinates index);
+
+	/**
+	 * saves the given entities to the index retrieved from the entities' Document annotation
+	 * 
+	 * @param entities must not be {@literal null}
+	 * @param <T> the entity type
+	 * @return the saved entites
+	 */
+	<T> Iterable<T> save(Iterable<T> entities);
+
+	/**
+	 * saves the given entities to the given index
+	 *
+	 * @param entities must not be {@literal null}
+	 * @param index the idnex to save the entities in, must not be {@literal null}
+	 * @param <T> the entity type
+	 * @return the saved entites
+	 */
+	<T> Iterable<T> save(Iterable<T> entities, IndexCoordinates index);
+
+	/**
+	 * saves the given entities to the index retrieved from the entities' Document annotation
+	 *
+	 * @param entities must not be {@literal null}
+	 * @param <T> the entity type
+	 * @return the saved entites as Iterable
+	 */
+	<T> Iterable<T> save(T... entities);
+
+	/**
+	 * saves the given entities to the given index.
+	 *
+	 * @param index the idnex to save the entities in, must not be {@literal null}
+	 * @param entities must not be {@literal null}
+	 * @param <T> the entity type
+	 * @return the saved entites as Iterable
+	 */
+	<T> Iterable<T> save(IndexCoordinates index, T... entities);
 
 	/**
 	 * Index an object. Will do save or update.
@@ -52,6 +110,7 @@ public interface DocumentOperations {
 	 * @param index the index from which the object is read.
 	 * @return the found object
 	 */
+	@Nullable
 	<T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index);
 
 	/**
@@ -68,18 +127,20 @@ public interface DocumentOperations {
 	 * Bulk index all objects. Will do save or update.
 	 *
 	 * @param queries the queries to execute in bulk
+	 * @return the ids of the indexed objects
 	 */
-	default void bulkIndex(List<IndexQuery> queries, IndexCoordinates index) {
-		bulkIndex(queries, BulkOptions.defaultOptions(), index);
+	default List<String> bulkIndex(List<IndexQuery> queries, IndexCoordinates index) {
+		return bulkIndex(queries, BulkOptions.defaultOptions(), index);
 	}
 
 	/**
 	 * Bulk index all objects. Will do save or update.
-	 *
+	 * 
 	 * @param queries the queries to execute in bulk
 	 * @param bulkOptions options to be added to the bulk request
+	 * @return the ids of the indexed objects
 	 */
-	void bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index);
+	List<String> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index);
 
 	/**
 	 * Bulk update all objects. Will do update.

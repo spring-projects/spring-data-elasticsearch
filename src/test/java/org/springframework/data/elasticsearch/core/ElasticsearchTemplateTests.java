@@ -2907,6 +2907,84 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(highlightField.get(1)).contains("<em>message</em>");
 	}
 
+	@Test // DATAES-738
+	void shouldSaveEntityWithIndexCoordinates() {
+		String id = "42";
+		SampleEntity entity = new SampleEntity();
+		entity.setId(id);
+		entity.setVersion(42L);
+		entity.setMessage("message");
+
+		operations.save(entity, index);
+		indexOperations.refresh(index);
+
+		SampleEntity result = operations.get(new GetQuery(id), SampleEntity.class, index);
+
+		assertThat(result).isEqualTo(entity);
+	}
+
+	@Test // DATAES-738
+	void shouldSaveEntityWithOutIndexCoordinates() {
+		String id = "42";
+		SampleEntity entity = new SampleEntity();
+		entity.setId(id);
+		entity.setVersion(42L);
+		entity.setMessage("message");
+
+		operations.save(entity);
+		indexOperations.refresh(index);
+
+		SampleEntity result = operations.get(new GetQuery(id), SampleEntity.class, index);
+
+		assertThat(result).isEqualTo(entity);
+	}
+
+	@Test // DATAES-738
+	void shouldSaveEntityIterableWithIndexCoordinates() {
+		String id1 = "42";
+		SampleEntity entity1 = new SampleEntity();
+		entity1.setId(id1);
+		entity1.setVersion(42L);
+		entity1.setMessage("message");
+		String id2 = "43";
+		SampleEntity entity2 = new SampleEntity();
+		entity2.setId(id2);
+		entity2.setVersion(43L);
+		entity2.setMessage("message");
+
+		operations.save(Arrays.asList(entity1, entity2), index);
+		indexOperations.refresh(index);
+
+		SampleEntity result1 = operations.get(new GetQuery(id1), SampleEntity.class, index);
+		SampleEntity result2 = operations.get(new GetQuery(id2), SampleEntity.class, index);
+
+		assertThat(result1).isEqualTo(entity1);
+		assertThat(result2).isEqualTo(entity2);
+	}
+
+	@Test // DATAES-738
+	void shouldSaveEntityIterableWithoutIndexCoordinates() {
+		String id1 = "42";
+		SampleEntity entity1 = new SampleEntity();
+		entity1.setId(id1);
+		entity1.setVersion(42L);
+		entity1.setMessage("message");
+		String id2 = "43";
+		SampleEntity entity2 = new SampleEntity();
+		entity2.setId(id2);
+		entity2.setVersion(43L);
+		entity2.setMessage("message");
+
+		operations.save(Arrays.asList(entity1, entity2));
+		indexOperations.refresh(index);
+
+		SampleEntity result1 = operations.get(new GetQuery(id1), SampleEntity.class, index);
+		SampleEntity result2 = operations.get(new GetQuery(id2), SampleEntity.class, index);
+
+		assertThat(result1).isEqualTo(entity1);
+		assertThat(result2).isEqualTo(entity2);
+	}
+
 	protected RequestFactory getRequestFactory() {
 		return ((AbstractElasticsearchTemplate) operations).getRequestFactory();
 	}
@@ -3039,8 +3117,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		static class NestedEntity {
 
-			@Nullable
-			@Field(type = Text) private String someField;
+			@Nullable @Field(type = Text) private String someField;
 
 			@Nullable
 			public String getSomeField() {
