@@ -38,7 +38,7 @@ public interface DocumentOperations {
 
 	/**
 	 * Saves an entity to the index specified in the entity's Document annotation
-	 * 
+	 *
 	 * @param entity the entity to save, must not be {@literal null}
 	 * @param <T> the entity type
 	 * @return the saved entity
@@ -47,7 +47,7 @@ public interface DocumentOperations {
 
 	/**
 	 * Saves an entity to the index specified in the entity's Document annotation
-	 * 
+	 *
 	 * @param entity the entity to save, must not be {@literal null}
 	 * @param index the index to save the entity in, must not be {@literal null}
 	 * @param <T> the entity type
@@ -57,7 +57,7 @@ public interface DocumentOperations {
 
 	/**
 	 * saves the given entities to the index retrieved from the entities' Document annotation
-	 * 
+	 *
 	 * @param entities must not be {@literal null}
 	 * @param <T> the entity type
 	 * @return the saved entites
@@ -79,19 +79,9 @@ public interface DocumentOperations {
 	 *
 	 * @param entities must not be {@literal null}
 	 * @param <T> the entity type
-	 * @return the saved entites as Iterable
+	 * @return the saved entities as Iterable
 	 */
 	<T> Iterable<T> save(T... entities);
-
-	/**
-	 * saves the given entities to the given index.
-	 *
-	 * @param index the idnex to save the entities in, must not be {@literal null}
-	 * @param entities must not be {@literal null}
-	 * @param <T> the entity type
-	 * @return the saved entites as Iterable
-	 */
-	<T> Iterable<T> save(IndexCoordinates index, T... entities);
 
 	/**
 	 * Index an object. Will do save or update.
@@ -135,7 +125,7 @@ public interface DocumentOperations {
 
 	/**
 	 * Bulk index all objects. Will do save or update.
-	 * 
+	 *
 	 * @param queries the queries to execute in bulk
 	 * @param bulkOptions options to be added to the bulk request
 	 * @return the ids of the indexed objects

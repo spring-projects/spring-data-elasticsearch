@@ -147,11 +147,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public <T> Iterable<T> save(IndexCoordinates index, T... entities) {
-		return save(Arrays.asList(entities), index);
-	}
-
-	@Override
 	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
 
 		Assert.notNull(query, "Query must not be null.");
