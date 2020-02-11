@@ -76,7 +76,7 @@ public class ElasticsearchConfigurationSupport {
 	 */
 	@Bean
 	public ElasticsearchCustomConversions elasticsearchCustomConversions() {
-		return ElasticsearchCustomConversions.of(Collections.emptyList());
+		return new ElasticsearchCustomConversions(Collections.emptyList());
 	}
 
 	/**
