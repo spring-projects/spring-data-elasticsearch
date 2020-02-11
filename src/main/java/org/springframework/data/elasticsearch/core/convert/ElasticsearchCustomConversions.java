@@ -43,7 +43,7 @@ public class ElasticsearchCustomConversions extends CustomConversions {
 
 	static {
 
-		List<Converter<?, ?>> converters = new ArrayList<>();
+		List<Converter<?, ?>> converters = new ArrayList<>(GeoConverters.getConvertersToRegister());
 		converters.add(StringToUUIDConverter.INSTANCE);
 		converters.add(UUIDToStringConverter.INSTANCE);
 		converters.add(BigDecimalToDoubleConverter.INSTANCE);
@@ -58,14 +58,8 @@ public class ElasticsearchCustomConversions extends CustomConversions {
 	 *
 	 * @param converters must not be {@literal null}.
 	 */
-	public static ElasticsearchCustomConversions of(Collection<Converter<?, ?>> converters) {
-		List<Converter<?, ?>> userConverters = new ArrayList<>(GeoConverters.getConvertersToRegister());
-		userConverters.addAll(converters);
-		return new ElasticsearchCustomConversions(STORE_CONVERSIONS, userConverters);
-	}
-
-	private ElasticsearchCustomConversions(StoreConversions storeConversions, Collection<?> converters) {
-		super(storeConversions, converters);
+	public ElasticsearchCustomConversions(Collection<?> converters) {
+		super(STORE_CONVERSIONS, converters);
 	}
 
 	/**
