@@ -123,6 +123,7 @@ import org.springframework.util.StringUtils;
  * @author Martin Choraine
  * @author Farid Azaza
  * @author Gyula Attila Csorogi
+ * @author Alexander Shabunevich
  */
 public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 		implements ElasticsearchOperations, EsClient<Client>, ApplicationContextAware {
@@ -1115,7 +1116,13 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 		}
 
 		if (query.getPageable().isPaged()) {
-			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
+			long offset = query.getPageable().getOffset();
+
+			if (offset > Integer.MAX_VALUE) {
+				throw new IllegalArgumentException(String.format("Offset must not be more than %s", Integer.MAX_VALUE));
+			}
+
+			startRecord = (int) offset;
 			searchRequestBuilder.setSize(query.getPageable().getPageSize());
 		}
 		searchRequestBuilder.setFrom(startRecord);

@@ -143,6 +143,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Peter-Josef Meisch
  * @author Mathias Teier
  * @author Gyula Attila Csorogi
+ * @author Alexander Shabunevich
  */
 public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 		implements ElasticsearchOperations, EsClient<RestHighLevelClient>, ApplicationContextAware {
@@ -1338,7 +1339,13 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 		}
 
 		if (query.getPageable().isPaged()) {
-			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
+			long offset = query.getPageable().getOffset();
+
+			if (offset > Integer.MAX_VALUE) {
+				throw new IllegalArgumentException(String.format("Offset must not be more than %s", Integer.MAX_VALUE));
+			}
+
+			startRecord = (int) offset;
 			sourceBuilder.size(query.getPageable().getPageSize());
 		}
 		sourceBuilder.from(startRecord);
