@@ -1115,7 +1115,13 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 		}
 
 		if (query.getPageable().isPaged()) {
-			startRecord = query.getPageable().getPageNumber() * query.getPageable().getPageSize();
+			long offset = query.getPageable().getOffset();
+
+			if (offset > Integer.MAX_VALUE) {
+				throw new IllegalArgumentException(String.format("Offset must not be more than %s", Integer.MAX_VALUE));
+			}
+
+			startRecord = (int) offset;
 			searchRequestBuilder.setSize(query.getPageable().getPageSize());
 		}
 		searchRequestBuilder.setFrom(startRecord);
