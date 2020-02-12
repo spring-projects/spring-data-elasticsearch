@@ -1,6 +1,18 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.0.M3 (2020-02-12)
+----------------------------------------
+* DATAES-743 - Revert geo converters to back to store converters.
+* DATAES-740 - Adapt to spring-data-commons changes.
+* DATAES-739 - Introduce nullable annotations for API validation.
+* DATAES-738 - Add entity related save methods to DocumentOperations.
+* DATAES-735 - Update to Elasticsearch 7.5.2.
+* DATAES-734 - Add Sort implementation that allows geo distance sorts.
+* DATAES-732 - Release 4.0 M3 (Neumann).
+* DATAES-449 - Pass route parameter to created search request.
+
+
 Changes in version 4.0.0.M2 (2020-01-17)
 ----------------------------------------
 * DATAES-731 - Release 4.0 M2 (Neumann).
@@ -996,6 +1008,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
