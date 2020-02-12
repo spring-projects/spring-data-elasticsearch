@@ -1342,7 +1342,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 			long offset = query.getPageable().getOffset();
 
 			if (offset > Integer.MAX_VALUE) {
-				throw new IllegalArgumentException(String.format("Offset must not be more than %s", Integer.MAX_VALUE));
+				throw new IllegalArgumentException(String.format("Offset must not be more than %d", Integer.MAX_VALUE));
 			}
 
 			startRecord = (int) offset;
