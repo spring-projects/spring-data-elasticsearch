@@ -257,7 +257,29 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	@Override
 	public Mono<Boolean> exists(String id, Class<?> entityType) {
-		return exists(id, entityType, getIndexCoordinatesFor(entityType));
+		return doExists(id, getIndexCoordinatesFor(entityType));
+	}
+
+	@Override
+	public Mono<Boolean> exists(String id, IndexCoordinates index) {
+		return doExists(id, index);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exists(String, Class, IndexCoordinates)
+	 */
+	@Override
+	public Mono<Boolean> exists(String id, Class<?> entityType, IndexCoordinates index) {
+
+		Assert.notNull(id, "Id must not be null!");
+
+		return doExists(id, index);
+	}
+
+	private Mono<Boolean> doExists(String id, @Nullable IndexCoordinates index) {
+
+		return Mono.defer(() -> doExists(new GetRequest(index.getIndexName(), id)));
 	}
 
 	/**
@@ -343,23 +365,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 			return doFindById(new GetRequest(index.getIndexName(), id));
 		});
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exists(String, Class, IndexCoordinates)
-	 */
-	@Override
-	public Mono<Boolean> exists(String id, Class<?> entityType, IndexCoordinates index) {
-
-		Assert.notNull(id, "Id must not be null!");
-
-		return doExists(id, getPersistentEntityFor(entityType), index);
-	}
-
-	private Mono<Boolean> doExists(String id, ElasticsearchPersistentEntity<?> entity, @Nullable IndexCoordinates index) {
-
-		return Mono.defer(() -> doExists(new GetRequest(index.getIndexName(), id)));
 	}
 
 	/*

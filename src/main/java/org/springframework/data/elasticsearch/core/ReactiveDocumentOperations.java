@@ -180,6 +180,17 @@ public interface ReactiveDocumentOperations {
 	 * @param index the target index, must not be {@literal null}
 	 * @return a {@link Mono} emitting {@literal true} if a matching document exists, {@literal false} otherwise.
 	 */
+	Mono<Boolean> exists(String id, IndexCoordinates index);
+
+	/**
+	 * Check if an entity with given {@literal id} exists.
+	 *
+	 * @param id the {@literal _id} of the document to look for.
+	 * @param index the target index, must not be {@literal null}
+	 * @return a {@link Mono} emitting {@literal true} if a matching document exists, {@literal false} otherwise.
+	 * @deprecated since 4.0, use {@link #exists(String, Class)} or {@link #exists(String, IndexCoordinates)}
+	 */
+	@Deprecated
 	Mono<Boolean> exists(String id, Class<?> entityType, IndexCoordinates index);
 
 	/**
