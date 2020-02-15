@@ -138,6 +138,24 @@ public interface DocumentOperations {
 	<T> List<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
 
 	/**
+	 * Check if an entity with given {@literal id} exists.
+	 *
+	 * @param id the {@literal _id} of the document to look for.
+	 * @param entityType the domain type used.
+	 * @return {@literal true} if a matching document exists, {@literal false} otherwise.
+	 */
+	<T> Boolean exists(String id, Class<T> clazz);
+
+	/**
+	 * Check if an entity with given {@literal id} exists.
+	 *
+	 * @param id the {@literal _id} of the document to look for.
+	 * @param index the target index, must not be {@literal null}
+	 * @return {@literal true} if a matching document exists, {@literal false} otherwise.
+	 */
+	Boolean exists(String id, IndexCoordinates index);
+
+	/**
 	 * Bulk index all objects. Will do save or update.
 	 *
 	 * @param queries the queries to execute in bulk

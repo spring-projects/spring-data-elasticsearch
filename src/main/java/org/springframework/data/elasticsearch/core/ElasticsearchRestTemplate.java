@@ -47,7 +47,6 @@ import org.springframework.data.elasticsearch.core.document.SearchDocumentRespon
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
@@ -149,6 +148,16 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 			return elasticsearchConverter.mapDocuments(DocumentAdapters.from(result), clazz);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while multiget for request: " + request.toString(), e);
+		}
+	}
+
+	@Override
+	protected Boolean doExists(String id, IndexCoordinates index) {
+		GetRequest request = requestFactory.getRequest(id, index);
+		try {
+			return client.get(request, RequestOptions.DEFAULT).isExists();
+		} catch (IOException e) {
+			throw new ElasticsearchException("Error while getting for request: " + request.toString(), e);
 		}
 	}
 

@@ -158,6 +158,18 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
+	public <T> Boolean exists(String id, Class<T> clazz) {
+		return exists(id, getIndexCoordinatesFor(clazz));
+	}
+
+	@Override
+	public Boolean exists(String id, IndexCoordinates index) {
+		return doExists(id, index);
+	}
+
+	abstract protected Boolean doExists(String id, IndexCoordinates index);
+
+	@Override
 	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
 
 		Assert.notNull(query, "Query must not be null.");
