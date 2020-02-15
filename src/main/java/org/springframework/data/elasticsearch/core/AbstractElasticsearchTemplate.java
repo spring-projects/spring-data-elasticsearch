@@ -148,13 +148,13 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public <T> T findById(String id, Class<T> clazz) {
-		return findById(id, clazz, getIndexCoordinatesFor(clazz));
+	public <T> T getById(String id, Class<T> clazz) {
+		return getById(id, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
 	public <T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index) {
-		return findById(query.getId(), clazz, index);
+		return getById(query.getId(), clazz, index);
 	}
 
 	@Override

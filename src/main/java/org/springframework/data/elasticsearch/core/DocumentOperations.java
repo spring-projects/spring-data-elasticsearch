@@ -101,7 +101,7 @@ public interface DocumentOperations {
 	 * @return the entity or null if not found
 	 */
 	@Nullable
-	<T> T findById(String id, Class<T> clazz);
+	<T> T getById(String id, Class<T> clazz);
 
 	/**
 	 * Retrieves an object from o the index specified in the entity's Document annotation.
@@ -112,7 +112,7 @@ public interface DocumentOperations {
 	 * @return the entity or null if not found
 	 */
 	@Nullable
-	<T> T findById(String id, Class<T> clazz, IndexCoordinates index);
+	<T> T getById(String id, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Retrieves an object from an index.
@@ -121,7 +121,7 @@ public interface DocumentOperations {
 	 * @param clazz the type of the object to be returned
 	 * @param index the index from which the object is read.
 	 * @return the found object
-	 * @deprecated since 4.0, use {@link #findById(String, Class, IndexCoordinates)}
+	 * @deprecated since 4.0, use {@link #getById(String, Class, IndexCoordinates)}
 	 */
 	@Deprecated
 	@Nullable

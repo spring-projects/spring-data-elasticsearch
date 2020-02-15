@@ -148,7 +148,7 @@ public class NestedObjectTests {
 		indexOperations.refresh(PersonMultipleLevelNested.class);
 
 		// then
-		PersonMultipleLevelNested personIndexed = operations.findById("1", PersonMultipleLevelNested.class,
+		PersonMultipleLevelNested personIndexed = operations.getById("1", PersonMultipleLevelNested.class,
 				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes("user"));
 		assertThat(personIndexed).isNotNull();
 	}

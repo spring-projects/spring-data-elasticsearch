@@ -243,18 +243,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		}
 	}
 
-	/**
-	 * Customization hook on the actual execution result {@link Publisher}. <br />
-	 *
-	 * @param request the already prepared {@link GetRequest} ready to be executed.
-	 * @return a {@link Mono} emitting the result of the operation.
-	 */
-	protected Mono<GetResult> doFindById(GetRequest request) {
-
-		return Mono.from(execute(client -> client.get(request))) //
-				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
-	}
-
 	@Override
 	public Mono<Boolean> exists(String id, Class<?> entityType) {
 		return doExists(id, getIndexCoordinatesFor(entityType));
@@ -342,29 +330,35 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public <T> Mono<T> findById(String id, Class<T> entityType) {
-		return findById(id, entityType, getIndexCoordinatesFor(entityType));
+	public <T> Mono<T> getById(String id, Class<T> entityType) {
+		return getById(id, entityType, getIndexCoordinatesFor(entityType));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#findById(String, Class, IndexCoordinates)
-	 */
 	@Override
-	public <T> Mono<T> findById(String id, Class<T> entityType, IndexCoordinates index) {
+	public <T> Mono<T> getById(String id, Class<T> entityType, IndexCoordinates index) {
 
 		Assert.notNull(id, "Id must not be null!");
 
-		return doFindById(id, getPersistentEntityFor(entityType), index)
+		return doGetById(id, getPersistentEntityFor(entityType), index)
 				.map(it -> converter.mapDocument(DocumentAdapters.from(it), entityType));
 	}
 
-	private Mono<GetResult> doFindById(String id, ElasticsearchPersistentEntity<?> entity, IndexCoordinates index) {
-
+	private Mono<GetResult> doGetById(String id, ElasticsearchPersistentEntity<?> entity, IndexCoordinates index) {
 		return Mono.defer(() -> {
-
-			return doFindById(new GetRequest(index.getIndexName(), id));
+			return doGetById(new GetRequest(index.getIndexName(), id));
 		});
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link GetRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
+	 */
+	protected Mono<GetResult> doGetById(GetRequest request) {
+
+		return Mono.from(execute(client -> client.get(request))) //
+				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
 	}
 
 	/*

@@ -151,8 +151,36 @@ public interface ReactiveDocumentOperations {
 	 * @param entityType the domain type used for mapping the document.
 	 * @param <T>
 	 * @return {@link Mono#empty()} if not found.
+	 * @deprecated since 4.0 use {@link #getById(String, Class)}
 	 */
-	<T> Mono<T> findById(String id, Class<T> entityType);
+	@Deprecated
+	default <T> Mono<T> findById(String id, Class<T> entityType) {
+		return getById(id, entityType);
+	}
+
+	/**
+	 * Fetch the entity with given {@literal id}.
+	 *
+	 * @param id must not be {@literal null}.
+	 * @param index the target index, must not be {@literal null}
+	 * @param <T>
+	 * @return the {@link Mono} emitting the entity or signalling completion if none found.
+	 * @deprecated since 4.0, use {@link #getById(String, Class, IndexCoordinates)}
+	 */
+	@Deprecated
+	default <T> Mono<T> findById(String id, Class<T> entityType, IndexCoordinates index) {
+		return getById(id, entityType, index);
+	}
+
+	/**
+	 * Find the document with the given {@literal id} mapped onto the given {@literal entityType}.
+	 *
+	 * @param id the {@literal _id} of the document to fetch.
+	 * @param entityType the domain type used for mapping the document.
+	 * @param <T>
+	 * @return {@link Mono#empty()} if not found.
+	 */
+	<T> Mono<T> getById(String id, Class<T> entityType);
 
 	/**
 	 * Fetch the entity with given {@literal id}.
@@ -162,7 +190,7 @@ public interface ReactiveDocumentOperations {
 	 * @param <T>
 	 * @return the {@link Mono} emitting the entity or signalling completion if none found.
 	 */
-	<T> Mono<T> findById(String id, Class<T> entityType, IndexCoordinates index);
+	<T> Mono<T> getById(String id, Class<T> entityType, IndexCoordinates index);
 
 	/**
 	 * Check if an entity with given {@literal id} exists.

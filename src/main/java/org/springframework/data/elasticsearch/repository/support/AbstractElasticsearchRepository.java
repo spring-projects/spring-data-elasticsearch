@@ -121,7 +121,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	@Override
 	public Optional<T> findById(ID id) {
-		return Optional.ofNullable(operations.findById(stringIdRepresentation(id), getEntityClass(), getIndexCoordinates()));
+		return Optional.ofNullable(operations.getById(stringIdRepresentation(id), getEntityClass(), getIndexCoordinates()));
 	}
 
 	@Override

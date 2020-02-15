@@ -127,7 +127,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> T findById(String id, Class<T> clazz, IndexCoordinates index) {
+	public <T> T getById(String id, Class<T> clazz, IndexCoordinates index) {
 		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, index);
 		GetResponse response = getRequestBuilder.execute().actionGet();
 		return elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);
