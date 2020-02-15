@@ -40,7 +40,7 @@ import org.springframework.lang.Nullable;
 /**
  * @author Peter-Josef Meisch
  */
-class RequestFactoryTest {
+class RequestFactoryTests {
 
 	@Nullable private static RequestFactory requestFactory;
 	@Nullable private static MappingElasticsearchConverter converter;
@@ -74,7 +74,7 @@ class RequestFactoryTest {
 				"          \"query_string\": {" + //
 				"            \"query\": \"Smith\"," + //
 				"            \"fields\": [" + //
-				"              \"first-name^1.0\"" + //
+				"              \"last-name^1.0\"" + //
 				"            ]" + //
 				"          }" + //
 				"        }" + //

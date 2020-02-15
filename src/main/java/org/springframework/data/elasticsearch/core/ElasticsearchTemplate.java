@@ -165,7 +165,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public String delete(String id, IndexCoordinates index) {
-		return client.prepareDelete(index.getIndexName(), IndexCoordinates.TYPE, id).execute().actionGet().getId();
+		return client.prepareDelete(index.getIndexName(), IndexCoordinates.TYPE, elasticsearchConverter.convertId(id))
+				.execute().actionGet().getId();
 	}
 
 	@Override

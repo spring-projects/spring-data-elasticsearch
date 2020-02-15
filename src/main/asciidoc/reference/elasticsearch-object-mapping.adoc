@@ -3,12 +3,15 @@
 
 Spring Data Elasticsearch Object Mapping is the process that maps a Java object - the domain entity - into the JSON representation that is stored in Elasticsearch and back.
 
-Earlier versions of Spring Data Elasticsearch used a Jackson based conversion, Spring Data Elasticsearch 3.2.x introduced the <<elasticsearch.mapping.meta-model>>. As of version 4.0 only the Meta Object Mapping is used, the Jackson based mapper is not available anymore.
+Earlier versions of Spring Data Elasticsearch used a Jackson based conversion, Spring Data Elasticsearch 3.2.x introduced the <<elasticsearch.mapping.meta-model>>. As of version 4.0 only the Meta Object Mapping is used, the Jackson based mapper is not available anymore and the `MappingElasticsearchConverter` is used.
 
 The main reasons for the removal of the Jackson based mapper are:
 
 * Custom mappings of fields needed to be done with annotations like `@JsonFormat` or `@JsonInclude`. This often caused problems when the same object was used in different JSON based datastores or sent over a JSON based API.
 * Custom field types and formats also need to be stored into the Elasticsearch index mappings. The Jackson based annotations did not fully provide all the information that is necessary to represent the types of Elasticsearch.
+* Fields must be mapped not only when converting fromand to entities, but also an query argument, returned data and on other places.
+
+Using the `MappingElasticsearchConverter` now covers all these cases.
 
 
 [[elasticsearch.mapping.meta-model]]
@@ -20,7 +23,7 @@ This allows to register `Converter` instances for specific domain type mapping.
 [[elasticsearch.mapping.meta-model.annotations]]
 === Mapping Annotation Overview
 
-The `ElasticsearchEntityMapper` can use metadata to drive the mapping of objects to documents. The metadata is taken from the entities properties which can be annotated.
+The `MappingElasticsearchConverter` uses metadata to drive the mapping of objects to documents. The metadata is taken from the entity's properties which can be annotated.
 
 The following annotations are available:
 
@@ -208,23 +211,12 @@ public class Config extends AbstractElasticsearchConfiguration {
 
   @Bean
   @Override
-  public EntityMapper entityMapper() {
-
-    ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(
-      elasticsearchMappingContext(), new DefaultConversionService());
-    entityMapper.setConversions(elasticsearchCustomConversions());  <1>
-
-  	return entityMapper;
-  }
-
-  @Bean
-  @Override
   public ElasticsearchCustomConversions elasticsearchCustomConversions() {
     return new ElasticsearchCustomConversions(
-      Arrays.asList(new AddressToMap(), new MapToAddress()));       <2>
+      Arrays.asList(new AddressToMap(), new MapToAddress()));       <1>
   }
 
-  @WritingConverter                                                 <3>
+  @WritingConverter                                                 <2>
   static class AddressToMap implements Converter<Address, Map<String, Object>> {
 
     @Override
@@ -238,7 +230,7 @@ public class Config extends AbstractElasticsearchConfiguration {
     }
   }
 
-  @ReadingConverter                                                 <4>
+  @ReadingConverter                                                 <3>
   static class MapToAddress implements Converter<Map<String, Object>, Address> {
 
     @Override
@@ -258,8 +250,7 @@ public class Config extends AbstractElasticsearchConfiguration {
   "localidad" : { "lat" : 34.118347, "lon" : -118.3026284 }
 }
 ----
-<1> Register `ElasticsearchCustomConversions` with the `EntityMapper`.
-<2> Add `Converter` implementations.
-<3> Set up the `Converter` used for writing `DomainType` to Elasticsearch.
-<4> Set up the `Converter` used for reading `DomainType` from search result.
+<1> Add `Converter` implementations.
+<2> Set up the `Converter` used for writing `DomainType` to Elasticsearch.
+<3> Set up the `Converter` used for reading `DomainType` from search result.
 ====

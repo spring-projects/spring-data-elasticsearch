@@ -173,7 +173,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public String delete(String id, IndexCoordinates index) {
-		DeleteRequest request = new DeleteRequest(index.getIndexName(), id);
+		DeleteRequest request = new DeleteRequest(index.getIndexName(), elasticsearchConverter.convertId(id));
 		try {
 			return client.delete(request, RequestOptions.DEFAULT).getId();
 		} catch (IOException e) {

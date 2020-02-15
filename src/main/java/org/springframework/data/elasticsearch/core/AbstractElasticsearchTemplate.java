@@ -326,7 +326,16 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	private <T> IndexQuery getIndexQuery(T entity) {
-		return new IndexQueryBuilder().withObject(entity).withId(getEntityId(entity)).withVersion(getEntityVersion(entity))
+		String id = getEntityId(entity);
+
+		if (id != null) {
+			id = elasticsearchConverter.convertId(id);
+		}
+
+		return new IndexQueryBuilder() //
+				.withId(id) //
+				.withVersion(getEntityVersion(entity)) //
+				.withObject(entity) //
 				.build();
 	}
 
