@@ -48,7 +48,10 @@ public class ElasticsearchConfigurationSupport {
 	@Bean
 	public ElasticsearchConverter elasticsearchEntityMapper(
 			SimpleElasticsearchMappingContext elasticsearchMappingContext) {
-		return new MappingElasticsearchConverter(elasticsearchMappingContext);
+		MappingElasticsearchConverter elasticsearchConverter = new MappingElasticsearchConverter(
+				elasticsearchMappingContext);
+		elasticsearchConverter.setConversions(elasticsearchCustomConversions());
+		return elasticsearchConverter;
 	}
 
 	/**
