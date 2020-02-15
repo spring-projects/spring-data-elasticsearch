@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -148,13 +149,13 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public <T> T getById(String id, Class<T> clazz) {
+	public <T> Optional<T> getById(String id, Class<T> clazz) {
 		return getById(id, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
 	public <T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index) {
-		return getById(query.getId(), clazz, index);
+		return getById(query.getId(), clazz, index).orElse(null);
 	}
 
 	@Override

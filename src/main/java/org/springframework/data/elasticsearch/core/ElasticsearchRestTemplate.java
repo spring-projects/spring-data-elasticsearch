@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -126,11 +127,11 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> T getById(String id, Class<T> clazz, IndexCoordinates index) {
+	public <T> Optional<T> getById(String id, Class<T> clazz, IndexCoordinates index) {
 		GetRequest request = requestFactory.getRequest(id, index);
 		try {
 			GetResponse response = client.get(request, RequestOptions.DEFAULT);
-			return elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);
+			return Optional.ofNullable(elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz));
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while getting for request: " + request.toString(), e);
 		}

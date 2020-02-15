@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -148,9 +149,9 @@ public class NestedObjectTests {
 		indexOperations.refresh(PersonMultipleLevelNested.class);
 
 		// then
-		PersonMultipleLevelNested personIndexed = operations.getById("1", PersonMultipleLevelNested.class,
+		Optional<PersonMultipleLevelNested> personIndexed = operations.getById("1", PersonMultipleLevelNested.class,
 				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes("user"));
-		assertThat(personIndexed).isNotNull();
+		assertThat(personIndexed).isPresent();
 	}
 
 	@Test

@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.elasticsearch.action.update.UpdateResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -98,10 +99,9 @@ public interface DocumentOperations {
 	 * @param id the id of the object
 	 * @param clazz the entity class,
 	 * @param <T> the entity type
-	 * @return the entity or null if not found
+	 * @return the entity
 	 */
-	@Nullable
-	<T> T getById(String id, Class<T> clazz);
+	<T> Optional<T> getById(String id, Class<T> clazz);
 
 	/**
 	 * Retrieves an object from o the index specified in the entity's Document annotation.
@@ -109,10 +109,9 @@ public interface DocumentOperations {
 	 * @param id the id of the object
 	 * @param clazz the entity class,
 	 * @param index the index from which the object is read.
-	 * @return the entity or null if not found
+	 * @return the entity
 	 */
-	@Nullable
-	<T> T getById(String id, Class<T> clazz, IndexCoordinates index);
+	<T> Optional<T> getById(String id, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Retrieves an object from an index.

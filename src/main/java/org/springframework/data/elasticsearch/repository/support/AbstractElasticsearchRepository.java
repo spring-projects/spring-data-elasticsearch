@@ -121,7 +121,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	@Override
 	public Optional<T> findById(ID id) {
-		return Optional.ofNullable(operations.getById(stringIdRepresentation(id), getEntityClass(), getIndexCoordinates()));
+		return operations.getById(stringIdRepresentation(id), getEntityClass(), getIndexCoordinates());
 	}
 
 	@Override
@@ -208,7 +208,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	@Override
 	public boolean existsById(ID id) {
-		return findById(id).isPresent();
+		return operations.exists(stringIdRepresentation(id), getIndexCoordinates());
 	}
 
 	@SuppressWarnings("unchecked")
