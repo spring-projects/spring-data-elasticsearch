@@ -30,6 +30,7 @@ import org.springframework.data.elasticsearch.client.NodeClientFactoryBean;
  * @author Artur Konczak
  * @author Ilkang Na
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 public class Utils {
 
@@ -46,6 +47,11 @@ public class Utils {
 						.put("path.data", pathData) //
 						.put("cluster.name", clusterName) //
 						.put("node.max_local_storage_nodes", 100)//
+						// the following 3 settings are needed to avoid problems on big, but
+						// almost full filesystems, see DATAES-741
+						.put("cluster.routing.allocation.disk.watermark.low", "1gb")//
+						.put("cluster.routing.allocation.disk.watermark.high", "1gb")//
+						.put("cluster.routing.allocation.disk.watermark.flood_stage", "1gb")//
 						.build(), //
 				Collections.singletonList(Netty4Plugin.class));
 	}
