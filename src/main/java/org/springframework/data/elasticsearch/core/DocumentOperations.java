@@ -93,13 +93,37 @@ public interface DocumentOperations {
 	String index(IndexQuery query, IndexCoordinates index);
 
 	/**
+	 * Retrieves an object from o the index specified in the entity's Document annotation.
+	 *
+	 * @param id the id of the object
+	 * @param clazz the entity class,
+	 * @param <T> the entity type
+	 * @return the entity or null if not found
+	 */
+	@Nullable
+	<T> T findById(String id, Class<T> clazz);
+
+	/**
+	 * Retrieves an object from o the index specified in the entity's Document annotation.
+	 *
+	 * @param id the id of the object
+	 * @param clazz the entity class,
+	 * @param index the index from which the object is read.
+	 * @return the entity or null if not found
+	 */
+	@Nullable
+	<T> T findById(String id, Class<T> clazz, IndexCoordinates index);
+
+	/**
 	 * Retrieves an object from an index.
 	 *
 	 * @param query the query defining the id of the object to get
 	 * @param clazz the type of the object to be returned
 	 * @param index the index from which the object is read.
 	 * @return the found object
+	 * @deprecated since 4.0, use {@link #findById(String, Class, IndexCoordinates)}
 	 */
+	@Deprecated
 	@Nullable
 	<T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index);
 

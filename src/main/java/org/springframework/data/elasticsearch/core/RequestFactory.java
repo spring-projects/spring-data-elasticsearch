@@ -236,12 +236,12 @@ class RequestFactory {
 		return requestBuilder;
 	}
 
-	public GetRequest getRequest(GetQuery query, IndexCoordinates index) {
-		return new GetRequest(index.getIndexName(), query.getId());
+	public GetRequest getRequest(String id, IndexCoordinates index) {
+		return new GetRequest(index.getIndexName(), id);
 	}
 
-	public GetRequestBuilder getRequestBuilder(Client client, GetQuery query, IndexCoordinates index) {
-		return client.prepareGet(index.getIndexName(), null, query.getId());
+	public GetRequestBuilder getRequestBuilder(Client client, String id, IndexCoordinates index) {
+		return client.prepareGet(index.getIndexName(), null, id);
 	}
 
 	public HighlightBuilder highlightBuilder(Query query) {

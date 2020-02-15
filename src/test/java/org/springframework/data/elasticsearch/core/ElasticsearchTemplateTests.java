@@ -200,8 +200,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.index(indexQuery, index);
 
 		// when
-		GetQuery getQuery = new GetQuery(documentId);
-		SampleEntity sampleEntity1 = operations.get(getQuery, SampleEntity.class, index);
+		SampleEntity sampleEntity1 = operations.findById(documentId, SampleEntity.class, index);
 
 		// then
 		assertThat(sampleEntity1).isNotNull();
@@ -415,8 +414,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.bulkUpdate(queries, index);
 
 		// then
-		GetQuery getQuery = new GetQuery(documentId);
-		SampleEntity indexedEntity = operations.get(getQuery, SampleEntity.class, index);
+		SampleEntity indexedEntity = operations.findById(documentId, SampleEntity.class, index);
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
@@ -1430,8 +1428,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.update(updateQuery, index);
 
 		// then
-		GetQuery getQuery = new GetQuery(documentId);
-		SampleEntity indexedEntity = operations.get(getQuery, SampleEntity.class, index);
+		SampleEntity indexedEntity = operations.findById(documentId, SampleEntity.class, index);
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
@@ -1495,8 +1492,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.update(updateQuery, index);
 
 		// then
-		GetQuery getQuery = new GetQuery(documentId);
-		SampleEntity indexedEntity = operations.get(getQuery, SampleEntity.class, index);
+		SampleEntity indexedEntity = operations.findById(documentId, SampleEntity.class, index);
 		assertThat(indexedEntity.getMessage()).isEqualTo(message);
 	}
 
@@ -1738,8 +1734,7 @@ public abstract class ElasticsearchTemplateTests {
 		// then
 		assertThat(sampleEntity.getId()).isEqualTo(documentId);
 
-		GetQuery getQuery = new GetQuery(documentId);
-		SampleEntity result = operations.get(getQuery, SampleEntity.class, index);
+		SampleEntity result = operations.findById(documentId, SampleEntity.class, index);
 		assertThat(result.getId()).isEqualTo(documentId);
 	}
 
@@ -2918,7 +2913,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(entity, index);
 		indexOperations.refresh(index);
 
-		SampleEntity result = operations.get(new GetQuery(id), SampleEntity.class, index);
+		SampleEntity result = operations.findById(id, SampleEntity.class, index);
 
 		assertThat(result).isEqualTo(entity);
 	}
@@ -2934,7 +2929,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(entity);
 		indexOperations.refresh(index);
 
-		SampleEntity result = operations.get(new GetQuery(id), SampleEntity.class, index);
+		SampleEntity result = operations.findById(id, SampleEntity.class, index);
 
 		assertThat(result).isEqualTo(entity);
 	}
@@ -2955,8 +2950,8 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(Arrays.asList(entity1, entity2), index);
 		indexOperations.refresh(index);
 
-		SampleEntity result1 = operations.get(new GetQuery(id1), SampleEntity.class, index);
-		SampleEntity result2 = operations.get(new GetQuery(id2), SampleEntity.class, index);
+		SampleEntity result1 = operations.findById(id1, SampleEntity.class, index);
+		SampleEntity result2 = operations.findById(id2, SampleEntity.class, index);
 
 		assertThat(result1).isEqualTo(entity1);
 		assertThat(result2).isEqualTo(entity2);
@@ -2978,8 +2973,8 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(Arrays.asList(entity1, entity2));
 		indexOperations.refresh(index);
 
-		SampleEntity result1 = operations.get(new GetQuery(id1), SampleEntity.class, index);
-		SampleEntity result2 = operations.get(new GetQuery(id2), SampleEntity.class, index);
+		SampleEntity result1 = operations.findById(id1, SampleEntity.class, index);
+		SampleEntity result2 = operations.findById(id2, SampleEntity.class, index);
 
 		assertThat(result1).isEqualTo(entity1);
 		assertThat(result2).isEqualTo(entity2);

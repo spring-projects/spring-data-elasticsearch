@@ -127,9 +127,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	@Nullable
-	public <T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index) {
-		GetRequest request = requestFactory.getRequest(query, index);
+	public <T> T findById(String id, Class<T> clazz, IndexCoordinates index) {
+		GetRequest request = requestFactory.getRequest(id, index);
 		try {
 			GetResponse response = client.get(request, RequestOptions.DEFAULT);
 			return elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);

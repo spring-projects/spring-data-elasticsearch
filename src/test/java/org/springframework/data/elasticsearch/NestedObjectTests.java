@@ -47,7 +47,6 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
@@ -149,8 +148,7 @@ public class NestedObjectTests {
 		indexOperations.refresh(PersonMultipleLevelNested.class);
 
 		// then
-		GetQuery getQuery = new GetQuery("1");
-		PersonMultipleLevelNested personIndexed = operations.get(getQuery, PersonMultipleLevelNested.class,
+		PersonMultipleLevelNested personIndexed = operations.findById("1", PersonMultipleLevelNested.class,
 				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes("user"));
 		assertThat(personIndexed).isNotNull();
 	}

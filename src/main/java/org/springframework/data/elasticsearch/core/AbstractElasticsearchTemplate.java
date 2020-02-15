@@ -30,6 +30,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
@@ -144,6 +145,16 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Override
 	public <T> Iterable<T> save(T... entities) {
 		return save(Arrays.asList(entities));
+	}
+
+	@Override
+	public <T> T findById(String id, Class<T> clazz) {
+		return findById(id, clazz, getIndexCoordinatesFor(clazz));
+	}
+
+	@Override
+	public <T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index) {
+		return findById(query.getId(), clazz, index);
 	}
 
 	@Override

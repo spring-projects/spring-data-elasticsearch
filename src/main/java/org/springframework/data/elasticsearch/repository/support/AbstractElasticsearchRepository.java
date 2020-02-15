@@ -45,8 +45,6 @@ import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
@@ -123,8 +121,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	@Override
 	public Optional<T> findById(ID id) {
-		GetQuery query = new GetQuery(stringIdRepresentation(id));
-		return Optional.ofNullable(operations.get(query, getEntityClass(), getIndexCoordinates()));
+		return Optional.ofNullable(operations.findById(stringIdRepresentation(id), getEntityClass(), getIndexCoordinates()));
 	}
 
 	@Override
@@ -330,7 +327,6 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		indexOperations.refresh(getEntityClass());
 	}
 
-
 	@SuppressWarnings("unchecked")
 	private Class<T> resolveReturnedClassFromGenericType() {
 		ParameterizedType parameterizedType = resolveReturnedClassFromGenericType(getClass());
@@ -388,7 +384,6 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	}
 
 	protected abstract @Nullable String stringIdRepresentation(@Nullable ID id);
-
 
 	private IndexCoordinates getIndexCoordinates() {
 		return operations.getIndexCoordinatesFor(getEntityClass());

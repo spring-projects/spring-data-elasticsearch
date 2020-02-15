@@ -21,7 +21,9 @@ package org.springframework.data.elasticsearch.core.query;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
+ * @deprecated since 4.0
  */
+@Deprecated
 public class GetQuery {
 
 	public GetQuery(String id) {
