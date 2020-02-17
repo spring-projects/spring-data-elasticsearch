@@ -373,19 +373,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return Mono.defer(() -> doDeleteById(converter.convertId(elasticsearchEntity.getId()), index));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(String, Class, IndexCoordinates)
-	 */
-	@Override
-	public Mono<String> deleteById(String id, Class<?> entityType, IndexCoordinates index) {
-
-		Assert.notNull(id, "Id must not be null!");
-
-		return doDeleteById(id, index);
-
-	}
-
 	@Override
 	public Mono<String> delete(Object entity) {
 		return delete(entity, getIndexCoordinatesFor(entity.getClass()));
@@ -393,7 +380,20 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	@Override
 	public Mono<String> deleteById(String id, Class<?> entityType) {
-		return deleteById(id, entityType, getIndexCoordinatesFor(entityType));
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(entityType, "entityType must not be null");
+
+		return deleteById(id, getIndexCoordinatesFor(entityType));
+	}
+
+	@Override
+	public Mono<String> deleteById(String id, IndexCoordinates index) {
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(index, "index must not be null");
+
+		return doDeleteById(id, index);
 	}
 
 	private Mono<String> doDeleteById(String id, IndexCoordinates index) {

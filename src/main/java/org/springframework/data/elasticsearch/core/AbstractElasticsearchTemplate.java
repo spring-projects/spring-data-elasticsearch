@@ -171,15 +171,36 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	abstract protected Boolean doExists(String id, IndexCoordinates index);
 
 	@Override
+	public String deleteById(String id, Class<?> entityType) {
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(entityType, "entityType must not be null");
+
+		return deleteById(id, getIndexCoordinatesFor(entityType));
+	}
+
+	@Override
 	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
 
-		Assert.notNull(query, "Query must not be null.");
+		Assert.notNull(query, "query must not be null.");
+		Assert.notNull(clazz, "clazz must not be null.");
+		Assert.notNull(index, "index must not be null.");
 
 		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
 		DeleteQuery deleteQuery = new DeleteQuery();
 		deleteQuery.setQuery(searchRequest.source().query());
 
 		delete(deleteQuery, index);
+	}
+
+	@Override
+	public <T> String delete(T entity) {
+		return delete(entity, getIndexCoordinatesFor(entity.getClass()));
+	}
+
+	@Override
+	public <T> String delete(T entity, IndexCoordinates index) {
+		return deleteById(getEntityId(entity), index);
 	}
 	// endregion
 

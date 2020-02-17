@@ -181,7 +181,11 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public String delete(String id, IndexCoordinates index) {
+	public String deleteById(String id, IndexCoordinates index) {
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(index, "index must not be null");
+
 		DeleteRequest request = new DeleteRequest(index.getIndexName(), elasticsearchConverter.convertId(id));
 		try {
 			return client.delete(request, RequestOptions.DEFAULT).getId();

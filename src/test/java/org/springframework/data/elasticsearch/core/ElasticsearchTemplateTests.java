@@ -432,7 +432,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.index(indexQuery, index);
 
 		// when
-		operations.delete(documentId, index);
+		operations.deleteById(documentId, index);
 		indexOperations.refresh(SampleEntity.class);
 
 		// then
@@ -455,7 +455,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.index(indexQuery, index);
 
 		// when
-		operations.delete(documentId, index);
+		operations.deleteById(documentId, index);
 		indexOperations.refresh(SampleEntity.class);
 
 		// then
@@ -2382,7 +2382,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.refresh(SampleEntity.class);
 
 		// when
-		operations.delete(documentIdToDelete, index);
+		operations.deleteById(documentIdToDelete, index);
 		indexOperations.refresh(SampleEntity.class);
 
 		// then
@@ -2979,6 +2979,34 @@ public abstract class ElasticsearchTemplateTests {
 
 		assertThat(result1).contains(entity1);
 		assertThat(result2).contains(entity2);
+	}
+
+	@Test // DATAES-745
+	void shouldDoExistsWithEntity() {
+		String id = "42";
+		SampleEntity entity = new SampleEntity();
+		entity.setId(id);
+		entity.setVersion(42L);
+		entity.setMessage("message");
+
+		operations.save(entity);
+		indexOperations.refresh(SampleEntity.class);
+
+		assertThat(operations.exists("42", SampleEntity.class)).isTrue();
+	}
+
+	@Test // DATAES-745
+	void shouldDoExistsWithIndexCoordinates() {
+		String id = "42";
+		SampleEntity entity = new SampleEntity();
+		entity.setId(id);
+		entity.setVersion(42L);
+		entity.setMessage("message");
+
+		operations.save(entity);
+		indexOperations.refresh(SampleEntity.class);
+
+		assertThat(operations.exists("42", index)).isTrue();
 	}
 
 	protected RequestFactory getRequestFactory() {

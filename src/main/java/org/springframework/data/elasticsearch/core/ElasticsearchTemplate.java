@@ -169,7 +169,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public String delete(String id, IndexCoordinates index) {
+	public String deleteById(String id, IndexCoordinates index) {
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(index, "index must not be null");
+
 		return client.prepareDelete(index.getIndexName(), IndexCoordinates.TYPE, elasticsearchConverter.convertId(id))
 				.execute().actionGet().getId();
 	}

@@ -245,12 +245,7 @@ public interface ReactiveDocumentOperations {
 	 * @param index the target index, must not be {@literal null}
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	default Mono<String> deleteById(String id, IndexCoordinates index) {
-
-		Assert.notNull(index, "Index must not be null!");
-
-		return deleteById(id, Object.class, index);
-	}
+	Mono<String> deleteById(String id, IndexCoordinates index);
 
 	/**
 	 * Delete the entity with given {@literal id} extracting index and type from entity metadata.
@@ -268,8 +263,12 @@ public interface ReactiveDocumentOperations {
 	 * @param entityType must not be {@literal null}.
 	 * @param index the target index, must not be {@literal null}
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
+	 * @deprecated since 4.0, use {@link #deleteById(String, Class)} or {@link #deleteById(String, IndexCoordinates)}
 	 */
-	Mono<String> deleteById(String id, Class<?> entityType, IndexCoordinates index);
+	@Deprecated
+	default Mono<String> deleteById(String id, Class<?> entityType, IndexCoordinates index) {
+		return deleteById(id, index);
+	}
 
 	/**
 	 * Delete the documents matching the given {@link Query} extracting index and type from entity metadata.

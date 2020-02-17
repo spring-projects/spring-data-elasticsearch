@@ -140,7 +140,7 @@ public interface DocumentOperations {
 	 * Check if an entity with given {@literal id} exists.
 	 *
 	 * @param id the {@literal _id} of the document to look for.
-	 * @param entityType the domain type used.
+	 * @param clazz the domain type used.
 	 * @return {@literal true} if a matching document exists, {@literal false} otherwise.
 	 */
 	<T> Boolean exists(String id, Class<T> clazz);
@@ -196,8 +196,47 @@ public interface DocumentOperations {
 	 * @param id the document ot delete
 	 * @param index the index from which to delete
 	 * @return documentId of the document deleted
+	 * @deprecated since 4.0, use {@link #deleteById(String, IndexCoordinates)}
 	 */
-	String delete(String id, IndexCoordinates index);
+	@Deprecated
+	default String delete(String id, IndexCoordinates index) {
+		return deleteById(id, index);
+	}
+
+	/**
+	 * Delete the one object with provided id.
+	 *
+	 * @param id the document ot delete
+	 * @param index the index from which to delete
+	 * @return documentId of the document deleted
+	 */
+	String deleteById(String id, IndexCoordinates index);
+
+	/**
+	 * Delete the one object with provided id.
+	 *
+	 * @param id the document ot delete
+	 * @param entityType must not be {@literal null}.
+	 * @return documentId of the document deleted
+	 */
+	String deleteById(String id, Class<?> entityType);
+
+	/**
+	 * Deletes the given entity
+	 * @param entity the entity to delete
+	 * @param <T> the entity class
+	 * @return documentId of the document deleted
+	 */
+	<T> String delete(T entity);
+
+	/**
+	 * Deletes the given entity
+	 * @param entity the entity to delete
+	 * @param index the index from which to delete
+	 * @param <T> the entity class
+	 * @return documentId of the document deleted
+	 */
+	<T> String delete(T entity, IndexCoordinates index);
 
 	/**
 	 * Delete all records matching the query.

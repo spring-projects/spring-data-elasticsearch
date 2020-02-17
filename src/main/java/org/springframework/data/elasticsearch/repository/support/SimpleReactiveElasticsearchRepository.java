@@ -154,7 +154,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		Assert.notNull(id, "Id must not be null!");
 		return elasticsearchOperations
-				.deleteById(convertId(id), entityInformation.getJavaType(), entityInformation.getIndexCoordinates()) //
+				.deleteById(convertId(id), entityInformation.getIndexCoordinates()) //
 				.then();
 	}
 

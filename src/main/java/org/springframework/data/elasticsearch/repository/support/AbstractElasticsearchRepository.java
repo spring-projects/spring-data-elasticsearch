@@ -309,7 +309,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	private void doDelete(@Nullable ID id, IndexCoordinates indexCoordinates) {
 		if (id != null) {
-			operations.delete(stringIdRepresentation(id), indexCoordinates);
+			operations.deleteById(stringIdRepresentation(id), indexCoordinates);
 		}
 	}
 

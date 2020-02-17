@@ -522,7 +522,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@Test // DATAES-519
 	public void deleteByIdShouldCompleteWhenIndexDoesNotExist() {
 
-		template.deleteById("does-not-exists", SampleEntity.class, IndexCoordinates.of("no-such-index")) //
+		template.deleteById("does-not-exists", IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create)//
 				.verifyComplete();
 	}
