@@ -370,8 +370,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Entity<?> elasticsearchEntity = operations.forEntity(entity);
 
-		return Mono.defer(() -> doDeleteById(entity, converter.convertId(elasticsearchEntity.getId()),
-				elasticsearchEntity.getPersistentEntity(), index));
+		return Mono.defer(() -> doDeleteById(converter.convertId(elasticsearchEntity.getId()), index));
 	}
 
 	/*
@@ -383,7 +382,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Assert.notNull(id, "Id must not be null!");
 
-		return doDeleteById(null, id, getPersistentEntityFor(entityType), index);
+		return doDeleteById(id, index);
 
 	}
 
@@ -397,12 +396,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return deleteById(id, entityType, getIndexCoordinatesFor(entityType));
 	}
 
-	private Mono<String> doDeleteById(@Nullable Object source, String id, ElasticsearchPersistentEntity<?> entity,
-			IndexCoordinates index) {
+	private Mono<String> doDeleteById(String id, IndexCoordinates index) {
 
 		return Mono.defer(() -> {
 
-			return doDelete(prepareDeleteRequest(source, new DeleteRequest(index.getIndexName(), id)));
+			return doDelete(prepareDeleteRequest(new DeleteRequest(index.getIndexName(), id)));
 		});
 	}
 
@@ -472,12 +470,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * Customization hook to modify a generated {@link DeleteRequest} prior to its execution. Eg. by setting the
 	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
 	 *
-	 * @param source the source object the {@link DeleteRequest} was derived from. My be {@literal null} if using the
-	 *          {@literal id} directly.
 	 * @param request the generated {@link DeleteRequest}.
 	 * @return never {@literal null}.
 	 */
-	protected DeleteRequest prepareDeleteRequest(@Nullable Object source, DeleteRequest request) {
+	protected DeleteRequest prepareDeleteRequest(DeleteRequest request) {
 		return prepareWriteRequest(request);
 	}
 
