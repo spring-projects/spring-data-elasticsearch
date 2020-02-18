@@ -84,7 +84,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Override
 	public IndexOperations getIndexOperations() {
 
-		Assert.notNull("indexOperations are not initialized");
+		Assert.notNull(indexOperations,"indexOperations are not initialized");
 
 		return indexOperations;
 	}
