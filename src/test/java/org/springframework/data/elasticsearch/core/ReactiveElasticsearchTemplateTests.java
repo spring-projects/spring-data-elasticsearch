@@ -520,20 +520,20 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-519
-	public void deleteByIdShouldCompleteWhenIndexDoesNotExist() {
+	public void deleteShouldCompleteWhenIndexDoesNotExist() {
 
-		template.deleteById("does-not-exists", IndexCoordinates.of("no-such-index")) //
+		template.delete("does-not-exists", IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create)//
 				.verifyComplete();
 	}
 
 	@Test // DATAES-504
-	public void deleteByIdShouldRemoveExistingDocumentById() {
+	public void deleteShouldRemoveExistingDocumentById() {
 
 		SampleEntity sampleEntity = randomEntity("test message");
 		index(sampleEntity);
 
-		template.deleteById(sampleEntity.getId(), SampleEntity.class) //
+		template.delete(sampleEntity.getId(), SampleEntity.class) //
 				.as(StepVerifier::create)//
 				.expectNext(sampleEntity.getId()) //
 				.verifyComplete();
@@ -545,7 +545,7 @@ public class ReactiveElasticsearchTemplateTests {
 		SampleEntity sampleEntity = randomEntity("test message");
 		index(sampleEntity);
 
-		template.deleteById(sampleEntity.getId(), IndexCoordinates.of(DEFAULT_INDEX).withTypes("test-type")) //
+		template.delete(sampleEntity.getId(), IndexCoordinates.of(DEFAULT_INDEX).withTypes("test-type")) //
 				.as(StepVerifier::create)//
 				.expectNext(sampleEntity.getId()) //
 				.verifyComplete();
@@ -564,7 +564,7 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-504
-	public void deleteByIdShouldCompleteWhenNothingDeleted() {
+	public void deleteShouldCompleteWhenNothingDeleted() {
 
 		SampleEntity sampleEntity = randomEntity("test message");
 
@@ -579,7 +579,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
 
-		template.deleteBy(query, SampleEntity.class) //
+		template.delete(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
 				.verifyComplete();
@@ -606,7 +606,7 @@ public class ReactiveElasticsearchTemplateTests {
 				.withQuery(termQuery("message", "test")) //
 				.build();
 
-		template.deleteBy(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
+		template.delete(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
 				.verifyComplete();
@@ -635,7 +635,7 @@ public class ReactiveElasticsearchTemplateTests {
 				.withQuery(termQuery("message", "negative")) //
 				.build();
 
-		template.deleteBy(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
+		template.delete(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
 				.verifyComplete();
@@ -651,7 +651,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
 
-		template.deleteBy(query, SampleEntity.class) //
+		template.delete(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
 				.verifyComplete();
@@ -665,7 +665,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("luke"));
 
-		template.deleteBy(query, SampleEntity.class) //
+		template.delete(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
 				.verifyComplete();

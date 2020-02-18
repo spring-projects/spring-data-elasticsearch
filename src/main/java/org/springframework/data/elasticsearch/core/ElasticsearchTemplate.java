@@ -169,7 +169,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public String deleteById(String id, IndexCoordinates index) {
+	public String delete(String id, IndexCoordinates index) {
 
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(index, "index must not be null");
@@ -185,7 +185,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public void deleteBy(Query query, Class<?> clazz, IndexCoordinates index) {
+	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
 		requestFactory.deleteByQueryRequestBuilder(client, query, clazz, index).get();
 	}
 

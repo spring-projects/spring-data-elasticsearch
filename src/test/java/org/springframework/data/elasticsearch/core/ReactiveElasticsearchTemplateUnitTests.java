@@ -170,7 +170,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		ArgumentCaptor<DeleteRequest> captor = ArgumentCaptor.forClass(DeleteRequest.class);
 		when(client.delete(captor.capture())).thenReturn(Mono.empty());
 
-		template.deleteById("id", index) //
+		template.delete("id", index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -185,7 +185,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 		template.setRefreshPolicy(RefreshPolicy.WAIT_UNTIL);
 
-		template.deleteById("id", index) //
+		template.delete("id", index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -198,7 +198,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		ArgumentCaptor<DeleteByQueryRequest> captor = ArgumentCaptor.forClass(DeleteByQueryRequest.class);
 		when(client.deleteBy(captor.capture())).thenReturn(Mono.empty());
 
-		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, index) //
+		template.delete(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -213,7 +213,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 		template.setRefreshPolicy(RefreshPolicy.NONE);
 
-		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, index) //
+		template.delete(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -226,7 +226,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		ArgumentCaptor<DeleteByQueryRequest> captor = ArgumentCaptor.forClass(DeleteByQueryRequest.class);
 		when(client.deleteBy(captor.capture())).thenReturn(Mono.empty());
 
-		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, index) //
+		template.delete(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -241,7 +241,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 		template.setIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
 
-		template.deleteBy(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, index) //
+		template.delete(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 

@@ -302,13 +302,13 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 		Query query = new NativeSearchQueryBuilder().withQuery(idsQueryBuilder).build();
 
-		operations.deleteBy(query, getEntityClass(), indexCoordinates);
+		operations.delete(query, getEntityClass(), indexCoordinates);
 		indexOperations.refresh(indexCoordinates);
 	}
 
 	private void doDelete(@Nullable ID id, IndexCoordinates indexCoordinates) {
 		if (id != null) {
-			operations.deleteById(stringIdRepresentation(id), indexCoordinates);
+			operations.delete(stringIdRepresentation(id), indexCoordinates);
 		}
 	}
 
@@ -317,7 +317,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
 		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
-		operations.deleteBy(query, getEntityClass(), indexCoordinates);
+		operations.delete(query, getEntityClass(), indexCoordinates);
 		indexOperations.refresh(indexCoordinates);
 	}
 

@@ -196,21 +196,8 @@ public interface DocumentOperations {
 	 * @param id the document ot delete
 	 * @param index the index from which to delete
 	 * @return documentId of the document deleted
-	 * @deprecated since 4.0, use {@link #deleteById(String, IndexCoordinates)}
 	 */
-	@Deprecated
-	default String delete(String id, IndexCoordinates index) {
-		return deleteById(id, index);
-	}
-
-	/**
-	 * Delete the one object with provided id.
-	 *
-	 * @param id the document ot delete
-	 * @param index the index from which to delete
-	 * @return documentId of the document deleted
-	 */
-	String deleteById(String id, IndexCoordinates index);
+	String delete(String id, IndexCoordinates index);
 
 	/**
 	 * Delete the one object with provided id.
@@ -219,7 +206,7 @@ public interface DocumentOperations {
 	 * @param entityType must not be {@literal null}.
 	 * @return documentId of the document deleted
 	 */
-	String deleteById(String id, Class<?> entityType);
+	String delete(String id, Class<?> entityType);
 
 	/**
 	 * Deletes the given entity
@@ -246,14 +233,14 @@ public interface DocumentOperations {
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @param index the index from which to delete
 	 */
-	void deleteBy(Query query, Class<?> clazz, IndexCoordinates index);
+	void delete(Query query, Class<?> clazz, IndexCoordinates index);
 
 	/**
 	 * Delete all records matching the query.
 	 *
 	 * @param query query defining the objects
 	 * @param index the index where to delete the records
-	 * @deprecated since 4.0, use {@link #deleteBy(Query, Class, IndexCoordinates)}
+	 * @deprecated since 4.0, use {@link #delete(Query, Class, IndexCoordinates)}
 	 */
 	@Deprecated
 	void delete(DeleteQuery query, IndexCoordinates index);

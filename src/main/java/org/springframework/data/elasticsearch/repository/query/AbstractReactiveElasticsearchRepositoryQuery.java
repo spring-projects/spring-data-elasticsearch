@@ -116,7 +116,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 			ReactiveElasticsearchOperations operations) {
 
 		if (isDeleteQuery()) {
-			return (query, type, targetType, indexCoordinates) -> operations.deleteBy(query, type, indexCoordinates);
+			return (query, type, targetType, indexCoordinates) -> operations.delete(query, type, indexCoordinates);
 		} else if (isCountQuery()) {
 			return (query, type, targetType, indexCoordinates) -> operations.count(query, type, indexCoordinates);
 		} else if (isExistsQuery()) {

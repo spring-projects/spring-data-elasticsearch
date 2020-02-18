@@ -366,7 +366,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(Object, String, String)
 	 */
 	@Override
-	public Mono<String> delete(Object entity, IndexCoordinates index) {
+	public <T> Mono<String> delete(T entity, IndexCoordinates index) {
 
 		Entity<?> elasticsearchEntity = operations.forEntity(entity);
 
@@ -374,21 +374,21 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public Mono<String> delete(Object entity) {
+	public <T> Mono<String> delete(T entity) {
 		return delete(entity, getIndexCoordinatesFor(entity.getClass()));
 	}
 
 	@Override
-	public Mono<String> deleteById(String id, Class<?> entityType) {
+	public Mono<String> delete(String id, Class<?> entityType) {
 
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(entityType, "entityType must not be null");
 
-		return deleteById(id, getIndexCoordinatesFor(entityType));
+		return delete(id, getIndexCoordinatesFor(entityType));
 	}
 
 	@Override
-	public Mono<String> deleteById(String id, IndexCoordinates index) {
+	public Mono<String> delete(String id, IndexCoordinates index) {
 
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(index, "index must not be null");
@@ -406,10 +406,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#deleteBy(Query, Class, IndexCoordinates)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(Query, Class, IndexCoordinates)
 	 */
 	@Override
-	public Mono<Long> deleteBy(Query query, Class<?> entityType, IndexCoordinates index) {
+	public Mono<Long> delete(Query query, Class<?> entityType, IndexCoordinates index) {
 
 		Assert.notNull(query, "Query must not be null!");
 
@@ -418,8 +418,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public Mono<Long> deleteBy(Query query, Class<?> entityType) {
-		return deleteBy(query, entityType, getIndexCoordinatesFor(entityType));
+	public Mono<Long> delete(Query query, Class<?> entityType) {
+		return delete(query, entityType, getIndexCoordinatesFor(entityType));
 	}
 
 	private Flux<BulkByScrollResponse> doDeleteBy(Query query, ElasticsearchPersistentEntity<?> entity,

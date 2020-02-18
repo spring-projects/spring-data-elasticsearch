@@ -14,7 +14,6 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
-import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
@@ -30,7 +29,6 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
@@ -171,12 +169,12 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	abstract protected Boolean doExists(String id, IndexCoordinates index);
 
 	@Override
-	public String deleteById(String id, Class<?> entityType) {
+	public String delete(String id, Class<?> entityType) {
 
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(entityType, "entityType must not be null");
 
-		return deleteById(id, getIndexCoordinatesFor(entityType));
+		return this.delete(id, getIndexCoordinatesFor(entityType));
 	}
 
 	@Override
@@ -186,7 +184,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	@Override
 	public <T> String delete(T entity, IndexCoordinates index) {
-		return deleteById(getEntityId(entity), index);
+		return this.delete(getEntityId(entity), index);
 	}
 	// endregion
 

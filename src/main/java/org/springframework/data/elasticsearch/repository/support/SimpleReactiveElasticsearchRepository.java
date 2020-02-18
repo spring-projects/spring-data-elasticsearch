@@ -154,7 +154,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		Assert.notNull(id, "Id must not be null!");
 		return elasticsearchOperations
-				.deleteById(convertId(id), entityInformation.getIndexCoordinates()) //
+				.delete(convertId(id), entityInformation.getIndexCoordinates()) //
 				.then();
 	}
 
@@ -200,7 +200,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 				}) //
 				.flatMap(query -> {
 
-					return elasticsearchOperations.deleteBy(query, entityInformation.getJavaType(),
+					return elasticsearchOperations.delete(query, entityInformation.getJavaType(),
 							entityInformation.getIndexCoordinates());
 				}) //
 				.then();
@@ -210,7 +210,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public Mono<Void> deleteAll() {
 
 		return elasticsearchOperations
-				.deleteBy(Query.findAll(), entityInformation.getJavaType(), entityInformation.getIndexCoordinates()) //
+				.delete(Query.findAll(), entityInformation.getJavaType(), entityInformation.getIndexCoordinates()) //
 				.then();
 	}
 
