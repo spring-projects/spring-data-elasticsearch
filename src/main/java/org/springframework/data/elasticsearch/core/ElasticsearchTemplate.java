@@ -179,8 +179,19 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
+	@Deprecated
 	public void delete(DeleteQuery deleteQuery, IndexCoordinates index) {
 		requestFactory.deleteByQueryRequestBuilder(client, deleteQuery, index).get();
+	}
+
+	@Override
+	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
+		requestFactory.deleteByQueryRequestBuilder(client, query, clazz, index).get();
+	}
+
+	@Override
+	public <T> String delete(T entity, IndexCoordinates index) {
+		return super.delete(entity, index);
 	}
 
 	@Override

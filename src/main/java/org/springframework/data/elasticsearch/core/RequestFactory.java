@@ -205,6 +205,7 @@ class RequestFactory {
 		return createIndexRequestBuilder;
 	}
 
+	@Deprecated
 	public DeleteByQueryRequest deleteByQueryRequest(DeleteQuery deleteQuery, IndexCoordinates index) {
 		DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(index.getIndexNames()) //
 				.setQuery(deleteQuery.getQuery()) //
@@ -220,8 +221,26 @@ class RequestFactory {
 		return deleteByQueryRequest;
 	}
 
-	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, DeleteQuery deleteQuery,
-			IndexCoordinates index) {
+	public DeleteByQueryRequest deleteByQueryRequest(Query query, Class<?> clazz, IndexCoordinates index) {
+		SearchRequest searchRequest = searchRequest(query, clazz, index);
+		DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(index.getIndexNames()) //
+				.setQuery(searchRequest.source().query()) //
+				.setAbortOnVersionConflict(false) //
+				.setRefresh(true);
+
+		if (query.isLimiting()) {
+			deleteByQueryRequest.setBatchSize(query.getMaxResults());
+		}
+
+		if (query.hasScrollTimeMillis()) {
+			deleteByQueryRequest.setScroll(TimeValue.timeValueMillis(query.getScrollTimeInMillis()));
+		}
+
+		return deleteByQueryRequest;
+	}
+
+	@Deprecated
+	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, DeleteQuery deleteQuery, IndexCoordinates index) {
 		DeleteByQueryRequestBuilder requestBuilder = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE) //
 				.source(index.getIndexNames()) //
 				.filter(deleteQuery.getQuery()) //
@@ -232,6 +251,26 @@ class RequestFactory {
 
 		if (deleteQuery.getScrollTimeInMillis() != null)
 			source.setScroll(TimeValue.timeValueMillis(deleteQuery.getScrollTimeInMillis()));
+
+		return requestBuilder;
+	}
+	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, Query query, Class<?> clazz, IndexCoordinates index) {
+		SearchRequest searchRequest = searchRequest(query, clazz, index);
+		DeleteByQueryRequestBuilder requestBuilder = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE) //
+				.source(index.getIndexNames()) //
+				.filter(searchRequest.source().query()) //
+				.abortOnVersionConflict(false) //
+				.refresh(true);
+
+		SearchRequestBuilder source = requestBuilder.source();
+
+		if (query.isLimiting()) {
+			source.setSize(query.getMaxResults());
+		}
+
+		if (query.hasScrollTimeMillis()) {
+			source.setScroll(TimeValue.timeValueMillis(query.getScrollTimeInMillis()));
+		}
 
 		return requestBuilder;
 	}

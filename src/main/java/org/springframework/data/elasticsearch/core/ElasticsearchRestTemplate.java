@@ -195,6 +195,17 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
+	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
+		DeleteByQueryRequest deleteByQueryRequest = requestFactory.deleteByQueryRequest(query, clazz, index);
+		try {
+			client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw new ElasticsearchException("Error for delete request: " + deleteByQueryRequest.toString(), e);
+		}
+	}
+
+	@Override
+	@Deprecated
 	public void delete(DeleteQuery deleteQuery, IndexCoordinates index) {
 		DeleteByQueryRequest deleteByQueryRequest = requestFactory.deleteByQueryRequest(deleteQuery, index);
 		try {

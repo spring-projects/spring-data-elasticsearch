@@ -45,7 +45,7 @@ public interface Query {
 	Pageable DEFAULT_PAGE = PageRequest.of(0, DEFAULT_PAGE_SIZE);
 
 	/**
-	 * Get get a {@link Query} that matches all documents in the index.
+	 * Get a {@link Query} that matches all documents in the index.
 	 *
 	 * @return new instance of {@link Query}.
 	 * @since 3.2

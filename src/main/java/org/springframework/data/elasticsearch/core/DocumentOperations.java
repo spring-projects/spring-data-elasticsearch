@@ -253,7 +253,9 @@ public interface DocumentOperations {
 	 *
 	 * @param query query defining the objects
 	 * @param index the index where to delete the records
+	 * @deprecated since 4.0, use {@link #delete(Query, Class, IndexCoordinates)}
 	 */
+	@Deprecated
 	void delete(DeleteQuery query, IndexCoordinates index);
 
 	/**

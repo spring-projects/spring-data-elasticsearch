@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import lombok.val;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -44,7 +45,6 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
@@ -300,10 +300,10 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		if (idsQueryBuilder.ids().isEmpty()) {
 			return;
 		}
-		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(idsQueryBuilder);
 
-		operations.delete(deleteQuery, indexCoordinates);
+		Query query = new NativeSearchQueryBuilder().withQuery(idsQueryBuilder).build();
+
+		operations.delete(query, getEntityClass(), indexCoordinates);
 		indexOperations.refresh(indexCoordinates);
 	}
 
@@ -315,10 +315,10 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	@Override
 	public void deleteAll() {
-		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(matchAllQuery());
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
-		operations.delete(deleteQuery, indexCoordinates);
+		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+
+		operations.delete(query, getEntityClass(), indexCoordinates);
 		indexOperations.refresh(indexCoordinates);
 	}
 

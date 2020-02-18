@@ -71,7 +71,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 		try {
 			return client.indices().create(request, RequestOptions.DEFAULT).isAcknowledged();
 		} catch (IOException e) {
-			throw new ElasticsearchException("Error for creating index: " + request.toString(), e);
+			throw new ElasticsearchException("Error for creating index: " + indexName + ", client: " + client.getLowLevelClient().getNodes(), e);
 		}
 	}
 

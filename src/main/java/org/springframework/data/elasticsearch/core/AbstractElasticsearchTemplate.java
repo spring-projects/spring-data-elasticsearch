@@ -180,20 +180,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
-
-		Assert.notNull(query, "query must not be null.");
-		Assert.notNull(clazz, "clazz must not be null.");
-		Assert.notNull(index, "index must not be null.");
-
-		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
-		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(searchRequest.source().query());
-
-		delete(deleteQuery, index);
-	}
-
-	@Override
 	public <T> String delete(T entity) {
 		return delete(entity, getIndexCoordinatesFor(entity.getClass()));
 	}
