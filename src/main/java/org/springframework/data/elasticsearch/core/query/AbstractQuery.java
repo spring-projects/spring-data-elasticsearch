@@ -56,6 +56,7 @@ abstract class AbstractQuery implements Query {
 	@Nullable protected Integer maxResults;
 	@Nullable protected HighlightQuery highlightQuery;
 	private boolean trackTotalHits = false;
+	@Nullable private Long scrollTimeInMillis;
 
 	@Override
 	@Nullable
@@ -225,5 +226,16 @@ abstract class AbstractQuery implements Query {
 	@Override
 	public boolean getTrackTotalHits() {
 		return trackTotalHits;
+	}
+
+	@Nullable
+	@Override
+	public Long getScrollTimeInMillis() {
+		return scrollTimeInMillis;
+	}
+
+	@Override
+	public void setScrollTimeInMillis(Long scrollTimeInMillis) {
+		this.scrollTimeInMillis = scrollTimeInMillis;
 	}
 }

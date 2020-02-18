@@ -229,4 +229,29 @@ public interface Query {
 	 * @since 4.0
 	 */
 	boolean getTrackTotalHits();
+
+	/**
+	 * For queries that are used in delete request, these are internally handled by Elasticsearch as scroll/bulk delete queries.
+	 * 
+	 * @return the scrolltime settings
+	 * @since 4.0
+	 */
+	@Nullable
+	Long getScrollTimeInMillis();
+
+	/**
+	 * For queries that are used in delete request, these are internally handled by Elasticsearch as scroll/bulk delete queries.
+	 * 
+	 * @param scrollTimeInMillis the scrolltime settings
+	 * @since 4.0
+	 */
+	void setScrollTimeInMillis(Long scrollTimeInMillis);
+
+	/**
+	 * @return {@literal true} if scrollTimeMillis is set.
+	 * @since 4.0
+	 */
+	default Boolean hasScrollTimeMillis() {
+		return getScrollTimeInMillis() != null;
+	}
 }
