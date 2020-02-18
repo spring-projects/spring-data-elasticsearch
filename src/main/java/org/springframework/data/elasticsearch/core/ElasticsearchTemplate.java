@@ -185,7 +185,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
+	public void deleteBy(Query query, Class<?> clazz, IndexCoordinates index) {
 		requestFactory.deleteByQueryRequestBuilder(client, query, clazz, index).get();
 	}
 

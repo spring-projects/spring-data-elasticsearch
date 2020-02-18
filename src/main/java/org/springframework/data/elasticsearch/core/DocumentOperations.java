@@ -246,14 +246,14 @@ public interface DocumentOperations {
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @param index the index from which to delete
 	 */
-	void delete(Query query, Class<?> clazz, IndexCoordinates index);
+	void deleteBy(Query query, Class<?> clazz, IndexCoordinates index);
 
 	/**
 	 * Delete all records matching the query.
 	 *
 	 * @param query query defining the objects
 	 * @param index the index where to delete the records
-	 * @deprecated since 4.0, use {@link #delete(Query, Class, IndexCoordinates)}
+	 * @deprecated since 4.0, use {@link #deleteBy(Query, Class, IndexCoordinates)}
 	 */
 	@Deprecated
 	void delete(DeleteQuery query, IndexCoordinates index);

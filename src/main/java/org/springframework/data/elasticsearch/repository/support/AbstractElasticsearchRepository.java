@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import lombok.val;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -303,7 +302,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 		Query query = new NativeSearchQueryBuilder().withQuery(idsQueryBuilder).build();
 
-		operations.delete(query, getEntityClass(), indexCoordinates);
+		operations.deleteBy(query, getEntityClass(), indexCoordinates);
 		indexOperations.refresh(indexCoordinates);
 	}
 
@@ -318,7 +317,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
 		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
-		operations.delete(query, getEntityClass(), indexCoordinates);
+		operations.deleteBy(query, getEntityClass(), indexCoordinates);
 		indexOperations.refresh(indexCoordinates);
 	}
 

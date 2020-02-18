@@ -479,7 +479,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		Query query = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
-		operations.delete(query, SampleEntity.class, index);
+		operations.deleteBy(query, SampleEntity.class, index);
 		indexOperations.refresh(SampleEntity.class);
 
 		// then
@@ -509,7 +509,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		Query query = new NativeSearchQueryBuilder().withQuery(termQuery("message", "foo")).build();
-		operations.delete(query, SampleEntity.class, IndexCoordinates.of("test-index-*").withTypes(TYPE_NAME));
+		operations.deleteBy(query, SampleEntity.class, IndexCoordinates.of("test-index-*").withTypes(TYPE_NAME));
 
 		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME));
 		indexOperations.refresh(IndexCoordinates.of(INDEX_2_NAME));
@@ -542,7 +542,7 @@ public abstract class ElasticsearchTemplateTests {
 		// when
 		Query query = new NativeSearchQueryBuilder().withQuery(termQuery("message", "negative")).build();
 
-		operations.delete(query, SampleEntity.class, IndexCoordinates.of("test-index-*").withTypes(TYPE_NAME));
+		operations.deleteBy(query, SampleEntity.class, IndexCoordinates.of("test-index-*").withTypes(TYPE_NAME));
 
 		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME));
 		indexOperations.refresh(IndexCoordinates.of(INDEX_2_NAME));
@@ -925,7 +925,7 @@ public abstract class ElasticsearchTemplateTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("test"));
 
 		// when
-		operations.delete(criteriaQuery, SampleEntity.class, index);
+		operations.deleteBy(criteriaQuery, SampleEntity.class, index);
 		indexOperations.refresh(SampleEntity.class);
 
 		// then
@@ -1606,7 +1606,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		Query query = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
-		operations.delete(query, SampleEntity.class, index);
+		operations.deleteBy(query, SampleEntity.class, index);
 		indexOperations.refresh(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY));
 
 		// then
@@ -2316,7 +2316,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		Query query = new NativeSearchQueryBuilder().withQuery(idsQuery().addIds(documentIdToDelete)).build();
-		operations.delete(query, SampleEntity.class, index);
+		operations.deleteBy(query, SampleEntity.class, index);
 		indexOperations.refresh(SampleEntity.class);
 
 		// then
@@ -2347,7 +2347,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("id").is(documentIdToDelete));
-		operations.delete(criteriaQuery, SampleEntity.class, index);
+		operations.deleteBy(criteriaQuery, SampleEntity.class, index);
 		indexOperations.refresh(SampleEntity.class);
 
 		// then

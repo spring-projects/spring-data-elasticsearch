@@ -81,7 +81,7 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 
 		if (tree.isDelete()) {
 			result = countOrGetDocumentsForDelete(query, accessor);
-			elasticsearchOperations.delete(query, clazz, index);
+			elasticsearchOperations.deleteBy(query, clazz, index);
 			elasticsearchOperations.getIndexOperations().refresh(index);
 		} else if (queryMethod.isPageQuery()) {
 			query.setPageable(accessor.getPageable());
