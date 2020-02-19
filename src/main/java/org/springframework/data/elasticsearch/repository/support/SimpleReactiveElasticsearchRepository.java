@@ -79,7 +79,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public Mono<T> findById(ID id) {
 
 		Assert.notNull(id, "Id must not be null!");
-		return elasticsearchOperations.getById(convertId(id), entityInformation.getJavaType(),
+		return elasticsearchOperations.get(convertId(id), entityInformation.getJavaType(),
 				entityInformation.getIndexCoordinates());
 	}
 

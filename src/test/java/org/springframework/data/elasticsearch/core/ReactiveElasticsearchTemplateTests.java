@@ -207,7 +207,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@Test // DATAES-519
 	public void getByIdShouldCompleteWhenIndexDoesNotExist() {
 
-		template.getById("foo", SampleEntity.class, IndexCoordinates.of("no-such-index").withTypes("test-type")) //
+		template.get("foo", SampleEntity.class, IndexCoordinates.of("no-such-index").withTypes("test-type")) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
@@ -218,7 +218,7 @@ public class ReactiveElasticsearchTemplateTests {
 		SampleEntity sampleEntity = randomEntity("some message");
 		index(sampleEntity);
 
-		template.getById(sampleEntity.getId(), SampleEntity.class) //
+		template.get(sampleEntity.getId(), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNext(sampleEntity) //
 				.verifyComplete();
@@ -234,7 +234,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		assertThat(sampleEntity.getId()).isNotNull();
 
-		template.getById(sampleEntity.getId(), SampleEntity.class) //
+		template.get(sampleEntity.getId(), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(it -> assertThat(it.getId()).isEqualTo(sampleEntity.getId())) //
 				.verifyComplete();
@@ -246,7 +246,7 @@ public class ReactiveElasticsearchTemplateTests {
 		SampleEntity sampleEntity = randomEntity("some message");
 		index(sampleEntity);
 
-		template.getById("foo", SampleEntity.class) //
+		template.get("foo", SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
@@ -254,7 +254,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@Test // DATAES-504
 	public void getByIdShouldErrorForNullId() {
 		assertThatThrownBy(() -> {
-			template.getById(null, SampleEntity.class);
+			template.get(null, SampleEntity.class);
 		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
@@ -274,11 +274,11 @@ public class ReactiveElasticsearchTemplateTests {
 		restTemplate.refresh(defaultIndex);
 		restTemplate.refresh(alternateIndex);
 
-		template.getById(sampleEntity.getId(), SampleEntity.class, defaultIndex) //
+		template.get(sampleEntity.getId(), SampleEntity.class, defaultIndex) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		template.getById(sampleEntity.getId(), SampleEntity.class, alternateIndex) //
+		template.get(sampleEntity.getId(), SampleEntity.class, alternateIndex) //
 				.as(StepVerifier::create)//
 				.expectNextCount(1) //
 				.verifyComplete();

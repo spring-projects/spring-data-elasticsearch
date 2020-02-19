@@ -330,22 +330,22 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public <T> Mono<T> getById(String id, Class<T> entityType) {
-		return getById(id, entityType, getIndexCoordinatesFor(entityType));
+	public <T> Mono<T> get(String id, Class<T> entityType) {
+		return get(id, entityType, getIndexCoordinatesFor(entityType));
 	}
 
 	@Override
-	public <T> Mono<T> getById(String id, Class<T> entityType, IndexCoordinates index) {
+	public <T> Mono<T> get(String id, Class<T> entityType, IndexCoordinates index) {
 
 		Assert.notNull(id, "Id must not be null!");
 
-		return doGetById(id, getPersistentEntityFor(entityType), index)
+		return doGet(id, getPersistentEntityFor(entityType), index)
 				.map(it -> converter.mapDocument(DocumentAdapters.from(it), entityType));
 	}
 
-	private Mono<GetResult> doGetById(String id, ElasticsearchPersistentEntity<?> entity, IndexCoordinates index) {
+	private Mono<GetResult> doGet(String id, ElasticsearchPersistentEntity<?> entity, IndexCoordinates index) {
 		return Mono.defer(() -> {
-			return doGetById(new GetRequest(index.getIndexName(), id));
+			return doGet(new GetRequest(index.getIndexName(), id));
 		});
 	}
 
@@ -355,7 +355,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @param request the already prepared {@link GetRequest} ready to be executed.
 	 * @return a {@link Mono} emitting the result of the operation.
 	 */
-	protected Mono<GetResult> doGetById(GetRequest request) {
+	protected Mono<GetResult> doGet(GetRequest request) {
 
 		return Mono.from(execute(client -> client.get(request))) //
 				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
