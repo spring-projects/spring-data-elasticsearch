@@ -82,7 +82,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Override
 	public IndexOperations getIndexOperations() {
 
-		Assert.notNull(indexOperations,"indexOperations are not initialized");
+		Assert.notNull(indexOperations, "indexOperations are not initialized");
 
 		return indexOperations;
 	}
@@ -147,13 +147,13 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public <T> Optional<T> getById(String id, Class<T> clazz) {
-		return getById(id, clazz, getIndexCoordinatesFor(clazz));
+	public <T> Optional<T> get(String id, Class<T> clazz) {
+		return get(id, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
 	public <T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index) {
-		return getById(query.getId(), clazz, index).orElse(null);
+		return get(query.getId(), clazz, index).orElse(null);
 	}
 
 	@Override

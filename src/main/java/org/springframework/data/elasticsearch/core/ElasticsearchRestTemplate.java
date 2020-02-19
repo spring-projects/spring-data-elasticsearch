@@ -127,7 +127,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> Optional<T> getById(String id, Class<T> clazz, IndexCoordinates index) {
+	public <T> Optional<T> get(String id, Class<T> clazz, IndexCoordinates index) {
 		GetRequest request = requestFactory.getRequest(id, index);
 		try {
 			GetResponse response = client.get(request, RequestOptions.DEFAULT);

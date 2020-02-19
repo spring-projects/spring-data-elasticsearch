@@ -201,7 +201,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.index(indexQuery, index);
 
 		// when
-		Optional<SampleEntity> sampleEntity1 = operations.getById(documentId, SampleEntity.class, index);
+		Optional<SampleEntity> sampleEntity1 = operations.get(documentId, SampleEntity.class, index);
 
 		// then
 		assertThat(sampleEntity1).isPresent();
@@ -415,7 +415,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.bulkUpdate(queries, index);
 
 		// then
-		Optional<SampleEntity> indexedEntity = operations.getById(documentId, SampleEntity.class, index);
+		Optional<SampleEntity> indexedEntity = operations.get(documentId, SampleEntity.class, index);
 		assertThat(indexedEntity.get().getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
@@ -1425,7 +1425,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.update(updateQuery, index);
 
 		// then
-		Optional<SampleEntity> indexedEntity = operations.getById(documentId, SampleEntity.class, index);
+		Optional<SampleEntity> indexedEntity = operations.get(documentId, SampleEntity.class, index);
 		assertThat(indexedEntity.get().getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
@@ -1489,7 +1489,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.update(updateQuery, index);
 
 		// then
-		Optional<SampleEntity> indexedEntity = operations.getById(documentId, SampleEntity.class, index);
+		Optional<SampleEntity> indexedEntity = operations.get(documentId, SampleEntity.class, index);
 		assertThat(indexedEntity.get().getMessage()).isEqualTo(message);
 	}
 
@@ -1730,7 +1730,7 @@ public abstract class ElasticsearchTemplateTests {
 		// then
 		assertThat(sampleEntity.getId()).isEqualTo(documentId);
 
-		Optional<SampleEntity> result = operations.getById(documentId, SampleEntity.class, index);
+		Optional<SampleEntity> result = operations.get(documentId, SampleEntity.class, index);
 		assertThat(result.get().getId()).isEqualTo(documentId);
 	}
 
@@ -2908,7 +2908,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(entity, index);
 		indexOperations.refresh(index);
 
-		Optional<SampleEntity> result = operations.getById(id, SampleEntity.class, index);
+		Optional<SampleEntity> result = operations.get(id, SampleEntity.class, index);
 
 		assertThat(result).contains(entity);
 	}
@@ -2924,7 +2924,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(entity);
 		indexOperations.refresh(index);
 
-		Optional<SampleEntity> result = operations.getById(id, SampleEntity.class, index);
+		Optional<SampleEntity> result = operations.get(id, SampleEntity.class, index);
 
 		assertThat(result).contains(entity);
 	}
@@ -2945,8 +2945,8 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(Arrays.asList(entity1, entity2), index);
 		indexOperations.refresh(index);
 
-		Optional<SampleEntity> result1 = operations.getById(id1, SampleEntity.class, index);
-		Optional<SampleEntity> result2 = operations.getById(id2, SampleEntity.class, index);
+		Optional<SampleEntity> result1 = operations.get(id1, SampleEntity.class, index);
+		Optional<SampleEntity> result2 = operations.get(id2, SampleEntity.class, index);
 
 		assertThat(result1).contains(entity1);
 		assertThat(result2).contains(entity2);
@@ -2968,8 +2968,8 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(Arrays.asList(entity1, entity2));
 		indexOperations.refresh(index);
 
-		Optional<SampleEntity> result1 = operations.getById(id1, SampleEntity.class, index);
-		Optional<SampleEntity> result2 = operations.getById(id2, SampleEntity.class, index);
+		Optional<SampleEntity> result1 = operations.get(id1, SampleEntity.class, index);
+		Optional<SampleEntity> result2 = operations.get(id2, SampleEntity.class, index);
 
 		assertThat(result1).contains(entity1);
 		assertThat(result2).contains(entity2);

@@ -94,24 +94,24 @@ public interface DocumentOperations {
 	String index(IndexQuery query, IndexCoordinates index);
 
 	/**
-	 * Retrieves an object from o the index specified in the entity's Document annotation.
+	 * Retrieves an object from the index specified in the entity's Document annotation.
 	 *
 	 * @param id the id of the object
 	 * @param clazz the entity class,
 	 * @param <T> the entity type
 	 * @return the entity
 	 */
-	<T> Optional<T> getById(String id, Class<T> clazz);
+	<T> Optional<T> get(String id, Class<T> clazz);
 
 	/**
-	 * Retrieves an object from o the index specified in the entity's Document annotation.
+	 * Retrieves an object from the index specified in the entity's Document annotation.
 	 *
 	 * @param id the id of the object
 	 * @param clazz the entity class,
 	 * @param index the index from which the object is read.
 	 * @return the entity
 	 */
-	<T> Optional<T> getById(String id, Class<T> clazz, IndexCoordinates index);
+	<T> Optional<T> get(String id, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Retrieves an object from an index.
@@ -210,6 +210,7 @@ public interface DocumentOperations {
 
 	/**
 	 * Deletes the given entity
+	 * 
 	 * @param entity the entity to delete
 	 * @param <T> the entity class
 	 * @return documentId of the document deleted
@@ -218,6 +219,7 @@ public interface DocumentOperations {
 
 	/**
 	 * Deletes the given entity
+	 * 
 	 * @param entity the entity to delete
 	 * @param index the index from which to delete
 	 * @param <T> the entity class
