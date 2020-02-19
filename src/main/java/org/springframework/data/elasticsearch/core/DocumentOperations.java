@@ -114,19 +114,6 @@ public interface DocumentOperations {
 	<T> Optional<T> get(String id, Class<T> clazz, IndexCoordinates index);
 
 	/**
-	 * Retrieves an object from an index.
-	 *
-	 * @param query the query defining the id of the object to get
-	 * @param clazz the type of the object to be returned
-	 * @param index the index from which the object is read.
-	 * @return the found object
-	 * @deprecated since 4.0, use {@link #getById(String, Class, IndexCoordinates)}
-	 */
-	@Deprecated
-	@Nullable
-	<T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index);
-
-	/**
 	 * Execute a multiGet against elasticsearch for the given ids.
 	 *
 	 * @param query the query defining the ids of the objects to get
@@ -210,7 +197,7 @@ public interface DocumentOperations {
 
 	/**
 	 * Deletes the given entity
-	 * 
+	 *
 	 * @param entity the entity to delete
 	 * @param <T> the entity class
 	 * @return documentId of the document deleted
@@ -219,7 +206,7 @@ public interface DocumentOperations {
 
 	/**
 	 * Deletes the given entity
-	 * 
+	 *
 	 * @param entity the entity to delete
 	 * @param index the index from which to delete
 	 * @param <T> the entity class
@@ -238,6 +225,17 @@ public interface DocumentOperations {
 	void delete(Query query, Class<?> clazz, IndexCoordinates index);
 
 	/**
+	 * Partial update of the document.
+	 *
+	 * @param updateQuery query defining the update
+	 * @param index the index where to update the records
+	 * @return the update response
+	 */
+	UpdateResponse update(UpdateQuery updateQuery, IndexCoordinates index);
+
+
+	//region deprecated
+	/**
 	 * Delete all records matching the query.
 	 *
 	 * @param query query defining the objects
@@ -246,13 +244,18 @@ public interface DocumentOperations {
 	 */
 	@Deprecated
 	void delete(DeleteQuery query, IndexCoordinates index);
-
 	/**
-	 * Partial update of the document.
+	 * Retrieves an object from an index.
 	 *
-	 * @param updateQuery query defining the update
-	 * @param index the index where to update the records
-	 * @return the update response
+	 * @param query the query defining the id of the object to get
+	 * @param clazz the type of the object to be returned
+	 * @param index the index from which the object is read.
+	 * @return the found object
+	 * @deprecated since 4.0, use {@link #getById(String, Class, IndexCoordinates)}
 	 */
-	UpdateResponse update(UpdateQuery updateQuery, IndexCoordinates index);
+	@Deprecated
+	@Nullable
+	<T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index);
+
+	//endregion
 }

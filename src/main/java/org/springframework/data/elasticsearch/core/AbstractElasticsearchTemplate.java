@@ -35,6 +35,7 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.support.SearchHitsUtil;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
@@ -190,10 +191,19 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	// region SearchOperations
 	@Override
+	public long count(Query query, Class<?> clazz) {
+		return count(query, clazz, getIndexCoordinatesFor(clazz));
+	}
+
+	@Override
 	public <T> CloseableIterator<T> stream(Query query, Class<T> clazz, IndexCoordinates index) {
 		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
-		return StreamQueries.streamResults(startScroll(scrollTimeInMillis, query, clazz, index),
-				scrollId -> continueScroll(scrollId, scrollTimeInMillis, clazz), this::searchScrollClear);
+		return (CloseableIterator<T>) SearchHitSupport.unwrapSearchHits(searchForStream(query, clazz, index));
+	}
+
+	@Override
+	public <T> CloseableIterator<SearchHit<T>> searchForStream(Query query, Class<T> clazz) {
+		return searchForStream(query, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
@@ -201,6 +211,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
 		return StreamQueries.streamResults(searchScrollStart(scrollTimeInMillis, query, clazz, index),
 				scrollId -> searchScrollContinue(scrollId, scrollTimeInMillis, clazz), this::searchScrollClear);
+	}
+
+	@Override
+	public <T> SearchHits<T> search(MoreLikeThisQuery query, Class<T> clazz) {
+		return search(query, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
@@ -248,6 +263,28 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		}
 		return res;
 	}
+
+	@Override
+	public <T> SearchHits<T> search(Query query, Class<T> clazz) {
+		return search(query, clazz, getIndexCoordinatesFor(clazz));
+	}
+
+	/*
+	 * internal use only, not for public API
+	 */
+	abstract protected <T> ScrolledPage<SearchHit<T>> searchScrollStart(long scrollTimeInMillis, Query query,
+			Class<T> clazz, IndexCoordinates index);
+
+	/*
+	 * internal use only, not for public API
+	 */
+	abstract protected <T> ScrolledPage<SearchHit<T>> searchScrollContinue(@Nullable String scrollId,
+			long scrollTimeInMillis, Class<T> clazz);
+
+	/*
+	 * internal use only, not for public API
+	 */
+	abstract protected void searchScrollClear(String scrollId);
 
 	abstract protected MultiSearchResponse.Item[] getMultiSearchResult(MultiSearchRequest request);
 	// endregion

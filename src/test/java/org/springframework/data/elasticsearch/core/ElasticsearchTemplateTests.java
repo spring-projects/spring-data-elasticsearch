@@ -1048,14 +1048,14 @@ public abstract class ElasticsearchTemplateTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, criteriaQuery, SampleEntity.class,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(1000, criteriaQuery, SampleEntity.class,
 				index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scroll.getScrollId());
+		((AbstractElasticsearchTemplate)operations).searchScrollClear(scroll.getScrollId());
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1074,14 +1074,14 @@ public abstract class ElasticsearchTemplateTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, 10)).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(1000, searchQuery, SampleEntity.class,
 				index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scroll.getScrollId());
+		((AbstractElasticsearchTemplate)operations).searchScrollClear(scroll.getScrollId());
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1100,16 +1100,16 @@ public abstract class ElasticsearchTemplateTests {
 		criteriaQuery.addFields("message");
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, criteriaQuery, SampleEntity.class,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(1000, criteriaQuery, SampleEntity.class,
 				index);
 		String scrollId = scroll.getScrollId();
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
 			scrollId = scroll.getScrollId();
-			scroll = operations.searchScrollContinue(scrollId, 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scrollId, 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate)operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1127,16 +1127,16 @@ public abstract class ElasticsearchTemplateTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withFields("message")
 				.withQuery(matchAllQuery()).withPageable(PageRequest.of(0, 10)).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(1000, searchQuery, SampleEntity.class,
 				index);
 		String scrollId = scroll.getScrollId();
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
 			scrollId = scroll.getScrollId();
-			scroll = operations.searchScrollContinue(scrollId, 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scrollId, 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate)operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1154,16 +1154,16 @@ public abstract class ElasticsearchTemplateTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, criteriaQuery, SampleEntity.class,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(1000, criteriaQuery, SampleEntity.class,
 				index);
 		String scrollId = scroll.getScrollId();
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
 			scrollId = scroll.getScrollId();
-			scroll = operations.searchScrollContinue(scrollId, 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scrollId, 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate)operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1181,16 +1181,16 @@ public abstract class ElasticsearchTemplateTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, 10)).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(1000, searchQuery, SampleEntity.class,
 				index);
 		String scrollId = scroll.getScrollId();
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
 			scrollId = scroll.getScrollId();
-			scroll = operations.searchScrollContinue(scrollId, 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scrollId, 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate)operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1208,16 +1208,16 @@ public abstract class ElasticsearchTemplateTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, criteriaQuery, SampleEntity.class,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(1000, criteriaQuery, SampleEntity.class,
 				index);
 		String scrollId = scroll.getScrollId();
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
 			scrollId = scroll.getScrollId();
-			scroll = operations.searchScrollContinue(scrollId, 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scrollId, 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate)operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1235,16 +1235,16 @@ public abstract class ElasticsearchTemplateTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, 10)).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(1000, searchQuery, SampleEntity.class,
 				index);
 		String scrollId = scroll.getScrollId();
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
 			scrollId = scroll.getScrollId();
-			scroll = operations.searchScrollContinue(scrollId, 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scrollId, 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate)operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1512,13 +1512,13 @@ public abstract class ElasticsearchTemplateTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withIndicesOptions(IndicesOptions.lenientExpandOpen()).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(scrollTimeInMillis, searchQuery,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(scrollTimeInMillis, searchQuery,
 				SampleEntity.class, index);
 
 		List<SearchHit<SampleEntity>> entities = new ArrayList<>(scroll.getContent());
 
 		while (scroll.hasContent()) {
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), scrollTimeInMillis, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scroll.getScrollId(), scrollTimeInMillis, SampleEntity.class);
 
 			entities.addAll(scroll.getContent());
 		}
@@ -2408,14 +2408,14 @@ public abstract class ElasticsearchTemplateTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("message"));
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, criteriaQuery, SampleEntity.class,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(1000, criteriaQuery, SampleEntity.class,
 				index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scroll.getScrollId());
+		((AbstractElasticsearchTemplate)operations).searchScrollClear(scroll.getScrollId());
 
 		// then
 		assertThat(sampleEntities).hasSize(2);
@@ -2445,14 +2445,14 @@ public abstract class ElasticsearchTemplateTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchQuery("message", "message"))
 				.withPageable(PageRequest.of(0, 10)).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(1000, searchQuery, SampleEntity.class,
 				index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scroll.getScrollId());
+		((AbstractElasticsearchTemplate)operations).searchScrollClear(scroll.getScrollId());
 
 		// then
 		assertThat(sampleEntities).hasSize(2);
@@ -2477,14 +2477,14 @@ public abstract class ElasticsearchTemplateTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, 10)).withSourceFilter(sourceFilter).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(1000, searchQuery, SampleEntity.class,
 				index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scroll.getScrollId());
+		((AbstractElasticsearchTemplate)operations).searchScrollClear(scroll.getScrollId());
 		assertThat(sampleEntities).hasSize(3);
 		assertThat(sampleEntities.stream().map(SearchHit::getContent).map(SampleEntity::getId).collect(Collectors.toList()))
 				.doesNotContain((String) null);
@@ -2523,12 +2523,12 @@ public abstract class ElasticsearchTemplateTests {
 				.withSort(new FieldSortBuilder("message").order(SortOrder.DESC)).withPageable(PageRequest.of(0, 10)).build();
 
 		// when
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(1000, searchQuery, SampleEntity.class,
 				index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
 		}
 
 		// then
@@ -2571,12 +2571,12 @@ public abstract class ElasticsearchTemplateTests {
 				.build();
 
 		// when
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate)operations).searchScrollStart(1000, searchQuery, SampleEntity.class,
 				index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate)operations).searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
 		}
 
 		// then
