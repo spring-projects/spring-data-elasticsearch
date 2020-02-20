@@ -96,36 +96,6 @@ public interface IndexOperations {
 	 */
 	boolean createIndex(Class<?> clazz, Object settings);
 
-	/**
-	 * Deletes an index for given entity.
-	 *
-	 * @param clazz The entity class, must be annotated with
-	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
-	 * @return {@literal true} if the index was deleted
-	 */
-	default boolean deleteIndex(Class<?> clazz) {
-		return indexOps(clazz).delete();
-	}
-
-	/**
-	 * Deletes an index for an InxdexCoordinate
-	 *
-	 * @param index the index to delete
-	 * @return {@literal true} if the index was deleted
-	 */
-	default boolean deleteIndex(IndexCoordinates index) {
-		return indexOps(index).delete();
-	}
-
-	/**
-	 * Deletes an index.
-	 *
-	 * @param indexName the name of the index to delete
-	 * @return {@literal true} if the index was deleted
-	 */
-	default boolean deleteIndex(String indexName) {
-		return deleteIndex(IndexCoordinates.of(indexName));
-	}
 
 	/**
 	 * check if index exists.
@@ -276,4 +246,44 @@ public interface IndexOperations {
 	 */
 	void refresh(Class<?> clazz);
 	// endregion
+
+	//region deprecated
+	/**
+	 * Deletes an index for given entity.
+	 *
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @return {@literal true} if the index was deleted
+	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link #delete()}
+	 */
+	@Deprecated
+	default boolean deleteIndex(Class<?> clazz) {
+		return indexOps(clazz).delete();
+	}
+
+	/**
+	 * Deletes an index for an InxdexCoordinate
+	 *
+	 * @param index the index to delete
+	 * @return {@literal true} if the index was deleted
+	 * @deprecated since 4.0 use {@link #indexOps(IndexCoordinates)} and {@link #delete()}
+	 */
+	@Deprecated
+	default boolean deleteIndex(IndexCoordinates index) {
+		return indexOps(index).delete();
+	}
+
+	/**
+	 * Deletes an index.
+	 *
+	 * @param indexName the name of the index to delete
+	 * @return {@literal true} if the index was deleted
+	 * @deprecated since 4.0 use {@link #indexOps(IndexCoordinates)} and {@link #delete()}
+	 */
+	@Deprecated
+	default boolean deleteIndex(String indexName) {
+		return indexOps(IndexCoordinates.of(indexName)).delete();
+	}
+	//endregion
+
 }
