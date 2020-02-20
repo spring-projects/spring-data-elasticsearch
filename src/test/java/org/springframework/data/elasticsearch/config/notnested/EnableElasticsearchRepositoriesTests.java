@@ -39,6 +39,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
@@ -74,16 +75,18 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 	@EnableElasticsearchRepositories
 	static class Config {}
 
-	@Autowired private IndexOperations indexOperations;
+	@Autowired ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@Autowired private SampleElasticsearchRepository repository;
 
 	@Autowired(required = false) private SampleRepository nestedRepository;
 
-	interface SampleRepository extends Repository<EnableElasticsearchRepositoriesTests.SampleEntity, Long> {}
+	interface SampleRepository extends Repository<SampleEntity, Long> {}
 
 	@BeforeEach
 	public void before() {
+		indexOperations = operations.getIndexOperations(SampleEntity.class);
 		IndexInitializer.init(indexOperations, SampleEntity.class);
 	}
 

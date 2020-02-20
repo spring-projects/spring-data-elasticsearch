@@ -79,20 +79,15 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	protected @Nullable Class<T> entityClass;
 	protected @Nullable ElasticsearchEntityInformation<T, ID> entityInformation;
 
-	public AbstractElasticsearchRepository(ElasticsearchOperations operations) {
-		Assert.notNull(operations, "ElasticsearchOperations must not be null.");
-		this.operations = operations;
-		this.indexOperations = operations.getIndexOperations();
-	}
-
 	public AbstractElasticsearchRepository(ElasticsearchEntityInformation<T, ID> metadata,
 			ElasticsearchOperations operations) {
-		this(operations);
+		this.operations = operations;
 
 		Assert.notNull(metadata, "ElasticsearchEntityInformation must not be null!");
 
 		this.entityInformation = metadata;
-		setEntityClass(this.entityInformation.getJavaType());
+		this.entityClass = this.entityInformation.getJavaType();
+		this.indexOperations = operations.getIndexOperations(this.entityClass);
 		try {
 			if (createIndexAndMapping()) {
 				createIndex();
@@ -360,11 +355,6 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	private boolean isEntityClassSet() {
 		return entityClass != null;
-	}
-
-	public final void setEntityClass(Class<T> entityClass) {
-		Assert.notNull(entityClass, "EntityClass must not be null.");
-		this.entityClass = entityClass;
 	}
 
 	@Nullable

@@ -37,7 +37,6 @@ import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
@@ -63,18 +62,18 @@ public class ElasticsearchTemplateCompletionTests {
 	static class Config {}
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	private void setup() {
-		IndexInitializer.init(indexOperations, CompletionEntity.class);
-		IndexInitializer.init(indexOperations, AnnotatedCompletionEntity.class);
+		IndexInitializer.init(operations.getIndexOperations(CompletionEntity.class), CompletionEntity.class);
+		IndexInitializer.init(operations.getIndexOperations(AnnotatedCompletionEntity.class),
+				AnnotatedCompletionEntity.class);
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex("test-index-annotated-completion");
-		indexOperations.deleteIndex("test-index-core-completion");
+		operations.getIndexOperations(CompletionEntity.class).delete();
+		operations.getIndexOperations(AnnotatedCompletionEntity.class).delete();
 	}
 
 	private void loadCompletionObjectEntities() {

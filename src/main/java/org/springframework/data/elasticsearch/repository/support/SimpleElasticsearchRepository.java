@@ -35,10 +35,6 @@ public class SimpleElasticsearchRepository<T, ID> extends AbstractElasticsearchR
 		super(metadata, elasticsearchOperations);
 	}
 
-	public SimpleElasticsearchRepository(ElasticsearchOperations elasticsearchOperations) {
-		super(elasticsearchOperations);
-	}
-
 	@Override
 	protected @Nullable String stringIdRepresentation(@Nullable ID id) {
 		return operations.stringIdRepresentation(id);

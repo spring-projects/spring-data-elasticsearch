@@ -61,8 +61,30 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	private RestHighLevelClient client;
 
 	public DefaultIndexOperations(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter) {
-		super(elasticsearchConverter);
+		super(elasticsearchConverter, (Class<?>) null);
 		this.client = client;
+	}
+
+	public DefaultIndexOperations(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
+			Class<?> boundClass) {
+		super(elasticsearchConverter, boundClass);
+		this.client = client;
+	}
+
+	public DefaultIndexOperations(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
+			IndexCoordinates boundIndex) {
+		super(elasticsearchConverter, boundIndex);
+		this.client = client;
+	}
+
+	@Override
+	public IndexOperations indexOps(Class<?> clazz) {
+		return new DefaultIndexOperations(client, elasticsearchConverter, clazz);
+	}
+
+	@Override
+	public IndexOperations indexOps(IndexCoordinates index) {
+		return new DefaultIndexOperations(client, elasticsearchConverter, index);
 	}
 
 	@Override
@@ -71,12 +93,13 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 		try {
 			return client.indices().create(request, RequestOptions.DEFAULT).isAcknowledged();
 		} catch (IOException e) {
-			throw new ElasticsearchException("Error for creating index: " + indexName + ", client: " + client.getLowLevelClient().getNodes(), e);
+			throw new ElasticsearchException(
+					"Error for creating index: " + indexName + ", client: " + client.getLowLevelClient().getNodes(), e);
 		}
 	}
 
 	@Override
-	public boolean deleteIndex(String indexName) {
+	protected boolean doDelete(String indexName) {
 
 		Assert.notNull(indexName, "No index defined for delete operation");
 

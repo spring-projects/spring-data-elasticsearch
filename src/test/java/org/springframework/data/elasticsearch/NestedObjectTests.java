@@ -45,7 +45,6 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -68,13 +67,13 @@ import org.springframework.test.context.ContextConfiguration;
 public class NestedObjectTests {
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(indexOperations, Book.class);
-		IndexInitializer.init(indexOperations, Person.class);
-		IndexInitializer.init(indexOperations, PersonMultipleLevelNested.class);
+		IndexInitializer.init(operations.getIndexOperations(Book.class), Book.class);
+		IndexInitializer.init(operations.getIndexOperations(Person.class), Person.class);
+		IndexInitializer.init(operations.getIndexOperations(PersonMultipleLevelNested.class),
+				PersonMultipleLevelNested.class);
 	}
 
 	@Test
@@ -126,7 +125,7 @@ public class NestedObjectTests {
 
 		IndexCoordinates index = IndexCoordinates.of("test-index-person").withTypes("user");
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(Person.class);
+		operations.getIndexOperations(Person.class).refresh(Person.class);
 
 		QueryBuilder builder = nestedQuery("car",
 				boolQuery().must(termQuery("car.name", "saturn")).must(termQuery("car.model", "imprezza")), ScoreMode.None);
@@ -146,7 +145,7 @@ public class NestedObjectTests {
 		// when
 		operations.bulkIndex(indexQueries,
 				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes("user"));
-		indexOperations.refresh(PersonMultipleLevelNested.class);
+		operations.getIndexOperations(PersonMultipleLevelNested.class).refresh(PersonMultipleLevelNested.class);
 
 		// then
 		Optional<PersonMultipleLevelNested> personIndexed = operations.get("1", PersonMultipleLevelNested.class,
@@ -165,7 +164,8 @@ public class NestedObjectTests {
 				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes("user"));
 
 		// then
-		Map<String, Object> mapping = indexOperations.getMapping(PersonMultipleLevelNested.class);
+		Map<String, Object> mapping = operations.getIndexOperations(PersonMultipleLevelNested.class)
+				.getMapping(PersonMultipleLevelNested.class);
 
 		assertThat(mapping).isNotNull();
 		Map<String, Object> propertyMap = (Map<String, Object>) mapping.get("properties");
@@ -183,7 +183,7 @@ public class NestedObjectTests {
 		// when
 		IndexCoordinates index = IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes("user");
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(PersonMultipleLevelNested.class);
+		operations.getIndexOperations(PersonMultipleLevelNested.class).refresh(PersonMultipleLevelNested.class);
 
 		// then
 		BoolQueryBuilder builder = boolQuery();
@@ -323,7 +323,7 @@ public class NestedObjectTests {
 
 		IndexCoordinates index = IndexCoordinates.of("test-index-person").withTypes("user");
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(Person.class);
+		operations.getIndexOperations(Person.class).refresh(Person.class);
 
 		// when
 		QueryBuilder builder = nestedQuery("books", boolQuery().must(termQuery("books.name", "java")), ScoreMode.None);
@@ -372,7 +372,7 @@ public class NestedObjectTests {
 		// when
 		IndexCoordinates index = IndexCoordinates.of("test-index-book-nested-objects").withTypes("book");
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(Book.class);
+		operations.getIndexOperations(Book.class).refresh(Book.class);
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()

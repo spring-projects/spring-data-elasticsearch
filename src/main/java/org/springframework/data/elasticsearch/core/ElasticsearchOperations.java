@@ -40,7 +40,19 @@ import org.springframework.lang.Nullable;
  */
 public interface ElasticsearchOperations extends DocumentOperations, SearchOperations {
 
-	IndexOperations getIndexOperations();
+	/**
+	 * get an {@link IndexOperations} that is bound to the given class
+	 * 
+	 * @return IndexOperations
+	 */
+	IndexOperations getIndexOperations(Class<?> clazz);
+
+	/**
+	 * get an {@link IndexOperations} that is bound to the given class
+	 * 
+	 * @return IndexOperations
+	 */
+	IndexOperations getIndexOperations(IndexCoordinates index);
 
 	ElasticsearchConverter getElasticsearchConverter();
 
@@ -56,7 +68,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean createIndex(String indexName) {
-		return getIndexOperations().createIndex(indexName);
+		return getIndexOperations(IndexCoordinates.of(indexName)).createIndex(indexName);
 	}
 
 	/**
@@ -69,7 +81,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean createIndex(String indexName, Object settings) {
-		return getIndexOperations().createIndex(indexName, settings);
+		return getIndexOperations(IndexCoordinates.of(indexName)).createIndex(indexName, settings);
 	}
 
 	/**
@@ -82,7 +94,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean createIndex(Class<?> clazz) {
-		return getIndexOperations().createIndex(clazz);
+		return getIndexOperations(clazz).createIndex(clazz);
 	}
 
 	/**
@@ -96,7 +108,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean createIndex(Class<?> clazz, Object settings) {
-		return getIndexOperations().createIndex(clazz, settings);
+		return getIndexOperations(clazz).createIndex(clazz, settings);
 	}
 
 	/**
@@ -109,7 +121,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean deleteIndex(Class<?> clazz) {
-		return getIndexOperations().deleteIndex(clazz);
+		return getIndexOperations(clazz).delete();
 	}
 
 	/**
@@ -121,7 +133,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean deleteIndex(String indexName) {
-		return getIndexOperations().deleteIndex(indexName);
+		return getIndexOperations(IndexCoordinates.of(indexName)).delete();
 	}
 
 	/**
@@ -133,7 +145,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean indexExists(String indexName) {
-		return getIndexOperations().indexExists(indexName);
+		return getIndexOperations(IndexCoordinates.of(indexName)).indexExists(indexName);
 	}
 
 	/**
@@ -146,7 +158,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean indexExists(Class<?> clazz) {
-		return getIndexOperations().indexExists(clazz);
+		return getIndexOperations(clazz).indexExists(clazz);
 	}
 
 	/**
@@ -159,7 +171,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean putMapping(Class<?> clazz) {
-		return getIndexOperations().putMapping(clazz);
+		return getIndexOperations(clazz).putMapping(clazz);
 	}
 
 	/**
@@ -173,7 +185,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean putMapping(IndexCoordinates index, Class<?> clazz) {
-		return getIndexOperations().putMapping(index, clazz);
+		return getIndexOperations(clazz).putMapping(index, clazz);
 	}
 
 	/**
@@ -186,7 +198,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean putMapping(IndexCoordinates index, Object mappings) {
-		return getIndexOperations().putMapping(index, mappings);
+		return getIndexOperations(index).putMapping(index, mappings);
 	}
 
 	/**
@@ -200,7 +212,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean putMapping(Class<?> clazz, Object mappings) {
-		return getIndexOperations().putMapping(clazz, mappings);
+		return getIndexOperations(clazz).putMapping(clazz, mappings);
 	}
 
 	/**
@@ -213,7 +225,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default Map<String, Object> getMapping(Class<?> clazz) {
-		return getIndexOperations().getMapping(clazz);
+		return getIndexOperations(clazz).getMapping(clazz);
 	}
 
 	/**
@@ -225,7 +237,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default Map<String, Object> getMapping(IndexCoordinates index) {
-		return getIndexOperations().getMapping(index);
+		return getIndexOperations(index).getMapping(index);
 	}
 
 	/**
@@ -238,7 +250,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean addAlias(AliasQuery query, IndexCoordinates index) {
-		return getIndexOperations().addAlias(query, index);
+		return getIndexOperations(index).addAlias(query, index);
 	}
 
 	/**
@@ -251,7 +263,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default boolean removeAlias(AliasQuery query, IndexCoordinates index) {
-		return getIndexOperations().removeAlias(query, index);
+		return getIndexOperations(index).removeAlias(query, index);
 	}
 
 	/**
@@ -263,7 +275,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default List<AliasMetaData> queryForAlias(String indexName) {
-		return getIndexOperations().queryForAlias(indexName);
+		return getIndexOperations(IndexCoordinates.of(indexName)).queryForAlias(indexName);
 	}
 
 	/**
@@ -275,7 +287,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default Map<String, Object> getSetting(String indexName) {
-		return getIndexOperations().getSettings(indexName);
+		return getIndexOperations(IndexCoordinates.of(indexName)).getSettings(indexName);
 	}
 
 	/**
@@ -288,7 +300,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default Map<String, Object> getSetting(Class<?> clazz) {
-		return getIndexOperations().getSettings(clazz);
+		return getIndexOperations(clazz).getSettings(clazz);
 	}
 
 	/**
@@ -299,7 +311,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default void refresh(IndexCoordinates index) {
-		getIndexOperations().refresh(index);
+		getIndexOperations(index).refresh(index);
 	}
 
 	/**
@@ -311,7 +323,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Deprecated
 	default void refresh(Class<?> clazz) {
-		getIndexOperations().refresh(clazz);
+		getIndexOperations(clazz).refresh(clazz);
 	}
 	// endregion
 

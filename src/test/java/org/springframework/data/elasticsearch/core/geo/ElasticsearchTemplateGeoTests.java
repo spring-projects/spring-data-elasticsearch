@@ -39,7 +39,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -78,18 +77,17 @@ public class ElasticsearchTemplateGeoTests {
 			.withTypes("geo-class-point-type");
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(indexOperations, AuthorMarkerEntity.class);
-		IndexInitializer.init(indexOperations, LocationMarkerEntity.class);
+		IndexInitializer.init(operations.getIndexOperations(AuthorMarkerEntity.class), AuthorMarkerEntity.class);
+		IndexInitializer.init(operations.getIndexOperations(LocationMarkerEntity.class), LocationMarkerEntity.class);
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex(AuthorMarkerEntity.class);
-		indexOperations.deleteIndex(LocationMarkerEntity.class);
+		operations.getIndexOperations(AuthorMarkerEntity.class).delete();
+		operations.getIndexOperations(LocationMarkerEntity.class).delete();
 	}
 
 	private void loadClassBaseEntities() {

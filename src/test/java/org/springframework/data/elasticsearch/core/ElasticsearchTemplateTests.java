@@ -113,10 +113,11 @@ public abstract class ElasticsearchTemplateTests {
 	protected final IndexCoordinates index = IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY).withTypes(TYPE_NAME);
 
 	@Autowired protected ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
+		indexOperations = operations.getIndexOperations(SampleEntity.class);
 		deleteIndices();
 
 		indexOperations.createIndex(SampleEntity.class);
@@ -137,7 +138,7 @@ public abstract class ElasticsearchTemplateTests {
 
 	private void deleteIndices() {
 
-		indexOperations.deleteIndex(SampleEntity.class);
+		indexOperations.delete();
 		indexOperations.deleteIndex(SampleEntityUUIDKeyed.class);
 		indexOperations.deleteIndex(UseServerConfigurationEntity.class);
 		indexOperations.deleteIndex(SampleMappingEntity.class);

@@ -41,6 +41,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -65,16 +66,19 @@ public class InnerObjectTests {
 
 	@Autowired private SampleElasticSearchBookRepository bookRepository;
 
-	@Autowired private IndexOperations indexOperations;
+	@Autowired ElasticsearchOperations operations;
+
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
+		indexOperations = operations.getIndexOperations(Book.class);
 		IndexInitializer.init(indexOperations, Book.class);
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex(Book.class);
+		indexOperations.delete();
 	}
 
 	@Test

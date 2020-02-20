@@ -35,6 +35,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
@@ -62,18 +63,20 @@ public class SpringDataGeoRepositoryTests {
 	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
 
-	@Autowired private IndexOperations indexOperations;
+	@Autowired ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@Autowired SpringDataGeoRepository repository;
 
 	@BeforeEach
 	public void init() {
+		indexOperations = operations.getIndexOperations(GeoEntity.class);
 		IndexInitializer.init(indexOperations, GeoEntity.class);
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex(GeoEntity.class);
+		indexOperations.delete();
 	}
 
 	@Test

@@ -77,10 +77,11 @@ public class ElasticsearchTemplateAggregationTests {
 	static final String INDEX_NAME = "test-index-articles-core-aggregation";
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
+		indexOperations = operations.getIndexOperations(ArticleEntity.class);
 		IndexInitializer.init(indexOperations, ArticleEntity.class);
 
 		IndexQuery article1 = new ArticleEntityBuilder("1").title("article four").subject("computing")
@@ -106,7 +107,7 @@ public class ElasticsearchTemplateAggregationTests {
 
 	@AfterEach
 	public void after() {
-		indexOperations.deleteIndex(ArticleEntity.class);
+		indexOperations.delete();
 	}
 
 	@Test

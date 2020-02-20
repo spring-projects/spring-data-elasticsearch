@@ -26,7 +26,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -56,12 +58,14 @@ public class DynamicIndexEntityTests {
 
 	@Autowired private DynamicIndexRepository repository;
 
-	@Autowired private IndexOperations indexOperations;
+	@Autowired ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	public void init() {
+		indexOperations = operations.getIndexOperations(IndexCoordinates.of("index1"));
 		deleteIndexes();
 		indexOperations.createIndex("index1");
 		indexOperations.createIndex("index2");
@@ -74,7 +78,7 @@ public class DynamicIndexEntityTests {
 
 	private void deleteIndexes() {
 
-		indexOperations.deleteIndex("index1");
+		indexOperations.delete();
 		indexOperations.deleteIndex("index2");
 	}
 

@@ -55,10 +55,11 @@ public class SpELEntityTests {
 	@Autowired private SpELRepository repository;
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
+		indexOperations = operations.getIndexOperations(SpELEntity.class);
 		IndexInitializer.init(indexOperations, SpELEntity.class);
 	}
 

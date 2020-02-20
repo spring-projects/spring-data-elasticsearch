@@ -32,6 +32,7 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -48,9 +49,35 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	protected final ElasticsearchConverter elasticsearchConverter;
 	protected final RequestFactory requestFactory;
 
-	public AbstractDefaultIndexOperations(ElasticsearchConverter elasticsearchConverter) {
+	@Nullable protected final Class<?> boundClass;
+	@Nullable protected final IndexCoordinates boundIndex;
+
+	public AbstractDefaultIndexOperations(ElasticsearchConverter elasticsearchConverter, @Nullable Class<?> boundClass) {
 		this.elasticsearchConverter = elasticsearchConverter;
 		requestFactory = new RequestFactory(elasticsearchConverter);
+
+		if (boundClass != null) {
+			this.boundClass = boundClass;
+			this.boundIndex = getIndexCoordinatesFor(boundClass);
+		} else {
+			this.boundClass = null;
+			this.boundIndex = null;
+		}
+	}
+
+	public AbstractDefaultIndexOperations(ElasticsearchConverter elasticsearchConverter,
+			@Nullable IndexCoordinates boundIndex) {
+		this.elasticsearchConverter = elasticsearchConverter;
+		requestFactory = new RequestFactory(elasticsearchConverter);
+
+		this.boundClass = null;
+		this.boundIndex = boundIndex;
+	}
+
+	protected void checkForBoundIndex() {
+		if (boundIndex == null) {
+			throw new IndexOperationsException("IndexOperations are not bound");
+		}
 	}
 
 	// region IndexOperations
@@ -84,10 +111,12 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 		return createIndex(getRequiredPersistentEntity(clazz).getIndexCoordinates().getIndexName(), settings);
 	}
 
-	@Override
-	public boolean deleteIndex(Class<?> clazz) {
-		return deleteIndex(getRequiredPersistentEntity(clazz).getIndexCoordinates().getIndexName());
+	public boolean delete() {
+		checkForBoundIndex();
+		return doDelete(boundIndex.getIndexName());
 	}
+
+	protected abstract boolean doDelete(String indexName);
 
 	@Override
 	public boolean indexExists(Class<?> clazz) {

@@ -84,20 +84,19 @@ import org.springframework.test.context.ContextConfiguration;
 public class MappingBuilderTests extends MappingContextBaseTests {
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-
-		indexOperations.deleteIndex(StockPrice.class);
-		indexOperations.deleteIndex(SimpleRecursiveEntity.class);
-		indexOperations.deleteIndex(StockPrice.class);
-		indexOperations.deleteIndex(SampleInheritedEntity.class);
-		indexOperations.deleteIndex(User.class);
-		indexOperations.deleteIndex(Group.class);
-		indexOperations.deleteIndex(Book.class);
-		indexOperations.deleteIndex(NormalizerEntity.class);
-		indexOperations.deleteIndex(CopyToEntity.class);
+		indexOperations = operations.getIndexOperations(SimpleRecursiveEntity.class);
+		indexOperations.delete();
+		operations.getIndexOperations(StockPrice.class).delete();
+		operations.getIndexOperations(SampleInheritedEntity.class).delete();
+		operations.getIndexOperations(User.class).delete();
+		operations.getIndexOperations(Group.class).delete();
+		operations.getIndexOperations(Book.class).delete();
+		operations.getIndexOperations(NormalizerEntity.class).delete();
+		operations.getIndexOperations(CopyToEntity.class).delete();
 	}
 
 	@Test

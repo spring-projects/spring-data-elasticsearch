@@ -67,11 +67,12 @@ public class CriteriaQueryTests {
 	private final IndexCoordinates index = IndexCoordinates.of("test-index-sample-core-query").withTypes("test-type");
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		indexOperations.deleteIndex(SampleEntity.class);
+		indexOperations = operations.getIndexOperations(SampleEntity.class);
+		indexOperations.delete();
 		indexOperations.createIndex(SampleEntity.class);
 		indexOperations.putMapping(SampleEntity.class);
 		indexOperations.refresh(SampleEntity.class);
@@ -79,7 +80,7 @@ public class CriteriaQueryTests {
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex(SampleEntity.class);
+		indexOperations.delete();
 	}
 
 	@Test

@@ -25,13 +25,41 @@ import org.springframework.data.elasticsearch.core.query.AliasQuery;
 /**
  * The operations for the
  * <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices.html">Elasticsearch Index APIs</a>.
- *
+ * <br/>
+ * IndexOperations can be bound to an entity class or an IndexCoordinate (by {@link #indexOps(Class)} or
+ * {@link #indexOps(IndexCoordinates)}), then it is not necessary to pass the class or IndexCoordinate in every call.
+ * 
  * @author Peter-Josef Meisch
  * @author Sascha Woo
  * @since 4.0
  */
 public interface IndexOperations {
 
+	/**
+	 * returns an {@link IndexOperations} bound to the given entity class.
+	 * 
+	 * @param clazz the entity class
+	 * @return IndexOperations;
+	 */
+	IndexOperations indexOps(Class<?> clazz);
+
+	/**
+	 * returns an {@link IndexOperations} bound to the given IndexCoordinate.
+	 * 
+	 * @param index the IndexCoordinate
+	 * @return IndexOperations;
+	 */
+	IndexOperations indexOps(IndexCoordinates index);
+
+	/**
+	 * Deletes the index this {@link IndexOperations} is bound to
+	 *
+	 * @return {@literal true} if the index was deleted
+	 * @throws IndexOperationsException if this object is not bound
+	 */
+	boolean delete();
+
+	// region unbound
 	/**
 	 * Create an index for given indexName.
 	 *
@@ -75,7 +103,19 @@ public interface IndexOperations {
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @return {@literal true} if the index was deleted
 	 */
-	boolean deleteIndex(Class<?> clazz);
+	default boolean deleteIndex(Class<?> clazz) {
+		return indexOps(clazz).delete();
+	}
+
+	/**
+	 * Deletes an index for an InxdexCoordinate
+	 *
+	 * @param index the index to delete
+	 * @return {@literal true} if the index was deleted
+	 */
+	default boolean deleteIndex(IndexCoordinates index) {
+		return indexOps(index).delete();
+	}
 
 	/**
 	 * Deletes an index.
@@ -83,7 +123,9 @@ public interface IndexOperations {
 	 * @param indexName the name of the index to delete
 	 * @return {@literal true} if the index was deleted
 	 */
-	boolean deleteIndex(String indexName);
+	default boolean deleteIndex(String indexName) {
+		return deleteIndex(IndexCoordinates.of(indexName));
+	}
 
 	/**
 	 * check if index exists.
@@ -233,4 +275,5 @@ public interface IndexOperations {
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 */
 	void refresh(Class<?> clazz);
+	// endregion
 }

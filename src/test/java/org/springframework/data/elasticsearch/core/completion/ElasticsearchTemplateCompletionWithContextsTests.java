@@ -67,16 +67,17 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 	static class Config {}
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	void setup() {
-		indexOperations.deleteIndex(ContextCompletionEntity.class);
+		indexOperations = operations.getIndexOperations(ContextCompletionEntity.class);
+		indexOperations.delete();
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex(ContextCompletionEntity.class);
+		indexOperations.delete();
 	}
 
 	private void loadContextCompletionObjectEntities() {

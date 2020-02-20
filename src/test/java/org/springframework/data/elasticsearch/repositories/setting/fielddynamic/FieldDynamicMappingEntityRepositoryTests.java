@@ -53,16 +53,17 @@ public class FieldDynamicMappingEntityRepositoryTests {
 	static class Config {}
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
+		indexOperations = operations.getIndexOperations(FieldDynamicMappingEntity.class);
 		IndexInitializer.init(indexOperations, FieldDynamicMappingEntity.class);
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex(FieldDynamicMappingEntity.class);
+		indexOperations.delete();
 	}
 
 	@Test // DATAES-209

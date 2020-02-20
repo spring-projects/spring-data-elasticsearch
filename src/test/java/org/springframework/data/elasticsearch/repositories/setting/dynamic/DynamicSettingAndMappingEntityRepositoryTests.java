@@ -61,18 +61,19 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 	static class Config {}
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@Autowired private DynamicSettingAndMappingEntityRepository repository;
 
 	@BeforeEach
 	public void before() {
+		indexOperations = operations.getIndexOperations(DynamicSettingAndMappingEntity.class);
 		IndexInitializer.init(indexOperations, DynamicSettingAndMappingEntity.class);
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex(DynamicSettingAndMappingEntity.class);
+		indexOperations.delete();
 	}
 
 	@Test // DATAES-64
