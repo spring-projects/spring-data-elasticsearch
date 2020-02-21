@@ -60,6 +60,13 @@ public interface IndexOperations {
 	boolean addAlias(AliasQuery query);
 
 	/**
+	 * Get the alias informations for a specified index.
+	 *
+	 * @return alias information
+	 */
+	List<AliasMetaData> queryForAlias();
+
+	/**
 	 * Remove an alias.
 	 *
 	 * @param query query defining the alias
@@ -193,14 +200,6 @@ public interface IndexOperations {
 	 * @return the mapping
 	 */
 	Map<String, Object> getMapping(IndexCoordinates index);
-
-	/**
-	 * Get the alias informations for a specified index.
-	 *
-	 * @param indexName the name of the index
-	 * @return alias information
-	 */
-	List<AliasMetaData> queryForAlias(String indexName);
 
 	// endregion
 
@@ -352,6 +351,18 @@ public interface IndexOperations {
 	@Deprecated
 	default boolean addAlias(AliasQuery query, IndexCoordinates index) {
 		return indexOps(index).addAlias(query);
+	}
+
+	/**
+	 * Get the alias informations for a specified index.
+	 *
+	 * @param indexName the name of the index
+	 * @return alias information
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)} and {@link #queryForAlias()}
+	 */
+	@Deprecated
+	default List<AliasMetaData> queryForAlias(String indexName) {
+		return indexOps(IndexCoordinates.of(indexName)).queryForAlias();
 	}
 
 	/**

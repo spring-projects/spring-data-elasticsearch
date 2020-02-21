@@ -18,9 +18,11 @@ package org.springframework.data.elasticsearch.core;
 import static org.springframework.util.StringUtils.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
+import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.settings.Settings;
 import org.slf4j.Logger;
@@ -172,6 +174,13 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	}
 
 	protected abstract boolean doAddAlias(AliasQuery query, IndexCoordinates index);
+
+	@Override
+	public List<AliasMetaData> queryForAlias() {
+		return doQueryForAlias(checkForBoundIndex().getIndexName());
+	}
+
+	protected abstract List<AliasMetaData> doQueryForAlias(String indexName);
 
 	@Override
 	public boolean removeAlias(AliasQuery query) {

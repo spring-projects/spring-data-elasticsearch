@@ -138,7 +138,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	public List<AliasMetaData> queryForAlias(String indexName) {
+	protected List<AliasMetaData> doQueryForAlias(String indexName) {
 		return client.admin().indices().getAliases(new GetAliasesRequest().indices(indexName)).actionGet().getAliases()
 				.get(indexName);
 	}

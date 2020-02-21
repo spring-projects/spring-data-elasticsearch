@@ -178,7 +178,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public List<AliasMetaData> queryForAlias(String indexName) {
+	protected List<AliasMetaData> doQueryForAlias(String indexName) {
 		List<AliasMetaData> aliases = null;
 		RestClient restClient = client.getLowLevelClient();
 		Response response;
