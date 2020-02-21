@@ -34,6 +34,7 @@ import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -75,7 +76,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	protected boolean doCreate(String indexName, Object settings) {
+	protected boolean doCreate(String indexName, @Nullable Object settings) {
 		CreateIndexRequestBuilder createIndexRequestBuilder = requestFactory.createIndexRequestBuilder(client, indexName,
 				settings);
 		return createIndexRequestBuilder.execute().actionGet().isAcknowledged();

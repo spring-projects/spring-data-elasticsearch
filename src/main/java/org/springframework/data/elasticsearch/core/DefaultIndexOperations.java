@@ -43,6 +43,7 @@ import org.springframework.data.elasticsearch.core.client.support.AliasData;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -88,7 +89,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	protected boolean doCreate(String indexName, Object settings) {
+	protected boolean doCreate(String indexName, @Nullable Object settings) {
 		CreateIndexRequest request = requestFactory.createIndexRequest(indexName, settings);
 		try {
 			return client.indices().create(request, RequestOptions.DEFAULT).isAcknowledged();

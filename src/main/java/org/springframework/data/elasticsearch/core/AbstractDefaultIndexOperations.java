@@ -98,7 +98,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 		if (boundClass != null) {
 			Class<?> clazz = boundClass;
-			String indexName = getRequiredPersistentEntity(clazz).getIndexCoordinates().getIndexName();
+			String indexName = checkForBoundIndex().getIndexName();
 
 			if (clazz.isAnnotationPresent(Setting.class)) {
 				String settingPath = clazz.getAnnotation(Setting.class).settingPath();
@@ -123,7 +123,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 		return doCreate(checkForBoundIndex().getIndexName(), settings);
 	}
 
-	protected abstract boolean doCreate(String indexName, Object settings);
+	protected abstract boolean doCreate(String indexName, @Nullable Object settings);
 
 	@Override
 	public boolean delete() {

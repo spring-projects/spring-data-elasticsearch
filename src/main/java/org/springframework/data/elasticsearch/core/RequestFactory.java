@@ -180,7 +180,7 @@ class RequestFactory {
 	}
 
 	@SuppressWarnings("unchecked")
-	public CreateIndexRequest createIndexRequest(String indexName, Object settings) {
+	public CreateIndexRequest createIndexRequest(String indexName, @Nullable Object settings) {
 		CreateIndexRequest request = new CreateIndexRequest(indexName);
 		if (settings instanceof String) {
 			request.settings(String.valueOf(settings), Requests.INDEX_CONTENT_TYPE);
@@ -193,7 +193,7 @@ class RequestFactory {
 	}
 
 	@SuppressWarnings("unchecked")
-	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, String indexName, Object settings) {
+	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, String indexName, @Nullable Object settings) {
 		CreateIndexRequestBuilder createIndexRequestBuilder = client.admin().indices().prepareCreate(indexName);
 		if (settings instanceof String) {
 			createIndexRequestBuilder.setSettings(String.valueOf(settings), Requests.INDEX_CONTENT_TYPE);
