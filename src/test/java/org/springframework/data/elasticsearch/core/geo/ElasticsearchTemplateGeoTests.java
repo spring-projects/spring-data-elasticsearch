@@ -98,7 +98,7 @@ public class ElasticsearchTemplateGeoTests {
 		indexQueries.add(new AuthorMarkerEntityBuilder("2").name("Mohsin Husen").location(51.5171d, 0.1062d).buildIndex());
 		indexQueries.add(new AuthorMarkerEntityBuilder("3").name("Rizwan Idrees").location(51.5171d, 0.1062d).buildIndex());
 		operations.bulkIndex(indexQueries, authorMarkerIndex);
-		operations.refresh(AuthorMarkerEntity.class);
+		operations.getIndexOperations(AuthorMarkerEntity.class).refresh();
 	}
 
 	private void loadAnnotationBaseEntities() {
@@ -130,7 +130,7 @@ public class ElasticsearchTemplateGeoTests {
 		indexQueries.add(buildIndex(location3));
 
 		operations.bulkIndex(indexQueries, locationMarkerIndex);
-		operations.refresh(LocationMarkerEntity.class);
+		operations.getIndexOperations(LocationMarkerEntity.class).refresh();
 	}
 
 	@Test

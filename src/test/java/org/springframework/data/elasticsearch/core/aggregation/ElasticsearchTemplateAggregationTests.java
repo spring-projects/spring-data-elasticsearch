@@ -102,7 +102,7 @@ public class ElasticsearchTemplateAggregationTests {
 		operations.index(article2, index);
 		operations.index(article3, index);
 		operations.index(article4, index);
-		operations.refresh(ArticleEntity.class);
+		indexOperations.refresh();
 	}
 
 	@AfterEach

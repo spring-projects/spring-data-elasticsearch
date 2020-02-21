@@ -89,16 +89,18 @@ public class ReactiveElasticsearchTemplateTests {
 
 	private ElasticsearchRestTemplate restTemplate;
 	private ReactiveElasticsearchTemplate template;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void setUp() {
+		restTemplate = new ElasticsearchRestTemplate(TestUtils.restHighLevelClient());
+		indexOperations = restTemplate.getIndexOperations(SampleEntity.class);
 
 		deleteIndices();
 
-		restTemplate = new ElasticsearchRestTemplate(TestUtils.restHighLevelClient());
-		restTemplate.createIndex(SampleEntity.class);
-		restTemplate.putMapping(SampleEntity.class);
-		restTemplate.refresh(SampleEntity.class);
+		indexOperations.createIndex(SampleEntity.class);
+		indexOperations.putMapping(SampleEntity.class);
+		indexOperations.refresh();
 
 		template = new ReactiveElasticsearchTemplate(TestUtils.reactiveClient(), restTemplate.getElasticsearchConverter());
 	}
@@ -142,7 +144,7 @@ public class ReactiveElasticsearchTemplateTests {
 				.expectNextCount(1)//
 				.verifyComplete();
 
-		restTemplate.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		SearchHits<SampleEntity> result = restTemplate.search(
 				new CriteriaQuery(Criteria.where("message").is(sampleEntity.getMessage())), SampleEntity.class,
@@ -161,7 +163,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 					assertThat(it.getId()).isNotNull();
 
-					restTemplate.refresh(SampleEntity.class);
+					indexOperations.refresh();
 					assertThat(TestUtils.documentWithId(it.getId()).existsIn(DEFAULT_INDEX)).isTrue();
 				}) //
 				.verifyComplete();
@@ -269,10 +271,10 @@ public class ReactiveElasticsearchTemplateTests {
 		IndexCoordinates alternateIndex = IndexCoordinates.of(ALTERNATE_INDEX).withTypes("test-type");
 
 		restTemplate.index(indexQuery, alternateIndex);
-		restTemplate.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
-		restTemplate.refresh(defaultIndex);
-		restTemplate.refresh(alternateIndex);
+		restTemplate.getIndexOperations(defaultIndex).refresh();
+		restTemplate.getIndexOperations(alternateIndex).refresh();
 
 		template.get(sampleEntity.getId(), SampleEntity.class, defaultIndex) //
 				.as(StepVerifier::create) //
@@ -858,7 +860,7 @@ public class ReactiveElasticsearchTemplateTests {
 			restTemplate.bulkIndex(getIndexQueries(entities), indexCoordinates);
 		}
 
-		restTemplate.refresh(SampleEntity.class);
+		indexOperations.refresh();
 	}
 
 	@Data

@@ -65,7 +65,7 @@ public class SpELEntityTests {
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex("test-index-abz-*");
+		indexOperations.indexOps(IndexCoordinates.of("test-index-abz-*")).delete();
 	}
 
 	@Test

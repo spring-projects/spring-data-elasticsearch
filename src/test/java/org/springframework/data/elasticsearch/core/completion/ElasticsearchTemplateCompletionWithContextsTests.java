@@ -112,7 +112,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 
 		operations.bulkIndex(indexQueries,
 				IndexCoordinates.of("test-index-context-completion").withTypes("context-completion-type"));
-		operations.refresh(ContextCompletionEntity.class);
+		operations.getIndexOperations(ContextCompletionEntity.class).refresh();
 	}
 
 	@Test // DATAES-536

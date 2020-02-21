@@ -89,7 +89,7 @@ public class ElasticsearchTemplateCompletionTests {
 				.buildIndex());
 
 		operations.bulkIndex(indexQueries, IndexCoordinates.of("test-index-core-completion").withTypes("completion-type"));
-		operations.refresh(CompletionEntity.class);
+		operations.getIndexOperations(CompletionEntity.class).refresh();
 	}
 
 	private void loadAnnotatedCompletionObjectEntities() {
@@ -110,7 +110,7 @@ public class ElasticsearchTemplateCompletionTests {
 
 		operations.bulkIndex(indexQueries,
 				IndexCoordinates.of("test-index-annotated-completion").withTypes("annotated-completion-type"));
-		operations.refresh(AnnotatedCompletionEntity.class);
+		operations.getIndexOperations(AnnotatedCompletionEntity.class).refresh();
 	}
 
 	private void loadAnnotatedCompletionObjectEntitiesWithWeights() {
@@ -127,7 +127,7 @@ public class ElasticsearchTemplateCompletionTests {
 
 		operations.bulkIndex(indexQueries,
 				IndexCoordinates.of("test-index-annotated-completion").withTypes("annotated-completion-type"));
-		operations.refresh(AnnotatedCompletionEntity.class);
+		operations.getIndexOperations(AnnotatedCompletionEntity.class).refresh();
 	}
 
 	@Test

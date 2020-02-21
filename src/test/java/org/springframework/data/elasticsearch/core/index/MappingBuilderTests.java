@@ -104,7 +104,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		indexOperations.createIndex(SimpleRecursiveEntity.class);
 		indexOperations.putMapping(SimpleRecursiveEntity.class);
-		indexOperations.refresh(SimpleRecursiveEntity.class);
+		indexOperations.refresh();
 	}
 
 	@Test // DATAES-568
@@ -149,7 +149,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 				.symbol(symbol) //
 				.price(BigDecimal.valueOf(price)) //
 				.build()), index);
-		indexOperations.refresh(StockPrice.class);
+		indexOperations.indexOps(StockPrice.class).refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		SearchHits<StockPrice> result = operations.search(searchQuery, StockPrice.class, index);
@@ -197,7 +197,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		IndexCoordinates index = IndexCoordinates.of("test-index-sample-inherited-mapping-builder").withTypes("mapping");
 		operations.index(new SampleInheritedEntityBuilder(id).createdDate(createdDate).message(message).buildIndex(),
 				index);
-		operations.refresh(SampleInheritedEntity.class);
+		operations.getIndexOperations(SampleInheritedEntity.class).refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		SearchHits<SampleInheritedEntity> result = operations.search(searchQuery, SampleInheritedEntity.class, index);

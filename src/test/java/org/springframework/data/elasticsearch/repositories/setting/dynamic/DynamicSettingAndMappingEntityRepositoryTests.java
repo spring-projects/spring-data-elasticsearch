@@ -150,9 +150,9 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 	public void shouldCreateMappingWithSpecifiedMappings() {
 
 		// given
-		indexOperations.deleteIndex(DynamicSettingAndMappingEntity.class);
+		indexOperations.delete();
 		indexOperations.createIndex(DynamicSettingAndMappingEntity.class);
-		indexOperations.refresh(DynamicSettingAndMappingEntity.class);
+		indexOperations.refresh();
 
 		// when
 		String mappings = "{\n" + //
@@ -161,7 +161,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 				"        }\n" + //
 				'}';
 		indexOperations.putMapping(DynamicSettingAndMappingEntity.class, mappings);
-		indexOperations.refresh(DynamicSettingAndMappingEntity.class);
+		indexOperations.refresh();
 
 		// then
 		Map<String, Object> mapping = indexOperations.getMapping(DynamicSettingAndMappingEntity.class);

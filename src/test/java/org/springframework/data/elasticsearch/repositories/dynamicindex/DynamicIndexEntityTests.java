@@ -79,7 +79,7 @@ public class DynamicIndexEntityTests {
 	private void deleteIndexes() {
 
 		indexOperations.delete();
-		indexOperations.deleteIndex("index2");
+		indexOperations.indexOps(IndexCoordinates.of("index2")).delete();
 	}
 
 	@Test // DATAES-456

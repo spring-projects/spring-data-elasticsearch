@@ -83,7 +83,7 @@ public class LogEntityTests {
 				.code(2).ip("10.10.10.4").buildIndex();
 
 		operations.bulkIndex(Arrays.asList(indexQuery1, indexQuery2, indexQuery3, indexQuery4), index);
-		indexOperations.refresh(LogEntity.class);
+		indexOperations.refresh();
 	}
 
 	@AfterEach

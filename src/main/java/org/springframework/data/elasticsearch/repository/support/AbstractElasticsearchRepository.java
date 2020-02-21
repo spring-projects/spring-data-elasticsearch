@@ -21,6 +21,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -74,7 +75,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	static final Logger LOGGER = LoggerFactory.getLogger(AbstractElasticsearchRepository.class);
 
 	protected ElasticsearchOperations operations;
-	protected IndexOperations indexOperations;
+	protected IndexOperations entityClassIndexOperations;
 
 	protected @Nullable Class<T> entityClass;
 	protected @Nullable ElasticsearchEntityInformation<T, ID> entityInformation;
@@ -87,7 +88,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 		this.entityInformation = metadata;
 		this.entityClass = this.entityInformation.getJavaType();
-		this.indexOperations = operations.getIndexOperations(this.entityClass);
+		this.entityClassIndexOperations = operations.getIndexOperations(this.entityClass);
 		try {
 			if (createIndexAndMapping()) {
 				createIndex();
@@ -99,11 +100,11 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	}
 
 	private void createIndex() {
-		indexOperations.createIndex(getEntityClass());
+		entityClassIndexOperations.createIndex(getEntityClass());
 	}
 
 	private void putMapping() {
-		indexOperations.putMapping(getEntityClass());
+		entityClassIndexOperations.putMapping(getEntityClass());
 	}
 
 	private boolean createIndexAndMapping() {
@@ -171,7 +172,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		Assert.notNull(entity, "Cannot save 'null' entity.");
 
 		operations.save(entity, getIndexCoordinates());
-		indexOperations.refresh(getIndexCoordinates());
+		operations.getIndexOperations(entity.getClass()).refresh();
 		return entity;
 	}
 
@@ -194,8 +195,12 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
 
-		operations.save(entities, getIndexCoordinates());
-		indexOperations.refresh(getIndexCoordinates());
+		Iterator<S> iterator = entities.iterator();
+		if (iterator.hasNext()) {
+			S entity = iterator.next();
+			operations.save(entities, getIndexCoordinates());
+			operations.getIndexOperations(entity.getClass()).refresh();
+		}
 
 		return entities;
 	}
@@ -264,7 +269,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
 		doDelete(id, indexCoordinates);
-		indexOperations.refresh(indexCoordinates);
+		entityClassIndexOperations.refresh();
 	}
 
 	@Override
@@ -274,7 +279,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
 		doDelete(extractIdFromBean(entity), indexCoordinates);
-		indexOperations.refresh(indexCoordinates);
+		entityClassIndexOperations.refresh();
 	}
 
 	@Override
@@ -298,7 +303,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		Query query = new NativeSearchQueryBuilder().withQuery(idsQueryBuilder).build();
 
 		operations.delete(query, getEntityClass(), indexCoordinates);
-		indexOperations.refresh(indexCoordinates);
+		entityClassIndexOperations.indexOps(indexCoordinates).refresh();
 	}
 
 	private void doDelete(@Nullable ID id, IndexCoordinates indexCoordinates) {
@@ -313,12 +318,12 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
 		operations.delete(query, getEntityClass(), indexCoordinates);
-		indexOperations.refresh(indexCoordinates);
+		entityClassIndexOperations.refresh();
 	}
 
 	@Override
 	public void refresh() {
-		indexOperations.refresh(getEntityClass());
+		entityClassIndexOperations.refresh();
 	}
 
 	@SuppressWarnings("unchecked")
