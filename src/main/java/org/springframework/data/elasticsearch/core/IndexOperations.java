@@ -52,6 +52,14 @@ public interface IndexOperations {
 	IndexOperations indexOps(IndexCoordinates index);
 
 	/**
+	 * Add an alias.
+	 *
+	 * @param query query defining the alias
+	 * @return true if the alias was created
+	 */
+	boolean addAlias(AliasQuery query);
+
+	/**
 	 * Deletes the index this {@link IndexOperations} is bound to
 	 *
 	 * @return {@literal true} if the index was deleted
@@ -177,15 +185,6 @@ public interface IndexOperations {
 	 * @return the mapping
 	 */
 	Map<String, Object> getMapping(IndexCoordinates index);
-
-	/**
-	 * Add an alias.
-	 *
-	 * @param query query defining the alias
-	 * @param index the index for which to add an alias
-	 * @return true if the alias was created
-	 */
-	boolean addAlias(AliasQuery query, IndexCoordinates index);
 
 	/**
 	 * Remove an alias.
@@ -342,6 +341,20 @@ public interface IndexOperations {
 	default Map<String, Object> getSettings(Class<?> clazz, boolean includeDefaults) {
 		return indexOps(clazz).getSettings(includeDefaults);
 	}
+
+	/**
+	 * Add an alias.
+	 *
+	 * @param query query defining the alias
+	 * @param index the index for which to add an alias
+	 * @return true if the alias was created
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)} and {@link #addAlias(AliasQuery)}
+	 */
+	@Deprecated
+	default boolean addAlias(AliasQuery query, IndexCoordinates index) {
+		return indexOps(index).addAlias(query);
+	}
+
 	// endregion
 
 }

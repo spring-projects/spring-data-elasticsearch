@@ -153,7 +153,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public boolean addAlias(AliasQuery query, IndexCoordinates index) {
+	protected boolean doAddAlias(AliasQuery query, IndexCoordinates index) {
 		IndicesAliasesRequest request = requestFactory.indicesAddAliasesRequest(query, index);
 		try {
 			return client.indices().updateAliases(request, RequestOptions.DEFAULT).isAcknowledged();

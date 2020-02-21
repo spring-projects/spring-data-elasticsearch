@@ -122,7 +122,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	public boolean addAlias(AliasQuery query, IndexCoordinates index) {
+	protected boolean doAddAlias(AliasQuery query, IndexCoordinates index) {
 		IndicesAliasesRequest.AliasActions aliasAction = requestFactory.aliasAction(query, index);
 		return client.admin().indices().prepareAliases().addAliasAction(aliasAction).execute().actionGet().isAcknowledged();
 	}

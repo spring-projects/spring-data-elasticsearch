@@ -32,6 +32,7 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
@@ -164,6 +165,13 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	}
 
 	protected abstract void doRefresh(IndexCoordinates indexCoordinates);
+
+	@Override
+	public boolean addAlias(AliasQuery query) {
+		return doAddAlias(query, checkForBoundIndex());
+	}
+
+	protected abstract boolean doAddAlias(AliasQuery query, IndexCoordinates index);
 
 	protected String buildMapping(Class<?> clazz) {
 

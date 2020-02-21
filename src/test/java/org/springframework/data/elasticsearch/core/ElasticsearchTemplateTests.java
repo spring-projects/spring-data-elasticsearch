@@ -2655,7 +2655,7 @@ public abstract class ElasticsearchTemplateTests {
 				.build();
 
 		// when
-		indexOperations.addAlias(aliasQuery, IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY));
+		indexOperations.addAlias(aliasQuery);
 
 		// then
 		List<AliasMetaData> aliases = indexOperations.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
@@ -2682,8 +2682,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		IndexCoordinates index = IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY);
-		indexOperations.addAlias(aliasQuery1, index);
-		indexOperations.addAlias(aliasQuery2, index);
+		indexOperations.addAlias(aliasQuery1);
+		indexOperations.addAlias(aliasQuery2);
 
 		String documentId = randomNumeric(5);
 		SampleEntity entity = SampleEntity.builder() //
@@ -2731,7 +2731,7 @@ public abstract class ElasticsearchTemplateTests {
 				.build();
 
 		// when
-		indexOperations.addAlias(aliasQuery, index);
+		indexOperations.addAlias(aliasQuery);
 
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity = SampleEntity.builder() //
@@ -2779,7 +2779,7 @@ public abstract class ElasticsearchTemplateTests {
 				.build();
 
 		// when
-		indexOperations.addAlias(aliasQuery, index);
+		indexOperations.addAlias(aliasQuery);
 		List<AliasMetaData> aliases = indexOperations.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
 		assertThat(aliases).isNotNull();
 		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
