@@ -2714,8 +2714,8 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(aliasMetaData2.searchRouting()).isEqualTo("1");
 
 		// cleanup
-		indexOperations.removeAlias(aliasQuery1, index);
-		indexOperations.removeAlias(aliasQuery2, index);
+		indexOperations.removeAlias(aliasQuery1);
+		indexOperations.removeAlias(aliasQuery2);
 	}
 
 	@Test // DATAES-70
@@ -2764,7 +2764,7 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(count).isEqualTo(1);
 
 		// cleanup
-		indexOperations.removeAlias(aliasQuery, index);
+		indexOperations.removeAlias(aliasQuery);
 	}
 
 	@Test // DATAES-541
@@ -2785,7 +2785,7 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
 
 		// then
-		indexOperations.removeAlias(aliasQuery, index);
+		indexOperations.removeAlias(aliasQuery);
 		aliases = indexOperations.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
 		assertThat(aliases).isEmpty();
 	}

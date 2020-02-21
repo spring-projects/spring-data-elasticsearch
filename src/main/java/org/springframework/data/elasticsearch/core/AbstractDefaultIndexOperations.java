@@ -173,6 +173,13 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 	protected abstract boolean doAddAlias(AliasQuery query, IndexCoordinates index);
 
+	@Override
+	public boolean removeAlias(AliasQuery query) {
+		return doRemoveAlias(query, checkForBoundIndex());
+	}
+
+	protected abstract boolean doRemoveAlias(AliasQuery query, IndexCoordinates index);
+
 	protected String buildMapping(Class<?> clazz) {
 
 		// load mapping specified in Mapping annotation if present

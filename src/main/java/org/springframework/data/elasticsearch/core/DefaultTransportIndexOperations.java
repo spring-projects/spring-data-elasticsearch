@@ -128,7 +128,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	public boolean removeAlias(AliasQuery query, IndexCoordinates index) {
+	protected boolean doRemoveAlias(AliasQuery query, IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for Alias");
 		Assert.notNull(query.getAliasName(), "No alias defined");

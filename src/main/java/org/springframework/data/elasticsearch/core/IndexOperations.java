@@ -60,6 +60,14 @@ public interface IndexOperations {
 	boolean addAlias(AliasQuery query);
 
 	/**
+	 * Remove an alias.
+	 *
+	 * @param query query defining the alias
+	 * @return true if the alias was removed
+	 */
+	boolean removeAlias(AliasQuery query);
+
+	/**
 	 * Deletes the index this {@link IndexOperations} is bound to
 	 *
 	 * @return {@literal true} if the index was deleted
@@ -185,15 +193,6 @@ public interface IndexOperations {
 	 * @return the mapping
 	 */
 	Map<String, Object> getMapping(IndexCoordinates index);
-
-	/**
-	 * Remove an alias.
-	 *
-	 * @param query query defining the alias
-	 * @param index the index for which to remove an alias
-	 * @return true if the alias was removed
-	 */
-	boolean removeAlias(AliasQuery query, IndexCoordinates index);
 
 	/**
 	 * Get the alias informations for a specified index.
@@ -353,6 +352,18 @@ public interface IndexOperations {
 	@Deprecated
 	default boolean addAlias(AliasQuery query, IndexCoordinates index) {
 		return indexOps(index).addAlias(query);
+	}
+
+	/**
+	 * Remove an alias.
+	 *
+	 * @param query query defining the alias
+	 * @param index the index for which to remove an alias
+	 * @return true if the alias was removed
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)} and {@link #removeAlias(AliasQuery)}
+	 */
+	default boolean removeAlias(AliasQuery query, IndexCoordinates index) {
+		return indexOps(index).removeAlias(query);
 	}
 
 	// endregion
