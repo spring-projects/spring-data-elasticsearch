@@ -195,12 +195,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public Map<String, Object> getSettings(String indexName) {
-		return getSettings(indexName, false);
-	}
-
-	@Override
-	public Map<String, Object> getSettings(String indexName, boolean includeDefaults) {
+	protected Map<String, Object> doGetSettings(String indexName, boolean includeDefaults) {
 
 		Assert.notNull(indexName, "No index defined for getSettings");
 

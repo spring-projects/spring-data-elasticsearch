@@ -71,6 +71,21 @@ public interface IndexOperations {
 	 */
 	void refresh();
 
+	/**
+	 * Get the index settings.
+	 *
+	 * @return the settings
+	 */
+	Map<String, Object> getSettings();
+
+	/**
+	 * Get settings for a given indexName.
+	 *
+	 * @param includeDefaults wehther or not to include all the default settings
+	 * @return the settings
+	 */
+	Map<String, Object> getSettings(boolean includeDefaults);
+
 	// region unbound
 	/**
 	 * Create an index for given indexName.
@@ -189,42 +204,6 @@ public interface IndexOperations {
 	 */
 	List<AliasMetaData> queryForAlias(String indexName);
 
-	/**
-	 * Get settings for a given indexName.
-	 *
-	 * @param indexName the name of the index
-	 * @return the settings
-	 */
-	Map<String, Object> getSettings(String indexName);
-
-	/**
-	 * Get settings for a given indexName.
-	 *
-	 * @param indexName the name of the index
-	 * @param includeDefaults whether or not to include all the default settings
-	 * @return the settings
-	 */
-	Map<String, Object> getSettings(String indexName, boolean includeDefaults);
-
-	/**
-	 * Get settings for a given class.
-	 *
-	 * @param clazz The entity class, must be annotated with
-	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
-	 * @return the settings
-	 */
-	Map<String, Object> getSettings(Class<?> clazz);
-
-	/**
-	 * Get settings for a given class.
-	 *
-	 * @param clazz The entity class, must be annotated with
-	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
-	 * @param includeDefaults whether or not to include all the default settings
-	 * @return the settings
-	 */
-	Map<String, Object> getSettings(Class<?> clazz, boolean includeDefaults);
-
 	// endregion
 
 	// region deprecated
@@ -311,6 +290,57 @@ public interface IndexOperations {
 	@Deprecated
 	default void refresh(Class<?> clazz) {
 		indexOps(clazz).refresh();
+	}
+
+	/**
+	 * Get settings for a given indexName.
+	 *
+	 * @param indexName the name of the index
+	 * @return the settings
+	 * @deprecated since 4.0 use {@link #indexOps(IndexCoordinates)} and {@link #getSettings()} ()}
+	 */
+	@Deprecated
+	default Map<String, Object> getSettings(String indexName) {
+		return indexOps(IndexCoordinates.of(indexName)).getSettings();
+	}
+
+	/**
+	 * Get settings for a given indexName.
+	 *
+	 * @param indexName the name of the index
+	 * @param includeDefaults whether or not to include all the default settings
+	 * @deprecated since 4.0 use {@link #indexOps(IndexCoordinates)} and {@link #getSettings(boolean)} ()}
+	 * @return the settings
+	 */
+	@Deprecated
+	default Map<String, Object> getSettings(String indexName, boolean includeDefaults) {
+		return indexOps(IndexCoordinates.of(indexName)).getSettings(includeDefaults);
+	}
+
+	/**
+	 * Get settings for a given class.
+	 *
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @return the settings
+	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link #getSettings()} ()}
+	 */
+	@Deprecated
+	default Map<String, Object> getSettings(Class<?> clazz) {
+		return indexOps(clazz).getSettings();
+	}
+
+	/**
+	 * Get settings for a given class.
+	 *
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @param includeDefaults whether or not to include all the default settings
+	 * @return the settings
+	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link #getSettings(boolean)} ()}
+	 */
+	default Map<String, Object> getSettings(Class<?> clazz, boolean includeDefaults) {
+		return indexOps(clazz).getSettings(includeDefaults);
 	}
 	// endregion
 

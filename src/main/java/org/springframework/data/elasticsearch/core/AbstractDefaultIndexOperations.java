@@ -147,14 +147,16 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
-	public Map<String, Object> getSettings(Class<?> clazz) {
-		return getSettings(clazz, false);
+	public Map<String, Object> getSettings() {
+		return getSettings(false);
 	}
 
 	@Override
-	public Map<String, Object> getSettings(Class<?> clazz, boolean includeDefaults) {
-		return getSettings(getRequiredPersistentEntity(clazz).getIndexCoordinates().getIndexName(), includeDefaults);
+	public Map<String, Object> getSettings(boolean includeDefaults) {
+		return doGetSettings(checkForBoundIndex().getIndexName(), includeDefaults);
 	}
+
+	protected abstract Map<String, Object> doGetSettings(String indexName, boolean includeDefaults);
 
 	@Override
 	public void refresh() {

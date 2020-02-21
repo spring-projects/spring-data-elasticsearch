@@ -885,7 +885,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		// creation is done in setup method
-		Map setting = indexOperations.getSettings(SampleEntity.class);
+		Map setting = indexOperations.getSettings();
 
 		// then
 		assertThat(setting.get("index.number_of_shards")).isEqualTo("1");
@@ -2162,14 +2162,15 @@ public abstract class ElasticsearchTemplateTests {
 				+ "                        \"tokenizer\": \"uax_url_email\"\n" + "                    }\n"
 				+ "                }\n" + "            }\n" + "        }\n" + '}';
 
-		indexOperations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).delete();
+		IndexOperations indexOperations3 = this.indexOperations.indexOps(IndexCoordinates.of(INDEX_3_NAME));
+		indexOperations3.delete();
 
 		// when
-		indexOperations.createIndex(INDEX_3_NAME, settings);
+		this.indexOperations.createIndex(INDEX_3_NAME, settings);
 
 		// then
-		Map map = indexOperations.getSettings(INDEX_3_NAME);
-		assertThat(indexOperations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).exists()).isTrue();
+		Map map = indexOperations3.getSettings();
+		assertThat(indexOperations3.exists()).isTrue();
 		assertThat(map.containsKey("index.analysis.analyzer.emailAnalyzer.tokenizer")).isTrue();
 		assertThat(map.get("index.analysis.analyzer.emailAnalyzer.tokenizer")).isEqualTo("uax_url_email");
 	}
@@ -2181,7 +2182,7 @@ public abstract class ElasticsearchTemplateTests {
 		// delete , create and apply mapping in before method
 
 		// then
-		Map map = indexOperations.getSettings(SampleEntity.class);
+		Map map = indexOperations.getSettings();
 		assertThat(indexOperations.exists()).isTrue();
 		assertThat(map.containsKey("index.refresh_interval")).isTrue();
 		assertThat(map.containsKey("index.number_of_replicas")).isTrue();
@@ -2211,7 +2212,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.refresh();
 
 		// then
-		Map map = indexOperations.getSettings(SampleEntity.class);
+		Map map = indexOperations.getSettings();
 		assertThat(indexOperations.indexOps(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY)).exists()).isTrue();
 		assertThat(map.containsKey("index.number_of_replicas")).isTrue();
 		assertThat(map.containsKey("index.number_of_shards")).isTrue();
@@ -2286,7 +2287,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// then
 		assertThat(created).isTrue();
-		Map setting = indexOperations.getSettings(UseServerConfigurationEntity.class);
+		Map setting = indexOperations.indexOps(UseServerConfigurationEntity.class).getSettings();
 		assertThat(setting.get("index.number_of_shards")).isEqualTo("1");
 		assertThat(setting.get("index.number_of_replicas")).isEqualTo("1");
 	}
@@ -2830,7 +2831,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		// when
-		Map<String, Object> map = indexOperations.getSettings(SampleEntity.class);
+		Map<String, Object> map = indexOperations.getSettings();
 
 		// then
 		assertThat(map).doesNotContainKey("index.max_result_window");
@@ -2841,7 +2842,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		// when
-		Map<String, Object> map = indexOperations.getSettings(SampleEntity.class, true);
+		Map<String, Object> map = indexOperations.getSettings(true);
 
 		// then
 		assertThat(map).containsKey("index.max_result_window");
