@@ -59,6 +59,18 @@ public interface IndexOperations {
 	 */
 	boolean delete();
 
+	/**
+	 * Checks if the index this IndexOperations is bound to exists
+	 *
+	 * @return {@literal true} if the index exists
+	 */
+	boolean exists();
+
+	/**
+	 * Refresh the index(es) this IndexOperations is bound to
+	 */
+	void refresh();
+
 	// region unbound
 	/**
 	 * Create an index for given indexName.
@@ -95,24 +107,6 @@ public interface IndexOperations {
 	 * @return {@literal true} if the index was created
 	 */
 	boolean createIndex(Class<?> clazz, Object settings);
-
-
-	/**
-	 * check if index exists.
-	 *
-	 * @param indexName the name of the index
-	 * @return {@literal true} if the index exists
-	 */
-	boolean indexExists(String indexName);
-
-	/**
-	 * check if index is exists.
-	 *
-	 * @param clazz The entity class, must be annotated with
-	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
-	 * @return {@literal true} if the index exists
-	 */
-	boolean indexExists(Class<?> clazz);
 
 	/**
 	 * Create mapping for a class and store it to the index.
@@ -231,23 +225,9 @@ public interface IndexOperations {
 	 */
 	Map<String, Object> getSettings(Class<?> clazz, boolean includeDefaults);
 
-	/**
-	 * Refresh the index(es).
-	 *
-	 * @param index the index to refresh
-	 */
-	void refresh(IndexCoordinates index);
-
-	/**
-	 * Refresh the index.
-	 *
-	 * @param clazz The entity class, must be annotated with
-	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
-	 */
-	void refresh(Class<?> clazz);
 	// endregion
 
-	//region deprecated
+	// region deprecated
 	/**
 	 * Deletes an index for given entity.
 	 *
@@ -262,7 +242,7 @@ public interface IndexOperations {
 	}
 
 	/**
-	 * Deletes an index for an InxdexCoordinate
+	 * Deletes an index for an IndexCoordinate
 	 *
 	 * @param index the index to delete
 	 * @return {@literal true} if the index was deleted
@@ -284,6 +264,54 @@ public interface IndexOperations {
 	default boolean deleteIndex(String indexName) {
 		return indexOps(IndexCoordinates.of(indexName)).delete();
 	}
-	//endregion
+
+	/**
+	 * check if index is exists.
+	 *
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @return {@literal true} if the index exists
+	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link #exists()}
+	 */
+	@Deprecated
+	default boolean indexExists(Class<?> clazz) {
+		return indexOps(clazz).exists();
+	}
+
+	/**
+	 * check if index exists.
+	 *
+	 * @param indexName the name of the index
+	 * @return {@literal true} if the index exists
+	 * @deprecated since 4.0 use {@link #indexOps(IndexCoordinates)} and {@link #exists()}
+	 */
+	@Deprecated
+	default boolean indexExists(String indexName) {
+		return indexOps(IndexCoordinates.of(indexName)).exists();
+	}
+
+	/**
+	 * Refresh the index(es).
+	 *
+	 * @param index the index to refresh
+	 * @deprecated since 4.0 use {@link #indexOps(IndexCoordinates)} and {@link #refresh()}
+	 */
+	@Deprecated
+	default void refresh(IndexCoordinates index) {
+		indexOps(index).refresh();
+	}
+
+	/**
+	 * Refresh the index.
+	 *
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link #refresh()}
+	 */
+	@Deprecated
+	default void refresh(Class<?> clazz) {
+		indexOps(clazz).refresh();
+	}
+	// endregion
 
 }

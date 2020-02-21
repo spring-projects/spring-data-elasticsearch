@@ -74,10 +74,11 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 		this.boundIndex = boundIndex;
 	}
 
-	protected void checkForBoundIndex() {
+	protected IndexCoordinates checkForBoundIndex() {
 		if (boundIndex == null) {
 			throw new IndexOperationsException("IndexOperations are not bound");
 		}
+		return boundIndex;
 	}
 
 	// region IndexOperations
@@ -111,17 +112,19 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 		return createIndex(getRequiredPersistentEntity(clazz).getIndexCoordinates().getIndexName(), settings);
 	}
 
+	@Override
 	public boolean delete() {
-		checkForBoundIndex();
-		return doDelete(boundIndex.getIndexName());
+		return doDelete(checkForBoundIndex().getIndexName());
 	}
 
 	protected abstract boolean doDelete(String indexName);
 
 	@Override
-	public boolean indexExists(Class<?> clazz) {
-		return indexExists(getIndexCoordinatesFor(clazz).getIndexName());
+	public boolean exists() {
+		return doExists(checkForBoundIndex().getIndexName());
 	}
+
+	protected abstract boolean doExists(String indexName);
 
 	@Override
 	public Map<String, Object> getMapping(Class<?> clazz) {
@@ -154,9 +157,11 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
-	public void refresh(Class<?> clazz) {
-		refresh(getIndexCoordinatesFor(clazz));
+	public void refresh() {
+		doRefresh(checkForBoundIndex());
 	}
+
+	protected abstract void doRefresh(IndexCoordinates indexCoordinates);
 
 	protected String buildMapping(Class<?> clazz) {
 

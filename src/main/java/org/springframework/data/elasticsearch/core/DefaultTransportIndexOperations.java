@@ -86,14 +86,14 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 		Assert.notNull(indexName, "No index defined for delete operation");
 
-		if (indexExists(indexName)) {
+		if (doExists(indexName)) {
 			return client.admin().indices().delete(new DeleteIndexRequest(indexName)).actionGet().isAcknowledged();
 		}
 		return false;
 	}
 
 	@Override
-	public boolean indexExists(String indexName) {
+	protected boolean doExists(String indexName) {
 		return client.admin().indices().exists(indicesExistsRequest(indexName)).actionGet().isExists();
 	}
 
@@ -166,7 +166,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	public void refresh(IndexCoordinates index) {
+	protected void doRefresh(IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for refresh()");
 

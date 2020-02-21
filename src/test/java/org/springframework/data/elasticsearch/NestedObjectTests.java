@@ -323,7 +323,7 @@ public class NestedObjectTests {
 
 		IndexCoordinates index = IndexCoordinates.of("test-index-person").withTypes("user");
 		operations.bulkIndex(indexQueries, index);
-		operations.getIndexOperations(Person.class).refresh(Person.class);
+		operations.getIndexOperations(Person.class).refresh();
 
 		// when
 		QueryBuilder builder = nestedQuery("books", boolQuery().must(termQuery("books.name", "java")), ScoreMode.None);

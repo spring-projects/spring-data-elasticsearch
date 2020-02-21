@@ -103,7 +103,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 
 		Assert.notNull(indexName, "No index defined for delete operation");
 
-		if (indexExists(indexName)) {
+		if (doExists(indexName)) {
 			DeleteIndexRequest request = new DeleteIndexRequest(indexName);
 			try {
 				return client.indices().delete(request, RequestOptions.DEFAULT).isAcknowledged();
@@ -115,7 +115,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public boolean indexExists(String indexName) {
+	protected boolean doExists(String indexName) {
 		GetIndexRequest request = new GetIndexRequest(indexName);
 		try {
 			return client.indices().exists(request, RequestOptions.DEFAULT);
@@ -219,7 +219,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public void refresh(IndexCoordinates index) {
+	protected void doRefresh(IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for refresh()");
 

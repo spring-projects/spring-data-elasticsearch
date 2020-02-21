@@ -83,7 +83,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		// delete , create and apply mapping in before method
 
 		// then
-		assertThat(indexOperations.indexExists(DynamicSettingAndMappingEntity.class)).isTrue();
+		assertThat(indexOperations.exists()).isTrue();
 		Map<String, Object> map = indexOperations.getSettings(DynamicSettingAndMappingEntity.class);
 		assertThat(map.containsKey("index.number_of_replicas")).isTrue();
 		assertThat(map.containsKey("index.number_of_shards")).isTrue();

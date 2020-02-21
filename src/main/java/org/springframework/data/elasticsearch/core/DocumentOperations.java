@@ -69,9 +69,9 @@ public interface DocumentOperations {
 	 * saves the given entities to the given index
 	 *
 	 * @param entities must not be {@literal null}
-	 * @param index the idnex to save the entities in, must not be {@literal null}
+	 * @param index the index to save the entities in, must not be {@literal null}
 	 * @param <T> the entity type
-	 * @return the saved entites
+	 * @return the saved entities
 	 */
 	<T> Iterable<T> save(Iterable<T> entities, IndexCoordinates index);
 
@@ -233,8 +233,7 @@ public interface DocumentOperations {
 	 */
 	UpdateResponse update(UpdateQuery updateQuery, IndexCoordinates index);
 
-
-	//region deprecated
+	// region deprecated
 	/**
 	 * Delete all records matching the query.
 	 *
@@ -244,6 +243,7 @@ public interface DocumentOperations {
 	 */
 	@Deprecated
 	void delete(DeleteQuery query, IndexCoordinates index);
+
 	/**
 	 * Retrieves an object from an index.
 	 *
@@ -257,5 +257,5 @@ public interface DocumentOperations {
 	@Nullable
 	<T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index);
 
-	//endregion
+	// endregion
 }

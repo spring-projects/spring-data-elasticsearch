@@ -40,7 +40,7 @@ public class IndexInitializer {
 		indexOperations.delete();
 		indexOperations.createIndex(clazz);
 		indexOperations.putMapping(clazz);
-		indexOperations.refresh(clazz);
+		indexOperations.refresh();
 	}
 
 	/**
@@ -54,6 +54,6 @@ public class IndexInitializer {
 		indexOperations.delete();
 		operations.createIndex(clazz);
 		operations.putMapping(clazz);
-		operations.refresh(clazz);
+		operations.refresh();
 	}
 }
