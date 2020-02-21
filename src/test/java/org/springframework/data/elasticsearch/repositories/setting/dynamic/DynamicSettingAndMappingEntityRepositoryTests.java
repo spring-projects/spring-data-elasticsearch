@@ -151,7 +151,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 
 		// given
 		indexOperations.delete();
-		indexOperations.createIndex(DynamicSettingAndMappingEntity.class);
+		indexOperations.indexOps(DynamicSettingAndMappingEntity.class).create();
 		indexOperations.refresh();
 
 		// when

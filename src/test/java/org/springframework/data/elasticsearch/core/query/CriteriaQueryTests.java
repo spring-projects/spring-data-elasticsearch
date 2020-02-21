@@ -73,7 +73,7 @@ public class CriteriaQueryTests {
 	public void before() {
 		indexOperations = operations.getIndexOperations(SampleEntity.class);
 		indexOperations.delete();
-		indexOperations.createIndex(SampleEntity.class);
+		indexOperations.create();
 		indexOperations.putMapping(SampleEntity.class);
 		indexOperations.refresh();
 	}

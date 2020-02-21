@@ -67,8 +67,8 @@ public class DynamicIndexEntityTests {
 	public void init() {
 		indexOperations = operations.getIndexOperations(IndexCoordinates.of("index1"));
 		deleteIndexes();
-		indexOperations.createIndex("index1");
-		indexOperations.createIndex("index2");
+		indexOperations.indexOps(IndexCoordinates.of("index1")).create();
+		indexOperations.indexOps(IndexCoordinates.of("index2")).create();
 	}
 
 	@AfterEach

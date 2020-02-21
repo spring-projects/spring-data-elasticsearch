@@ -120,13 +120,13 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations = operations.getIndexOperations(SampleEntity.class);
 		deleteIndices();
 
-		indexOperations.createIndex(SampleEntity.class);
+		indexOperations.create();
 		indexOperations.putMapping(SampleEntity.class);
 
-		indexOperations.createIndex(SampleEntityUUIDKeyed.class);
+		indexOperations.indexOps(SampleEntityUUIDKeyed.class).create();
 		indexOperations.putMapping(SampleEntityUUIDKeyed.class);
 
-		indexOperations.createIndex(SearchHitsEntity.class);
+		indexOperations.indexOps(SearchHitsEntity.class).create();
 		indexOperations.putMapping(SearchHitsEntity.class);
 	}
 
@@ -1369,7 +1369,7 @@ public abstract class ElasticsearchTemplateTests {
 		// given
 		Class<SampleEntity> entityClass = SampleEntity.class;
 		indexOperations.indexOps(entityClass).delete();
-		indexOperations.createIndex(entityClass);
+		indexOperations.indexOps(entityClass).create();
 
 		// when
 
@@ -1382,8 +1382,9 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		Class<SampleEntity> entity = SampleEntity.class;
-		indexOperations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).delete();
-		indexOperations.createIndex(INDEX_1_NAME);
+		IndexOperations indexOperations1 = indexOperations.indexOps(IndexCoordinates.of(INDEX_1_NAME));
+		indexOperations1.delete();
+		indexOperations1.create();
 
 		// when
 		indexOperations.putMapping(IndexCoordinates.of(INDEX_1_NAME).withTypes(TYPE_NAME), entity);
@@ -1566,9 +1567,9 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		Class<Book> clazz = Book.class;
-		IndexOperations bookIndexOperations = this.indexOperations.indexOps(Book.class);
+		IndexOperations bookIndexOperations = indexOperations.indexOps(Book.class);
 		bookIndexOperations.delete();
-		indexOperations.createIndex(clazz);
+		bookIndexOperations.create();
 		indexOperations.putMapping(clazz);
 		bookIndexOperations.refresh();
 
@@ -2017,10 +2018,12 @@ public abstract class ElasticsearchTemplateTests {
 	}
 
 	private void cleanUpIndices() {
-		indexOperations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).delete();
-		indexOperations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).delete();
-		indexOperations.createIndex(INDEX_1_NAME);
-		indexOperations.createIndex(INDEX_2_NAME);
+		IndexOperations indexOperations1 = this.indexOperations.indexOps(IndexCoordinates.of(INDEX_1_NAME));
+		indexOperations1.delete();
+		IndexOperations indexOperations2 = this.indexOperations.indexOps(IndexCoordinates.of(INDEX_2_NAME));
+		indexOperations2.delete();
+		indexOperations1.create();
+		indexOperations2.create();
 		indexOperations.indexOps(IndexCoordinates.of(INDEX_1_NAME, INDEX_2_NAME)).refresh();
 	}
 
@@ -2031,7 +2034,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).delete();
 
 		// when
-		indexOperations.createIndex(INDEX_3_NAME);
+		indexOperations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).create();
 
 		// then
 		assertThat(indexOperations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).exists()).isTrue();
@@ -2042,8 +2045,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		String indexName = "some-random-index";
-		indexOperations.createIndex(indexName);
 		IndexCoordinates index = IndexCoordinates.of(indexName);
+		indexOperations.indexOps(index).create();
 		indexOperations.indexOps(index).refresh();
 
 		// when
@@ -2166,7 +2169,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations3.delete();
 
 		// when
-		this.indexOperations.createIndex(INDEX_3_NAME, settings);
+		this.indexOperations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).create(settings);
 
 		// then
 		Map map = indexOperations3.getSettings();
@@ -2206,8 +2209,8 @@ public abstract class ElasticsearchTemplateTests {
 				+ "                }\n" + "            }\n" + "        }\n" + '}';
 
 		// when
-		indexOperations.indexOps(SampleEntity.class).delete();
-		indexOperations.createIndex(SampleEntity.class, settings);
+		indexOperations.delete();
+		indexOperations.create(settings);
 		indexOperations.putMapping(SampleEntity.class);
 		indexOperations.refresh();
 
@@ -2279,15 +2282,15 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Test
 	public void shouldCreateIndexUsingServerDefaultConfiguration() {
-
 		// given
+		IndexOperations indexOps = indexOperations.indexOps(UseServerConfigurationEntity.class);
 
 		// when
-		boolean created = indexOperations.createIndex(UseServerConfigurationEntity.class);
+		boolean created = indexOps.create();
 
 		// then
 		assertThat(created).isTrue();
-		Map setting = indexOperations.indexOps(UseServerConfigurationEntity.class).getSettings();
+		Map setting = indexOps.getSettings();
 		assertThat(setting.get("index.number_of_shards")).isEqualTo("1");
 		assertThat(setting.get("index.number_of_replicas")).isEqualTo("1");
 	}

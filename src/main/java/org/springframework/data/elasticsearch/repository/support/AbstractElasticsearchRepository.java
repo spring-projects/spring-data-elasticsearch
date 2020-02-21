@@ -100,7 +100,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	}
 
 	private void createIndex() {
-		entityClassIndexOperations.createIndex(getEntityClass());
+		entityClassIndexOperations.create();
 	}
 
 	private void putMapping() {

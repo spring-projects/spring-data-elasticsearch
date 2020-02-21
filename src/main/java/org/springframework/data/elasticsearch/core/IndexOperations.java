@@ -52,6 +52,21 @@ public interface IndexOperations {
 	IndexOperations indexOps(IndexCoordinates index);
 
 	/**
+	 * Create an index.
+	 *
+	 * @return {@literal true} if the index was created
+	 */
+	boolean create();
+
+	/**
+	 * Create an index for given Settings.
+	 *
+	 * @param settings the index settings
+	 * @return {@literal true} if the index was created
+	 */
+	boolean create(Object settings);
+
+	/**
 	 * Add an alias.
 	 *
 	 * @param query query defining the alias
@@ -111,42 +126,6 @@ public interface IndexOperations {
 
 	// region unbound
 	/**
-	 * Create an index for given indexName.
-	 *
-	 * @param indexName the name of the index
-	 * @return {@literal true} if the index was created
-	 */
-	boolean createIndex(String indexName);
-
-	/**
-	 * Create an index for given indexName and Settings.
-	 *
-	 * @param indexName the name of the index
-	 * @param settings the index settings
-	 * @return {@literal true} if the index was created
-	 */
-	boolean createIndex(String indexName, Object settings);
-
-	/**
-	 * Create an index for a class.
-	 *
-	 * @param clazz The entity class, must be annotated with
-	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
-	 * @return {@literal true} if the index was created
-	 */
-	boolean createIndex(Class<?> clazz);
-
-	/**
-	 * Create an index for given class and Settings.
-	 *
-	 * @param clazz The entity class, must be annotated with
-	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
-	 * @param settings the index settings
-	 * @return {@literal true} if the index was created
-	 */
-	boolean createIndex(Class<?> clazz, Object settings);
-
-	/**
 	 * Create mapping for a class and store it to the index.
 	 *
 	 * @param clazz The entity class, must be annotated with
@@ -204,6 +183,58 @@ public interface IndexOperations {
 	// endregion
 
 	// region deprecated
+	/**
+	 * Create an index for given indexName.
+	 *
+	 * @param indexName the name of the index
+	 * @return {@literal true} if the index was created
+	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link #create()} ()}
+	 */
+	@Deprecated
+	default boolean createIndex(String indexName) {
+		return indexOps(IndexCoordinates.of(indexName)).create();
+	}
+
+	/**
+	 * Create an index for given indexName and Settings.
+	 *
+	 * @param indexName the name of the index
+	 * @param settings the index settings
+	 * @return {@literal true} if the index was created
+	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link #create(Object)} ()}
+	 */
+	@Deprecated
+	default boolean createIndex(String indexName, Object settings) {
+		return indexOps(IndexCoordinates.of(indexName)).create(settings);
+	}
+
+	/**
+	 * Create an index for a class.
+	 *
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @return {@literal true} if the index was created
+	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link #create()} ()}
+	 */
+	@Deprecated
+	default boolean createIndex(Class<?> clazz) {
+		return indexOps(clazz).create();
+	}
+
+	/**
+	 * Create an index for given class and Settings.
+	 *
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @param settings the index settings
+	 * @return {@literal true} if the index was created
+	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link #create(Object)} ()}
+	 */
+	@Deprecated
+	default boolean createIndex(Class<?> clazz, Object settings) {
+		return indexOps(clazz).create(settings);
+	}
+
 	/**
 	 * Deletes an index for given entity.
 	 *

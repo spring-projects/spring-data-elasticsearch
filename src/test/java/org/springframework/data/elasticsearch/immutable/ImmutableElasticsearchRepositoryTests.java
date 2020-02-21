@@ -60,7 +60,7 @@ public class ImmutableElasticsearchRepositoryTests {
 	public void before() {
 		IndexOperations indexOperations = operations.getIndexOperations(ImmutableEntity.class);
 		indexOperations.delete();
-		indexOperations.createIndex(ImmutableEntity.class);
+		indexOperations.create();
 		indexOperations.refresh();
 	}
 

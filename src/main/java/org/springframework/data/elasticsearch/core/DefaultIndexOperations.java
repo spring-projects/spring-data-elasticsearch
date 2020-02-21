@@ -88,7 +88,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public boolean createIndex(String indexName, Object settings) {
+	protected boolean doCreate(String indexName, Object settings) {
 		CreateIndexRequest request = requestFactory.createIndexRequest(indexName, settings);
 		try {
 			return client.indices().create(request, RequestOptions.DEFAULT).isAcknowledged();

@@ -77,6 +77,13 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 		this.boundIndex = boundIndex;
 	}
 
+	protected Class<?> checkForBoundClass() {
+		if (boundClass == null) {
+			throw new IndexOperationsException("IndexOperations are not bound");
+		}
+		return boundClass;
+	}
+
 	protected IndexCoordinates checkForBoundIndex() {
 		if (boundIndex == null) {
 			throw new IndexOperationsException("IndexOperations are not bound");
@@ -85,35 +92,38 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	}
 
 	// region IndexOperations
-	@Override
-	public boolean createIndex(String indexName) {
-		return createIndex(indexName, null);
-	}
 
 	@Override
-	public boolean createIndex(Class<?> clazz) {
+	public boolean create() {
 
-		String indexName = getRequiredPersistentEntity(clazz).getIndexCoordinates().getIndexName();
-		if (clazz.isAnnotationPresent(Setting.class)) {
-			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
+		if (boundClass != null) {
+			Class<?> clazz = boundClass;
+			String indexName = getRequiredPersistentEntity(clazz).getIndexCoordinates().getIndexName();
 
-			if (hasText(settingPath)) {
-				String settings = ResourceUtil.readFileFromClasspath(settingPath);
+			if (clazz.isAnnotationPresent(Setting.class)) {
+				String settingPath = clazz.getAnnotation(Setting.class).settingPath();
 
-				if (hasText(settings)) {
-					return createIndex(indexName, settings);
+				if (hasText(settingPath)) {
+					String settings = ResourceUtil.readFileFromClasspath(settingPath);
+
+					if (hasText(settings)) {
+						return doCreate(indexName, settings);
+					}
+				} else {
+					LOGGER.info("settingPath in @Setting has to be defined. Using default instead.");
 				}
-			} else {
-				LOGGER.info("settingPath in @Setting has to be defined. Using default instead.");
 			}
+			return doCreate(indexName, getDefaultSettings(getRequiredPersistentEntity(clazz)));
 		}
-		return createIndex(indexName, getDefaultSettings(getRequiredPersistentEntity(clazz)));
+		return doCreate(checkForBoundIndex().getIndexName(), null);
 	}
 
 	@Override
-	public boolean createIndex(Class<?> clazz, Object settings) {
-		return createIndex(getRequiredPersistentEntity(clazz).getIndexCoordinates().getIndexName(), settings);
+	public boolean create(Object settings) {
+		return doCreate(checkForBoundIndex().getIndexName(), settings);
 	}
+
+	protected abstract boolean doCreate(String indexName, Object settings);
 
 	@Override
 	public boolean delete() {

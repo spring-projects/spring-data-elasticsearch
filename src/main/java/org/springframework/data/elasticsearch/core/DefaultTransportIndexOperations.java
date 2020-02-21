@@ -75,7 +75,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	public boolean createIndex(String indexName, Object settings) {
+	protected boolean doCreate(String indexName, Object settings) {
 		CreateIndexRequestBuilder createIndexRequestBuilder = requestFactory.createIndexRequestBuilder(client, indexName,
 				settings);
 		return createIndexRequestBuilder.execute().actionGet().isAcknowledged();
