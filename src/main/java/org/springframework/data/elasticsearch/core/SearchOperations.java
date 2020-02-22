@@ -237,18 +237,17 @@ public interface SearchOperations {
 		return (AggregatedPage<T>) SearchHitSupport.unwrapSearchHits(aggregatedPage);
 	}
 
+
+	// endregion
+
 	/**
 	 * Does a suggest query
 	 *
 	 * @param suggestion the query
 	 * @param index the index to run the query against
 	 * @return the suggest response
-	 * @deprecated since 4.0
 	 */
-	@Deprecated
 	SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index);
-
-	// endregion
 
 	/**
 	 * Execute the query against elasticsearch and return the first returned object.
