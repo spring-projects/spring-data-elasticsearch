@@ -164,8 +164,7 @@ public class NestedObjectTests {
 				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes("user"));
 
 		// then
-		Map<String, Object> mapping = operations.getIndexOperations(PersonMultipleLevelNested.class)
-				.getMapping(PersonMultipleLevelNested.class);
+		Map<String, Object> mapping = operations.getIndexOperations(PersonMultipleLevelNested.class).getMapping();
 
 		assertThat(mapping).isNotNull();
 		Map<String, Object> propertyMap = (Map<String, Object>) mapping.get("properties");

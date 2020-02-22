@@ -1390,7 +1390,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.putMapping(IndexCoordinates.of(INDEX_1_NAME).withTypes(TYPE_NAME), entity);
 
 		// then
-		Map<String, Object> mapping = indexOperations.getMapping(IndexCoordinates.of(INDEX_1_NAME).withTypes(TYPE_NAME));
+		Map<String, Object> mapping = indexOperations.getMapping();
 		assertThat(mapping.get("properties")).isNotNull();
 	}
 
@@ -2301,7 +2301,7 @@ public abstract class ElasticsearchTemplateTests {
 		// given
 
 		// when
-		Map<String, Object> mapping = indexOperations.getMapping(SampleEntity.class);
+		Map<String, Object> mapping = indexOperations.getMapping();
 
 		// then
 		assertThat(mapping).isNotNull();

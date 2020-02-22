@@ -108,7 +108,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	public Map<String, Object> getMapping(IndexCoordinates index) {
+	protected Map<String, Object> doGetMapping(IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for getMapping()");
 

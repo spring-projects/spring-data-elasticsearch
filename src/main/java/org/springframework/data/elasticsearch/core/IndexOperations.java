@@ -67,6 +67,33 @@ public interface IndexOperations {
 	boolean create(Object settings);
 
 	/**
+	 * Deletes the index this {@link IndexOperations} is bound to
+	 *
+	 * @return {@literal true} if the index was deleted
+	 * @throws IndexOperationsException if this object is not bound
+	 */
+	boolean delete();
+
+	/**
+	 * Checks if the index this IndexOperations is bound to exists
+	 *
+	 * @return {@literal true} if the index exists
+	 */
+	boolean exists();
+
+	/**
+	 * Refresh the index(es) this IndexOperations is bound to
+	 */
+	void refresh();
+
+	/**
+	 * Get mapping for an index defined by a class.
+	 *
+	 * @return the mapping
+	 */
+	Map<String, Object> getMapping();
+
+	/**
 	 * Add an alias.
 	 *
 	 * @param query query defining the alias
@@ -88,26 +115,6 @@ public interface IndexOperations {
 	 * @return true if the alias was removed
 	 */
 	boolean removeAlias(AliasQuery query);
-
-	/**
-	 * Deletes the index this {@link IndexOperations} is bound to
-	 *
-	 * @return {@literal true} if the index was deleted
-	 * @throws IndexOperationsException if this object is not bound
-	 */
-	boolean delete();
-
-	/**
-	 * Checks if the index this IndexOperations is bound to exists
-	 *
-	 * @return {@literal true} if the index exists
-	 */
-	boolean exists();
-
-	/**
-	 * Refresh the index(es) this IndexOperations is bound to
-	 */
-	void refresh();
 
 	/**
 	 * Get the index settings.
@@ -162,23 +169,6 @@ public interface IndexOperations {
 	 * @return {@literal true} if the mapping could be stored
 	 */
 	<T> boolean putMapping(Class<T> clazz, Object mappings);
-
-	/**
-	 * Get mapping for an index defined by a class.
-	 *
-	 * @param clazz The entity class, must be annotated with
-	 *          {@link org.springframework.data.elasticsearch.annotations.Document}.
-	 * @return the mapping
-	 */
-	Map<String, Object> getMapping(Class<?> clazz);
-
-	/**
-	 * Get mapping for a given index.
-	 *
-	 * @param index the index to read the mapping from
-	 * @return the mapping
-	 */
-	Map<String, Object> getMapping(IndexCoordinates index);
 
 	// endregion
 
@@ -369,6 +359,31 @@ public interface IndexOperations {
 	 */
 	default Map<String, Object> getSettings(Class<?> clazz, boolean includeDefaults) {
 		return indexOps(clazz).getSettings(includeDefaults);
+	}
+
+	/**
+	 * Get mapping for an index defined by a class.
+	 *
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}.
+	 * @return the mapping
+	 * @deprecated since 4.0, use {@link #indexOps(Class)} and {@link #getMapping(IndexCoordinates)}.
+	 */
+	@Deprecated
+	default Map<String, Object> getMapping(Class<?> clazz) {
+		return indexOps(clazz).getMapping();
+	}
+
+	/**
+	 * Get mapping for a given index.
+	 *
+	 * @param index the index to read the mapping from
+	 * @return the mapping
+	 * @deprecated since 4.0, use {@link #indexOps(Class)} and {@link #getMapping(IndexCoordinates)}.
+	 */
+	@Deprecated
+	default Map<String, Object> getMapping(IndexCoordinates index) {
+		return indexOps(index).getMapping();
 	}
 
 	/**

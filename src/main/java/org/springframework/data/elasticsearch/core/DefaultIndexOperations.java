@@ -139,7 +139,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public Map<String, Object> getMapping(IndexCoordinates index) {
+	protected Map<String, Object> doGetMapping(IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for getMapping()");
 

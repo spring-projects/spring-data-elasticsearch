@@ -140,11 +140,6 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	protected abstract boolean doExists(String indexName);
 
 	@Override
-	public Map<String, Object> getMapping(Class<?> clazz) {
-		return getMapping(getIndexCoordinatesFor(clazz));
-	}
-
-	@Override
 	public boolean putMapping(Class<?> clazz) {
 		return putMapping(clazz, buildMapping(clazz));
 	}
@@ -158,6 +153,13 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	public boolean putMapping(IndexCoordinates index, Class<?> clazz) {
 		return putMapping(index, buildMapping(clazz));
 	}
+
+	@Override
+	public Map<String, Object> getMapping() {
+		return doGetMapping(checkForBoundIndex());
+	}
+
+	abstract protected Map<String, Object> doGetMapping(IndexCoordinates index);
 
 	@Override
 	public Map<String, Object> getSettings() {

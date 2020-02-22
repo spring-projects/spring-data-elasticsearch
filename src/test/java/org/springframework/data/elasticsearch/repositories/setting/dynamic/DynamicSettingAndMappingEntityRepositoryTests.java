@@ -135,7 +135,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		// delete , create and apply mapping in before method
 
 		// when
-		Map<String, Object> mapping = indexOperations.getMapping(DynamicSettingAndMappingEntity.class);
+		Map<String, Object> mapping = indexOperations.getMapping();
 
 		// then
 		Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
@@ -151,7 +151,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 
 		// given
 		indexOperations.delete();
-		indexOperations.indexOps(DynamicSettingAndMappingEntity.class).create();
+		indexOperations.create();
 		indexOperations.refresh();
 
 		// when
@@ -164,7 +164,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		indexOperations.refresh();
 
 		// then
-		Map<String, Object> mapping = indexOperations.getMapping(DynamicSettingAndMappingEntity.class);
+		Map<String, Object> mapping = indexOperations.getMapping();
 		Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
 		assertThat(mapping).isNotNull();
 		assertThat(properties).isNotNull();
@@ -179,7 +179,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		// given
 
 		// then
-		Map<String, Object> mapping = indexOperations.getMapping(DynamicSettingAndMappingEntity.class);
+		Map<String, Object> mapping = indexOperations.getMapping();
 		Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
 		assertThat(mapping).isNotNull();
 		assertThat(properties).isNotNull();
