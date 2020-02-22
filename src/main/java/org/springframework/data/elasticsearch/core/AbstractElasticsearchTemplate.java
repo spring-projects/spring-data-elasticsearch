@@ -14,10 +14,8 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
-import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -35,7 +33,6 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.support.SearchHitsUtil;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
@@ -314,9 +311,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		String[] valuesAsArray = new String[values.size()];
 		return values.toArray(valuesAsArray);
 	}
-
-	@Override
-	public abstract SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index);
 
 	/**
 	 * @param clazz the entity class

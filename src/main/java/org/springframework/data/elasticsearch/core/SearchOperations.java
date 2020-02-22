@@ -236,6 +236,18 @@ public interface SearchOperations {
 		AggregatedPage<SearchHit<T>> aggregatedPage = SearchHitSupport.page(searchHits, query.getPageable());
 		return (AggregatedPage<T>) SearchHitSupport.unwrapSearchHits(aggregatedPage);
 	}
+
+	/**
+	 * Does a suggest query
+	 *
+	 * @param suggestion the query
+	 * @param index the index to run the query against
+	 * @return the suggest response
+	 * @deprecated since 4.0
+	 */
+	@Deprecated
+	SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index);
+
 	// endregion
 
 	/**
@@ -352,13 +364,4 @@ public interface SearchOperations {
 	 *         error.
 	 */
 	<T> CloseableIterator<SearchHit<T>> searchForStream(Query query, Class<T> clazz, IndexCoordinates index);
-
-	/**
-	 * Does a suggest query
-	 *
-	 * @param suggestion the query
-	 * @param index the index to run the query against
-	 * @return the suggest response
-	 */
-	SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index);
 }
