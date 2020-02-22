@@ -39,7 +39,7 @@ public class IndexInitializer {
 		IndexOperations indexOperations = operations.getIndexOperations(clazz);
 		indexOperations.delete();
 		indexOperations.create();
-		indexOperations.putMapping(clazz);
+		indexOperations.putMapping(indexOperations.createMapping(clazz));
 		indexOperations.refresh();
 	}
 
@@ -53,7 +53,7 @@ public class IndexInitializer {
 		IndexOperations indexOperations = operations.indexOps(clazz);
 		indexOperations.delete();
 		operations.create();
-		operations.putMapping(clazz);
+		operations.putMapping(indexOperations.createMapping(clazz));
 		operations.refresh();
 	}
 }

@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repositories.setting.dynamic;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.core.document.Document.*;
 
 import java.util.Map;
 
@@ -160,7 +161,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 				"            \"email\" : {\"type\" : \"text\", \"analyzer\" : \"emailAnalyzer\" }\n" + //
 				"        }\n" + //
 				'}';
-		indexOperations.putMapping(DynamicSettingAndMappingEntity.class, mappings);
+		indexOperations.putMapping(parse(mappings));
 		indexOperations.refresh();
 
 		// then

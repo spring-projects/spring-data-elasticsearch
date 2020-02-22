@@ -20,7 +20,6 @@ import static org.springframework.util.CollectionUtils.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -44,8 +43,6 @@ import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -67,6 +64,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -180,27 +178,22 @@ class RequestFactory {
 	}
 
 	@SuppressWarnings("unchecked")
-	public CreateIndexRequest createIndexRequest(String indexName, @Nullable Object settings) {
+	public CreateIndexRequest createIndexRequest(String indexName, @Nullable Document settings) {
 		CreateIndexRequest request = new CreateIndexRequest(indexName);
-		if (settings instanceof String) {
-			request.settings(String.valueOf(settings), Requests.INDEX_CONTENT_TYPE);
-		} else if (settings instanceof Map) {
-			request.settings((Map<String, ?>) settings);
-		} else if (settings instanceof XContentBuilder) {
-			request.settings((XContentBuilder) settings);
+
+		if (settings != null) {
+			request.settings(settings);
 		}
 		return request;
 	}
 
 	@SuppressWarnings("unchecked")
-	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, String indexName, @Nullable Object settings) {
+	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, String indexName,
+			@Nullable Document settings) {
 		CreateIndexRequestBuilder createIndexRequestBuilder = client.admin().indices().prepareCreate(indexName);
-		if (settings instanceof String) {
-			createIndexRequestBuilder.setSettings(String.valueOf(settings), Requests.INDEX_CONTENT_TYPE);
-		} else if (settings instanceof Map) {
-			createIndexRequestBuilder.setSettings((Map<String, ?>) settings);
-		} else if (settings instanceof XContentBuilder) {
-			createIndexRequestBuilder.setSettings((XContentBuilder) settings);
+
+		if (settings != null) {
+			createIndexRequestBuilder.setSettings(settings);
 		}
 		return createIndexRequestBuilder;
 	}
@@ -240,7 +233,8 @@ class RequestFactory {
 	}
 
 	@Deprecated
-	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, DeleteQuery deleteQuery, IndexCoordinates index) {
+	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, DeleteQuery deleteQuery,
+			IndexCoordinates index) {
 		DeleteByQueryRequestBuilder requestBuilder = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE) //
 				.source(index.getIndexNames()) //
 				.filter(deleteQuery.getQuery()) //
@@ -254,7 +248,9 @@ class RequestFactory {
 
 		return requestBuilder;
 	}
-	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, Query query, Class<?> clazz, IndexCoordinates index) {
+
+	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, Query query, Class<?> clazz,
+			IndexCoordinates index) {
 		SearchRequest searchRequest = searchRequest(query, clazz, index);
 		DeleteByQueryRequestBuilder requestBuilder = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE) //
 				.source(index.getIndexNames()) //
@@ -608,29 +604,17 @@ class RequestFactory {
 	}
 
 	@SuppressWarnings("unchecked")
-	public PutMappingRequest putMappingRequest(IndexCoordinates index, Object mapping) {
+	public PutMappingRequest putMappingRequest(IndexCoordinates index, Document mapping) {
 		PutMappingRequest request = new PutMappingRequest(index.getIndexName());
-		if (mapping instanceof String) {
-			request.source(String.valueOf(mapping), XContentType.JSON);
-		} else if (mapping instanceof Map) {
-			request.source((Map<String, ?>) mapping);
-		} else if (mapping instanceof XContentBuilder) {
-			request.source((XContentBuilder) mapping);
-		}
+		request.source(mapping);
 		return request;
 	}
 
 	@SuppressWarnings("rawtypes")
-	public PutMappingRequestBuilder putMappingRequestBuilder(Client client, IndexCoordinates index, Object mapping) {
+	public PutMappingRequestBuilder putMappingRequestBuilder(Client client, IndexCoordinates index, Document mapping) {
 		PutMappingRequestBuilder requestBuilder = client.admin().indices().preparePutMapping(index.getIndexName())
 				.setType(IndexCoordinates.TYPE);
-		if (mapping instanceof String) {
-			requestBuilder.setSource(String.valueOf(mapping), XContentType.JSON);
-		} else if (mapping instanceof Map) {
-			requestBuilder.setSource((Map) mapping);
-		} else if (mapping instanceof XContentBuilder) {
-			requestBuilder.setSource((XContentBuilder) mapping);
-		}
+		requestBuilder.setSource(mapping);
 		return requestBuilder;
 	}
 

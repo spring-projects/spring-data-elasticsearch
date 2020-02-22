@@ -31,6 +31,7 @@ import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -107,7 +108,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 					String settings = ResourceUtil.readFileFromClasspath(settingPath);
 
 					if (hasText(settings)) {
-						return doCreate(indexName, settings);
+						return doCreate(indexName, Document.parse(settings));
 					}
 				} else {
 					LOGGER.info("settingPath in @Setting has to be defined. Using default instead.");
@@ -119,11 +120,11 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
-	public boolean create(Object settings) {
+	public boolean create(Document settings) {
 		return doCreate(checkForBoundIndex().getIndexName(), settings);
 	}
 
-	protected abstract boolean doCreate(String indexName, @Nullable Object settings);
+	protected abstract boolean doCreate(String indexName, @Nullable Document settings);
 
 	@Override
 	public boolean delete() {
@@ -140,19 +141,11 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	protected abstract boolean doExists(String indexName);
 
 	@Override
-	public boolean putMapping(Class<?> clazz) {
-		return putMapping(clazz, buildMapping(clazz));
+	public boolean putMapping(Document mapping) {
+		return doPutMapping(checkForBoundIndex(), mapping);
 	}
 
-	@Override
-	public <T> boolean putMapping(Class<T> clazz, Object mapping) {
-		return putMapping(getIndexCoordinatesFor(clazz), mapping);
-	}
-
-	@Override
-	public boolean putMapping(IndexCoordinates index, Class<?> clazz) {
-		return putMapping(index, buildMapping(clazz));
-	}
+	protected abstract boolean doPutMapping(IndexCoordinates index, Document mapping);
 
 	@Override
 	public Map<String, Object> getMapping() {
@@ -201,7 +194,17 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 	protected abstract boolean doRemoveAlias(AliasQuery query, IndexCoordinates index);
 
-	protected String buildMapping(Class<?> clazz) {
+	@Override
+	public Document createMapping() {
+		return createMapping(checkForBoundClass());
+	}
+
+	@Override
+	public Document createMapping(Class<?> clazz) {
+		return buildMapping(clazz);
+	}
+
+	protected Document buildMapping(Class<?> clazz) {
 
 		// load mapping specified in Mapping annotation if present
 		if (clazz.isAnnotationPresent(Mapping.class)) {
@@ -211,7 +214,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 				String mappings = ResourceUtil.readFileFromClasspath(mappingPath);
 
 				if (!StringUtils.isEmpty(mappings)) {
-					return mappings;
+					return Document.parse(mappings);
 				}
 			} else {
 				LOGGER.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
@@ -220,7 +223,8 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 		// build mapping from field annotations
 		try {
-			return new MappingBuilder(elasticsearchConverter).buildPropertyMapping(clazz);
+			String mapping = new MappingBuilder(elasticsearchConverter).buildPropertyMapping(clazz);
+			return Document.parse(mapping);
 		} catch (Exception e) {
 			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
 		}
@@ -228,15 +232,18 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	// endregion
 
 	// region Helper functions
-	private <T> Map getDefaultSettings(ElasticsearchPersistentEntity<T> persistentEntity) {
+	private <T> Document getDefaultSettings(ElasticsearchPersistentEntity<T> persistentEntity) {
 
-		if (persistentEntity.isUseServerConfiguration())
-			return new HashMap();
+		if (persistentEntity.isUseServerConfiguration()) {
+			return Document.create();
+		}
 
-		return new MapBuilder<String, String>().put("index.number_of_shards", String.valueOf(persistentEntity.getShards()))
+		Map<String, String> map = new MapBuilder<String, String>()
+				.put("index.number_of_shards", String.valueOf(persistentEntity.getShards()))
 				.put("index.number_of_replicas", String.valueOf(persistentEntity.getReplicas()))
 				.put("index.refresh_interval", persistentEntity.getRefreshInterval())
 				.put("index.store.type", persistentEntity.getIndexStoreType()).map();
+		return Document.from(map);
 	}
 
 	ElasticsearchPersistentEntity<?> getRequiredPersistentEntity(Class<?> clazz) {

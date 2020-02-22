@@ -19,8 +19,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.lang.Nullable;
 
 /**
  * The operations for the
@@ -64,7 +66,7 @@ public interface IndexOperations {
 	 * @param settings the index settings
 	 * @return {@literal true} if the index was created
 	 */
-	boolean create(Object settings);
+	boolean create(Document settings);
 
 	/**
 	 * Deletes the index this {@link IndexOperations} is bound to
@@ -85,6 +87,29 @@ public interface IndexOperations {
 	 * Refresh the index(es) this IndexOperations is bound to
 	 */
 	void refresh();
+
+	/**
+	 * Creates the index mapping for the entity this IndexOperations is bound to.
+	 *
+	 * @return mapping object
+	 */
+	Document createMapping();
+
+	/**
+	 * Creates the index mapping for the given class
+	 *
+	 * @param clazz the clazz to create a mapping for
+	 * @return mapping object
+	 */
+	Document createMapping(Class<?> clazz);
+
+	/**
+	 * writes a mapping to the index
+	 * 
+	 * @param mapping the Document with the mapping definitions
+	 * @return {@literal true} if the mapping could be stored
+	 */
+	boolean putMapping(Document mapping);
 
 	/**
 	 * Get mapping for an index defined by a class.
@@ -131,47 +156,6 @@ public interface IndexOperations {
 	 */
 	Map<String, Object> getSettings(boolean includeDefaults);
 
-	// region unbound
-	/**
-	 * Create mapping for a class and store it to the index.
-	 *
-	 * @param clazz The entity class, must be annotated with
-	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
-	 * @return {@literal true} if the mapping could be stored
-	 */
-	boolean putMapping(Class<?> clazz);
-
-	/**
-	 * Create mapping for the given class and put the mapping to the given index.
-	 *
-	 * @param index the index to store the mapping to
-	 * @param clazz The entity class, must be annotated with
-	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
-	 * @return {@literal true} if the mapping could be stored
-	 */
-	boolean putMapping(IndexCoordinates index, Class<?> clazz);
-
-	/**
-	 * Stores a mapping to an index.
-	 *
-	 * @param index the index to store the mapping to
-	 * @param mappings can be a JSON String or a {@link Map}
-	 * @return {@literal true} if the mapping could be stored
-	 */
-	boolean putMapping(IndexCoordinates index, Object mappings);
-
-	/**
-	 * Create mapping for a class Stores a mapping to an index.
-	 *
-	 * @param clazz The entity class, must be annotated with
-	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
-	 * @param mappings can be a JSON String or a {@link Map}
-	 * @return {@literal true} if the mapping could be stored
-	 */
-	<T> boolean putMapping(Class<T> clazz, Object mappings);
-
-	// endregion
-
 	// region deprecated
 	/**
 	 * Create an index for given indexName.
@@ -189,13 +173,13 @@ public interface IndexOperations {
 	 * Create an index for given indexName and Settings.
 	 *
 	 * @param indexName the name of the index
-	 * @param settings the index settings
+	 * @param settings the index settings, must be a JSON String or a Map<String, Object>
 	 * @return {@literal true} if the index was created
-	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link #create(Object)} ()}
+	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link #create(Document)} ()}
 	 */
 	@Deprecated
 	default boolean createIndex(String indexName, Object settings) {
-		return indexOps(IndexCoordinates.of(indexName)).create(settings);
+		return indexOps(IndexCoordinates.of(indexName)).create(getDocument(settings));
 	}
 
 	/**
@@ -218,11 +202,11 @@ public interface IndexOperations {
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @param settings the index settings
 	 * @return {@literal true} if the index was created
-	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link #create(Object)} ()}
+	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link #create(Document)} ()}
 	 */
 	@Deprecated
 	default boolean createIndex(Class<?> clazz, Object settings) {
-		return indexOps(clazz).create(settings);
+		return indexOps(clazz).create(getDocument(settings));
 	}
 
 	/**
@@ -362,6 +346,72 @@ public interface IndexOperations {
 	}
 
 	/**
+	 * Stores a mapping to an index.
+	 *
+	 * @param clazz The entity class defining the index, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @param mapping can be a JSON String or a {@link Map}
+	 * @return {@literal true} if the mapping could be stored
+	 * @deprecated since 4.0, use {@link #indexOps(Class)} and {@link #putMapping(Document)}
+	 */
+	@Deprecated
+	default <T> boolean putMapping(Class<T> clazz, Object mapping) {
+		Document document = getDocument(mapping);
+		if (document == null) {
+			throw new IllegalArgumentException("mapping cannot be converted to Document");
+		}
+		return indexOps(clazz).putMapping(document);
+	}
+
+	/**
+	 * Create mapping for a class and store it to the index.
+	 *
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @return {@literal true} if the mapping could be stored
+	 * @deprecated since 4.0, use {@link #indexOps(Class)}, {@link #createMapping(Class)} and
+	 *             {@link #putMapping(Document)}
+	 */
+	@Deprecated
+	default boolean putMapping(Class<?> clazz) {
+		Document mapping = createMapping(clazz);
+		return indexOps(clazz).putMapping(mapping);
+	}
+
+	/**
+	 * Create mapping for the given class and put the mapping to the given index.
+	 *
+	 * @param index the index to store the mapping to
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @return {@literal true} if the mapping could be stored
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)}, {@link #createMapping(Class)} and
+	 *             {@link #putMapping(Document)}
+	 */
+	@Deprecated
+	default boolean putMapping(IndexCoordinates index, Class<?> clazz) {
+		Document mapping = createMapping(clazz);
+		return indexOps(index).putMapping(mapping);
+	}
+
+	/**
+	 * Stores a mapping to an index.
+	 *
+	 * @param index the index to store the mapping to
+	 * @param mapping can be a JSON String or a {@link Map}
+	 * @return {@literal true} if the mapping could be stored
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)} and {@link #putMapping(Document)}
+	 */
+	@Deprecated
+	default boolean putMapping(IndexCoordinates index, Object mapping) {
+		Document document = getDocument(mapping);
+		if (document == null) {
+			throw new IllegalArgumentException("mapping cannot be converted to Document");
+		}
+		return indexOps(index).putMapping(document);
+	}
+
+	/**
 	 * Get mapping for an index defined by a class.
 	 *
 	 * @param clazz The entity class, must be annotated with
@@ -421,6 +471,30 @@ public interface IndexOperations {
 	 */
 	default boolean removeAlias(AliasQuery query, IndexCoordinates index) {
 		return indexOps(index).removeAlias(query);
+	}
+
+	/**
+	 * converts an object to a Document
+	 * 
+	 * @param object
+	 * @return
+	 * @deprecated since 4.0, helper method for deprecated functions
+	 */
+	@Deprecated
+	@Nullable
+	default Document getDocument(Object object) {
+		Document document = null;
+
+		try {
+			if (object instanceof String) {
+				document = Document.parse((String) object);
+			} else if (object instanceof Map) {
+				document = Document.from((Map<String, Object>) object);
+			}
+		} catch (Exception e) {
+			throw new IllegalArgumentException("object cannot be converted to Document", e);
+		}
+		return document;
 	}
 
 	// endregion

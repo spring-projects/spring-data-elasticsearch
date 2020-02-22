@@ -41,6 +41,7 @@ import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.client.support.AliasData;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
@@ -89,7 +90,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	protected boolean doCreate(String indexName, @Nullable Object settings) {
+	protected boolean doCreate(String indexName, @Nullable Document settings) {
 		CreateIndexRequest request = requestFactory.createIndexRequest(indexName, settings);
 		try {
 			return client.indices().create(request, RequestOptions.DEFAULT).isAcknowledged();
@@ -126,7 +127,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public boolean putMapping(IndexCoordinates index, Object mapping) {
+	protected boolean doPutMapping(IndexCoordinates index, Document mapping) {
 
 		Assert.notNull(index, "No index defined for putMapping()");
 

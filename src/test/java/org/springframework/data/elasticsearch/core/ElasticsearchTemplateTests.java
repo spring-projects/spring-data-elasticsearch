@@ -19,6 +19,7 @@ import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.core.document.Document.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 import lombok.AllArgsConstructor;
@@ -121,13 +122,15 @@ public abstract class ElasticsearchTemplateTests {
 		deleteIndices();
 
 		indexOperations.create();
-		indexOperations.putMapping(SampleEntity.class);
+		indexOperations.putMapping(indexOperations.createMapping(SampleEntity.class));
 
-		indexOperations.indexOps(SampleEntityUUIDKeyed.class).create();
-		indexOperations.putMapping(SampleEntityUUIDKeyed.class);
+		IndexOperations indexOpsSampleEntityUUIDKeyed = this.indexOperations.indexOps(SampleEntityUUIDKeyed.class);
+		indexOpsSampleEntityUUIDKeyed.create();
+		indexOpsSampleEntityUUIDKeyed.putMapping(indexOpsSampleEntityUUIDKeyed.createMapping(SampleEntityUUIDKeyed.class));
 
-		indexOperations.indexOps(SearchHitsEntity.class).create();
-		indexOperations.putMapping(SearchHitsEntity.class);
+		IndexOperations indexOpsSearchHitsEntity = this.indexOperations.indexOps(SearchHitsEntity.class);
+		indexOpsSearchHitsEntity.create();
+		indexOpsSearchHitsEntity.putMapping(indexOpsSearchHitsEntity.createMapping(SearchHitsEntity.class));
 	}
 
 	@AfterEach
@@ -1374,7 +1377,7 @@ public abstract class ElasticsearchTemplateTests {
 		// when
 
 		// then
-		assertThat(indexOperations.putMapping(entityClass)).isTrue();
+		assertThat(indexOperations.putMapping(indexOperations.createMapping(entityClass))).isTrue();
 	}
 
 	@Test // DATAES-305
@@ -1387,7 +1390,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations1.create();
 
 		// when
-		indexOperations.putMapping(IndexCoordinates.of(INDEX_1_NAME).withTypes(TYPE_NAME), entity);
+		indexOperations1.putMapping(indexOperations1.createMapping(entity));
 
 		// then
 		Map<String, Object> mapping = indexOperations.getMapping();
@@ -1570,7 +1573,7 @@ public abstract class ElasticsearchTemplateTests {
 		IndexOperations bookIndexOperations = indexOperations.indexOps(Book.class);
 		bookIndexOperations.delete();
 		bookIndexOperations.create();
-		indexOperations.putMapping(clazz);
+		indexOperations.putMapping(indexOperations.createMapping(clazz));
 		bookIndexOperations.refresh();
 
 		IndexCoordinates bookIndex = IndexCoordinates.of("test-index-book-core-template").withTypes("book");
@@ -2169,7 +2172,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations3.delete();
 
 		// when
-		this.indexOperations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).create(settings);
+		indexOperations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).create(parse(settings));
 
 		// then
 		Map map = indexOperations3.getSettings();
@@ -2210,8 +2213,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		indexOperations.delete();
-		indexOperations.create(settings);
-		indexOperations.putMapping(SampleEntity.class);
+		indexOperations.create(parse(settings));
+		indexOperations.putMapping(indexOperations.createMapping(SampleEntity.class));
 		indexOperations.refresh();
 
 		// then
