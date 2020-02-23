@@ -33,7 +33,6 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
@@ -51,6 +50,7 @@ import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.support.SearchHitsUtil;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -219,7 +219,9 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	public UpdateResponse update(UpdateQuery query, IndexCoordinates index) {
 		UpdateRequest request = requestFactory.updateRequest(query, index);
 		try {
-			return client.update(request, RequestOptions.DEFAULT);
+			org.elasticsearch.action.update.UpdateResponse updateResponse = client.update(request, RequestOptions.DEFAULT);
+			UpdateResponse.Result result = UpdateResponse.Result.valueOf(updateResponse.getResult().name());
+			return new UpdateResponse(result);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while update for request: " + request.toString(), e);
 		}

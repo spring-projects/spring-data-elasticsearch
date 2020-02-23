@@ -29,7 +29,6 @@ import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.suggest.SuggestBuilder;
@@ -45,6 +44,7 @@ import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.support.SearchHitsUtil;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -197,7 +197,9 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	public UpdateResponse update(UpdateQuery query, IndexCoordinates index) {
 		UpdateRequestBuilder updateRequestBuilder = requestFactory.updateRequestBuilderFor(client, query, index);
-		return updateRequestBuilder.execute().actionGet();
+		org.elasticsearch.action.update.UpdateResponse updateResponse = updateRequestBuilder.execute().actionGet();
+		UpdateResponse.Result result = UpdateResponse.Result.valueOf(updateResponse.getResult().name());
+		return new UpdateResponse(result);
 	}
 
 	private List<String> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {

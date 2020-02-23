@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.core;
 import java.util.List;
 import java.util.Optional;
 
-import org.elasticsearch.action.update.UpdateResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
@@ -26,6 +25,7 @@ import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.lang.Nullable;
 
 /**
