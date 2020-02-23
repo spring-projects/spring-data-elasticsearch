@@ -40,7 +40,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.elasticsearch.ElasticsearchStatusException;
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.AfterEach;
@@ -66,7 +65,6 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQueryBuilder;
 import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersion;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.util.StringUtils;
@@ -765,17 +763,19 @@ public class ReactiveElasticsearchTemplateTests {
 		entity2.rate = 2;
 		index(entity2);
 
-		IndexRequest indexRequest1 = new IndexRequest();
-		indexRequest1.source("message", "updated 1");
-		UpdateQuery updateQuery1 = new UpdateQueryBuilder() //
-				.withId(entity1.getId()) //
-				.withIndexRequest(indexRequest1).build();
+		org.springframework.data.elasticsearch.core.document.Document document1 = org.springframework.data.elasticsearch.core.document.Document
+				.create();
+		document1.put("message", "updated 1");
+		UpdateQuery updateQuery1 = UpdateQuery.builder(entity1.getId()) //
+				.withDocument(document1) //
+				.build();
 
-		IndexRequest indexRequest2 = new IndexRequest();
-		indexRequest2.source("message", "updated 2");
-		UpdateQuery updateQuery2 = new UpdateQueryBuilder() //
-				.withId(entity2.getId()) //
-				.withIndexRequest(indexRequest2).build();
+		org.springframework.data.elasticsearch.core.document.Document document2 = org.springframework.data.elasticsearch.core.document.Document
+				.create();
+		document2.put("message", "updated 2");
+		UpdateQuery updateQuery2 = UpdateQuery.builder(entity2.getId()) //
+				.withDocument(document2) //
+				.build();
 
 		List<UpdateQuery> queries = Arrays.asList(updateQuery1, updateQuery2);
 		template.bulkUpdate(queries, IndexCoordinates.of(DEFAULT_INDEX)).block();

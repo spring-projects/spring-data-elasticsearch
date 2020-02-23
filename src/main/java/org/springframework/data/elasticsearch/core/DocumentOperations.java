@@ -88,7 +88,7 @@ public interface DocumentOperations {
 	 * Index an object. Will do save or update.
 	 *
 	 * @param query the query defining the object
-	 * @param index the index from which the object is read.
+	 * @param index the index where the object is stored.
 	 * @return returns the document id
 	 */
 	String index(IndexQuery query, IndexCoordinates index);

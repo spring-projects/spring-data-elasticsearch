@@ -15,43 +15,168 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.elasticsearch.action.update.UpdateRequest;
+import java.util.Map;
+
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.lang.Nullable;
 
 /**
+ * Defines an update request.
+ * 
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
+ * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html>docs</a>
  */
 public class UpdateQuery {
 
-	@Nullable private String id;
-	@Nullable private UpdateRequest updateRequest;
-	private boolean doUpsert;
+	private String id;
+	@Nullable private String script;
+	@Nullable private Map<String, Object> params;
+	@Nullable private Document document;
+	@Nullable private Document upsert;
+	@Nullable private String lang;
+	@Nullable private String routing;
+	@Nullable private Boolean scriptedUpsert;
+	@Nullable private Boolean docAsUpsert;
+	@Nullable private Boolean fetchSource;
 
-	@Nullable
+	public static Builder builder(String id) {
+		return new Builder(id);
+	}
+
+	private UpdateQuery(String id, @Nullable String script, @Nullable Map<String, Object> params,
+			@Nullable Document document, @Nullable Document upsert, @Nullable String lang, @Nullable String routing,
+			@Nullable Boolean scriptedUpsert, @Nullable Boolean docAsUpsert, @Nullable Boolean fetchSource) {
+		this.id = id;
+		this.script = script;
+		this.params = params;
+		this.document = document;
+		this.upsert = upsert;
+		this.lang = lang;
+		this.routing = routing;
+		this.scriptedUpsert = scriptedUpsert;
+		this.docAsUpsert = docAsUpsert;
+		this.fetchSource = fetchSource;
+	}
+
 	public String getId() {
 		return id;
 	}
 
-	public void setId(String id) {
-		this.id = id;
+	@Nullable
+	public String getScript() {
+		return script;
 	}
 
 	@Nullable
-	public UpdateRequest getUpdateRequest() {
-		return updateRequest;
+	public Map<String, Object> getParams() {
+		return params;
 	}
 
-	public void setUpdateRequest(UpdateRequest updateRequest) {
-		this.updateRequest = updateRequest;
+	@Nullable
+	public Document getDocument() {
+		return document;
 	}
 
-	public boolean DoUpsert() {
-		return doUpsert;
+	@Nullable
+	public Document getUpsert() {
+		return upsert;
 	}
 
-	public void setDoUpsert(boolean doUpsert) {
-		this.doUpsert = doUpsert;
+	@Nullable
+	public String getLang() {
+		return lang;
+	}
+
+	@Nullable
+	public String getRouting() {
+		return routing;
+	}
+
+	@Nullable
+	public Boolean getScriptedUpsert() {
+		return scriptedUpsert;
+	}
+
+	@Nullable
+	public Boolean getDocAsUpsert() {
+		return docAsUpsert;
+	}
+
+	@Nullable
+	public Boolean getFetchSource() {
+		return fetchSource;
+	}
+
+	public static final class Builder {
+		private String id;
+		@Nullable private String script = null;
+		@Nullable private Map<String, Object> params;
+		@Nullable private Document document = null;
+		@Nullable private Document upsert = null;
+		@Nullable private String lang = "painless";
+		@Nullable private String routing = null;
+		@Nullable private Boolean scriptedUpsert;
+		@Nullable private Boolean docAsUpsert;
+		@Nullable private Boolean fetchSource;
+
+		private Builder(String id) {
+			this.id = id;
+		}
+
+		public Builder withScript(String script) {
+			this.script = script;
+			return this;
+		}
+
+		public Builder withParams(Map<String, Object> params) {
+			this.params = params;
+			return this;
+		}
+
+		public Builder withDocument(Document document) {
+			this.document = document;
+			return this;
+		}
+
+		public Builder withUpsert(Document upsert) {
+			this.upsert = upsert;
+			return this;
+		}
+
+		public Builder withLang(String lang) {
+			this.lang = lang;
+			return this;
+		}
+
+		public Builder withRouting(String routing) {
+			this.routing = routing;
+			return this;
+		}
+
+		public Builder withScriptedUpsert(Boolean scriptedUpsert) {
+			this.scriptedUpsert = scriptedUpsert;
+			return this;
+		}
+
+		public Builder withDocAsUpsert(Boolean docAsUpsert) {
+			this.docAsUpsert = docAsUpsert;
+			return this;
+		}
+
+		public Builder withFetchSource(Boolean fetchSource) {
+			this.fetchSource = fetchSource;
+			return this;
+		}
+
+		public UpdateQuery build() {
+
+			if (script == null && document == null) {
+				throw new IllegalArgumentException("either script or document must be set");
+			}
+			return new UpdateQuery(id, script, params, document, upsert, lang, routing, scriptedUpsert, docAsUpsert,
+					fetchSource);
+		}
 	}
 }

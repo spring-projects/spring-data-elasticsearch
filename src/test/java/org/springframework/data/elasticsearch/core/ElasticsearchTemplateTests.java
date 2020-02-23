@@ -43,7 +43,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.assertj.core.util.Lists;
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -410,9 +409,12 @@ public abstract class ElasticsearchTemplateTests {
 		operations.index(indexQuery, index);
 		indexOperations.refresh();
 
-		IndexRequest indexRequest = new IndexRequest();
-		indexRequest.source("message", messageAfterUpdate);
-		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId).withIndexRequest(indexRequest).build();
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.create();
+		document.put("message", messageAfterUpdate);
+		UpdateQuery updateQuery = UpdateQuery.builder(documentId) //
+				.withDocument(document) //
+				.build();
 
 		List<UpdateQuery> queries = new ArrayList<>();
 		queries.add(updateQuery);
@@ -1426,9 +1428,12 @@ public abstract class ElasticsearchTemplateTests {
 		operations.index(indexQuery, index);
 		indexOperations.refresh();
 
-		IndexRequest indexRequest = new IndexRequest();
-		indexRequest.source("message", messageAfterUpdate);
-		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId).withIndexRequest(indexRequest).build();
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.create();
+		document.put("message", messageAfterUpdate);
+		UpdateQuery updateQuery = UpdateQuery.builder(documentId)//
+				.withDocument(document) //
+				.build();
 
 		// when
 		operations.update(updateQuery, index);
@@ -1446,13 +1451,13 @@ public abstract class ElasticsearchTemplateTests {
 		doc.put("id", "1");
 		doc.put("message", "test");
 
-		UpdateRequest updateRequest = new UpdateRequest() //
-				.doc(doc) //
-				.upsert(doc);
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.from(doc);
 
-		UpdateQuery updateQuery = new UpdateQueryBuilder() //
-				.withId("1") //
-				.withUpdateRequest(updateRequest).build();
+		UpdateQuery updateQuery = UpdateQuery.builder("1") //
+				.withDocument(document) //
+				.withUpsert(document) //
+				.build();
 
 		// when
 		UpdateRequest request = getRequestFactory().updateRequest(updateQuery, IndexCoordinates.of("index"));
@@ -1469,11 +1474,13 @@ public abstract class ElasticsearchTemplateTests {
 		doc.put("id", "1");
 		doc.put("message", "test");
 
-		UpdateRequest updateRequest = new UpdateRequest().doc(doc).fetchSource(FetchSourceContext.FETCH_SOURCE);
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.from(doc);
 
-		UpdateQuery updateQuery = new UpdateQueryBuilder() //
-				.withId("1") //
-				.withUpdateRequest(updateRequest).build();
+		UpdateQuery updateQuery = UpdateQuery.builder("1") //
+				.withDocument(document) //
+				.withFetchSource(true) //
+				.build();
 
 		// when
 		UpdateRequest request = getRequestFactory().updateRequest(updateQuery, IndexCoordinates.of("index"));
@@ -1488,18 +1495,20 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		String documentId = randomNumeric(5);
-		String message = "test message";
-		IndexRequest indexRequest = new IndexRequest();
-		indexRequest.source("message", message);
-		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId).withDoUpsert(true)
-				.withIndexRequest(indexRequest).build();
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.create();
+		document.put("message", "test message");
+		UpdateQuery updateQuery = UpdateQuery.builder(documentId) //
+				.withDocument(document) //
+				.withDocAsUpsert(true) //
+				.build();
 
 		// when
 		operations.update(updateQuery, index);
 
 		// then
 		Optional<SampleEntity> indexedEntity = operations.get(documentId, SampleEntity.class, index);
-		assertThat(indexedEntity.get().getMessage()).isEqualTo(message);
+		assertThat(indexedEntity.get().getMessage()).isEqualTo("test message");
 	}
 
 	@Test // DATAES-671

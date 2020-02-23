@@ -19,7 +19,9 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.util.CollectionUtils.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -50,9 +52,10 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
@@ -455,39 +458,40 @@ class RequestFactory {
 
 	public UpdateRequest updateRequest(UpdateQuery query, IndexCoordinates index) {
 
-		Assert.notNull(query.getId(), "No Id define for Query");
-		Assert.notNull(query.getUpdateRequest(), "No UpdateRequest define for Query");
+		UpdateRequest updateRequest = new UpdateRequest(index.getIndexName(), query.getId());
 
-		UpdateRequest queryUpdateRequest = query.getUpdateRequest();
+		if (query.getScript() != null) {
+			Map<String, Object> params = query.getParams();
 
-		UpdateRequest updateRequest = new UpdateRequest(index.getIndexName(), query.getId()) //
-				.routing(queryUpdateRequest.routing()) //
-				.retryOnConflict(queryUpdateRequest.retryOnConflict()) //
-				.timeout(queryUpdateRequest.timeout()) //
-				.waitForActiveShards(queryUpdateRequest.waitForActiveShards()) //
-				.setRefreshPolicy(queryUpdateRequest.getRefreshPolicy()) //
-				.waitForActiveShards(queryUpdateRequest.waitForActiveShards()) //
-				.scriptedUpsert(queryUpdateRequest.scriptedUpsert()) //
-				.docAsUpsert(queryUpdateRequest.docAsUpsert());
-
-		if (query.DoUpsert()) {
-			updateRequest.docAsUpsert(true);
+			if (params == null) {
+				params = new HashMap<>();
+			}
+			Script script = new Script(ScriptType.INLINE, query.getLang(), query.getScript(), params);
+			updateRequest.script(script);
 		}
 
-		if (queryUpdateRequest.script() != null) {
-			updateRequest.script(queryUpdateRequest.script());
+		if (query.getDocument() != null) {
+			updateRequest.doc(query.getDocument());
 		}
 
-		if (queryUpdateRequest.doc() != null) {
-			updateRequest.doc(queryUpdateRequest.doc());
+		if (query.getUpsert() != null) {
+			updateRequest.upsert(query.getUpsert());
 		}
 
-		if (queryUpdateRequest.upsertRequest() != null) {
-			updateRequest.upsert(queryUpdateRequest.upsertRequest());
+		if (query.getRouting() != null) {
+			updateRequest.routing(query.getRouting());
 		}
 
-		if (queryUpdateRequest.fetchSource() != null) {
-			updateRequest.fetchSource(queryUpdateRequest.fetchSource());
+		if (query.getScriptedUpsert() != null) {
+			updateRequest.scriptedUpsert(query.getScriptedUpsert());
+		}
+
+		if (query.getDocAsUpsert() != null) {
+			updateRequest.docAsUpsert(query.getDocAsUpsert());
+		}
+
+		if (query.getFetchSource() != null) {
+			updateRequest.fetchSource(query.getFetchSource());
 		}
 
 		return updateRequest;
@@ -495,41 +499,41 @@ class RequestFactory {
 
 	public UpdateRequestBuilder updateRequestBuilderFor(Client client, UpdateQuery query, IndexCoordinates index) {
 
-		Assert.notNull(query.getId(), "No Id define for Query");
-		Assert.notNull(query.getUpdateRequest(), "No UpdateRequest define for Query");
+		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(index.getIndexName(), IndexCoordinates.TYPE,
+				query.getId());
 
-		UpdateRequest queryUpdateRequest = query.getUpdateRequest();
+		if (query.getScript() != null) {
+			Map<String, Object> params = query.getParams();
 
-		UpdateRequestBuilder updateRequestBuilder = client
-				.prepareUpdate(index.getIndexName(), IndexCoordinates.TYPE, query.getId()) //
-				.setRouting(queryUpdateRequest.routing()) //
-				.setRetryOnConflict(queryUpdateRequest.retryOnConflict()) //
-				.setTimeout(queryUpdateRequest.timeout()) //
-				.setWaitForActiveShards(queryUpdateRequest.waitForActiveShards()) //
-				.setRefreshPolicy(queryUpdateRequest.getRefreshPolicy()) //
-				.setWaitForActiveShards(queryUpdateRequest.waitForActiveShards()) //
-				.setScriptedUpsert(queryUpdateRequest.scriptedUpsert()) //
-				.setDocAsUpsert(queryUpdateRequest.docAsUpsert());
-
-		if (query.DoUpsert()) {
-			updateRequestBuilder.setDocAsUpsert(true);
+			if (params == null) {
+				params = new HashMap<>();
+			}
+			Script script = new Script(ScriptType.INLINE, query.getLang(), query.getScript(), params);
+			updateRequestBuilder.setScript(script);
 		}
 
-		if (queryUpdateRequest.script() != null) {
-			updateRequestBuilder.setScript(queryUpdateRequest.script());
+		if (query.getDocument() != null) {
+			updateRequestBuilder.setDoc(query.getDocument());
 		}
 
-		if (queryUpdateRequest.doc() != null) {
-			updateRequestBuilder.setDoc(queryUpdateRequest.doc());
+		if (query.getUpsert() != null) {
+			updateRequestBuilder.setUpsert(query.getUpsert());
 		}
 
-		if (queryUpdateRequest.upsertRequest() != null) {
-			updateRequestBuilder.setUpsert(queryUpdateRequest.upsertRequest());
+		if (query.getRouting() != null) {
+			updateRequestBuilder.setRouting(query.getRouting());
 		}
 
-		FetchSourceContext fetchSourceContext = queryUpdateRequest.fetchSource();
-		if (fetchSourceContext != null) {
-			updateRequestBuilder.setFetchSource(fetchSourceContext.includes(), fetchSourceContext.excludes());
+		if (query.getScriptedUpsert() != null) {
+			updateRequestBuilder.setScriptedUpsert(query.getScriptedUpsert());
+		}
+
+		if (query.getDocAsUpsert() != null) {
+			updateRequestBuilder.setDocAsUpsert(query.getDocAsUpsert());
+		}
+
+		if (query.getFetchSource() != null) {
+			updateRequestBuilder.setFetchSource(query.getFetchSource());
 		}
 
 		return updateRequestBuilder;

@@ -21,10 +21,8 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import lombok.Data;
 
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +36,6 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQueryBuilder;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -56,9 +53,9 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 	@Test
 	public void shouldThrowExceptionIfDocumentDoesNotExistWhileDoingPartialUpdate() {
 		// when
-		IndexRequest indexRequest = new IndexRequest();
-		indexRequest.source("{}", XContentType.JSON);
-		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5)).withIndexRequest(indexRequest).build();
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.create();
+		UpdateQuery updateQuery = UpdateQuery.builder(randomNumeric(5)).withDocument(document).build();
 		assertThatThrownBy(() -> operations.update(updateQuery, index)).isInstanceOf(DocumentMissingException.class);
 	}
 
@@ -87,8 +84,7 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 	}
 
 	@Data
-	@Document(indexName = "test-index-sample-core-transport-template", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-core-transport-template", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;
