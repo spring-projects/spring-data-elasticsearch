@@ -32,27 +32,22 @@ public class IndexInitializer {
 	 *
 	 * @param operations
 	 * @param clazz
-	 * @deprecated since 4.0, use {@link IndexInitializer#init(IndexOperations, Class)}
+	 * @deprecated since 4.0, use {@link IndexInitializer#init(IndexOperations)}
 	 */
 	@Deprecated
 	public static void init(ElasticsearchOperations operations, Class<?> clazz) {
-		IndexOperations indexOperations = operations.getIndexOperations();
-		indexOperations.deleteIndex(clazz);
-		indexOperations.createIndex(clazz);
-		indexOperations.putMapping(clazz);
-		indexOperations.refresh(clazz);
+		init(operations.indexOps(clazz));
 	}
 
 	/**
 	 * Initialize a fresh index with mappings for {@link Class}. Drops the index if it exists before creation.
 	 *
-	 * @param operations
-	 * @param clazz
+	 * @param indexOperations
 	 */
-	public static void init(IndexOperations operations, Class<?> clazz) {
-		operations.deleteIndex(clazz);
-		operations.createIndex(clazz);
-		operations.putMapping(clazz);
-		operations.refresh(clazz);
+	public static void init(IndexOperations indexOperations) {
+		indexOperations.delete();
+		indexOperations.create();
+		indexOperations.putMapping(indexOperations.createMapping());
+		indexOperations.refresh();
 	}
 }

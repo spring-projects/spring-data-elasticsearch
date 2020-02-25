@@ -55,16 +55,17 @@ public class SpELEntityTests {
 	@Autowired private SpELRepository repository;
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(indexOperations, SpELEntity.class);
+		indexOperations = operations.indexOps(SpELEntity.class);
+		IndexInitializer.init(indexOperations);
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex("test-index-abz-*");
+		operations.indexOps(IndexCoordinates.of("test-index-abz-*")).delete();
 	}
 
 	@Test

@@ -54,6 +54,15 @@ public interface SearchOperations {
 	 * return number of elements found by given query
 	 *
 	 * @param query the query to execute
+	 * @param clazz the entity clazz used for property mapping and index name extraction
+	 * @return count
+	 */
+	long count(Query query, Class<?> clazz);
+
+	/**
+	 * return number of elements found by given query
+	 *
+	 * @param query the query to execute
 	 * @param clazz the entity clazz used for property mapping
 	 * @param index the index to run the query against
 	 * @return count
@@ -212,50 +221,6 @@ public interface SearchOperations {
 	}
 
 	/**
-	 * Returns scrolled page for given query
-	 *
-	 * @param scrollTimeInMillis duration of the scroll time
-	 * @param query The search query.
-	 * @param clazz The class of entity to retrieve.
-	 * @param index the index to run the query against
-	 * @return scrolled page result
-	 * @deprecated since 4.0, use {@link #searchScrollStart(long, Query, Class, IndexCoordinates)}.
-	 */
-	@Deprecated
-	default <T> ScrolledPage<T> startScroll(long scrollTimeInMillis, Query query, Class<T> clazz,
-			IndexCoordinates index) {
-		return (ScrolledPage<T>) SearchHitSupport
-				.unwrapSearchHits(searchScrollStart(scrollTimeInMillis, query, clazz, index));
-	}
-
-	/**
-	 * Returns next scrolled page.
-	 *
-	 * @param scrollId the scroll id
-	 * @param scrollTimeInMillis duration of the scroll time
-	 * @param clazz The class of entity to retrieve.
-	 * @return scrolled page result
-	 * @deprecated since 4.0, use {@link #searchScrollContinue(String, long, Class)}.
-	 */
-	@SuppressWarnings("unchecked")
-	@Deprecated
-	default <T> ScrolledPage<T> continueScroll(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz) {
-		return (ScrolledPage<T>) SearchHitSupport
-				.unwrapSearchHits(searchScrollContinue(scrollId, scrollTimeInMillis, clazz));
-	}
-
-	/**
-	 * Clears the search contexts associated with specified scroll ids.
-	 *
-	 * @param scrollId the scroll id
-	 * @deprecated since 4.0, use {@link #searchScrollClear(String)}.
-	 */
-	@Deprecated
-	default void clearScroll(String scrollId) {
-		searchScrollClear(scrollId);
-	}
-
-	/**
 	 * more like this query to search for documents that are "like" a specific document.
 	 *
 	 * @param <T> element return type
@@ -271,7 +236,31 @@ public interface SearchOperations {
 		AggregatedPage<SearchHit<T>> aggregatedPage = SearchHitSupport.page(searchHits, query.getPageable());
 		return (AggregatedPage<T>) SearchHitSupport.unwrapSearchHits(aggregatedPage);
 	}
+
+
 	// endregion
+
+	/**
+	 * Does a suggest query
+	 *
+	 * @param suggestion the query
+	 * @param index the index to run the query against
+	 * @return the suggest response
+	 */
+	SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index);
+
+	/**
+	 * Execute the query against elasticsearch and return the first returned object.
+	 *
+	 * @param query the query to execute
+	 * @param clazz the entity clazz used for property mapping and indexname extraction
+	 * @return the first found object
+	 */
+	@Nullable
+	default <T> SearchHit<T> searchOne(Query query, Class<T> clazz) {
+		List<SearchHit<T>> content = search(query, clazz).getSearchHits();
+		return content.isEmpty() ? null : content.get(0);
+	}
 
 	/**
 	 * Execute the query against elasticsearch and return the first returned object.
@@ -313,11 +302,31 @@ public interface SearchOperations {
 	 *
 	 * @param <T> element return type
 	 * @param query the query to execute
+	 * @param clazz the entity clazz used for property mapping and index name extraction
+	 * @return SearchHits containing the list of found objects
+	 */
+	<T> SearchHits<T> search(Query query, Class<T> clazz);
+
+	/**
+	 * Execute the criteria query against elasticsearch and return result as {@link SearchHits}
+	 *
+	 * @param <T> element return type
+	 * @param query the query to execute
 	 * @param clazz the entity clazz used for property mapping
 	 * @param index the index to run the query against
 	 * @return SearchHits containing the list of found objects
 	 */
 	<T> SearchHits<T> search(Query query, Class<T> clazz, IndexCoordinates index);
+
+	/**
+	 * more like this query to search for documents that are "like" a specific document.
+	 *
+	 * @param <T> element return type
+	 * @param query the query to execute
+	 * @param clazz the entity clazz used for property mapping and index name extraction
+	 * @return SearchHits containing the list of found objects
+	 */
+	<T> SearchHits<T> search(MoreLikeThisQuery query, Class<T> clazz);
 
 	/**
 	 * more like this query to search for documents that are "like" a specific document.
@@ -331,34 +340,16 @@ public interface SearchOperations {
 	<T> SearchHits<T> search(MoreLikeThisQuery query, Class<T> clazz, IndexCoordinates index);
 
 	/**
-	 * Returns scrolled page for given query
+	 * Executes the given {@link Query} against elasticsearch and return result as {@link CloseableIterator}.
+	 * <p>
 	 *
-	 * @param scrollTimeInMillis duration of the scroll time
-	 * @param query The search query.
-	 * @param clazz The class of entity to retrieve.
-	 * @param index the index to run the query against
-	 * @return scrolled page result
+	 * @param <T> element return type
+	 * @param query the query to execute
+	 * @param clazz the entity clazz used for property mapping and index name extraction
+	 * @return a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of *
+	 *         error.
 	 */
-	<T> ScrolledPage<SearchHit<T>> searchScrollStart(long scrollTimeInMillis, Query query, Class<T> clazz,
-			IndexCoordinates index);
-
-	/**
-	 * Returns next scrolled page
-	 *
-	 * @param scrollId the scroll id
-	 * @param scrollTimeInMillis duration of the scroll time
-	 * @param clazz The class of entity to retrieve.
-	 * @return scrolled page result
-	 */
-	<T> ScrolledPage<SearchHit<T>> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
-			Class<T> clazz);
-
-	/**
-	 * Clears the search contexts associated with specified scroll ids.
-	 *
-	 * @param scrollId the scroll id
-	 */
-	void searchScrollClear(String scrollId);
+	<T> CloseableIterator<SearchHit<T>> searchForStream(Query query, Class<T> clazz);
 
 	/**
 	 * Executes the given {@link Query} against elasticsearch and return result as {@link CloseableIterator}.
@@ -372,13 +363,4 @@ public interface SearchOperations {
 	 *         error.
 	 */
 	<T> CloseableIterator<SearchHit<T>> searchForStream(Query query, Class<T> clazz, IndexCoordinates index);
-
-	/**
-	 * Does a suggest query
-	 *
-	 * @param suggestion the query
-	 * @param index the index to run the query against
-	 * @return the suggest response
-	 */
-	SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index);
 }

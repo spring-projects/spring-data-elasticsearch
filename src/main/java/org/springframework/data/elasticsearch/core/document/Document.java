@@ -58,7 +58,7 @@ public interface Document extends Map<String, Object> {
 	 * @param map source map containing key-value pairs and sub-documents. must not be {@literal null}.
 	 * @return a new {@link Document}.
 	 */
-	static Document from(Map<String, Object> map) {
+	static Document from(Map<String, ? extends Object> map) {
 
 		Assert.notNull(map, "Map must not be null");
 

@@ -69,7 +69,12 @@ public class IndexQuery {
 		this.source = source;
 	}
 
+	/**
+	 * @deprecated from 4.0. Elasticsearch 7 does not support the parent id in an index request. parent/child relations
+	 *             must be modeled using the join datatype. Setting it here will have no effect.
+	 */
 	@Nullable
+	@Deprecated
 	public String getParentId() {
 		return parentId;
 	}

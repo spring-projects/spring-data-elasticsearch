@@ -41,8 +41,10 @@ import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.client.support.AliasData;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -60,27 +62,35 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 
 	private RestHighLevelClient client;
 
-	public DefaultIndexOperations(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter) {
-		super(elasticsearchConverter);
+	public DefaultIndexOperations(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
+			Class<?> boundClass) {
+		super(elasticsearchConverter, boundClass);
+		this.client = client;
+	}
+
+	public DefaultIndexOperations(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
+			IndexCoordinates boundIndex) {
+		super(elasticsearchConverter, boundIndex);
 		this.client = client;
 	}
 
 	@Override
-	public boolean createIndex(String indexName, Object settings) {
+	protected boolean doCreate(String indexName, @Nullable Document settings) {
 		CreateIndexRequest request = requestFactory.createIndexRequest(indexName, settings);
 		try {
 			return client.indices().create(request, RequestOptions.DEFAULT).isAcknowledged();
 		} catch (IOException e) {
-			throw new ElasticsearchException("Error for creating index: " + request.toString(), e);
+			throw new ElasticsearchException(
+					"Error for creating index: " + indexName + ", client: " + client.getLowLevelClient().getNodes(), e);
 		}
 	}
 
 	@Override
-	public boolean deleteIndex(String indexName) {
+	protected boolean doDelete(String indexName) {
 
 		Assert.notNull(indexName, "No index defined for delete operation");
 
-		if (indexExists(indexName)) {
+		if (doExists(indexName)) {
 			DeleteIndexRequest request = new DeleteIndexRequest(indexName);
 			try {
 				return client.indices().delete(request, RequestOptions.DEFAULT).isAcknowledged();
@@ -92,7 +102,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public boolean indexExists(String indexName) {
+	protected boolean doExists(String indexName) {
 		GetIndexRequest request = new GetIndexRequest(indexName);
 		try {
 			return client.indices().exists(request, RequestOptions.DEFAULT);
@@ -102,7 +112,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public boolean putMapping(IndexCoordinates index, Object mapping) {
+	protected boolean doPutMapping(IndexCoordinates index, Document mapping) {
 
 		Assert.notNull(index, "No index defined for putMapping()");
 
@@ -115,7 +125,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public Map<String, Object> getMapping(IndexCoordinates index) {
+	protected Map<String, Object> doGetMapping(IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for getMapping()");
 
@@ -130,7 +140,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public boolean addAlias(AliasQuery query, IndexCoordinates index) {
+	protected boolean doAddAlias(AliasQuery query, IndexCoordinates index) {
 		IndicesAliasesRequest request = requestFactory.indicesAddAliasesRequest(query, index);
 		try {
 			return client.indices().updateAliases(request, RequestOptions.DEFAULT).isAcknowledged();
@@ -140,7 +150,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public boolean removeAlias(AliasQuery query, IndexCoordinates index) {
+	protected boolean doRemoveAlias(AliasQuery query, IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for Alias");
 		Assert.notNull(query.getAliasName(), "No alias defined");
@@ -155,7 +165,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public List<AliasMetaData> queryForAlias(String indexName) {
+	protected List<AliasMetaData> doQueryForAlias(String indexName) {
 		List<AliasMetaData> aliases = null;
 		RestClient restClient = client.getLowLevelClient();
 		Response response;
@@ -172,12 +182,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public Map<String, Object> getSettings(String indexName) {
-		return getSettings(indexName, false);
-	}
-
-	@Override
-	public Map<String, Object> getSettings(String indexName, boolean includeDefaults) {
+	protected Map<String, Object> doGetSettings(String indexName, boolean includeDefaults) {
 
 		Assert.notNull(indexName, "No index defined for getSettings");
 
@@ -196,7 +201,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public void refresh(IndexCoordinates index) {
+	protected void doRefresh(IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for refresh()");
 

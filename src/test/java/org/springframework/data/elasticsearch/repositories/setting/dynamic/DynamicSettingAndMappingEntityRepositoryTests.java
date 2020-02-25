@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repositories.setting.dynamic;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.core.document.Document.*;
 
 import java.util.Map;
 
@@ -61,18 +62,19 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 	static class Config {}
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@Autowired private DynamicSettingAndMappingEntityRepository repository;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(indexOperations, DynamicSettingAndMappingEntity.class);
+		indexOperations = operations.indexOps(DynamicSettingAndMappingEntity.class);
+		IndexInitializer.init(indexOperations);
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex(DynamicSettingAndMappingEntity.class);
+		indexOperations.delete();
 	}
 
 	@Test // DATAES-64
@@ -82,8 +84,8 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		// delete , create and apply mapping in before method
 
 		// then
-		assertThat(indexOperations.indexExists(DynamicSettingAndMappingEntity.class)).isTrue();
-		Map<String, Object> map = indexOperations.getSettings(DynamicSettingAndMappingEntity.class);
+		assertThat(indexOperations.exists()).isTrue();
+		Map<String, Object> map = indexOperations.getSettings();
 		assertThat(map.containsKey("index.number_of_replicas")).isTrue();
 		assertThat(map.containsKey("index.number_of_shards")).isTrue();
 		assertThat(map.containsKey("index.analysis.analyzer.emailAnalyzer.tokenizer")).isTrue();
@@ -134,7 +136,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		// delete , create and apply mapping in before method
 
 		// when
-		Map<String, Object> mapping = indexOperations.getMapping(DynamicSettingAndMappingEntity.class);
+		Map<String, Object> mapping = indexOperations.getMapping();
 
 		// then
 		Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
@@ -149,9 +151,9 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 	public void shouldCreateMappingWithSpecifiedMappings() {
 
 		// given
-		indexOperations.deleteIndex(DynamicSettingAndMappingEntity.class);
-		indexOperations.createIndex(DynamicSettingAndMappingEntity.class);
-		indexOperations.refresh(DynamicSettingAndMappingEntity.class);
+		indexOperations.delete();
+		indexOperations.create();
+		indexOperations.refresh();
 
 		// when
 		String mappings = "{\n" + //
@@ -159,11 +161,11 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 				"            \"email\" : {\"type\" : \"text\", \"analyzer\" : \"emailAnalyzer\" }\n" + //
 				"        }\n" + //
 				'}';
-		indexOperations.putMapping(DynamicSettingAndMappingEntity.class, mappings);
-		indexOperations.refresh(DynamicSettingAndMappingEntity.class);
+		indexOperations.putMapping(parse(mappings));
+		indexOperations.refresh();
 
 		// then
-		Map<String, Object> mapping = indexOperations.getMapping(DynamicSettingAndMappingEntity.class);
+		Map<String, Object> mapping = indexOperations.getMapping();
 		Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
 		assertThat(mapping).isNotNull();
 		assertThat(properties).isNotNull();
@@ -178,7 +180,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		// given
 
 		// then
-		Map<String, Object> mapping = indexOperations.getMapping(DynamicSettingAndMappingEntity.class);
+		Map<String, Object> mapping = indexOperations.getMapping();
 		Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
 		assertThat(mapping).isNotNull();
 		assertThat(properties).isNotNull();

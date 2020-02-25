@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -13,11 +14,8 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
-import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -29,7 +27,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
+import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
@@ -50,16 +48,14 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	protected @Nullable ElasticsearchConverter elasticsearchConverter;
 	protected @Nullable RequestFactory requestFactory;
-	protected @Nullable IndexOperations indexOperations;
 
 	// region Initialization
-	protected void initialize(ElasticsearchConverter elasticsearchConverter, IndexOperations indexOperations) {
+	protected void initialize(ElasticsearchConverter elasticsearchConverter) {
 
 		Assert.notNull(elasticsearchConverter, "elasticsearchConverter must not be null.");
 
 		this.elasticsearchConverter = elasticsearchConverter;
 		requestFactory = new RequestFactory(elasticsearchConverter);
-		this.indexOperations = indexOperations;
 	}
 
 	protected ElasticsearchConverter createElasticsearchConverter() {
@@ -75,16 +71,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		if (elasticsearchConverter instanceof ApplicationContextAware) {
 			((ApplicationContextAware) elasticsearchConverter).setApplicationContext(context);
 		}
-	}
-	// endregion
-
-	// region getter/setter
-	@Override
-	public IndexOperations getIndexOperations() {
-
-		Assert.notNull("indexOperations are not initialized");
-
-		return indexOperations;
 	}
 	// endregion
 
@@ -147,24 +133,64 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
+	@Nullable
+	public <T> T get(String id, Class<T> clazz) {
+		return get(id, clazz, getIndexCoordinatesFor(clazz));
+	}
 
-		Assert.notNull(query, "Query must not be null.");
+	@Override
+	@Nullable
+	public <T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index) {
+		return get(query.getId(), clazz, index);
+	}
 
-		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
-		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(searchRequest.source().query());
+	@Override
+	public boolean exists(String id, Class<?> clazz) {
+		return exists(id, getIndexCoordinatesFor(clazz));
+	}
 
-		delete(deleteQuery, index);
+	@Override
+	public boolean exists(String id, IndexCoordinates index) {
+		return doExists(id, index);
+	}
+
+	abstract protected boolean doExists(String id, IndexCoordinates index);
+
+	@Override
+	public String delete(String id, Class<?> entityType) {
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(entityType, "entityType must not be null");
+
+		return this.delete(id, getIndexCoordinatesFor(entityType));
+	}
+
+	@Override
+	public String delete(Object entity) {
+		return delete(entity, getIndexCoordinatesFor(entity.getClass()));
+	}
+
+	@Override
+	public String delete(Object entity, IndexCoordinates index) {
+		return this.delete(getEntityId(entity), index);
 	}
 	// endregion
 
 	// region SearchOperations
 	@Override
+	public long count(Query query, Class<?> clazz) {
+		return count(query, clazz, getIndexCoordinatesFor(clazz));
+	}
+
+	@Override
 	public <T> CloseableIterator<T> stream(Query query, Class<T> clazz, IndexCoordinates index) {
 		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
-		return StreamQueries.streamResults(startScroll(scrollTimeInMillis, query, clazz, index),
-				scrollId -> continueScroll(scrollId, scrollTimeInMillis, clazz), this::searchScrollClear);
+		return (CloseableIterator<T>) SearchHitSupport.unwrapSearchHits(searchForStream(query, clazz, index));
+	}
+
+	@Override
+	public <T> CloseableIterator<SearchHit<T>> searchForStream(Query query, Class<T> clazz) {
+		return searchForStream(query, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
@@ -172,6 +198,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
 		return StreamQueries.streamResults(searchScrollStart(scrollTimeInMillis, query, clazz, index),
 				scrollId -> searchScrollContinue(scrollId, scrollTimeInMillis, clazz), this::searchScrollClear);
+	}
+
+	@Override
+	public <T> SearchHits<T> search(MoreLikeThisQuery query, Class<T> clazz) {
+		return search(query, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
@@ -220,6 +251,28 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		return res;
 	}
 
+	@Override
+	public <T> SearchHits<T> search(Query query, Class<T> clazz) {
+		return search(query, clazz, getIndexCoordinatesFor(clazz));
+	}
+
+	/*
+	 * internal use only, not for public API
+	 */
+	abstract protected <T> ScrolledPage<SearchHit<T>> searchScrollStart(long scrollTimeInMillis, Query query,
+			Class<T> clazz, IndexCoordinates index);
+
+	/*
+	 * internal use only, not for public API
+	 */
+	abstract protected <T> ScrolledPage<SearchHit<T>> searchScrollContinue(@Nullable String scrollId,
+			long scrollTimeInMillis, Class<T> clazz);
+
+	/*
+	 * internal use only, not for public API
+	 */
+	abstract protected void searchScrollClear(String scrollId);
+
 	abstract protected MultiSearchResponse.Item[] getMultiSearchResult(MultiSearchRequest request);
 	// endregion
 
@@ -246,9 +299,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		String[] valuesAsArray = new String[values.size()];
 		return values.toArray(valuesAsArray);
 	}
-
-	@Override
-	public abstract SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index);
 
 	/**
 	 * @param clazz the entity class

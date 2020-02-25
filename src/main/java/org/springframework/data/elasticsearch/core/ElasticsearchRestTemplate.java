@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -32,7 +33,6 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
@@ -47,10 +47,10 @@ import org.springframework.data.elasticsearch.core.document.SearchDocumentRespon
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.support.SearchHitsUtil;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -103,9 +103,29 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	private void initialize(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter) {
+
 		Assert.notNull(client, "Client must not be null!");
+
 		this.client = client;
-		initialize(elasticsearchConverter, new DefaultIndexOperations(client, elasticsearchConverter));
+		initialize(elasticsearchConverter);
+	}
+	// endregion
+
+	// region IndexOperations
+	@Override
+	public IndexOperations indexOps(Class<?> clazz) {
+
+		Assert.notNull(clazz, "clazz must not be null");
+
+		return new DefaultIndexOperations(client, elasticsearchConverter, clazz);
+	}
+
+	@Override
+	public IndexOperations indexOps(IndexCoordinates index) {
+
+		Assert.notNull(index, "index must not be null");
+
+		return new DefaultIndexOperations(client, elasticsearchConverter, index);
 	}
 	// endregion
 
@@ -128,8 +148,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	@Nullable
-	public <T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index) {
-		GetRequest request = requestFactory.getRequest(query, index);
+	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
+		GetRequest request = requestFactory.getRequest(id, index);
 		try {
 			GetResponse response = client.get(request, RequestOptions.DEFAULT);
 			return elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);
@@ -154,6 +174,16 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
+	protected boolean doExists(String id, IndexCoordinates index) {
+		GetRequest request = requestFactory.getRequest(id, index);
+		try {
+			return client.get(request, RequestOptions.DEFAULT).isExists();
+		} catch (IOException e) {
+			throw new ElasticsearchException("Error while getting for request: " + request.toString(), e);
+		}
+	}
+
+	@Override
 	public List<String> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index) {
 
 		Assert.notNull(queries, "List of IndexQuery must not be null");
@@ -173,6 +203,10 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public String delete(String id, IndexCoordinates index) {
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(index, "index must not be null");
+
 		DeleteRequest request = new DeleteRequest(index.getIndexName(), elasticsearchConverter.convertId(id));
 		try {
 			return client.delete(request, RequestOptions.DEFAULT).getId();
@@ -182,6 +216,17 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
+	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
+		DeleteByQueryRequest deleteByQueryRequest = requestFactory.deleteByQueryRequest(query, clazz, index);
+		try {
+			client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw new ElasticsearchException("Error for delete request: " + deleteByQueryRequest.toString(), e);
+		}
+	}
+
+	@Override
+	@Deprecated
 	public void delete(DeleteQuery deleteQuery, IndexCoordinates index) {
 		DeleteByQueryRequest deleteByQueryRequest = requestFactory.deleteByQueryRequest(deleteQuery, index);
 		try {
@@ -195,7 +240,9 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	public UpdateResponse update(UpdateQuery query, IndexCoordinates index) {
 		UpdateRequest request = requestFactory.updateRequest(query, index);
 		try {
-			return client.update(request, RequestOptions.DEFAULT);
+			org.elasticsearch.action.update.UpdateResponse updateResponse = client.update(request, RequestOptions.DEFAULT);
+			UpdateResponse.Result result = UpdateResponse.Result.valueOf(updateResponse.getResult().name());
+			return new UpdateResponse(result);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while update for request: " + request.toString(), e);
 		}

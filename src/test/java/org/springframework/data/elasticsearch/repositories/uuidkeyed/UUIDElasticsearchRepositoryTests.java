@@ -45,6 +45,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
@@ -76,16 +77,18 @@ public class UUIDElasticsearchRepositoryTests {
 
 	@Autowired private SampleUUIDKeyedElasticsearchRepository repository;
 
-	@Autowired private IndexOperations indexOperations;
+	@Autowired ElasticsearchOperations operations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(indexOperations, SampleEntityUUIDKeyed.class);
+		indexOperations = operations.indexOps(SampleEntityUUIDKeyed.class);
+		IndexInitializer.init(indexOperations);
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex(SampleEntityUUIDKeyed.class);
+		indexOperations.delete();
 	}
 
 	@Test

@@ -60,16 +60,17 @@ public class SynonymRepositoryTests {
 	@Autowired private SynonymRepository repository;
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(indexOperations, SynonymEntity.class);
+		indexOperations = operations.indexOps(SynonymEntity.class);
+		IndexInitializer.init(indexOperations);
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex(SynonymEntity.class);
+		indexOperations.delete();
 	}
 
 	@Test

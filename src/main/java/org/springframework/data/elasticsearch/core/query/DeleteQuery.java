@@ -24,7 +24,9 @@ import org.springframework.lang.Nullable;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
+ * @deprecated since 4.0, use {@link Query} implementations and set {@link Query#setScrollTimeInMillis(Long)} and {@link Query#getMaxResults()}
  */
+@Deprecated
 public class DeleteQuery {
 
 	@Nullable private QueryBuilder query;

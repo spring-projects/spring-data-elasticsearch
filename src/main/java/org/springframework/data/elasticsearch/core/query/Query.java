@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -45,7 +46,7 @@ public interface Query {
 	Pageable DEFAULT_PAGE = PageRequest.of(0, DEFAULT_PAGE_SIZE);
 
 	/**
-	 * Get get a {@link Query} that matches all documents in the index.
+	 * Get a {@link Query} that matches all documents in the index.
 	 *
 	 * @return new instance of {@link Query}.
 	 * @since 3.2
@@ -229,4 +230,29 @@ public interface Query {
 	 * @since 4.0
 	 */
 	boolean getTrackTotalHits();
+
+	/**
+	 * For queries that are used in delete request, these are internally handled by Elasticsearch as scroll/bulk delete queries.
+	 * 
+	 * @return the scrolltime settings
+	 * @since 4.0
+	 */
+	@Nullable
+	Duration getScrollTime();
+
+	/**
+	 * For queries that are used in delete request, these are internally handled by Elasticsearch as scroll/bulk delete queries.
+	 * 
+	 * @param scrollTime the scrolltime settings
+	 * @since 4.0
+	 */
+	void setScrollTime(@Nullable Duration scrollTime);
+
+	/**
+	 * @return {@literal true} if scrollTimeMillis is set.
+	 * @since 4.0
+	 */
+	default boolean hasScrollTime() {
+		return getScrollTime() != null;
+	}
 }

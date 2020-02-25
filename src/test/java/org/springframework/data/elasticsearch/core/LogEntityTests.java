@@ -62,11 +62,12 @@ public class LogEntityTests {
 
 	private final IndexCoordinates index = IndexCoordinates.of("test-index-log-core").withTypes("test-log-type");
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() throws ParseException {
-		IndexInitializer.init(indexOperations, LogEntity.class);
+		indexOperations = operations.indexOps(LogEntity.class);
+		IndexInitializer.init(indexOperations);
 
 		SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 		IndexQuery indexQuery1 = new LogEntityBuilder("1").action("update").date(dateFormatter.parse("2013-10-18 18:01"))
@@ -82,12 +83,12 @@ public class LogEntityTests {
 				.code(2).ip("10.10.10.4").buildIndex();
 
 		operations.bulkIndex(Arrays.asList(indexQuery1, indexQuery2, indexQuery3, indexQuery4), index);
-		indexOperations.refresh(LogEntity.class);
+		indexOperations.refresh();
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex(LogEntity.class);
+		indexOperations.delete();
 	}
 
 	@Test // DATAES-66

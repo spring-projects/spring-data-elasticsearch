@@ -243,21 +243,31 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		}
 	}
 
-	/**
-	 * Customization hook on the actual execution result {@link Publisher}. <br />
-	 *
-	 * @param request the already prepared {@link GetRequest} ready to be executed.
-	 * @return a {@link Mono} emitting the result of the operation.
-	 */
-	protected Mono<GetResult> doFindById(GetRequest request) {
-
-		return Mono.from(execute(client -> client.get(request))) //
-				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
+	@Override
+	public Mono<Boolean> exists(String id, Class<?> entityType) {
+		return doExists(id, getIndexCoordinatesFor(entityType));
 	}
 
 	@Override
-	public Mono<Boolean> exists(String id, Class<?> entityType) {
-		return exists(id, entityType, getIndexCoordinatesFor(entityType));
+	public Mono<Boolean> exists(String id, IndexCoordinates index) {
+		return doExists(id, index);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exists(String, Class, IndexCoordinates)
+	 */
+	@Override
+	public Mono<Boolean> exists(String id, Class<?> entityType, IndexCoordinates index) {
+
+		Assert.notNull(id, "Id must not be null!");
+
+		return doExists(id, index);
+	}
+
+	private Mono<Boolean> doExists(String id, @Nullable IndexCoordinates index) {
+
+		return Mono.defer(() -> doExists(new GetRequest(index.getIndexName(), id)));
 	}
 
 	/**
@@ -320,46 +330,35 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public <T> Mono<T> findById(String id, Class<T> entityType) {
-		return findById(id, entityType, getIndexCoordinatesFor(entityType));
+	public <T> Mono<T> get(String id, Class<T> entityType) {
+		return get(id, entityType, getIndexCoordinatesFor(entityType));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#findById(String, Class, IndexCoordinates)
-	 */
 	@Override
-	public <T> Mono<T> findById(String id, Class<T> entityType, IndexCoordinates index) {
+	public <T> Mono<T> get(String id, Class<T> entityType, IndexCoordinates index) {
 
 		Assert.notNull(id, "Id must not be null!");
 
-		return doFindById(id, getPersistentEntityFor(entityType), index)
+		return doGet(id, getPersistentEntityFor(entityType), index)
 				.map(it -> converter.mapDocument(DocumentAdapters.from(it), entityType));
 	}
 
-	private Mono<GetResult> doFindById(String id, ElasticsearchPersistentEntity<?> entity, IndexCoordinates index) {
-
+	private Mono<GetResult> doGet(String id, ElasticsearchPersistentEntity<?> entity, IndexCoordinates index) {
 		return Mono.defer(() -> {
-
-			return doFindById(new GetRequest(index.getIndexName(), id));
+			return doGet(new GetRequest(index.getIndexName(), id));
 		});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exists(String, Class, IndexCoordinates)
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link GetRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation.
 	 */
-	@Override
-	public Mono<Boolean> exists(String id, Class<?> entityType, IndexCoordinates index) {
+	protected Mono<GetResult> doGet(GetRequest request) {
 
-		Assert.notNull(id, "Id must not be null!");
-
-		return doExists(id, getPersistentEntityFor(entityType), index);
-	}
-
-	private Mono<Boolean> doExists(String id, ElasticsearchPersistentEntity<?> entity, @Nullable IndexCoordinates index) {
-
-		return Mono.defer(() -> doExists(new GetRequest(index.getIndexName(), id)));
+		return Mono.from(execute(client -> client.get(request))) //
+				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
 	}
 
 	/*
@@ -367,25 +366,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(Object, String, String)
 	 */
 	@Override
-	public Mono<String> delete(Object entity, IndexCoordinates index) {
+	public  Mono<String> delete(Object entity, IndexCoordinates index) {
 
 		Entity<?> elasticsearchEntity = operations.forEntity(entity);
 
-		return Mono.defer(() -> doDeleteById(entity, converter.convertId(elasticsearchEntity.getId()),
-				elasticsearchEntity.getPersistentEntity(), index));
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(String, Class, IndexCoordinates)
-	 */
-	@Override
-	public Mono<String> deleteById(String id, Class<?> entityType, IndexCoordinates index) {
-
-		Assert.notNull(id, "Id must not be null!");
-
-		return doDeleteById(null, id, getPersistentEntityFor(entityType), index);
-
+		return Mono.defer(() -> doDeleteById(converter.convertId(elasticsearchEntity.getId()), index));
 	}
 
 	@Override
@@ -394,25 +379,37 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public Mono<String> deleteById(String id, Class<?> entityType) {
-		return deleteById(id, entityType, getIndexCoordinatesFor(entityType));
+	public Mono<String> delete(String id, Class<?> entityType) {
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(entityType, "entityType must not be null");
+
+		return delete(id, getIndexCoordinatesFor(entityType));
 	}
 
-	private Mono<String> doDeleteById(@Nullable Object source, String id, ElasticsearchPersistentEntity<?> entity,
-			IndexCoordinates index) {
+	@Override
+	public Mono<String> delete(String id, IndexCoordinates index) {
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(index, "index must not be null");
+
+		return doDeleteById(id, index);
+	}
+
+	private Mono<String> doDeleteById(String id, IndexCoordinates index) {
 
 		return Mono.defer(() -> {
 
-			return doDelete(prepareDeleteRequest(source, new DeleteRequest(index.getIndexName(), id)));
+			return doDelete(prepareDeleteRequest(new DeleteRequest(index.getIndexName(), id)));
 		});
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#deleteBy(Query, Class, IndexCoordinates)
+	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(Query, Class, IndexCoordinates)
 	 */
 	@Override
-	public Mono<Long> deleteBy(Query query, Class<?> entityType, IndexCoordinates index) {
+	public Mono<Long> delete(Query query, Class<?> entityType, IndexCoordinates index) {
 
 		Assert.notNull(query, "Query must not be null!");
 
@@ -421,8 +418,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public Mono<Long> deleteBy(Query query, Class<?> entityType) {
-		return deleteBy(query, entityType, getIndexCoordinatesFor(entityType));
+	public Mono<Long> delete(Query query, Class<?> entityType) {
+		return delete(query, entityType, getIndexCoordinatesFor(entityType));
 	}
 
 	private Flux<BulkByScrollResponse> doDeleteBy(Query query, ElasticsearchPersistentEntity<?> entity,
@@ -473,12 +470,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * Customization hook to modify a generated {@link DeleteRequest} prior to its execution. Eg. by setting the
 	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
 	 *
-	 * @param source the source object the {@link DeleteRequest} was derived from. My be {@literal null} if using the
-	 *          {@literal id} directly.
 	 * @param request the generated {@link DeleteRequest}.
 	 * @return never {@literal null}.
 	 */
-	protected DeleteRequest prepareDeleteRequest(@Nullable Object source, DeleteRequest request) {
+	protected DeleteRequest prepareDeleteRequest(DeleteRequest request) {
 		return prepareWriteRequest(request);
 	}
 

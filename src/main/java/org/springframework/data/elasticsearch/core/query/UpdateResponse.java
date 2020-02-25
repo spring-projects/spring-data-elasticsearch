@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,28 +15,31 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.springframework.util.Assert;
+
 /**
- * GetQuery
- *
- * @author Rizwan Idrees
- * @author Mohsin Husen
+ * Response data from an update request ({@link UpdateQuery}). Currently contains only the result status value from
+ * Elasticsearch. Should be extended if further information is needed.
+ * 
  * @author Peter-Josef Meisch
- * @deprecated since 4.0
+ * @since 4.0
  */
-@Deprecated
-public class GetQuery {
+public class UpdateResponse {
 
-	public GetQuery(String id) {
-		this.id = id;
+	private Result result;
+
+	public UpdateResponse(Result result) {
+
+		Assert.notNull(result, "result must not be null");
+
+		this.result = result;
 	}
 
-	private String id;
-
-	public String getId() {
-		return id;
+	public Result getResult() {
+		return result;
 	}
 
-	public static GetQuery getById(String id) {
-		return new GetQuery(id);
+	public enum Result {
+		CREATED, UPDATED, DELETED, NOT_FOUND, NOOP;
 	}
 }

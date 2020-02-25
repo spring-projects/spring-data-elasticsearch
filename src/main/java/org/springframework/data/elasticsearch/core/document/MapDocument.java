@@ -46,7 +46,7 @@ class MapDocument implements Document {
 		this(new LinkedHashMap<>());
 	}
 
-	MapDocument(Map<String, Object> documentAsMap) {
+	MapDocument(Map<String, ? extends Object> documentAsMap) {
 		this.documentAsMap = new LinkedHashMap<>(documentAsMap);
 	}
 

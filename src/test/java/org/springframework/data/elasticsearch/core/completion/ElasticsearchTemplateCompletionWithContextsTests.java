@@ -67,21 +67,22 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 	static class Config {}
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	void setup() {
-		indexOperations.deleteIndex(ContextCompletionEntity.class);
+		indexOperations = operations.indexOps(ContextCompletionEntity.class);
+		indexOperations.delete();
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.deleteIndex(ContextCompletionEntity.class);
+		indexOperations.delete();
 	}
 
 	private void loadContextCompletionObjectEntities() {
 
-		IndexInitializer.init(indexOperations, ContextCompletionEntity.class);
+		IndexInitializer.init(indexOperations);
 
 		NonDocumentEntity nonDocumentEntity = new NonDocumentEntity();
 		nonDocumentEntity.setSomeField1("foo");
@@ -111,7 +112,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 
 		operations.bulkIndex(indexQueries,
 				IndexCoordinates.of("test-index-context-completion").withTypes("context-completion-type"));
-		operations.refresh(ContextCompletionEntity.class);
+		operations.indexOps(ContextCompletionEntity.class).refresh();
 	}
 
 	@Test // DATAES-536

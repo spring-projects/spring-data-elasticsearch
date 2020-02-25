@@ -84,28 +84,27 @@ import org.springframework.test.context.ContextConfiguration;
 public class MappingBuilderTests extends MappingContextBaseTests {
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-
-		indexOperations.deleteIndex(StockPrice.class);
-		indexOperations.deleteIndex(SimpleRecursiveEntity.class);
-		indexOperations.deleteIndex(StockPrice.class);
-		indexOperations.deleteIndex(SampleInheritedEntity.class);
-		indexOperations.deleteIndex(User.class);
-		indexOperations.deleteIndex(Group.class);
-		indexOperations.deleteIndex(Book.class);
-		indexOperations.deleteIndex(NormalizerEntity.class);
-		indexOperations.deleteIndex(CopyToEntity.class);
+		indexOperations = operations.indexOps(SimpleRecursiveEntity.class);
+		indexOperations.delete();
+		operations.indexOps(StockPrice.class).delete();
+		operations.indexOps(SampleInheritedEntity.class).delete();
+		operations.indexOps(User.class).delete();
+		operations.indexOps(Group.class).delete();
+		operations.indexOps(Book.class).delete();
+		operations.indexOps(NormalizerEntity.class).delete();
+		operations.indexOps(CopyToEntity.class).delete();
 	}
 
 	@Test
 	public void shouldNotFailOnCircularReference() {
 
-		indexOperations.createIndex(SimpleRecursiveEntity.class);
-		indexOperations.putMapping(SimpleRecursiveEntity.class);
-		indexOperations.refresh(SimpleRecursiveEntity.class);
+		operations.indexOps(SimpleRecursiveEntity.class).create();
+		indexOperations.putMapping(indexOperations.createMapping(SimpleRecursiveEntity.class));
+		indexOperations.refresh();
 	}
 
 	@Test // DATAES-568
@@ -136,10 +135,11 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldAddStockPriceDocumentToIndex() {
 
 		// Given
+		IndexOperations indexOps = operations.indexOps(StockPrice.class);
 
 		// When
-		indexOperations.createIndex(StockPrice.class);
-		indexOperations.putMapping(StockPrice.class);
+		indexOps.create();
+		indexOps.putMapping(indexOps.createMapping(StockPrice.class));
 		String symbol = "AU";
 		double price = 2.34;
 		String id = "abc";
@@ -150,7 +150,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 				.symbol(symbol) //
 				.price(BigDecimal.valueOf(price)) //
 				.build()), index);
-		indexOperations.refresh(StockPrice.class);
+		operations.indexOps(StockPrice.class).refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		SearchHits<StockPrice> result = operations.search(searchQuery, StockPrice.class, index);
@@ -186,19 +186,19 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 	@Test // DATAES-76
 	public void shouldAddSampleInheritedEntityDocumentToIndex() {
-
 		// given
+		IndexCoordinates index = IndexCoordinates.of("test-index-sample-inherited-mapping-builder").withTypes("mapping");
+		IndexOperations indexOps = operations.indexOps(index);
 
 		// when
-		indexOperations.createIndex(SampleInheritedEntity.class);
-		indexOperations.putMapping(SampleInheritedEntity.class);
+		indexOps.create();
+		indexOps.putMapping(indexOps.createMapping(SampleInheritedEntity.class));
 		Date createdDate = new Date();
 		String message = "msg";
 		String id = "abc";
-		IndexCoordinates index = IndexCoordinates.of("test-index-sample-inherited-mapping-builder").withTypes("mapping");
 		operations.index(new SampleInheritedEntityBuilder(id).createdDate(createdDate).message(message).buildIndex(),
 				index);
-		operations.refresh(SampleInheritedEntity.class);
+		operations.indexOps(SampleInheritedEntity.class).refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		SearchHits<SampleInheritedEntity> result = operations.search(searchQuery, SampleInheritedEntity.class, index);
@@ -231,10 +231,13 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldHandleReverseRelationship() {
 
 		// given
-		indexOperations.createIndex(User.class);
-		indexOperations.putMapping(User.class);
-		indexOperations.createIndex(Group.class);
-		indexOperations.putMapping(Group.class);
+		IndexOperations indexOpsUser = operations.indexOps(User.class);
+		indexOpsUser.create();
+		indexOpsUser.putMapping(indexOpsUser.createMapping(User.class));
+
+		IndexOperations indexOpsGroup = operations.indexOps(Group.class);
+		indexOpsGroup.create();
+		indexOpsGroup.putMapping(indexOpsGroup.createMapping(Group.class));
 
 		// when
 
@@ -245,8 +248,9 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldMapBooks() {
 
 		// given
-		indexOperations.createIndex(Book.class);
-		indexOperations.putMapping(Book.class);
+		IndexOperations indexOps = operations.indexOps(Book.class);
+		indexOps.create();
+		indexOps.putMapping(indexOps.createMapping(Book.class));
 
 		// when
 
@@ -257,11 +261,12 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldUseBothAnalyzer() {
 
 		// given
-		indexOperations.createIndex(Book.class);
-		indexOperations.putMapping(Book.class);
+		IndexOperations indexOps = this.operations.indexOps(Book.class);
+		indexOps.create();
+		indexOps.putMapping(indexOps.createMapping(Book.class));
 
 		// when
-		Map mapping = operations.getMapping(Book.class);
+		Map mapping = indexOps.getMapping();
 		Map descriptionMapping = (Map) ((Map) mapping.get("properties")).get("description");
 		Map prefixDescription = (Map) ((Map) descriptionMapping.get("fields")).get("prefix");
 
@@ -298,11 +303,12 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldUseCopyTo() {
 
 		// given
-		indexOperations.createIndex(CopyToEntity.class);
-		indexOperations.putMapping(CopyToEntity.class);
+		IndexOperations indexOps = operations.indexOps(CopyToEntity.class);
+		indexOps.create();
+		indexOps.putMapping(indexOps.createMapping(CopyToEntity.class));
 
 		// when
-		Map mapping = operations.getMapping(CopyToEntity.class);
+		Map mapping = indexOps.getMapping();
 		Map properties = (Map) mapping.get("properties");
 		Map fieldFirstName = (Map) properties.get("firstName");
 		Map fieldLastName = (Map) properties.get("lastName");

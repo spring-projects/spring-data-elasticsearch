@@ -32,8 +32,10 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -47,36 +49,43 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 	private final Client client;
 
-	public DefaultTransportIndexOperations(Client client, ElasticsearchConverter elasticsearchConverter) {
-		super(elasticsearchConverter);
+	public DefaultTransportIndexOperations(Client client, ElasticsearchConverter elasticsearchConverter,
+			Class<?> boundClass) {
+		super(elasticsearchConverter, boundClass);
+		this.client = client;
+	}
+
+	public DefaultTransportIndexOperations(Client client, ElasticsearchConverter elasticsearchConverter,
+			IndexCoordinates boundIndex) {
+		super(elasticsearchConverter, boundIndex);
 		this.client = client;
 	}
 
 	@Override
-	public boolean createIndex(String indexName, Object settings) {
+	protected boolean doCreate(String indexName, @Nullable Document settings) {
 		CreateIndexRequestBuilder createIndexRequestBuilder = requestFactory.createIndexRequestBuilder(client, indexName,
 				settings);
 		return createIndexRequestBuilder.execute().actionGet().isAcknowledged();
 	}
 
 	@Override
-	public boolean deleteIndex(String indexName) {
+	protected boolean doDelete(String indexName) {
 
 		Assert.notNull(indexName, "No index defined for delete operation");
 
-		if (indexExists(indexName)) {
+		if (doExists(indexName)) {
 			return client.admin().indices().delete(new DeleteIndexRequest(indexName)).actionGet().isAcknowledged();
 		}
 		return false;
 	}
 
 	@Override
-	public boolean indexExists(String indexName) {
+	protected boolean doExists(String indexName) {
 		return client.admin().indices().exists(indicesExistsRequest(indexName)).actionGet().isExists();
 	}
 
 	@Override
-	public boolean putMapping(IndexCoordinates index, Object mapping) {
+	protected boolean doPutMapping(IndexCoordinates index, Document mapping) {
 
 		Assert.notNull(index, "No index defined for putMapping()");
 
@@ -85,7 +94,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	public Map<String, Object> getMapping(IndexCoordinates index) {
+	protected Map<String, Object> doGetMapping(IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for getMapping()");
 
@@ -100,13 +109,13 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	public boolean addAlias(AliasQuery query, IndexCoordinates index) {
+	protected boolean doAddAlias(AliasQuery query, IndexCoordinates index) {
 		IndicesAliasesRequest.AliasActions aliasAction = requestFactory.aliasAction(query, index);
 		return client.admin().indices().prepareAliases().addAliasAction(aliasAction).execute().actionGet().isAcknowledged();
 	}
 
 	@Override
-	public boolean removeAlias(AliasQuery query, IndexCoordinates index) {
+	protected boolean doRemoveAlias(AliasQuery query, IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for Alias");
 		Assert.notNull(query.getAliasName(), "No alias defined");
@@ -116,18 +125,13 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	public List<AliasMetaData> queryForAlias(String indexName) {
+	protected List<AliasMetaData> doQueryForAlias(String indexName) {
 		return client.admin().indices().getAliases(new GetAliasesRequest().indices(indexName)).actionGet().getAliases()
 				.get(indexName);
 	}
 
 	@Override
-	public Map<String, Object> getSettings(String indexName) {
-		return getSettings(indexName, false);
-	}
-
-	@Override
-	public Map<String, Object> getSettings(String indexName, boolean includeDefaults) {
+	protected Map<String, Object> doGetSettings(String indexName, boolean includeDefaults) {
 
 		Assert.notNull(indexName, "No index defined for getSettings");
 
@@ -144,7 +148,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	public void refresh(IndexCoordinates index) {
+	protected void doRefresh(IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for refresh()");
 

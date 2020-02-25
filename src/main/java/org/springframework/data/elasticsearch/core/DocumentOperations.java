@@ -16,8 +16,8 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
+import java.util.Optional;
 
-import org.elasticsearch.action.update.UpdateResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
@@ -25,6 +25,7 @@ import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.lang.Nullable;
 
 /**
@@ -68,9 +69,9 @@ public interface DocumentOperations {
 	 * saves the given entities to the given index
 	 *
 	 * @param entities must not be {@literal null}
-	 * @param index the idnex to save the entities in, must not be {@literal null}
+	 * @param index the index to save the entities in, must not be {@literal null}
 	 * @param <T> the entity type
-	 * @return the saved entites
+	 * @return the saved entities
 	 */
 	<T> Iterable<T> save(Iterable<T> entities, IndexCoordinates index);
 
@@ -87,21 +88,32 @@ public interface DocumentOperations {
 	 * Index an object. Will do save or update.
 	 *
 	 * @param query the query defining the object
-	 * @param index the index from which the object is read.
+	 * @param index the index where the object is stored.
 	 * @return returns the document id
 	 */
 	String index(IndexQuery query, IndexCoordinates index);
 
 	/**
-	 * Retrieves an object from an index.
+	 * Retrieves an object from the index specified in the entity's Document annotation.
 	 *
-	 * @param query the query defining the id of the object to get
-	 * @param clazz the type of the object to be returned
-	 * @param index the index from which the object is read.
-	 * @return the found object
+	 * @param id the id of the object
+	 * @param clazz the entity class,
+	 * @param <T> the entity type
+	 * @return the entity
 	 */
 	@Nullable
-	<T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index);
+	<T> T get(String id, Class<T> clazz);
+
+	/**
+	 * Retrieves an object from the index specified in the entity's Document annotation.
+	 *
+	 * @param id the id of the object
+	 * @param clazz the entity class,
+	 * @param index the index from which the object is read.
+	 * @return the entity
+	 */
+	@Nullable
+	<T> T get(String id, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Execute a multiGet against elasticsearch for the given ids.
@@ -112,6 +124,24 @@ public interface DocumentOperations {
 	 * @return list of objects
 	 */
 	<T> List<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
+
+	/**
+	 * Check if an entity with given {@literal id} exists.
+	 *
+	 * @param id the {@literal _id} of the document to look for.
+	 * @param clazz the domain type used.
+	 * @return {@literal true} if a matching document exists, {@literal false} otherwise.
+	 */
+	boolean exists(String id, Class<?> clazz);
+
+	/**
+	 * Check if an entity with given {@literal id} exists.
+	 *
+	 * @param id the {@literal _id} of the document to look for.
+	 * @param index the target index, must not be {@literal null}
+	 * @return {@literal true} if a matching document exists, {@literal false} otherwise.
+	 */
+	boolean exists(String id, IndexCoordinates index);
 
 	/**
 	 * Bulk index all objects. Will do save or update.
@@ -159,6 +189,32 @@ public interface DocumentOperations {
 	String delete(String id, IndexCoordinates index);
 
 	/**
+	 * Delete the one object with provided id.
+	 *
+	 * @param id the document ot delete
+	 * @param entityType must not be {@literal null}.
+	 * @return documentId of the document deleted
+	 */
+	String delete(String id, Class<?> entityType);
+
+	/**
+	 * Deletes the given entity
+	 *
+	 * @param entity the entity to delete
+	 * @return documentId of the document deleted
+	 */
+	String delete(Object entity);
+
+	/**
+	 * Deletes the given entity
+	 *
+	 * @param entity the entity to delete
+	 * @param index the index from which to delete
+	 * @return documentId of the document deleted
+	 */
+	String delete(Object entity, IndexCoordinates index);
+
+	/**
 	 * Delete all records matching the query.
 	 *
 	 * @param query query defining the objects
@@ -169,14 +225,6 @@ public interface DocumentOperations {
 	void delete(Query query, Class<?> clazz, IndexCoordinates index);
 
 	/**
-	 * Delete all records matching the query.
-	 *
-	 * @param query query defining the objects
-	 * @param index the index where to delete the records
-	 */
-	void delete(DeleteQuery query, IndexCoordinates index);
-
-	/**
 	 * Partial update of the document.
 	 *
 	 * @param updateQuery query defining the update
@@ -184,4 +232,30 @@ public interface DocumentOperations {
 	 * @return the update response
 	 */
 	UpdateResponse update(UpdateQuery updateQuery, IndexCoordinates index);
+
+	// region deprecated
+	/**
+	 * Delete all records matching the query.
+	 *
+	 * @param query query defining the objects
+	 * @param index the index where to delete the records
+	 * @deprecated since 4.0, use {@link #delete(Query, Class, IndexCoordinates)}
+	 */
+	@Deprecated
+	void delete(DeleteQuery query, IndexCoordinates index);
+
+	/**
+	 * Retrieves an object from an index.
+	 *
+	 * @param query the query defining the id of the object to get
+	 * @param clazz the type of the object to be returned
+	 * @param index the index from which the object is read.
+	 * @return the found object
+	 * @deprecated since 4.0, use {@link #getById(String, Class, IndexCoordinates)}
+	 */
+	@Deprecated
+	@Nullable
+	<T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index);
+
+	// endregion
 }

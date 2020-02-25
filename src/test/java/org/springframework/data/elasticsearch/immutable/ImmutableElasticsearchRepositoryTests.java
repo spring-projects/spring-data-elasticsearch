@@ -29,6 +29,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
@@ -57,10 +58,10 @@ public class ImmutableElasticsearchRepositoryTests {
 
 	@BeforeEach
 	public void before() {
-
-		operations.deleteIndex(ImmutableEntity.class);
-		operations.createIndex(ImmutableEntity.class);
-		operations.refresh(ImmutableEntity.class);
+		IndexOperations indexOperations = operations.indexOps(ImmutableEntity.class);
+		indexOperations.delete();
+		indexOperations.create();
+		indexOperations.refresh();
 	}
 
 	@Test // DATAES-281

@@ -19,6 +19,7 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.util.CollectionUtils.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,8 +45,6 @@ import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -53,9 +52,10 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
@@ -67,6 +67,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -180,31 +181,27 @@ class RequestFactory {
 	}
 
 	@SuppressWarnings("unchecked")
-	public CreateIndexRequest createIndexRequest(String indexName, Object settings) {
+	public CreateIndexRequest createIndexRequest(String indexName, @Nullable Document settings) {
 		CreateIndexRequest request = new CreateIndexRequest(indexName);
-		if (settings instanceof String) {
-			request.settings(String.valueOf(settings), Requests.INDEX_CONTENT_TYPE);
-		} else if (settings instanceof Map) {
-			request.settings((Map<String, ?>) settings);
-		} else if (settings instanceof XContentBuilder) {
-			request.settings((XContentBuilder) settings);
+
+		if (settings != null) {
+			request.settings(settings);
 		}
 		return request;
 	}
 
 	@SuppressWarnings("unchecked")
-	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, String indexName, Object settings) {
+	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, String indexName,
+			@Nullable Document settings) {
 		CreateIndexRequestBuilder createIndexRequestBuilder = client.admin().indices().prepareCreate(indexName);
-		if (settings instanceof String) {
-			createIndexRequestBuilder.setSettings(String.valueOf(settings), Requests.INDEX_CONTENT_TYPE);
-		} else if (settings instanceof Map) {
-			createIndexRequestBuilder.setSettings((Map<String, ?>) settings);
-		} else if (settings instanceof XContentBuilder) {
-			createIndexRequestBuilder.setSettings((XContentBuilder) settings);
+
+		if (settings != null) {
+			createIndexRequestBuilder.setSettings(settings);
 		}
 		return createIndexRequestBuilder;
 	}
 
+	@Deprecated
 	public DeleteByQueryRequest deleteByQueryRequest(DeleteQuery deleteQuery, IndexCoordinates index) {
 		DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(index.getIndexNames()) //
 				.setQuery(deleteQuery.getQuery()) //
@@ -220,6 +217,25 @@ class RequestFactory {
 		return deleteByQueryRequest;
 	}
 
+	public DeleteByQueryRequest deleteByQueryRequest(Query query, Class<?> clazz, IndexCoordinates index) {
+		SearchRequest searchRequest = searchRequest(query, clazz, index);
+		DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(index.getIndexNames()) //
+				.setQuery(searchRequest.source().query()) //
+				.setAbortOnVersionConflict(false) //
+				.setRefresh(true);
+
+		if (query.isLimiting()) {
+			deleteByQueryRequest.setBatchSize(query.getMaxResults());
+		}
+
+		if (query.hasScrollTime()) {
+			deleteByQueryRequest.setScroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
+		}
+
+		return deleteByQueryRequest;
+	}
+
+	@Deprecated
 	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, DeleteQuery deleteQuery,
 			IndexCoordinates index) {
 		DeleteByQueryRequestBuilder requestBuilder = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE) //
@@ -236,14 +252,37 @@ class RequestFactory {
 		return requestBuilder;
 	}
 
-	public GetRequest getRequest(GetQuery query, IndexCoordinates index) {
-		return new GetRequest(index.getIndexName(), query.getId());
+	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, Query query, Class<?> clazz,
+			IndexCoordinates index) {
+		SearchRequest searchRequest = searchRequest(query, clazz, index);
+		DeleteByQueryRequestBuilder requestBuilder = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE) //
+				.source(index.getIndexNames()) //
+				.filter(searchRequest.source().query()) //
+				.abortOnVersionConflict(false) //
+				.refresh(true);
+
+		SearchRequestBuilder source = requestBuilder.source();
+
+		if (query.isLimiting()) {
+			source.setSize(query.getMaxResults());
+		}
+
+		if (query.hasScrollTime()) {
+			source.setScroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
+		}
+
+		return requestBuilder;
 	}
 
-	public GetRequestBuilder getRequestBuilder(Client client, GetQuery query, IndexCoordinates index) {
-		return client.prepareGet(index.getIndexName(), null, query.getId());
+	public GetRequest getRequest(String id, IndexCoordinates index) {
+		return new GetRequest(index.getIndexName(), id);
 	}
 
+	public GetRequestBuilder getRequestBuilder(Client client, String id, IndexCoordinates index) {
+		return client.prepareGet(index.getIndexName(), null, id);
+	}
+
+	@Nullable
 	public HighlightBuilder highlightBuilder(Query query) {
 		HighlightBuilder highlightBuilder = query.getHighlightQuery().map(HighlightQuery::getHighlightBuilder).orElse(null);
 
@@ -420,39 +459,40 @@ class RequestFactory {
 
 	public UpdateRequest updateRequest(UpdateQuery query, IndexCoordinates index) {
 
-		Assert.notNull(query.getId(), "No Id define for Query");
-		Assert.notNull(query.getUpdateRequest(), "No UpdateRequest define for Query");
+		UpdateRequest updateRequest = new UpdateRequest(index.getIndexName(), query.getId());
 
-		UpdateRequest queryUpdateRequest = query.getUpdateRequest();
+		if (query.getScript() != null) {
+			Map<String, Object> params = query.getParams();
 
-		UpdateRequest updateRequest = new UpdateRequest(index.getIndexName(), query.getId()) //
-				.routing(queryUpdateRequest.routing()) //
-				.retryOnConflict(queryUpdateRequest.retryOnConflict()) //
-				.timeout(queryUpdateRequest.timeout()) //
-				.waitForActiveShards(queryUpdateRequest.waitForActiveShards()) //
-				.setRefreshPolicy(queryUpdateRequest.getRefreshPolicy()) //
-				.waitForActiveShards(queryUpdateRequest.waitForActiveShards()) //
-				.scriptedUpsert(queryUpdateRequest.scriptedUpsert()) //
-				.docAsUpsert(queryUpdateRequest.docAsUpsert());
-
-		if (query.DoUpsert()) {
-			updateRequest.docAsUpsert(true);
+			if (params == null) {
+				params = new HashMap<>();
+			}
+			Script script = new Script(ScriptType.INLINE, query.getLang(), query.getScript(), params);
+			updateRequest.script(script);
 		}
 
-		if (queryUpdateRequest.script() != null) {
-			updateRequest.script(queryUpdateRequest.script());
+		if (query.getDocument() != null) {
+			updateRequest.doc(query.getDocument());
 		}
 
-		if (queryUpdateRequest.doc() != null) {
-			updateRequest.doc(queryUpdateRequest.doc());
+		if (query.getUpsert() != null) {
+			updateRequest.upsert(query.getUpsert());
 		}
 
-		if (queryUpdateRequest.upsertRequest() != null) {
-			updateRequest.upsert(queryUpdateRequest.upsertRequest());
+		if (query.getRouting() != null) {
+			updateRequest.routing(query.getRouting());
 		}
 
-		if (queryUpdateRequest.fetchSource() != null) {
-			updateRequest.fetchSource(queryUpdateRequest.fetchSource());
+		if (query.getScriptedUpsert() != null) {
+			updateRequest.scriptedUpsert(query.getScriptedUpsert());
+		}
+
+		if (query.getDocAsUpsert() != null) {
+			updateRequest.docAsUpsert(query.getDocAsUpsert());
+		}
+
+		if (query.getFetchSource() != null) {
+			updateRequest.fetchSource(query.getFetchSource());
 		}
 
 		return updateRequest;
@@ -460,41 +500,41 @@ class RequestFactory {
 
 	public UpdateRequestBuilder updateRequestBuilderFor(Client client, UpdateQuery query, IndexCoordinates index) {
 
-		Assert.notNull(query.getId(), "No Id define for Query");
-		Assert.notNull(query.getUpdateRequest(), "No UpdateRequest define for Query");
+		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(index.getIndexName(), IndexCoordinates.TYPE,
+				query.getId());
 
-		UpdateRequest queryUpdateRequest = query.getUpdateRequest();
+		if (query.getScript() != null) {
+			Map<String, Object> params = query.getParams();
 
-		UpdateRequestBuilder updateRequestBuilder = client
-				.prepareUpdate(index.getIndexName(), IndexCoordinates.TYPE, query.getId()) //
-				.setRouting(queryUpdateRequest.routing()) //
-				.setRetryOnConflict(queryUpdateRequest.retryOnConflict()) //
-				.setTimeout(queryUpdateRequest.timeout()) //
-				.setWaitForActiveShards(queryUpdateRequest.waitForActiveShards()) //
-				.setRefreshPolicy(queryUpdateRequest.getRefreshPolicy()) //
-				.setWaitForActiveShards(queryUpdateRequest.waitForActiveShards()) //
-				.setScriptedUpsert(queryUpdateRequest.scriptedUpsert()) //
-				.setDocAsUpsert(queryUpdateRequest.docAsUpsert());
-
-		if (query.DoUpsert()) {
-			updateRequestBuilder.setDocAsUpsert(true);
+			if (params == null) {
+				params = new HashMap<>();
+			}
+			Script script = new Script(ScriptType.INLINE, query.getLang(), query.getScript(), params);
+			updateRequestBuilder.setScript(script);
 		}
 
-		if (queryUpdateRequest.script() != null) {
-			updateRequestBuilder.setScript(queryUpdateRequest.script());
+		if (query.getDocument() != null) {
+			updateRequestBuilder.setDoc(query.getDocument());
 		}
 
-		if (queryUpdateRequest.doc() != null) {
-			updateRequestBuilder.setDoc(queryUpdateRequest.doc());
+		if (query.getUpsert() != null) {
+			updateRequestBuilder.setUpsert(query.getUpsert());
 		}
 
-		if (queryUpdateRequest.upsertRequest() != null) {
-			updateRequestBuilder.setUpsert(queryUpdateRequest.upsertRequest());
+		if (query.getRouting() != null) {
+			updateRequestBuilder.setRouting(query.getRouting());
 		}
 
-		FetchSourceContext fetchSourceContext = queryUpdateRequest.fetchSource();
-		if (fetchSourceContext != null) {
-			updateRequestBuilder.setFetchSource(fetchSourceContext.includes(), fetchSourceContext.excludes());
+		if (query.getScriptedUpsert() != null) {
+			updateRequestBuilder.setScriptedUpsert(query.getScriptedUpsert());
+		}
+
+		if (query.getDocAsUpsert() != null) {
+			updateRequestBuilder.setDocAsUpsert(query.getDocAsUpsert());
+		}
+
+		if (query.getFetchSource() != null) {
+			updateRequestBuilder.setFetchSource(query.getFetchSource());
 		}
 
 		return updateRequestBuilder;
@@ -569,29 +609,17 @@ class RequestFactory {
 	}
 
 	@SuppressWarnings("unchecked")
-	public PutMappingRequest putMappingRequest(IndexCoordinates index, Object mapping) {
+	public PutMappingRequest putMappingRequest(IndexCoordinates index, Document mapping) {
 		PutMappingRequest request = new PutMappingRequest(index.getIndexName());
-		if (mapping instanceof String) {
-			request.source(String.valueOf(mapping), XContentType.JSON);
-		} else if (mapping instanceof Map) {
-			request.source((Map<String, ?>) mapping);
-		} else if (mapping instanceof XContentBuilder) {
-			request.source((XContentBuilder) mapping);
-		}
+		request.source(mapping);
 		return request;
 	}
 
 	@SuppressWarnings("rawtypes")
-	public PutMappingRequestBuilder putMappingRequestBuilder(Client client, IndexCoordinates index, Object mapping) {
+	public PutMappingRequestBuilder putMappingRequestBuilder(Client client, IndexCoordinates index, Document mapping) {
 		PutMappingRequestBuilder requestBuilder = client.admin().indices().preparePutMapping(index.getIndexName())
 				.setType(IndexCoordinates.TYPE);
-		if (mapping instanceof String) {
-			requestBuilder.setSource(String.valueOf(mapping), XContentType.JSON);
-		} else if (mapping instanceof Map) {
-			requestBuilder.setSource((Map) mapping);
-		} else if (mapping instanceof XContentBuilder) {
-			requestBuilder.setSource((XContentBuilder) mapping);
-		}
+		requestBuilder.setSource(mapping);
 		return requestBuilder;
 	}
 

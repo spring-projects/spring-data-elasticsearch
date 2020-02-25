@@ -23,14 +23,11 @@ import lombok.Builder;
 import lombok.Data;
 
 import org.elasticsearch.ElasticsearchStatusException;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQueryBuilder;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -57,16 +54,15 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 	public void shouldThrowExceptionIfDocumentDoesNotExistWhileDoingPartialUpdate() {
 
 		// when
-		IndexRequest indexRequest = new IndexRequest();
-		indexRequest.source("{}", XContentType.JSON);
-		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(randomNumeric(5)).withIndexRequest(indexRequest).build();
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.create();
+		UpdateQuery updateQuery = UpdateQuery.builder(randomNumeric(5)).withDocument(document).build();
 		assertThatThrownBy(() -> operations.update(updateQuery, index)).isInstanceOf(ElasticsearchStatusException.class);
 	}
 
 	@Data
 	@Builder
-	@Document(indexName = "test-index-sample-core-rest-template", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-core-rest-template", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;

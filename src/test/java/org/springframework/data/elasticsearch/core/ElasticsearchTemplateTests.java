@@ -19,6 +19,7 @@ import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.core.document.Document.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 import lombok.AllArgsConstructor;
@@ -37,11 +38,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.assertj.core.util.Lists;
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -112,20 +113,23 @@ public abstract class ElasticsearchTemplateTests {
 	protected final IndexCoordinates index = IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY).withTypes(TYPE_NAME);
 
 	@Autowired protected ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
+		indexOperations = operations.indexOps(SampleEntity.class);
 		deleteIndices();
 
-		indexOperations.createIndex(SampleEntity.class);
-		indexOperations.putMapping(SampleEntity.class);
+		indexOperations.create();
+		indexOperations.putMapping(indexOperations.createMapping(SampleEntity.class));
 
-		indexOperations.createIndex(SampleEntityUUIDKeyed.class);
-		indexOperations.putMapping(SampleEntityUUIDKeyed.class);
+		IndexOperations indexOpsSampleEntityUUIDKeyed = operations.indexOps(SampleEntityUUIDKeyed.class);
+		indexOpsSampleEntityUUIDKeyed.create();
+		indexOpsSampleEntityUUIDKeyed.putMapping(indexOpsSampleEntityUUIDKeyed.createMapping(SampleEntityUUIDKeyed.class));
 
-		indexOperations.createIndex(SearchHitsEntity.class);
-		indexOperations.putMapping(SearchHitsEntity.class);
+		IndexOperations indexOpsSearchHitsEntity = operations.indexOps(SearchHitsEntity.class);
+		indexOpsSearchHitsEntity.create();
+		indexOpsSearchHitsEntity.putMapping(indexOpsSearchHitsEntity.createMapping(SearchHitsEntity.class));
 	}
 
 	@AfterEach
@@ -136,16 +140,16 @@ public abstract class ElasticsearchTemplateTests {
 
 	private void deleteIndices() {
 
-		indexOperations.deleteIndex(SampleEntity.class);
-		indexOperations.deleteIndex(SampleEntityUUIDKeyed.class);
-		indexOperations.deleteIndex(UseServerConfigurationEntity.class);
-		indexOperations.deleteIndex(SampleMappingEntity.class);
-		indexOperations.deleteIndex(Book.class);
-		indexOperations.deleteIndex(INDEX_1_NAME);
-		indexOperations.deleteIndex(INDEX_2_NAME);
-		indexOperations.deleteIndex(INDEX_3_NAME);
-		indexOperations.deleteIndex(SearchHitsEntity.class);
-		indexOperations.deleteIndex(HighlightEntity.class);
+		indexOperations.delete();
+		operations.indexOps(SampleEntityUUIDKeyed.class).delete();
+		operations.indexOps(UseServerConfigurationEntity.class).delete();
+		operations.indexOps(SampleMappingEntity.class).delete();
+		operations.indexOps(Book.class).delete();
+		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).delete();
+		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).delete();
+		operations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).delete();
+		operations.indexOps(SearchHitsEntity.class).delete();
+		operations.indexOps(HighlightEntity.class).delete();
 	}
 
 	@Test // DATAES-106
@@ -158,7 +162,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
+		;
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 
 		// when
@@ -179,7 +184,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
+		;
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
 		// when
@@ -200,11 +206,9 @@ public abstract class ElasticsearchTemplateTests {
 		operations.index(indexQuery, index);
 
 		// when
-		GetQuery getQuery = new GetQuery(documentId);
-		SampleEntity sampleEntity1 = operations.get(getQuery, SampleEntity.class, index);
+		SampleEntity sampleEntity1 = operations.get(documentId, SampleEntity.class, index);
 
 		// then
-		assertThat(sampleEntity1).isNotNull();
 		assertThat(sampleEntity1).isEqualTo(sampleEntity);
 	}
 
@@ -225,7 +229,7 @@ public abstract class ElasticsearchTemplateTests {
 		List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// when
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(Arrays.asList(documentId, documentId2)).build();
@@ -254,7 +258,7 @@ public abstract class ElasticsearchTemplateTests {
 		List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// when
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(Arrays.asList(documentId, documentId2))
@@ -276,7 +280,7 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
@@ -300,7 +304,7 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQueryWithValidPreference = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPreference("_local").build();
@@ -324,7 +328,7 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQueryWithInvalidPreference = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPreference("_only_nodes:oops").build();
@@ -345,7 +349,7 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery idxQuery = new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity).build();
 
 		operations.index(idxQuery, IndexCoordinates.of(INDEX_1_NAME).withTypes("test-type"));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME));
+		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withIndicesOptions(IndicesOptions.lenientExpandOpen()).build();
@@ -377,7 +381,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2));
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
@@ -402,11 +406,14 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
-		IndexRequest indexRequest = new IndexRequest();
-		indexRequest.source("message", messageAfterUpdate);
-		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId).withIndexRequest(indexRequest).build();
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.create();
+		document.put("message", messageAfterUpdate);
+		UpdateQuery updateQuery = UpdateQuery.builder(documentId) //
+				.withDocument(document) //
+				.build();
 
 		List<UpdateQuery> queries = new ArrayList<>();
 		queries.add(updateQuery);
@@ -415,8 +422,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.bulkUpdate(queries, index);
 
 		// then
-		GetQuery getQuery = new GetQuery(documentId);
-		SampleEntity indexedEntity = operations.get(getQuery, SampleEntity.class, index);
+		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class, index);
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
@@ -434,7 +440,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.delete(documentId, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
@@ -457,7 +463,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.delete(documentId, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
@@ -476,13 +482,12 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// when
-		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(termQuery("id", documentId));
-		operations.delete(deleteQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		Query query = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
+		operations.delete(query, SampleEntity.class, index);
+		indexOperations.refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
@@ -502,21 +507,19 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery idxQuery1 = new IndexQueryBuilder().withId(randomNumeric(5)).withObject(sampleEntity).build();
 
 		operations.index(idxQuery1, IndexCoordinates.of(INDEX_1_NAME).withTypes("test-type"));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME));
+		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
 
 		IndexQuery idxQuery2 = new IndexQueryBuilder().withId(randomNumeric(5)).withObject(sampleEntity).build();
 
 		operations.index(idxQuery2, IndexCoordinates.of(INDEX_2_NAME).withTypes("test-type"));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_2_NAME));
+		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).refresh();
 
 		// when
-		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(termQuery("message", "foo"));
+		Query query = new NativeSearchQueryBuilder().withQuery(termQuery("message", "foo")).build();
+		operations.delete(query, SampleEntity.class, IndexCoordinates.of("test-index-*").withTypes(TYPE_NAME));
 
-		operations.delete(deleteQuery, IndexCoordinates.of("test-index-*").withTypes(TYPE_NAME));
-
-		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_2_NAME));
+		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
+		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("message", "foo")).build();
@@ -536,21 +539,20 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery idxQuery1 = new IndexQueryBuilder().withId(randomNumeric(5)).withObject(sampleEntity).build();
 
 		operations.index(idxQuery1, IndexCoordinates.of(INDEX_1_NAME).withTypes("test-type"));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME));
+		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
 
 		IndexQuery idxQuery2 = new IndexQueryBuilder().withId(randomNumeric(5)).withObject(sampleEntity).build();
 
 		operations.index(idxQuery2, IndexCoordinates.of(INDEX_2_NAME).withTypes("test-type"));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_2_NAME));
+		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).refresh();
 
 		// when
-		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(termQuery("message", "negative"));
+		Query query = new NativeSearchQueryBuilder().withQuery(termQuery("message", "negative")).build();
 
-		operations.delete(deleteQuery, IndexCoordinates.of("test-index-*").withTypes(TYPE_NAME));
+		operations.delete(query, SampleEntity.class, IndexCoordinates.of("test-index-*").withTypes(TYPE_NAME));
 
-		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_2_NAME));
+		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
+		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("message", "positive")).build();
@@ -568,7 +570,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withFilter(boolQuery().filter(termQuery("id", documentId))).build();
@@ -603,7 +605,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withSort(new FieldSortBuilder("rate").order(SortOrder.ASC)).build();
@@ -639,7 +641,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withSort(new FieldSortBuilder("rate").order(SortOrder.ASC))
@@ -678,7 +680,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, 10, Sort.by(Sort.Order.asc("message").nullsFirst()))).build();
@@ -716,7 +718,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, 10, Sort.by(Sort.Order.asc("message").nullsLast()))).build();
@@ -740,7 +742,7 @@ public abstract class ElasticsearchTemplateTests {
 				SampleEntity.builder().id("3").message("blue").build());
 
 		operations.bulkIndex(getIndexQueries(entities), index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
 				.withQuery(matchQuery("message", "green")) //
@@ -767,7 +769,7 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		StringQuery stringQuery = new StringQuery(matchAllQuery().toString());
 
@@ -794,7 +796,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexQuery.setObject(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("factor", 2);
@@ -821,7 +823,7 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		StringQuery stringQuery = new StringQuery(matchAllQuery().toString(), PageRequest.of(0, 10));
 
@@ -847,7 +849,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexQuery.setObject(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		StringQuery stringQuery = new StringQuery(matchAllQuery().toString(), PageRequest.of(0, 10),
 				Sort.by(Order.asc("message")));
@@ -870,7 +872,7 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		StringQuery stringQuery = new StringQuery(termQuery("id", documentId).toString());
 
@@ -887,7 +889,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		// creation is done in setup method
-		Map setting = indexOperations.getSettings(SampleEntity.class);
+		Map setting = indexOperations.getSettings();
 
 		// then
 		assertThat(setting.get("index.number_of_shards")).isEqualTo("1");
@@ -905,7 +907,7 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("test"));
 
 		// when
@@ -926,12 +928,12 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("test"));
 
 		// when
 		operations.delete(criteriaQuery, SampleEntity.class, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		StringQuery stringQuery = new StringQuery(matchAllQuery().toString());
@@ -953,7 +955,7 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withFields("message")
 				.build();
 
@@ -981,7 +983,7 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		FetchSourceFilterBuilder sourceFilter = new FetchSourceFilterBuilder();
 		sourceFilter.withIncludes("message");
@@ -1022,7 +1024,7 @@ public abstract class ElasticsearchTemplateTests {
 				getIndexQuery(
 						SampleEntity.builder().id(documentId2).message(sampleMessage).version(System.currentTimeMillis()).build()),
 				index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		MoreLikeThisQuery moreLikeThisQuery = new MoreLikeThisQuery();
 		moreLikeThisQuery.setId(documentId2);
@@ -1047,20 +1049,21 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(entities, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, criteriaQuery, SampleEntity.class,
-				index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
+				criteriaQuery, SampleEntity.class, index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scroll.getScrollId(), 1000,
+					SampleEntity.class);
 		}
-		operations.searchScrollClear(scroll.getScrollId());
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(scroll.getScrollId());
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1072,21 +1075,22 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(entities, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, 10)).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
-				index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
+				searchQuery, SampleEntity.class, index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scroll.getScrollId(), 1000,
+					SampleEntity.class);
 		}
-		operations.searchScrollClear(scroll.getScrollId());
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(scroll.getScrollId());
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1098,23 +1102,23 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(entities, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 		criteriaQuery.addFields("message");
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, criteriaQuery, SampleEntity.class,
-				index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
+				criteriaQuery, SampleEntity.class, index);
 		String scrollId = scroll.getScrollId();
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
 			scrollId = scroll.getScrollId();
-			scroll = operations.searchScrollContinue(scrollId, 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1126,22 +1130,22 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(entities, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withFields("message")
 				.withQuery(matchAllQuery()).withPageable(PageRequest.of(0, 10)).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
-				index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
+				searchQuery, SampleEntity.class, index);
 		String scrollId = scroll.getScrollId();
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
 			scrollId = scroll.getScrollId();
-			scroll = operations.searchScrollContinue(scrollId, 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1153,22 +1157,22 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(entities, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, criteriaQuery, SampleEntity.class,
-				index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
+				criteriaQuery, SampleEntity.class, index);
 		String scrollId = scroll.getScrollId();
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
 			scrollId = scroll.getScrollId();
-			scroll = operations.searchScrollContinue(scrollId, 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1180,22 +1184,22 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(entities, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, 10)).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
-				index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
+				searchQuery, SampleEntity.class, index);
 		String scrollId = scroll.getScrollId();
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
 			scrollId = scroll.getScrollId();
-			scroll = operations.searchScrollContinue(scrollId, 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1207,22 +1211,22 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(entities, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, criteriaQuery, SampleEntity.class,
-				index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
+				criteriaQuery, SampleEntity.class, index);
 		String scrollId = scroll.getScrollId();
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
 			scrollId = scroll.getScrollId();
-			scroll = operations.searchScrollContinue(scrollId, 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1234,22 +1238,22 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(entities, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, 10)).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
-				index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
+				searchQuery, SampleEntity.class, index);
 		String scrollId = scroll.getScrollId();
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
 			scrollId = scroll.getScrollId();
-			scroll = operations.searchScrollContinue(scrollId, 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class);
 		}
-		operations.searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1261,7 +1265,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(entities, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
@@ -1317,7 +1321,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		CriteriaQuery singleCriteriaQuery = new CriteriaQuery(new Criteria("message").contains("test"));
 		CriteriaQuery multipleCriteriaQuery = new CriteriaQuery(
@@ -1354,7 +1358,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		StringQuery stringQuery = new StringQuery(matchAllQuery().toString());
 		SearchHits<SampleEntity> sampleEntities = operations.search(stringQuery, SampleEntity.class, index);
@@ -1367,14 +1371,14 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldPutMappingForGivenEntity() {
 
 		// given
-		Class<SampleEntity> entity = SampleEntity.class;
-		indexOperations.deleteIndex(entity);
-		indexOperations.createIndex(entity);
+		Class<SampleEntity> entityClass = SampleEntity.class;
+		operations.indexOps(entityClass).delete();
+		operations.indexOps(entityClass).create();
 
 		// when
 
 		// then
-		assertThat(indexOperations.putMapping(entity)).isTrue();
+		assertThat(indexOperations.putMapping(indexOperations.createMapping(entityClass))).isTrue();
 	}
 
 	@Test // DATAES-305
@@ -1382,14 +1386,15 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		Class<SampleEntity> entity = SampleEntity.class;
-		indexOperations.deleteIndex(INDEX_1_NAME);
-		indexOperations.createIndex(INDEX_1_NAME);
+		IndexOperations indexOperations1 = operations.indexOps(IndexCoordinates.of(INDEX_1_NAME));
+		indexOperations1.delete();
+		indexOperations1.create();
 
 		// when
-		indexOperations.putMapping(IndexCoordinates.of(INDEX_1_NAME).withTypes(TYPE_NAME), entity);
+		indexOperations1.putMapping(indexOperations1.createMapping(entity));
 
 		// then
-		Map<String, Object> mapping = indexOperations.getMapping(IndexCoordinates.of(INDEX_1_NAME).withTypes(TYPE_NAME));
+		Map<String, Object> mapping = indexOperations.getMapping();
 		assertThat(mapping.get("properties")).isNotNull();
 	}
 
@@ -1400,10 +1405,10 @@ public abstract class ElasticsearchTemplateTests {
 		Class<?> clazz = SampleEntity.class;
 
 		// when
-		indexOperations.deleteIndex(clazz);
+		indexOperations.delete();
 
 		// then
-		assertThat(indexOperations.indexExists(clazz)).isFalse();
+		assertThat(indexOperations.exists()).isFalse();
 	}
 
 	@Test
@@ -1420,18 +1425,20 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
-		IndexRequest indexRequest = new IndexRequest();
-		indexRequest.source("message", messageAfterUpdate);
-		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId).withIndexRequest(indexRequest).build();
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.create();
+		document.put("message", messageAfterUpdate);
+		UpdateQuery updateQuery = UpdateQuery.builder(documentId)//
+				.withDocument(document) //
+				.build();
 
 		// when
 		operations.update(updateQuery, index);
 
 		// then
-		GetQuery getQuery = new GetQuery(documentId);
-		SampleEntity indexedEntity = operations.get(getQuery, SampleEntity.class, index);
+		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class, index);
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
@@ -1443,13 +1450,13 @@ public abstract class ElasticsearchTemplateTests {
 		doc.put("id", "1");
 		doc.put("message", "test");
 
-		UpdateRequest updateRequest = new UpdateRequest() //
-				.doc(doc) //
-				.upsert(doc);
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.from(doc);
 
-		UpdateQuery updateQuery = new UpdateQueryBuilder() //
-				.withId("1") //
-				.withUpdateRequest(updateRequest).build();
+		UpdateQuery updateQuery = UpdateQuery.builder("1") //
+				.withDocument(document) //
+				.withUpsert(document) //
+				.build();
 
 		// when
 		UpdateRequest request = getRequestFactory().updateRequest(updateQuery, IndexCoordinates.of("index"));
@@ -1466,11 +1473,13 @@ public abstract class ElasticsearchTemplateTests {
 		doc.put("id", "1");
 		doc.put("message", "test");
 
-		UpdateRequest updateRequest = new UpdateRequest().doc(doc).fetchSource(FetchSourceContext.FETCH_SOURCE);
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.from(doc);
 
-		UpdateQuery updateQuery = new UpdateQueryBuilder() //
-				.withId("1") //
-				.withUpdateRequest(updateRequest).build();
+		UpdateQuery updateQuery = UpdateQuery.builder("1") //
+				.withDocument(document) //
+				.withFetchSource(true) //
+				.build();
 
 		// when
 		UpdateRequest request = getRequestFactory().updateRequest(updateQuery, IndexCoordinates.of("index"));
@@ -1485,19 +1494,20 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		String documentId = randomNumeric(5);
-		String message = "test message";
-		IndexRequest indexRequest = new IndexRequest();
-		indexRequest.source("message", message);
-		UpdateQuery updateQuery = new UpdateQueryBuilder().withId(documentId).withDoUpsert(true)
-				.withIndexRequest(indexRequest).build();
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.create();
+		document.put("message", "test message");
+		UpdateQuery updateQuery = UpdateQuery.builder(documentId) //
+				.withDocument(document) //
+				.withDocAsUpsert(true) //
+				.build();
 
 		// when
 		operations.update(updateQuery, index);
 
 		// then
-		GetQuery getQuery = new GetQuery(documentId);
-		SampleEntity indexedEntity = operations.get(getQuery, SampleEntity.class, index);
-		assertThat(indexedEntity.getMessage()).isEqualTo(message);
+		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class, index);
+		assertThat(indexedEntity.getMessage()).isEqualTo("test message");
 	}
 
 	@Test // DATAES-671
@@ -1513,19 +1523,20 @@ public abstract class ElasticsearchTemplateTests {
 
 		IndexCoordinates index = IndexCoordinates.of(INDEX_1_NAME).withTypes("test-type");
 		operations.index(idxQuery, index);
-		indexOperations.refresh(index);
+		operations.indexOps(index).refresh();
 
 		// when
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withIndicesOptions(IndicesOptions.lenientExpandOpen()).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(scrollTimeInMillis, searchQuery,
-				SampleEntity.class, index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations)
+				.searchScrollStart(scrollTimeInMillis, searchQuery, SampleEntity.class, index);
 
 		List<SearchHit<SampleEntity>> entities = new ArrayList<>(scroll.getContent());
 
 		while (scroll.hasContent()) {
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), scrollTimeInMillis, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scroll.getScrollId(),
+					scrollTimeInMillis, SampleEntity.class);
 
 			entities.addAll(scroll.getContent());
 		}
@@ -1546,7 +1557,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexQueries.add(buildIndex(SampleEntity.builder().id("3").message("ac").build()));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// when
 		List<NativeSearchQuery> queries = new ArrayList<>();
@@ -1567,17 +1578,18 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		Class<Book> clazz = Book.class;
-		indexOperations.deleteIndex(clazz);
-		indexOperations.createIndex(clazz);
-		indexOperations.putMapping(clazz);
-		indexOperations.refresh(clazz);
+		IndexOperations bookIndexOperations = operations.indexOps(Book.class);
+		bookIndexOperations.delete();
+		bookIndexOperations.create();
+		indexOperations.putMapping(indexOperations.createMapping(clazz));
+		bookIndexOperations.refresh();
 
 		IndexCoordinates bookIndex = IndexCoordinates.of("test-index-book-core-template").withTypes("book");
 
 		operations.index(buildIndex(SampleEntity.builder().id("1").message("ab").build()), index);
 		operations.index(buildIndex(Book.builder().id("2").description("bc").build()), bookIndex);
-		indexOperations.refresh(SampleEntity.class);
-		indexOperations.refresh(clazz);
+		indexOperations.refresh();
+		bookIndexOperations.refresh();
 
 		// when
 		List<NativeSearchQuery> queries = new ArrayList<>();
@@ -1609,13 +1621,12 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// when
-		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(termQuery("id", documentId));
-		operations.delete(deleteQuery, index);
-		indexOperations.refresh(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY));
+		Query query = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
+		operations.delete(query, SampleEntity.class, index);
+		operations.indexOps(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY)).refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
@@ -1634,7 +1645,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.index(indexQuery, IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY).withTypes(TYPE_NAME));
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", indexQuery.getId()))
 				.build();
 
@@ -1664,7 +1675,7 @@ public abstract class ElasticsearchTemplateTests {
 		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
 		// when
 		operations.bulkIndex(entities, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("message", "message"))
 				.withPageable(PageRequest.of(0, 100)).build();
 		// then
@@ -1682,7 +1693,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexQueries.add(buildIndex(SampleEntity.builder().id("3").message("ac").build()));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// when
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
@@ -1707,7 +1718,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexQueries.add(buildIndex(SampleEntity.builder().id("3").message("ac xz hi").build()));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// when
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("message", "xz"))
@@ -1738,8 +1749,7 @@ public abstract class ElasticsearchTemplateTests {
 		// then
 		assertThat(sampleEntity.getId()).isEqualTo(documentId);
 
-		GetQuery getQuery = new GetQuery(documentId);
-		SampleEntity result = operations.get(getQuery, SampleEntity.class, index);
+		SampleEntity result = operations.get(documentId, SampleEntity.class, index);
 		assertThat(result.getId()).isEqualTo(documentId);
 	}
 
@@ -1768,7 +1778,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
@@ -1812,7 +1822,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(index);
+		indexOperations.refresh();
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
@@ -1835,7 +1845,7 @@ public abstract class ElasticsearchTemplateTests {
 				.withObject(entity);
 
 		operations.index(indexQueryBuilder.build(), index);
-		indexOperations.refresh(index);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		// when
@@ -1846,7 +1856,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// reindex with same version
 		operations.index(indexQueryBuilder.build(), index);
-		indexOperations.refresh(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY));
+		operations.indexOps(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY)).refresh();
 
 		// reindex with version one below
 		assertThatThrownBy(() -> operations.index(indexQueryBuilder.withVersion(entity.getVersion() - 1).build(), index))
@@ -1864,7 +1874,7 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = new IndexQueryBuilder().withId(documentId).withObject(sampleEntity).build();
 
 		operations.index(indexQuery, IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY).withTypes(TYPE_NAME));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY));
+		operations.indexOps(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY)).refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
@@ -1886,7 +1896,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 
 		// when
@@ -1906,7 +1916,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
 		// when
@@ -1926,7 +1936,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 
 		// when
@@ -1946,7 +1956,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
 		// when
@@ -1975,8 +1985,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		operations.index(indexQuery1, IndexCoordinates.of(INDEX_1_NAME).withTypes("test-type"));
 		operations.index(indexQuery2, IndexCoordinates.of(INDEX_2_NAME).withTypes("test-type"));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_2_NAME));
+		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
+		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).refresh();
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 
@@ -2006,8 +2016,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		operations.index(indexQuery1, IndexCoordinates.of(INDEX_1_NAME).withTypes("test-type"));
 		operations.index(indexQuery2, IndexCoordinates.of(INDEX_2_NAME).withTypes("test-type"));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_2_NAME));
+		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
+		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
@@ -2019,24 +2029,26 @@ public abstract class ElasticsearchTemplateTests {
 	}
 
 	private void cleanUpIndices() {
-		indexOperations.deleteIndex(INDEX_1_NAME);
-		indexOperations.deleteIndex(INDEX_2_NAME);
-		indexOperations.createIndex(INDEX_1_NAME);
-		indexOperations.createIndex(INDEX_2_NAME);
-		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME, INDEX_2_NAME));
+		IndexOperations indexOperations1 = operations.indexOps(IndexCoordinates.of(INDEX_1_NAME));
+		indexOperations1.delete();
+		IndexOperations indexOperations2 = operations.indexOps(IndexCoordinates.of(INDEX_2_NAME));
+		indexOperations2.delete();
+		indexOperations1.create();
+		indexOperations2.create();
+		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME, INDEX_2_NAME)).refresh();
 	}
 
 	@Test // DATAES-71
 	public void shouldCreatedIndexWithSpecifiedIndexName() {
 
 		// given
-		indexOperations.deleteIndex(INDEX_3_NAME);
+		operations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).delete();
 
 		// when
-		indexOperations.createIndex(INDEX_3_NAME);
+		operations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).create();
 
 		// then
-		assertThat(indexOperations.indexExists(INDEX_3_NAME)).isTrue();
+		assertThat(operations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).exists()).isTrue();
 	}
 
 	@Test // DATAES-72
@@ -2044,14 +2056,15 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		String indexName = "some-random-index";
-		indexOperations.createIndex(indexName);
-		indexOperations.refresh(IndexCoordinates.of(indexName));
+		IndexCoordinates index = IndexCoordinates.of(indexName);
+		operations.indexOps(index).create();
+		operations.indexOps(index).refresh();
 
 		// when
-		indexOperations.deleteIndex(indexName);
+		operations.indexOps(index).delete();
 
 		// then
-		assertThat(indexOperations.indexExists(indexName)).isFalse();
+		assertThat(operations.indexOps(index).exists()).isFalse();
 	}
 
 	@Test // DATAES-106
@@ -2073,8 +2086,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		operations.index(indexQuery1, IndexCoordinates.of(INDEX_1_NAME).withTypes("test-type"));
 		operations.index(indexQuery2, IndexCoordinates.of(INDEX_2_NAME).withTypes("test-type"));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_2_NAME));
+		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
+		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).refresh();
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 
@@ -2104,8 +2117,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		operations.index(indexQuery1, IndexCoordinates.of(INDEX_1_NAME).withTypes("test-type"));
 		operations.index(indexQuery2, IndexCoordinates.of(INDEX_2_NAME).withTypes("test-type"));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_2_NAME));
+		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
+		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
@@ -2126,7 +2139,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 
 		// when
@@ -2144,7 +2157,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 		operations.index(indexQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
 		// when
@@ -2163,14 +2176,15 @@ public abstract class ElasticsearchTemplateTests {
 				+ "                        \"tokenizer\": \"uax_url_email\"\n" + "                    }\n"
 				+ "                }\n" + "            }\n" + "        }\n" + '}';
 
-		indexOperations.deleteIndex(INDEX_3_NAME);
+		IndexOperations indexOperations3 = operations.indexOps(IndexCoordinates.of(INDEX_3_NAME));
+		indexOperations3.delete();
 
 		// when
-		indexOperations.createIndex(INDEX_3_NAME, settings);
+		operations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).create(parse(settings));
 
 		// then
-		Map map = indexOperations.getSettings(INDEX_3_NAME);
-		assertThat(indexOperations.indexExists(INDEX_3_NAME)).isTrue();
+		Map map = indexOperations3.getSettings();
+		assertThat(indexOperations3.exists()).isTrue();
 		assertThat(map.containsKey("index.analysis.analyzer.emailAnalyzer.tokenizer")).isTrue();
 		assertThat(map.get("index.analysis.analyzer.emailAnalyzer.tokenizer")).isEqualTo("uax_url_email");
 	}
@@ -2182,8 +2196,8 @@ public abstract class ElasticsearchTemplateTests {
 		// delete , create and apply mapping in before method
 
 		// then
-		Map map = indexOperations.getSettings(SampleEntity.class);
-		assertThat(indexOperations.indexExists(SampleEntity.class)).isTrue();
+		Map map = indexOperations.getSettings();
+		assertThat(indexOperations.exists()).isTrue();
 		assertThat(map.containsKey("index.refresh_interval")).isTrue();
 		assertThat(map.containsKey("index.number_of_replicas")).isTrue();
 		assertThat(map.containsKey("index.number_of_shards")).isTrue();
@@ -2206,14 +2220,14 @@ public abstract class ElasticsearchTemplateTests {
 				+ "                }\n" + "            }\n" + "        }\n" + '}';
 
 		// when
-		indexOperations.deleteIndex(SampleEntity.class);
-		indexOperations.createIndex(SampleEntity.class, settings);
-		indexOperations.putMapping(SampleEntity.class);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.delete();
+		indexOperations.create(parse(settings));
+		indexOperations.putMapping(indexOperations.createMapping(SampleEntity.class));
+		indexOperations.refresh();
 
 		// then
-		Map map = indexOperations.getSettings(SampleEntity.class);
-		assertThat(indexOperations.indexExists(INDEX_NAME_SAMPLE_ENTITY)).isTrue();
+		Map map = indexOperations.getSettings();
+		assertThat(operations.indexOps(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY)).exists()).isTrue();
 		assertThat(map.containsKey("index.number_of_replicas")).isTrue();
 		assertThat(map.containsKey("index.number_of_shards")).isTrue();
 		assertThat((String) map.get("index.number_of_replicas")).isEqualTo("0");
@@ -2238,8 +2252,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		operations.index(indexQuery1, IndexCoordinates.of(INDEX_1_NAME).withTypes("test-type"));
 		operations.index(indexQuery2, IndexCoordinates.of(INDEX_2_NAME).withTypes("test-type"));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_2_NAME));
+		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
+		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
@@ -2266,8 +2280,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		operations.index(indexQuery1, IndexCoordinates.of(INDEX_1_NAME).withTypes("hetro"));
 		operations.index(indexQuery2, IndexCoordinates.of(INDEX_2_NAME).withTypes("hetro"));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_1_NAME));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_2_NAME));
+		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
+		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).refresh();
 
 		// when
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
@@ -2279,15 +2293,15 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Test
 	public void shouldCreateIndexUsingServerDefaultConfiguration() {
-
 		// given
+		IndexOperations indexOps = operations.indexOps(UseServerConfigurationEntity.class);
 
 		// when
-		boolean created = indexOperations.createIndex(UseServerConfigurationEntity.class);
+		boolean created = indexOps.create();
 
 		// then
 		assertThat(created).isTrue();
-		Map setting = indexOperations.getSettings(UseServerConfigurationEntity.class);
+		Map setting = indexOps.getSettings();
 		assertThat(setting.get("index.number_of_shards")).isEqualTo("1");
 		assertThat(setting.get("index.number_of_replicas")).isEqualTo("1");
 	}
@@ -2298,7 +2312,7 @@ public abstract class ElasticsearchTemplateTests {
 		// given
 
 		// when
-		Map<String, Object> mapping = indexOperations.getMapping(SampleEntity.class);
+		Map<String, Object> mapping = indexOperations.getMapping();
 
 		// then
 		assertThat(mapping).isNotNull();
@@ -2321,13 +2335,12 @@ public abstract class ElasticsearchTemplateTests {
 		indexQueries.add(getIndexQuery(SampleEntity.builder().id(remainingDocumentId).message("some other message")
 				.version(System.currentTimeMillis()).build()));
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// when
-		DeleteQuery deleteQuery = new DeleteQuery();
-		deleteQuery.setQuery(idsQuery().addIds(documentIdToDelete));
-		operations.delete(deleteQuery, index);
-		indexOperations.refresh(SampleEntity.class);
+		Query query = new NativeSearchQueryBuilder().withQuery(idsQuery().addIds(documentIdToDelete)).build();
+		operations.delete(query, SampleEntity.class, index);
+		indexOperations.refresh();
 
 		// then
 		// document with id "remainingDocumentId" should still be indexed
@@ -2353,12 +2366,12 @@ public abstract class ElasticsearchTemplateTests {
 		indexQueries.add(getIndexQuery(SampleEntity.builder().id(remainingDocumentId).message("some other message")
 				.version(System.currentTimeMillis()).build()));
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// when
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("id").is(documentIdToDelete));
 		operations.delete(criteriaQuery, SampleEntity.class, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		// document with id "remainingDocumentId" should still be indexed
@@ -2383,11 +2396,11 @@ public abstract class ElasticsearchTemplateTests {
 		indexQueries.add(getIndexQuery(SampleEntity.builder().id(remainingDocumentId).message("some other message")
 				.version(System.currentTimeMillis()).build()));
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// when
 		operations.delete(documentIdToDelete, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		// document with id "remainingDocumentId" should still be indexed
@@ -2412,20 +2425,21 @@ public abstract class ElasticsearchTemplateTests {
 				.version(System.currentTimeMillis()).build()));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// when
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("message"));
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, criteriaQuery, SampleEntity.class,
-				index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
+				criteriaQuery, SampleEntity.class, index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scroll.getScrollId(), 1000,
+					SampleEntity.class);
 		}
-		operations.searchScrollClear(scroll.getScrollId());
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(scroll.getScrollId());
 
 		// then
 		assertThat(sampleEntities).hasSize(2);
@@ -2449,20 +2463,21 @@ public abstract class ElasticsearchTemplateTests {
 				.version(System.currentTimeMillis()).build()));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// when
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchQuery("message", "message"))
 				.withPageable(PageRequest.of(0, 10)).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
-				index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
+				searchQuery, SampleEntity.class, index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scroll.getScrollId(), 1000,
+					SampleEntity.class);
 		}
-		operations.searchScrollClear(scroll.getScrollId());
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(scroll.getScrollId());
 
 		// then
 		assertThat(sampleEntities).hasSize(2);
@@ -2479,7 +2494,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkIndex(entities, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		// then
 		SourceFilter sourceFilter = new FetchSourceFilter(new String[] { "id" }, new String[] {});
@@ -2487,14 +2502,15 @@ public abstract class ElasticsearchTemplateTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, 10)).withSourceFilter(sourceFilter).build();
 
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
-				index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
+				searchQuery, SampleEntity.class, index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scroll.getScrollId(), 1000,
+					SampleEntity.class);
 		}
-		operations.searchScrollClear(scroll.getScrollId());
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(scroll.getScrollId());
 		assertThat(sampleEntities).hasSize(3);
 		assertThat(sampleEntities.stream().map(SearchHit::getContent).map(SampleEntity::getId).collect(Collectors.toList()))
 				.doesNotContain((String) null);
@@ -2526,19 +2542,20 @@ public abstract class ElasticsearchTemplateTests {
 		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withSort(new FieldSortBuilder("rate").order(SortOrder.ASC))
 				.withSort(new FieldSortBuilder("message").order(SortOrder.DESC)).withPageable(PageRequest.of(0, 10)).build();
 
 		// when
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
-				index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
+				searchQuery, SampleEntity.class, index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scroll.getScrollId(), 1000,
+					SampleEntity.class);
 		}
 
 		// then
@@ -2573,7 +2590,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(
@@ -2581,12 +2598,13 @@ public abstract class ElasticsearchTemplateTests {
 				.build();
 
 		// when
-		ScrolledPage<SearchHit<SampleEntity>> scroll = operations.searchScrollStart(1000, searchQuery, SampleEntity.class,
-				index);
+		ScrolledPage<SearchHit<SampleEntity>> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
+				searchQuery, SampleEntity.class, index);
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasContent()) {
 			sampleEntities.addAll(scroll.getContent());
-			scroll = operations.searchScrollContinue(scroll.getScrollId(), 1000, SampleEntity.class);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scroll.getScrollId(), 1000,
+					SampleEntity.class);
 		}
 
 		// then
@@ -2612,7 +2630,7 @@ public abstract class ElasticsearchTemplateTests {
 		List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(sampleEntity, sampleEntity2, sampleEntity3));
 
 		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh(SampleEntity.class);
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withCollapseField("rate")
 				.build();
@@ -2651,10 +2669,10 @@ public abstract class ElasticsearchTemplateTests {
 				.build();
 
 		// when
-		indexOperations.addAlias(aliasQuery, IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY));
+		indexOperations.addAlias(aliasQuery);
 
 		// then
-		List<AliasMetaData> aliases = indexOperations.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
+		List<AliasMetaData> aliases = indexOperations.queryForAlias();
 		assertThat(aliases).isNotNull();
 		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
 	}
@@ -2678,8 +2696,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		IndexCoordinates index = IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY);
-		indexOperations.addAlias(aliasQuery1, index);
-		indexOperations.addAlias(aliasQuery2, index);
+		indexOperations.addAlias(aliasQuery1);
+		indexOperations.addAlias(aliasQuery2);
 
 		String documentId = randomNumeric(5);
 		SampleEntity entity = SampleEntity.builder() //
@@ -2696,7 +2714,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.index(indexQuery, IndexCoordinates.of(alias1).withTypes(TYPE_NAME));
 
 		// then
-		List<AliasMetaData> aliasMetaData = indexOperations.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
+		List<AliasMetaData> aliasMetaData = indexOperations.queryForAlias();
 		assertThat(aliasMetaData).isNotEmpty();
 
 		AliasMetaData aliasMetaData1 = aliasMetaData.get(0);
@@ -2710,8 +2728,8 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(aliasMetaData2.searchRouting()).isEqualTo("1");
 
 		// cleanup
-		indexOperations.removeAlias(aliasQuery1, index);
-		indexOperations.removeAlias(aliasQuery2, index);
+		indexOperations.removeAlias(aliasQuery1);
+		indexOperations.removeAlias(aliasQuery2);
 	}
 
 	@Test // DATAES-70
@@ -2727,7 +2745,7 @@ public abstract class ElasticsearchTemplateTests {
 				.build();
 
 		// when
-		indexOperations.addAlias(aliasQuery, index);
+		indexOperations.addAlias(aliasQuery);
 
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity = SampleEntity.builder() //
@@ -2742,7 +2760,7 @@ public abstract class ElasticsearchTemplateTests {
 				.build();
 
 		operations.index(indexQuery, IndexCoordinates.of(alias).withTypes(TYPE_NAME));
-		indexOperations.refresh(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY));
+		operations.indexOps(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY)).refresh();
 
 		NativeSearchQuery query = new NativeSearchQueryBuilder() //
 				.withQuery(matchAllQuery()) //
@@ -2751,7 +2769,7 @@ public abstract class ElasticsearchTemplateTests {
 		long count = operations.count(query, IndexCoordinates.of(alias));
 
 		// then
-		List<AliasMetaData> aliases = indexOperations.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
+		List<AliasMetaData> aliases = indexOperations.queryForAlias();
 		assertThat(aliases).isNotNull();
 		AliasMetaData aliasMetaData = aliases.get(0);
 		assertThat(aliasMetaData.alias()).isEqualTo(alias);
@@ -2760,7 +2778,7 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(count).isEqualTo(1);
 
 		// cleanup
-		indexOperations.removeAlias(aliasQuery, index);
+		indexOperations.removeAlias(aliasQuery);
 	}
 
 	@Test // DATAES-541
@@ -2775,14 +2793,14 @@ public abstract class ElasticsearchTemplateTests {
 				.build();
 
 		// when
-		indexOperations.addAlias(aliasQuery, index);
-		List<AliasMetaData> aliases = indexOperations.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
+		indexOperations.addAlias(aliasQuery);
+		List<AliasMetaData> aliases = indexOperations.queryForAlias();
 		assertThat(aliases).isNotNull();
 		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
 
 		// then
-		indexOperations.removeAlias(aliasQuery, index);
-		aliases = indexOperations.queryForAlias(INDEX_NAME_SAMPLE_ENTITY);
+		indexOperations.removeAlias(aliasQuery);
+		aliases = indexOperations.queryForAlias();
 		assertThat(aliases).isEmpty();
 	}
 
@@ -2827,7 +2845,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		// when
-		Map<String, Object> map = indexOperations.getSettings(SampleEntity.class);
+		Map<String, Object> map = indexOperations.getSettings();
 
 		// then
 		assertThat(map).doesNotContainKey("index.max_result_window");
@@ -2838,7 +2856,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		// when
-		Map<String, Object> map = indexOperations.getSettings(SampleEntity.class, true);
+		Map<String, Object> map = indexOperations.getSettings(true);
 
 		// then
 		assertThat(map).containsKey("index.max_result_window");
@@ -2850,7 +2868,7 @@ public abstract class ElasticsearchTemplateTests {
 		SearchHitsEntity entity = SearchHitsEntity.builder().id("1").number(1000L).keyword("thousands").build();
 		IndexQuery indexQuery = new IndexQueryBuilder().withId(entity.getId()).withObject(entity).build();
 		operations.index(indexQuery, index);
-		indexOperations.refresh(index);
+		operations.indexOps(index).refresh();
 
 		NativeSearchQuery query = new NativeSearchQueryBuilder() //
 				.withQuery(matchAllQuery()) //
@@ -2888,7 +2906,7 @@ public abstract class ElasticsearchTemplateTests {
 				.build();
 		IndexQuery indexQuery = new IndexQueryBuilder().withId(entity.getId()).withObject(entity).build();
 		operations.index(indexQuery, index);
-		indexOperations.refresh(index);
+		operations.indexOps(index).refresh();
 
 		NativeSearchQuery query = new NativeSearchQueryBuilder() //
 				.withQuery(termQuery("message", "message")) //
@@ -2916,9 +2934,9 @@ public abstract class ElasticsearchTemplateTests {
 		entity.setMessage("message");
 
 		operations.save(entity, index);
-		indexOperations.refresh(index);
+		indexOperations.refresh();
 
-		SampleEntity result = operations.get(new GetQuery(id), SampleEntity.class, index);
+		SampleEntity result = operations.get(id, SampleEntity.class, index);
 
 		assertThat(result).isEqualTo(entity);
 	}
@@ -2932,9 +2950,9 @@ public abstract class ElasticsearchTemplateTests {
 		entity.setMessage("message");
 
 		operations.save(entity);
-		indexOperations.refresh(index);
+		indexOperations.refresh();
 
-		SampleEntity result = operations.get(new GetQuery(id), SampleEntity.class, index);
+		SampleEntity result = operations.get(id, SampleEntity.class, index);
 
 		assertThat(result).isEqualTo(entity);
 	}
@@ -2953,10 +2971,10 @@ public abstract class ElasticsearchTemplateTests {
 		entity2.setMessage("message");
 
 		operations.save(Arrays.asList(entity1, entity2), index);
-		indexOperations.refresh(index);
+		indexOperations.refresh();
 
-		SampleEntity result1 = operations.get(new GetQuery(id1), SampleEntity.class, index);
-		SampleEntity result2 = operations.get(new GetQuery(id2), SampleEntity.class, index);
+		SampleEntity result1 = operations.get(id1, SampleEntity.class, index);
+		SampleEntity result2 = operations.get(id2, SampleEntity.class, index);
 
 		assertThat(result1).isEqualTo(entity1);
 		assertThat(result2).isEqualTo(entity2);
@@ -2976,13 +2994,41 @@ public abstract class ElasticsearchTemplateTests {
 		entity2.setMessage("message");
 
 		operations.save(Arrays.asList(entity1, entity2));
-		indexOperations.refresh(index);
+		indexOperations.refresh();
 
-		SampleEntity result1 = operations.get(new GetQuery(id1), SampleEntity.class, index);
-		SampleEntity result2 = operations.get(new GetQuery(id2), SampleEntity.class, index);
+		SampleEntity result1 = operations.get(id1, SampleEntity.class, index);
+		SampleEntity result2 = operations.get(id2, SampleEntity.class, index);
 
 		assertThat(result1).isEqualTo(entity1);
 		assertThat(result2).isEqualTo(entity2);
+	}
+
+	@Test // DATAES-745
+	void shouldDoExistsWithEntity() {
+		String id = "42";
+		SampleEntity entity = new SampleEntity();
+		entity.setId(id);
+		entity.setVersion(42L);
+		entity.setMessage("message");
+
+		operations.save(entity);
+		indexOperations.refresh();
+
+		assertThat(operations.exists("42", SampleEntity.class)).isTrue();
+	}
+
+	@Test // DATAES-745
+	void shouldDoExistsWithIndexCoordinates() {
+		String id = "42";
+		SampleEntity entity = new SampleEntity();
+		entity.setId(id);
+		entity.setVersion(42L);
+		entity.setMessage("message");
+
+		operations.save(entity);
+		indexOperations.refresh();
+
+		assertThat(operations.exists("42", index)).isTrue();
 	}
 
 	protected RequestFactory getRequestFactory() {

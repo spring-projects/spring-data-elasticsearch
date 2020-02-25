@@ -77,11 +77,12 @@ public class ElasticsearchTemplateAggregationTests {
 	static final String INDEX_NAME = "test-index-articles-core-aggregation";
 
 	@Autowired private ElasticsearchOperations operations;
-	@Autowired private IndexOperations indexOperations;
+	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(indexOperations, ArticleEntity.class);
+		indexOperations = operations.indexOps(ArticleEntity.class);
+		IndexInitializer.init(indexOperations);
 
 		IndexQuery article1 = new ArticleEntityBuilder("1").title("article four").subject("computing")
 				.addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addAuthor(JONATHAN_YAN).score(10)
@@ -101,12 +102,12 @@ public class ElasticsearchTemplateAggregationTests {
 		operations.index(article2, index);
 		operations.index(article3, index);
 		operations.index(article4, index);
-		operations.refresh(ArticleEntity.class);
+		indexOperations.refresh();
 	}
 
 	@AfterEach
 	public void after() {
-		indexOperations.deleteIndex(ArticleEntity.class);
+		indexOperations.delete();
 	}
 
 	@Test

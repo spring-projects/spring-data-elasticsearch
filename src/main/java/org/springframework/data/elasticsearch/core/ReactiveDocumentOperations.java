@@ -151,8 +151,37 @@ public interface ReactiveDocumentOperations {
 	 * @param entityType the domain type used for mapping the document.
 	 * @param <T>
 	 * @return {@link Mono#empty()} if not found.
+	 * @deprecated since 4.0 use {@link #get(String, Class)}
 	 */
-	<T> Mono<T> findById(String id, Class<T> entityType);
+	@Deprecated
+	default <T> Mono<T> findById(String id, Class<T> entityType) {
+		return get(id, entityType);
+	}
+
+	/**
+	 * Fetch the entity with given {@literal id}.
+	 *
+	 * @param id must not be {@literal null}.
+	 * @param index the target index, must not be {@literal null}
+	 * @param <T>
+	 * @return the {@link Mono} emitting the entity or signalling completion if none found.
+	 * @deprecated since 4.0, use {@link #get(String, Class, IndexCoordinates)}
+	 */
+	@Deprecated
+	default <T> Mono<T> findById(String id, Class<T> entityType, IndexCoordinates index) {
+		return get(id, entityType, index);
+	}
+
+	/**
+	 * Find the document with the given {@literal id} mapped onto the given {@literal entityType}.
+	 *
+	 * @param id the {@literal _id} of the document to fetch.
+	 * @param entityType the domain type used for mapping the document.
+	 * @param <T>
+	 * @return {@link Mono#empty()} if not found.
+	 * @since 4.0
+	 */
+	<T> Mono<T> get(String id, Class<T> entityType);
 
 	/**
 	 * Fetch the entity with given {@literal id}.
@@ -162,7 +191,7 @@ public interface ReactiveDocumentOperations {
 	 * @param <T>
 	 * @return the {@link Mono} emitting the entity or signalling completion if none found.
 	 */
-	<T> Mono<T> findById(String id, Class<T> entityType, IndexCoordinates index);
+	<T> Mono<T> get(String id, Class<T> entityType, IndexCoordinates index);
 
 	/**
 	 * Check if an entity with given {@literal id} exists.
@@ -180,6 +209,17 @@ public interface ReactiveDocumentOperations {
 	 * @param index the target index, must not be {@literal null}
 	 * @return a {@link Mono} emitting {@literal true} if a matching document exists, {@literal false} otherwise.
 	 */
+	Mono<Boolean> exists(String id, IndexCoordinates index);
+
+	/**
+	 * Check if an entity with given {@literal id} exists.
+	 *
+	 * @param id the {@literal _id} of the document to look for.
+	 * @param index the target index, must not be {@literal null}
+	 * @return a {@link Mono} emitting {@literal true} if a matching document exists, {@literal false} otherwise.
+	 * @deprecated since 4.0, use {@link #exists(String, Class)} or {@link #exists(String, IndexCoordinates)}
+	 */
+	@Deprecated
 	Mono<Boolean> exists(String id, Class<?> entityType, IndexCoordinates index);
 
 	/**
@@ -188,7 +228,7 @@ public interface ReactiveDocumentOperations {
 	 * @param entity must not be {@literal null}.
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	Mono<String> delete(Object entity);
+	 Mono<String> delete(Object entity);
 
 	/**
 	 * Delete the given entity extracting index and type from entity metadata.
@@ -197,7 +237,7 @@ public interface ReactiveDocumentOperations {
 	 * @param index the target index, must not be {@literal null}
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	Mono<String> delete(Object entity, IndexCoordinates index);
+	 Mono<String> delete(Object entity, IndexCoordinates index);
 
 	/**
 	 * Delete the entity with given {@literal id}.
@@ -206,40 +246,40 @@ public interface ReactiveDocumentOperations {
 	 * @param index the target index, must not be {@literal null}
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	default Mono<String> deleteById(String id, IndexCoordinates index) {
+	Mono<String> delete(String id, IndexCoordinates index);
 
-		Assert.notNull(index, "Index must not be null!");
+	/**
+	 * Delete the entity with given {@literal id} extracting index and type from entity metadata.
+	 *
+	 * @param id must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
+	 * @since 4.0
+	 */
+	Mono<String> delete(String id, Class<?> entityType);
 
-		return deleteById(id, Object.class, index);
+	/**
+	 * Delete the entity with given {@literal id} extracting index and type from entity metadata.
+	 *
+	 * @param id must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param index the target index, must not be {@literal null}
+	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
+	 * @deprecated since 4.0, use {@link #delete(String, Class)} or {@link #deleteById(String, IndexCoordinates)}
+	 */
+	@Deprecated
+	default Mono<String> delete(String id, Class<?> entityType, IndexCoordinates index) {
+		return delete(id, index);
 	}
 
 	/**
-	 * Delete the entity with given {@literal id} extracting index and type from entity metadata.
-	 *
-	 * @param id must not be {@literal null}.
-	 * @param entityType must not be {@literal null}.
-	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
-	 */
-	Mono<String> deleteById(String id, Class<?> entityType);
-
-	/**
-	 * Delete the entity with given {@literal id} extracting index and type from entity metadata.
-	 *
-	 * @param id must not be {@literal null}.
-	 * @param entityType must not be {@literal null}.
-	 * @param index the target index, must not be {@literal null}
-	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
-	 */
-	Mono<String> deleteById(String id, Class<?> entityType, IndexCoordinates index);
-
-	/**
 	 * Delete the documents matching the given {@link Query} extracting index and type from entity metadata.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @return a {@link Mono} emitting the number of the removed documents.
 	 */
-	Mono<Long> deleteBy(Query query, Class<?> entityType);
+	Mono<Long> delete(Query query, Class<?> entityType);
 
 	/**
 	 * Delete the documents matching the given {@link Query} extracting index and type from entity metadata.
@@ -249,5 +289,5 @@ public interface ReactiveDocumentOperations {
 	 * @param index the target index, must not be {@literal null}
 	 * @return a {@link Mono} emitting the number of the removed documents.
 	 */
-	Mono<Long> deleteBy(Query query, Class<?> entityType, IndexCoordinates index);
+	Mono<Long> delete(Query query, Class<?> entityType, IndexCoordinates index);
 }

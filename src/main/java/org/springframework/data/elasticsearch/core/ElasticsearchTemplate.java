@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -28,7 +29,6 @@ import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.suggest.SuggestBuilder;
@@ -41,10 +41,10 @@ import org.springframework.data.elasticsearch.core.document.SearchDocumentRespon
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.support.SearchHitsUtil;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -97,9 +97,29 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	private void initialize(Client client, ElasticsearchConverter elasticsearchConverter) {
+
 		Assert.notNull(client, "Client must not be null!");
+
 		this.client = client;
-		initialize(elasticsearchConverter, new DefaultTransportIndexOperations(client, elasticsearchConverter));
+		initialize(elasticsearchConverter);
+	}
+	// endregion
+
+	// region IndexOperations
+	@Override
+	public IndexOperations indexOps(Class<?> clazz) {
+
+		Assert.notNull(clazz, "clazz must not be null");
+
+		return new DefaultTransportIndexOperations(client, elasticsearchConverter, clazz);
+	}
+
+	@Override
+	public IndexOperations indexOps(IndexCoordinates index) {
+
+		Assert.notNull(index, "index must not be null");
+
+		return new DefaultTransportIndexOperations(client, elasticsearchConverter, index);
 	}
 	// endregion
 
@@ -128,8 +148,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	@Nullable
-	public <T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index) {
-		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, query, index);
+	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
+		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, index);
 		GetResponse response = getRequestBuilder.execute().actionGet();
 		return elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);
 	}
@@ -143,6 +163,12 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		MultiGetRequestBuilder builder = requestFactory.multiGetRequestBuilder(client, query, index);
 
 		return elasticsearchConverter.mapDocuments(DocumentAdapters.from(builder.execute().actionGet()), clazz);
+	}
+
+	@Override
+	protected boolean doExists(String id, IndexCoordinates index) {
+		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, index);
+		return getRequestBuilder.execute().actionGet().isExists();
 	}
 
 	@Override
@@ -165,19 +191,36 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public String delete(String id, IndexCoordinates index) {
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(index, "index must not be null");
+
 		return client.prepareDelete(index.getIndexName(), IndexCoordinates.TYPE, elasticsearchConverter.convertId(id))
 				.execute().actionGet().getId();
 	}
 
 	@Override
+	@Deprecated
 	public void delete(DeleteQuery deleteQuery, IndexCoordinates index) {
 		requestFactory.deleteByQueryRequestBuilder(client, deleteQuery, index).get();
 	}
 
 	@Override
+	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
+		requestFactory.deleteByQueryRequestBuilder(client, query, clazz, index).get();
+	}
+
+	@Override
+	public String delete(Object entity, IndexCoordinates index) {
+		return super.delete(entity, index);
+	}
+
+	@Override
 	public UpdateResponse update(UpdateQuery query, IndexCoordinates index) {
 		UpdateRequestBuilder updateRequestBuilder = requestFactory.updateRequestBuilderFor(client, query, index);
-		return updateRequestBuilder.execute().actionGet();
+		org.elasticsearch.action.update.UpdateResponse updateResponse = updateRequestBuilder.execute().actionGet();
+		UpdateResponse.Result result = UpdateResponse.Result.valueOf(updateResponse.getResult().name());
+		return new UpdateResponse(result);
 	}
 
 	private List<String> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
