@@ -147,26 +147,28 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public <T> Optional<T> get(String id, Class<T> clazz) {
+	@Nullable
+	public <T> T get(String id, Class<T> clazz) {
 		return get(id, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
+	@Nullable
 	public <T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index) {
-		return get(query.getId(), clazz, index).orElse(null);
+		return get(query.getId(), clazz, index);
 	}
 
 	@Override
-	public <T> Boolean exists(String id, Class<T> clazz) {
+	public boolean exists(String id, Class<?> clazz) {
 		return exists(id, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
-	public Boolean exists(String id, IndexCoordinates index) {
+	public boolean exists(String id, IndexCoordinates index) {
 		return doExists(id, index);
 	}
 
-	abstract protected Boolean doExists(String id, IndexCoordinates index);
+	abstract protected boolean doExists(String id, IndexCoordinates index);
 
 	@Override
 	public String delete(String id, Class<?> entityType) {
@@ -178,12 +180,12 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public <T> String delete(T entity) {
+	public String delete(Object entity) {
 		return delete(entity, getIndexCoordinatesFor(entity.getClass()));
 	}
 
 	@Override
-	public <T> String delete(T entity, IndexCoordinates index) {
+	public String delete(Object entity, IndexCoordinates index) {
 		return this.delete(getEntityId(entity), index);
 	}
 	// endregion

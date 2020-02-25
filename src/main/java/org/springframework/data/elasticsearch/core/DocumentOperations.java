@@ -101,7 +101,8 @@ public interface DocumentOperations {
 	 * @param <T> the entity type
 	 * @return the entity
 	 */
-	<T> Optional<T> get(String id, Class<T> clazz);
+	@Nullable
+	<T> T get(String id, Class<T> clazz);
 
 	/**
 	 * Retrieves an object from the index specified in the entity's Document annotation.
@@ -111,7 +112,8 @@ public interface DocumentOperations {
 	 * @param index the index from which the object is read.
 	 * @return the entity
 	 */
-	<T> Optional<T> get(String id, Class<T> clazz, IndexCoordinates index);
+	@Nullable
+	<T> T get(String id, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Execute a multiGet against elasticsearch for the given ids.
@@ -130,7 +132,7 @@ public interface DocumentOperations {
 	 * @param clazz the domain type used.
 	 * @return {@literal true} if a matching document exists, {@literal false} otherwise.
 	 */
-	<T> Boolean exists(String id, Class<T> clazz);
+	boolean exists(String id, Class<?> clazz);
 
 	/**
 	 * Check if an entity with given {@literal id} exists.
@@ -139,7 +141,7 @@ public interface DocumentOperations {
 	 * @param index the target index, must not be {@literal null}
 	 * @return {@literal true} if a matching document exists, {@literal false} otherwise.
 	 */
-	Boolean exists(String id, IndexCoordinates index);
+	boolean exists(String id, IndexCoordinates index);
 
 	/**
 	 * Bulk index all objects. Will do save or update.
@@ -199,20 +201,18 @@ public interface DocumentOperations {
 	 * Deletes the given entity
 	 *
 	 * @param entity the entity to delete
-	 * @param <T> the entity class
 	 * @return documentId of the document deleted
 	 */
-	<T> String delete(T entity);
+	String delete(Object entity);
 
 	/**
 	 * Deletes the given entity
 	 *
 	 * @param entity the entity to delete
 	 * @param index the index from which to delete
-	 * @param <T> the entity class
 	 * @return documentId of the document deleted
 	 */
-	<T> String delete(T entity, IndexCoordinates index);
+	String delete(Object entity, IndexCoordinates index);
 
 	/**
 	 * Delete all records matching the query.

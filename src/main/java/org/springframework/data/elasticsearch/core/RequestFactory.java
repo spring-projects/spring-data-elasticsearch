@@ -228,8 +228,8 @@ class RequestFactory {
 			deleteByQueryRequest.setBatchSize(query.getMaxResults());
 		}
 
-		if (query.hasScrollTimeMillis()) {
-			deleteByQueryRequest.setScroll(TimeValue.timeValueMillis(query.getScrollTimeInMillis()));
+		if (query.hasScrollTime()) {
+			deleteByQueryRequest.setScroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
 		}
 
 		return deleteByQueryRequest;
@@ -267,8 +267,8 @@ class RequestFactory {
 			source.setSize(query.getMaxResults());
 		}
 
-		if (query.hasScrollTimeMillis()) {
-			source.setScroll(TimeValue.timeValueMillis(query.getScrollTimeInMillis()));
+		if (query.hasScrollTime()) {
+			source.setScroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
 		}
 
 		return requestBuilder;
@@ -282,6 +282,7 @@ class RequestFactory {
 		return client.prepareGet(index.getIndexName(), null, id);
 	}
 
+	@Nullable
 	public HighlightBuilder highlightBuilder(Query query) {
 		HighlightBuilder highlightBuilder = query.getHighlightQuery().map(HighlightQuery::getHighlightBuilder).orElse(null);
 

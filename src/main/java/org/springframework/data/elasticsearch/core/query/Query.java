@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -237,21 +238,21 @@ public interface Query {
 	 * @since 4.0
 	 */
 	@Nullable
-	Long getScrollTimeInMillis();
+	Duration getScrollTime();
 
 	/**
 	 * For queries that are used in delete request, these are internally handled by Elasticsearch as scroll/bulk delete queries.
 	 * 
-	 * @param scrollTimeInMillis the scrolltime settings
+	 * @param scrollTime the scrolltime settings
 	 * @since 4.0
 	 */
-	void setScrollTimeInMillis(Long scrollTimeInMillis);
+	void setScrollTime(@Nullable Duration scrollTime);
 
 	/**
 	 * @return {@literal true} if scrollTimeMillis is set.
 	 * @since 4.0
 	 */
-	default Boolean hasScrollTimeMillis() {
-		return getScrollTimeInMillis() != null;
+	default boolean hasScrollTime() {
+		return getScrollTime() != null;
 	}
 }

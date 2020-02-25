@@ -148,9 +148,9 @@ public class NestedObjectTests {
 		operations.getIndexOperations(PersonMultipleLevelNested.class).refresh();
 
 		// then
-		Optional<PersonMultipleLevelNested> personIndexed = operations.get("1", PersonMultipleLevelNested.class,
+		PersonMultipleLevelNested personIndexed = operations.get("1", PersonMultipleLevelNested.class,
 				IndexCoordinates.of("test-index-person-multiple-level-nested").withTypes("user"));
-		assertThat(personIndexed).isPresent();
+		assertThat(personIndexed).isNotNull();
 	}
 
 	@Test

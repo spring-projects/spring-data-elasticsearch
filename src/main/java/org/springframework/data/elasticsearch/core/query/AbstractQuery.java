@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.query;
 
 import static java.util.Collections.*;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -56,7 +57,7 @@ abstract class AbstractQuery implements Query {
 	@Nullable protected Integer maxResults;
 	@Nullable protected HighlightQuery highlightQuery;
 	private boolean trackTotalHits = false;
-	@Nullable private Long scrollTimeInMillis;
+	@Nullable private Duration scrollTime;
 
 	@Override
 	@Nullable
@@ -230,12 +231,12 @@ abstract class AbstractQuery implements Query {
 
 	@Nullable
 	@Override
-	public Long getScrollTimeInMillis() {
-		return scrollTimeInMillis;
+	public Duration getScrollTime() {
+		return scrollTime;
 	}
 
 	@Override
-	public void setScrollTimeInMillis(Long scrollTimeInMillis) {
-		this.scrollTimeInMillis = scrollTimeInMillis;
+	public void setScrollTime(@Nullable Duration scrollTime) {
+		this.scrollTime = scrollTime;
 	}
 }

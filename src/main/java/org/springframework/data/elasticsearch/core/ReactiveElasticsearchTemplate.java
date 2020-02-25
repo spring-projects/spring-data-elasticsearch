@@ -366,7 +366,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(Object, String, String)
 	 */
 	@Override
-	public <T> Mono<String> delete(T entity, IndexCoordinates index) {
+	public  Mono<String> delete(Object entity, IndexCoordinates index) {
 
 		Entity<?> elasticsearchEntity = operations.forEntity(entity);
 
@@ -374,7 +374,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public <T> Mono<String> delete(T entity) {
+	public Mono<String> delete(Object entity) {
 		return delete(entity, getIndexCoordinatesFor(entity.getClass()));
 	}
 

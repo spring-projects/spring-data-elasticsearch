@@ -206,11 +206,10 @@ public abstract class ElasticsearchTemplateTests {
 		operations.index(indexQuery, index);
 
 		// when
-		Optional<SampleEntity> sampleEntity1 = operations.get(documentId, SampleEntity.class, index);
+		SampleEntity sampleEntity1 = operations.get(documentId, SampleEntity.class, index);
 
 		// then
-		assertThat(sampleEntity1).isPresent();
-		assertThat(sampleEntity1).contains(sampleEntity);
+		assertThat(sampleEntity1).isEqualTo(sampleEntity);
 	}
 
 	@Test
@@ -423,8 +422,8 @@ public abstract class ElasticsearchTemplateTests {
 		operations.bulkUpdate(queries, index);
 
 		// then
-		Optional<SampleEntity> indexedEntity = operations.get(documentId, SampleEntity.class, index);
-		assertThat(indexedEntity.get().getMessage()).isEqualTo(messageAfterUpdate);
+		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class, index);
+		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
 	@Test
@@ -1439,8 +1438,8 @@ public abstract class ElasticsearchTemplateTests {
 		operations.update(updateQuery, index);
 
 		// then
-		Optional<SampleEntity> indexedEntity = operations.get(documentId, SampleEntity.class, index);
-		assertThat(indexedEntity.get().getMessage()).isEqualTo(messageAfterUpdate);
+		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class, index);
+		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
 	@Test // DATAES-227
@@ -1507,8 +1506,8 @@ public abstract class ElasticsearchTemplateTests {
 		operations.update(updateQuery, index);
 
 		// then
-		Optional<SampleEntity> indexedEntity = operations.get(documentId, SampleEntity.class, index);
-		assertThat(indexedEntity.get().getMessage()).isEqualTo("test message");
+		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class, index);
+		assertThat(indexedEntity.getMessage()).isEqualTo("test message");
 	}
 
 	@Test // DATAES-671
@@ -1750,8 +1749,8 @@ public abstract class ElasticsearchTemplateTests {
 		// then
 		assertThat(sampleEntity.getId()).isEqualTo(documentId);
 
-		Optional<SampleEntity> result = operations.get(documentId, SampleEntity.class, index);
-		assertThat(result.get().getId()).isEqualTo(documentId);
+		SampleEntity result = operations.get(documentId, SampleEntity.class, index);
+		assertThat(result.getId()).isEqualTo(documentId);
 	}
 
 	@Test
@@ -2937,9 +2936,9 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(entity, index);
 		indexOperations.refresh();
 
-		Optional<SampleEntity> result = operations.get(id, SampleEntity.class, index);
+		SampleEntity result = operations.get(id, SampleEntity.class, index);
 
-		assertThat(result).contains(entity);
+		assertThat(result).isEqualTo(entity);
 	}
 
 	@Test // DATAES-738
@@ -2953,9 +2952,9 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(entity);
 		indexOperations.refresh();
 
-		Optional<SampleEntity> result = operations.get(id, SampleEntity.class, index);
+		SampleEntity result = operations.get(id, SampleEntity.class, index);
 
-		assertThat(result).contains(entity);
+		assertThat(result).isEqualTo(entity);
 	}
 
 	@Test // DATAES-738
@@ -2974,11 +2973,11 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(Arrays.asList(entity1, entity2), index);
 		indexOperations.refresh();
 
-		Optional<SampleEntity> result1 = operations.get(id1, SampleEntity.class, index);
-		Optional<SampleEntity> result2 = operations.get(id2, SampleEntity.class, index);
+		SampleEntity result1 = operations.get(id1, SampleEntity.class, index);
+		SampleEntity result2 = operations.get(id2, SampleEntity.class, index);
 
-		assertThat(result1).contains(entity1);
-		assertThat(result2).contains(entity2);
+		assertThat(result1).isEqualTo(entity1);
+		assertThat(result2).isEqualTo(entity2);
 	}
 
 	@Test // DATAES-738
@@ -2997,11 +2996,11 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(Arrays.asList(entity1, entity2));
 		indexOperations.refresh();
 
-		Optional<SampleEntity> result1 = operations.get(id1, SampleEntity.class, index);
-		Optional<SampleEntity> result2 = operations.get(id2, SampleEntity.class, index);
+		SampleEntity result1 = operations.get(id1, SampleEntity.class, index);
+		SampleEntity result2 = operations.get(id2, SampleEntity.class, index);
 
-		assertThat(result1).contains(entity1);
-		assertThat(result2).contains(entity2);
+		assertThat(result1).isEqualTo(entity1);
+		assertThat(result2).isEqualTo(entity2);
 	}
 
 	@Test // DATAES-745

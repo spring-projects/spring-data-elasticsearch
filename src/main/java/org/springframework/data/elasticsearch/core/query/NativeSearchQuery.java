@@ -94,6 +94,7 @@ public class NativeSearchQuery extends AbstractQuery {
 		return filter;
 	}
 
+	@Nullable
 	public List<SortBuilder> getElasticsearchSorts() {
 		return sorts;
 	}
@@ -103,6 +104,7 @@ public class NativeSearchQuery extends AbstractQuery {
 		return highlightBuilder;
 	}
 
+	@Nullable
 	public HighlightBuilder.Field[] getHighlightFields() {
 		return highlightFields;
 	}

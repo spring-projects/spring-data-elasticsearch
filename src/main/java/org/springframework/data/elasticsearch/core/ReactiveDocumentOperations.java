@@ -179,6 +179,7 @@ public interface ReactiveDocumentOperations {
 	 * @param entityType the domain type used for mapping the document.
 	 * @param <T>
 	 * @return {@link Mono#empty()} if not found.
+	 * @since 4.0
 	 */
 	<T> Mono<T> get(String id, Class<T> entityType);
 
@@ -227,7 +228,7 @@ public interface ReactiveDocumentOperations {
 	 * @param entity must not be {@literal null}.
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	<T> Mono<String> delete(T entity);
+	 Mono<String> delete(Object entity);
 
 	/**
 	 * Delete the given entity extracting index and type from entity metadata.
@@ -236,7 +237,7 @@ public interface ReactiveDocumentOperations {
 	 * @param index the target index, must not be {@literal null}
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	<T> Mono<String> delete(T entity, IndexCoordinates index);
+	 Mono<String> delete(Object entity, IndexCoordinates index);
 
 	/**
 	 * Delete the entity with given {@literal id}.
@@ -253,6 +254,7 @@ public interface ReactiveDocumentOperations {
 	 * @param id must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
+	 * @since 4.0
 	 */
 	Mono<String> delete(String id, Class<?> entityType);
 

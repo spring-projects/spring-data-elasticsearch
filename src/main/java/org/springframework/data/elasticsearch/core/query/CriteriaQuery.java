@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import org.springframework.data.domain.Pageable;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -29,9 +28,7 @@ import org.springframework.util.Assert;
  */
 public class CriteriaQuery extends AbstractQuery {
 
-	private @Nullable Criteria criteria;
-
-	private CriteriaQuery() {}
+	private Criteria criteria;
 
 	public CriteriaQuery(Criteria criteria) {
 		this(criteria, Pageable.unpaged());
@@ -48,7 +45,7 @@ public class CriteriaQuery extends AbstractQuery {
 	}
 
 	public static Query fromQuery(CriteriaQuery source) {
-		return fromQuery(source, new CriteriaQuery());
+		return fromQuery(source, new CriteriaQuery(source.criteria));
 	}
 
 	public static <T extends CriteriaQuery> T fromQuery(CriteriaQuery source, T destination) {
@@ -56,9 +53,7 @@ public class CriteriaQuery extends AbstractQuery {
 		Assert.notNull(source, "source must not be null");
 		Assert.notNull(destination, "destination must not be null");
 
-		if (source.getCriteria() != null) {
-			destination.addCriteria(source.getCriteria());
-		}
+		destination.addCriteria(source.getCriteria());
 
 		if (source.getSort() != null) {
 			destination.addSort(source.getSort());
@@ -69,16 +64,13 @@ public class CriteriaQuery extends AbstractQuery {
 
 	@SuppressWarnings("unchecked")
 	public final <T extends CriteriaQuery> T addCriteria(Criteria criteria) {
+
 		Assert.notNull(criteria, "Cannot add null criteria.");
-		if (this.criteria == null) {
-			this.criteria = criteria;
-		} else {
-			this.criteria.and(criteria);
-		}
+
+		this.criteria.and(criteria);
 		return (T) this;
 	}
 
-	@Nullable
 	public Criteria getCriteria() {
 		return this.criteria;
 	}

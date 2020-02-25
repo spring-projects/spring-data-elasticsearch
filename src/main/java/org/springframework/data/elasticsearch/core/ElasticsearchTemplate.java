@@ -127,10 +127,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> Optional<T> get(String id, Class<T> clazz, IndexCoordinates index) {
+	@Nullable
+	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
 		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, index);
 		GetResponse response = getRequestBuilder.execute().actionGet();
-		return Optional.ofNullable(elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz));
+		return elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);
 	}
 
 	@Override
@@ -145,7 +146,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	protected Boolean doExists(String id, IndexCoordinates index) {
+	protected boolean doExists(String id, IndexCoordinates index) {
 		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, index);
 		return getRequestBuilder.execute().actionGet().isExists();
 	}
@@ -190,7 +191,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> String delete(T entity, IndexCoordinates index) {
+	public String delete(Object entity, IndexCoordinates index) {
 		return super.delete(entity, index);
 	}
 

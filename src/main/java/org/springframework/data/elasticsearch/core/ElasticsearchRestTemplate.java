@@ -127,11 +127,12 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> Optional<T> get(String id, Class<T> clazz, IndexCoordinates index) {
+	@Nullable
+	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
 		GetRequest request = requestFactory.getRequest(id, index);
 		try {
 			GetResponse response = client.get(request, RequestOptions.DEFAULT);
-			return Optional.ofNullable(elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz));
+			return elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);
 		} catch (IOException e) {
 			throw new ElasticsearchException("Error while getting for request: " + request.toString(), e);
 		}
@@ -153,7 +154,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	protected Boolean doExists(String id, IndexCoordinates index) {
+	protected boolean doExists(String id, IndexCoordinates index) {
 		GetRequest request = requestFactory.getRequest(id, index);
 		try {
 			return client.get(request, RequestOptions.DEFAULT).isExists();
