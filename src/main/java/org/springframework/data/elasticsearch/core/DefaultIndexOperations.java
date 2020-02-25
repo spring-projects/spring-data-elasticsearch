@@ -62,11 +62,6 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 
 	private RestHighLevelClient client;
 
-	public DefaultIndexOperations(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter) {
-		super(elasticsearchConverter, (Class<?>) null);
-		this.client = client;
-	}
-
 	public DefaultIndexOperations(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
 			Class<?> boundClass) {
 		super(elasticsearchConverter, boundClass);
@@ -77,16 +72,6 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 			IndexCoordinates boundIndex) {
 		super(elasticsearchConverter, boundIndex);
 		this.client = client;
-	}
-
-	@Override
-	public IndexOperations indexOps(Class<?> clazz) {
-		return new DefaultIndexOperations(client, elasticsearchConverter, clazz);
-	}
-
-	@Override
-	public IndexOperations indexOps(IndexCoordinates index) {
-		return new DefaultIndexOperations(client, elasticsearchConverter, index);
 	}
 
 	@Override

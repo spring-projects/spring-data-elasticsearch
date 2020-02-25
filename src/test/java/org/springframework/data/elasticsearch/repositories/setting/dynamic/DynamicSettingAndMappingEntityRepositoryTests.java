@@ -68,8 +68,8 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations(DynamicSettingAndMappingEntity.class);
-		IndexInitializer.init(indexOperations, DynamicSettingAndMappingEntity.class);
+		indexOperations = operations.indexOps(DynamicSettingAndMappingEntity.class);
+		IndexInitializer.init(indexOperations);
 	}
 
 	@AfterEach

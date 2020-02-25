@@ -27,6 +27,7 @@ import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
@@ -54,23 +55,17 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	protected final RequestFactory requestFactory;
 
 	@Nullable protected final Class<?> boundClass;
-	@Nullable protected final IndexCoordinates boundIndex;
+	protected final IndexCoordinates boundIndex;
 
-	public AbstractDefaultIndexOperations(ElasticsearchConverter elasticsearchConverter, @Nullable Class<?> boundClass) {
+	public AbstractDefaultIndexOperations(ElasticsearchConverter elasticsearchConverter, Class<?> boundClass) {
 		this.elasticsearchConverter = elasticsearchConverter;
 		requestFactory = new RequestFactory(elasticsearchConverter);
 
-		if (boundClass != null) {
-			this.boundClass = boundClass;
-			this.boundIndex = getIndexCoordinatesFor(boundClass);
-		} else {
-			this.boundClass = null;
-			this.boundIndex = null;
-		}
+		this.boundClass = boundClass;
+		this.boundIndex = getIndexCoordinatesFor(boundClass);
 	}
 
-	public AbstractDefaultIndexOperations(ElasticsearchConverter elasticsearchConverter,
-			@Nullable IndexCoordinates boundIndex) {
+	public AbstractDefaultIndexOperations(ElasticsearchConverter elasticsearchConverter, IndexCoordinates boundIndex) {
 		this.elasticsearchConverter = elasticsearchConverter;
 		requestFactory = new RequestFactory(elasticsearchConverter);
 
@@ -80,16 +75,9 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 	protected Class<?> checkForBoundClass() {
 		if (boundClass == null) {
-			throw new IndexOperationsException("IndexOperations are not bound");
+			throw new InvalidDataAccessApiUsageException("IndexOperations are not bound");
 		}
 		return boundClass;
-	}
-
-	protected IndexCoordinates checkForBoundIndex() {
-		if (boundIndex == null) {
-			throw new IndexOperationsException("IndexOperations are not bound");
-		}
-		return boundIndex;
 	}
 
 	// region IndexOperations
@@ -99,7 +87,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 		if (boundClass != null) {
 			Class<?> clazz = boundClass;
-			String indexName = checkForBoundIndex().getIndexName();
+			String indexName = boundIndex.getIndexName();
 
 			if (clazz.isAnnotationPresent(Setting.class)) {
 				String settingPath = clazz.getAnnotation(Setting.class).settingPath();
@@ -116,40 +104,40 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 			}
 			return doCreate(indexName, getDefaultSettings(getRequiredPersistentEntity(clazz)));
 		}
-		return doCreate(checkForBoundIndex().getIndexName(), null);
+		return doCreate(boundIndex.getIndexName(), null);
 	}
 
 	@Override
 	public boolean create(Document settings) {
-		return doCreate(checkForBoundIndex().getIndexName(), settings);
+		return doCreate(boundIndex.getIndexName(), settings);
 	}
 
 	protected abstract boolean doCreate(String indexName, @Nullable Document settings);
 
 	@Override
 	public boolean delete() {
-		return doDelete(checkForBoundIndex().getIndexName());
+		return doDelete(boundIndex.getIndexName());
 	}
 
 	protected abstract boolean doDelete(String indexName);
 
 	@Override
 	public boolean exists() {
-		return doExists(checkForBoundIndex().getIndexName());
+		return doExists(boundIndex.getIndexName());
 	}
 
 	protected abstract boolean doExists(String indexName);
 
 	@Override
 	public boolean putMapping(Document mapping) {
-		return doPutMapping(checkForBoundIndex(), mapping);
+		return doPutMapping(boundIndex, mapping);
 	}
 
 	protected abstract boolean doPutMapping(IndexCoordinates index, Document mapping);
 
 	@Override
 	public Map<String, Object> getMapping() {
-		return doGetMapping(checkForBoundIndex());
+		return doGetMapping(boundIndex);
 	}
 
 	abstract protected Map<String, Object> doGetMapping(IndexCoordinates index);
@@ -161,35 +149,35 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 	@Override
 	public Map<String, Object> getSettings(boolean includeDefaults) {
-		return doGetSettings(checkForBoundIndex().getIndexName(), includeDefaults);
+		return doGetSettings(boundIndex.getIndexName(), includeDefaults);
 	}
 
 	protected abstract Map<String, Object> doGetSettings(String indexName, boolean includeDefaults);
 
 	@Override
 	public void refresh() {
-		doRefresh(checkForBoundIndex());
+		doRefresh(boundIndex);
 	}
 
 	protected abstract void doRefresh(IndexCoordinates indexCoordinates);
 
 	@Override
 	public boolean addAlias(AliasQuery query) {
-		return doAddAlias(query, checkForBoundIndex());
+		return doAddAlias(query, boundIndex);
 	}
 
 	protected abstract boolean doAddAlias(AliasQuery query, IndexCoordinates index);
 
 	@Override
 	public List<AliasMetaData> queryForAlias() {
-		return doQueryForAlias(checkForBoundIndex().getIndexName());
+		return doQueryForAlias(boundIndex.getIndexName());
 	}
 
 	protected abstract List<AliasMetaData> doQueryForAlias(String indexName);
 
 	@Override
 	public boolean removeAlias(AliasQuery query) {
-		return doRemoveAlias(query, checkForBoundIndex());
+		return doRemoveAlias(query, boundIndex);
 	}
 
 	protected abstract boolean doRemoveAlias(AliasQuery query, IndexCoordinates index);

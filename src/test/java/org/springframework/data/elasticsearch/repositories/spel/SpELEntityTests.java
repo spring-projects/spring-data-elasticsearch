@@ -59,13 +59,13 @@ public class SpELEntityTests {
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations(SpELEntity.class);
-		IndexInitializer.init(indexOperations, SpELEntity.class);
+		indexOperations = operations.indexOps(SpELEntity.class);
+		IndexInitializer.init(indexOperations);
 	}
 
 	@AfterEach
 	void after() {
-		indexOperations.indexOps(IndexCoordinates.of("test-index-abz-*")).delete();
+		operations.indexOps(IndexCoordinates.of("test-index-abz-*")).delete();
 	}
 
 	@Test

@@ -62,8 +62,8 @@ public class DoubleIDRepositoryTests {
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations(DoubleIDEntity.class);
-		IndexInitializer.init(indexOperations, DoubleIDEntity.class);
+		indexOperations = operations.indexOps(DoubleIDEntity.class);
+		IndexInitializer.init(indexOperations);
 	}
 
 	@AfterEach

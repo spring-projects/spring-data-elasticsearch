@@ -81,8 +81,8 @@ public class ElasticsearchTemplateAggregationTests {
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations(ArticleEntity.class);
-		IndexInitializer.init(indexOperations, ArticleEntity.class);
+		indexOperations = operations.indexOps(ArticleEntity.class);
+		IndexInitializer.init(indexOperations);
 
 		IndexQuery article1 = new ArticleEntityBuilder("1").title("article four").subject("computing")
 				.addAuthor(RIZWAN_IDREES).addAuthor(ARTUR_KONCZAK).addAuthor(MOHSIN_HUSEN).addAuthor(JONATHAN_YAN).score(10)

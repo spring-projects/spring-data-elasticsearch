@@ -21,6 +21,7 @@ import java.util.Objects;
 
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
@@ -45,14 +46,14 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * 
 	 * @return IndexOperations
 	 */
-	IndexOperations getIndexOperations(Class<?> clazz);
+	IndexOperations indexOps(Class<?> clazz);
 
 	/**
 	 * get an {@link IndexOperations} that is bound to the given class
 	 * 
 	 * @return IndexOperations
 	 */
-	IndexOperations getIndexOperations(IndexCoordinates index);
+	IndexOperations indexOps(IndexCoordinates index);
 
 	ElasticsearchConverter getElasticsearchConverter();
 
@@ -64,11 +65,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 *
 	 * @param indexName the name of the index
 	 * @return {@literal true} if the index was created
-	 * @deprecated since 4.0, use {@link IndexOperations#createIndex(String) instead}
+	 * @deprecated since 4.0, use {@link IndexOperations#create()}
 	 */
 	@Deprecated
 	default boolean createIndex(String indexName) {
-		return getIndexOperations(IndexCoordinates.of(indexName)).createIndex(indexName);
+		return indexOps(IndexCoordinates.of(indexName)).create();
 	}
 
 	/**
@@ -77,11 +78,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @param indexName the name of the index
 	 * @param settings the index settings
 	 * @return {@literal true} if the index was created
-	 * @deprecated since 4.0, use {@link IndexOperations#createIndex(String, Object)} instead}
+	 * @deprecated since 4.0, use {@link IndexOperations#create(Document)}
 	 */
 	@Deprecated
 	default boolean createIndex(String indexName, Object settings) {
-		return getIndexOperations(IndexCoordinates.of(indexName)).createIndex(indexName, settings);
+		return indexOps(IndexCoordinates.of(indexName)).create(getDocument(settings));
 	}
 
 	/**
@@ -90,11 +91,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @param clazz The entity class, must be annotated with
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @return {@literal true} if the index was created
-	 * @deprecated since 4.0, use {@link IndexOperations#createIndex(Class)} instead}
+	 * @deprecated since 4.0, use {@link IndexOperations#create()}
 	 */
 	@Deprecated
 	default boolean createIndex(Class<?> clazz) {
-		return getIndexOperations(clazz).createIndex(clazz);
+		return indexOps(clazz).create();
 	}
 
 	/**
@@ -104,11 +105,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @param settings the index settings
 	 * @return {@literal true} if the index was created
-	 * @deprecated since 4.0, use {@link IndexOperations#createIndex(Class, Object)} instead}
+	 * @deprecated since 4.0, use {@link IndexOperations#create(Document)}
 	 */
 	@Deprecated
 	default boolean createIndex(Class<?> clazz, Object settings) {
-		return getIndexOperations(clazz).createIndex(clazz, settings);
+		return indexOps(clazz).create(getDocument(settings));
 	}
 
 	/**
@@ -117,11 +118,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @param clazz The entity class, must be annotated with
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @return {@literal true} if the index was deleted
-	 * @deprecated since 4.0, use {@link IndexOperations#deleteIndex(Class)} instead}
+	 * @deprecated since 4.0, use {@link IndexOperations#delete()}
 	 */
 	@Deprecated
 	default boolean deleteIndex(Class<?> clazz) {
-		return getIndexOperations(clazz).delete();
+		return indexOps(clazz).delete();
 	}
 
 	/**
@@ -129,11 +130,23 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 *
 	 * @param indexName the name of the index to delete
 	 * @return {@literal true} if the index was deleted
-	 * @deprecated since 4.0, use {@link IndexOperations#deleteIndex(String)} instead}
+	 * @deprecated since 4.0, use {@link IndexOperations#delete()}
 	 */
 	@Deprecated
 	default boolean deleteIndex(String indexName) {
-		return getIndexOperations(IndexCoordinates.of(indexName)).delete();
+		return indexOps(IndexCoordinates.of(indexName)).delete();
+	}
+
+	/**
+	 * Deletes an index for an IndexCoordinate
+	 *
+	 * @param index the index to delete
+	 * @return {@literal true} if the index was deleted
+	 * @deprecated since 4.0 use {@link #indexOps(IndexCoordinates)} and {@link IndexOperations#delete()}
+	 */
+	@Deprecated
+	default boolean deleteIndex(IndexCoordinates index) {
+		return indexOps(index).delete();
 	}
 
 	/**
@@ -141,11 +154,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 *
 	 * @param indexName the name of the index
 	 * @return {@literal true} if the index exists
-	 * @deprecated since 4.0, use {@link IndexOperations#indexExists(String)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)} and {@link IndexOperations#exists()}
 	 */
 	@Deprecated
 	default boolean indexExists(String indexName) {
-		return getIndexOperations(IndexCoordinates.of(indexName)).indexExists(indexName);
+		return indexOps(IndexCoordinates.of(indexName)).exists();
 	}
 
 	/**
@@ -154,11 +167,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @param clazz The entity class, must be annotated with
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @return {@literal true} if the index exists
-	 * @deprecated since 4.0, use {@link IndexOperations#indexExists(Class)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(Class)} and {@link IndexOperations#exists()}
 	 */
 	@Deprecated
 	default boolean indexExists(Class<?> clazz) {
-		return getIndexOperations(clazz).indexExists(clazz);
+		return indexOps(clazz).exists();
 	}
 
 	/**
@@ -167,11 +180,13 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @param clazz The entity class, must be annotated with
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @return {@literal true} if the mapping could be stored
-	 * @deprecated since 4.0, use {@link IndexOperations#putMapping(Class)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(Class)}, {@link IndexOperations#createMapping(Class)} and
+	 *             {@link IndexOperations#putMapping(Document)}
 	 */
 	@Deprecated
 	default boolean putMapping(Class<?> clazz) {
-		return getIndexOperations(clazz).putMapping(clazz);
+		IndexOperations indexOps = indexOps(clazz);
+		return indexOps.putMapping(indexOps.createMapping(clazz));
 	}
 
 	/**
@@ -181,11 +196,13 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @param clazz The entity class, must be annotated with
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @return {@literal true} if the mapping could be stored
-	 * @deprecated since 4.0, use {@link IndexOperations#putMapping(IndexCoordinates, Class)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)}, {@link IndexOperations#createMapping(Class)} and
+	 *             {@link IndexOperations#putMapping(Document)}
 	 */
 	@Deprecated
 	default boolean putMapping(IndexCoordinates index, Class<?> clazz) {
-		return getIndexOperations(clazz).putMapping(index, clazz);
+		IndexOperations indexOps = indexOps(index);
+		return indexOps.putMapping(indexOps.createMapping(clazz));
 	}
 
 	/**
@@ -194,11 +211,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @param index the index to store the mapping to
 	 * @param mappings can be a JSON String or a {@link Map}
 	 * @return {@literal true} if the mapping could be stored
-	 * @deprecated since 4.0, use {@link IndexOperations#putMapping(IndexCoordinates, Object)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)} and {@link IndexOperations#putMapping(Document)}
 	 */
 	@Deprecated
 	default boolean putMapping(IndexCoordinates index, Object mappings) {
-		return getIndexOperations(index).putMapping(index, mappings);
+		return indexOps(index).putMapping(getDocument(mappings));
 	}
 
 	/**
@@ -208,11 +225,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @param mappings can be a JSON String or a {@link Map}
 	 * @return {@literal true} if the mapping could be stored
-	 * @deprecated since 4.0, use {@link IndexOperations#putMapping(Class, Object)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(Class)} and {@link IndexOperations#putMapping(Document)}
 	 */
 	@Deprecated
 	default boolean putMapping(Class<?> clazz, Object mappings) {
-		return getIndexOperations(clazz).putMapping(clazz, mappings);
+		return indexOps(clazz).putMapping(getDocument(mappings));
 	}
 
 	/**
@@ -221,11 +238,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @param clazz The entity class, must be annotated with
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}.
 	 * @return the mapping
-	 * @deprecated since 4.0, use {@link IndexOperations#getMapping(Class)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(Class)} and {@link IndexOperations#getMapping()}
 	 */
 	@Deprecated
 	default Map<String, Object> getMapping(Class<?> clazz) {
-		return getIndexOperations(clazz).getMapping(clazz);
+		return indexOps(clazz).getMapping();
 	}
 
 	/**
@@ -233,11 +250,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 *
 	 * @param index the index to read the mapping from
 	 * @return the mapping
-	 * @deprecated since 4.0, use {@link IndexOperations#getMapping(IndexCoordinates)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)} and {@link IndexOperations#getMapping()}
 	 */
 	@Deprecated
 	default Map<String, Object> getMapping(IndexCoordinates index) {
-		return getIndexOperations(index).getMapping(index);
+		return indexOps(index).getMapping();
 	}
 
 	/**
@@ -246,11 +263,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @param query query defining the alias
 	 * @param index the index for which to add an alias
 	 * @return true if the alias was created
-	 * @deprecated since 4.0, use {@link IndexOperations#addAlias(AliasQuery, IndexCoordinates)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)} and {@link IndexOperations#addAlias(AliasQuery)}
 	 */
 	@Deprecated
 	default boolean addAlias(AliasQuery query, IndexCoordinates index) {
-		return getIndexOperations(index).addAlias(query, index);
+		return indexOps(index).addAlias(query);
 	}
 
 	/**
@@ -259,11 +276,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @param query query defining the alias
 	 * @param index the index for which to remove an alias
 	 * @return true if the alias was removed
-	 * @deprecated since 4.0, use {@link IndexOperations#removeAlias(AliasQuery, IndexCoordinates)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)} {@link IndexOperations#removeAlias(AliasQuery)}
 	 */
 	@Deprecated
 	default boolean removeAlias(AliasQuery query, IndexCoordinates index) {
-		return getIndexOperations(index).removeAlias(query, index);
+		return indexOps(index).removeAlias(query);
 	}
 
 	/**
@@ -271,11 +288,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 *
 	 * @param indexName the name of the index
 	 * @return alias information
-	 * @deprecated since 4.0, use {@link IndexOperations#queryForAlias(String)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)} and {@link IndexOperations#queryForAlias()}
 	 */
 	@Deprecated
 	default List<AliasMetaData> queryForAlias(String indexName) {
-		return getIndexOperations(IndexCoordinates.of(indexName)).queryForAlias(indexName);
+		return indexOps(IndexCoordinates.of(indexName)).queryForAlias();
 	}
 
 	/**
@@ -283,11 +300,11 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 *
 	 * @param indexName the name of the index
 	 * @return the settings
-	 * @deprecated since 4.0, use {@link IndexOperations#getSettings(String)} )} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)} and {@link IndexOperations#getSettings()} )}
 	 */
 	@Deprecated
 	default Map<String, Object> getSetting(String indexName) {
-		return getIndexOperations(IndexCoordinates.of(indexName)).getSettings(indexName);
+		return indexOps(IndexCoordinates.of(indexName)).getSettings();
 	}
 
 	/**
@@ -296,22 +313,48 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @param clazz The entity class, must be annotated with
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @return the settings
-	 * @deprecated since 4.0, use {@link IndexOperations#getSettings(Class)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(Class)} and {@link IndexOperations#getSettings()}
 	 */
 	@Deprecated
 	default Map<String, Object> getSetting(Class<?> clazz) {
-		return getIndexOperations(clazz).getSettings(clazz);
+		return indexOps(clazz).getSettings();
+	}
+
+	/**
+	 * Get settings for a given indexName.
+	 *
+	 * @param indexName the name of the index
+	 * @param includeDefaults whether or not to include all the default settings
+	 * @deprecated since 4.0 use {@link #indexOps(IndexCoordinates)} and {@link IndexOperations#getSettings(boolean)} ()}
+	 * @return the settings
+	 */
+	@Deprecated
+	default Map<String, Object> getSettings(String indexName, boolean includeDefaults) {
+		return indexOps(IndexCoordinates.of(indexName)).getSettings(includeDefaults);
+	}
+
+	/**
+	 * Get settings for a given class.
+	 *
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @param includeDefaults whether or not to include all the default settings
+	 * @return the settings
+	 * @deprecated since 4.0 use {@link #indexOps(Class)} and {@link IndexOperations#getSettings(boolean)} ()}
+	 */
+	default Map<String, Object> getSettings(Class<?> clazz, boolean includeDefaults) {
+		return indexOps(clazz).getSettings(includeDefaults);
 	}
 
 	/**
 	 * Refresh the index(es).
 	 *
 	 * @param index the index to refresh
-	 * @deprecated since 4.0, use {@link IndexOperations#refresh(IndexCoordinates)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)} and {@link IndexOperations#refresh()} instead}
 	 */
 	@Deprecated
 	default void refresh(IndexCoordinates index) {
-		getIndexOperations(index).refresh(index);
+		indexOps(index).refresh();
 	}
 
 	/**
@@ -319,13 +362,36 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 *
 	 * @param clazz The entity class, must be annotated with
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
-	 * @deprecated since 4.0, use {@link IndexOperations#refresh(Class)} instead}
+	 * @deprecated since 4.0, use {@link #indexOps(Class)} and {@link IndexOperations#refresh()} instead}
 	 */
 	@Deprecated
 	default void refresh(Class<?> clazz) {
-		getIndexOperations(clazz).refresh(clazz);
+		indexOps(clazz).refresh();
 	}
-	// endregion
+
+	/**
+	 * converts an object to a Document
+	 *
+	 * @param object
+	 * @return
+	 * @deprecated since 4.0, helper method for deprecated functions
+	 */
+	@Deprecated
+	@Nullable
+	default Document getDocument(Object object) {
+		Document document = null;
+
+		try {
+			if (object instanceof String) {
+				document = Document.parse((String) object);
+			} else if (object instanceof Map) {
+				document = Document.from((Map<String, Object>) object);
+			}
+		} catch (Exception e) {
+			throw new IllegalArgumentException("object cannot be converted to Document", e);
+		}
+		return document;
+	} // endregion
 
 	// region helper
 	/**

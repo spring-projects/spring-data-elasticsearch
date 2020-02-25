@@ -15,14 +15,23 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.springframework.util.Assert;
+
 /**
+ * Response data from an update request ({@link UpdateQuery}). Currently contains only the result status value from
+ * Elasticsearch. Should be extended if further information is needed.
+ * 
  * @author Peter-Josef Meisch
+ * @since 4.0
  */
 public class UpdateResponse {
 
 	private Result result;
 
 	public UpdateResponse(Result result) {
+
+		Assert.notNull(result, "result must not be null");
+
 		this.result = result;
 	}
 

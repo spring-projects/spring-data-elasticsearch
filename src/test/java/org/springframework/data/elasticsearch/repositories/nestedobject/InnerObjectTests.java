@@ -72,8 +72,8 @@ public class InnerObjectTests {
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations(Book.class);
-		IndexInitializer.init(indexOperations, Book.class);
+		indexOperations = operations.indexOps(Book.class);
+		IndexInitializer.init(indexOperations);
 	}
 
 	@AfterEach

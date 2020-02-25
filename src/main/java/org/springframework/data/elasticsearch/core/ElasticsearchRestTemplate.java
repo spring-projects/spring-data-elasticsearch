@@ -103,9 +103,29 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	private void initialize(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter) {
+
 		Assert.notNull(client, "Client must not be null!");
+
 		this.client = client;
-		initialize(elasticsearchConverter, new DefaultIndexOperations(client, elasticsearchConverter));
+		initialize(elasticsearchConverter);
+	}
+	// endregion
+
+	// region IndexOperations
+	@Override
+	public IndexOperations indexOps(Class<?> clazz) {
+
+		Assert.notNull(clazz, "clazz must not be null");
+
+		return new DefaultIndexOperations(client, elasticsearchConverter, clazz);
+	}
+
+	@Override
+	public IndexOperations indexOps(IndexCoordinates index) {
+
+		Assert.notNull(index, "index must not be null");
+
+		return new DefaultIndexOperations(client, elasticsearchConverter, index);
 	}
 	// endregion
 

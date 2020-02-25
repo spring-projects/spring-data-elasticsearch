@@ -49,16 +49,13 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	protected @Nullable ElasticsearchConverter elasticsearchConverter;
 	protected @Nullable RequestFactory requestFactory;
 
-	private @Nullable IndexOperations indexOperations;
-
 	// region Initialization
-	protected void initialize(ElasticsearchConverter elasticsearchConverter, IndexOperations indexOperations) {
+	protected void initialize(ElasticsearchConverter elasticsearchConverter) {
 
 		Assert.notNull(elasticsearchConverter, "elasticsearchConverter must not be null.");
 
 		this.elasticsearchConverter = elasticsearchConverter;
 		requestFactory = new RequestFactory(elasticsearchConverter);
-		this.indexOperations = indexOperations;
 	}
 
 	protected ElasticsearchConverter createElasticsearchConverter() {
@@ -75,17 +72,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			((ApplicationContextAware) elasticsearchConverter).setApplicationContext(context);
 		}
 	}
-
-	@Override
-	public IndexOperations getIndexOperations(Class<?> clazz) {
-		return indexOperations.indexOps(clazz);
-	}
-
-	@Override
-	public IndexOperations getIndexOperations(IndexCoordinates index) {
-		return indexOperations.indexOps(index);
-	}
-
 	// endregion
 
 	// region DocumentOperations

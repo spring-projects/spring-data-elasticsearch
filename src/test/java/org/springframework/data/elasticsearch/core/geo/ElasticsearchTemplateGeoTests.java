@@ -80,14 +80,14 @@ public class ElasticsearchTemplateGeoTests {
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(operations.getIndexOperations(AuthorMarkerEntity.class), AuthorMarkerEntity.class);
-		IndexInitializer.init(operations.getIndexOperations(LocationMarkerEntity.class), LocationMarkerEntity.class);
+		IndexInitializer.init(operations.indexOps(AuthorMarkerEntity.class));
+		IndexInitializer.init(operations.indexOps(LocationMarkerEntity.class));
 	}
 
 	@AfterEach
 	void after() {
-		operations.getIndexOperations(AuthorMarkerEntity.class).delete();
-		operations.getIndexOperations(LocationMarkerEntity.class).delete();
+		operations.indexOps(AuthorMarkerEntity.class).delete();
+		operations.indexOps(LocationMarkerEntity.class).delete();
 	}
 
 	private void loadClassBaseEntities() {
@@ -98,7 +98,7 @@ public class ElasticsearchTemplateGeoTests {
 		indexQueries.add(new AuthorMarkerEntityBuilder("2").name("Mohsin Husen").location(51.5171d, 0.1062d).buildIndex());
 		indexQueries.add(new AuthorMarkerEntityBuilder("3").name("Rizwan Idrees").location(51.5171d, 0.1062d).buildIndex());
 		operations.bulkIndex(indexQueries, authorMarkerIndex);
-		operations.getIndexOperations(AuthorMarkerEntity.class).refresh();
+		operations.indexOps(AuthorMarkerEntity.class).refresh();
 	}
 
 	private void loadAnnotationBaseEntities() {
@@ -130,7 +130,7 @@ public class ElasticsearchTemplateGeoTests {
 		indexQueries.add(buildIndex(location3));
 
 		operations.bulkIndex(indexQueries, locationMarkerIndex);
-		operations.getIndexOperations(LocationMarkerEntity.class).refresh();
+		operations.indexOps(LocationMarkerEntity.class).refresh();
 	}
 
 	@Test

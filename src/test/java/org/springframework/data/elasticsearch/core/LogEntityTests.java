@@ -66,8 +66,8 @@ public class LogEntityTests {
 
 	@BeforeEach
 	public void before() throws ParseException {
-		indexOperations = operations.getIndexOperations(LogEntity.class);
-		IndexInitializer.init(indexOperations, LogEntity.class);
+		indexOperations = operations.indexOps(LogEntity.class);
+		IndexInitializer.init(indexOperations);
 
 		SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 		IndexQuery indexQuery1 = new LogEntityBuilder("1").action("update").date(dateFormatter.parse("2013-10-18 18:01"))

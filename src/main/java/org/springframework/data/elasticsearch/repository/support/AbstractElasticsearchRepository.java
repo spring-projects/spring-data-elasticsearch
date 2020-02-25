@@ -21,7 +21,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -75,9 +74,9 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	static final Logger LOGGER = LoggerFactory.getLogger(AbstractElasticsearchRepository.class);
 
 	protected ElasticsearchOperations operations;
-	protected IndexOperations entityClassIndexOperations;
+	protected IndexOperations indexOperations;
 
-	protected @Nullable Class<T> entityClass;
+	protected Class<T> entityClass;
 	protected @Nullable ElasticsearchEntityInformation<T, ID> entityInformation;
 
 	public AbstractElasticsearchRepository(ElasticsearchEntityInformation<T, ID> metadata,
@@ -88,7 +87,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 		this.entityInformation = metadata;
 		this.entityClass = this.entityInformation.getJavaType();
-		this.entityClassIndexOperations = operations.getIndexOperations(this.entityClass);
+		this.indexOperations = operations.indexOps(this.entityClass);
 		try {
 			if (createIndexAndMapping()) {
 				createIndex();
@@ -100,11 +99,11 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	}
 
 	private void createIndex() {
-		entityClassIndexOperations.create();
+		indexOperations.create();
 	}
 
 	private void putMapping() {
-		entityClassIndexOperations.putMapping(entityClassIndexOperations.createMapping(entityClass));
+		indexOperations.putMapping(indexOperations.createMapping(entityClass));
 	}
 
 	private boolean createIndexAndMapping() {
@@ -172,7 +171,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		Assert.notNull(entity, "Cannot save 'null' entity.");
 
 		operations.save(entity, getIndexCoordinates());
-		operations.getIndexOperations(entity.getClass()).refresh();
+		operations.indexOps(entity.getClass()).refresh();
 		return entity;
 	}
 
@@ -195,12 +194,9 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
 
-		Iterator<S> iterator = entities.iterator();
-		if (iterator.hasNext()) {
-			S entity = iterator.next();
-			operations.save(entities, getIndexCoordinates());
-			operations.getIndexOperations(entity.getClass()).refresh();
-		}
+		IndexCoordinates indexCoordinates = getIndexCoordinates();
+		operations.save(entities, indexCoordinates);
+		operations.indexOps(indexCoordinates).refresh();
 
 		return entities;
 	}
@@ -269,7 +265,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
 		doDelete(id, indexCoordinates);
-		entityClassIndexOperations.refresh();
+		indexOperations.refresh();
 	}
 
 	@Override
@@ -279,7 +275,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
 		doDelete(extractIdFromBean(entity), indexCoordinates);
-		entityClassIndexOperations.refresh();
+		indexOperations.refresh();
 	}
 
 	@Override
@@ -303,7 +299,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		Query query = new NativeSearchQueryBuilder().withQuery(idsQueryBuilder).build();
 
 		operations.delete(query, getEntityClass(), indexCoordinates);
-		entityClassIndexOperations.indexOps(indexCoordinates).refresh();
+		indexOperations.refresh();
 	}
 
 	private void doDelete(@Nullable ID id, IndexCoordinates indexCoordinates) {
@@ -318,12 +314,12 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
 		operations.delete(query, getEntityClass(), indexCoordinates);
-		entityClassIndexOperations.refresh();
+		indexOperations.refresh();
 	}
 
 	@Override
 	public void refresh() {
-		entityClassIndexOperations.refresh();
+		indexOperations.refresh();
 	}
 
 	@SuppressWarnings("unchecked")

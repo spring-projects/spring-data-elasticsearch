@@ -71,7 +71,7 @@ public class CriteriaQueryTests {
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations(SampleEntity.class);
+		indexOperations = operations.indexOps(SampleEntity.class);
 		indexOperations.delete();
 		indexOperations.create();
 		indexOperations.putMapping(indexOperations.createMapping(SampleEntity.class));

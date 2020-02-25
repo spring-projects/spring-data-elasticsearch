@@ -65,15 +65,14 @@ public class ElasticsearchTemplateCompletionTests {
 
 	@BeforeEach
 	private void setup() {
-		IndexInitializer.init(operations.getIndexOperations(CompletionEntity.class), CompletionEntity.class);
-		IndexInitializer.init(operations.getIndexOperations(AnnotatedCompletionEntity.class),
-				AnnotatedCompletionEntity.class);
+		IndexInitializer.init(operations.indexOps(CompletionEntity.class));
+		IndexInitializer.init(operations.indexOps(AnnotatedCompletionEntity.class));
 	}
 
 	@AfterEach
 	void after() {
-		operations.getIndexOperations(CompletionEntity.class).delete();
-		operations.getIndexOperations(AnnotatedCompletionEntity.class).delete();
+		operations.indexOps(CompletionEntity.class).delete();
+		operations.indexOps(AnnotatedCompletionEntity.class).delete();
 	}
 
 	private void loadCompletionObjectEntities() {
@@ -89,7 +88,7 @@ public class ElasticsearchTemplateCompletionTests {
 				.buildIndex());
 
 		operations.bulkIndex(indexQueries, IndexCoordinates.of("test-index-core-completion").withTypes("completion-type"));
-		operations.getIndexOperations(CompletionEntity.class).refresh();
+		operations.indexOps(CompletionEntity.class).refresh();
 	}
 
 	private void loadAnnotatedCompletionObjectEntities() {
@@ -110,7 +109,7 @@ public class ElasticsearchTemplateCompletionTests {
 
 		operations.bulkIndex(indexQueries,
 				IndexCoordinates.of("test-index-annotated-completion").withTypes("annotated-completion-type"));
-		operations.getIndexOperations(AnnotatedCompletionEntity.class).refresh();
+		operations.indexOps(AnnotatedCompletionEntity.class).refresh();
 	}
 
 	private void loadAnnotatedCompletionObjectEntitiesWithWeights() {
@@ -127,7 +126,7 @@ public class ElasticsearchTemplateCompletionTests {
 
 		operations.bulkIndex(indexQueries,
 				IndexCoordinates.of("test-index-annotated-completion").withTypes("annotated-completion-type"));
-		operations.getIndexOperations(AnnotatedCompletionEntity.class).refresh();
+		operations.indexOps(AnnotatedCompletionEntity.class).refresh();
 	}
 
 	@Test

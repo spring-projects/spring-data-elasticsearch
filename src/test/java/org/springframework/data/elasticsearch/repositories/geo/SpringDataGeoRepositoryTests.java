@@ -70,8 +70,8 @@ public class SpringDataGeoRepositoryTests {
 
 	@BeforeEach
 	public void init() {
-		indexOperations = operations.getIndexOperations(GeoEntity.class);
-		IndexInitializer.init(indexOperations, GeoEntity.class);
+		indexOperations = operations.indexOps(GeoEntity.class);
+		IndexInitializer.init(indexOperations);
 	}
 
 	@AfterEach

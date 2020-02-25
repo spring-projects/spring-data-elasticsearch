@@ -57,8 +57,8 @@ public class ComplexCustomMethodRepositoryManualWiringTests {
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations(SampleEntity.class);
-		IndexInitializer.init(indexOperations, SampleEntity.class);
+		indexOperations = operations.indexOps(SampleEntity.class);
+		IndexInitializer.init(indexOperations);
 	}
 
 	@AfterEach

@@ -64,8 +64,8 @@ public class SynonymRepositoryTests {
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations(SynonymEntity.class);
-		IndexInitializer.init(indexOperations, SynonymEntity.class);
+		indexOperations = operations.indexOps(SynonymEntity.class);
+		IndexInitializer.init(indexOperations);
 	}
 
 	@AfterEach

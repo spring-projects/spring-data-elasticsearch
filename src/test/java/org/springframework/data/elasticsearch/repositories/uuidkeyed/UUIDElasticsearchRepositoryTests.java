@@ -82,8 +82,8 @@ public class UUIDElasticsearchRepositoryTests {
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations(SampleEntityUUIDKeyed.class);
-		IndexInitializer.init(indexOperations, SampleEntityUUIDKeyed.class);
+		indexOperations = operations.indexOps(SampleEntityUUIDKeyed.class);
+		IndexInitializer.init(indexOperations);
 	}
 
 	@AfterEach

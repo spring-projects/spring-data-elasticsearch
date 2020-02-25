@@ -71,8 +71,8 @@ class QueryKeywordsTests {
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations(Product.class);
-		IndexInitializer.init(indexOperations, Product.class);
+		indexOperations = operations.indexOps(Product.class);
+		IndexInitializer.init(indexOperations);
 
 		Product product1 = Product.builder().id("1").name("Sugar").text("Cane sugar").price(1.0f).available(false)
 				.sortName("sort5").build();

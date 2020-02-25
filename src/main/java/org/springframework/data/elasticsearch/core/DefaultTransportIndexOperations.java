@@ -49,11 +49,6 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 	private final Client client;
 
-	public DefaultTransportIndexOperations(Client client, ElasticsearchConverter elasticsearchConverter) {
-		super(elasticsearchConverter, (Class<?>) null);
-		this.client = client;
-	}
-
 	public DefaultTransportIndexOperations(Client client, ElasticsearchConverter elasticsearchConverter,
 			Class<?> boundClass) {
 		super(elasticsearchConverter, boundClass);
@@ -64,16 +59,6 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 			IndexCoordinates boundIndex) {
 		super(elasticsearchConverter, boundIndex);
 		this.client = client;
-	}
-
-	@Override
-	public IndexOperations indexOps(Class<?> clazz) {
-		return new DefaultTransportIndexOperations(client, elasticsearchConverter, clazz);
-	}
-
-	@Override
-	public IndexOperations indexOps(IndexCoordinates index) {
-		return new DefaultTransportIndexOperations(client, elasticsearchConverter, index);
 	}
 
 	@Override

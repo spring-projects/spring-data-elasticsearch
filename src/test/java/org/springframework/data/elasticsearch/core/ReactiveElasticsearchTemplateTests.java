@@ -92,7 +92,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@BeforeEach
 	public void setUp() {
 		restTemplate = new ElasticsearchRestTemplate(TestUtils.restHighLevelClient());
-		indexOperations = restTemplate.getIndexOperations(SampleEntity.class);
+		indexOperations = restTemplate.indexOps(SampleEntity.class);
 
 		deleteIndices();
 
@@ -271,8 +271,8 @@ public class ReactiveElasticsearchTemplateTests {
 		restTemplate.index(indexQuery, alternateIndex);
 		indexOperations.refresh();
 
-		restTemplate.getIndexOperations(defaultIndex).refresh();
-		restTemplate.getIndexOperations(alternateIndex).refresh();
+		restTemplate.indexOps(defaultIndex).refresh();
+		restTemplate.indexOps(alternateIndex).refresh();
 
 		template.get(sampleEntity.getId(), SampleEntity.class, defaultIndex) //
 				.as(StepVerifier::create) //

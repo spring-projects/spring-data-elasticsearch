@@ -65,10 +65,10 @@ public class DynamicIndexEntityTests {
 
 	@BeforeEach
 	public void init() {
-		indexOperations = operations.getIndexOperations(IndexCoordinates.of("index1"));
+		indexOperations = operations.indexOps(IndexCoordinates.of("index1"));
 		deleteIndexes();
-		indexOperations.indexOps(IndexCoordinates.of("index1")).create();
-		indexOperations.indexOps(IndexCoordinates.of("index2")).create();
+		operations.indexOps(IndexCoordinates.of("index1")).create();
+		operations.indexOps(IndexCoordinates.of("index2")).create();
 	}
 
 	@AfterEach
@@ -79,7 +79,7 @@ public class DynamicIndexEntityTests {
 	private void deleteIndexes() {
 
 		indexOperations.delete();
-		indexOperations.indexOps(IndexCoordinates.of("index2")).delete();
+		operations.indexOps(IndexCoordinates.of("index2")).delete();
 	}
 
 	@Test // DATAES-456

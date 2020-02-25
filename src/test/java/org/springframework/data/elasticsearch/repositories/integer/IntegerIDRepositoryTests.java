@@ -63,8 +63,8 @@ public class IntegerIDRepositoryTests {
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.getIndexOperations(IntegerIDEntity.class);
-		IndexInitializer.init(indexOperations, IntegerIDEntity.class);
+		indexOperations = operations.indexOps(IntegerIDEntity.class);
+		IndexInitializer.init(indexOperations);
 	}
 
 	@AfterEach
