@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.16.RELEASE (2020-02-26)
+----------------------------------------------
+* DATAES-729 - Release 3.1.16 (Lovelace SR16).
+
+
 Changes in version 4.0.0.M3 (2020-02-12)
 ----------------------------------------
 * DATAES-743 - Revert geo converters to back to store converters.
@@ -1008,6 +1013,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
