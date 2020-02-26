@@ -1,6 +1,14 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.5.RELEASE (2020-02-26)
+---------------------------------------------
+* DATAES-752 - Upgrade to Elasticsearch 6.8.6.
+* DATAES-741 - Tests fail due to Elasticsearch cluster 'blocks' on nearly-full file-systems.
+* DATAES-730 - Release 3.2.5 (Moore SR5).
+* DATAES-214 - ElasticsearchTemplate's prepareSearch(Query query) method should use getOffset().
+
+
 Changes in version 3.1.16.RELEASE (2020-02-26)
 ----------------------------------------------
 * DATAES-729 - Release 3.1.16 (Lovelace SR16).
@@ -1013,6 +1021,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
