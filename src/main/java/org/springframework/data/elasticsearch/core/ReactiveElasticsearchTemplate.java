@@ -160,6 +160,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			List<AdaptibleEntity<? extends T>> adaptibleEntities = entityList.stream() //
 					.map(e -> operations.forEntity(e, converter.getConversionService())) //
 					.collect(Collectors.toList());
+
+			if (adaptibleEntities.isEmpty()) {
+				return Flux.empty();
+			}
+
 			Iterator<AdaptibleEntity<? extends T>> iterator = adaptibleEntities.iterator();
 			List<IndexQuery> indexRequests = adaptibleEntities.stream() //
 					.map(e -> getIndexQuery(e.getBean(), e)) //
@@ -366,7 +371,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(Object, String, String)
 	 */
 	@Override
-	public  Mono<String> delete(Object entity, IndexCoordinates index) {
+	public Mono<String> delete(Object entity, IndexCoordinates index) {
 
 		Entity<?> elasticsearchEntity = operations.forEntity(entity);
 

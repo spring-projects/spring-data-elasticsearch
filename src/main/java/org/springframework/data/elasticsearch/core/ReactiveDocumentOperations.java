@@ -88,7 +88,7 @@ public interface ReactiveDocumentOperations {
 
 	/**
 	 * Index entities under the given {@literal type} in the given {@literal index}. If the {@literal index} is
-	 * {@literal null} or empty the index name provided via entity metadata is used. Same for the {@literal type}.
+	 * {@literal null} or empty the index name provided via entity metadata is used.
 	 *
 	 * @param entities must not be {@literal null}.
 	 * @param index the target index, must not be {@literal null}
@@ -104,7 +104,7 @@ public interface ReactiveDocumentOperations {
 
 	/**
 	 * Index entities under the given {@literal type} in the given {@literal index}. If the {@literal index} is
-	 * {@literal null} or empty the index name provided via entity metadata is used. Same for the {@literal type}.
+	 * {@literal null} or empty the index name provided via entity metadata is used.
 	 *
 	 * @param entities must not be {@literal null}.
 	 * @param index the target index, must not be {@literal null}
@@ -228,7 +228,7 @@ public interface ReactiveDocumentOperations {
 	 * @param entity must not be {@literal null}.
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	 Mono<String> delete(Object entity);
+	Mono<String> delete(Object entity);
 
 	/**
 	 * Delete the given entity extracting index and type from entity metadata.
@@ -237,7 +237,7 @@ public interface ReactiveDocumentOperations {
 	 * @param index the target index, must not be {@literal null}
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
 	 */
-	 Mono<String> delete(Object entity, IndexCoordinates index);
+	Mono<String> delete(Object entity, IndexCoordinates index);
 
 	/**
 	 * Delete the entity with given {@literal id}.
