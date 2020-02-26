@@ -53,6 +53,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
@@ -1479,6 +1480,23 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat(searchHits.getSearchHit(2).getId()).isEqualTo("oslo");
 	}
 
+	@Test // DATAES-749
+	void shouldReturnSearchPage() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		// when
+		SearchPage<SampleEntity> searchPage = repository.searchByMessage("Message", PageRequest.of(0, 10));
+
+		assertThat(searchPage).isNotNull();
+		SearchHits<SampleEntity> searchHits = searchPage.getSearchHits();
+		assertThat(searchHits).isNotNull();
+		assertThat((searchHits.getTotalHits())).isEqualTo(20);
+		assertThat(searchHits.getSearchHits()).hasSize(10);
+		Pageable nextPageable = searchPage.nextPageable();
+		assertThat((nextPageable.getPageNumber())).isEqualTo(1);
+	}
+
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
 
 		List<SampleEntity> entities = new ArrayList<>();
@@ -1627,6 +1645,8 @@ public abstract class CustomMethodRepositoryBaseTests {
 		Stream<SearchHit<SampleEntity>> readByMessage(String message);
 
 		SearchHits<SampleEntity> searchBy(Sort sort);
+
+		SearchPage<SampleEntity> searchByMessage(String message, Pageable pageable);
 	}
 
 	/**

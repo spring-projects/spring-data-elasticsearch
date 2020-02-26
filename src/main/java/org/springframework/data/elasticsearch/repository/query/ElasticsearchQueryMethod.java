@@ -25,6 +25,7 @@ import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.HighlightQuery;
@@ -169,6 +170,25 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		} catch (Exception ignored) {}
 
 		return false;
+	}
+
+	/**
+	 * checks if the return type is {@link SearchPage}.
+	 * 
+	 * @since 4.0
+	 */
+	public boolean isSearchPageMethod() {
+		return SearchPage.class.isAssignableFrom(methodReturnType());
+	}
+
+	/**
+	 * retusn the declared return type for this method.
+	 * 
+	 * @return the return type
+	 * @since 4.0
+	 */
+	public Class<?> methodReturnType() {
+		return method.getReturnType();
 	}
 
 	protected boolean isAllowedGenericType(ParameterizedType methodGenericReturnType) {
