@@ -87,7 +87,8 @@ public class ElasticsearchTemplateCompletionTests {
 		indexQueries.add(new CompletionEntityBuilder("4").name("Artur Konczak").suggest(new String[] { "Artur", "Konczak" })
 				.buildIndex());
 
-		operations.bulkIndex(indexQueries, IndexCoordinates.of("test-index-core-completion").withTypes("completion-type"));
+		IndexCoordinates index = IndexCoordinates.of("test-index-core-completion");
+		operations.bulkIndex(indexQueries, index);
 		operations.indexOps(CompletionEntity.class).refresh();
 	}
 
@@ -149,6 +150,13 @@ public class ElasticsearchTemplateCompletionTests {
 		assertThat(options).hasSize(2);
 		assertThat(options.get(0).getText().string()).isIn("Marchand", "Mohsin");
 		assertThat(options.get(1).getText().string()).isIn("Marchand", "Mohsin");
+	}
+
+	@Test // DATAES-754
+	void shouldRetrieveEntityWithCompletion() {
+		loadCompletionObjectEntities();
+		IndexCoordinates index = IndexCoordinates.of("test-index-core-completion");
+		operations.get("1", CompletionEntity.class, index);
 	}
 
 	@Test
