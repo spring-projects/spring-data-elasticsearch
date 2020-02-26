@@ -811,6 +811,13 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
+	@Test // DATAES-753
+	void shouldReturnEmptyFluxOnSaveAllWithEmptyInput() {
+		template.saveAll(Collections.emptyList(), IndexCoordinates.of(DEFAULT_INDEX)) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
 	@Data
 	@Document(indexName = "marvel")
 	static class Person {
