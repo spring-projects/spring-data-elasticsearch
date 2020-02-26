@@ -3,6 +3,7 @@ package org.springframework.data.elasticsearch.core.completion;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.lang.Nullable;
 
 /**
@@ -21,6 +22,11 @@ public class Completion {
 
 	public Completion(String[] input) {
 		this.input = input;
+	}
+
+	@PersistenceConstructor
+	public Completion(List<String> input) {
+		this.input = input.toArray(new String[0]);
 	}
 
 	public String[] getInput() {
