@@ -21,9 +21,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
+import org.springframework.data.elasticsearch.support.ReactiveSupport;
+import org.springframework.lang.Nullable;
 
 /**
  * Utility class with helper methods for working with {@link SearchHit}.
@@ -75,9 +78,12 @@ public final class SearchHitSupport {
 			return unwrapSearchHits(searchHits.getSearchHits());
 		}
 
-		if (result instanceof Flux) {
-			Flux<?> flux = (Flux<?>) result;
-			return flux.map(SearchHitSupport::unwrapSearchHits);
+		if (ReactiveSupport.isReactorAvailable()) {
+
+			if (result instanceof Flux) {
+				Flux<?> flux = (Flux<?>) result;
+				return flux.map(SearchHitSupport::unwrapSearchHits);
+			}
 		}
 
 		return result;
@@ -93,5 +99,29 @@ public final class SearchHitSupport {
 	public static <T> AggregatedPage<SearchHit<T>> page(SearchHits<T> searchHits, Pageable pageable) {
 		return new AggregatedPageImpl<>(searchHits.getSearchHits(), pageable, searchHits.getTotalHits(),
 				searchHits.getAggregations(), searchHits.getScrollId(), searchHits.getMaxScore());
+	}
+
+	public static <T> SearchPage<T> searchPageFor(SearchHits<T> searchHits, @Nullable Pageable pageable) {
+		return new SearchPageImpl<>(searchHits, (pageable != null) ? pageable : Pageable.unpaged());
+	}
+
+	/**
+	 * SearchPage implementation.
+	 * 
+	 * @param <T>
+	 */
+	static class SearchPageImpl<T> extends PageImpl<SearchHit<T>> implements SearchPage<T> {
+
+		private final SearchHits<T> searchHits;
+
+		public SearchPageImpl(SearchHits<T> searchHits, Pageable pageable) {
+			super(searchHits.getSearchHits(), pageable, searchHits.getTotalHits());
+			this.searchHits = searchHits;
+		}
+
+		@Override
+		public SearchHits<T> getSearchHits() {
+			return searchHits;
+		}
 	}
 }
