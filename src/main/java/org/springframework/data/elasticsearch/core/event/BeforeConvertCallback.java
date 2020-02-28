@@ -13,27 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.support;
+package org.springframework.data.elasticsearch.core.event;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.springframework.data.repository.util.ClassUtils;
+import org.springframework.data.mapping.callback.EntityCallback;
 
 /**
+ * Callback being invoked before a domain object is converted to be persisted.
+ *
  * @author Peter-Josef Meisch
  * @since 4.0
  */
-public final class ReactiveSupport {
-	private ReactiveSupport() {}
+@FunctionalInterface
+public interface BeforeConvertCallback<T> extends EntityCallback<T> {
 
 	/**
-	 * @return true if project reactor is on the classpath
+	 * Callback method that will be invoked before an entity is persisted. Can return the same or a different instance of
+	 * the domain entity class.
+	 * 
+	 * @param entity the entity being converted
+	 * @return the entity to be converted
 	 */
-	public static boolean isReactorAvailable() {
-		AtomicBoolean available = new AtomicBoolean(false);
-		ClassUtils.ifPresent("reactor.core.publisher.Flux", null, aClass -> {
-			available.set(true);
-		});
-		return available.get();
-	}
+	T onBeforeConvert(T entity);
 }

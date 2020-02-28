@@ -25,7 +25,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
-import org.springframework.data.elasticsearch.support.ReactiveSupport;
+import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.lang.Nullable;
 
 /**
@@ -78,7 +78,7 @@ public final class SearchHitSupport {
 			return unwrapSearchHits(searchHits.getSearchHits());
 		}
 
-		if (ReactiveSupport.isReactorAvailable()) {
+		if (ReactiveWrappers.isAvailable(ReactiveWrappers.ReactiveLibrary.PROJECT_REACTOR)) {
 
 			if (result instanceof Flux) {
 				Flux<?> flux = (Flux<?>) result;

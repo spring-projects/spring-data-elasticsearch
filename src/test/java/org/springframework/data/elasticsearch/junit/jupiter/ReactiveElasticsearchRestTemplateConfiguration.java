@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the original author or authors.
+ * Copyright 2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,34 +15,29 @@
  */
 package org.springframework.data.elasticsearch.junit.jupiter;
 
-import java.time.Duration;
-
-import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.RestClients;
-import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
+import org.springframework.data.elasticsearch.config.AbstractReactiveElasticsearchConfiguration;
 
 /**
- * Configuration for Spring Data Elasticsearch using
- * {@link org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate}.
+ * Configuration for Spring Data Elasticsearch Integration Tests using
+ * {@link org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations}
  *
  * @author Peter-Josef Meisch
  */
 @Configuration
-public class ElasticsearchRestTemplateConfiguration extends AbstractElasticsearchConfiguration {
+public class ReactiveElasticsearchRestTemplateConfiguration extends AbstractReactiveElasticsearchConfiguration {
 
 	@Autowired private ClusterConnectionInfo clusterConnectionInfo;
 
 	@Override
-	@Bean
-	public RestHighLevelClient elasticsearchClient() {
-
+	public ReactiveElasticsearchClient reactiveElasticsearchClient() {
 		String elasticsearchHostPort = clusterConnectionInfo.getHost() + ':' + clusterConnectionInfo.getHttpPort();
 
-		ClientConfiguration.TerminalClientConfigurationBuilder configurationBuilder = ClientConfiguration.builder()
+		ClientConfiguration.TerminalClientConfigurationBuilder configurationBuilder = ClientConfiguration.builder() //
 				.connectedTo(elasticsearchHostPort);
 
 		if (clusterConnectionInfo.isUseSsl()) {
@@ -50,10 +45,7 @@ public class ElasticsearchRestTemplateConfiguration extends AbstractElasticsearc
 					.usingSsl();
 		}
 
-		return RestClients.create(configurationBuilder //
-				.withConnectTimeout(Duration.ofSeconds(5)) //
-				.withSocketTimeout(Duration.ofSeconds(3)) //
-				.build()) //
-				.rest();
+		return ReactiveRestClients.create(configurationBuilder.build());
+
 	}
 }

@@ -15,17 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.search.aggregations.Aggregations;
@@ -38,8 +29,6 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.convert.EntityInstantiator;
-import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
@@ -57,6 +46,8 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
+import org.springframework.data.mapping.model.EntityInstantiator;
+import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
 import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.util.ClassTypeInformation;
@@ -108,6 +99,7 @@ public class MappingElasticsearchConverter
 
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+
 		if (mappingContext instanceof ApplicationContextAware) {
 			((ApplicationContextAware) mappingContext).setApplicationContext(applicationContext);
 		}
@@ -653,7 +645,7 @@ public class MappingElasticsearchConverter
 			collectionSource.map(it -> {
 
 				if (it == null) {
-					//noinspection ReturnOfNull
+					// noinspection ReturnOfNull
 					return null;
 				}
 
