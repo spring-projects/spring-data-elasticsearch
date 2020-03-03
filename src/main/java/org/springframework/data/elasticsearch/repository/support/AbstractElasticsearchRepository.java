@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
@@ -93,8 +92,8 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 				createIndex();
 				putMapping();
 			}
-		} catch (ElasticsearchException exception) {
-			LOGGER.warn("Cannot create index: {}", exception.getDetailedMessage());
+		} catch (Exception exception) {
+			LOGGER.warn("Cannot create index: {}", exception.getMessage());
 		}
 	}
 

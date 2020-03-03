@@ -24,6 +24,8 @@ import lombok.Data;
 import java.lang.Double;
 import java.lang.Long;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +36,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -56,6 +59,17 @@ public class EnableNestedElasticsearchRepositoriesTests {
 	static class Config {}
 
 	@Autowired(required = false) private SampleRepository nestedRepository;
+	@Autowired ElasticsearchOperations operations;
+
+	@BeforeEach
+	void setUp() {
+		operations.indexOps(SampleEntity.class).delete();
+	}
+
+	@AfterEach
+	void tearDown() {
+		operations.indexOps(SampleEntity.class).delete();
+	}
 
 	@Test
 	public void hasNestedRepository() {

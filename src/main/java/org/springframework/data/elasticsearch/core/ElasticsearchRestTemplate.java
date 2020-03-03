@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -40,7 +39,6 @@ import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
@@ -90,25 +88,29 @@ import org.springframework.util.Assert;
 public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	private RestHighLevelClient client;
+	private ElasticsearchExceptionTranslator exceptionTranslator;
 
 	// region Initialization
 	public ElasticsearchRestTemplate(RestHighLevelClient client) {
-		this.client = client;
-		initialize(client, createElasticsearchConverter());
-	}
-
-	public ElasticsearchRestTemplate(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter) {
-		this.client = client;
-		initialize(client, elasticsearchConverter);
-	}
-
-	private void initialize(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter) {
 
 		Assert.notNull(client, "Client must not be null!");
 
 		this.client = client;
+		this.exceptionTranslator = new ElasticsearchExceptionTranslator();
+
+		initialize(createElasticsearchConverter());
+	}
+
+	public ElasticsearchRestTemplate(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter) {
+
+		Assert.notNull(client, "Client must not be null!");
+
+		this.client = client;
+		this.exceptionTranslator = new ElasticsearchExceptionTranslator();
+
 		initialize(elasticsearchConverter);
 	}
+
 	// endregion
 
 	// region IndexOperations
@@ -117,7 +119,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(clazz, "clazz must not be null");
 
-		return new DefaultIndexOperations(client, elasticsearchConverter, clazz);
+		return new DefaultIndexOperations(this, clazz);
 	}
 
 	@Override
@@ -125,7 +127,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(index, "index must not be null");
 
-		return new DefaultIndexOperations(client, elasticsearchConverter, index);
+		return new DefaultIndexOperations(this, index);
 	}
 	// endregion
 
@@ -133,29 +135,21 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	public String index(IndexQuery query, IndexCoordinates index) {
 		IndexRequest request = requestFactory.indexRequest(query, index);
-		try {
-			String documentId = client.index(request, RequestOptions.DEFAULT).getId();
+		String documentId = execute(client -> client.index(request, RequestOptions.DEFAULT).getId());
 
-			// We should call this because we are not going through a mapper.
-			if (query.getObject() != null) {
-				setPersistentEntityId(query.getObject(), documentId);
-			}
-			return documentId;
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error while index for request: " + request.toString(), e);
+		// We should call this because we are not going through a mapper.
+		if (query.getObject() != null) {
+			setPersistentEntityId(query.getObject(), documentId);
 		}
+		return documentId;
 	}
 
 	@Override
 	@Nullable
 	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
 		GetRequest request = requestFactory.getRequest(id, index);
-		try {
-			GetResponse response = client.get(request, RequestOptions.DEFAULT);
-			return elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error while getting for request: " + request.toString(), e);
-		}
+		GetResponse response = execute(client -> client.get(request, RequestOptions.DEFAULT));
+		return elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);
 	}
 
 	@Override
@@ -165,22 +159,14 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Assert.notEmpty(query.getIds(), "No Id define for Query");
 
 		MultiGetRequest request = requestFactory.multiGetRequest(query, index);
-		try {
-			MultiGetResponse result = client.mget(request, RequestOptions.DEFAULT);
-			return elasticsearchConverter.mapDocuments(DocumentAdapters.from(result), clazz);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error while multiget for request: " + request.toString(), e);
-		}
+		MultiGetResponse result = execute(client -> client.mget(request, RequestOptions.DEFAULT));
+		return elasticsearchConverter.mapDocuments(DocumentAdapters.from(result), clazz);
 	}
 
 	@Override
 	protected boolean doExists(String id, IndexCoordinates index) {
 		GetRequest request = requestFactory.getRequest(id, index);
-		try {
-			return client.get(request, RequestOptions.DEFAULT).isExists();
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error while getting for request: " + request.toString(), e);
-		}
+		return execute(client -> client.get(request, RequestOptions.DEFAULT).isExists());
 	}
 
 	@Override
@@ -208,53 +194,33 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(index, "index must not be null");
 
 		DeleteRequest request = new DeleteRequest(index.getIndexName(), elasticsearchConverter.convertId(id));
-		try {
-			return client.delete(request, RequestOptions.DEFAULT).getId();
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error while deleting item request: " + request.toString(), e);
-		}
+		return execute(client -> client.delete(request, RequestOptions.DEFAULT).getId());
 	}
 
 	@Override
 	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
 		DeleteByQueryRequest deleteByQueryRequest = requestFactory.deleteByQueryRequest(query, clazz, index);
-		try {
-			client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error for delete request: " + deleteByQueryRequest.toString(), e);
-		}
+		execute(client -> client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT));
 	}
 
 	@Override
 	@Deprecated
 	public void delete(DeleteQuery deleteQuery, IndexCoordinates index) {
 		DeleteByQueryRequest deleteByQueryRequest = requestFactory.deleteByQueryRequest(deleteQuery, index);
-		try {
-			client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error for delete request: " + deleteByQueryRequest.toString(), e);
-		}
+		execute(client -> client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT));
 	}
 
 	@Override
 	public UpdateResponse update(UpdateQuery query, IndexCoordinates index) {
 		UpdateRequest request = requestFactory.updateRequest(query, index);
-		try {
-			org.elasticsearch.action.update.UpdateResponse updateResponse = client.update(request, RequestOptions.DEFAULT);
-			UpdateResponse.Result result = UpdateResponse.Result.valueOf(updateResponse.getResult().name());
-			return new UpdateResponse(result);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error while update for request: " + request.toString(), e);
-		}
+		UpdateResponse.Result result = UpdateResponse.Result
+				.valueOf(execute(client -> client.update(request, RequestOptions.DEFAULT)).getResult().name());
+		return new UpdateResponse(result);
 	}
 
 	private List<String> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
 		BulkRequest bulkRequest = requestFactory.bulkRequest(queries, bulkOptions, index);
-		try {
-			return checkForBulkOperationFailure(client.bulk(bulkRequest, RequestOptions.DEFAULT));
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error while bulk for request: " + bulkRequest.toString(), e);
-		}
+		return checkForBulkOperationFailure(execute(client -> client.bulk(bulkRequest, RequestOptions.DEFAULT)));
 	}
 	// endregion
 
@@ -272,22 +238,14 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		searchRequest.source().size(0);
 
-		try {
-			return SearchHitsUtil.getTotalCount(client.search(searchRequest, RequestOptions.DEFAULT).getHits());
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error for search request: " + searchRequest.toString(), e);
-		}
+		return SearchHitsUtil
+				.getTotalCount(execute(client -> client.search(searchRequest, RequestOptions.DEFAULT).getHits()));
 	}
 
 	@Override
 	public <T> SearchHits<T> search(Query query, Class<T> clazz, IndexCoordinates index) {
 		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
-		SearchResponse response;
-		try {
-			response = client.search(searchRequest, RequestOptions.DEFAULT);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error for search request: " + searchRequest.toString(), e);
-		}
+		SearchResponse response = execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
 		return elasticsearchConverter.read(clazz, SearchDocumentResponse.from(response));
 	}
 
@@ -299,13 +257,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
 		searchRequest.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
-
-		try {
-			SearchResponse result = client.search(searchRequest, RequestOptions.DEFAULT);
-			return elasticsearchConverter.mapResults(SearchDocumentResponse.from(result), clazz, null);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error for search request with scroll: " + searchRequest.toString(), e);
-		}
+		SearchResponse result = execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
+		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(result), clazz, null);
 	}
 
 	@Override
@@ -313,12 +266,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 			Class<T> clazz) {
 		SearchScrollRequest request = new SearchScrollRequest(scrollId);
 		request.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
-		SearchResponse response;
-		try {
-			response = client.searchScroll(request, RequestOptions.DEFAULT);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error for search request with scroll: " + request.toString(), e);
-		}
+		SearchResponse response = execute(client -> client.searchScroll(request, RequestOptions.DEFAULT));
 		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, Pageable.unpaged());
 	}
 
@@ -326,11 +274,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	public void searchScrollClear(String scrollId) {
 		ClearScrollRequest request = new ClearScrollRequest();
 		request.addScrollId(scrollId);
-		try {
-			client.clearScroll(request, RequestOptions.DEFAULT);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error for search request with scroll: " + request.toString(), e);
-		}
+		execute(client -> client.clearScroll(request, RequestOptions.DEFAULT));
 	}
 
 	@Override
@@ -339,26 +283,66 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 		sourceBuilder.suggest(suggestion);
 		searchRequest.source(sourceBuilder);
-
-		try {
-			return client.search(searchRequest, RequestOptions.DEFAULT);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Could not execute search request : " + searchRequest.toString(), e);
-		}
-
+		return execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
 	}
 
 	@Override
 	protected MultiSearchResponse.Item[] getMultiSearchResult(MultiSearchRequest request) {
-		MultiSearchResponse response;
-		try {
-			response = client.multiSearch(request, RequestOptions.DEFAULT);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error for search request: " + request.toString(), e);
-		}
+		MultiSearchResponse response = execute(client -> client.multiSearch(request, RequestOptions.DEFAULT));
 		MultiSearchResponse.Item[] items = response.getResponses();
 		Assert.isTrue(items.length == request.requests().size(), "Response should has same length with queries");
 		return items;
 	}
+	// endregion
+
+	// region clientcallback
+	/**
+	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on
+	 * {@link RestHighLevelClient}.
+	 *
+	 * @since 4.0
+	 */
+	@FunctionalInterface
+	interface ClientCallback<T> {
+		T doWithClient(RestHighLevelClient client) throws IOException;
+	}
+
+	/**
+	 * Execute a callback with the {@link RestHighLevelClient}
+	 *
+	 * @param callback the callback to execute, must not be {@literal null}
+	 * @param <T> the type returned from the callback
+	 * @return the callback result
+	 * @since 4.0
+	 */
+	public <T> T execute(ClientCallback<T> callback) {
+
+		Assert.notNull(callback, "callback must not be null");
+
+		try {
+			return callback.doWithClient(client);
+		} catch (IOException | RuntimeException e) {
+			throw translateException(e);
+		}
+	}
+
+	/**
+	 * translates an Exception if possible. Exceptions that are no {@link RuntimeException}s are wrapped in a
+	 * RuntimeException
+	 *
+	 * @param exception the Exception to map
+	 * @return the potentially translated RuntimeException.
+	 * @since 4.0
+	 */
+	private RuntimeException translateException(Exception exception) {
+
+		RuntimeException runtimeException = exception instanceof RuntimeException ? (RuntimeException) exception
+				: new RuntimeException(exception.getMessage(), exception);
+		RuntimeException potentiallyTranslatedException = exceptionTranslator
+				.translateExceptionIfPossible(runtimeException);
+
+		return potentiallyTranslatedException != null ? potentiallyTranslatedException : runtimeException;
+	}
+
 	// endregion
 }

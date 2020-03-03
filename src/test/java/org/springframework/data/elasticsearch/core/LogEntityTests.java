@@ -26,13 +26,13 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
-import org.elasticsearch.ElasticsearchException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -102,6 +102,10 @@ public class LogEntityTests {
 		assertThat(entities).isNotNull().hasSize(1);
 	}
 
+	protected Class<? extends Exception> invalidIpExceptionClass() {
+		return DataAccessException.class;
+	}
+
 	@Test // DATAES-66
 	public void shouldThrowExceptionWhenInvalidIPGivenForSearchQuery() {
 
@@ -110,7 +114,7 @@ public class LogEntityTests {
 
 		assertThatThrownBy(() -> {
 			SearchHits<LogEntity> entities = operations.search(searchQuery, LogEntity.class, index);
-		}).isInstanceOf(ElasticsearchException.class);
+		}).isInstanceOf(invalidIpExceptionClass());
 	}
 
 	@Test // DATAES-66

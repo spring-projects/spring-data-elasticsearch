@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;

@@ -792,15 +792,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return type != null ? mappingContext.getPersistentEntity(type) : null;
 	}
 
-	private Throwable translateException(Throwable throwable) {
-
-		RuntimeException exception = throwable instanceof RuntimeException ? (RuntimeException) throwable
-				: new RuntimeException(throwable.getMessage(), throwable);
-		RuntimeException potentiallyTranslatedException = exceptionTranslator.translateExceptionIfPossible(exception);
-
-		return potentiallyTranslatedException != null ? potentiallyTranslatedException : throwable;
-	}
-
 	/**
 	 * Obtain the {@link ReactiveElasticsearchClient} to operate upon.
 	 *
@@ -811,5 +802,23 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	// endregion
+
+	/**
+	 * translates an Exception if possible. Exceptions that are no {@link RuntimeException}s are wrapped in a
+	 * RuntimeException
+	 *
+	 * @param throwable the Throwable to map
+	 * @return the potentially translated RuntimeException.
+	 * @since 4.0
+	 */
+	private RuntimeException translateException(Throwable throwable) {
+
+		RuntimeException runtimeException = throwable instanceof RuntimeException ? (RuntimeException) throwable
+				: new RuntimeException(throwable.getMessage(), throwable);
+		RuntimeException potentiallyTranslatedException = exceptionTranslator
+				.translateExceptionIfPossible(runtimeException);
+
+		return potentiallyTranslatedException != null ? potentiallyTranslatedException : runtimeException;
+	}
 
 }

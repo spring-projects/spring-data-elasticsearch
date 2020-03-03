@@ -16,21 +16,25 @@
 
 package org.springframework.data.elasticsearch.core;
 
-import java.net.ConnectException;
+import java.io.IOException;
 import java.util.List;
 
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.common.ValidationException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
+import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public class ElasticsearchExceptionTranslator implements PersistenceExceptionTranslator {
@@ -46,9 +50,15 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 				return new NoSuchIndexException(ObjectUtils.nullSafeToString(elasticsearchException.getMetadata("es.index")),
 						ex);
 			}
+			return new UncategorizedElasticsearchException(ex.getMessage(), ex);
 		}
 
-		if (ex.getCause() instanceof ConnectException) {
+		if (ex instanceof ValidationException) {
+			return new DataIntegrityViolationException(ex.getMessage(), ex);
+		}
+
+		Throwable cause = ex.getCause();
+		if (cause instanceof IOException) {
 			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
 
@@ -60,8 +70,9 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 		List<String> metadata = ex.getMetadata("es.index_uuid");
 		if (metadata == null) {
 			if (ex instanceof ElasticsearchStatusException) {
-				return StringUtils.hasText(ObjectUtils.nullSafeToString(((ElasticsearchStatusException) ex).getIndex()));
+				return StringUtils.hasText(ObjectUtils.nullSafeToString(ex.getIndex()));
 			}
+			return false;
 		}
 		return !CollectionUtils.contains(metadata.iterator(), "_na_");
 	}

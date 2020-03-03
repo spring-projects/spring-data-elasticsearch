@@ -22,9 +22,9 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import lombok.Builder;
 import lombok.Data;
 
-import org.elasticsearch.ElasticsearchStatusException;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
@@ -57,7 +57,8 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
 				.create();
 		UpdateQuery updateQuery = UpdateQuery.builder(randomNumeric(5)).withDocument(document).build();
-		assertThatThrownBy(() -> operations.update(updateQuery, index)).isInstanceOf(ElasticsearchStatusException.class);
+		assertThatThrownBy(() -> operations.update(updateQuery, index))
+				.isInstanceOf(UncategorizedElasticsearchException.class);
 	}
 
 	@Data

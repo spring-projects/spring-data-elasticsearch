@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +63,12 @@ public class ImmutableElasticsearchRepositoryTests {
 		indexOperations.delete();
 		indexOperations.create();
 		indexOperations.refresh();
+	}
+
+	@AfterEach
+	void tearDown() {
+		IndexOperations indexOperations = operations.indexOps(ImmutableEntity.class);
+		indexOperations.delete();
 	}
 
 	@Test // DATAES-281

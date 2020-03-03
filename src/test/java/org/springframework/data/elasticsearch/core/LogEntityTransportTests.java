@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.ElasticsearchSecurityException;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
@@ -28,4 +30,9 @@ public class LogEntityTransportTests extends LogEntityTests {
 	@Configuration
 	@Import({ ElasticsearchTemplateConfiguration.class })
 	static class Config {}
+
+	@Override
+	protected Class<? extends Exception> invalidIpExceptionClass() {
+		return ElasticsearchException.class;
+	}
 }
