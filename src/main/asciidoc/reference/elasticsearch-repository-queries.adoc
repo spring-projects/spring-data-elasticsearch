@@ -274,7 +274,8 @@ Repository methods can be defined to have the following return types for returni
 * `Stream<T>`
 * `SearchHits<T>`
 * `List<SearchHits<T>>`
-* `Stream<>>SearchHit<T>>`
+* `Stream<SearchHit<T>>`
+* `SearchPage<T>`
 
 [[elasticsearch.query-methods.at-query]]
 == Using @Query Annotation
@@ -284,8 +285,21 @@ Repository methods can be defined to have the following return types for returni
 [source,java]
 ----
 interface BookRepository extends ElasticsearchRepository<Book, String> {
-    @Query("{\"bool\" : {\"must\" : {\"field\" : {\"name\" : \"?0\"}}}}")
+    @Query("{\"match\": {\"name\": {\"query\": \"?0\"}}}")
     Page<Book> findByName(String name,Pageable pageable);
+}
+----
+The String that is set as the annotation argument must be a valid Elasticsearch JSON query. It will be sent to Easticsearch as value of the query element; if for example the function is called with the parameter _John_, it would produce the following query body:
+[source,json]
+----
+{
+  "query": {
+    "match": {
+      "name": {
+        "query": "John"
+      }
+    }
+  }
 }
 ----
 ====
