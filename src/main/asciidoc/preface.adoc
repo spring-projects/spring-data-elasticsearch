@@ -35,8 +35,8 @@ The following table shows the Elasticsearch versions that are used by Spring Dat
 [cols="^,^,^,^",options="header"]
 |===
 | Spring Data Release Train |Spring Data Elasticsearch |Elasticsearch | Spring Boot
-| Neumannfootnote:cdv[Currently in development] |4.0.xfootnote:cdv[]|7.5.2 |2.3.xfootnote:cdv[]
-| Moore | 3.2.x |6.8.4 | 2.2.x
+| Neumannfootnote:cdv[Currently in development] |4.0.xfootnote:cdv[]|7.6.1 |2.3.xfootnote:cdv[]
+| Moore | 3.2.x |6.8.6 | 2.2.x
 | Lovelace | 3.1.x | 6.2.2 |2.1.x
 | Kayfootnote:oom[Out of maintenance] | 3.0.xfootnote:oom[] | 5.5.0 | 2.0.xfootnote:oom[]
 | Ingallsfootnote:oom[] | 2.1.xfootnote:oom[] | 2.4.0 | 1.5.xfootnote:oom[]
