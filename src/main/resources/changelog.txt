@@ -1,6 +1,21 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.0.M4 (2020-03-11)
+----------------------------------------
+* DATAES-759 - Update to Elasticsearch 7.6.1.
+* DATAES-758 - fix documentation for @Query annotation.
+* DATAES-754 - Completion field deserialization is failing due to class cast error.
+* DATAES-753 - Reactive Elasticsearch repository: Bulk update fails on empty entity list.
+* DATAES-749 - Introduce SearchPage as return type for repository methods.
+* DATAES-747 - ElasticsearchConfigurationSupport does not set customConversions into the MappingElasticsearchConverter.
+* DATAES-746 - Add store converters to convert binary data to base64 encoded strings.
+* DATAES-745 - Consolidate Operations API.
+* DATAES-744 - Release 4.0 M4 (Neumann).
+* DATAES-741 - Tests fail due to Elasticsearch cluster 'blocks' on nearly-full file-systems.
+* DATAES-282 - Remove all low-level reflection based field inspection from MappingBuilder in favor of PersistentProperty inspections.
+
+
 Changes in version 3.2.5.RELEASE (2020-02-26)
 ---------------------------------------------
 * DATAES-752 - Upgrade to Elasticsearch 6.8.6.
@@ -1021,6 +1036,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
