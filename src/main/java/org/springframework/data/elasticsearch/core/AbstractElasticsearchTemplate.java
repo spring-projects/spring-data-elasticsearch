@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,6 +22,7 @@ import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
+import org.springframework.data.elasticsearch.core.event.BeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -33,6 +33,7 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
@@ -48,6 +49,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	protected @Nullable ElasticsearchConverter elasticsearchConverter;
 	protected @Nullable RequestFactory requestFactory;
+
+	private @Nullable EntityCallbacks entityCallbacks;
 
 	// region Initialization
 	protected void initialize(ElasticsearchConverter elasticsearchConverter) {
@@ -66,11 +69,32 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public void setApplicationContext(ApplicationContext context) throws BeansException {
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+
+		if (entityCallbacks == null) {
+			setEntityCallbacks(EntityCallbacks.create(applicationContext));
+		}
 
 		if (elasticsearchConverter instanceof ApplicationContextAware) {
-			((ApplicationContextAware) elasticsearchConverter).setApplicationContext(context);
+			((ApplicationContextAware) elasticsearchConverter).setApplicationContext(applicationContext);
 		}
+	}
+
+	/**
+	 * Set the {@link EntityCallbacks} instance to use when invoking {@link EntityCallbacks callbacks} like the
+	 * {@link org.springframework.data.elasticsearch.core.event.BeforeConvertCallback}.
+	 * <p />
+	 * Overrides potentially existing {@link EntityCallbacks}.
+	 *
+	 * @param entityCallbacks must not be {@literal null}.
+	 * @throws IllegalArgumentException if the given instance is {@literal null}.
+	 * @since 4.0
+	 */
+	public void setEntityCallbacks(EntityCallbacks entityCallbacks) {
+
+		Assert.notNull(entityCallbacks, "entityCallbacks must not be null");
+
+		this.entityCallbacks = entityCallbacks;
 	}
 	// endregion
 
@@ -388,6 +412,37 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 				.withObject(entity) //
 				.build();
 	}
+	// endregion
+
+	// region callbacks
+	protected <T> T maybeCallbackBeforeConvert(T entity) {
+
+		if (entityCallbacks != null) {
+			return entityCallbacks.callback(BeforeConvertCallback.class, entity);
+		}
+
+		return entity;
+	}
+
+	protected void maybeCallbackBeforeConvertWithQuery(Object query) {
+
+		if (query instanceof IndexQuery) {
+			IndexQuery indexQuery = (IndexQuery) query;
+			Object queryObject = indexQuery.getObject();
+
+			if (queryObject != null) {
+				queryObject = maybeCallbackBeforeConvert(queryObject);
+				indexQuery.setObject(queryObject);
+			}
+		}
+	}
+
+	// this can be called with either a List<IndexQuery> or a List<UpdateQuery>; these query classes
+	// don't have a common bas class, therefore the List<?> argument
+	protected void maybeCallbackBeforeConvertWithQueries(List<?> queries) {
+		queries.forEach(this::maybeCallbackBeforeConvertWithQuery);
+	}
 
 	// endregion
+
 }

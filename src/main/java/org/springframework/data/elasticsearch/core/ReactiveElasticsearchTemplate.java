@@ -56,6 +56,9 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
@@ -67,6 +70,7 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
+import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -78,6 +82,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
@@ -93,7 +98,7 @@ import org.springframework.util.Assert;
  * @author Aleksei Arsenev
  * @since 3.2
  */
-public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations {
+public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations, ApplicationContextAware {
 
 	private static final Logger QUERY_LOGGER = LoggerFactory
 			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
@@ -107,6 +112,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	private @Nullable RefreshPolicy refreshPolicy = RefreshPolicy.IMMEDIATE;
 	private @Nullable IndicesOptions indicesOptions = IndicesOptions.strictExpandOpenAndForbidClosedIgnoreThrottled();
+
+	private @Nullable ReactiveEntityCallbacks entityCallbacks;
 
 	// region Initialization
 	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client) {
@@ -124,6 +131,31 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		this.exceptionTranslator = new ElasticsearchExceptionTranslator();
 		this.operations = new EntityOperations(this.mappingContext);
 		this.requestFactory = new RequestFactory(converter);
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+
+		if (entityCallbacks == null) {
+			setEntityCallbacks(ReactiveEntityCallbacks.create(applicationContext));
+		}
+	}
+
+	/**
+	 * Set the {@link ReactiveEntityCallbacks} instance to use when invoking {@link ReactiveEntityCallbacks callbacks}
+	 * like the {@link ReactiveBeforeConvertCallback}.
+	 * <p />
+	 * Overrides potentially existing {@link ReactiveEntityCallbacks}.
+	 *
+	 * @param entityCallbacks must not be {@literal null}.
+	 * @throws IllegalArgumentException if the given instance is {@literal null}.
+	 * @since 4.0
+	 */
+	public void setEntityCallbacks(ReactiveEntityCallbacks entityCallbacks) {
+
+		Assert.notNull(entityCallbacks, "EntityCallbacks must not be null!");
+
+		this.entityCallbacks = entityCallbacks;
 	}
 	// endregion
 
@@ -289,7 +321,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	private Mono<IndexResponse> doIndex(Object value, AdaptibleEntity<?> entity, IndexCoordinates index) {
 
-		return Mono.defer(() -> {
+		return maybeCallBeforeConvert(value).flatMap(it -> {
 			IndexRequest request = getIndexRequest(value, entity, index);
 			request = prepareIndexRequest(value, request);
 			return doIndex(request);
@@ -821,4 +853,14 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return potentiallyTranslatedException != null ? potentiallyTranslatedException : runtimeException;
 	}
 
+	// region callbacks
+	protected <T> Mono<T> maybeCallBeforeConvert(T entity) {
+
+		if (null != entityCallbacks) {
+			return entityCallbacks.callback(ReactiveBeforeConvertCallback.class, entity);
+		}
+
+		return Mono.just(entity);
+	}
+	// endregion
 }

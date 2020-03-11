@@ -24,6 +24,8 @@ include::reference/elasticsearch-clients.adoc[]
 include::reference/elasticsearch-object-mapping.adoc[]
 include::reference/elasticsearch-operations.adoc[]
 include::reference/elasticsearch-repositories.adoc[]
+include::{spring-data-commons-docs}/auditing.adoc[]
+include::reference/elasticsearch-auditing.adoc[]
 include::reference/elasticsearch-misc.adoc[]
 :leveloffset: -1
 

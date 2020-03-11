@@ -136,12 +136,18 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	// region DocumentOperations
 	@Override
 	public String index(IndexQuery query, IndexCoordinates index) {
+
+		maybeCallbackBeforeConvertWithQuery(query);
+
 		IndexRequestBuilder indexRequestBuilder = requestFactory.indexRequestBuilder(client, query, index);
 		String documentId = indexRequestBuilder.execute().actionGet().getId();
+
 		// We should call this because we are not going through a mapper.
-		if (query.getObject() != null) {
-			setPersistentEntityId(query.getObject(), documentId);
+		Object queryObject = query.getObject();
+		if (queryObject != null) {
+			setPersistentEntityId(queryObject, documentId);
 		}
+
 		return documentId;
 	}
 
@@ -167,6 +173,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	protected boolean doExists(String id, IndexCoordinates index) {
 		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, index);
+		getRequestBuilder.setFetchSource(false);
 		return getRequestBuilder.execute().actionGet().isExists();
 	}
 
@@ -223,6 +230,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	private List<String> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
+		maybeCallbackBeforeConvertWithQueries(queries);
 		BulkRequestBuilder bulkRequest = requestFactory.bulkRequestBuilder(client, queries, bulkOptions, index);
 		return checkForBulkOperationFailure(bulkRequest.execute().actionGet());
 	}

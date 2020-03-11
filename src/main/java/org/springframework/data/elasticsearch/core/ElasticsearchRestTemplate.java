@@ -37,6 +37,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -134,12 +135,16 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	// region DocumentOperations
 	@Override
 	public String index(IndexQuery query, IndexCoordinates index) {
+
+		maybeCallbackBeforeConvertWithQuery(query);
+
 		IndexRequest request = requestFactory.indexRequest(query, index);
 		String documentId = execute(client -> client.index(request, RequestOptions.DEFAULT).getId());
 
 		// We should call this because we are not going through a mapper.
-		if (query.getObject() != null) {
-			setPersistentEntityId(query.getObject(), documentId);
+		Object queryObject = query.getObject();
+		if (queryObject != null) {
+			setPersistentEntityId(queryObject, documentId);
 		}
 		return documentId;
 	}
@@ -166,6 +171,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	protected boolean doExists(String id, IndexCoordinates index) {
 		GetRequest request = requestFactory.getRequest(id, index);
+		request.fetchSourceContext(FetchSourceContext.DO_NOT_FETCH_SOURCE);
 		return execute(client -> client.get(request, RequestOptions.DEFAULT).isExists());
 	}
 
@@ -219,6 +225,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	private List<String> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
+		maybeCallbackBeforeConvertWithQueries(queries);
 		BulkRequest bulkRequest = requestFactory.bulkRequest(queries, bulkOptions, index);
 		return checkForBulkOperationFailure(execute(client -> client.bulk(bulkRequest, RequestOptions.DEFAULT)));
 	}

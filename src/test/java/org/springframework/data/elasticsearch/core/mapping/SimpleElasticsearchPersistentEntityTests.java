@@ -104,7 +104,7 @@ public class SimpleElasticsearchPersistentEntityTests {
 
 	}
 
-	private class EntityWithWrongVersionType {
+	private static class EntityWithWrongVersionType {
 
 		@Nullable @Version private String version;
 
@@ -118,7 +118,7 @@ public class SimpleElasticsearchPersistentEntityTests {
 		}
 	}
 
-	private class EntityWithMultipleVersionField {
+	private static class EntityWithMultipleVersionField {
 
 		@Nullable @Version private Long version1;
 		@Nullable @Version private Long version2;
@@ -143,7 +143,6 @@ public class SimpleElasticsearchPersistentEntityTests {
 	}
 
 	// DATAES-462
-
 	static class TwoScoreProperties {
 
 		@Score float first;
