@@ -39,7 +39,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.AfterEach;
@@ -52,6 +51,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.TestUtils;
+import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
@@ -436,7 +436,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		template.search(queryWithInvalidPreference, SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.expectError(ElasticsearchStatusException.class).verify();
+				.expectError(UncategorizedElasticsearchException.class).verify();
 	}
 
 	@Test // DATAES-504

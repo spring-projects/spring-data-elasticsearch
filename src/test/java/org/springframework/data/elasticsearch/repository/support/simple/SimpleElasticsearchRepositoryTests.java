@@ -32,13 +32,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.elasticsearch.action.ActionRequestValidationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Page;
@@ -148,7 +148,7 @@ public class SimpleElasticsearchRepositoryTests {
 		sampleEntity.setVersion(System.currentTimeMillis());
 
 		// when
-		assertThatThrownBy(() -> repository.save(sampleEntity)).isInstanceOf(ActionRequestValidationException.class);
+		assertThatThrownBy(() -> repository.save(sampleEntity)).isInstanceOf(DataIntegrityViolationException.class);
 	}
 
 	@Test

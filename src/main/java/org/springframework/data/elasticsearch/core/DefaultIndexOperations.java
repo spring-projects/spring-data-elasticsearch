@@ -33,14 +33,12 @@ import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
-import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.core.client.support.AliasData;
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
@@ -60,29 +58,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 class DefaultIndexOperations extends AbstractDefaultIndexOperations implements IndexOperations {
 
-	private RestHighLevelClient client;
+	private ElasticsearchRestTemplate restTemplate;
 
-	public DefaultIndexOperations(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
-			Class<?> boundClass) {
-		super(elasticsearchConverter, boundClass);
-		this.client = client;
+	public DefaultIndexOperations(ElasticsearchRestTemplate restTemplate, Class<?> boundClass) {
+		super(restTemplate.getElasticsearchConverter(), boundClass);
+		this.restTemplate = restTemplate;
 	}
 
-	public DefaultIndexOperations(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter,
-			IndexCoordinates boundIndex) {
-		super(elasticsearchConverter, boundIndex);
-		this.client = client;
+	public DefaultIndexOperations(ElasticsearchRestTemplate restTemplate, IndexCoordinates boundIndex) {
+		super(restTemplate.getElasticsearchConverter(), boundIndex);
+		this.restTemplate = restTemplate;
 	}
 
 	@Override
 	protected boolean doCreate(String indexName, @Nullable Document settings) {
 		CreateIndexRequest request = requestFactory.createIndexRequest(indexName, settings);
-		try {
-			return client.indices().create(request, RequestOptions.DEFAULT).isAcknowledged();
-		} catch (IOException e) {
-			throw new ElasticsearchException(
-					"Error for creating index: " + indexName + ", client: " + client.getLowLevelClient().getNodes(), e);
-		}
+		return restTemplate.execute(client -> client.indices().create(request, RequestOptions.DEFAULT).isAcknowledged());
 	}
 
 	@Override
@@ -92,11 +83,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 
 		if (doExists(indexName)) {
 			DeleteIndexRequest request = new DeleteIndexRequest(indexName);
-			try {
-				return client.indices().delete(request, RequestOptions.DEFAULT).isAcknowledged();
-			} catch (IOException e) {
-				throw new ElasticsearchException("Error while deleting index request: " + request.toString(), e);
-			}
+			return restTemplate.execute(client -> client.indices().delete(request, RequestOptions.DEFAULT).isAcknowledged());
 		}
 		return false;
 	}
@@ -104,11 +91,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	@Override
 	protected boolean doExists(String indexName) {
 		GetIndexRequest request = new GetIndexRequest(indexName);
-		try {
-			return client.indices().exists(request, RequestOptions.DEFAULT);
-		} catch (IOException e) {
-			throw new ElasticsearchException("Error while for indexExists request: " + request.toString(), e);
-		}
+		return restTemplate.execute(client -> client.indices().exists(request, RequestOptions.DEFAULT));
 	}
 
 	@Override
@@ -117,11 +100,8 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 		Assert.notNull(index, "No index defined for putMapping()");
 
 		PutMappingRequest request = requestFactory.putMappingRequest(index, mapping);
-		try {
-			return client.indices().putMapping(request, RequestOptions.DEFAULT).isAcknowledged();
-		} catch (IOException e) {
-			throw new ElasticsearchException("Failed to put mapping for " + index.getIndexName(), e);
-		}
+		return restTemplate
+				.execute(client -> client.indices().putMapping(request, RequestOptions.DEFAULT).isAcknowledged());
 	}
 
 	@Override
@@ -129,24 +109,19 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 
 		Assert.notNull(index, "No index defined for getMapping()");
 
-		RestClient restClient = client.getLowLevelClient();
-		try {
+		return restTemplate.execute(client -> {
+			RestClient restClient = client.getLowLevelClient();
 			Request request = new Request("GET", '/' + index.getIndexName() + "/_mapping");
 			Response response = restClient.performRequest(request);
 			return convertMappingResponse(EntityUtils.toString(response.getEntity()));
-		} catch (Exception e) {
-			throw new ElasticsearchException("Error while getting mapping for indexName : " + index.getIndexName(), e);
-		}
+		});
 	}
 
 	@Override
 	protected boolean doAddAlias(AliasQuery query, IndexCoordinates index) {
 		IndicesAliasesRequest request = requestFactory.indicesAddAliasesRequest(query, index);
-		try {
-			return client.indices().updateAliases(request, RequestOptions.DEFAULT).isAcknowledged();
-		} catch (IOException e) {
-			throw new ElasticsearchException("failed to update aliases with request: " + request, e);
-		}
+		return restTemplate
+				.execute(client -> client.indices().updateAliases(request, RequestOptions.DEFAULT).isAcknowledged());
 	}
 
 	@Override
@@ -156,29 +131,23 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 		Assert.notNull(query.getAliasName(), "No alias defined");
 
 		IndicesAliasesRequest indicesAliasesRequest = requestFactory.indicesRemoveAliasesRequest(query, index);
-		try {
-			return client.indices().updateAliases(indicesAliasesRequest, RequestOptions.DEFAULT).isAcknowledged();
-		} catch (IOException e) {
-			throw new ElasticsearchException(
-					"failed to update aliases with indicesRemoveAliasesRequest: " + indicesAliasesRequest, e);
-		}
+		return restTemplate.execute(
+				client -> client.indices().updateAliases(indicesAliasesRequest, RequestOptions.DEFAULT).isAcknowledged());
 	}
 
 	@Override
 	protected List<AliasMetaData> doQueryForAlias(String indexName) {
 		List<AliasMetaData> aliases = null;
-		RestClient restClient = client.getLowLevelClient();
-		Response response;
-		String aliasResponse;
+		return restTemplate.execute(client -> {
+			RestClient restClient = client.getLowLevelClient();
+			Response response;
+			String aliasResponse;
 
-		try {
 			response = restClient.performRequest(new Request("GET", '/' + indexName + "/_alias/*"));
 			aliasResponse = EntityUtils.toString(response.getEntity());
-		} catch (Exception e) {
-			throw new ElasticsearchException("Error while getting mapping for indexName : " + indexName, e);
-		}
 
-		return convertAliasResponse(aliasResponse);
+			return convertAliasResponse(aliasResponse);
+		});
 	}
 
 	@Override
@@ -190,14 +159,11 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 				.indices(indexName) //
 				.includeDefaults(includeDefaults);
 
-		try {
-			GetSettingsResponse response = client.indices() //
-					.getSettings(request, RequestOptions.DEFAULT);
+		//
+		GetSettingsResponse response = restTemplate.execute(client -> client.indices() //
+				.getSettings(request, RequestOptions.DEFAULT));
 
-			return convertSettingsResponseToMap(response, indexName);
-		} catch (IOException e) {
-			throw new ElasticsearchException("failed to get settings for index: " + indexName, e);
-		}
+		return convertSettingsResponseToMap(response, indexName);
 	}
 
 	@Override
@@ -205,11 +171,8 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 
 		Assert.notNull(index, "No index defined for refresh()");
 
-		try {
-			client.indices().refresh(refreshRequest(index.getIndexNames()), RequestOptions.DEFAULT);
-		} catch (IOException e) {
-			throw new ElasticsearchException("failed to refresh index: " + index, e);
-		}
+		restTemplate
+				.execute(client -> client.indices().refresh(refreshRequest(index.getIndexNames()), RequestOptions.DEFAULT));
 	}
 
 	// region Helper methods
@@ -225,7 +188,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 
 			return result;
 		} catch (IOException e) {
-			throw new ElasticsearchException("Could not map alias response : " + mappingResponse, e);
+			throw new UncategorizedElasticsearchException("Could not map alias response : " + mappingResponse, e);
 		}
 	}
 
@@ -261,7 +224,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 			}
 			return aliasMetaDataList;
 		} catch (IOException e) {
-			throw new ElasticsearchException("Could not map alias response : " + aliasResponse, e);
+			throw new UncategorizedElasticsearchException("Could not map alias response : " + aliasResponse, e);
 		}
 	}
 	// endregion

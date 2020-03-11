@@ -25,7 +25,9 @@ import org.springframework.lang.Nullable;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
+ * @deprecated since 4.0, use {@link org.springframework.dao.UncategorizedDataAccessException}
  */
+@Deprecated
 public class ElasticsearchException extends RuntimeException {
 
 	@Nullable private Map<String, String> failedDocuments;
