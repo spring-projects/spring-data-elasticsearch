@@ -142,7 +142,7 @@ public class MappingElasticsearchConverterUnitTests {
 		bigBunsCafe.name = "Big Buns Cafe";
 		bigBunsCafe.city = "Los Angeles";
 		bigBunsCafe.street = "15 South Fremont Avenue";
-		bigBunsCafre.state = null;
+		bigBunsCafe.state = null;
 		bigBunsCafe.location = new Point(34.0945637D, -118.1545845D);
 
 		sarahAsMap = Document.create();
