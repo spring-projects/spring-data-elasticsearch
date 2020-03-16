@@ -733,6 +733,7 @@ public class MappingElasticsearchConverterUnitTests {
 		Point location;
 		String street;
 		String city;
+		String state;
 	}
 
 	@EqualsAndHashCode(callSuper = true)
