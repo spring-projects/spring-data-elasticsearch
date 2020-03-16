@@ -170,6 +170,7 @@ public class MappingElasticsearchConverterUnitTests {
 		bigBunsCafeAsMap.put("city", "Los Angeles");
 		bigBunsCafeAsMap.put("street", "15 South Fremont Avenue");
 		bigBunsCafeAsMap.put("location", new LinkedHashMap<>());
+		bigBunsCafeAsMap.put("state", null);
 		((HashMap<String, Object>) bigBunsCafeAsMap.get("location")).put("lat", 34.0945637D);
 		((HashMap<String, Object>) bigBunsCafeAsMap.get("location")).put("lon", -118.1545845D);
 		bigBunsCafeAsMap.put("_class",
