@@ -7,9 +7,9 @@ import org.springframework.lang.Nullable;
 /**
  * @author Artur Konczak
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  */
 public interface ScrolledPage<T> extends Page<T> {
 
-    @Nullable
-    String getScrollId();
+	String getScrollId();
 }
