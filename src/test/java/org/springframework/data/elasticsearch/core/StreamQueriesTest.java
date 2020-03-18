@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
