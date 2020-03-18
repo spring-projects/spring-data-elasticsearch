@@ -142,7 +142,6 @@ public class MappingElasticsearchConverterUnitTests {
 		bigBunsCafe.name = "Big Buns Cafe";
 		bigBunsCafe.city = "Los Angeles";
 		bigBunsCafe.street = "15 South Fremont Avenue";
-		bigBunsCafe.state = null;
 		bigBunsCafe.location = new Point(34.0945637D, -118.1545845D);
 
 		sarahAsMap = Document.create();
@@ -171,7 +170,6 @@ public class MappingElasticsearchConverterUnitTests {
 		bigBunsCafeAsMap.put("city", "Los Angeles");
 		bigBunsCafeAsMap.put("street", "15 South Fremont Avenue");
 		bigBunsCafeAsMap.put("location", new LinkedHashMap<>());
-		bigBunsCafeAsMap.put("state", null);
 		((HashMap<String, Object>) bigBunsCafeAsMap.get("location")).put("lat", 34.0945637D);
 		((HashMap<String, Object>) bigBunsCafeAsMap.get("location")).put("lon", -118.1545845D);
 		bigBunsCafeAsMap.put("_class",
@@ -734,7 +732,6 @@ public class MappingElasticsearchConverterUnitTests {
 		Point location;
 		String street;
 		String city;
-		String state;
 	}
 
 	@EqualsAndHashCode(callSuper = true)
