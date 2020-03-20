@@ -19,10 +19,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.data.convert.EntityConverter;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.SearchScrollHits;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
@@ -39,6 +38,7 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Sasch Woo
  */
 public interface ElasticsearchConverter
 		extends EntityConverter<ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty, Object, Document> {
@@ -89,6 +89,17 @@ public interface ElasticsearchConverter
 	 * @since 4.0
 	 */
 	<T> SearchHits<T> read(Class<T> type, SearchDocumentResponse searchDocumentResponse);
+	
+	/**
+	 * builds a {@link SearchScrollHits} from a {@link SearchDocumentResponse}.
+	 * 
+	 * @param <T> the clazz of the type, must not be {@literal null}.
+	 * @param type the type of the returned data, must not be {@literal null}.
+	 * @param searchDocumentResponse the response to read from, must not be {@literal null}.
+	 * @return a {@link SearchScrollHits} object
+	 * @since 4.0
+	 */
+	<T> SearchScrollHits<T> readScroll(Class<T> type, SearchDocumentResponse searchDocumentResponse);
 
 	/**
 	 * builds a {@link SearchHit} from a {@link SearchDocument}.
@@ -100,9 +111,6 @@ public interface ElasticsearchConverter
 	 * @since 4.0
 	 */
 	<T> SearchHit<T> read(Class<T> type, SearchDocument searchDocument);
-
-	<T> AggregatedPage<SearchHit<T>> mapResults(SearchDocumentResponse response, Class<T> clazz,
-			@Nullable Pageable pageable);
 
 	// endregion
 
