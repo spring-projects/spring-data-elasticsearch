@@ -27,6 +27,7 @@ import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
@@ -260,22 +261,32 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> ScrolledPage<SearchHit<T>> searchScrollStart(long scrollTimeInMillis, Query query, Class<T> clazz,
+	public <T> SearchScrollHits<T> searchScrollStart(long scrollTimeInMillis, Query query, Class<T> clazz,
 			IndexCoordinates index) {
-		Assert.notNull(query.getPageable(), "Query.pageable is required for scan & scroll");
 
-		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, clazz, index);
-		searchRequestBuilder.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis));
-		SearchResponse response = getSearchResponse(searchRequestBuilder);
-		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, null);
+		Assert.notNull(query.getPageable(), "pageable of query must not be null.");
+
+		ActionFuture<SearchResponse> action = requestFactory //
+				.searchRequestBuilder(client, query, clazz, index) //
+				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)) //
+				.execute();
+
+		SearchResponse response = getSearchResponseWithTimeout(action);
+
+		return elasticsearchConverter.readScroll(clazz, SearchDocumentResponse.from(response));
 	}
 
 	@Override
-	public <T> ScrolledPage<SearchHit<T>> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
-			Class<T> clazz) {
-		SearchResponse response = getSearchResponseWithTimeout(
-				client.prepareSearchScroll(scrollId).setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)).execute());
-		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, Pageable.unpaged());
+	public <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz) {
+
+		 ActionFuture<SearchResponse> action = client //
+				.prepareSearchScroll(scrollId) //
+				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)) //
+				.execute();
+		
+		SearchResponse response = getSearchResponseWithTimeout(action);
+
+		return elasticsearchConverter.readScroll(clazz, SearchDocumentResponse.from(response));
 	}
 
 	@Override

@@ -15,21 +15,19 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.util.Iterator;
-import java.util.List;
-
 import org.elasticsearch.search.aggregations.Aggregations;
-import org.springframework.data.util.Streamable;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
 
 /**
- * Encapsulates a list of {@link SearchHit}s with additional information from the search.
- * 
- * @param <T> the result data class.
+ * A {@link SearchHitsIterator} encapsulates {@link SearchHit} results that can be wrapped in a Java 8
+ * {@link java.util.stream.Stream}.
+ *
  * @author Sascha Woo
+ * @param <T>
  * @since 4.0
  */
-public interface SearchHits<T> extends Streamable<SearchHit<T>> {
+public interface SearchHitsIterator<T> extends CloseableIterator<SearchHit<T>> {
 
 	/**
 	 * @return the aggregations.
@@ -41,18 +39,6 @@ public interface SearchHits<T> extends Streamable<SearchHit<T>> {
 	 * @return the maximum score
 	 */
 	float getMaxScore();
-
-	/**
-	 * @param index position in List.
-	 * @return the {@link SearchHit} at position {index}
-	 * @throws IndexOutOfBoundsException on invalid index
-	 */
-	SearchHit<T> getSearchHit(int index);
-
-	/**
-	 * @return the contained {@link SearchHit}s.
-	 */
-	List<SearchHit<T>> getSearchHits();
 
 	/**
 	 * @return the number of total hits.
@@ -69,20 +55,6 @@ public interface SearchHits<T> extends Streamable<SearchHit<T>> {
 	 */
 	default boolean hasAggregations() {
 		return getAggregations() != null;
-	}
-
-	/**
-	 * @return whether the {@link SearchHits} has search hits.
-	 */
-	default boolean hasSearchHits() {
-		return !getSearchHits().isEmpty();
-	}
-
-	/**
-	 * @return an iterator for {@link SearchHit}
-	 */
-	default Iterator<SearchHit<T>> iterator() {
-		return getSearchHits().iterator();
 	}
 
 }

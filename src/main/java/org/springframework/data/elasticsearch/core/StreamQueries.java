@@ -20,7 +20,8 @@ import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.springframework.data.util.CloseableIterator;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -33,27 +34,32 @@ import org.springframework.util.Assert;
 abstract class StreamQueries {
 
 	/**
-	 * Stream query results using {@link ScrolledPage}.
+	 * Stream query results using {@link SearchScrollHits}.
 	 *
-	 * @param page the initial scrolled page.
+	 * @param searchHits the initial hits
 	 * @param continueScrollFunction function to continue scrolling applies to the current scrollId.
 	 * @param clearScrollConsumer consumer to clear the scroll context by accepting the current scrollId.
 	 * @param <T>
-	 * @return the {@link CloseableIterator}.
+	 * @return the {@link SearchHitsIterator}.
 	 */
-	static <T> CloseableIterator<T> streamResults(ScrolledPage<T> page,
-			Function<String, ScrolledPage<T>> continueScrollFunction, Consumer<String> clearScrollConsumer) {
+	static <T> SearchHitsIterator<T> streamResults(SearchScrollHits<T> searchHits,
+			Function<String, SearchScrollHits<T>> continueScrollFunction, Consumer<String> clearScrollConsumer) {
 
-		Assert.notNull(page, "page must not be null.");
-		Assert.notNull(page.getScrollId(), "scrollId must not be null.");
+		Assert.notNull(searchHits, "searchHits must not be null.");
+		Assert.notNull(searchHits.getScrollId(), "scrollId of searchHits must not be null.");
 		Assert.notNull(continueScrollFunction, "continueScrollFunction must not be null.");
 		Assert.notNull(clearScrollConsumer, "clearScrollConsumer must not be null.");
 
-		return new CloseableIterator<T>() {
+		Aggregations aggregations = searchHits.getAggregations();
+		float maxScore = searchHits.getMaxScore();
+		long totalHits = searchHits.getTotalHits();
+		TotalHitsRelation totalHitsRelation = searchHits.getTotalHitsRelation();
+
+		return new SearchHitsIterator<T>() {
 
 			// As we couldn't retrieve single result with scroll, store current hits.
-			private volatile Iterator<T> scrollHits = page.iterator();
-			private volatile String scrollId = page.getScrollId();
+			private volatile Iterator<SearchHit<T>> scrollHits = searchHits.iterator();
+			private volatile String scrollId = searchHits.getScrollId();
 			private volatile boolean continueScroll = scrollHits.hasNext();
 
 			@Override
@@ -68,6 +74,27 @@ abstract class StreamQueries {
 			}
 
 			@Override
+			@Nullable
+			public Aggregations getAggregations() {
+				return aggregations;
+			}
+
+			@Override
+			public float getMaxScore() {
+				return maxScore;
+			}
+
+			@Override
+			public long getTotalHits() {
+				return totalHits;
+			}
+
+			@Override
+			public TotalHitsRelation getTotalHitsRelation() {
+				return totalHitsRelation;
+			}
+
+			@Override
 			public boolean hasNext() {
 
 				if (!continueScroll) {
@@ -75,7 +102,7 @@ abstract class StreamQueries {
 				}
 
 				if (!scrollHits.hasNext()) {
-					ScrolledPage<T> nextPage = continueScrollFunction.apply(scrollId);
+					SearchScrollHits<T> nextPage = continueScrollFunction.apply(scrollId);
 					scrollHits = nextPage.iterator();
 					scrollId = nextPage.getScrollId();
 					continueScroll = scrollHits.hasNext();
@@ -85,7 +112,7 @@ abstract class StreamQueries {
 			}
 
 			@Override
-			public T next() {
+			public SearchHit<T> next() {
 				if (hasNext()) {
 					return scrollHits.next();
 				}

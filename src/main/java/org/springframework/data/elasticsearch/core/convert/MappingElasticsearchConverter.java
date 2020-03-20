@@ -29,13 +29,13 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.core.SearchScrollHits;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
-import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
+import org.springframework.data.elasticsearch.core.SearchHitsImpl;
+import org.springframework.data.elasticsearch.core.TotalHitsRelation;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
@@ -138,33 +138,8 @@ public class MappingElasticsearchConverter
 	// region read
 
 	@Override
-	public <T> AggregatedPage<SearchHit<T>> mapResults(SearchDocumentResponse response, Class<T> type,
-			@Nullable Pageable pageable) {
-
-		List<SearchHit<T>> results = response.getSearchDocuments().stream() //
-				.map(searchDocument -> read(type, searchDocument)) //
-				.collect(Collectors.toList());
-
-		return new AggregatedPageImpl<>(results, pageable, response);
-	}
-
-	@Override
 	public <T> SearchHits<T> read(Class<T> type, SearchDocumentResponse searchDocumentResponse) {
-
-		Assert.notNull(type, "type must not be null");
-		Assert.notNull(searchDocumentResponse, "searchDocumentResponse must not be null");
-
-		long totalHits = searchDocumentResponse.getTotalHits();
-		float maxScore = searchDocumentResponse.getMaxScore();
-		String scrollId = searchDocumentResponse.getScrollId();
-		List<SearchHit<T>> searchHits = searchDocumentResponse.getSearchDocuments().stream() //
-				.map(searchDocument -> read(type, searchDocument)) //
-				.collect(Collectors.toList());
-		Aggregations aggregations = searchDocumentResponse.getAggregations();
-		SearchHits.TotalHitsRelation totalHitsRelation = SearchHits.TotalHitsRelation
-				.valueOf(searchDocumentResponse.getTotalHitsRelation());
-
-		return new SearchHits<>(totalHits, totalHitsRelation, maxScore, scrollId, searchHits, aggregations);
+		return readResponse(type, searchDocumentResponse);
 	}
 
 	@Override
@@ -180,6 +155,29 @@ public class MappingElasticsearchConverter
 		T content = mapDocument(searchDocument, type);
 
 		return new SearchHit<T>(id, score, sortValues, highlightFields, content);
+	}
+
+	@Override
+	public <T> SearchScrollHits<T> readScroll(Class<T> type, SearchDocumentResponse searchDocumentResponse) {
+		return readResponse(type, searchDocumentResponse);
+	}
+
+	private <T> SearchHitsImpl<T> readResponse(Class<T> type, SearchDocumentResponse searchDocumentResponse) {
+
+		Assert.notNull(type, "type must not be null");
+		Assert.notNull(searchDocumentResponse, "searchDocumentResponse must not be null");
+
+		long totalHits = searchDocumentResponse.getTotalHits();
+		float maxScore = searchDocumentResponse.getMaxScore();
+		String scrollId = searchDocumentResponse.getScrollId();
+		List<SearchHit<T>> searchHits = searchDocumentResponse.getSearchDocuments().stream() //
+				.map(searchDocument -> read(type, searchDocument)) //
+				.collect(Collectors.toList());
+		Aggregations aggregations = searchDocumentResponse.getAggregations();
+		TotalHitsRelation totalHitsRelation = TotalHitsRelation
+				.valueOf(searchDocumentResponse.getTotalHitsRelation());
+
+		return new SearchHitsImpl<>(totalHits, totalHitsRelation, maxScore, scrollId, searchHits, aggregations);
 	}
 
 	@Nullable

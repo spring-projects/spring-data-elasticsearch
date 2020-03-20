@@ -36,6 +36,7 @@ import org.springframework.lang.Nullable;
  * APIs</a>.
  *
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  * @since 4.0
  */
 public interface SearchOperations {
@@ -155,8 +156,9 @@ public interface SearchOperations {
 	 * @param query the query to execute
 	 * @param clazz the entity clazz used for property mapping
 	 * @param index the index to run the query against
-	 * @return a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of *
-	 *         error.
+	 * @return a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed. The
+	 *         try-with-resources construct should be used to ensure that the close method is invoked after the operations
+	 *         are completed.
 	 * @deprecated since 4.0, use {@link #searchForStream(Query, Class, IndexCoordinates)}.
 	 */
 	@Deprecated
@@ -236,7 +238,6 @@ public interface SearchOperations {
 		AggregatedPage<SearchHit<T>> aggregatedPage = SearchHitSupport.page(searchHits, query.getPageable());
 		return (AggregatedPage<T>) SearchHitSupport.unwrapSearchHits(aggregatedPage);
 	}
-
 
 	// endregion
 
@@ -340,27 +341,29 @@ public interface SearchOperations {
 	<T> SearchHits<T> search(MoreLikeThisQuery query, Class<T> clazz, IndexCoordinates index);
 
 	/**
-	 * Executes the given {@link Query} against elasticsearch and return result as {@link CloseableIterator}.
+	 * Executes the given {@link Query} against elasticsearch and return result as {@link SearchHitsIterator}.
 	 * <p>
 	 *
 	 * @param <T> element return type
 	 * @param query the query to execute
 	 * @param clazz the entity clazz used for property mapping and index name extraction
-	 * @return a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of *
-	 *         error.
+	 * @return a {@link SearchHitsIterator} that wraps an Elasticsearch scroll context that needs to be closed. The
+	 *         try-with-resources construct should be used to ensure that the close method is invoked after the operations
+	 *         are completed.
 	 */
-	<T> CloseableIterator<SearchHit<T>> searchForStream(Query query, Class<T> clazz);
+	<T> SearchHitsIterator<T> searchForStream(Query query, Class<T> clazz);
 
 	/**
-	 * Executes the given {@link Query} against elasticsearch and return result as {@link CloseableIterator}.
+	 * Executes the given {@link Query} against elasticsearch and return result as {@link SearchHitsIterator}.
 	 * <p>
 	 *
 	 * @param <T> element return type
 	 * @param query the query to execute
 	 * @param clazz the entity clazz used for property mapping
 	 * @param index the index to run the query against
-	 * @return a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of *
-	 *         error.
+	 * @return a {@link SearchHitsIterator} that wraps an Elasticsearch scroll context that needs to be closed. The
+	 *         try-with-resources construct should be used to ensure that the close method is invoked after the operations
+	 *         are completed.
 	 */
-	<T> CloseableIterator<SearchHit<T>> searchForStream(Query query, Class<T> clazz, IndexCoordinates index);
+	<T> SearchHitsIterator<T> searchForStream(Query query, Class<T> clazz, IndexCoordinates index);
 }

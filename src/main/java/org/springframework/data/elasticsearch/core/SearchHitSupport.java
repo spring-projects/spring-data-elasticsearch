@@ -32,6 +32,7 @@ import org.springframework.lang.Nullable;
  * Utility class with helper methods for working with {@link SearchHit}.
  * 
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  * @since 4.0
  */
 public final class SearchHitSupport {
@@ -95,10 +96,17 @@ public final class SearchHitSupport {
 	 * @param searchHits, must not be {@literal null}.
 	 * @param pageable, must not be {@literal null}.
 	 * @return the created Page
+	 * @deprecated since 4.0, will be removed in a future version.
 	 */
+	@Deprecated
 	public static <T> AggregatedPage<SearchHit<T>> page(SearchHits<T> searchHits, Pageable pageable) {
-		return new AggregatedPageImpl<>(searchHits.getSearchHits(), pageable, searchHits.getTotalHits(),
-				searchHits.getAggregations(), searchHits.getScrollId(), searchHits.getMaxScore());
+		return new AggregatedPageImpl<>( //
+				searchHits.getSearchHits(), //
+				pageable, //
+				searchHits.getTotalHits(), //
+				searchHits.getAggregations(), //
+				null, //
+				searchHits.getMaxScore());
 	}
 
 	public static <T> SearchPage<T> searchPageFor(SearchHits<T> searchHits, @Nullable Pageable pageable) {

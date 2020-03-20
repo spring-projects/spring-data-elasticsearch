@@ -208,20 +208,25 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	@Override
 	public <T> CloseableIterator<T> stream(Query query, Class<T> clazz, IndexCoordinates index) {
+
 		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
 		return (CloseableIterator<T>) SearchHitSupport.unwrapSearchHits(searchForStream(query, clazz, index));
 	}
 
 	@Override
-	public <T> CloseableIterator<SearchHit<T>> searchForStream(Query query, Class<T> clazz) {
+	public <T> SearchHitsIterator<T> searchForStream(Query query, Class<T> clazz) {
 		return searchForStream(query, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
-	public <T> CloseableIterator<SearchHit<T>> searchForStream(Query query, Class<T> clazz, IndexCoordinates index) {
+	public <T> SearchHitsIterator<T> searchForStream(Query query, Class<T> clazz, IndexCoordinates index) {
+
 		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
-		return StreamQueries.streamResults(searchScrollStart(scrollTimeInMillis, query, clazz, index),
-				scrollId -> searchScrollContinue(scrollId, scrollTimeInMillis, clazz), this::searchScrollClear);
+
+		return StreamQueries.streamResults( //
+				searchScrollStart(scrollTimeInMillis, query, clazz, index), //
+				scrollId -> searchScrollContinue(scrollId, scrollTimeInMillis, clazz), //
+				this::searchScrollClear);
 	}
 
 	@Override
@@ -283,13 +288,13 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	/*
 	 * internal use only, not for public API
 	 */
-	abstract protected <T> ScrolledPage<SearchHit<T>> searchScrollStart(long scrollTimeInMillis, Query query,
+	abstract protected <T> SearchScrollHits<T> searchScrollStart(long scrollTimeInMillis, Query query,
 			Class<T> clazz, IndexCoordinates index);
 
 	/*
 	 * internal use only, not for public API
 	 */
-	abstract protected <T> ScrolledPage<SearchHit<T>> searchScrollContinue(@Nullable String scrollId,
+	abstract protected <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId,
 			long scrollTimeInMillis, Class<T> clazz);
 
 	/*

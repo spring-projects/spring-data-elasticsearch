@@ -39,7 +39,6 @@ import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.suggest.SuggestBuilder;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
@@ -257,24 +256,28 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> ScrolledPage<SearchHit<T>> searchScrollStart(long scrollTimeInMillis, Query query, Class<T> clazz,
+	public <T> SearchScrollHits<T> searchScrollStart(long scrollTimeInMillis, Query query, Class<T> clazz,
 			IndexCoordinates index) {
 
-		Assert.notNull(query.getPageable(), "Query.pageable is required for scan & scroll");
+		Assert.notNull(query.getPageable(), "pageable of query must not be null.");
 
 		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
 		searchRequest.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
-		SearchResponse result = execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
-		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(result), clazz, null);
+
+		SearchResponse response = execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
+
+		return elasticsearchConverter.readScroll(clazz, SearchDocumentResponse.from(response));
 	}
 
 	@Override
-	public <T> ScrolledPage<SearchHit<T>> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
-			Class<T> clazz) {
+	public <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz) {
+
 		SearchScrollRequest request = new SearchScrollRequest(scrollId);
 		request.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
-		SearchResponse response = execute(client -> client.searchScroll(request, RequestOptions.DEFAULT));
-		return elasticsearchConverter.mapResults(SearchDocumentResponse.from(response), clazz, Pageable.unpaged());
+
+		SearchResponse response = execute(client -> client.scroll(request, RequestOptions.DEFAULT));
+
+		return elasticsearchConverter.readScroll(clazz, SearchDocumentResponse.from(response));
 	}
 
 	@Override

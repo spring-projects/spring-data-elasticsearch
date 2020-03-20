@@ -19,12 +19,14 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.util.CloseableIterator;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 
 /**
@@ -36,42 +38,51 @@ public class StreamQueriesTest {
 	public void shouldCallClearScrollOnIteratorClose() {
 
 		// given
-		List<String> results = new ArrayList<>();
-		results.add("one");
+		List<SearchHit<String>> hits = new ArrayList<>();
+		hits.add(new SearchHit<String>(null, 0, null, null, "one"));
 
-		ScrolledPage<String> page = new ScrolledPageImpl("1234", results);
+		SearchScrollHits<String> searchHits = newSearchScrollHits(hits);
 
 		AtomicBoolean clearScrollCalled = new AtomicBoolean(false);
 
 		// when
-		CloseableIterator<String> closeableIterator = StreamQueries.streamResults( //
-				page, //
-				scrollId -> new ScrolledPageImpl(scrollId, Collections.emptyList()), //
+		SearchHitsIterator<String> iterator = StreamQueries.streamResults( //
+				searchHits, //
+				scrollId -> newSearchScrollHits(Collections.emptyList()), //
 				scrollId -> clearScrollCalled.set(true));
 
-		while (closeableIterator.hasNext()) {
-			closeableIterator.next();
+		while (iterator.hasNext()) {
+			iterator.next();
 		}
-		closeableIterator.close();
+		iterator.close();
 
 		// then
 		assertThat(clearScrollCalled).isTrue();
 
 	}
 
-	private static class ScrolledPageImpl extends PageImpl<String> implements ScrolledPage<String> {
+	@Test // DATAES-766
+	public void shouldReturnTotalHits() {
 
-		private String scrollId;
+		// given
+		List<SearchHit<String>> hits = new ArrayList<>();
+		hits.add(new SearchHit<String>(null, 0, null, null, "one"));
 
-		public ScrolledPageImpl(String scrollId, List<String> content) {
-			super(content);
-			this.scrollId = scrollId;
-		}
+		SearchScrollHits<String> searchHits = newSearchScrollHits(hits);
 
-		@Override
-		@Nullable
-		public String getScrollId() {
-			return scrollId;
-		}
+		// when
+		SearchHitsIterator<String> iterator = StreamQueries.streamResults( //
+				searchHits, //
+				scrollId -> newSearchScrollHits(Collections.emptyList()), //
+				scrollId -> {
+				});
+
+		// then
+		assertThat(iterator.getTotalHits()).isEqualTo(1);
+
+	}
+
+	private SearchScrollHits<String> newSearchScrollHits(List<SearchHit<String>> hits) {
+		return new SearchHitsImpl<String>(hits.size(), TotalHitsRelation.EQUAL_TO, 0, "1234", hits, null);
 	}
 }
