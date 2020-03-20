@@ -16,16 +16,25 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.mockito.Mockito.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import java.util.Collections;
 
+import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.client.Client;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
@@ -35,18 +44,22 @@ import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMa
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
  */
+@ExtendWith(MockitoExtension.class)
 class RequestFactoryTests {
 
 	@Nullable private static RequestFactory requestFactory;
 	@Nullable private static MappingElasticsearchConverter converter;
 
-	@BeforeAll
+	@Mock private Client client;
 
+	@BeforeAll
 	static void setUpAll() {
 		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
 		mappingContext.setInitialEntitySet(Collections.singleton(Person.class));
@@ -116,6 +129,28 @@ class RequestFactoryTests {
 		SearchRequest searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
 
 		assertThat(searchRequest.routing()).isEqualTo(route);
+	}
+
+	@Test // DATAES-765
+	void shouldAddMaxQueryWindowForUnpagedToRequest() {
+		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withPageable(Pageable.unpaged()).build();
+
+		SearchRequest searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
+
+		assertThat(searchRequest.source().from()).isEqualTo(0);
+		assertThat(searchRequest.source().size()).isEqualTo(RequestFactory.INDEX_MAX_RESULT_WINDOW);
+	}
+
+	@Test // DATAES-765
+	void shouldAddMaxQueryWindowForUnpagedToRequestBuilder() {
+		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
+		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withPageable(Pageable.unpaged()).build();
+
+		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, Person.class,
+				IndexCoordinates.of("persons"));
+
+		assertThat(searchRequestBuilder.request().source().from()).isEqualTo(0);
+		assertThat(searchRequestBuilder.request().source().size()).isEqualTo(RequestFactory.INDEX_MAX_RESULT_WINDOW);
 	}
 
 	static class Person {
