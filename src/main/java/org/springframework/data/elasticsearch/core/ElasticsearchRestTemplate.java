@@ -1347,6 +1347,9 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 
 			startRecord = (int) offset;
 			sourceBuilder.size(query.getPageable().getPageSize());
+		} else {
+			startRecord = 0;
+			sourceBuilder.size(INDEX_MAX_RESULT_WINDOW);
 		}
 		sourceBuilder.from(startRecord);
 

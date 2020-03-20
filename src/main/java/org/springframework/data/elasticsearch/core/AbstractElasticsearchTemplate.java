@@ -15,6 +15,8 @@ import org.springframework.util.StringUtils;
  */
 public abstract class AbstractElasticsearchTemplate {
 
+	static final Integer INDEX_MAX_RESULT_WINDOW = 10_000;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractElasticsearchTemplate.class);
 
 	protected ElasticsearchConverter elasticsearchConverter;

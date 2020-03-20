@@ -367,6 +367,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 			request.source(searchSourceBuilder);
 		} else {
+			searchSourceBuilder.from(0);
+			searchSourceBuilder.size(AbstractElasticsearchTemplate.INDEX_MAX_RESULT_WINDOW);
 			request.source(searchSourceBuilder);
 		}
 		return request;
