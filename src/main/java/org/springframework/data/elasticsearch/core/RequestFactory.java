@@ -84,6 +84,10 @@ import org.springframework.util.StringUtils;
  * @since 4.0
  */
 class RequestFactory {
+
+	// the default max result window size of Elasticsearch
+	static final Integer INDEX_MAX_RESULT_WINDOW = 10_000;
+
 	private final ElasticsearchConverter elasticsearchConverter;
 
 	public RequestFactory(ElasticsearchConverter elasticsearchConverter) {
@@ -557,6 +561,9 @@ class RequestFactory {
 		if (query.getPageable().isPaged()) {
 			sourceBuilder.from((int) query.getPageable().getOffset());
 			sourceBuilder.size(query.getPageable().getPageSize());
+		} else {
+			sourceBuilder.from(0);
+			sourceBuilder.size(INDEX_MAX_RESULT_WINDOW);
 		}
 
 		if (!query.getFields().isEmpty()) {
@@ -720,6 +727,9 @@ class RequestFactory {
 		if (query.getPageable().isPaged()) {
 			searchRequestBuilder.setFrom((int) query.getPageable().getOffset());
 			searchRequestBuilder.setSize(query.getPageable().getPageSize());
+		} else {
+			searchRequestBuilder.setFrom(0);
+			searchRequestBuilder.setSize(INDEX_MAX_RESULT_WINDOW);
 		}
 
 		if (!query.getFields().isEmpty()) {
