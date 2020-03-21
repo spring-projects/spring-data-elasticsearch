@@ -98,6 +98,7 @@ public class MappingElasticsearchConverterUnitTests {
 	Document rifleAsMap;
 	Document shotGunAsMap;
 	Document bigBunsCafeAsMap;
+	Document notificationAsMap;
 
 	@BeforeEach
 	public void init() {
@@ -193,6 +194,17 @@ public class MappingElasticsearchConverterUnitTests {
 		shotGunAsMap = Document.create();
 		shotGunAsMap.put("model", "Ithaca 37 Pump Shotgun");
 		shotGunAsMap.put("_class", ShotGun.class.getName());
+		
+		notificationAsMap = Document.create();
+		notificationAsMap.put("id",1L);
+		notificationAsMap.put("fromEmail","from@email.com");
+		notificationAsMap.put("toEmail","to@email.com");
+		Map<String,Object> data = new HashMap<>();
+		data.put("documentType","abc");
+		data.put("content",null);
+		notificationAsMap.put("params",data);
+		notificationAsMap.put("_class",
+				  "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Notification");
 	}
 
 	@Test
@@ -615,6 +627,40 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(person.getBirthDate()).isEqualTo(LocalDate.of(2000, 8, 22));
 		assertThat(person.getGender()).isEqualTo(Gender.MAN);
 	}
+	
+	@Test //DATAES-763
+	void writeEntityWithMapDataType() {
+
+		Notification notification = new Notification();
+		notification.fromEmail="from@email.com";
+		notification.toEmail="to@email.com";
+		Map<String,Object> data = new HashMap<>();
+		data.put("documentType","abc");
+		data.put("content",null);
+		notification.params= data;
+		notification.id= 1L;
+
+		Document document = Document.create();
+		mappingElasticsearchConverter.write(notification,document);
+		Assert.assertEquals(notificationAsMap,document);
+	}
+
+	@Test //DATAES-763
+	void readEntityWithMapDataType() {
+
+		Document document = Document.create();
+		document.put("id",1L);
+		document.put("fromEmail","from@email.com");
+		document.put("toEmail","to@email.com");
+		Map<String,Object> data = new HashMap<>();
+		data.put("documentType","abc");
+		data.put("content",null);
+		document.put("params",data);
+
+		Notification notification = mappingElasticsearchConverter.read(Notification.class,document);
+		Assert.assertEquals("abc", notification.params.get("documentType"));
+		Assert.assertNull(notification.params.get("content"));
+	}
 
 	private String pointTemplate(String name, Point point) {
 		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
@@ -747,6 +793,15 @@ public class MappingElasticsearchConverterUnitTests {
 		Object object;
 		List<Object> objectList;
 		Map<String, Object> objectMap;
+	}
+	
+	@Data
+	static class Notification {
+
+		Long id;
+		String fromEmail;
+		String toEmail;
+		Map<String,Object> params;
 	}
 
 	@WritingConverter
