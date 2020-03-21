@@ -355,8 +355,10 @@ public class MappingElasticsearchConverter
 
 		for (Object value : source) {
 			
-			if(null == value)
+			if(value == null) {
 				return null;
+			}
+		
 
 			if (isSimpleType(value)) {
 				target.add(
