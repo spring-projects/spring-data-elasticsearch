@@ -642,7 +642,7 @@ public class MappingElasticsearchConverterUnitTests {
 
 		Document document = Document.create();
 		mappingElasticsearchConverter.write(notification,document);
-		Assert.assertEquals(notificationAsMap,document);
+		assertThat(document).isEqualTo(notificationAsMap);
 	}
 
 	@Test //DATAES-763
@@ -658,8 +658,8 @@ public class MappingElasticsearchConverterUnitTests {
 		document.put("params",data);
 
 		Notification notification = mappingElasticsearchConverter.read(Notification.class,document);
-		Assert.assertEquals("abc", notification.params.get("documentType"));
-		Assert.assertNull(notification.params.get("content"));
+		assertThat(notification.params.get("documentType")).isEqualTo("abc");
+		assertThat(notification.params.get("content")).isNull();
 	}
 
 	private String pointTemplate(String name, Point point) {
