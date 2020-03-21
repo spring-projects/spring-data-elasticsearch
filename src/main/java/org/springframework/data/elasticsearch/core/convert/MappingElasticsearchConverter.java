@@ -354,6 +354,9 @@ public class MappingElasticsearchConverter
 		Collection<Object> target = createCollectionForValue(targetType, source.size());
 
 		for (Object value : source) {
+			
+			if(null == value)
+				return null;
 
 			if (isSimpleType(value)) {
 				target.add(
