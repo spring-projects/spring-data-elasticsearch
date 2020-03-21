@@ -390,12 +390,9 @@ public class MappingElasticsearchConverter
 		Map<String, Object> target = new LinkedHashMap<>();
 		for (Entry<String, Object> entry : source.entrySet()) {
 			
-			if(null == entry.getValue()) {
+			if(entry.getValue() == null) {
 				target.put(entry.getKey(),null);
-				continue ;
-			}
-
-			if (isSimpleType(entry.getValue())) {
+			} else if (isSimpleType(entry.getValue())) {
 				target.put(entry.getKey(),
 						readSimpleValue(entry.getValue(), targetType.isMap() ? targetType.getComponentType() : targetType));
 			} else {
