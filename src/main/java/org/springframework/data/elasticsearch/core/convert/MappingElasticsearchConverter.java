@@ -15,8 +15,17 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.search.aggregations.Aggregations;
@@ -354,13 +363,10 @@ public class MappingElasticsearchConverter
 		Collection<Object> target = createCollectionForValue(targetType, source.size());
 
 		for (Object value : source) {
-			
-			if(value == null) {
-				return null;
-			}
-		
 
-			if (isSimpleType(value)) {
+			if (value == null) {
+				target.add(null);
+			} else if (isSimpleType(value)) {
 				target.add(
 						readSimpleValue(value, targetType.getComponentType() != null ? targetType.getComponentType() : targetType));
 			} else {
@@ -391,30 +397,32 @@ public class MappingElasticsearchConverter
 
 		Map<String, Object> target = new LinkedHashMap<>();
 		for (Entry<String, Object> entry : source.entrySet()) {
-			
-			if(entry.getValue() == null) {
-				target.put(entry.getKey(),null);
-			} else if (isSimpleType(entry.getValue())) {
-				target.put(entry.getKey(),
-						readSimpleValue(entry.getValue(), targetType.isMap() ? targetType.getComponentType() : targetType));
+
+			String entryKey = entry.getKey();
+			Object entryValue = entry.getValue();
+
+			if (entryValue == null) {
+				target.put(entryKey, null);
+			} else if (isSimpleType(entryValue)) {
+				target.put(entryKey,
+						readSimpleValue(entryValue, targetType.isMap() ? targetType.getComponentType() : targetType));
 			} else {
 
-				ElasticsearchPersistentEntity<?> targetEntity = computeGenericValueTypeForRead(property, entry.getValue());
+				ElasticsearchPersistentEntity<?> targetEntity = computeGenericValueTypeForRead(property, entryValue);
 
 				if (targetEntity.getTypeInformation().isMap()) {
 
-					Map<String, Object> valueMap = (Map<String, Object>) entry.getValue();
+					Map<String, Object> valueMap = (Map<String, Object>) entryValue;
 					if (typeMapper.containsTypeInformation(valueMap)) {
-						target.put(entry.getKey(), readEntity(targetEntity, valueMap));
+						target.put(entryKey, readEntity(targetEntity, valueMap));
 					} else {
-						target.put(entry.getKey(), readValue(valueMap, property, targetEntity.getTypeInformation()));
+						target.put(entryKey, readValue(valueMap, property, targetEntity.getTypeInformation()));
 					}
 
 				} else if (targetEntity.getTypeInformation().isCollectionLike()) {
-					target.put(entry.getKey(),
-							readValue(entry.getValue(), property, targetEntity.getTypeInformation().getActualType()));
+					target.put(entryKey, readValue(entryValue, property, targetEntity.getTypeInformation().getActualType()));
 				} else {
-					target.put(entry.getKey(), readEntity(targetEntity, (Map<String, Object>) entry.getValue()));
+					target.put(entryKey, readEntity(targetEntity, (Map<String, Object>) entryValue));
 				}
 			}
 		}
@@ -615,7 +623,14 @@ public class MappingElasticsearchConverter
 
 		if (!typeHint.getActualType().getType().equals(Object.class)
 				&& isSimpleType(typeHint.getMapValueType().getType())) {
-			mapSource.forEach(it -> target.put(it.getKey(), getWriteSimpleValue(it.getValue())));
+			mapSource.forEach(it -> {
+
+				if (it.getValue() == null) {
+					target.put(it.getKey(), null);
+				} else {
+					target.put(it.getKey(), getWriteSimpleValue(it.getValue()));
+				}
+			});
 		} else {
 
 			mapSource.forEach(it -> {
