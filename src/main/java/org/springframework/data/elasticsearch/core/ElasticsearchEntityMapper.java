@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
@@ -52,6 +50,8 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
  * Elasticsearch specific {@link EntityReader} & {@link EntityWriter} implementation based on domain type
@@ -241,27 +241,31 @@ public class ElasticsearchEntityMapper implements
 		Map<String, Object> target = new LinkedHashMap<>();
 		for (Entry<String, Object> entry : source.entrySet()) {
 
-			if (isSimpleType(entry.getValue())) {
-				target.put(entry.getKey(),
-						readSimpleValue(entry.getValue(), targetType.isMap() ? targetType.getComponentType() : targetType));
+			String entryKey = entry.getKey();
+			Object entryValue = entry.getValue();
+
+			if (entryValue == null) {
+				target.put(entryKey, null);
+			} else if (isSimpleType(entryValue)) {
+				target.put(entryKey,
+						readSimpleValue(entryValue, targetType.isMap() ? targetType.getComponentType() : targetType));
 			} else {
 
-				ElasticsearchPersistentEntity<?> targetEntity = computeGenericValueTypeForRead(property, entry.getValue());
+				ElasticsearchPersistentEntity<?> targetEntity = computeGenericValueTypeForRead(property, entryValue);
 
 				if (targetEntity.getTypeInformation().isMap()) {
 
-					Map<String, Object> valueMap = (Map) entry.getValue();
+					Map<String, Object> valueMap = (Map) entryValue;
 					if (typeMapper.containsTypeInformation(valueMap)) {
-						target.put(entry.getKey(), readEntity(targetEntity, (Map) entry.getValue()));
+						target.put(entryKey, readEntity(targetEntity, (Map) entryValue));
 					} else {
-						target.put(entry.getKey(), readValue(valueMap, property, targetEntity.getTypeInformation()));
+						target.put(entryKey, readValue(valueMap, property, targetEntity.getTypeInformation()));
 					}
 
 				} else if (targetEntity.getTypeInformation().isCollectionLike()) {
-					target.put(entry.getKey(),
-							readValue(entry.getValue(), property, targetEntity.getTypeInformation().getActualType()));
+					target.put(entryKey, readValue(entryValue, property, targetEntity.getTypeInformation().getActualType()));
 				} else {
-					target.put(entry.getKey(), readEntity(targetEntity, (Map) entry.getValue()));
+					target.put(entryKey, readEntity(targetEntity, (Map) entryValue));
 				}
 			}
 		}
@@ -281,7 +285,9 @@ public class ElasticsearchEntityMapper implements
 
 		for (Object value : source) {
 
-			if (isSimpleType(value)) {
+			if (value == null) {
+				target.add(null);
+			} else if (isSimpleType(value)) {
 				target.add(
 						readSimpleValue(value, targetType.getComponentType() != null ? targetType.getComponentType() : targetType));
 			} else {
@@ -493,7 +499,14 @@ public class ElasticsearchEntityMapper implements
 
 		if (!typeHint.getActualType().getType().equals(Object.class)
 				&& isSimpleType(typeHint.getMapValueType().getType())) {
-			mapSource.forEach(it -> target.put(it.getKey(), getWriteSimpleValue(it.getValue())));
+			mapSource.forEach(it -> {
+
+				if (it.getValue() == null) {
+					target.put(it.getKey(), null);
+				} else {
+					target.put(it.getKey(), getWriteSimpleValue(it.getValue()));
+				}
+			});
 		} else {
 
 			mapSource.forEach(it -> {
