@@ -354,6 +354,11 @@ public class MappingElasticsearchConverter
 		Collection<Object> target = createCollectionForValue(targetType, source.size());
 
 		for (Object value : source) {
+			
+			if(value == null) {
+				return null;
+			}
+		
 
 			if (isSimpleType(value)) {
 				target.add(
@@ -386,8 +391,10 @@ public class MappingElasticsearchConverter
 
 		Map<String, Object> target = new LinkedHashMap<>();
 		for (Entry<String, Object> entry : source.entrySet()) {
-
-			if (isSimpleType(entry.getValue())) {
+			
+			if(entry.getValue() == null) {
+				target.put(entry.getKey(),null);
+			} else if (isSimpleType(entry.getValue())) {
 				target.put(entry.getKey(),
 						readSimpleValue(entry.getValue(), targetType.isMap() ? targetType.getComponentType() : targetType));
 			} else {
