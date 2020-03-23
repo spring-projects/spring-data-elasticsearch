@@ -20,11 +20,19 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import lombok.Data;
+import lombok.val;
+
+import java.lang.Object;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.support.ActiveShardCount;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +49,6 @@ import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.test.context.ContextConfiguration;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Peter-Josef Meisch
@@ -101,17 +106,30 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 				.withIfPrimaryTerm(13) //
 				.withScript("script")//
 				.withLang("lang") //
+				.withRefresh(UpdateQuery.Refresh.Wait_For) //
+				.withRetryOnConflict(7) //
+				.withTimeout("4711s") //
+				.withWaitForActiveShards("all").withFetchSourceIncludes(Collections.singletonList("incl")) //
+				.withFetchSourceExcludes(Collections.singletonList("excl")) //
 				.build();
 
-		UpdateRequestBuilder request = getRequestFactory().updateRequestBuilderFor(client, updateQuery, IndexCoordinates.of("index"));
+		UpdateRequestBuilder request = getRequestFactory().updateRequestBuilderFor(client, updateQuery,
+				IndexCoordinates.of("index"));
 
 		assertThat(request).isNotNull();
 		assertThat(request.request().ifSeqNo()).isEqualTo(42);
 		assertThat(request.request().ifPrimaryTerm()).isEqualTo(13);
 		assertThat(request.request().script().getIdOrCode()).isEqualTo("script");
 		assertThat(request.request().script().getLang()).isEqualTo("lang");
+		assertThat(request.request().getRefreshPolicy()).isEqualByComparingTo(WriteRequest.RefreshPolicy.WAIT_UNTIL);
+		assertThat(request.request().retryOnConflict()).isEqualTo(7);
+		assertThat(request.request().timeout()).isEqualByComparingTo(TimeValue.parseTimeValue("4711s", "test"));
+		assertThat(request.request().waitForActiveShards()).isEqualTo(ActiveShardCount.ALL);
+		val fetchSourceContext = request.request().fetchSource();
+		assertThat(fetchSourceContext).isNotNull();
+		assertThat(fetchSourceContext.includes()).containsExactlyInAnyOrder("incl");
+		assertThat(fetchSourceContext.excludes()).containsExactlyInAnyOrder("excl");
 	}
-
 
 	@Data
 	@Document(indexName = "test-index-sample-core-transport-template", replicas = 0, refreshInterval = "-1")
