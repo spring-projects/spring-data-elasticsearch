@@ -19,6 +19,7 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.util.CollectionUtils.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -499,6 +501,38 @@ class RequestFactory {
 			updateRequest.fetchSource(query.getFetchSource());
 		}
 
+		if (query.getFetchSourceIncludes() != null || query.getFetchSourceExcludes() != null) {
+			List<String> includes = query.getFetchSourceIncludes() != null ? query.getFetchSourceIncludes()
+					: Collections.emptyList();
+			List<String> excludes = query.getFetchSourceExcludes() != null ? query.getFetchSourceExcludes()
+					: Collections.emptyList();
+			updateRequest.fetchSource(includes.toArray(new String[0]), excludes.toArray(new String[0]));
+		}
+
+		if (query.getIfSeqNo() != null) {
+			updateRequest.setIfSeqNo(query.getIfSeqNo());
+		}
+
+		if (query.getIfPrimaryTerm() != null) {
+			updateRequest.setIfPrimaryTerm(query.getIfPrimaryTerm());
+		}
+
+		if (query.getRefresh() != null) {
+			updateRequest.setRefreshPolicy(query.getRefresh().name().toLowerCase());
+		}
+
+		if (query.getRetryOnConflict() != null) {
+			updateRequest.retryOnConflict(query.getRetryOnConflict());
+		}
+
+		if (query.getTimeout() != null) {
+			updateRequest.timeout(query.getTimeout());
+		}
+
+		if (query.getWaitForActiveShards() != null) {
+			updateRequest.waitForActiveShards(ActiveShardCount.parseString(query.getWaitForActiveShards()));
+		}
+
 		return updateRequest;
 	}
 
@@ -539,6 +573,38 @@ class RequestFactory {
 
 		if (query.getFetchSource() != null) {
 			updateRequestBuilder.setFetchSource(query.getFetchSource());
+		}
+
+		if (query.getFetchSourceIncludes() != null || query.getFetchSourceExcludes() != null) {
+			List<String> includes = query.getFetchSourceIncludes() != null ? query.getFetchSourceIncludes()
+					: Collections.emptyList();
+			List<String> excludes = query.getFetchSourceExcludes() != null ? query.getFetchSourceExcludes()
+					: Collections.emptyList();
+			updateRequestBuilder.setFetchSource(includes.toArray(new String[0]), excludes.toArray(new String[0]));
+		}
+
+		if (query.getIfSeqNo() != null) {
+			updateRequestBuilder.setIfSeqNo(query.getIfSeqNo());
+		}
+
+		if (query.getIfPrimaryTerm() != null) {
+			updateRequestBuilder.setIfPrimaryTerm(query.getIfPrimaryTerm());
+		}
+
+		if (query.getRefresh() != null) {
+			updateRequestBuilder.setRefreshPolicy(query.getRefresh().name().toLowerCase());
+		}
+
+		if (query.getRetryOnConflict() != null) {
+			updateRequestBuilder.setRetryOnConflict(query.getRetryOnConflict());
+		}
+
+		if (query.getTimeout() != null) {
+			updateRequestBuilder.setTimeout(query.getTimeout());
+		}
+
+		if (query.getWaitForActiveShards() != null) {
+			updateRequestBuilder.setWaitForActiveShards(ActiveShardCount.parseString(query.getWaitForActiveShards()));
 		}
 
 		return updateRequestBuilder;
