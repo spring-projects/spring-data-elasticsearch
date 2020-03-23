@@ -499,6 +499,14 @@ class RequestFactory {
 			updateRequest.fetchSource(query.getFetchSource());
 		}
 
+		if (query.getIfSeqNo() != null) {
+			updateRequest.setIfSeqNo(query.getIfSeqNo());
+		}
+
+		if (query.getIfPrimaryTerm() != null) {
+			updateRequest.setIfPrimaryTerm(query.getIfPrimaryTerm());
+		}
+
 		return updateRequest;
 	}
 
@@ -539,6 +547,14 @@ class RequestFactory {
 
 		if (query.getFetchSource() != null) {
 			updateRequestBuilder.setFetchSource(query.getFetchSource());
+		}
+
+		if (query.getIfSeqNo() != null) {
+			updateRequestBuilder.setIfSeqNo(query.getIfSeqNo());
+		}
+
+		if (query.getIfPrimaryTerm() != null) {
+			updateRequestBuilder.setIfPrimaryTerm(query.getIfPrimaryTerm());
 		}
 
 		return updateRequestBuilder;

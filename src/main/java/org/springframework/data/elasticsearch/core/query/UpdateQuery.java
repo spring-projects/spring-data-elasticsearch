@@ -40,6 +40,8 @@ public class UpdateQuery {
 	@Nullable private Boolean scriptedUpsert;
 	@Nullable private Boolean docAsUpsert;
 	@Nullable private Boolean fetchSource;
+	@Nullable private Integer ifSeqNo;
+	@Nullable private Integer ifPrimaryTerm;
 
 	public static Builder builder(String id) {
 		return new Builder(id);
@@ -47,7 +49,8 @@ public class UpdateQuery {
 
 	private UpdateQuery(String id, @Nullable String script, @Nullable Map<String, Object> params,
 			@Nullable Document document, @Nullable Document upsert, @Nullable String lang, @Nullable String routing,
-			@Nullable Boolean scriptedUpsert, @Nullable Boolean docAsUpsert, @Nullable Boolean fetchSource) {
+			@Nullable Boolean scriptedUpsert, @Nullable Boolean docAsUpsert, @Nullable Boolean fetchSource,
+			@Nullable Integer ifSeqNo, @Nullable Integer ifPrimaryTerm) {
 		this.id = id;
 		this.script = script;
 		this.params = params;
@@ -58,6 +61,8 @@ public class UpdateQuery {
 		this.scriptedUpsert = scriptedUpsert;
 		this.docAsUpsert = docAsUpsert;
 		this.fetchSource = fetchSource;
+		this.ifSeqNo = ifSeqNo;
+		this.ifPrimaryTerm = ifPrimaryTerm;
 	}
 
 	public String getId() {
@@ -109,6 +114,16 @@ public class UpdateQuery {
 		return fetchSource;
 	}
 
+	@Nullable
+	public Integer getIfSeqNo() {
+		return ifSeqNo;
+	}
+
+	@Nullable
+	public Integer getIfPrimaryTerm() {
+		return ifPrimaryTerm;
+	}
+
 	public static final class Builder {
 		private String id;
 		@Nullable private String script = null;
@@ -120,6 +135,8 @@ public class UpdateQuery {
 		@Nullable private Boolean scriptedUpsert;
 		@Nullable private Boolean docAsUpsert;
 		@Nullable private Boolean fetchSource;
+		@Nullable private Integer ifSeqNo;
+		@Nullable private Integer ifPrimaryTerm;
 
 		private Builder(String id) {
 			this.id = id;
@@ -170,13 +187,23 @@ public class UpdateQuery {
 			return this;
 		}
 
+		public Builder withIfSeqNo(Integer ifSeqNo) {
+			this.ifSeqNo = ifSeqNo;
+			return this;
+		}
+
+		public Builder withIfPrimaryTerm(Integer ifPrimaryTerm) {
+			this.ifPrimaryTerm = ifPrimaryTerm;
+			return this;
+		}
+
 		public UpdateQuery build() {
 
 			if (script == null && document == null) {
 				throw new IllegalArgumentException("either script or document must be set");
 			}
 			return new UpdateQuery(id, script, params, document, upsert, lang, routing, scriptedUpsert, docAsUpsert,
-					fetchSource);
+					fetchSource, ifSeqNo, ifPrimaryTerm);
 		}
 	}
 }

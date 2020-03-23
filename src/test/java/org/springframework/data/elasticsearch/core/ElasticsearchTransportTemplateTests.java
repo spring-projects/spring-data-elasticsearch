@@ -22,6 +22,8 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import lombok.Data;
 
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.junit.jupiter.api.Test;
@@ -39,6 +41,9 @@ import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.test.context.ContextConfiguration;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Peter-Josef Meisch
@@ -82,6 +87,31 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		// then
 		assertThat(searchRequestBuilder.request().source().from()).isEqualTo(30);
 	}
+
+	@Test // DATAES-768
+	void shouldUseAllOptionsFromUpdateQuery() {
+		Map<String, Object> doc = new HashMap<>();
+		doc.put("id", "1");
+		doc.put("message", "test");
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.from(doc);
+		UpdateQuery updateQuery = UpdateQuery.builder("1") //
+				.withDocument(document) //
+				.withIfSeqNo(42) //
+				.withIfPrimaryTerm(13) //
+				.withScript("script")//
+				.withLang("lang") //
+				.build();
+
+		UpdateRequestBuilder request = getRequestFactory().updateRequestBuilderFor(client, updateQuery, IndexCoordinates.of("index"));
+
+		assertThat(request).isNotNull();
+		assertThat(request.request().ifSeqNo()).isEqualTo(42);
+		assertThat(request.request().ifPrimaryTerm()).isEqualTo(13);
+		assertThat(request.request().script().getIdOrCode()).isEqualTo("script");
+		assertThat(request.request().script().getLang()).isEqualTo("lang");
+	}
+
 
 	@Data
 	@Document(indexName = "test-index-sample-core-transport-template", replicas = 0, refreshInterval = "-1")

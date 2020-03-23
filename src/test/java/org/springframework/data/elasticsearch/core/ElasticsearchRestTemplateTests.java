@@ -22,11 +22,17 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import lombok.Builder;
 import lombok.Data;
 
+import java.lang.Object;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.elasticsearch.action.update.UpdateRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -69,4 +75,29 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 		@Id private String id;
 		@Field(type = Text, store = true, fielddata = true) private String type;
 	}
+
+	@Test // DATAES-768
+	void shouldUseAllOptionsFromUpdateQuery() {
+		Map<String, Object> doc = new HashMap<>();
+		doc.put("id", "1");
+		doc.put("message", "test");
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.from(doc);
+		UpdateQuery updateQuery = UpdateQuery.builder("1") //
+				.withDocument(document) //
+				.withIfSeqNo(42) //
+				.withIfPrimaryTerm(13) //
+				.withScript("script")//
+				.withLang("lang") //
+				.build();
+
+		UpdateRequest request = getRequestFactory().updateRequest(updateQuery, IndexCoordinates.of("index"));
+
+		assertThat(request).isNotNull();
+		assertThat(request.ifSeqNo()).isEqualTo(42);
+		assertThat(request.ifPrimaryTerm()).isEqualTo(13);
+		assertThat(request.script().getIdOrCode()).isEqualTo("script");
+		assertThat(request.script().getLang()).isEqualTo("lang");
+	}
+
 }
