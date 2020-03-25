@@ -1,6 +1,16 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.6.RELEASE (2020-03-25)
+---------------------------------------------
+* DATAES-769 - Upgrade to Elasticsearch 6.8.7.
+* DATAES-765 - Pageable.unpaged() is not used to build a query returning all documents.
+* DATAES-764 - StreamQueries#streamResults does not clear scroll context when finished.
+* DATAES-763 - Allow map properties in entity with null values.
+* DATAES-758 - fix documentation for @Query annotation.
+* DATAES-756 - Release 3.2.6 (Moore SR6).
+
+
 Changes in version 4.0.0.M4 (2020-03-11)
 ----------------------------------------
 * DATAES-759 - Update to Elasticsearch 7.6.1.
@@ -1036,6 +1046,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
