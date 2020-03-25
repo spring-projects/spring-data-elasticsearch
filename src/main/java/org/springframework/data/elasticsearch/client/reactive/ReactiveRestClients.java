@@ -24,6 +24,7 @@ import org.springframework.util.Assert;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Roman Puchkovskiy
  * @since 3.2
  */
 public final class ReactiveRestClients {
@@ -33,6 +34,8 @@ public final class ReactiveRestClients {
 	/**
 	 * Start here to create a new client tailored to your needs.
 	 *
+	 * @param clientConfiguration client configuration to use for building {@link ReactiveElasticsearchClient};
+	 *                            must not be {@literal null}.
 	 * @return new instance of {@link ReactiveElasticsearchClient}.
 	 */
 	public static ReactiveElasticsearchClient create(ClientConfiguration clientConfiguration) {
@@ -40,5 +43,22 @@ public final class ReactiveRestClients {
 		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null!");
 
 		return DefaultReactiveElasticsearchClient.create(clientConfiguration);
+	}
+
+	/**
+	 * Start here to create a new client tailored to your needs.
+	 *
+	 * @param clientConfiguration client configuration to use for building {@link ReactiveElasticsearchClient};
+	 *                            must not be {@literal null}.
+	 * @param requestCreator request creator to use in the client; must not be {@literal null}.
+	 * @return new instance of {@link ReactiveElasticsearchClient}.
+	 */
+	public static ReactiveElasticsearchClient create(ClientConfiguration clientConfiguration,
+			RequestCreator requestCreator) {
+
+		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null!");
+		Assert.notNull(requestCreator, "RequestCreator must not be null!");
+
+		return DefaultReactiveElasticsearchClient.create(clientConfiguration, requestCreator);
 	}
 }
