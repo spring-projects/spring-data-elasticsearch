@@ -33,6 +33,7 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Streamable;
@@ -59,6 +60,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		this.elasticsearchConverter = elasticsearchConverter;
 		requestFactory = new RequestFactory(elasticsearchConverter);
+
+		VersionInfo.logVersions(getClusterVersion());
 	}
 
 	protected ElasticsearchConverter createElasticsearchConverter() {
@@ -288,14 +291,14 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	/*
 	 * internal use only, not for public API
 	 */
-	abstract protected <T> SearchScrollHits<T> searchScrollStart(long scrollTimeInMillis, Query query,
-			Class<T> clazz, IndexCoordinates index);
+	abstract protected <T> SearchScrollHits<T> searchScrollStart(long scrollTimeInMillis, Query query, Class<T> clazz,
+			IndexCoordinates index);
 
 	/*
 	 * internal use only, not for public API
 	 */
-	abstract protected <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId,
-			long scrollTimeInMillis, Class<T> clazz);
+	abstract protected <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
+			Class<T> clazz);
 
 	/*
 	 * internal use only, not for public API
@@ -417,6 +420,15 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 				.withObject(entity) //
 				.build();
 	}
+
+	/**
+	 * tries to extract the version of the Elasticsearch cluster
+	 * 
+	 * @return the version as string if it can be retrieved
+	 */
+	@Nullable
+	abstract protected String getClusterVersion();
+
 	// endregion
 
 	// region callbacks

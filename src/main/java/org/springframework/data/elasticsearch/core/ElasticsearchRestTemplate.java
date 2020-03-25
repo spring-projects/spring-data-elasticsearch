@@ -270,7 +270,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz) {
+	public <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
+			Class<T> clazz) {
 
 		SearchScrollRequest request = new SearchScrollRequest(scrollId);
 		request.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
@@ -354,5 +355,15 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		return potentiallyTranslatedException != null ? potentiallyTranslatedException : runtimeException;
 	}
 
+	// endregion
+
+	// region helper methods
+	@Override
+	protected String getClusterVersion() {
+		try {
+			return execute(client -> client.info(RequestOptions.DEFAULT)).getVersion().getNumber();
+		} catch (Exception ignored) {}
+		return null;
+	}
 	// endregion
 }

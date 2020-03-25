@@ -7,6 +7,7 @@
 		</encoder>
 	</appender>
 
+	<logger name="org.springframework.data.elasticsearch.support.VersionInfo" level="info"/>
 	<logger name="org.springframework.data.elasticsearch.junit" level="debug"/>
 	<logger name="org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersionRule" level="info"/>
 	<logger name="org.springframework.data.elasticsearch.client.WIRE" level="info"/>
