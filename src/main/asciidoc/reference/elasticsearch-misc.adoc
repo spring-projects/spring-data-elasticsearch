@@ -27,10 +27,8 @@ Page<SampleEntity> sampleEntities = operations.searchForPage(searchQuery, Sample
 [[elasticsearch.scroll]]
 == Using Scroll For Big Result Set
 
-Elasticsearch has a scroll API for getting big result set in chunks. `ElasticsearchOperations` has startScroll and continueScroll methods that can be used as below.
+Elasticsearch has a scroll API for getting big result set in chunks. This is internally used by Spring Data Elasticsearch to provide the implementations of the `<T> SearchHitsIterator<T> SearchOperations.searchForStream(Query query, Class<T> clazz, IndexCoordinates index)` method.
 
-.Using startScroll and continueScroll
-====
 [source,java]
 ----
 IndexCoordinates index = IndexCoordinates.of("sample-index");
@@ -43,43 +41,44 @@ SearchQuery searchQuery = new NativeSearchQueryBuilder()
   .withPageable(PageRequest.of(0, 10))
   .build();
 
-ScrolledPage<SampleEntity> scroll = operations.startScroll(1000, searchQuery, SampleEntity.class, index);
-
-String scrollId = scroll.getScrollId();
-List<SampleEntity> sampleEntities = new ArrayList<>();
-while (scroll.hasContent()) {
-  sampleEntities.addAll(scroll.getContent());
-  scrollId = scroll.getScrollId();
-  scroll = operations.continueScroll(scrollId, 1000, SampleEntity.class);
-}
-operations.clearScroll(scrollId);
-----
-====
-
-`ElasticsearchOperations` additionally has the stream method which wraps the scan and scroll operations into a CloseableIterator.
-
-.Using stream
-====
-[source,java]
-----
-IndexCoordinates index = IndexCoordinates.of("sample-index");
-
-SearchQuery searchQuery = new NativeSearchQueryBuilder()
-  .withQuery(matchAllQuery())
-  .withIndices(INDEX_NAME)
-  .withTypes(TYPE_NAME)
-  .withFields("message")
-  .withPageable(PageRequest.of(0, 10))
-  .build();
-
-CloseableIterator<SampleEntity> stream = elasticsearchTemplate.stream(searchQuery, SampleEntity.class, index);
+SearchHitsIterator<SampleEntity> stream = elasticsearchTemplate.searchForStream(searchQuery, SampleEntity.class, index);
 
 List<SampleEntity> sampleEntities = new ArrayList<>();
 while (stream.hasNext()) {
   sampleEntities.add(stream.next());
 }
+
+stream.close();
 ----
-====
+
+There are no methods in the `SearchOperations` API to access the scroll id, if it should be necessary to access this, the following methods of the `ElasticsearchRestTemplate` can be used:
+
+[source,java]
+----
+
+@Autowired ElasticsearchRestTemplate template;
+
+IndexCoordinates index = IndexCoordinates.of("sample-index");
+
+SearchQuery searchQuery = new NativeSearchQueryBuilder()
+  .withQuery(matchAllQuery())
+  .withIndices(INDEX_NAME)
+  .withTypes(TYPE_NAME)
+  .withFields("message")
+  .withPageable(PageRequest.of(0, 10))
+  .build();
+
+SearchScrollHits<SampleEntity> scroll = template.searchScrollStart(1000, searchQuery, SampleEntity.class, index);
+
+String scrollId = scroll.getScrollId();
+List<SampleEntity> sampleEntities = new ArrayList<>();
+while (scroll.hasSearchHits()) {
+  sampleEntities.addAll(scroll.getSearchHits());
+  scrollId = scroll.getScrollId();
+  scroll = template.searchScrollContinue(scrollId, 1000, SampleEntity.class);
+}
+template.searchScrollClear(scrollId);
+----
 
 [[elasticsearch.misc.sorts]]
 == Sort options
