@@ -22,6 +22,7 @@ import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
+import org.springframework.data.elasticsearch.core.event.AfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.BeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -45,6 +46,7 @@ import org.springframework.util.Assert;
  *
  * @author Sascha Woo
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 public abstract class AbstractElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -117,8 +119,13 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		Assert.notNull(entity, "entity must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		index(getIndexQuery(entity), index);
-		return entity;
+		IndexQuery query = getIndexQuery(entity);
+		index(query, index);
+
+		// suppressing because it's either entity itself or something of a correct type returned by an entity callback
+		@SuppressWarnings("unchecked")
+		T castResult = (T) query.getObject();
+		return castResult;
 	}
 
 	@Override
@@ -151,7 +158,10 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			});
 		}
 
-		return entities;
+		return indexQueries.stream()
+				.map(IndexQuery::getObject)
+				.map(entity -> (T) entity)
+				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -455,9 +465,37 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	// this can be called with either a List<IndexQuery> or a List<UpdateQuery>; these query classes
-	// don't have a common bas class, therefore the List<?> argument
+	// don't have a common base class, therefore the List<?> argument
 	protected void maybeCallbackBeforeConvertWithQueries(List<?> queries) {
 		queries.forEach(this::maybeCallbackBeforeConvertWithQuery);
+	}
+
+	protected <T> T maybeCallbackAfterSave(T entity) {
+
+		if (entityCallbacks != null) {
+			return entityCallbacks.callback(AfterSaveCallback.class, entity);
+		}
+
+		return entity;
+	}
+
+	protected void maybeCallbackAfterSaveWithQuery(Object query) {
+
+		if (query instanceof IndexQuery) {
+			IndexQuery indexQuery = (IndexQuery) query;
+			Object queryObject = indexQuery.getObject();
+
+			if (queryObject != null) {
+				queryObject = maybeCallbackAfterSave(queryObject);
+				indexQuery.setObject(queryObject);
+			}
+		}
+	}
+
+	// this can be called with either a List<IndexQuery> or a List<UpdateQuery>; these query classes
+	// don't have a common base class, therefore the List<?> argument
+	protected void maybeCallbackAfterSaveWithQueries(List<?> queries) {
+		queries.forEach(this::maybeCallbackAfterSaveWithQuery);
 	}
 
 	// endregion

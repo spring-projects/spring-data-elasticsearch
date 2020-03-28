@@ -145,6 +145,9 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		if (queryObject != null) {
 			setPersistentEntityId(queryObject, documentId);
 		}
+
+		maybeCallbackAfterSaveWithQuery(query);
+
 		return documentId;
 	}
 
@@ -226,7 +229,10 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	private List<String> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
 		maybeCallbackBeforeConvertWithQueries(queries);
 		BulkRequest bulkRequest = requestFactory.bulkRequest(queries, bulkOptions, index);
-		return checkForBulkOperationFailure(execute(client -> client.bulk(bulkRequest, RequestOptions.DEFAULT)));
+		List<String> ids = checkForBulkOperationFailure(execute(
+				client -> client.bulk(bulkRequest, RequestOptions.DEFAULT)));
+		maybeCallbackAfterSaveWithQueries(queries);
+		return ids;
 	}
 	// endregion
 

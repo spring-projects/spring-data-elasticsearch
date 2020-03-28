@@ -31,14 +31,12 @@ import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
@@ -79,6 +77,7 @@ import org.springframework.util.Assert;
  * @author Martin Choraine
  * @author Farid Azaza
  * @author Gyula Attila Csorogi
+ * @author Roman Puchkovskiy
  * @deprecated as of 4.0
  */
 @Deprecated
@@ -153,6 +152,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 			setPersistentEntityId(queryObject, documentId);
 		}
 
+		maybeCallbackAfterSaveWithQuery(query);
+
 		return documentId;
 	}
 
@@ -188,7 +189,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(queries, "List of IndexQuery must not be null");
 		Assert.notNull(bulkOptions, "BulkOptions must not be null");
 
-		return doBulkOperation(queries, bulkOptions, index);
+		List<String> ids = doBulkOperation(queries, bulkOptions, index);
+
+		maybeCallbackAfterSaveWithQueries(queries);
+
+		return ids;
 	}
 
 	@Override
