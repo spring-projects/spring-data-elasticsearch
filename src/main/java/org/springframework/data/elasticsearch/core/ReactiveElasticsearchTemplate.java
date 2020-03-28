@@ -82,6 +82,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.http.HttpStatus;
@@ -131,6 +132,15 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		this.exceptionTranslator = new ElasticsearchExceptionTranslator();
 		this.operations = new EntityOperations(this.mappingContext);
 		this.requestFactory = new RequestFactory(converter);
+
+		logVersions();
+	}
+
+	private void logVersions() {
+		getClusterVersion() //
+				.doOnSuccess(VersionInfo::logVersions) //
+				.doOnError(e -> VersionInfo.logVersions(null)) //
+				.subscribe();
 	}
 
 	@Override
@@ -157,6 +167,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		this.entityCallbacks = entityCallbacks;
 	}
+
 	// endregion
 
 	// region DocumentOperations
@@ -775,6 +786,15 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	// endregion
 
 	// region Helper methods
+	protected Mono<String> getClusterVersion() {
+		try {
+			return Mono.from(execute(client -> client.info())).map(mainResponse -> mainResponse.getVersion().toString());
+		} catch (Exception ignored) {}
+		return Mono.empty();
+	}
+
+	// endregion
+
 	// Property Setters / Getters
 
 	/**

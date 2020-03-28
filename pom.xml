@@ -292,6 +292,23 @@
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/versions.properties</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<excludes>
+					<exclude>**/versions.properties</exclude>
+				</excludes>
+			</resource>
+		</resources>
+
 		<plugins>
 			<!--
 			please do not remove this configuration for surefire - we need that to avoid issue with jar hell

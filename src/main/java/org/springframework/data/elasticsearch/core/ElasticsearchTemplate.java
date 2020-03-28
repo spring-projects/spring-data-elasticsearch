@@ -17,7 +17,11 @@ package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
 
+import org.elasticsearch.Version;
 import org.elasticsearch.action.ActionFuture;
+import org.elasticsearch.action.admin.cluster.node.info.NodesInfoAction;
+import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequestBuilder;
+import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
@@ -320,4 +324,22 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		return searchTimeout == null ? response.actionGet() : response.actionGet(searchTimeout);
 	}
 	// endregion
+
+
+	//region helper methods
+	@Override
+	protected String getClusterVersion() {
+
+		try {
+			NodesInfoResponse nodesInfoResponse = client.admin().cluster().nodesInfo(
+					new NodesInfoRequestBuilder(client, NodesInfoAction.INSTANCE).request()
+			).actionGet();
+			if (!nodesInfoResponse.getNodes().isEmpty()) {
+				return nodesInfoResponse.getNodes().get(0).getVersion().toString();
+			}
+		} catch (Exception ignored) {
+		}
+		return null;
+	}
+	//endregion
 }
