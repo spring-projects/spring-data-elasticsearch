@@ -70,6 +70,7 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
+import org.springframework.data.elasticsearch.core.event.ReactiveAfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -97,6 +98,7 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @author Mathias Teier
  * @author Aleksei Arsenev
+ * @author Roman Puchkovskiy
  * @since 3.2
  */
 public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations, ApplicationContextAware {
@@ -185,7 +187,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return doIndex(entity, adaptableEntity, index) //
 				.map(it -> {
 					return adaptableEntity.populateIdIfNecessary(it.getId());
-				});
+				})
+				.flatMap(this::maybeCallAfterSave);
 	}
 
 	@Override
@@ -213,11 +216,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 					.map(e -> getIndexQuery(e.getBean(), e)) //
 					.collect(Collectors.toList());
 			return doBulkOperation(indexRequests, BulkOptions.defaultOptions(), index) //
-					.map(bulkItemResponse -> {
+					.flatMap(bulkItemResponse -> {
 
 						AdaptibleEntity<? extends T> mappedEntity = iterator.next();
 						mappedEntity.populateIdIfNecessary(bulkItemResponse.getResponse().getId());
-						return mappedEntity.getBean();
+						return maybeCallAfterSave(mappedEntity.getBean());
 					});
 		});
 	}
@@ -878,6 +881,15 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		if (null != entityCallbacks) {
 			return entityCallbacks.callback(ReactiveBeforeConvertCallback.class, entity);
+		}
+
+		return Mono.just(entity);
+	}
+
+	protected <T> Mono<T> maybeCallAfterSave(T entity) {
+
+		if (null != entityCallbacks) {
+			return entityCallbacks.callback(ReactiveAfterSaveCallback.class, entity);
 		}
 
 		return Mono.just(entity);
