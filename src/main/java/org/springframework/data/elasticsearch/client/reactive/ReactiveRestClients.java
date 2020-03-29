@@ -34,8 +34,8 @@ public final class ReactiveRestClients {
 	/**
 	 * Start here to create a new client tailored to your needs.
 	 *
-	 * @param clientConfiguration client configuration to use for building {@link ReactiveElasticsearchClient};
-	 *                            must not be {@literal null}.
+	 * @param clientConfiguration client configuration to use for building {@link ReactiveElasticsearchClient}; must not
+	 *          be {@literal null}.
 	 * @return new instance of {@link ReactiveElasticsearchClient}.
 	 */
 	public static ReactiveElasticsearchClient create(ClientConfiguration clientConfiguration) {
@@ -48,8 +48,8 @@ public final class ReactiveRestClients {
 	/**
 	 * Start here to create a new client tailored to your needs.
 	 *
-	 * @param clientConfiguration client configuration to use for building {@link ReactiveElasticsearchClient};
-	 *                            must not be {@literal null}.
+	 * @param clientConfiguration client configuration to use for building {@link ReactiveElasticsearchClient}; must not
+	 *          be {@literal null}.
 	 * @param requestCreator request creator to use in the client; must not be {@literal null}.
 	 * @return new instance of {@link ReactiveElasticsearchClient}.
 	 */

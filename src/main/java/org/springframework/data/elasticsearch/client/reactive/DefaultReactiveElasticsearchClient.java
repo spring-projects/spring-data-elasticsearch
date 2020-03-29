@@ -133,7 +133,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
 public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearchClient, Indices {
 
 	private final HostProvider hostProvider;
-	
+
 	private final RequestCreator requestCreator;
 
 	/**

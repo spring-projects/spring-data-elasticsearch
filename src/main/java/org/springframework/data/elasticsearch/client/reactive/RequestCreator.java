@@ -1,5 +1,8 @@
 package org.springframework.data.elasticsearch.client.reactive;
 
+import java.io.IOException;
+import java.util.function.Function;
+
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -23,9 +26,6 @@ import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.client.util.RequestConverters;
-
-import java.io.IOException;
-import java.util.function.Function;
 
 /**
  * @author Roman Puchkovskiy
