@@ -158,10 +158,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			});
 		}
 
-		return indexQueries.stream()
-				.map(IndexQuery::getObject)
-				.map(entity -> (T) entity)
-				.collect(Collectors.toList());
+		return indexQueries.stream().map(IndexQuery::getObject).map(entity -> (T) entity).collect(Collectors.toList());
 	}
 
 	@Override
@@ -433,7 +430,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	/**
 	 * tries to extract the version of the Elasticsearch cluster
-	 * 
+	 *
 	 * @return the version as string if it can be retrieved
 	 */
 	@Nullable

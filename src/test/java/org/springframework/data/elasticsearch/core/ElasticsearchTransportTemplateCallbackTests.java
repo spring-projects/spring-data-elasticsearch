@@ -59,23 +59,15 @@ public class ElasticsearchTransportTemplateCallbackTests {
 
 	private ElasticsearchTemplate template;
 
-	@Mock
-	private Client client;
+	@Mock private Client client;
 
-	@Mock
-	private IndexRequestBuilder indexRequestBuilder;
-	@Mock
-	private ActionFuture<IndexResponse> indexResponseActionFuture;
-	@Mock
-	private IndexResponse indexResponse;
-	@Mock
-	private BulkRequestBuilder bulkRequestBuilder;
-	@Mock
-	private ActionFuture<BulkResponse> bulkResponseActionFuture;
-	@Mock
-	private BulkResponse bulkResponse;
-	@Mock
-	private BulkItemResponse bulkItemResponse;
+	@Mock private IndexRequestBuilder indexRequestBuilder;
+	@Mock private ActionFuture<IndexResponse> indexResponseActionFuture;
+	@Mock private IndexResponse indexResponse;
+	@Mock private BulkRequestBuilder bulkRequestBuilder;
+	@Mock private ActionFuture<BulkResponse> bulkResponseActionFuture;
+	@Mock private BulkResponse bulkResponse;
+	@Mock private BulkItemResponse bulkItemResponse;
 
 	@BeforeEach
 	public void setUp() {
@@ -89,7 +81,7 @@ public class ElasticsearchTransportTemplateCallbackTests {
 		when(client.prepareBulk()).thenReturn(bulkRequestBuilder);
 		doReturn(bulkResponseActionFuture).when(bulkRequestBuilder).execute();
 		when(bulkResponseActionFuture.actionGet()).thenReturn(bulkResponse);
-		doReturn(new BulkItemResponse[] {bulkItemResponse, bulkItemResponse}).when(bulkResponse).getItems();
+		doReturn(new BulkItemResponse[] { bulkItemResponse, bulkItemResponse }).when(bulkResponse).getItems();
 		doReturn("response-id").when(bulkItemResponse).getId();
 	}
 

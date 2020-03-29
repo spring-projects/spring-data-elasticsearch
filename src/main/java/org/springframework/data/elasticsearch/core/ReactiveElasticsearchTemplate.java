@@ -187,8 +187,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return doIndex(entity, adaptableEntity, index) //
 				.map(it -> {
 					return adaptableEntity.populateIdIfNecessary(it.getId());
-				})
-				.flatMap(this::maybeCallAfterSave);
+				}).flatMap(this::maybeCallAfterSave);
 	}
 
 	@Override

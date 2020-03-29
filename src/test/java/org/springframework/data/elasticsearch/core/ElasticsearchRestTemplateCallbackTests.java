@@ -59,15 +59,11 @@ public class ElasticsearchRestTemplateCallbackTests {
 
 	private ElasticsearchRestTemplate template;
 
-	@Mock
-	private RestHighLevelClient client;
+	@Mock private RestHighLevelClient client;
 
-	@Mock
-	private IndexResponse indexResponse;
-	@Mock
-	private BulkResponse bulkResponse;
-	@Mock
-	private BulkItemResponse bulkItemResponse;
+	@Mock private IndexResponse indexResponse;
+	@Mock private BulkResponse bulkResponse;
+	@Mock private BulkItemResponse bulkItemResponse;
 
 	@BeforeEach
 	public void setUp() throws Exception {
@@ -77,7 +73,7 @@ public class ElasticsearchRestTemplateCallbackTests {
 		doReturn("response-id").when(indexResponse).getId();
 
 		doReturn(bulkResponse).when(client).bulk(any(BulkRequest.class), any(RequestOptions.class));
-		doReturn(new BulkItemResponse[] {bulkItemResponse, bulkItemResponse}).when(bulkResponse).getItems();
+		doReturn(new BulkItemResponse[] { bulkItemResponse, bulkItemResponse }).when(bulkResponse).getItems();
 		doReturn("response-id").when(bulkItemResponse).getId();
 	}
 

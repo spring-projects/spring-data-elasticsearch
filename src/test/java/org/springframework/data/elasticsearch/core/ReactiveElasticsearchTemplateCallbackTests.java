@@ -59,17 +59,12 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 	private ReactiveElasticsearchTemplate template;
 
-	@Mock
-	private ReactiveElasticsearchClient client;
+	@Mock private ReactiveElasticsearchClient client;
 
-	@Mock
-	private IndexResponse indexResponse;
-	@Mock
-	private BulkResponse bulkResponse;
-	@Mock
-	private BulkItemResponse bulkItemResponse;
-	@Mock
-	private DocWriteResponse docWriteResponse;
+	@Mock private IndexResponse indexResponse;
+	@Mock private BulkResponse bulkResponse;
+	@Mock private BulkItemResponse bulkItemResponse;
+	@Mock private DocWriteResponse docWriteResponse;
 
 	@BeforeEach
 	public void setUp() {
@@ -79,7 +74,7 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		doReturn("response-id").when(indexResponse).getId();
 
 		when(client.bulk(any(BulkRequest.class))).thenReturn(Mono.just(bulkResponse));
-		doReturn(new BulkItemResponse[] {bulkItemResponse, bulkItemResponse}).when(bulkResponse).getItems();
+		doReturn(new BulkItemResponse[] { bulkItemResponse, bulkItemResponse }).when(bulkResponse).getItems();
 		doReturn(docWriteResponse).when(bulkItemResponse).getResponse();
 		doReturn("response-id").when(docWriteResponse).getId();
 	}
@@ -154,8 +149,8 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		Person entity1 = new Person("init1", "luke1");
 		Person entity2 = new Person("init2", "luke2");
 
-		List<Person> saved = template.saveAll(Arrays.asList(entity1, entity2), IndexCoordinates.of("index"))
-				.toStream().collect(Collectors.toList());
+		List<Person> saved = template.saveAll(Arrays.asList(entity1, entity2), IndexCoordinates.of("index")).toStream()
+				.collect(Collectors.toList());
 
 		verify(afterSaveCallback, times(2)).onAfterSave(any());
 		assertThat(saved.get(0).getId()).isEqualTo("after-save");

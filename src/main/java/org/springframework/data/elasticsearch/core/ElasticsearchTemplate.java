@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
 
-import org.elasticsearch.Version;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoAction;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequestBuilder;
@@ -286,13 +285,14 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis, Class<T> clazz) {
+	public <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
+			Class<T> clazz) {
 
-		 ActionFuture<SearchResponse> action = client //
+		ActionFuture<SearchResponse> action = client //
 				.prepareSearchScroll(scrollId) //
 				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)) //
 				.execute();
-		
+
 		SearchResponse response = getSearchResponseWithTimeout(action);
 
 		return elasticsearchConverter.readScroll(clazz, SearchDocumentResponse.from(response));
@@ -330,21 +330,18 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 	// endregion
 
-
-	//region helper methods
+	// region helper methods
 	@Override
 	protected String getClusterVersion() {
 
 		try {
-			NodesInfoResponse nodesInfoResponse = client.admin().cluster().nodesInfo(
-					new NodesInfoRequestBuilder(client, NodesInfoAction.INSTANCE).request()
-			).actionGet();
+			NodesInfoResponse nodesInfoResponse = client.admin().cluster()
+					.nodesInfo(new NodesInfoRequestBuilder(client, NodesInfoAction.INSTANCE).request()).actionGet();
 			if (!nodesInfoResponse.getNodes().isEmpty()) {
 				return nodesInfoResponse.getNodes().get(0).getVersion().toString();
 			}
-		} catch (Exception ignored) {
-		}
+		} catch (Exception ignored) {}
 		return null;
 	}
-	//endregion
+	// endregion
 }

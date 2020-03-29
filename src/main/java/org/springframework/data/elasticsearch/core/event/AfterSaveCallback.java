@@ -29,8 +29,8 @@ import org.springframework.data.mapping.callback.EntityCallbacks;
 public interface AfterSaveCallback<T> extends EntityCallback<T> {
 
 	/**
-	 * Entity callback method invoked after a domain object is saved. Can return either the same or a modified
-	 * instance of the domain object.
+	 * Entity callback method invoked after a domain object is saved. Can return either the same or a modified instance of
+	 * the domain object.
 	 *
 	 * @param entity the domain object that was saved.
 	 * @return the domain object that was persisted.
