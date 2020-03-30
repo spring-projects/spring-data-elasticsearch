@@ -26,6 +26,7 @@ import java.lang.annotation.Target;
  * @author Sascha Woo
  * @author Xiao Yu
  * @author Peter-Josef Meisch
+ * @author Aleksei Arsenev
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -117,4 +118,9 @@ public @interface InnerField {
 	 * @since 4.0
 	 */
 	double scalingFactor() default 1;
+
+	/**
+	 * @since 4.0
+	 */
+	int maxShingleSize() default 3;
 }

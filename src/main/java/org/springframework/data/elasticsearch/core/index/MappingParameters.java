@@ -61,11 +61,11 @@ public final class MappingParameters {
 	static final String FIELD_PARAMETER_NAME_POSITION_INCREMENT_GAP = "position_increment_gap";
 	static final String FIELD_PARAM_SCALING_FACTOR = "scaling_factor";
 	static final String FIELD_PARAM_SEARCH_ANALYZER = "search_analyzer";
-	static final String FIELD_PARAM_SEARCH_QUOTE_ANALYZER = "search_quote_analyzer";
 	static final String FIELD_PARAM_STORE = "store";
 	static final String FIELD_PARAM_SIMILARITY = "similarity";
 	static final String FIELD_PARAM_TERM_VECTOR = "term_vector";
 	static final String FIELD_PARAM_TYPE = "type";
+	static final String FIELD_PARAM_MAX_SHINGLE_SIZE = "max_shingle_size";
 
 	private boolean index = true;
 	private boolean store = false;
@@ -90,6 +90,7 @@ public final class MappingParameters {
 	private Similarity similarity = Similarity.Default;
 	private TermVector termVector = TermVector.none;
 	private double scalingFactor = 1.0;
+	private int maxShingleSize;
 
 	/**
 	 * extracts the mapping parameters from the relevant annotations.
@@ -138,6 +139,9 @@ public final class MappingParameters {
 		similarity = field.similarity();
 		termVector = field.termVector();
 		scalingFactor = field.scalingFactor();
+		maxShingleSize = field.maxShingleSize();
+		Assert.isTrue(type != FieldType.Search_As_You_Type || (maxShingleSize >= 2 && maxShingleSize <= 4),
+				"maxShingleSize must be in inclusive range from 2 to 4 for field type search_as_you_type");
 	}
 
 	private MappingParameters(InnerField field) {
@@ -167,6 +171,9 @@ public final class MappingParameters {
 		similarity = field.similarity();
 		termVector = field.termVector();
 		scalingFactor = field.scalingFactor();
+		maxShingleSize = field.maxShingleSize();
+		Assert.isTrue(type != FieldType.Search_As_You_Type || (maxShingleSize >= 2 && maxShingleSize <= 4),
+				"maxShingleSize must be in inclusive range from 2 to 4 for field type search_as_you_type");
 	}
 
 	public boolean isStore() {
@@ -270,6 +277,10 @@ public final class MappingParameters {
 
 		if (type == FieldType.Scaled_Float) {
 			builder.field(FIELD_PARAM_SCALING_FACTOR, scalingFactor);
+		}
+
+		if (maxShingleSize != 3) {
+			builder.field(FIELD_PARAM_MAX_SHINGLE_SIZE, maxShingleSize);
 		}
 	}
 }

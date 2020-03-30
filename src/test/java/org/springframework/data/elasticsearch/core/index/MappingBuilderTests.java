@@ -78,7 +78,6 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Sascha Woo
  * @author Peter-Josef Meisch
  * @author Xiao Yu
- * @author Aleksei Arsenev
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
@@ -404,19 +403,6 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
-	@Test // DATAES-773
-	public void shouldUseFieldNameOnSearchAsYouType() throws JSONException {
-
-		// given
-		String expected = "{\"properties\":{\"id-property\":{\"type\":\"keyword\",\"index\":true},\"search-as-you-type-property\":{\"type\":\"search_as_you_type\",\"max_shingle_size\":2,\"index\":true,\"norms\":true,\"store\":false,\"index_options\":\"positions\"},\"search-as-you-type-property\":{}}}";
-
-		// when
-		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.SearchAsYouTypeEntity.class);
-
-		// then
-		assertEquals(expected, mapping, false);
-	}
-
 	@Test // DATAES-568
 	public void shouldUseFieldNameOnMultiField() throws JSONException {
 
@@ -628,15 +614,6 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 			@Nullable @Field("completion-property") @CompletionField(maxInputLength = 100) //
 			private Completion suggest;
-		}
-
-		@Document(indexName = "fieldname-index")
-		static class SearchAsYouTypeEntity {
-
-			@Nullable @Id @Field("id-property") private String id;
-
-			@Nullable @Field("search-as-you-type-property") @SearchAsYouTypeField(maxShingleSize = 2) //
-			private String suggest;
 		}
 
 		@Document(indexName = "fieldname-index")

@@ -42,10 +42,6 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.SearchAsYouTypeField;
-import org.springframework.data.elasticsearch.annotations.IndexOptions;
-import org.springframework.data.elasticsearch.annotations.Similarity;
-import org.springframework.data.elasticsearch.annotations.TermVector;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.completion.Completion;
@@ -77,7 +73,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Petr Kukral
  * @author Peter-Josef Meisch
  * @author Xiao Yu
- * @author Aleksei Arsenev
  */
 public class MappingBuilder {
 
@@ -208,10 +203,9 @@ public class MappingBuilder {
 		boolean isGeoPointProperty = isGeoPointProperty(property);
 		boolean isCompletionProperty = isCompletionProperty(property);
 		boolean isNestedOrObjectProperty = isNestedOrObjectProperty(property);
-		boolean isSearchAsYouTypeProperty = isSearchAsYouTypeProperty(property);
 
 		Field fieldAnnotation = property.findAnnotation(Field.class);
-		if (!isGeoPointProperty && !isSearchAsYouTypeProperty && !isCompletionProperty && property.isEntity() && hasRelevantAnnotation(property)) {
+		if (!isGeoPointProperty && !isCompletionProperty && property.isEntity() && hasRelevantAnnotation(property)) {
 
 			if (fieldAnnotation == null) {
 				return;
@@ -242,11 +236,6 @@ public class MappingBuilder {
 			applyCompletionFieldMapping(builder, property, completionField);
 		}
 
-		if (isSearchAsYouTypeProperty) {
-			SearchAsYouTypeField searchAsYouTypeField = property.findAnnotation(SearchAsYouTypeField.class);
-			applySearchAsYouTypeFieldMapping(builder, property, searchAsYouTypeField);
-		}
-
 		if (isRootObject && fieldAnnotation != null && property.isIdProperty()) {
 			applyDefaultIdFieldMapping(builder, property);
 		} else if (multiField != null) {
@@ -260,8 +249,7 @@ public class MappingBuilder {
 
 		return property.findAnnotation(Field.class) != null || property.findAnnotation(MultiField.class) != null
 				|| property.findAnnotation(GeoPointField.class) != null
-				|| property.findAnnotation(CompletionField.class) != null
-				|| property.findAnnotation(SearchAsYouTypeField.class) != null;
+				|| property.findAnnotation(CompletionField.class) != null;
 	}
 
 	private void applyGeoPointFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property)
@@ -304,40 +292,6 @@ public class MappingBuilder {
 				builder.endArray();
 			}
 
-		}
-		builder.endObject();
-	}
-
-	private void applySearchAsYouTypeFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property,
-												  @Nullable SearchAsYouTypeField annotation) throws IOException {
-
-		builder.startObject(property.getFieldName());
-		builder.field(FIELD_PARAM_TYPE, TYPE_VALUE_SEARCH_AS_YOU_TYPE);
-
-		if (annotation != null) {
-
-			builder.field(SEARCH_AS_YOU_TYPE_MAX_SHINGLE_SIZE, annotation.maxShingleSize());
-			builder.field(FIELD_PARAM_INDEX, annotation.index());
-			builder.field(FIELD_PARAM_NORMS, annotation.norms());
-			builder.field(FIELD_PARAM_STORE, annotation.store());
-			if (!StringUtils.isEmpty(annotation.searchAnalyzer())) {
-				builder.field(FIELD_PARAM_SEARCH_ANALYZER, annotation.searchAnalyzer());
-			}
-			if (!StringUtils.isEmpty(annotation.searchQuoteAnalyzer())) {
-				builder.field(FIELD_PARAM_SEARCH_QUOTE_ANALYZER, annotation.searchQuoteAnalyzer());
-			}
-			if (!StringUtils.isEmpty(annotation.analyzer())) {
-				builder.field(FIELD_PARAM_INDEX_ANALYZER, annotation.analyzer());
-			}
-			if (annotation.indexOptions() != IndexOptions.none) {
-				builder.field(FIELD_PARAM_INDEX_OPTIONS, annotation.indexOptions());
-			}
-			if (annotation.similarity() != Similarity.Default) {
-				builder.field(FIELD_PARAM_SIMILARITY, annotation.similarity());
-			}
-			if (annotation.termVector() != TermVector.none) {
-				builder.field(FIELD_PARAM_TERM_VECTOR, annotation.termVector());
-			}
 		}
 		builder.endObject();
 	}
@@ -451,9 +405,5 @@ public class MappingBuilder {
 
 	private boolean isCompletionProperty(ElasticsearchPersistentProperty property) {
 		return property.getActualType() == Completion.class;
-	}
-
-	private boolean isSearchAsYouTypeProperty(ElasticsearchPersistentProperty property) {
-		return property.isAnnotationPresent(SearchAsYouTypeField.class);
 	}
 }

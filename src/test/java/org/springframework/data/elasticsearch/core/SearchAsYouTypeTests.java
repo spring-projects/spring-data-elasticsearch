@@ -26,7 +26,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.SearchAsYouTypeField;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
@@ -93,7 +94,7 @@ public class SearchAsYouTypeTests {
 
         // when
         Query query = new NativeSearchQuery(QueryBuilders.multiMatchQuery("test ", //
-                "suggest", "suggest._2gram", "suggest._3gram")
+                "suggest", "suggest._2gram", "suggest._3gram", "suggest._4gram")
                 .type(MultiMatchQueryBuilder.Type.BOOL_PREFIX));
         IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
         List<SearchAsYouTypeEntity> result = operations.search(query, SearchAsYouTypeEntity.class, index) //
@@ -116,7 +117,7 @@ public class SearchAsYouTypeTests {
 
         // when
         Query query = new NativeSearchQuery(QueryBuilders.multiMatchQuery("5678 ", //
-                "suggest", "suggest._2gram", "suggest._3gram")
+                "suggest", "suggest._2gram", "suggest._3gram", "suggest._4gram")
                 .type(MultiMatchQueryBuilder.Type.BOOL_PREFIX));
         IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
         List<SearchAsYouTypeEntity> result = operations.search(query, SearchAsYouTypeEntity.class, index) //
@@ -139,7 +140,7 @@ public class SearchAsYouTypeTests {
 
         // when
         Query query = new NativeSearchQuery(QueryBuilders.multiMatchQuery("n mat", //
-                "suggest", "suggest._2gram", "suggest._3gram")
+                "suggest", "suggest._2gram", "suggest._3gram", "suggest._4gram")
                 .type(MultiMatchQueryBuilder.Type.BOOL_PREFIX));
         IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
         List<SearchAsYouTypeEntity> result = operations.search(query, SearchAsYouTypeEntity.class, index) //
@@ -177,7 +178,7 @@ public class SearchAsYouTypeTests {
         private String name;
 
         @Nullable
-        @SearchAsYouTypeField
+        @Field(type = FieldType.Search_As_You_Type, maxShingleSize = 4)
         private String suggest;
 
         public IndexQuery toIndex() {
