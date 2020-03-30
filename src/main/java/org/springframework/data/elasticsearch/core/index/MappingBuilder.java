@@ -89,13 +89,10 @@ public class MappingBuilder {
 	private static final String COMPLETION_MAX_INPUT_LENGTH = "max_input_length";
 	private static final String COMPLETION_CONTEXTS = "contexts";
 
-	private static final String SEARCH_AS_YOU_TYPE_MAX_SHINGLE_SIZE = "max_shingle_size";
-
 	private static final String TYPE_DYNAMIC = "dynamic";
 	private static final String TYPE_VALUE_KEYWORD = "keyword";
 	private static final String TYPE_VALUE_GEO_POINT = "geo_point";
 	private static final String TYPE_VALUE_COMPLETION = "completion";
-	private static final String TYPE_VALUE_SEARCH_AS_YOU_TYPE = "search_as_you_type";
 
 	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
 
