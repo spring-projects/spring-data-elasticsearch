@@ -16,32 +16,7 @@
 
 package org.springframework.data.elasticsearch.core.index;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.skyscreamer.jsonassert.JSONAssert.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import java.lang.Boolean;
-import java.lang.Double;
-import java.lang.Integer;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import lombok.*;
 import org.assertj.core.data.Percentage;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,6 +43,17 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Keyword;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.buildIndex;
+
 /**
  * @author Stuart Stevenson
  * @author Jakub Vavrik
@@ -78,6 +64,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Sascha Woo
  * @author Peter-Josef Meisch
  * @author Xiao Yu
+ * @author Aleksei Arsenev
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
@@ -403,6 +390,19 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
+	@Test // DATAES-773
+	public void shouldUseFieldNameOnSearchAsYouType() throws JSONException {
+
+		// given
+		String expected = "{\"properties\":{\"id-property\":{\"type\":\"keyword\",\"index\":true},\"search-as-you-type-property\":{\"type\":\"search_as_you_type\",\"max_shingle_size\":2,\"index\":true,\"norms\":true,\"store\":false,\"index_options\":\"positions\"},\"search-as-you-type-property\":{}}}";
+
+		// when
+		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.SearchAsYouTypeEntity.class);
+
+		// then
+		assertEquals(expected, mapping, false);
+	}
+
 	@Test // DATAES-568
 	public void shouldUseFieldNameOnMultiField() throws JSONException {
 
@@ -614,6 +614,15 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 			@Nullable @Field("completion-property") @CompletionField(maxInputLength = 100) //
 			private Completion suggest;
+		}
+
+		@Document(indexName = "fieldname-index")
+		static class SearchAsYouTypeEntity {
+
+			@Nullable @Id @Field("id-property") private String id;
+
+			@Nullable @Field("search-as-you-type-property") @SearchAsYouTypeField(maxShingleSize = 2) //
+			private String suggest;
 		}
 
 		@Document(indexName = "fieldname-index")

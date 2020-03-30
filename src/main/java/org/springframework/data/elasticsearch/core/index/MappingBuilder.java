@@ -15,16 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.*;
-import static org.springframework.data.elasticsearch.core.index.MappingParameters.*;
-import static org.springframework.util.StringUtils.*;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.util.Arrays;
-import java.util.Iterator;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
@@ -32,16 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.ElasticsearchException;
-import org.springframework.data.elasticsearch.annotations.CompletionContext;
-import org.springframework.data.elasticsearch.annotations.CompletionField;
-import org.springframework.data.elasticsearch.annotations.DynamicMapping;
-import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.GeoPointField;
-import org.springframework.data.elasticsearch.annotations.InnerField;
-import org.springframework.data.elasticsearch.annotations.Mapping;
-import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.completion.Completion;
@@ -55,8 +38,15 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.Iterator;
+
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import static org.springframework.data.elasticsearch.core.index.MappingParameters.*;
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  * @author Rizwan Idrees
@@ -73,6 +63,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Petr Kukral
  * @author Peter-Josef Meisch
  * @author Xiao Yu
+ * @author Aleksei Arsenev
  */
 public class MappingBuilder {
 
@@ -89,10 +80,13 @@ public class MappingBuilder {
 	private static final String COMPLETION_MAX_INPUT_LENGTH = "max_input_length";
 	private static final String COMPLETION_CONTEXTS = "contexts";
 
+	private static final String SEARCH_AS_YOU_TYPE_MAX_SHINGLE_SIZE = "max_shingle_size";
+
 	private static final String TYPE_DYNAMIC = "dynamic";
 	private static final String TYPE_VALUE_KEYWORD = "keyword";
 	private static final String TYPE_VALUE_GEO_POINT = "geo_point";
 	private static final String TYPE_VALUE_COMPLETION = "completion";
+	private static final String TYPE_VALUE_SEARCH_AS_YOU_TYPE = "search_as_you_type";
 
 	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
 
@@ -200,9 +194,10 @@ public class MappingBuilder {
 		boolean isGeoPointProperty = isGeoPointProperty(property);
 		boolean isCompletionProperty = isCompletionProperty(property);
 		boolean isNestedOrObjectProperty = isNestedOrObjectProperty(property);
+		boolean isSearchAsYouTypeProperty = isSearchAsYouTypeProperty(property);
 
 		Field fieldAnnotation = property.findAnnotation(Field.class);
-		if (!isGeoPointProperty && !isCompletionProperty && property.isEntity() && hasRelevantAnnotation(property)) {
+		if (!isGeoPointProperty && !isSearchAsYouTypeProperty && !isCompletionProperty && property.isEntity() && hasRelevantAnnotation(property)) {
 
 			if (fieldAnnotation == null) {
 				return;
@@ -233,6 +228,11 @@ public class MappingBuilder {
 			applyCompletionFieldMapping(builder, property, completionField);
 		}
 
+		if (isSearchAsYouTypeProperty) {
+			SearchAsYouTypeField searchAsYouTypeField = property.findAnnotation(SearchAsYouTypeField.class);
+			applySearchAsYouTypeFieldMapping(builder, property, searchAsYouTypeField);
+		}
+
 		if (isRootObject && fieldAnnotation != null && property.isIdProperty()) {
 			applyDefaultIdFieldMapping(builder, property);
 		} else if (multiField != null) {
@@ -246,7 +246,8 @@ public class MappingBuilder {
 
 		return property.findAnnotation(Field.class) != null || property.findAnnotation(MultiField.class) != null
 				|| property.findAnnotation(GeoPointField.class) != null
-				|| property.findAnnotation(CompletionField.class) != null;
+				|| property.findAnnotation(CompletionField.class) != null
+				|| property.findAnnotation(SearchAsYouTypeField.class) != null;
 	}
 
 	private void applyGeoPointFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property)
@@ -289,6 +290,40 @@ public class MappingBuilder {
 				builder.endArray();
 			}
 
+		}
+		builder.endObject();
+	}
+
+	private void applySearchAsYouTypeFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property,
+												  @Nullable SearchAsYouTypeField annotation) throws IOException {
+
+		builder.startObject(property.getFieldName());
+		builder.field(FIELD_PARAM_TYPE, TYPE_VALUE_SEARCH_AS_YOU_TYPE);
+
+		if (annotation != null) {
+
+			builder.field(SEARCH_AS_YOU_TYPE_MAX_SHINGLE_SIZE, annotation.maxShingleSize());
+			builder.field(FIELD_PARAM_INDEX, annotation.index());
+			builder.field(FIELD_PARAM_NORMS, annotation.norms());
+			builder.field(FIELD_PARAM_STORE, annotation.store());
+			if (!StringUtils.isEmpty(annotation.searchAnalyzer())) {
+				builder.field(FIELD_PARAM_SEARCH_ANALYZER, annotation.searchAnalyzer());
+			}
+			if (!StringUtils.isEmpty(annotation.searchQuoteAnalyzer())) {
+				builder.field(FIELD_PARAM_SEARCH_QUOTE_ANALYZER, annotation.searchQuoteAnalyzer());
+			}
+			if (!StringUtils.isEmpty(annotation.analyzer())) {
+				builder.field(FIELD_PARAM_INDEX_ANALYZER, annotation.analyzer());
+			}
+			if (annotation.indexOptions() != IndexOptions.none) {
+				builder.field(FIELD_PARAM_INDEX_OPTIONS, annotation.indexOptions());
+			}
+			if (annotation.similarity() != Similarity.Default) {
+				builder.field(FIELD_PARAM_SIMILARITY, annotation.similarity());
+			}
+			if (annotation.termVector() != TermVector.none) {
+				builder.field(FIELD_PARAM_TERM_VECTOR, annotation.termVector());
+			}
 		}
 		builder.endObject();
 	}
@@ -402,5 +437,9 @@ public class MappingBuilder {
 
 	private boolean isCompletionProperty(ElasticsearchPersistentProperty property) {
 		return property.getActualType() == Completion.class;
+	}
+
+	private boolean isSearchAsYouTypeProperty(ElasticsearchPersistentProperty property) {
+		return property.isAnnotationPresent(SearchAsYouTypeField.class);
 	}
 }

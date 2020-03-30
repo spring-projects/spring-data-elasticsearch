@@ -15,20 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.springframework.data.elasticsearch.annotations.DateFormat;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.IndexOptions;
-import org.springframework.data.elasticsearch.annotations.IndexPrefixes;
-import org.springframework.data.elasticsearch.annotations.InnerField;
-import org.springframework.data.elasticsearch.annotations.Similarity;
-import org.springframework.data.elasticsearch.annotations.TermVector;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import java.io.IOException;
+import java.lang.annotation.Annotation;
 
 /**
  * A class to hold the mapping parameters that might be set on
@@ -36,6 +29,7 @@ import org.springframework.util.StringUtils;
  * {@link org.springframework.data.elasticsearch.annotations.InnerField} annotation.
  *
  * @author Peter-Josef Meisch
+ * @author Aleksei Arsenev
  * @since 4.0
  */
 public final class MappingParameters {
@@ -60,6 +54,7 @@ public final class MappingParameters {
 	static final String FIELD_PARAMETER_NAME_POSITION_INCREMENT_GAP = "position_increment_gap";
 	static final String FIELD_PARAM_SCALING_FACTOR = "scaling_factor";
 	static final String FIELD_PARAM_SEARCH_ANALYZER = "search_analyzer";
+	static final String FIELD_PARAM_SEARCH_QUOTE_ANALYZER = "search_quote_analyzer";
 	static final String FIELD_PARAM_STORE = "store";
 	static final String FIELD_PARAM_SIMILARITY = "similarity";
 	static final String FIELD_PARAM_TERM_VECTOR = "term_vector";
