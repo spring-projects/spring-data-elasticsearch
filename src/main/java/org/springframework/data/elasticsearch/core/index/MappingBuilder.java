@@ -15,8 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.elasticsearch.common.xcontent.XContentFactory.*;
+import static org.springframework.data.elasticsearch.core.index.MappingParameters.*;
+import static org.springframework.util.StringUtils.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.Iterator;
+
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
@@ -24,7 +32,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.ElasticsearchException;
-import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.annotations.CompletionContext;
+import org.springframework.data.elasticsearch.annotations.CompletionField;
+import org.springframework.data.elasticsearch.annotations.DynamicMapping;
+import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.annotations.SearchAsYouTypeField;
+import org.springframework.data.elasticsearch.annotations.IndexOptions;
+import org.springframework.data.elasticsearch.annotations.Similarity;
+import org.springframework.data.elasticsearch.annotations.TermVector;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.completion.Completion;
@@ -38,15 +59,8 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.util.Arrays;
-import java.util.Iterator;
-
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import static org.springframework.data.elasticsearch.core.index.MappingParameters.*;
-import static org.springframework.util.StringUtils.hasText;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author Rizwan Idrees

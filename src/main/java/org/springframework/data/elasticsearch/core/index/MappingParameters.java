@@ -15,13 +15,20 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.springframework.data.elasticsearch.annotations.*;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
-
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.IndexOptions;
+import org.springframework.data.elasticsearch.annotations.IndexPrefixes;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.Similarity;
+import org.springframework.data.elasticsearch.annotations.TermVector;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * A class to hold the mapping parameters that might be set on

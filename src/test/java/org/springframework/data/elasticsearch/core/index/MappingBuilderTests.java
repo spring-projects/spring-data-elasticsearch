@@ -16,7 +16,32 @@
 
 package org.springframework.data.elasticsearch.core.index;
 
-import lombok.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.skyscreamer.jsonassert.JSONAssert.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.lang.Boolean;
+import java.lang.Double;
+import java.lang.Integer;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.assertj.core.data.Percentage;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,17 +67,6 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.*;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
-import static org.springframework.data.elasticsearch.annotations.FieldType.Keyword;
-import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
-import static org.springframework.data.elasticsearch.utils.IndexBuilder.buildIndex;
 
 /**
  * @author Stuart Stevenson
