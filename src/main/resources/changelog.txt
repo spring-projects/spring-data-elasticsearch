@@ -1,6 +1,21 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.0.RC1 (2020-03-31)
+-----------------------------------------
+* DATAES-771 - Add after-save entity callbacks support.
+* DATAES-768 - Add missing query parameters for an UpdateQuery.
+* DATAES-766 - Replace CloseableIterator with SearchHitsIterator in stream operations.
+* DATAES-765 - Pageable.unpaged() is not used to build a query returning all documents.
+* DATAES-763 - Allow map properties in entity with null values.
+* DATAES-762 - Release 4.0 RC1 (Neumann).
+* DATAES-751 - Introduce ClientCallbackfor the rest client.
+* DATAES-653 - Make it easier to use a custom request converter when extending DefaultReactiveElasticsearchClient.
+* DATAES-435 - Report version mismatch if used with older ElasticSearch version.
+* DATAES-382 - Add Exception translation for Elasticsearch errors.
+* DATAES-68 - Add support for auditing annotations.
+
+
 Changes in version 3.2.6.RELEASE (2020-03-25)
 ---------------------------------------------
 * DATAES-769 - Upgrade to Elasticsearch 6.8.7.
@@ -1046,6 +1061,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
