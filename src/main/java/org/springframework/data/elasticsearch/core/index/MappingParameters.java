@@ -91,8 +91,7 @@ public final class MappingParameters {
 	private Similarity similarity = Similarity.Default;
 	private TermVector termVector = TermVector.none;
 	private double scalingFactor = 1.0;
-	@Nullable
-	private Integer maxShingleSize;
+	@Nullable private Integer maxShingleSize;
 
 	/**
 	 * extracts the mapping parameters from the relevant annotations.
@@ -142,9 +141,9 @@ public final class MappingParameters {
 		termVector = field.termVector();
 		scalingFactor = field.scalingFactor();
 		maxShingleSize = field.maxShingleSize() >= 0 ? field.maxShingleSize() : null;
-		Assert.isTrue(type != FieldType.Search_As_You_Type
-						|| maxShingleSize == null
-						|| (maxShingleSize >= 2 && maxShingleSize <= 4),
+		Assert.isTrue(type != FieldType.Search_As_You_Type //
+				|| maxShingleSize == null //
+				|| (maxShingleSize >= 2 && maxShingleSize <= 4), //
 				"maxShingleSize must be in inclusive range from 2 to 4 for field type search_as_you_type");
 	}
 
@@ -176,9 +175,9 @@ public final class MappingParameters {
 		termVector = field.termVector();
 		scalingFactor = field.scalingFactor();
 		maxShingleSize = field.maxShingleSize() >= 0 ? field.maxShingleSize() : null;
-		Assert.isTrue(type != FieldType.Search_As_You_Type
-						|| maxShingleSize == null
-						|| (maxShingleSize >= 2 && maxShingleSize <= 4),
+		Assert.isTrue(type != FieldType.Search_As_You_Type //
+				|| maxShingleSize == null //
+				|| (maxShingleSize >= 2 && maxShingleSize <= 4), //
 				"maxShingleSize must be in inclusive range from 2 to 4 for field type search_as_you_type");
 	}
 

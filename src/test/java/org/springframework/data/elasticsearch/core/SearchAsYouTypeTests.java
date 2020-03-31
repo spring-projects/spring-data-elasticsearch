@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2020 the original author or authors.
+ * Copyright 2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,20 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import lombok.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nonnull;
+
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.jupiter.api.AfterEach;
@@ -35,16 +48,9 @@ import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
-
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Aleksei Arsenev
@@ -52,140 +58,131 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringIntegrationTest
 @ContextConfiguration(classes = { SearchAsYouTypeTests.Config.class })
 public class SearchAsYouTypeTests {
-    @Configuration
-    @Import({ ElasticsearchRestTemplateConfiguration.class })
-    static class Config {}
-    @Autowired
-    private ElasticsearchOperations operations;
+	@Configuration
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	static class Config {}
 
-    @BeforeEach
-    private void setup() {
-        IndexInitializer.init(operations.indexOps(SearchAsYouTypeEntity.class));
-    }
+	@Autowired private ElasticsearchOperations operations;
 
-    @AfterEach
-    void after() {
-        operations.indexOps(SearchAsYouTypeEntity.class).delete();
-    }
+	@BeforeEach
+	private void setup() {
+		IndexInitializer.init(operations.indexOps(SearchAsYouTypeEntity.class));
+	}
 
-    private void loadEntities() {
-        List<IndexQuery> indexQueries = new ArrayList<>();
-        indexQueries.add(SearchAsYouTypeEntity.builder().id("1").name("test 1").suggest("test 1234").build().toIndex());
-        indexQueries.add(SearchAsYouTypeEntity.builder().id("2").name("test 2").suggest("test 5678").build().toIndex());
-        indexQueries.add(SearchAsYouTypeEntity.builder().id("3").name("test 3").suggest("asd 5678").build().toIndex());
-        indexQueries.add(SearchAsYouTypeEntity.builder().id("4").name("test 4").suggest("not match").build().toIndex());
-        IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
-        operations.bulkIndex(indexQueries, index);
-        operations.indexOps(SearchAsYouTypeEntity.class).refresh();
-    }
+	@AfterEach
+	void after() {
+		operations.indexOps(SearchAsYouTypeEntity.class).delete();
+	}
 
-    @Test // DATAES-773
-    void shouldRetrieveEntityById() {
-        loadEntities();
-        IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
-        operations.get("1", SearchAsYouTypeEntity.class, index);
-    }
+	private void loadEntities() {
+		List<IndexQuery> indexQueries = new ArrayList<>();
+		indexQueries.add(SearchAsYouTypeEntity.builder().id("1").name("test 1").suggest("test 1234").build().toIndex());
+		indexQueries.add(SearchAsYouTypeEntity.builder().id("2").name("test 2").suggest("test 5678").build().toIndex());
+		indexQueries.add(SearchAsYouTypeEntity.builder().id("3").name("test 3").suggest("asd 5678").build().toIndex());
+		indexQueries.add(SearchAsYouTypeEntity.builder().id("4").name("test 4").suggest("not match").build().toIndex());
+		IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
+		operations.bulkIndex(indexQueries, index);
+		operations.indexOps(SearchAsYouTypeEntity.class).refresh();
+	}
 
-    @Test // DATAES-773
-    void shouldReturnCorrectResultsForTextString() {
+	@Test // DATAES-773
+	void shouldRetrieveEntityById() {
+		loadEntities();
+		IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
+		operations.get("1", SearchAsYouTypeEntity.class, index);
+	}
 
-        // given
-        loadEntities();
+	@Test // DATAES-773
+	void shouldReturnCorrectResultsForTextString() {
 
-        // when
-        Query query = new NativeSearchQuery(QueryBuilders.multiMatchQuery("test ", //
-                "suggest", "suggest._2gram", "suggest._3gram", "suggest._4gram")
-                .type(MultiMatchQueryBuilder.Type.BOOL_PREFIX));
-        IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
-        List<SearchAsYouTypeEntity> result = operations.search(query, SearchAsYouTypeEntity.class, index) //
-                .getSearchHits() //
-                .stream() //
-                .map(SearchHit::getContent) //
-                .collect(Collectors.toList());
+		// given
+		loadEntities();
 
-        // then
-        assertEquals(2, result.size());
-        assertTrue(result.contains(new SearchAsYouTypeEntity("1")));
-        assertTrue(result.contains(new SearchAsYouTypeEntity("2")));
-    }
+		// when
+		Query query = new NativeSearchQuery(QueryBuilders.multiMatchQuery("test ", //
+				"suggest", "suggest._2gram", "suggest._3gram", "suggest._4gram").type(MultiMatchQueryBuilder.Type.BOOL_PREFIX));
+		IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
+		List<SearchAsYouTypeEntity> result = operations.search(query, SearchAsYouTypeEntity.class, index) //
+				.getSearchHits() //
+				.stream() //
+				.map(SearchHit::getContent) //
+				.collect(Collectors.toList());
 
-    @Test // DATAES-773
-    void shouldReturnCorrectResultsForNumQuery() {
+		// then
+		assertEquals(2, result.size());
+		assertTrue(result.contains(new SearchAsYouTypeEntity("1")));
+		assertTrue(result.contains(new SearchAsYouTypeEntity("2")));
+	}
 
-        // given
-        loadEntities();
+	@Test // DATAES-773
+	void shouldReturnCorrectResultsForNumQuery() {
 
-        // when
-        Query query = new NativeSearchQuery(QueryBuilders.multiMatchQuery("5678 ", //
-                "suggest", "suggest._2gram", "suggest._3gram", "suggest._4gram")
-                .type(MultiMatchQueryBuilder.Type.BOOL_PREFIX));
-        IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
-        List<SearchAsYouTypeEntity> result = operations.search(query, SearchAsYouTypeEntity.class, index) //
-                .getSearchHits() //
-                .stream() //
-                .map(SearchHit::getContent) //
-                .collect(Collectors.toList());
+		// given
+		loadEntities();
 
-        // then
-        assertEquals(2, result.size());
-        assertTrue(result.contains(new SearchAsYouTypeEntity("2")));
-        assertTrue(result.contains(new SearchAsYouTypeEntity("3")));
-    }
+		// when
+		Query query = new NativeSearchQuery(QueryBuilders.multiMatchQuery("5678 ", //
+				"suggest", "suggest._2gram", "suggest._3gram", "suggest._4gram").type(MultiMatchQueryBuilder.Type.BOOL_PREFIX));
+		IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
+		List<SearchAsYouTypeEntity> result = operations.search(query, SearchAsYouTypeEntity.class, index) //
+				.getSearchHits() //
+				.stream() //
+				.map(SearchHit::getContent) //
+				.collect(Collectors.toList());
 
-    @Test // DATAES-773
-    void shouldReturnCorrectResultsForNotMatchQuery() {
+		// then
+		assertEquals(2, result.size());
+		assertTrue(result.contains(new SearchAsYouTypeEntity("2")));
+		assertTrue(result.contains(new SearchAsYouTypeEntity("3")));
+	}
 
-        // given
-        loadEntities();
+	@Test // DATAES-773
+	void shouldReturnCorrectResultsForNotMatchQuery() {
 
-        // when
-        Query query = new NativeSearchQuery(QueryBuilders.multiMatchQuery("n mat", //
-                "suggest", "suggest._2gram", "suggest._3gram", "suggest._4gram")
-                .type(MultiMatchQueryBuilder.Type.BOOL_PREFIX));
-        IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
-        List<SearchAsYouTypeEntity> result = operations.search(query, SearchAsYouTypeEntity.class, index) //
-                .getSearchHits() //
-                .stream() //
-                .map(SearchHit::getContent) //
-                .collect(Collectors.toList());
+		// given
+		loadEntities();
 
-        // then
-        assertEquals(1, result.size());
-        assertTrue(result.contains(new SearchAsYouTypeEntity("4")));
-    }
+		// when
+		Query query = new NativeSearchQuery(QueryBuilders.multiMatchQuery("n mat", //
+				"suggest", "suggest._2gram", "suggest._3gram", "suggest._4gram").type(MultiMatchQueryBuilder.Type.BOOL_PREFIX));
+		IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
+		List<SearchAsYouTypeEntity> result = operations.search(query, SearchAsYouTypeEntity.class, index) //
+				.getSearchHits() //
+				.stream() //
+				.map(SearchHit::getContent) //
+				.collect(Collectors.toList());
 
-    /**
-     * @author Aleksei Arsenev
-     */
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    @Document(indexName = "test-index-core-search-as-you-type", replicas = 0, refreshInterval = "-1")
-    static class SearchAsYouTypeEntity {
+		// then
+		assertEquals(1, result.size());
+		assertTrue(result.contains(new SearchAsYouTypeEntity("4")));
+	}
 
-        public SearchAsYouTypeEntity(@Nonnull String id) {
-            this.id = id;
-        }
+	/**
+	 * @author Aleksei Arsenev
+	 */
+	@Data
+	@Builder
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+	@Document(indexName = "test-index-core-search-as-you-type", replicas = 0, refreshInterval = "-1")
+	static class SearchAsYouTypeEntity {
 
-        @Nonnull
-        @Id
-        @EqualsAndHashCode.Include
-        private String id;
+		public SearchAsYouTypeEntity(@Nonnull String id) {
+			this.id = id;
+		}
 
-        @Nullable
-        private String name;
+		@NonNull @Id @EqualsAndHashCode.Include private String id;
 
-        @Nullable
-        @Field(type = FieldType.Search_As_You_Type, maxShingleSize = 4)
-        private String suggest;
+		@Nullable private String name;
 
-        public IndexQuery toIndex() {
-            IndexQuery indexQuery = new IndexQuery();
-            indexQuery.setId(getId());
-            indexQuery.setObject(this);
-            return indexQuery;
-        }
-    }
+		@Nullable @Field(type = FieldType.Search_As_You_Type, maxShingleSize = 4) private String suggest;
+
+		public IndexQuery toIndex() {
+			IndexQuery indexQuery = new IndexQuery();
+			indexQuery.setId(getId());
+			indexQuery.setObject(this);
+			return indexQuery;
+		}
+	}
 }
