@@ -321,6 +321,7 @@
 					<useFile>false</useFile>
 					<includes>
 						<include>**/*Tests.java</include>
+						<include>**/*Test.java</include>
 					</includes>
 					<systemPropertyVariables>
 						<es.set.netty.runtime.available.processors>false</es.set.netty.runtime.available.processors>

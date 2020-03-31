@@ -24,8 +24,8 @@ import org.springframework.test.context.ContextConfiguration;
 /**
  * @author Peter-Josef Meisch
  */
-@ContextConfiguration(classes = { CriteriaQueryTestsTransport.Config.class })
-public class CriteriaQueryTestsTransport extends CriteriaQueryTests {
+@ContextConfiguration(classes = { CriteriaQueryTransportTests.Config.class })
+public class CriteriaQueryTransportTests extends CriteriaQueryTests {
 	@Configuration
 	@Import({ ElasticsearchTemplateConfiguration.class })
 	@EnableElasticsearchRepositories(considerNestedRepositories = true)
