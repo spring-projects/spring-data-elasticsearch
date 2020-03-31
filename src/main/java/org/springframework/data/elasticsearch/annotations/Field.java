@@ -153,5 +153,5 @@ public @interface Field {
 	/**
 	 * @since 4.0
 	 */
-	int maxShingleSize() default 3;
+	int maxShingleSize() default -1;
 }
