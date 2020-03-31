@@ -21,6 +21,7 @@ package org.springframework.data.elasticsearch.annotations;
  * @author Artur Konczak
  * @author Zeng Zetang
  * @author Peter-Josef Meisch
+ * @author Aleksei Arsenev
  */
 public enum FieldType {
     Auto,
@@ -49,5 +50,6 @@ public enum FieldType {
     Ip,
     TokenCount,
     Percolator,
-    Flattened
+    Flattened,
+    Search_As_You_Type
 }

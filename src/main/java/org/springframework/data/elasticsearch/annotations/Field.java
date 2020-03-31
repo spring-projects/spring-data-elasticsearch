@@ -33,6 +33,7 @@ import org.springframework.core.annotation.AliasFor;
  * @author Kevin Leturc
  * @author Peter-Josef Meisch
  * @author Xiao Yu
+ * @author Aleksei Arsenev
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -148,4 +149,9 @@ public @interface Field {
 	 * @since 4.0
 	 */
 	double scalingFactor() default 1;
+
+	/**
+	 * @since 4.0
+	 */
+	int maxShingleSize() default -1;
 }

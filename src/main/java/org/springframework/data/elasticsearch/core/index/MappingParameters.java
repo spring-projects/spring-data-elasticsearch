@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.index;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 
+import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -36,6 +37,7 @@ import org.springframework.util.StringUtils;
  * {@link org.springframework.data.elasticsearch.annotations.InnerField} annotation.
  *
  * @author Peter-Josef Meisch
+ * @author Aleksei Arsenev
  * @since 4.0
  */
 public final class MappingParameters {
@@ -64,6 +66,7 @@ public final class MappingParameters {
 	static final String FIELD_PARAM_SIMILARITY = "similarity";
 	static final String FIELD_PARAM_TERM_VECTOR = "term_vector";
 	static final String FIELD_PARAM_TYPE = "type";
+	static final String FIELD_PARAM_MAX_SHINGLE_SIZE = "max_shingle_size";
 
 	private boolean index = true;
 	private boolean store = false;
@@ -88,6 +91,8 @@ public final class MappingParameters {
 	private Similarity similarity = Similarity.Default;
 	private TermVector termVector = TermVector.none;
 	private double scalingFactor = 1.0;
+	@Nullable
+	private Integer maxShingleSize;
 
 	/**
 	 * extracts the mapping parameters from the relevant annotations.
@@ -136,6 +141,11 @@ public final class MappingParameters {
 		similarity = field.similarity();
 		termVector = field.termVector();
 		scalingFactor = field.scalingFactor();
+		maxShingleSize = field.maxShingleSize() >= 0 ? field.maxShingleSize() : null;
+		Assert.isTrue(type != FieldType.Search_As_You_Type
+						|| maxShingleSize == null
+						|| (maxShingleSize >= 2 && maxShingleSize <= 4),
+				"maxShingleSize must be in inclusive range from 2 to 4 for field type search_as_you_type");
 	}
 
 	private MappingParameters(InnerField field) {
@@ -165,6 +175,11 @@ public final class MappingParameters {
 		similarity = field.similarity();
 		termVector = field.termVector();
 		scalingFactor = field.scalingFactor();
+		maxShingleSize = field.maxShingleSize() >= 0 ? field.maxShingleSize() : null;
+		Assert.isTrue(type != FieldType.Search_As_You_Type
+						|| maxShingleSize == null
+						|| (maxShingleSize >= 2 && maxShingleSize <= 4),
+				"maxShingleSize must be in inclusive range from 2 to 4 for field type search_as_you_type");
 	}
 
 	public boolean isStore() {
@@ -268,6 +283,10 @@ public final class MappingParameters {
 
 		if (type == FieldType.Scaled_Float) {
 			builder.field(FIELD_PARAM_SCALING_FACTOR, scalingFactor);
+		}
+
+		if (maxShingleSize != null) {
+			builder.field(FIELD_PARAM_MAX_SHINGLE_SIZE, maxShingleSize);
 		}
 	}
 }
