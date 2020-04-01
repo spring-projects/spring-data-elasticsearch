@@ -55,6 +55,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Huw Ayling-Miller
  * @author Henrique Amaral
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public final class RestClients {
@@ -134,7 +135,7 @@ public final class RestClients {
 	}
 
 	private static List<String> formattedHosts(List<InetSocketAddress> hosts, boolean useSsl) {
-		return hosts.stream().map(it -> (useSsl ? "https" : "http") + "://" + it).collect(Collectors.toList());
+		return hosts.stream().map(it -> (useSsl ? "https" : "http") + "://" + it.getHostString() + ":" + it.getPort()).collect(Collectors.toList());
 	}
 
 	/**
