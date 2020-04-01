@@ -65,8 +65,8 @@ public final class SearchHitSupport {
 		if (result instanceof AggregatedPage<?>) {
 			AggregatedPage<?> page = (AggregatedPage<?>) result;
 			List<?> list = page.getContent().stream().map(SearchHitSupport::unwrapSearchHits).collect(Collectors.toList());
-			return new AggregatedPageImpl<>(list, null, page.getTotalElements(), page.getAggregations(), page.getScrollId(),
-					page.getMaxScore());
+			return new AggregatedPageImpl<>(list, page.getPageable(), page.getTotalElements(), page.getAggregations(),
+					page.getScrollId(), page.getMaxScore());
 
 		}
 
