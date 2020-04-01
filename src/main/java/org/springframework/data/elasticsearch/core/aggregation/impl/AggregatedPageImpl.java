@@ -40,7 +40,7 @@ public class AggregatedPageImpl<T> extends PageImpl<T> implements AggregatedPage
 	@Nullable private String scrollId;
 	private float maxScore;
 
-	private static Pageable pageableOrUnpaged(Pageable pageable) {
+	private static Pageable pageableOrUnpaged(@Nullable Pageable pageable) {
 		return ofNullable(pageable).orElse(Pageable.unpaged());
 	}
 
@@ -82,24 +82,25 @@ public class AggregatedPageImpl<T> extends PageImpl<T> implements AggregatedPage
 		this.maxScore = maxScore;
 	}
 
-	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, Aggregations aggregations) {
+	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, @Nullable Aggregations aggregations) {
 		super(content, pageableOrUnpaged(pageable), total);
 		this.aggregations = aggregations;
 	}
 
-	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, Aggregations aggregations, float maxScore) {
+	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, @Nullable Aggregations aggregations,
+			float maxScore) {
 		this(content, pageableOrUnpaged(pageable), total, aggregations);
 		this.maxScore = maxScore;
 	}
 
-	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, Aggregations aggregations,
+	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, @Nullable Aggregations aggregations,
 			String scrollId) {
 		this(content, pageableOrUnpaged(pageable), total, aggregations);
 		this.scrollId = scrollId;
 	}
 
-	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, Aggregations aggregations, String scrollId,
-			float maxScore) {
+	public AggregatedPageImpl(List<T> content, Pageable pageable, long total, @Nullable Aggregations aggregations,
+			String scrollId, float maxScore) {
 		this(content, pageableOrUnpaged(pageable), total, aggregations, scrollId);
 		this.maxScore = maxScore;
 	}

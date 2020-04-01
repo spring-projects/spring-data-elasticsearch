@@ -545,6 +545,37 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat(page.getTotalElements()).isEqualTo(1L);
 	}
 
+	@Test // DATAES-777
+	public void shouldReturnPageableInUnwrappedPageResult() {
+
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setMessage("foo");
+		sampleEntity.setAvailable(true);
+		repository.save(sampleEntity);
+
+		// given
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setType("test");
+		sampleEntity2.setMessage("bar");
+		sampleEntity2.setAvailable(false);
+		repository.save(sampleEntity2);
+
+		// when
+		PageRequest pageable = PageRequest.of(0, 10);
+		Page<SampleEntity> page = repository.findByAvailable(false, pageable);
+
+		// then
+		assertThat(page).isNotNull();
+		assertThat(page.getTotalElements()).isEqualTo(1L);
+		assertThat(page.getPageable()).isSameAs(pageable);
+	}
+
 	@Test
 	public void shouldReturnPageableResultsWithQueryAnnotationExpectedPageSize() {
 
