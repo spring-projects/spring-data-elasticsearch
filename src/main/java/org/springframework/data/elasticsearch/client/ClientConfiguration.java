@@ -26,6 +26,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -153,6 +154,7 @@ public interface ClientConfiguration {
 	 * @return the path prefix.
 	 * @since 4.0
 	 */
+	@Nullable
 	String getPathPrefix();
 
 	/**

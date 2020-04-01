@@ -47,14 +47,15 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	private final @Nullable SSLContext sslContext;
 	private final Duration soTimeout;
 	private final Duration connectTimeout;
-	private final String pathPrefix;
+	private final @Nullable String pathPrefix;
 	private final @Nullable HostnameVerifier hostnameVerifier;
-	private final String proxy;
-	private final Function<WebClient, WebClient> webClientConfigurer;
+	private final @Nullable String proxy;
+	private final @Nullable Function<WebClient, WebClient> webClientConfigurer;
 
 	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
 			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout, @Nullable String pathPrefix,
-			@Nullable HostnameVerifier hostnameVerifier, String proxy, Function<WebClient, WebClient> webClientConfigurer) {
+			@Nullable HostnameVerifier hostnameVerifier, @Nullable String proxy,
+			@Nullable Function<WebClient, WebClient> webClientConfigurer) {
 
 		this.hosts = Collections.unmodifiableList(new ArrayList<>(hosts));
 		this.headers = new HttpHeaders(headers);
@@ -103,6 +104,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		return this.soTimeout;
 	}
 
+	@Nullable
 	@Override
 	public String getPathPrefix() {
 		return this.pathPrefix;
