@@ -26,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.repository.util.ReactiveWrappers;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
 
 /**
@@ -33,6 +34,7 @@ import org.springframework.lang.Nullable;
  * 
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author Roman Puchkovskiy
  * @since 4.0
  */
 public final class SearchHitSupport {
@@ -79,6 +81,10 @@ public final class SearchHitSupport {
 			return unwrapSearchHits(searchHits.getSearchHits());
 		}
 
+		if (result instanceof SearchHitsIterator<?>) {
+			return unwrapSearchHitsIterator((SearchHitsIterator<?>) result);
+		}
+
 		if (ReactiveWrappers.isAvailable(ReactiveWrappers.ReactiveLibrary.PROJECT_REACTOR)) {
 
 			if (result instanceof Flux) {
@@ -88,6 +94,26 @@ public final class SearchHitSupport {
 		}
 
 		return result;
+	}
+
+	private static CloseableIterator<?> unwrapSearchHitsIterator(SearchHitsIterator<?> iterator) {
+		
+		return new CloseableIterator<Object>() {
+			@Override
+			public boolean hasNext() {
+				return iterator.hasNext();
+			}
+
+			@Override
+			public Object next() {
+				return unwrapSearchHits(iterator.next());
+			}
+
+			@Override
+			public void close() {
+				iterator.close();
+			}
+		};
 	}
 
 	/**

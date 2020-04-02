@@ -15,59 +15,55 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.HashMap;
 
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
+import org.elasticsearch.action.get.MultiGetRequest;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.MultiSearchRequest;
+import org.elasticsearch.action.search.MultiSearchResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.bytes.BytesArray;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.core.event.AfterSaveCallback;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.mapping.callback.EntityCallbacks;
-import org.springframework.lang.Nullable;
-import org.springframework.util.CollectionUtils;
 
 /**
  * @author Roman Puchkovskiy
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class ElasticsearchRestTemplateCallbackTests {
-
-	private ElasticsearchRestTemplate template;
+class ElasticsearchRestTemplateCallbackTests extends AbstractElasticsearchTemplateCallbackTests {
 
 	@Mock private RestHighLevelClient client;
 
 	@Mock private IndexResponse indexResponse;
 	@Mock private BulkResponse bulkResponse;
 	@Mock private BulkItemResponse bulkItemResponse;
+	@Mock private GetResponse getResponse;
+	@Mock private MultiGetResponse multiGetResponse;
+	@Mock private MultiGetItemResponse multiGetItemResponse;
+	@Mock private MultiSearchResponse.Item multiSearchResponseItem;
 
+	@SuppressWarnings("deprecation") // we know what we test
 	@BeforeEach
 	public void setUp() throws Exception {
-		template = new ElasticsearchRestTemplate(client);
+		initTemplate(new ElasticsearchRestTemplate(client));
 
 		doReturn(indexResponse).when(client).index(any(IndexRequest.class), any(RequestOptions.class));
 		doReturn("response-id").when(indexResponse).getId();
@@ -75,198 +71,39 @@ public class ElasticsearchRestTemplateCallbackTests {
 		doReturn(bulkResponse).when(client).bulk(any(BulkRequest.class), any(RequestOptions.class));
 		doReturn(new BulkItemResponse[] { bulkItemResponse, bulkItemResponse }).when(bulkResponse).getItems();
 		doReturn("response-id").when(bulkItemResponse).getId();
-	}
 
-	@Test // DATAES-771
-	void saveOneShouldInvokeAfterSaveCallbacks() {
+		doReturn(getResponse).when(client).get(any(GetRequest.class), any(RequestOptions.class));
 
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity = new Person("init", "luke");
-
-		Person saved = template.save(entity);
-
-		verify(afterSaveCallback).onAfterSave(eq(entity));
-		assertThat(saved.id).isEqualTo("after-save");
-	}
-
-	@Test // DATAES-771
-	void saveWithIndexCoordinatesShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity = new Person("init", "luke");
-
-		Person saved = template.save(entity, IndexCoordinates.of("index"));
-
-		verify(afterSaveCallback).onAfterSave(eq(entity));
-		assertThat(saved.id).isEqualTo("after-save");
-	}
-
-	@Test // DATAES-771
-	void saveArrayShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity1 = new Person("init1", "luke1");
-		Person entity2 = new Person("init2", "luke2");
-
-		Iterable<Person> saved = template.save(entity1, entity2);
-
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
-		Iterator<Person> savedIterator = saved.iterator();
-		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
-		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
-	}
-
-	@Test // DATAES-771
-	void saveIterableShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity1 = new Person("init1", "luke1");
-		Person entity2 = new Person("init2", "luke2");
-
-		Iterable<Person> saved = template.save(Arrays.asList(entity1, entity2));
-
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
-		Iterator<Person> savedIterator = saved.iterator();
-		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
-		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
-	}
-
-	@Test // DATAES-771
-	void saveIterableWithIndexCoordinatesShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity1 = new Person("init1", "luke1");
-		Person entity2 = new Person("init2", "luke2");
-
-		Iterable<Person> saved = template.save(Arrays.asList(entity1, entity2), IndexCoordinates.of("index"));
-
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
-		Iterator<Person> savedIterator = saved.iterator();
-		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
-		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
-	}
-
-	@Test // DATAES-771
-	void indexShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity = new Person("init", "luke");
-
-		IndexQuery indexQuery = indexQueryForEntity(entity);
-		template.index(indexQuery, IndexCoordinates.of("index"));
-
-		verify(afterSaveCallback).onAfterSave(eq(entity));
-		Person newPerson = (Person) indexQuery.getObject();
-		assertThat(newPerson.id).isEqualTo("after-save");
-	}
-
-	private IndexQuery indexQueryForEntity(Person entity) {
-		IndexQuery indexQuery = new IndexQuery();
-		indexQuery.setObject(entity);
-		return indexQuery;
-	}
-
-	@Test // DATAES-771
-	void bulkIndexShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity1 = new Person("init1", "luke1");
-		Person entity2 = new Person("init2", "luke2");
-
-		IndexQuery query1 = indexQueryForEntity(entity1);
-		IndexQuery query2 = indexQueryForEntity(entity2);
-		template.bulkIndex(Arrays.asList(query1, query2), IndexCoordinates.of("index"));
-
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
-		Person savedPerson1 = (Person) query1.getObject();
-		Person savedPerson2 = (Person) query2.getObject();
-		assertThat(savedPerson1.getId()).isEqualTo("after-save");
-		assertThat(savedPerson2.getId()).isEqualTo("after-save");
-	}
-
-	@Test // DATAES-771
-	void bulkIndexWithOptionsShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity1 = new Person("init1", "luke1");
-		Person entity2 = new Person("init2", "luke2");
-
-		IndexQuery query1 = indexQueryForEntity(entity1);
-		IndexQuery query2 = indexQueryForEntity(entity2);
-		template.bulkIndex(Arrays.asList(query1, query2), BulkOptions.defaultOptions(), IndexCoordinates.of("index"));
-
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
-		Person savedPerson1 = (Person) query1.getObject();
-		Person savedPerson2 = (Person) query2.getObject();
-		assertThat(savedPerson1.getId()).isEqualTo("after-save");
-		assertThat(savedPerson2.getId()).isEqualTo("after-save");
-	}
-
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	static class Person {
-
-		@Id String id;
-		String firstname;
-	}
-
-	static class ValueCapturingEntityCallback<T> {
-
-		private final List<T> values = new ArrayList<>(1);
-
-		protected void capture(T value) {
-			values.add(value);
-		}
-
-		public List<T> getValues() {
-			return values;
-		}
-
-		@Nullable
-		public T getValue() {
-			return CollectionUtils.lastElement(values);
-		}
-
-	}
-
-	static class ValueCapturingAfterSaveCallback extends ValueCapturingEntityCallback<Person>
-			implements AfterSaveCallback<Person> {
-
-		@Override
-		public Person onAfterSave(Person entity) {
-
-			capture(entity);
-			return new Person() {
+		doReturn(true).when(getResponse).isExists();
+		doReturn(false).when(getResponse).isSourceEmpty();
+		doReturn(new HashMap<String, Object>() {
 				{
-					id = "after-save";
-					firstname = entity.firstname;
+					put("id", "init");
+					put("firstname", "luke");
 				}
-			};
-		}
+		}).when(getResponse).getSourceAsMap();
+
+		doReturn(multiGetResponse).when(client).mget(any(MultiGetRequest.class), any(RequestOptions.class));
+		doReturn(new MultiGetItemResponse[]{multiGetItemResponse, multiGetItemResponse})
+				.when(multiGetResponse).getResponses();
+		doReturn(getResponse).when(multiGetItemResponse).getResponse();
+
+		doReturn(searchResponse).when(client).search(any(SearchRequest.class), any(RequestOptions.class));
+		doReturn(nSearchHits(2)).when(searchResponse).getHits();
+		doReturn("scroll-id").when(searchResponse).getScrollId();
+		doReturn(new BytesArray(new byte[8])).when(searchHit).getSourceRef();
+		doReturn(new HashMap<String, Object>() {
+				{
+					put("id", "init");
+					put("firstname", "luke");
+				}
+		}).when(searchHit).getSourceAsMap();
+
+		MultiSearchResponse multiSearchResponse = new MultiSearchResponse(
+				new MultiSearchResponse.Item[]{ multiSearchResponseItem }, 1L);
+		doReturn(multiSearchResponse).when(client).multiSearch(any(MultiSearchRequest.class), any());
+		doReturn(searchResponse).when(multiSearchResponseItem).getResponse();
+
+		doReturn(searchResponse).when(client).scroll(any(SearchScrollRequest.class), any(RequestOptions.class));
 	}
 }

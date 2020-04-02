@@ -15,49 +15,43 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.HashMap;
 
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.get.GetRequestBuilder;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
+import org.elasticsearch.action.get.MultiGetRequestBuilder;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.MultiSearchRequest;
+import org.elasticsearch.action.search.MultiSearchResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.bytes.BytesArray;
+import org.elasticsearch.common.unit.TimeValue;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.core.event.AfterSaveCallback;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.mapping.callback.EntityCallbacks;
-import org.springframework.lang.Nullable;
-import org.springframework.util.CollectionUtils;
 
 /**
  * @author Roman Puchkovskiy
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class ElasticsearchTransportTemplateCallbackTests {
-
-	private ElasticsearchTemplate template;
+class ElasticsearchTransportTemplateCallbackTests extends AbstractElasticsearchTemplateCallbackTests {
 
 	@Mock private Client client;
 
@@ -68,10 +62,23 @@ public class ElasticsearchTransportTemplateCallbackTests {
 	@Mock private ActionFuture<BulkResponse> bulkResponseActionFuture;
 	@Mock private BulkResponse bulkResponse;
 	@Mock private BulkItemResponse bulkItemResponse;
+	@Mock private GetRequestBuilder getRequestBuilder;
+	@Mock private ActionFuture<GetResponse> getResponseActionFuture;
+	@Mock private GetResponse getResponse;
+	@Mock private MultiGetRequestBuilder multiGetRequestBuilder;
+	@Mock private ActionFuture<MultiGetResponse> multiGetResponseActionFuture;
+	@Mock private MultiGetResponse multiGetResponse;
+	@Mock private MultiGetItemResponse multiGetItemResponse;
+	@Mock private SearchRequestBuilder searchRequestBuilder;
+	@Mock private ActionFuture<SearchResponse> searchResponseActionFuture;
+	@Mock private ActionFuture<MultiSearchResponse> multiSearchResponseActionFuture;
+	@Mock private MultiSearchResponse.Item multiSearchResponseItem;
+	@Mock private SearchScrollRequestBuilder searchScrollRequestBuilder;
 
 	@BeforeEach
+	@SuppressWarnings("deprecation") // we know what we are testing
 	public void setUp() {
-		template = new ElasticsearchTemplate(client);
+		initTemplate(new ElasticsearchTemplate(client));
 
 		when(client.prepareIndex(anyString(), anyString(), anyString())).thenReturn(indexRequestBuilder);
 		doReturn(indexResponseActionFuture).when(indexRequestBuilder).execute();
@@ -83,198 +90,53 @@ public class ElasticsearchTransportTemplateCallbackTests {
 		when(bulkResponseActionFuture.actionGet()).thenReturn(bulkResponse);
 		doReturn(new BulkItemResponse[] { bulkItemResponse, bulkItemResponse }).when(bulkResponse).getItems();
 		doReturn("response-id").when(bulkItemResponse).getId();
-	}
 
-	@Test // DATAES-771
-	void saveOneShouldInvokeAfterSaveCallbacks() {
+		when(client.prepareGet(anyString(), any(), any())).thenReturn(getRequestBuilder);
+		doReturn(getResponseActionFuture).when(getRequestBuilder).execute();
+		when(getResponseActionFuture.actionGet()).thenReturn(getResponse);
 
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity = new Person("init", "luke");
-
-		Person saved = template.save(entity);
-
-		verify(afterSaveCallback).onAfterSave(eq(entity));
-		assertThat(saved.id).isEqualTo("after-save");
-	}
-
-	@Test // DATAES-771
-	void saveWithIndexCoordinatesShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity = new Person("init", "luke");
-
-		Person saved = template.save(entity, IndexCoordinates.of("index"));
-
-		verify(afterSaveCallback).onAfterSave(eq(entity));
-		assertThat(saved.id).isEqualTo("after-save");
-	}
-
-	@Test // DATAES-771
-	void saveArrayShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity1 = new Person("init1", "luke1");
-		Person entity2 = new Person("init2", "luke2");
-
-		Iterable<Person> saved = template.save(entity1, entity2);
-
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
-		Iterator<Person> savedIterator = saved.iterator();
-		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
-		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
-	}
-
-	@Test // DATAES-771
-	void saveIterableShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity1 = new Person("init1", "luke1");
-		Person entity2 = new Person("init2", "luke2");
-
-		Iterable<Person> saved = template.save(Arrays.asList(entity1, entity2));
-
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
-		Iterator<Person> savedIterator = saved.iterator();
-		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
-		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
-	}
-
-	@Test // DATAES-771
-	void saveIterableWithIndexCoordinatesShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity1 = new Person("init1", "luke1");
-		Person entity2 = new Person("init2", "luke2");
-
-		Iterable<Person> saved = template.save(Arrays.asList(entity1, entity2), IndexCoordinates.of("index"));
-
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
-		Iterator<Person> savedIterator = saved.iterator();
-		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
-		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
-	}
-
-	@Test // DATAES-771
-	void indexShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity = new Person("init", "luke");
-
-		IndexQuery indexQuery = indexQueryForEntity(entity);
-		template.index(indexQuery, IndexCoordinates.of("index"));
-
-		verify(afterSaveCallback).onAfterSave(eq(entity));
-		Person savedPerson = (Person) indexQuery.getObject();
-		assertThat(savedPerson.id).isEqualTo("after-save");
-	}
-
-	private IndexQuery indexQueryForEntity(Person entity) {
-		IndexQuery indexQuery = new IndexQuery();
-		indexQuery.setObject(entity);
-		return indexQuery;
-	}
-
-	@Test // DATAES-771
-	void bulkIndexShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity1 = new Person("init1", "luke1");
-		Person entity2 = new Person("init2", "luke2");
-
-		IndexQuery query1 = indexQueryForEntity(entity1);
-		IndexQuery query2 = indexQueryForEntity(entity2);
-		template.bulkIndex(Arrays.asList(query1, query2), IndexCoordinates.of("index"));
-
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
-		Person savedPerson1 = (Person) query1.getObject();
-		Person savedPerson2 = (Person) query2.getObject();
-		assertThat(savedPerson1.getId()).isEqualTo("after-save");
-		assertThat(savedPerson2.getId()).isEqualTo("after-save");
-	}
-
-	@Test // DATAES-771
-	void bulkIndexWithOptionsShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
-
-		Person entity1 = new Person("init1", "luke1");
-		Person entity2 = new Person("init2", "luke2");
-
-		IndexQuery query1 = indexQueryForEntity(entity1);
-		IndexQuery query2 = indexQueryForEntity(entity2);
-		template.bulkIndex(Arrays.asList(query1, query2), BulkOptions.defaultOptions(), IndexCoordinates.of("index"));
-
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
-		Person savedPerson1 = (Person) query1.getObject();
-		Person savedPerson2 = (Person) query2.getObject();
-		assertThat(savedPerson1.getId()).isEqualTo("after-save");
-		assertThat(savedPerson2.getId()).isEqualTo("after-save");
-	}
-
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	static class Person {
-
-		@Id String id;
-		String firstname;
-	}
-
-	static class ValueCapturingEntityCallback<T> {
-
-		private final List<T> values = new ArrayList<>(1);
-
-		protected void capture(T value) {
-			values.add(value);
-		}
-
-		public List<T> getValues() {
-			return values;
-		}
-
-		@Nullable
-		public T getValue() {
-			return CollectionUtils.lastElement(values);
-		}
-
-	}
-
-	static class ValueCapturingAfterSaveCallback extends ValueCapturingEntityCallback<Person>
-			implements AfterSaveCallback<Person> {
-
-		@Override
-		public Person onAfterSave(Person entity) {
-
-			capture(entity);
-			return new Person() {
+		doReturn(true).when(getResponse).isExists();
+		doReturn(false).when(getResponse).isSourceEmpty();
+		doReturn(new HashMap<String, Object>() {
 				{
-					id = "after-save";
-					firstname = entity.firstname;
+					put("id", "init");
+					put("firstname", "luke");
 				}
-			};
-		}
+		}).when(getResponse).getSourceAsMap();
+
+		when(client.prepareMultiGet()).thenReturn(multiGetRequestBuilder);
+		doReturn(multiGetResponseActionFuture).when(multiGetRequestBuilder).execute();
+		when(multiGetResponseActionFuture.actionGet()).thenReturn(multiGetResponse);
+		doReturn(new MultiGetItemResponse[]{ multiGetItemResponse, multiGetItemResponse })
+				.when(multiGetResponse).getResponses();
+		doReturn(getResponse).when(multiGetItemResponse).getResponse();
+
+		when(client.prepareSearch(anyVararg())).thenReturn(searchRequestBuilder);
+		doReturn(searchRequestBuilder).when(searchRequestBuilder).setSearchType(any(SearchType.class));
+		doReturn(searchRequestBuilder).when(searchRequestBuilder).setVersion(anyBoolean());
+		doReturn(searchRequestBuilder).when(searchRequestBuilder).setTrackScores(anyBoolean());
+		doReturn(searchRequestBuilder).when(searchRequestBuilder).setScroll(any(TimeValue.class));
+		doReturn(searchResponseActionFuture).when(searchRequestBuilder).execute();
+		when(searchResponseActionFuture.actionGet()).thenReturn(searchResponse);
+		when(searchResponseActionFuture.actionGet(anyString())).thenReturn(searchResponse);
+		doReturn(nSearchHits(2)).when(searchResponse).getHits();
+		doReturn("scroll-id").when(searchResponse).getScrollId();
+		doReturn(new BytesArray(new byte[8])).when(searchHit).getSourceRef();
+		doReturn(new HashMap<String, Object>() {
+				{
+					put("id", "init");
+					put("firstname", "luke");
+				}
+		}).when(searchHit).getSourceAsMap();
+
+		when(client.multiSearch(any(MultiSearchRequest.class))).thenReturn(multiSearchResponseActionFuture);
+		MultiSearchResponse multiSearchResponse = new MultiSearchResponse(
+				new MultiSearchResponse.Item[]{ multiSearchResponseItem }, 1L);
+		when(multiSearchResponseActionFuture.actionGet()).thenReturn(multiSearchResponse);
+		doReturn(searchResponse).when(multiSearchResponseItem).getResponse();
+
+		when(client.prepareSearchScroll(anyString())).thenReturn(searchScrollRequestBuilder);
+		doReturn(searchScrollRequestBuilder).when(searchScrollRequestBuilder).setScroll(any(TimeValue.class));
+		doReturn(searchResponseActionFuture).when(searchScrollRequestBuilder).execute();
 	}
 }
