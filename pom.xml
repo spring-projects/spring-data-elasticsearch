@@ -19,7 +19,7 @@
 
 	<properties>
 		<commonslang>2.6</commonslang>
-		<elasticsearch>6.8.7</elasticsearch>
+		<elasticsearch>6.8.8</elasticsearch>
 		<log4j>2.9.1</log4j>
 		<springdata.commons>2.2.7.BUILD-SNAPSHOT</springdata.commons>
 		<netty>4.1.39.Final</netty>
@@ -296,6 +296,7 @@
 					<useFile>false</useFile>
 					<includes>
 						<include>**/*Tests.java</include>
+						<include>**/*Test.java</include>
 					</includes>
 					<systemPropertyVariables>
 						<es.set.netty.runtime.available.processors>false</es.set.netty.runtime.available.processors>
