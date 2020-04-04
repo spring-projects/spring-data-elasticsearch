@@ -131,6 +131,13 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		assertThat(fetchSourceContext.excludes()).containsExactlyInAnyOrder("excl");
 	}
 
+	@Test // DATAES-782
+	void shouldProvideClient() {
+		Client client = ((ElasticsearchTemplate) operations).getClient();
+
+		assertThat(client).isNotNull();
+	}
+
 	@Data
 	@Document(indexName = "test-index-sample-core-transport-template", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {

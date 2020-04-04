@@ -343,5 +343,9 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		} catch (Exception ignored) {}
 		return null;
 	}
+
+	public Client getClient() {
+		return client;
+	}
 	// endregion
 }
