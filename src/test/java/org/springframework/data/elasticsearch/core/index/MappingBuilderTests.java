@@ -545,6 +545,21 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, true);
 	}
 
+	@Test // DATAES-784
+	void shouldMapPropertyObjectsToFieldDefinition() throws JSONException {
+		String expected = "{\n" + //
+				"  properties: {\n" + //
+				"    valueObject: {\n" + //
+				"      type: \"text\"\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}";
+
+		String mapping = getMappingBuilder().buildPropertyMapping(ValueDoc.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
 	/**
 	 * @author Xiao Yu
 	 */
@@ -996,5 +1011,22 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		public void setAuthor(Author author) {
 			this.author = author;
 		}
+	}
+
+	static class ValueObject {
+		private String value;
+
+		public ValueObject(String value) {
+			this.value = value;
+		}
+
+		public String getValue() {
+			return value;
+		}
+	}
+
+	@Document(indexName = "valueDoc")
+	static class ValueDoc {
+		@Field(type = Text) private ValueObject valueObject;
 	}
 }

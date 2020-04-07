@@ -197,36 +197,34 @@ public class MappingBuilder {
 			}
 		}
 
-		boolean isGeoPointProperty = isGeoPointProperty(property);
+		if (isGeoPointProperty(property)) {
+			applyGeoPointFieldMapping(builder, property);
+			return;
+		}
+
+		Field fieldAnnotation = property.findAnnotation(Field.class);
 		boolean isCompletionProperty = isCompletionProperty(property);
 		boolean isNestedOrObjectProperty = isNestedOrObjectProperty(property);
 
-		Field fieldAnnotation = property.findAnnotation(Field.class);
-		if (!isGeoPointProperty && !isCompletionProperty && property.isEntity() && hasRelevantAnnotation(property)) {
+		if (!isCompletionProperty && property.isEntity() && hasRelevantAnnotation(property)) {
 
 			if (fieldAnnotation == null) {
 				return;
 			}
 
-			Iterator<? extends TypeInformation<?>> iterator = property.getPersistentEntityTypes().iterator();
-			ElasticsearchPersistentEntity<?> persistentEntity = iterator.hasNext()
-					? elasticsearchConverter.getMappingContext().getPersistentEntity(iterator.next())
-					: null;
-
-			mapEntity(builder, persistentEntity, false, property.getFieldName(), isNestedOrObjectProperty,
-					fieldAnnotation.type(), fieldAnnotation, property.findAnnotation(DynamicMapping.class));
-
 			if (isNestedOrObjectProperty) {
+				Iterator<? extends TypeInformation<?>> iterator = property.getPersistentEntityTypes().iterator();
+				ElasticsearchPersistentEntity<?> persistentEntity = iterator.hasNext()
+						? elasticsearchConverter.getMappingContext().getPersistentEntity(iterator.next())
+						: null;
+
+				mapEntity(builder, persistentEntity, false, property.getFieldName(), isNestedOrObjectProperty,
+						fieldAnnotation.type(), fieldAnnotation, property.findAnnotation(DynamicMapping.class));
 				return;
 			}
 		}
 
 		MultiField multiField = property.findAnnotation(MultiField.class);
-
-		if (isGeoPointProperty) {
-			applyGeoPointFieldMapping(builder, property);
-			return;
-		}
 
 		if (isCompletionProperty) {
 			CompletionField completionField = property.findAnnotation(CompletionField.class);
