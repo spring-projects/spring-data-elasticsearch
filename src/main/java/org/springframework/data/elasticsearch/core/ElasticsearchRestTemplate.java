@@ -320,7 +320,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	 * @since 4.0
 	 */
 	@FunctionalInterface
-	interface ClientCallback<T> {
+	public interface ClientCallback<T> {
 		T doWithClient(RestHighLevelClient client) throws IOException;
 	}
 
