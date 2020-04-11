@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.assertj.core.data.Percentage;
+import org.elasticsearch.search.suggest.completion.context.ContextMapping;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -560,6 +561,28 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, true);
 	}
 
+	@Test // DATAES-788
+	void shouldWriteCompletionContextInfo() throws JSONException {
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"suggest\": {\n" + //
+				"      \"type\": \"completion\",\n" + //
+				"      \"contexts\": [\n" + //
+				"        {\n" + //
+				"          \"name\": \"location\",\n" + //
+				"          \"type\": \"geo\",\n" + //
+				"          \"path\": \"proppath\"\n" + //
+				"        }\n" + //
+				"      ]\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}";
+
+		String mapping = getMappingBuilder().buildPropertyMapping(CompletionDocument.class);
+
+		assertEquals(expected, mapping, false);
+	}
+
 	/**
 	 * @author Xiao Yu
 	 */
@@ -1028,5 +1051,15 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@Document(indexName = "valueDoc")
 	static class ValueDoc {
 		@Field(type = Text) private ValueObject valueObject;
+	}
+
+	@Getter
+	@Setter
+	@Document(indexName = "completion")
+	static class CompletionDocument {
+		@Id private String id;
+
+		@CompletionField(contexts = { @CompletionContext(name = "location", type = ContextMapping.Type.GEO,
+				path = "proppath") }) private Completion suggest;
 	}
 }

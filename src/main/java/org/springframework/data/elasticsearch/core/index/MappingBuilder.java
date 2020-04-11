@@ -81,6 +81,7 @@ public class MappingBuilder {
 	private static final String FIELD_PARENT = "_parent";
 	private static final String FIELD_CONTEXT_NAME = "name";
 	private static final String FIELD_CONTEXT_TYPE = "type";
+	private static final String FIELD_CONTEXT_PATH = "path";
 	private static final String FIELD_CONTEXT_PRECISION = "precision";
 	private static final String FIELD_DYNAMIC_TEMPLATES = "dynamic_templates";
 
@@ -279,9 +280,15 @@ public class MappingBuilder {
 					builder.startObject();
 					builder.field(FIELD_CONTEXT_NAME, context.name());
 					builder.field(FIELD_CONTEXT_TYPE, context.type().name().toLowerCase());
+
 					if (context.precision().length() > 0) {
 						builder.field(FIELD_CONTEXT_PRECISION, context.precision());
 					}
+
+					if (StringUtils.hasText(context.path())) {
+						builder.field(FIELD_CONTEXT_PATH, context.path());
+					}
+
 					builder.endObject();
 				}
 				builder.endArray();
