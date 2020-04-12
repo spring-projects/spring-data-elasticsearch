@@ -48,7 +48,10 @@ public interface ElasticsearchRepository<T, ID> extends PagingAndSortingReposito
 	 * This method is intended to be used when many single inserts must be made that cannot be aggregated to be inserted
 	 * with {@link #saveAll(Iterable)}. This might lead to a temporary inconsistent state until {@link #refresh()} is
 	 * called.
+	 * 
+	 * @deprecated since 4.0, use a custom repository implementation instead
 	 */
+	@Deprecated
 	<S extends T> S indexWithoutRefresh(S entity);
 
 	/**
