@@ -253,11 +253,11 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	@Test // DATAES-530
-	public void shouldMapJsonStringToObject() {
+	public void shouldReadJsonStringToObject() {
 		// Given
 
 		// When
-		Car result = mappingElasticsearchConverter.mapDocument(Document.parse(JSON_STRING), Car.class);
+		Car result = mappingElasticsearchConverter.read(Car.class, Document.parse(JSON_STRING));
 
 		// Then
 		assertThat(result).isNotNull();

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2013-2020 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.data.elasticsearch.core;
 
 import java.util.ArrayList;
@@ -13,14 +28,17 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.data.convert.EntityReader;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.event.AfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.BeforeConvertCallback;
@@ -38,6 +56,7 @@ import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Streamable;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -235,7 +254,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		return StreamQueries.streamResults( //
 				searchScrollStart(scrollTimeInMillis, query, clazz, index), //
-				scrollId -> searchScrollContinue(scrollId, scrollTimeInMillis, clazz), //
+				scrollId -> searchScrollContinue(scrollId, scrollTimeInMillis, clazz, index), //
 				this::searchScrollClear);
 	}
 
@@ -262,10 +281,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
 
+		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
 		List<SearchHits<T>> res = new ArrayList<>(queries.size());
 		int c = 0;
 		for (Query query : queries) {
-			res.add(elasticsearchConverter.read(clazz, SearchDocumentResponse.from(items[c++].getResponse())));
+			res.add(callback.doWith(SearchDocumentResponse.from(items[c++].getResponse())));
 		}
 		return res;
 	}
@@ -285,7 +305,13 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		int c = 0;
 		Iterator<Class<?>> it1 = classes.iterator();
 		for (Query query : queries) {
-			res.add(elasticsearchConverter.read(it1.next(), SearchDocumentResponse.from(items[c++].getResponse())));
+			Class entityClass = it1.next();
+
+			SearchDocumentResponseCallback<SearchHits<?>> callback = new ReadSearchDocumentResponseCallback<>(
+					entityClass, index);
+
+			SearchResponse response = items[c++].getResponse();
+			res.add(callback.doWith(SearchDocumentResponse.from(response)));
 		}
 		return res;
 	}
@@ -305,7 +331,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	 * internal use only, not for public API
 	 */
 	abstract protected <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
-			Class<T> clazz);
+			Class<T> clazz, IndexCoordinates index);
 
 	/*
 	 * internal use only, not for public API
@@ -497,4 +523,82 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	// endregion
 
+	protected interface DocumentCallback<T> {
+
+		@Nullable
+		T doWith(@Nullable Document document);
+	}
+
+	protected static class ReadDocumentCallback<T> implements DocumentCallback<T> {
+		private final EntityReader<? super T, Document> reader;
+		private final Class<T> type;
+		private final IndexCoordinates index;
+
+		public ReadDocumentCallback(EntityReader<? super T, Document> reader, Class<T> type, IndexCoordinates index) {
+			Assert.notNull(reader, "reader is null");
+			Assert.notNull(type, "type is null");
+
+			this.reader = reader;
+			this.type = type;
+			this.index = index;
+		}
+
+		@Nullable
+		public T doWith(@Nullable Document document) {
+			if (document == null) {
+				return null;
+			}
+
+			return reader.read(type, document);
+		}
+	}
+
+	protected interface SearchDocumentResponseCallback<T> {
+
+		@NonNull
+		T doWith(@NonNull SearchDocumentResponse response);
+	}
+
+	protected class ReadSearchDocumentResponseCallback<T> implements SearchDocumentResponseCallback<SearchHits<T>> {
+		private final DocumentCallback<T> delegate;
+		private final Class<T> type;
+
+		public ReadSearchDocumentResponseCallback(Class<T> type, IndexCoordinates index) {
+			Assert.notNull(type, "type is null");
+
+			this.delegate = new ReadDocumentCallback<>(elasticsearchConverter, type, index);
+			this.type = type;
+		}
+
+		@Override
+		public SearchHits<T> doWith(SearchDocumentResponse response) {
+			List<T> entities = response.getSearchDocuments().stream()
+					.map(delegate::doWith)
+					.collect(Collectors.toList());
+			return SearchHitMapping.mappingFor(type, elasticsearchConverter.getMappingContext())
+					.mapHits(response, entities);
+		}
+	}
+
+	protected class ReadSearchScrollDocumentResponseCallback<T>
+			implements SearchDocumentResponseCallback<SearchScrollHits<T>> {
+		private final DocumentCallback<T> delegate;
+		private final Class<T> type;
+
+		public ReadSearchScrollDocumentResponseCallback(Class<T> type, IndexCoordinates index) {
+			Assert.notNull(type, "type is null");
+
+			this.delegate = new ReadDocumentCallback<>(elasticsearchConverter, type, index);
+			this.type = type;
+		}
+
+		@Override
+		public SearchScrollHits<T> doWith(SearchDocumentResponse response) {
+			List<T> entities = response.getSearchDocuments().stream()
+					.map(delegate::doWith)
+					.collect(Collectors.toList());
+			return SearchHitMapping.mappingFor(type, elasticsearchConverter.getMappingContext())
+					.mapScrollHits(response, entities);
+		}
+	}
 }
