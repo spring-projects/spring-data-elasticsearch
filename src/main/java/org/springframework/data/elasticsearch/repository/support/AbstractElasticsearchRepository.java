@@ -182,6 +182,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	}
 
 	@Override
+	@Deprecated
 	public <S extends T> S indexWithoutRefresh(S entity) {
 		Assert.notNull(entity, "Cannot save 'null' entity.");
 		operations.save(entity);
