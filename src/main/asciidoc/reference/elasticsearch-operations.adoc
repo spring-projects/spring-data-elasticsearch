@@ -125,7 +125,7 @@ include::reactive-elasticsearch-operations.adoc[leveloffset=+1]
 
 When a document is retrieved with the methods of the  `DocumentOperations` interface, just the found entity will be returned. When searching with the methods of the `SearchOperations` interface, additional information is available for each entity, for example the _score_ or the _sortValues_ of the found entity.
 
-In order to return this information, each entity is wrapped in a `SearchHit` object that contains this entity-specific additional information. These `SearchHit` objects themselves are returned within a `SearchHits` object which additionally contains informations about the whole search ike the _maxScore_ or requested aggregations.
+In order to return this information, each entity is wrapped in a `SearchHit` object that contains this entity-specific additional information. These `SearchHit` objects themselves are returned within a `SearchHits` object which additionally contains informations about the whole search like the _maxScore_ or requested aggregations. The following classes and interfaces are now available:
 
 .SearchHit<T>
 Contains the following information:
@@ -133,7 +133,7 @@ Contains the following information:
 * Id
 * Score
 * Sort Values
-* Highligth fields
+* Highlight fields
 * The retrieved entity of type <T>
 
 .SearchHits<T>
@@ -144,4 +144,13 @@ Contains the following information:
 * Maximum score
 * A list of `SearchHit<T>` objects
 * Returned aggregations
+
+.SearchPage<T>
+Defines a Spring Data `Page` that contains a `SearchHits<T>` element and can be used for paging access using repository methods.
+
+.SearchScrollHits<T>
+Returned by the low level scroll API functions in `ElasticsearchRestTemplate`, it enriches a `SearchHits<T>` with the Elasticsearch scroll id.
+
+.SearchHitsIterator<T>
+An Iterator returned by the streaming functions of the `SearchOperations` interface.
 

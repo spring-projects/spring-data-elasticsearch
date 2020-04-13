@@ -199,6 +199,12 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
+	@Nullable
+	public <T> T queryForObject(GetQuery query, Class<T> clazz) {
+		return get(query.getId(), clazz, getIndexCoordinatesFor(clazz));
+	}
+
+	@Override
 	public boolean exists(String id, Class<?> clazz) {
 		return exists(id, getIndexCoordinatesFor(clazz));
 	}

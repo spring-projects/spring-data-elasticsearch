@@ -256,5 +256,16 @@ public interface DocumentOperations {
 	@Nullable
 	<T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index);
 
+	/**
+	 * Retrieves an object from an index.
+	 *
+	 * @param query the query defining the id of the object to get
+	 * @param clazz the type of the object to be returned
+	 * @return the found object
+	 * @deprecated since 4.0, use {@link #get(String, Class, IndexCoordinates)}
+	 */
+	@Deprecated
+	@Nullable
+	<T> T queryForObject(GetQuery query, Class<T> clazz);
 	// endregion
 }
