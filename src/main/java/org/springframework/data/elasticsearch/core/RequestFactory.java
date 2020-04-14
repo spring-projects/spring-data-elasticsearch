@@ -85,7 +85,7 @@ import org.springframework.util.StringUtils;
  * @author Sascha Woo
  * @since 4.0
  */
-public class RequestFactory {
+class RequestFactory {
 
 	// the default max result window size of Elasticsearch
 	static final Integer INDEX_MAX_RESULT_WINDOW = 10_000;
