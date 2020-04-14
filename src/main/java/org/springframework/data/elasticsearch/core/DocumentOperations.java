@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
@@ -121,7 +120,7 @@ public interface DocumentOperations {
 	 * @param query the query defining the ids of the objects to get
 	 * @param clazz the type of the object to be returned
 	 * @param index the index(es) from which the objects are read.
-	 * @return list of objects
+	 * @return list of objects, contains null values for ids that are not found
 	 */
 	<T> List<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
 

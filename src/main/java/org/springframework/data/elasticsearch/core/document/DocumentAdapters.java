@@ -118,16 +118,16 @@ public class DocumentAdapters {
 	 * Creates a List of {@link Document}s from {@link MultiGetResponse}.
 	 * 
 	 * @param source the source {@link MultiGetResponse}, not {@literal null}.
-	 * @return a possibly empty list of the Documents.
+	 * @return a list of Documents, contains null values for not found Documents.
 	 */
 	public static List<Document> from(MultiGetResponse source) {
 
 		Assert.notNull(source, "MultiGetResponse must not be null");
 
-		//noinspection ReturnOfNull
+		// noinspection ReturnOfNull
 		return Arrays.stream(source.getResponses()) //
 				.map(itemResponse -> itemResponse.isFailed() ? null : DocumentAdapters.from(itemResponse.getResponse())) //
-				.filter(Objects::nonNull).collect(Collectors.toList());
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -299,8 +299,7 @@ public class DocumentAdapters {
 		public Object get(Object key) {
 			return documentFields.stream() //
 					.filter(documentField -> documentField.getName().equals(key)) //
-					.map(DocumentField::getValue)
-					.findFirst() //
+					.map(DocumentField::getValue).findFirst() //
 					.orElse(null); //
 
 		}
