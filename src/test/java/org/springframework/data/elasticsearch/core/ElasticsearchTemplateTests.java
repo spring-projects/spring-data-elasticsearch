@@ -240,6 +240,39 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.get(1)).isEqualTo(sampleEntity2);
 	}
 
+	@Test // DATAES-791
+	public void shouldReturnNullObjectForNotExistingIdUsingMultiGet() {
+
+		// given
+		// first document
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		// second document
+		String documentId2 = randomNumeric(5);
+		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2));
+
+		operations.bulkIndex(indexQueries, index);
+		indexOperations.refresh();
+
+		// when
+		List<String> idsToSearch = Arrays.asList(documentId, randomNumeric(5), documentId2);
+		assertThat(idsToSearch).hasSize(3);
+
+		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(idsToSearch).build();
+		List<SampleEntity> sampleEntities = operations.multiGet(query, SampleEntity.class, index);
+
+		// then
+		assertThat(sampleEntities).hasSize(3);
+		assertThat(sampleEntities.get(0)).isEqualTo(sampleEntity1);
+		assertThat(sampleEntities.get(1)).isNull();
+		assertThat(sampleEntities.get(2)).isEqualTo(sampleEntity2);
+	}
+
 	@Test
 	public void shouldReturnObjectsForGivenIdsUsingMultiGetWithFields() {
 
