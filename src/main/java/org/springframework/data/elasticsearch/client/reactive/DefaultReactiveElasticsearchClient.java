@@ -16,7 +16,9 @@
 package org.springframework.data.elasticsearch.client.reactive;
 
 import io.netty.channel.ChannelOption;
+import io.netty.handler.ssl.ApplicationProtocolConfig;
 import io.netty.handler.ssl.ClientAuth;
+import io.netty.handler.ssl.IdentityCipherSuiteFilter;
 import io.netty.handler.ssl.JdkSslContext;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
@@ -210,11 +212,16 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		if (clientConfiguration.useSsl()) {
 
-			httpClient = httpClient.secure(sslConfig -> {
+			Optional<SSLContext> sslContext = clientConfiguration.getSslContext();
 
-				Optional<SSLContext> sslContext = clientConfiguration.getSslContext();
-				sslContext.ifPresent(it -> sslConfig.sslContext(new JdkSslContext(it, true, ClientAuth.NONE)));
-			});
+			if (sslContext.isPresent()) {
+				httpClient = httpClient.secure(sslContextSpec -> {
+					sslContextSpec.sslContext(new JdkSslContext(sslContext.get(), true, null, IdentityCipherSuiteFilter.INSTANCE,
+							ApplicationProtocolConfig.DISABLED, ClientAuth.NONE, null, false));
+				});
+			} else {
+				httpClient = httpClient.secure();
+			}
 
 			scheme = "https";
 		}
