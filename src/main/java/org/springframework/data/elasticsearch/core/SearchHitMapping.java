@@ -99,8 +99,7 @@ class SearchHitMapping<T> {
 			searchHits.add(hit);
 		}
 		Aggregations aggregations = searchDocumentResponse.getAggregations();
-		TotalHitsRelation totalHitsRelation = TotalHitsRelation
-				.valueOf(searchDocumentResponse.getTotalHitsRelation());
+		TotalHitsRelation totalHitsRelation = TotalHitsRelation.valueOf(searchDocumentResponse.getTotalHitsRelation());
 
 		return new SearchHitsImpl<>(totalHits, totalHitsRelation, maxScore, scrollId, searchHits, aggregations);
 	}
@@ -119,8 +118,7 @@ class SearchHitMapping<T> {
 		}
 
 		return highlightFields.entrySet().stream().collect(Collectors.toMap(entry -> {
-			ElasticsearchPersistentProperty property = persistentEntity.getPersistentPropertyWithFieldName
-					(entry.getKey());
+			ElasticsearchPersistentProperty property = persistentEntity.getPersistentPropertyWithFieldName(entry.getKey());
 			return property != null ? property.getName() : entry.getKey();
 		}, Map.Entry::getValue));
 	}

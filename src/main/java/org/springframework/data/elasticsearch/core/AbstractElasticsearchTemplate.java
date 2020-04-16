@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,7 +123,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	// endregion
 
 	// region DocumentOperations
-
 	@Override
 	public <T> T save(T entity) {
 
@@ -307,8 +306,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		for (Query query : queries) {
 			Class entityClass = it1.next();
 
-			SearchDocumentResponseCallback<SearchHits<?>> callback = new ReadSearchDocumentResponseCallback<>(
-					entityClass, index);
+			SearchDocumentResponseCallback<SearchHits<?>> callback = new ReadSearchDocumentResponseCallback<>(entityClass,
+					index);
 
 			SearchResponse response = items[c++].getResponse();
 			res.add(callback.doWith(SearchDocumentResponse.from(response)));
@@ -464,7 +463,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	// endregion
 
-	// region callbacks
+	// region Entity callbacks
 	protected <T> T maybeCallbackBeforeConvert(T entity) {
 
 		if (entityCallbacks != null) {
@@ -523,8 +522,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	// endregion
 
+	// region Document callbacks
 	protected interface DocumentCallback<T> {
-
 		@Nullable
 		T doWith(@Nullable Document document);
 	}
@@ -535,6 +534,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		private final IndexCoordinates index;
 
 		public ReadDocumentCallback(EntityReader<? super T, Document> reader, Class<T> type, IndexCoordinates index) {
+
 			Assert.notNull(reader, "reader is null");
 			Assert.notNull(type, "type is null");
 
@@ -545,6 +545,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		@Nullable
 		public T doWith(@Nullable Document document) {
+
 			if (document == null) {
 				return null;
 			}
@@ -554,7 +555,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	protected interface SearchDocumentResponseCallback<T> {
-
 		@NonNull
 		T doWith(@NonNull SearchDocumentResponse response);
 	}
@@ -564,6 +564,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		private final Class<T> type;
 
 		public ReadSearchDocumentResponseCallback(Class<T> type, IndexCoordinates index) {
+
 			Assert.notNull(type, "type is null");
 
 			this.delegate = new ReadDocumentCallback<>(elasticsearchConverter, type, index);
@@ -572,11 +573,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		@Override
 		public SearchHits<T> doWith(SearchDocumentResponse response) {
-			List<T> entities = response.getSearchDocuments().stream()
-					.map(delegate::doWith)
-					.collect(Collectors.toList());
-			return SearchHitMapping.mappingFor(type, elasticsearchConverter.getMappingContext())
-					.mapHits(response, entities);
+			List<T> entities = response.getSearchDocuments().stream().map(delegate::doWith).collect(Collectors.toList());
+			return SearchHitMapping.mappingFor(type, elasticsearchConverter.getMappingContext()).mapHits(response, entities);
 		}
 	}
 
@@ -586,6 +584,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		private final Class<T> type;
 
 		public ReadSearchScrollDocumentResponseCallback(Class<T> type, IndexCoordinates index) {
+			
 			Assert.notNull(type, "type is null");
 
 			this.delegate = new ReadDocumentCallback<>(elasticsearchConverter, type, index);
@@ -594,11 +593,10 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		@Override
 		public SearchScrollHits<T> doWith(SearchDocumentResponse response) {
-			List<T> entities = response.getSearchDocuments().stream()
-					.map(delegate::doWith)
-					.collect(Collectors.toList());
-			return SearchHitMapping.mappingFor(type, elasticsearchConverter.getMappingContext())
-					.mapScrollHits(response, entities);
+			List<T> entities = response.getSearchDocuments().stream().map(delegate::doWith).collect(Collectors.toList());
+			return SearchHitMapping.mappingFor(type, elasticsearchConverter.getMappingContext()).mapScrollHits(response,
+					entities);
 		}
 	}
+	// endregion
 }

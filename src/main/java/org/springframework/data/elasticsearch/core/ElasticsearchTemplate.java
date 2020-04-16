@@ -178,9 +178,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
 		List<Document> documents = DocumentAdapters.from(builder.execute().actionGet());
-		return documents.stream()
-				.map(callback::doWith)
-				.collect(Collectors.toList());
+		return documents.stream().map(callback::doWith).collect(Collectors.toList());
 	}
 
 	@Override
@@ -291,8 +289,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		SearchResponse response = getSearchResponseWithTimeout(action);
 
-		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(
-				clazz, index);
+		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
+				index);
 		return callback.doWith(SearchDocumentResponse.from(response));
 	}
 
@@ -307,8 +305,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		SearchResponse response = getSearchResponseWithTimeout(action);
 
-		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(
-				clazz, index);
+		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
+				index);
 		return callback.doWith(SearchDocumentResponse.from(response));
 	}
 

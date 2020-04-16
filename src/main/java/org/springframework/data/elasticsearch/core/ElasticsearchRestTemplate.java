@@ -172,9 +172,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		MultiGetResponse result = execute(client -> client.mget(request, RequestOptions.DEFAULT));
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
-		return DocumentAdapters.from(result).stream()
-				.map(callback::doWith)
-				.collect(Collectors.toList());
+		return DocumentAdapters.from(result).stream().map(callback::doWith).collect(Collectors.toList());
 	}
 
 	@Override
@@ -281,8 +279,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		SearchResponse response = execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
 
-		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(
-				clazz, index);
+		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
+				index);
 		return callback.doWith(SearchDocumentResponse.from(response));
 	}
 
@@ -325,7 +323,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 	// endregion
 
-	// region clientcallback
+	// region ClientCallback
 	/**
 	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on
 	 * {@link RestHighLevelClient}.

@@ -1148,8 +1148,8 @@ public abstract class ElasticsearchTemplateTests {
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
 			scrollId = scroll.getScrollId();
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000,
-					SampleEntity.class, index);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class,
+					index);
 		}
 		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
@@ -1176,8 +1176,8 @@ public abstract class ElasticsearchTemplateTests {
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
 			scrollId = scroll.getScrollId();
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000,
-					SampleEntity.class, index);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class,
+					index);
 		}
 		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
@@ -1204,8 +1204,8 @@ public abstract class ElasticsearchTemplateTests {
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
 			scrollId = scroll.getScrollId();
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000,
-					SampleEntity.class, index);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class,
+					index);
 		}
 		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
@@ -1232,8 +1232,8 @@ public abstract class ElasticsearchTemplateTests {
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
 			scrollId = scroll.getScrollId();
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000,
-					SampleEntity.class, index);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class,
+					index);
 		}
 		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
@@ -1260,8 +1260,8 @@ public abstract class ElasticsearchTemplateTests {
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
 			scrollId = scroll.getScrollId();
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000,
-					SampleEntity.class, index);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class,
+					index);
 		}
 		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);
@@ -1288,8 +1288,8 @@ public abstract class ElasticsearchTemplateTests {
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
 			scrollId = scroll.getScrollId();
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000,
-					SampleEntity.class, index);
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class,
+					index);
 		}
 		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
 		assertThat(sampleEntities).hasSize(30);

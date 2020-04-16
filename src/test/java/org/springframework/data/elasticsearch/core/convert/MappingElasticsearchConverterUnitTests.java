@@ -194,17 +194,17 @@ public class MappingElasticsearchConverterUnitTests {
 		shotGunAsMap = Document.create();
 		shotGunAsMap.put("model", "Ithaca 37 Pump Shotgun");
 		shotGunAsMap.put("_class", ShotGun.class.getName());
-		
+
 		notificationAsMap = Document.create();
-		notificationAsMap.put("id",1L);
-		notificationAsMap.put("fromEmail","from@email.com");
-		notificationAsMap.put("toEmail","to@email.com");
-		Map<String,Object> data = new HashMap<>();
-		data.put("documentType","abc");
-		data.put("content",null);
-		notificationAsMap.put("params",data);
+		notificationAsMap.put("id", 1L);
+		notificationAsMap.put("fromEmail", "from@email.com");
+		notificationAsMap.put("toEmail", "to@email.com");
+		Map<String, Object> data = new HashMap<>();
+		data.put("documentType", "abc");
+		data.put("content", null);
+		notificationAsMap.put("params", data);
 		notificationAsMap.put("_class",
-				  "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Notification");
+				"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Notification");
 	}
 
 	@Test
@@ -627,37 +627,37 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(person.getBirthDate()).isEqualTo(LocalDate.of(2000, 8, 22));
 		assertThat(person.getGender()).isEqualTo(Gender.MAN);
 	}
-	
-	@Test //DATAES-763
+
+	@Test // DATAES-763
 	void writeEntityWithMapDataType() {
 
 		Notification notification = new Notification();
-		notification.fromEmail="from@email.com";
-		notification.toEmail="to@email.com";
-		Map<String,Object> data = new HashMap<>();
-		data.put("documentType","abc");
-		data.put("content",null);
-		notification.params= data;
-		notification.id= 1L;
+		notification.fromEmail = "from@email.com";
+		notification.toEmail = "to@email.com";
+		Map<String, Object> data = new HashMap<>();
+		data.put("documentType", "abc");
+		data.put("content", null);
+		notification.params = data;
+		notification.id = 1L;
 
 		Document document = Document.create();
-		mappingElasticsearchConverter.write(notification,document);
+		mappingElasticsearchConverter.write(notification, document);
 		assertThat(document).isEqualTo(notificationAsMap);
 	}
 
-	@Test //DATAES-763
+	@Test // DATAES-763
 	void readEntityWithMapDataType() {
 
 		Document document = Document.create();
-		document.put("id",1L);
-		document.put("fromEmail","from@email.com");
-		document.put("toEmail","to@email.com");
-		Map<String,Object> data = new HashMap<>();
-		data.put("documentType","abc");
-		data.put("content",null);
-		document.put("params",data);
+		document.put("id", 1L);
+		document.put("fromEmail", "from@email.com");
+		document.put("toEmail", "to@email.com");
+		Map<String, Object> data = new HashMap<>();
+		data.put("documentType", "abc");
+		data.put("content", null);
+		document.put("params", data);
 
-		Notification notification = mappingElasticsearchConverter.read(Notification.class,document);
+		Notification notification = mappingElasticsearchConverter.read(Notification.class, document);
 		assertThat(notification.params.get("documentType")).isEqualTo("abc");
 		assertThat(notification.params.get("content")).isNull();
 	}
@@ -794,14 +794,14 @@ public class MappingElasticsearchConverterUnitTests {
 		List<Object> objectList;
 		Map<String, Object> objectMap;
 	}
-	
+
 	@Data
 	static class Notification {
 
 		Long id;
 		String fromEmail;
 		String toEmail;
-		Map<String,Object> params;
+		Map<String, Object> params;
 	}
 
 	@WritingConverter
