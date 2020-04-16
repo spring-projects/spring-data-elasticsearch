@@ -15,20 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -40,14 +29,8 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
-import org.springframework.data.elasticsearch.core.SearchScrollHits;
-import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.SearchHitsImpl;
-import org.springframework.data.elasticsearch.core.TotalHitsRelation;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
-import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
@@ -77,6 +60,7 @@ import org.springframework.util.ObjectUtils;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @author Mark Paluch
+ * @author Roman Puchkovskiy
  * @since 3.2
  */
 public class MappingElasticsearchConverter
@@ -145,83 +129,6 @@ public class MappingElasticsearchConverter
 	}
 
 	// region read
-
-	@Override
-	public <T> SearchHits<T> read(Class<T> type, SearchDocumentResponse searchDocumentResponse) {
-		return readResponse(type, searchDocumentResponse);
-	}
-
-	@Override
-	public <T> SearchHit<T> read(Class<T> type, SearchDocument searchDocument) {
-
-		Assert.notNull(type, "type must not be null");
-		Assert.notNull(searchDocument, "searchDocument must not be null");
-
-		String id = searchDocument.hasId() ? searchDocument.getId() : null;
-		float score = searchDocument.getScore();
-		Object[] sortValues = searchDocument.getSortValues();
-		Map<String, List<String>> highlightFields = getHighlightsAndRemapFieldNames(type, searchDocument);
-		T content = mapDocument(searchDocument, type);
-
-		return new SearchHit<T>(id, score, sortValues, highlightFields, content);
-	}
-
-	@Override
-	public <T> SearchScrollHits<T> readScroll(Class<T> type, SearchDocumentResponse searchDocumentResponse) {
-		return readResponse(type, searchDocumentResponse);
-	}
-
-	private <T> SearchHitsImpl<T> readResponse(Class<T> type, SearchDocumentResponse searchDocumentResponse) {
-
-		Assert.notNull(type, "type must not be null");
-		Assert.notNull(searchDocumentResponse, "searchDocumentResponse must not be null");
-
-		long totalHits = searchDocumentResponse.getTotalHits();
-		float maxScore = searchDocumentResponse.getMaxScore();
-		String scrollId = searchDocumentResponse.getScrollId();
-		List<SearchHit<T>> searchHits = searchDocumentResponse.getSearchDocuments().stream() //
-				.map(searchDocument -> read(type, searchDocument)) //
-				.collect(Collectors.toList());
-		Aggregations aggregations = searchDocumentResponse.getAggregations();
-		TotalHitsRelation totalHitsRelation = TotalHitsRelation
-				.valueOf(searchDocumentResponse.getTotalHitsRelation());
-
-		return new SearchHitsImpl<>(totalHits, totalHitsRelation, maxScore, scrollId, searchHits, aggregations);
-	}
-
-	@Nullable
-	private Map<String, List<String>> getHighlightsAndRemapFieldNames(Class<?> type, SearchDocument searchDocument) {
-		Map<String, List<String>> highlightFields = searchDocument.getHighlightFields();
-
-		if (highlightFields == null) {
-			return null;
-		}
-
-		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(type);
-		if (persistentEntity == null) {
-			return highlightFields;
-		}
-
-		return highlightFields.entrySet().stream().collect(Collectors.toMap(entry -> {
-			ElasticsearchPersistentProperty property = persistentEntity.getPersistentPropertyWithFieldName(entry.getKey());
-			return property != null ? property.getName() : entry.getKey();
-		}, Entry::getValue));
-	}
-
-	@Override
-	@Nullable
-	public <T> T mapDocument(@Nullable Document document, Class<T> type) {
-
-		if (document == null) {
-			return null;
-		}
-
-		T mappedResult = read(type, document);
-
-		return type.isInterface() || !ClassUtils.isAssignableValue(type, mappedResult)
-				? getProjectionFactory().createProjection(type, mappedResult)
-				: type.cast(mappedResult);
-	}
 
 	@SuppressWarnings("unchecked")
 	@Override

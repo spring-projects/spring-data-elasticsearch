@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoAction;
@@ -37,6 +38,7 @@ import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -161,7 +163,9 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
 		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, index);
 		GetResponse response = getRequestBuilder.execute().actionGet();
-		return elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);
+
+		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
+		return callback.doWith(DocumentAdapters.from(response));
 	}
 
 	@Override
@@ -172,7 +176,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		MultiGetRequestBuilder builder = requestFactory.multiGetRequestBuilder(client, query, index);
 
-		return elasticsearchConverter.mapDocuments(DocumentAdapters.from(builder.execute().actionGet()), clazz);
+		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
+		List<Document> documents = DocumentAdapters.from(builder.execute().actionGet());
+		return documents.stream()
+				.map(callback::doWith)
+				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -265,7 +273,9 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	public <T> SearchHits<T> search(Query query, Class<T> clazz, IndexCoordinates index) {
 		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, clazz, index);
 		SearchResponse response = getSearchResponse(searchRequestBuilder);
-		return elasticsearchConverter.read(clazz, SearchDocumentResponse.from(response));
+
+		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
+		return callback.doWith(SearchDocumentResponse.from(response));
 	}
 
 	@Override
@@ -281,12 +291,14 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		SearchResponse response = getSearchResponseWithTimeout(action);
 
-		return elasticsearchConverter.readScroll(clazz, SearchDocumentResponse.from(response));
+		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(
+				clazz, index);
+		return callback.doWith(SearchDocumentResponse.from(response));
 	}
 
 	@Override
 	public <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
-			Class<T> clazz) {
+			Class<T> clazz, IndexCoordinates index) {
 
 		ActionFuture<SearchResponse> action = client //
 				.prepareSearchScroll(scrollId) //
@@ -295,7 +307,9 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		SearchResponse response = getSearchResponseWithTimeout(action);
 
-		return elasticsearchConverter.readScroll(clazz, SearchDocumentResponse.from(response));
+		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(
+				clazz, index);
+		return callback.doWith(SearchDocumentResponse.from(response));
 	}
 
 	@Override

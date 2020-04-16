@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -156,7 +157,9 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
 		GetRequest request = requestFactory.getRequest(id, index);
 		GetResponse response = execute(client -> client.get(request, RequestOptions.DEFAULT));
-		return elasticsearchConverter.mapDocument(DocumentAdapters.from(response), clazz);
+
+		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
+		return callback.doWith(DocumentAdapters.from(response));
 	}
 
 	@Override
@@ -167,7 +170,11 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		MultiGetRequest request = requestFactory.multiGetRequest(query, index);
 		MultiGetResponse result = execute(client -> client.mget(request, RequestOptions.DEFAULT));
-		return elasticsearchConverter.mapDocuments(DocumentAdapters.from(result), clazz);
+
+		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
+		return DocumentAdapters.from(result).stream()
+				.map(callback::doWith)
+				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -258,7 +265,9 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	public <T> SearchHits<T> search(Query query, Class<T> clazz, IndexCoordinates index) {
 		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
 		SearchResponse response = execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
-		return elasticsearchConverter.read(clazz, SearchDocumentResponse.from(response));
+
+		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
+		return callback.doWith(SearchDocumentResponse.from(response));
 	}
 
 	@Override
@@ -272,19 +281,23 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		SearchResponse response = execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
 
-		return elasticsearchConverter.readScroll(clazz, SearchDocumentResponse.from(response));
+		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(
+				clazz, index);
+		return callback.doWith(SearchDocumentResponse.from(response));
 	}
 
 	@Override
 	public <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
-			Class<T> clazz) {
+			Class<T> clazz, IndexCoordinates index) {
 
 		SearchScrollRequest request = new SearchScrollRequest(scrollId);
 		request.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
 
 		SearchResponse response = execute(client -> client.scroll(request, RequestOptions.DEFAULT));
 
-		return elasticsearchConverter.readScroll(clazz, SearchDocumentResponse.from(response));
+		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = //
+				new ReadSearchScrollDocumentResponseCallback<>(clazz, index);
+		return callback.doWith(SearchDocumentResponse.from(response));
 	}
 
 	@Override

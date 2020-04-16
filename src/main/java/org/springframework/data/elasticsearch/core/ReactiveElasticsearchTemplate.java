@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.data.convert.EntityReader;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
@@ -87,6 +88,7 @@ import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -232,16 +234,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		Assert.notNull(query, "Query must not be null");
 		Assert.notEmpty(query.getIds(), "No Id define for Query");
 
+		DocumentCallback<T> callback = new ReadDocumentCallback<>(converter, clazz, index);
+
 		MultiGetRequest request = requestFactory.multiGetRequest(query, index);
 		return Flux.from(execute(client -> client.multiGet(request))) //
-				.handle((result, sink) -> {
-
-					Document document = DocumentAdapters.from(result);
-					T entity = converter.mapDocument(document, clazz);
-					if (entity != null) {
-						sink.next(entity);
-					}
-				});
+				.concatMap(result -> callback.doWith(DocumentAdapters.from(result)));
 	}
 
 	@Override
@@ -389,8 +386,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Assert.notNull(id, "Id must not be null!");
 
+		DocumentCallback<T> callback = new ReadDocumentCallback<>(converter, entityType, index);
+
 		return doGet(id, getPersistentEntityFor(entityType), index)
-				.map(it -> converter.mapDocument(DocumentAdapters.from(it), entityType));
+				.flatMap(it -> callback.doWith(DocumentAdapters.from(it)));
 	}
 
 	private Mono<GetResult> doGet(String id, ElasticsearchPersistentEntity<?> entity, IndexCoordinates index) {
@@ -581,8 +580,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	// region SearchOperations
 	@Override
 	public <T> Flux<SearchHit<T>> search(Query query, Class<?> entityType, Class<T> resultType, IndexCoordinates index) {
-
-		return doFind(query, entityType, index).map(searchDocument -> converter.read(resultType, searchDocument));
+		SearchDocumentCallback<T> callback = new ReadSearchDocumentCallback<>(resultType, index);
+		return doFind(query, entityType, index).concatMap(callback::doWith);
 	}
 
 	@Override
@@ -894,4 +893,60 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return Mono.just(entity);
 	}
 	// endregion
+
+	protected interface DocumentCallback<T> {
+
+		@NonNull
+		Mono<T> doWith(@Nullable Document document);
+	}
+
+	protected static class ReadDocumentCallback<T> implements DocumentCallback<T> {
+		private final EntityReader<? super T, Document> reader;
+		private final Class<T> type;
+		private final IndexCoordinates index;
+
+		public ReadDocumentCallback(EntityReader<? super T, Document> reader, Class<T> type, IndexCoordinates index) {
+			Assert.notNull(reader, "reader is null");
+			Assert.notNull(type, "type is null");
+
+			this.reader = reader;
+			this.type = type;
+			this.index = index;
+		}
+
+		@NonNull
+		public Mono<T> doWith(@Nullable Document document) {
+			if (document == null) {
+				return Mono.empty();
+			}
+
+			T entity = reader.read(type, document);
+			return Mono.just(entity);
+		}
+	}
+
+	protected interface SearchDocumentCallback<T> {
+
+		@NonNull
+		Mono<SearchHit<T>> doWith(@NonNull SearchDocument response);
+	}
+
+	protected class ReadSearchDocumentCallback<T> implements SearchDocumentCallback<T> {
+		private final DocumentCallback<T> delegate;
+		private final Class<T> type;
+
+		public ReadSearchDocumentCallback(Class<T> type, IndexCoordinates index) {
+			Assert.notNull(type, "type is null");
+
+			this.delegate = new ReadDocumentCallback<>(converter, type, index);
+			this.type = type;
+		}
+
+		@Override
+		public Mono<SearchHit<T>> doWith(SearchDocument response) {
+			return delegate.doWith(response)
+					.map(entity -> SearchHitMapping.mappingFor(type, converter.getMappingContext())
+							.mapHit(response, entity));
+		}
+	}
 }
