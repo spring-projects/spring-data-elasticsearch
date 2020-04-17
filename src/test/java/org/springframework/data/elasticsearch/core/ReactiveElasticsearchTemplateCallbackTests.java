@@ -99,10 +99,10 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		doReturn(true).when(getResult).isExists();
 		doReturn(false).when(getResult).isSourceEmpty();
 		doReturn(new HashMap<String, Object>() {
-				{
-					put("id", "init");
-					put("firstname", "luke");
-				}
+			{
+				put("id", "init");
+				put("firstname", "luke");
+			}
 		}).when(getResult).getSource();
 
 		doReturn(Mono.just(getResult)).when(client).get(any(GetRequest.class));
@@ -110,10 +110,10 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		when(client.search(any(SearchRequest.class))).thenReturn(Flux.just(searchHit, searchHit));
 		doReturn(new BytesArray(new byte[8])).when(searchHit).getSourceRef();
 		doReturn(new HashMap<String, Object>() {
-				{
-					put("id", "init");
-					put("firstname", "luke");
-				}
+			{
+				put("id", "init");
+				put("firstname", "luke");
+			}
 		}).when(searchHit).getSourceAsMap();
 
 		when(client.scroll(any(SearchRequest.class))).thenReturn(Flux.just(searchHit, searchHit));
@@ -222,12 +222,11 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
-		List<Person> results = template.multiGet(pagedQueryForTwo(), Person.class, index)
-				.timeout(Duration.ofSeconds(1))
+		List<Person> results = template.multiGet(pagedQueryForTwo(), Person.class, index).timeout(Duration.ofSeconds(1))
 				.toStream().collect(Collectors.toList());
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		assertThat(results.get(0).id).isEqualTo("after-convert");
 		assertThat(results.get(1).id).isEqualTo("after-convert");
 	}
@@ -294,27 +293,21 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
 		@SuppressWarnings("deprecation") // we know what we test
-		List<Person> results = template.find(pagedQueryForTwo(), Person.class)
-				.timeout(Duration.ofSeconds(1)).toStream()
+		List<Person> results = template.find(pagedQueryForTwo(), Person.class).timeout(Duration.ofSeconds(1)).toStream()
 				.collect(Collectors.toList());
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
 		assertThat(results.get(0).id).isEqualTo("after-convert");
 		assertThat(results.get(1).id).isEqualTo("after-convert");
 	}
-	
+
 	private Query pagedQueryForTwo() {
-		return new NativeSearchQueryBuilder()
-				.withIds(Arrays.asList("init1", "init2"))
-				.withPageable(PageRequest.of(0, 10))
+		return new NativeSearchQueryBuilder().withIds(Arrays.asList("init1", "init2")).withPageable(PageRequest.of(0, 10))
 				.build();
 	}
 
 	private Document lukeDocument() {
-		return Document.create()
-				.append("id", "init")
-				.append("firstname", "luke");
+		return Document.create().append("id", "init").append("firstname", "luke");
 	}
 
 	@Test // DATAES-772
@@ -325,20 +318,16 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
 		@SuppressWarnings("deprecation") // we know what we test
-		List<Person> results = template.find(scrollingQueryForTwo(), Person.class)
-				.timeout(Duration.ofSeconds(1))
-				.toStream().collect(Collectors.toList());
+		List<Person> results = template.find(scrollingQueryForTwo(), Person.class).timeout(Duration.ofSeconds(1)).toStream()
+				.collect(Collectors.toList());
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
 		assertThat(results.get(0).id).isEqualTo("after-convert");
 		assertThat(results.get(1).id).isEqualTo("after-convert");
 	}
 
 	private Query scrollingQueryForTwo() {
-		return new NativeSearchQueryBuilder()
-				.withIds(Arrays.asList("init1", "init2"))
-				.build();
+		return new NativeSearchQueryBuilder().withIds(Arrays.asList("init1", "init2")).build();
 	}
 
 	@Test // DATAES-772
@@ -349,12 +338,11 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
 		@SuppressWarnings("deprecation") // we know what we test
-		List<Person> results = template.find(pagedQueryForTwo(), Person.class, index)
-				.timeout(Duration.ofSeconds(1)).toStream()
-				.collect(Collectors.toList());
+		List<Person> results = template.find(pagedQueryForTwo(), Person.class, index).timeout(Duration.ofSeconds(1))
+				.toStream().collect(Collectors.toList());
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		assertThat(results.get(0).id).isEqualTo("after-convert");
 		assertThat(results.get(1).id).isEqualTo("after-convert");
 	}
@@ -367,12 +355,10 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
 		@SuppressWarnings("deprecation") // we know what we test
-		List<Person> results = template.find(pagedQueryForTwo(), Person.class, Person.class)
-				.timeout(Duration.ofSeconds(1)).toStream()
-				.collect(Collectors.toList());
+		List<Person> results = template.find(pagedQueryForTwo(), Person.class, Person.class).timeout(Duration.ofSeconds(1))
+				.toStream().collect(Collectors.toList());
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
 		assertThat(results.get(0).id).isEqualTo("after-convert");
 		assertThat(results.get(1).id).isEqualTo("after-convert");
 	}
@@ -386,11 +372,10 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		@SuppressWarnings("deprecation") // we know what we test
 		List<Person> results = template.find(pagedQueryForTwo(), Person.class, Person.class, index)
-				.timeout(Duration.ofSeconds(1)).toStream()
-				.collect(Collectors.toList());
+				.timeout(Duration.ofSeconds(1)).toStream().collect(Collectors.toList());
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		assertThat(results.get(0).id).isEqualTo("after-convert");
 		assertThat(results.get(1).id).isEqualTo("after-convert");
 	}
@@ -402,12 +387,10 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
-		List<SearchHit<Person>> results = template.search(pagedQueryForTwo(), Person.class)
-				.timeout(Duration.ofSeconds(1)).toStream()
-				.collect(Collectors.toList());
+		List<SearchHit<Person>> results = template.search(pagedQueryForTwo(), Person.class).timeout(Duration.ofSeconds(1))
+				.toStream().collect(Collectors.toList());
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
 		assertThat(results.get(0).getContent().id).isEqualTo("after-convert");
 		assertThat(results.get(1).getContent().id).isEqualTo("after-convert");
 	}
@@ -420,11 +403,10 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
 		List<SearchHit<Person>> results = template.search(pagedQueryForTwo(), Person.class, index)
-				.timeout(Duration.ofSeconds(1)).toStream()
-				.collect(Collectors.toList());
+				.timeout(Duration.ofSeconds(1)).toStream().collect(Collectors.toList());
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		assertThat(results.get(0).getContent().id).isEqualTo("after-convert");
 		assertThat(results.get(1).getContent().id).isEqualTo("after-convert");
 	}
@@ -437,11 +419,9 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
 		List<SearchHit<Person>> results = template.search(pagedQueryForTwo(), Person.class, Person.class)
-				.timeout(Duration.ofSeconds(1)).toStream()
-				.collect(Collectors.toList());
+				.timeout(Duration.ofSeconds(1)).toStream().collect(Collectors.toList());
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
 		assertThat(results.get(0).getContent().id).isEqualTo("after-convert");
 		assertThat(results.get(1).getContent().id).isEqualTo("after-convert");
 	}
@@ -454,11 +434,10 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
 		List<SearchHit<Person>> results = template.search(pagedQueryForTwo(), Person.class, Person.class, index)
-				.timeout(Duration.ofSeconds(1)).toStream()
-				.collect(Collectors.toList());
+				.timeout(Duration.ofSeconds(1)).toStream().collect(Collectors.toList());
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		assertThat(results.get(0).getContent().id).isEqualTo("after-convert");
 		assertThat(results.get(1).getContent().id).isEqualTo("after-convert");
 	}

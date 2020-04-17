@@ -97,7 +97,7 @@ public final class SearchHitSupport {
 	}
 
 	private static CloseableIterator<?> unwrapSearchHitsIterator(SearchHitsIterator<?> iterator) {
-		
+
 		return new CloseableIterator<Object>() {
 			@Override
 			public boolean hasNext() {

@@ -77,15 +77,15 @@ class ElasticsearchRestTemplateCallbackTests extends AbstractElasticsearchTempla
 		doReturn(true).when(getResponse).isExists();
 		doReturn(false).when(getResponse).isSourceEmpty();
 		doReturn(new HashMap<String, Object>() {
-				{
-					put("id", "init");
-					put("firstname", "luke");
-				}
+			{
+				put("id", "init");
+				put("firstname", "luke");
+			}
 		}).when(getResponse).getSourceAsMap();
 
 		doReturn(multiGetResponse).when(client).mget(any(MultiGetRequest.class), any(RequestOptions.class));
-		doReturn(new MultiGetItemResponse[]{multiGetItemResponse, multiGetItemResponse})
-				.when(multiGetResponse).getResponses();
+		doReturn(new MultiGetItemResponse[] { multiGetItemResponse, multiGetItemResponse }).when(multiGetResponse)
+				.getResponses();
 		doReturn(getResponse).when(multiGetItemResponse).getResponse();
 
 		doReturn(searchResponse).when(client).search(any(SearchRequest.class), any(RequestOptions.class));
@@ -93,14 +93,14 @@ class ElasticsearchRestTemplateCallbackTests extends AbstractElasticsearchTempla
 		doReturn("scroll-id").when(searchResponse).getScrollId();
 		doReturn(new BytesArray(new byte[8])).when(searchHit).getSourceRef();
 		doReturn(new HashMap<String, Object>() {
-				{
-					put("id", "init");
-					put("firstname", "luke");
-				}
+			{
+				put("id", "init");
+				put("firstname", "luke");
+			}
 		}).when(searchHit).getSourceAsMap();
 
 		MultiSearchResponse multiSearchResponse = new MultiSearchResponse(
-				new MultiSearchResponse.Item[]{ multiSearchResponseItem }, 1L);
+				new MultiSearchResponse.Item[] { multiSearchResponseItem }, 1L);
 		doReturn(multiSearchResponse).when(client).multiSearch(any(MultiSearchRequest.class), any());
 		doReturn(searchResponse).when(multiSearchResponseItem).getResponse();
 

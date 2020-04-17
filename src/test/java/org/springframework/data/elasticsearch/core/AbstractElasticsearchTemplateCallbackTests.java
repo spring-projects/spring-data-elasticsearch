@@ -69,7 +69,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 	protected final void initTemplate(AbstractElasticsearchTemplate template) {
 		this.template = template;
-		
+
 		this.template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback, afterConvertCallback));
 	}
 
@@ -206,9 +206,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 	}
 
 	private Document lukeDocument() {
-		return Document.create()
-				.append("id", "init")
-				.append("firstname", "luke");
+		return Document.create().append("id", "init").append("firstname", "luke");
 	}
 
 	@Test // DATAES-772
@@ -235,8 +233,8 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		List<Person> results = template.multiGet(queryForTwo(), Person.class, index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		assertThat(results.get(0).id).isEqualTo("after-convert");
 		assertThat(results.get(1).id).isEqualTo("after-convert");
 	}
@@ -267,8 +265,8 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 		@SuppressWarnings("deprecation") // we know what we test
 		AggregatedPage<Person> results = template.queryForPage(queryForTwo(), Person.class, index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		assertThat(results.getContent().get(0).id).isEqualTo("after-convert");
 		assertThat(results.getContent().get(1).id).isEqualTo("after-convert");
 	}
@@ -279,8 +277,8 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 		@SuppressWarnings("deprecation") // we know what we test
 		List<Page<Person>> results = template.queryForPage(singletonList(queryForTwo()), Person.class, index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		List<Person> persons = results.get(0).getContent();
 		assertThat(persons.get(0).id).isEqualTo("after-convert");
 		assertThat(persons.get(1).id).isEqualTo("after-convert");
@@ -290,14 +288,12 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 	void queryForPageWithMultipleQueriesAndEntityClassesShouldInvokeAfterConvertCallback() {
 
 		@SuppressWarnings("deprecation") // we know what we test
-		List<AggregatedPage<?>> results = template.queryForPage(singletonList(queryForTwo()),
-				singletonList(Person.class), index);
+		List<AggregatedPage<?>> results = template.queryForPage(singletonList(queryForTwo()), singletonList(Person.class),
+				index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
-		List<Person> persons = results.get(0).getContent().stream()
-				.map(Person.class::cast)
-				.collect(Collectors.toList());
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
+		List<Person> persons = results.get(0).getContent().stream().map(Person.class::cast).collect(Collectors.toList());
 		assertThat(persons.get(0).id).isEqualTo("after-convert");
 		assertThat(persons.get(1).id).isEqualTo("after-convert");
 	}
@@ -307,8 +303,8 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		CloseableIterator<Person> results = template.stream(queryForTwo(), Person.class, index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		assertThat(results.next().id).isEqualTo("after-convert");
 		assertThat(results.next().id).isEqualTo("after-convert");
 	}
@@ -322,8 +318,8 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 		assertThat(results.next().id).isEqualTo("after-convert");
 		assertThat(results.next().id).isEqualTo("after-convert");
 
-		verify(afterConvertCallback, times(4))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(4)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 	}
 
 	private void skipItemsFromScrollStart(CloseableIterator<Person> results) {
@@ -337,8 +333,8 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 		@SuppressWarnings("deprecation") // we know what we test
 		List<Person> results = template.queryForList(queryForTwo(), Person.class, index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		assertThat(results.get(0).id).isEqualTo("after-convert");
 		assertThat(results.get(1).id).isEqualTo("after-convert");
 	}
@@ -349,8 +345,8 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 		@SuppressWarnings("deprecation") // we know what we test
 		List<List<Person>> results = template.queryForList(singletonList(queryForTwo()), Person.class, index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		List<Person> persons = results.get(0);
 		assertThat(persons.get(0).id).isEqualTo("after-convert");
 		assertThat(persons.get(1).id).isEqualTo("after-convert");
@@ -362,11 +358,9 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 		@SuppressWarnings("deprecation") // we know what we test
 		List<List<?>> results = template.queryForList(singletonList(queryForTwo()), singletonList(Person.class), index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
-		List<Person> persons = results.get(0).stream()
-				.map(Person.class::cast)
-				.collect(Collectors.toList());
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
+		List<Person> persons = results.get(0).stream().map(Person.class::cast).collect(Collectors.toList());
 		assertThat(persons.get(0).id).isEqualTo("after-convert");
 		assertThat(persons.get(1).id).isEqualTo("after-convert");
 	}
@@ -377,8 +371,8 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 		@SuppressWarnings("deprecation") // we know what we test
 		AggregatedPage<Person> results = template.moreLikeThis(moreLikeThisQuery(), Person.class, index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		assertThat(results.getContent().get(0).id).isEqualTo("after-convert");
 		assertThat(results.getContent().get(1).id).isEqualTo("after-convert");
 	}
@@ -408,8 +402,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		SearchHit<Person> result = template.searchOne(queryForOne(), Person.class, index);
 
-		verify(afterConvertCallback)
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
 		assertThat(result.getContent().id).isEqualTo("after-convert");
 	}
 
@@ -418,8 +411,8 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		List<SearchHits<Person>> results = template.multiSearch(singletonList(queryForTwo()), Person.class, index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		List<SearchHit<Person>> hits = results.get(0).getSearchHits();
 		assertThat(hits.get(0).getContent().id).isEqualTo("after-convert");
 		assertThat(hits.get(1).getContent().id).isEqualTo("after-convert");
@@ -428,11 +421,11 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 	@Test // DATAES-772
 	void multiSearchWithMultipleEntityClassesShouldInvokeAfterConvertCallback() {
 
-		List<SearchHits<?>> results = template.multiSearch(singletonList(queryForTwo()),
-				singletonList(Person.class), index);
+		List<SearchHits<?>> results = template.multiSearch(singletonList(queryForTwo()), singletonList(Person.class),
+				index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		List<? extends SearchHit<?>> hits = results.get(0).getSearchHits();
 		assertThat(((Person) hits.get(0).getContent()).id).isEqualTo("after-convert");
 		assertThat(((Person) hits.get(1).getContent()).id).isEqualTo("after-convert");
@@ -443,8 +436,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		SearchHits<Person> results = template.search(queryForTwo(), Person.class);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
 		List<SearchHit<Person>> hits = results.getSearchHits();
 		assertThat(hits.get(0).getContent().id).isEqualTo("after-convert");
 		assertThat(hits.get(1).getContent().id).isEqualTo("after-convert");
@@ -455,8 +447,8 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		SearchHits<Person> results = template.search(queryForTwo(), Person.class, index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		List<SearchHit<Person>> hits = results.getSearchHits();
 		assertThat(hits.get(0).getContent().id).isEqualTo("after-convert");
 		assertThat(hits.get(1).getContent().id).isEqualTo("after-convert");
@@ -467,8 +459,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		SearchHits<Person> results = template.search(moreLikeThisQuery(), Person.class);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
 		List<SearchHit<Person>> hits = results.getSearchHits();
 		assertThat(hits.get(0).getContent().id).isEqualTo("after-convert");
 		assertThat(hits.get(1).getContent().id).isEqualTo("after-convert");
@@ -479,8 +470,8 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		SearchHits<Person> results = template.search(moreLikeThisQuery(), Person.class, index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		List<SearchHit<Person>> hits = results.getSearchHits();
 		assertThat(hits.get(0).getContent().id).isEqualTo("after-convert");
 		assertThat(hits.get(1).getContent().id).isEqualTo("after-convert");
@@ -491,8 +482,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		SearchHitsIterator<Person> results = template.searchForStream(queryForTwo(), Person.class);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
 		assertThat(results.next().getContent().id).isEqualTo("after-convert");
 		assertThat(results.next().getContent().id).isEqualTo("after-convert");
 	}
@@ -502,8 +492,8 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		SearchHitsIterator<Person> results = template.searchForStream(queryForTwo(), Person.class, index);
 
-		verify(afterConvertCallback, times(2))
-				.onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
+				eq(index));
 		assertThat(results.next().getContent().id).isEqualTo("after-convert");
 		assertThat(results.next().getContent().id).isEqualTo("after-convert");
 	}

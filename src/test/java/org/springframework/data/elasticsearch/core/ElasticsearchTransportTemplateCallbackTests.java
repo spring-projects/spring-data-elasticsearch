@@ -98,17 +98,17 @@ class ElasticsearchTransportTemplateCallbackTests extends AbstractElasticsearchT
 		doReturn(true).when(getResponse).isExists();
 		doReturn(false).when(getResponse).isSourceEmpty();
 		doReturn(new HashMap<String, Object>() {
-				{
-					put("id", "init");
-					put("firstname", "luke");
-				}
+			{
+				put("id", "init");
+				put("firstname", "luke");
+			}
 		}).when(getResponse).getSourceAsMap();
 
 		when(client.prepareMultiGet()).thenReturn(multiGetRequestBuilder);
 		doReturn(multiGetResponseActionFuture).when(multiGetRequestBuilder).execute();
 		when(multiGetResponseActionFuture.actionGet()).thenReturn(multiGetResponse);
-		doReturn(new MultiGetItemResponse[]{ multiGetItemResponse, multiGetItemResponse })
-				.when(multiGetResponse).getResponses();
+		doReturn(new MultiGetItemResponse[] { multiGetItemResponse, multiGetItemResponse }).when(multiGetResponse)
+				.getResponses();
 		doReturn(getResponse).when(multiGetItemResponse).getResponse();
 
 		when(client.prepareSearch(anyVararg())).thenReturn(searchRequestBuilder);
@@ -123,15 +123,15 @@ class ElasticsearchTransportTemplateCallbackTests extends AbstractElasticsearchT
 		doReturn("scroll-id").when(searchResponse).getScrollId();
 		doReturn(new BytesArray(new byte[8])).when(searchHit).getSourceRef();
 		doReturn(new HashMap<String, Object>() {
-				{
-					put("id", "init");
-					put("firstname", "luke");
-				}
+			{
+				put("id", "init");
+				put("firstname", "luke");
+			}
 		}).when(searchHit).getSourceAsMap();
 
 		when(client.multiSearch(any(MultiSearchRequest.class))).thenReturn(multiSearchResponseActionFuture);
 		MultiSearchResponse multiSearchResponse = new MultiSearchResponse(
-				new MultiSearchResponse.Item[]{ multiSearchResponseItem }, 1L);
+				new MultiSearchResponse.Item[] { multiSearchResponseItem }, 1L);
 		when(multiSearchResponseActionFuture.actionGet()).thenReturn(multiSearchResponse);
 		doReturn(searchResponse).when(multiSearchResponseItem).getResponse();
 

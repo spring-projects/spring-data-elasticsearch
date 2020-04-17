@@ -31,8 +31,8 @@ import org.springframework.data.mapping.callback.EntityCallback;
 public interface ReactiveAfterConvertCallback<T> extends EntityCallback<T> {
 
 	/**
-	 * Entity callback method invoked after a domain object is materialized from a {@link Document}. Can return either
-	 * the same or a modified instance of the domain object.
+	 * Entity callback method invoked after a domain object is materialized from a {@link Document}. Can return either the
+	 * same or a modified instance of the domain object.
 	 *
 	 * @param entity the domain object (the result of the conversion).
 	 * @param document must not be {@literal null}.

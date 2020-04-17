@@ -34,8 +34,9 @@ class SearchHitSupportTest {
 	void unwrapsSearchHitsIteratorToCloseableIteratorOfEntities() {
 		TestStringSearchHitsIterator searchHitsIterator = new TestStringSearchHitsIterator();
 
-		@SuppressWarnings("unchecked") CloseableIterator<String> unwrappedIterator =
-				(CloseableIterator<String>) SearchHitSupport.unwrapSearchHits(searchHitsIterator);
+		@SuppressWarnings("unchecked")
+		CloseableIterator<String> unwrappedIterator = (CloseableIterator<String>) SearchHitSupport
+				.unwrapSearchHits(searchHitsIterator);
 
 		assertThat(unwrappedIterator.next()).isEqualTo("one");
 		assertThat(unwrappedIterator.next()).isEqualTo("two");
