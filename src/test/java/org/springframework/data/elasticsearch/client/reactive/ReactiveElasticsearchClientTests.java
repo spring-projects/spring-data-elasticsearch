@@ -19,6 +19,10 @@ import static org.assertj.core.api.Assertions.*;
 
 import lombok.SneakyThrows;
 import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.PutMappingRequest;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -67,6 +71,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Mark Paluch
  * @author Peter-Josef Meisch
  * @author Henrique Amaral
+ * @author Russell Parry
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
@@ -654,6 +659,27 @@ public class ReactiveElasticsearchClientTests {
 						assertThat(itemResponse.getVersion()).isEqualTo(2);
 					});
 				}).verifyComplete();
+	}
+
+	@Test //DATAES-567
+	public void aggregateReturnsAggregationResults() throws IOException {
+		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+		Map<String, Object> jsonMap = Collections.singletonMap("properties",
+				Collections.singletonMap("firstname", Collections.singletonMap("type", "keyword")));
+		syncClient.indices().putMapping(new PutMappingRequest(INDEX_I).source(jsonMap), RequestOptions.DEFAULT);
+
+		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder().query(QueryBuilders.matchAllQuery());
+		searchSourceBuilder.aggregation(AggregationBuilders.terms("terms").field("firstname"));
+
+		SearchRequest request = new SearchRequest(INDEX_I) //
+				.source(searchSourceBuilder);
+
+		client.aggregate(request)
+				.as(StepVerifier::create)
+				.expectNextMatches(aggregation -> aggregation.getType().equals(StringTerms.NAME))
+				.verifyComplete();
 	}
 
 	private AddToIndexOfType addSourceDocument() {

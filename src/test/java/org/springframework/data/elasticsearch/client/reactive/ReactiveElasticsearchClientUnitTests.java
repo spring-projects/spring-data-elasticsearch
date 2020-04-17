@@ -19,11 +19,15 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive.*;
 
+import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
+import org.elasticsearch.search.aggregations.metrics.ParsedMax;
+import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.Instant;
 import java.util.Collections;
 
 import org.elasticsearch.ElasticsearchStatusException;
@@ -53,6 +57,7 @@ import org.springframework.util.StreamUtils;
 /**
  * @author Christoph Strobl
  * @author Henrique Amaral
+ * @author Russell Parry
  */
 public class ReactiveElasticsearchClientUnitTests {
 
@@ -575,6 +580,83 @@ public class ReactiveElasticsearchClientUnitTests {
 		client.search(new SearchRequest("twitter")) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
+	}
+
+	// --> AGGREGATE
+
+	@Test // DATAES-567
+	public void aggregateShouldHitSearchEndpoint() {
+
+		hostProvider.when(HOST) //
+				.receive(Receive::json) //
+				.body(fromPath("aggregate-ok-no-results"));
+
+		client.search(new SearchRequest("twitter")).as(StepVerifier::create).verifyComplete();
+
+		verify(hostProvider.client(HOST)).method(HttpMethod.POST);
+		URI uri = hostProvider.when(HOST).captureUri();
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_search");
+	}
+
+	@Test // DATAES-567
+	public void aggregateShouldReturnSingleResultCorrectly() {
+		hostProvider.when(HOST) //
+				.receive(Receive::json) //
+				.body(fromPath("aggregate-ok-single-result"));
+
+		client.aggregate(new SearchRequest("twitter")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(aggregation -> {
+					assertThat(aggregation.getName()).isEqualTo("users");
+					assertThat(aggregation instanceof ParsedStringTerms);
+					ParsedStringTerms parsedStringTerms = (ParsedStringTerms) aggregation;
+					assertThat(parsedStringTerms.getBuckets().size()).isEqualTo(2);
+					assertThat(parsedStringTerms.getBucketByKey("kimchy").getDocCount()).isEqualTo(2);
+					assertThat(parsedStringTerms.getBucketByKey("elastic").getDocCount()).isEqualTo(1);
+				}).verifyComplete();
+	}
+
+	@Test // DATAES-567
+	public void aggregateShouldReturnMultipleResultsCorrectly() {
+
+		hostProvider.when(HOST) //
+				.receive(Receive::json) //
+				.body(fromPath("aggregate-ok-multiple-results"));
+
+		client.aggregate(new SearchRequest("twitter")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(aggregation -> {
+					assertThat(aggregation.getName()).isEqualTo("users");
+					assertThat(aggregation instanceof ParsedStringTerms);
+					ParsedStringTerms parsedStringTerms = (ParsedStringTerms) aggregation;
+					assertThat(parsedStringTerms.getBuckets().size()).isEqualTo(2);
+					assertThat(parsedStringTerms.getBucketByKey("kimchy").getDocCount()).isEqualTo(2);
+					assertThat(parsedStringTerms.getBucketByKey("elastic").getDocCount()).isEqualTo(1);
+				}) //
+				.consumeNextWith(aggregation -> {
+					assertThat(aggregation.getName()).isEqualTo("max_post_date");
+					assertThat(aggregation instanceof ParsedMax);
+					ParsedMax parsedMax = (ParsedMax) aggregation;
+					assertThat(Instant.ofEpochMilli((long)parsedMax.getValue())).isEqualTo(Instant.parse("2010-01-15T01:46:38Z"));
+				}).verifyComplete();
+	}
+
+	@Test // DATAES-567
+	public void aggregateShouldReturnAggregationWithNoValuesWhenNoResultsFound() {
+
+		hostProvider.when(HOST) //
+				.receive(Receive::json) //
+				.body(fromPath("aggregate-ok-no-results"));
+
+
+		client.aggregate(new SearchRequest("twitter")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(aggregation -> {
+					assertThat(aggregation.getName()).isEqualTo("users");
+					assertThat(aggregation instanceof ParsedStringTerms);
+					ParsedStringTerms parsedStringTerms = (ParsedStringTerms) aggregation;
+					assertThat(parsedStringTerms.getBuckets().size()).isEqualTo(0);
+				}).verifyComplete();
 	}
 
 	// --> SCROLL

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import org.elasticsearch.search.aggregations.Aggregation;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -410,6 +411,41 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
 	 */
 	Flux<SearchHit> search(HttpHeaders headers, SearchRequest searchRequest);
+
+	/**
+	 * Execute the given {@link SearchRequest} with aggregations against the {@literal search} API.
+	 *
+	 * @param consumer never {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html">Search API on
+	 *      elastic.co</a>
+	 * @return the {@link Flux} emitting {@link Aggregation} one by one.
+	 */
+	default Flux<Aggregation> aggregate(Consumer<SearchRequest> consumer) {
+
+		SearchRequest request = new SearchRequest();
+		consumer.accept(request);
+		return aggregate(request);
+	}
+	/**
+	 * Execute the given {@link SearchRequest} with aggregations against the {@literal search} API.
+	 *
+	 * @param searchRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html">Search API on
+	 *      elastic.co</a>
+	 * @return the {@link Flux} emitting {@link Aggregation} one by one.
+	 */
+	default Flux<Aggregation> aggregate(SearchRequest searchRequest) { return aggregate(HttpHeaders.EMPTY, searchRequest); }
+
+	/**
+	 * Execute the given {@link SearchRequest} with aggregations against the {@literal search} API.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param searchRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html">Search API on
+	 *      elastic.co</a>
+	 * @return the {@link Flux} emitting {@link Aggregation} one by one.
+	 */
+	Flux<Aggregation> aggregate(HttpHeaders headers, SearchRequest searchRequest);
 
 	/**
 	 * Execute the given {@link SearchRequest} against the {@literal search scroll} API.

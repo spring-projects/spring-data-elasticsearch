@@ -1,0 +1,69 @@
+{
+  "took": 52,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 2,
+    "max_score": 0.2876821,
+    "hits": [
+      {
+        "_index": "twitter",
+        "_type": "doc",
+        "_id": "2",
+        "_score": 0.2876821,
+        "_source": {
+          "user": "kimchy",
+          "post_date": "2009-11-15T14:13:14",
+          "message": "First tweet"
+        }
+      },
+      {
+        "_index": "twitter",
+        "_type": "doc",
+        "_id": "2",
+        "_score": 0.2876821,
+        "_source": {
+          "user": "kimchy",
+          "post_date": "2009-11-15T14:12:12",
+          "message": "Another tweet, will it be indexed?"
+        }
+      },
+      {
+        "_index": "twitter",
+        "_type": "doc",
+        "_id": "3",
+        "_score": 0.2876821,
+        "_source": {
+          "user": "elastic",
+          "post_date": "2010-01-15T01:46:38",
+          "message": "Building the site, should be kewl"
+        }
+      }
+    ]
+  },
+  "aggregations": {
+    "sterms#users": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "kimchy",
+          "doc_count": 2
+        },
+        {
+          "key": "elastic",
+          "doc_count": 1
+        }
+      ]
+    },
+    "max#max_post_date": {
+      "value" : 1.263519998E12,
+      "value_as_string" : "2010-01-15T01:46:38.000Z"
+    }
+  }
+}
