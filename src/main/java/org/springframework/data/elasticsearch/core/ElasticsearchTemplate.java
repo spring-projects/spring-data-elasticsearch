@@ -172,7 +172,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	public <T> List<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
 
 		Assert.notNull(index, "index must not be null");
-		Assert.notEmpty(query.getIds(), "No Id define for Query");
+		Assert.notEmpty(query.getIds(), "No Ids defined for Query");
 
 		MultiGetRequestBuilder builder = requestFactory.multiGetRequestBuilder(client, query, index);
 

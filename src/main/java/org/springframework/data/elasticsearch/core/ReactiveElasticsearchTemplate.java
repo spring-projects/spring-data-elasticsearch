@@ -71,6 +71,7 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
+import org.springframework.data.elasticsearch.core.event.ReactiveAfterConvertCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -892,6 +893,16 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		return Mono.just(entity);
 	}
+
+	protected <T> Mono<T> maybeCallAfterConvert(T entity, Document document, IndexCoordinates index) {
+
+		if (null != entityCallbacks) {
+			return entityCallbacks.callback(ReactiveAfterConvertCallback.class, entity, document, index);
+		}
+
+		return Mono.just(entity);
+	}
+
 	// endregion
 
 	protected interface DocumentCallback<T> {
@@ -900,7 +911,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		Mono<T> doWith(@Nullable Document document);
 	}
 
-	protected static class ReadDocumentCallback<T> implements DocumentCallback<T> {
+	protected class ReadDocumentCallback<T> implements DocumentCallback<T> {
 		private final EntityReader<? super T, Document> reader;
 		private final Class<T> type;
 		private final IndexCoordinates index;
@@ -921,7 +932,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			}
 
 			T entity = reader.read(type, document);
-			return Mono.just(entity);
+			return maybeCallAfterConvert(entity, document, index);
 		}
 	}
 

@@ -40,6 +40,7 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
+import org.springframework.data.elasticsearch.core.event.AfterConvertCallback;
 import org.springframework.data.elasticsearch.core.event.AfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.BeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -236,8 +237,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	@Override
 	public <T> CloseableIterator<T> stream(Query query, Class<T> clazz, IndexCoordinates index) {
-
-		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
 		return (CloseableIterator<T>) SearchHitSupport.unwrapSearchHits(searchForStream(query, clazz, index));
 	}
 
@@ -520,6 +519,15 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		queries.forEach(this::maybeCallbackAfterSaveWithQuery);
 	}
 
+	protected <T> T maybeCallbackAfterConvert(T entity, Document document, IndexCoordinates index) {
+
+		if (entityCallbacks != null) {
+			return entityCallbacks.callback(AfterConvertCallback.class, entity, document, index);
+		}
+
+		return entity;
+	}
+
 	// endregion
 
 	// region Document callbacks
@@ -528,7 +536,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		T doWith(@Nullable Document document);
 	}
 
-	protected static class ReadDocumentCallback<T> implements DocumentCallback<T> {
+	protected class ReadDocumentCallback<T> implements DocumentCallback<T> {
 		private final EntityReader<? super T, Document> reader;
 		private final Class<T> type;
 		private final IndexCoordinates index;
@@ -550,7 +558,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 				return null;
 			}
 
-			return reader.read(type, document);
+			T entity = reader.read(type, document);
+			return maybeCallbackAfterConvert(entity, document, index);
 		}
 	}
 

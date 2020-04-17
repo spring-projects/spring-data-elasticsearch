@@ -2561,7 +2561,6 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldSortResultsGivenSortCriteriaWithScanAndScroll() {
 
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("abc").rate(10)
@@ -2577,7 +2576,7 @@ public abstract class ElasticsearchTemplateTests {
 		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3).message("xyz").rate(10)
 				.version(System.currentTimeMillis()).build();
 
-		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+		List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		operations.bulkIndex(indexQueries, index);
 		indexOperations.refresh();
@@ -2609,7 +2608,6 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldSortResultsGivenSortCriteriaFromPageableWithScanAndScroll() {
 
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = randomNumeric(5);
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("abc").rate(10)
@@ -2625,7 +2623,7 @@ public abstract class ElasticsearchTemplateTests {
 		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3).message("xyz").rate(10)
 				.version(System.currentTimeMillis()).build();
 
-		indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+		List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		operations.bulkIndex(indexQueries, index);
 		indexOperations.refresh();
