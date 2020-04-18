@@ -31,12 +31,14 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.elasticsearch.core.event.BeforeConvertCallback;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 public abstract class AuditingIntegrationTest {
 
@@ -64,7 +66,7 @@ public abstract class AuditingIntegrationTest {
 
 		Entity entity = new Entity();
 		entity.setId("1");
-		entity = callbacks.callback(BeforeConvertCallback.class, entity);
+		entity = callbacks.callback(BeforeConvertCallback.class, entity, IndexCoordinates.of("index"));
 
 		assertThat(entity.getCreated()).isNotNull();
 		assertThat(entity.getModified()).isEqualTo(entity.created);
@@ -73,7 +75,7 @@ public abstract class AuditingIntegrationTest {
 
 		Thread.sleep(10);
 
-		entity = callbacks.callback(BeforeConvertCallback.class, entity);
+		entity = callbacks.callback(BeforeConvertCallback.class, entity, IndexCoordinates.of("index"));
 
 		assertThat(entity.getCreated()).isNotNull();
 		assertThat(entity.getModified()).isNotEqualTo(entity.created);

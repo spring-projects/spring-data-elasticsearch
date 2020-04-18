@@ -26,10 +26,12 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Component;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 abstract class ElasticsearchOperationsCallbackTest {
 
@@ -41,7 +43,7 @@ abstract class ElasticsearchOperationsCallbackTest {
 		@Component
 		static class SampleEntityBeforeConvertCallback implements BeforeConvertCallback<SampleEntity> {
 			@Override
-			public SampleEntity onBeforeConvert(SampleEntity entity) {
+			public SampleEntity onBeforeConvert(SampleEntity entity, IndexCoordinates index) {
 				entity.setText("converted");
 				return entity;
 			}

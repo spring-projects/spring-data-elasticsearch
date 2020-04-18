@@ -332,7 +332,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	private Mono<IndexResponse> doIndex(Object value, AdaptibleEntity<?> entity, IndexCoordinates index) {
 
-		return maybeCallBeforeConvert(value).flatMap(it -> {
+		return maybeCallBeforeConvert(value, index).flatMap(it -> {
 			IndexRequest request = getIndexRequest(value, entity, index);
 			request = prepareIndexRequest(value, request);
 			return doIndex(request);
@@ -876,10 +876,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	// region callbacks
-	protected <T> Mono<T> maybeCallBeforeConvert(T entity) {
+	protected <T> Mono<T> maybeCallBeforeConvert(T entity, IndexCoordinates index) {
 
 		if (null != entityCallbacks) {
-			return entityCallbacks.callback(ReactiveBeforeConvertCallback.class, entity);
+			return entityCallbacks.callback(ReactiveBeforeConvertCallback.class, entity, index);
 		}
 
 		return Mono.just(entity);

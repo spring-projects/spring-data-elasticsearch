@@ -142,7 +142,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	public String index(IndexQuery query, IndexCoordinates index) {
 
-		maybeCallbackBeforeConvertWithQuery(query);
+		maybeCallbackBeforeConvertWithQuery(query, index);
 
 		IndexRequestBuilder indexRequestBuilder = requestFactory.indexRequestBuilder(client, query, index);
 		String documentId = indexRequestBuilder.execute().actionGet().getId();
@@ -245,7 +245,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	private List<String> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
-		maybeCallbackBeforeConvertWithQueries(queries);
+		maybeCallbackBeforeConvertWithQueries(queries, index);
 		BulkRequestBuilder bulkRequest = requestFactory.bulkRequestBuilder(client, queries, bulkOptions, index);
 		return checkForBulkOperationFailure(bulkRequest.execute().actionGet());
 	}

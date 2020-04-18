@@ -31,6 +31,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -39,6 +40,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ReactiveElasticsearchOperationsCallbackTest.Config.class })
@@ -50,7 +52,7 @@ public class ReactiveElasticsearchOperationsCallbackTest {
 		@Component
 		static class SampleEntityBeforeConvertCallback implements ReactiveBeforeConvertCallback<SampleEntity> {
 			@Override
-			public Mono<SampleEntity> onBeforeConvert(SampleEntity entity) {
+			public Mono<SampleEntity> onBeforeConvert(SampleEntity entity, IndexCoordinates index) {
 				entity.setText("reactive-converted");
 				return Mono.just(entity);
 			}

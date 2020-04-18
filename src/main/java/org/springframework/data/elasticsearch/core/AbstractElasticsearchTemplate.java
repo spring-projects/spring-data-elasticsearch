@@ -463,23 +463,23 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	// endregion
 
 	// region Entity callbacks
-	protected <T> T maybeCallbackBeforeConvert(T entity) {
+	protected <T> T maybeCallbackBeforeConvert(T entity, IndexCoordinates index) {
 
 		if (entityCallbacks != null) {
-			return entityCallbacks.callback(BeforeConvertCallback.class, entity);
+			return entityCallbacks.callback(BeforeConvertCallback.class, entity, index);
 		}
 
 		return entity;
 	}
 
-	protected void maybeCallbackBeforeConvertWithQuery(Object query) {
+	protected void maybeCallbackBeforeConvertWithQuery(Object query, IndexCoordinates index) {
 
 		if (query instanceof IndexQuery) {
 			IndexQuery indexQuery = (IndexQuery) query;
 			Object queryObject = indexQuery.getObject();
 
 			if (queryObject != null) {
-				queryObject = maybeCallbackBeforeConvert(queryObject);
+				queryObject = maybeCallbackBeforeConvert(queryObject, index);
 				indexQuery.setObject(queryObject);
 			}
 		}
@@ -487,8 +487,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	// this can be called with either a List<IndexQuery> or a List<UpdateQuery>; these query classes
 	// don't have a common base class, therefore the List<?> argument
-	protected void maybeCallbackBeforeConvertWithQueries(List<?> queries) {
-		queries.forEach(this::maybeCallbackBeforeConvertWithQuery);
+	protected void maybeCallbackBeforeConvertWithQueries(List<?> queries, IndexCoordinates index) {
+		queries.forEach(query -> maybeCallbackBeforeConvertWithQuery(query, index));
 	}
 
 	protected <T> T maybeCallbackAfterSave(T entity, IndexCoordinates index) {

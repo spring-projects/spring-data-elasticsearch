@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.event;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.core.Ordered;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.mapping.callback.EntityCallback;
 import org.springframework.util.Assert;
 
@@ -25,6 +26,7 @@ import org.springframework.util.Assert;
  * {@link EntityCallback} to populate auditing related fields on an entity about to be saved.
  *
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  * @since 4.0
  */
 public class AuditingEntityCallback implements BeforeConvertCallback<Object>, Ordered {
@@ -45,7 +47,7 @@ public class AuditingEntityCallback implements BeforeConvertCallback<Object>, Or
 	}
 
 	@Override
-	public Object onBeforeConvert(Object entity) {
+	public Object onBeforeConvert(Object entity, IndexCoordinates index) {
 		return auditingHandlerFactory.getObject().markAudited(entity);
 	}
 

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.event;
 
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.ObjectFactory;
@@ -27,6 +28,7 @@ import org.springframework.util.Assert;
  * {@link EntityCallback} to populate auditing related fields on an entity about to be saved.
  *
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  * @since 4.0
  */
 public class ReactiveAuditingEntityCallback implements ReactiveBeforeConvertCallback<Object>, Ordered {
@@ -47,7 +49,7 @@ public class ReactiveAuditingEntityCallback implements ReactiveBeforeConvertCall
 	}
 
 	@Override
-	public Mono<Object> onBeforeConvert(Object entity) {
+	public Mono<Object> onBeforeConvert(Object entity, IndexCoordinates index) {
 		return Mono.just(auditingHandlerFactory.getObject().markAudited(entity));
 	}
 

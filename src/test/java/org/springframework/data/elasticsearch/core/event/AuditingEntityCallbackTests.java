@@ -30,12 +30,14 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 @ExtendWith(MockitoExtension.class)
 class AuditingEntityCallbackTests {
@@ -66,7 +68,7 @@ class AuditingEntityCallbackTests {
 	void shouldCallHandler() {
 		Sample entity = new Sample();
 		entity.setId("42");
-		callback.onBeforeConvert(entity);
+		callback.onBeforeConvert(entity, IndexCoordinates.of("index"));
 
 		verify(handler).markAudited(eq(entity));
 	}
@@ -79,7 +81,7 @@ class AuditingEntityCallbackTests {
 		sample2.setId("2");
 		doReturn(sample2).when(handler).markAudited(any());
 
-		Sample result = (Sample) callback.onBeforeConvert(sample1);
+		Sample result = (Sample) callback.onBeforeConvert(sample1, IndexCoordinates.of("index"));
 
 		assertThat(result).isSameAs(sample2);
 	}
