@@ -190,7 +190,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return doIndex(entity, adaptableEntity, index) //
 				.map(it -> {
 					return adaptableEntity.populateIdIfNecessary(it.getId());
-				}).flatMap(this::maybeCallAfterSave);
+				}).flatMap(saved -> maybeCallAfterSave(saved, index));
 	}
 
 	@Override
@@ -222,7 +222,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 						AdaptibleEntity<? extends T> mappedEntity = iterator.next();
 						mappedEntity.populateIdIfNecessary(bulkItemResponse.getResponse().getId());
-						return maybeCallAfterSave(mappedEntity.getBean());
+						return maybeCallAfterSave(mappedEntity.getBean(), index);
 					});
 		});
 	}
@@ -885,10 +885,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return Mono.just(entity);
 	}
 
-	protected <T> Mono<T> maybeCallAfterSave(T entity) {
+	protected <T> Mono<T> maybeCallAfterSave(T entity, IndexCoordinates index) {
 
 		if (null != entityCallbacks) {
-			return entityCallbacks.callback(ReactiveAfterSaveCallback.class, entity);
+			return entityCallbacks.callback(ReactiveAfterSaveCallback.class, entity, index);
 		}
 
 		return Mono.just(entity);

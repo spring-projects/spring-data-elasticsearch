@@ -130,7 +130,7 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		Person saved = template.save(entity).block(Duration.ofSeconds(1));
 
-		verify(afterSaveCallback).onAfterSave(eq(entity));
+		verify(afterSaveCallback).onAfterSave(eq(entity), any());
 		assertThat(saved.id).isEqualTo("after-save");
 	}
 
@@ -145,7 +145,7 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		Person saved = template.save(Mono.just(entity)).block(Duration.ofSeconds(1));
 
-		verify(afterSaveCallback).onAfterSave(eq(entity));
+		verify(afterSaveCallback).onAfterSave(eq(entity), any());
 		assertThat(saved.id).isEqualTo("after-save");
 	}
 
@@ -158,9 +158,9 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		Person entity = new Person("init", "luke");
 
-		Person saved = template.save(entity, IndexCoordinates.of("index")).block(Duration.ofSeconds(1));
+		Person saved = template.save(entity, index).block(Duration.ofSeconds(1));
 
-		verify(afterSaveCallback).onAfterSave(eq(entity));
+		verify(afterSaveCallback).onAfterSave(eq(entity), eq(index));
 		assertThat(saved.id).isEqualTo("after-save");
 	}
 
@@ -173,9 +173,9 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		Person entity = new Person("init", "luke");
 
-		Person saved = template.save(Mono.just(entity), IndexCoordinates.of("index")).block(Duration.ofSeconds(1));
+		Person saved = template.save(Mono.just(entity), index).block(Duration.ofSeconds(1));
 
-		verify(afterSaveCallback).onAfterSave(eq(entity));
+		verify(afterSaveCallback).onAfterSave(eq(entity), eq(index));
 		assertThat(saved.id).isEqualTo("after-save");
 	}
 
@@ -189,10 +189,10 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		Person entity1 = new Person("init1", "luke1");
 		Person entity2 = new Person("init2", "luke2");
 
-		List<Person> saved = template.saveAll(Arrays.asList(entity1, entity2), IndexCoordinates.of("index")).toStream()
+		List<Person> saved = template.saveAll(Arrays.asList(entity1, entity2), index).toStream()
 				.collect(Collectors.toList());
 
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
+		verify(afterSaveCallback, times(2)).onAfterSave(any(), eq(index));
 		assertThat(saved.get(0).getId()).isEqualTo("after-save");
 		assertThat(saved.get(1).getId()).isEqualTo("after-save");
 	}
@@ -207,10 +207,10 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		Person entity1 = new Person("init1", "luke1");
 		Person entity2 = new Person("init2", "luke2");
 
-		List<Person> saved = template.saveAll(Mono.just(Arrays.asList(entity1, entity2)), IndexCoordinates.of("index"))
+		List<Person> saved = template.saveAll(Mono.just(Arrays.asList(entity1, entity2)), index)
 				.toStream().collect(Collectors.toList());
 
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
+		verify(afterSaveCallback, times(2)).onAfterSave(any(), eq(index));
 		assertThat(saved.get(0).getId()).isEqualTo("after-save");
 		assertThat(saved.get(1).getId()).isEqualTo("after-save");
 	}
@@ -474,7 +474,7 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 			implements ReactiveAfterSaveCallback<Person> {
 
 		@Override
-		public Mono<Person> onAfterSave(Person entity) {
+		public Mono<Person> onAfterSave(Person entity, IndexCoordinates index) {
 
 			return Mono.defer(() -> {
 				capture(entity);

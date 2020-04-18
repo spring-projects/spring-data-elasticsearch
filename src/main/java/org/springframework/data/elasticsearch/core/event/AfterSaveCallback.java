@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.event;
 
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.mapping.callback.EntityCallback;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 
@@ -33,7 +34,8 @@ public interface AfterSaveCallback<T> extends EntityCallback<T> {
 	 * the domain object.
 	 *
 	 * @param entity the domain object that was saved.
+	 * @param index must not be {@literal null}.
 	 * @return the domain object that was persisted.
 	 */
-	T onAfterSave(T entity);
+	T onAfterSave(T entity, IndexCoordinates index);
 }

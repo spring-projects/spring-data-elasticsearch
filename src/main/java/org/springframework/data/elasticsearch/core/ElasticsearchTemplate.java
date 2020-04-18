@@ -153,7 +153,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 			setPersistentEntityId(queryObject, documentId);
 		}
 
-		maybeCallbackAfterSaveWithQuery(query);
+		maybeCallbackAfterSaveWithQuery(query, index);
 
 		return documentId;
 	}
@@ -196,7 +196,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		List<String> ids = doBulkOperation(queries, bulkOptions, index);
 
-		maybeCallbackAfterSaveWithQueries(queries);
+		maybeCallbackAfterSaveWithQueries(queries, index);
 
 		return ids;
 	}

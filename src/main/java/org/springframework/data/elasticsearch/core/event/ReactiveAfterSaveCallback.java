@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.event;
 
 import org.reactivestreams.Publisher;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.mapping.callback.EntityCallback;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 
@@ -34,7 +35,8 @@ public interface ReactiveAfterSaveCallback<T> extends EntityCallback<T> {
 	 * the domain object.
 	 *
 	 * @param entity the domain object that was saved.
+	 * @param index must not be {@literal null}.
 	 * @return a {@link Publisher} emitting the domain object to be returned to the caller.
 	 */
-	Publisher<T> onAfterSave(T entity);
+	Publisher<T> onAfterSave(T entity, IndexCoordinates index);
 }

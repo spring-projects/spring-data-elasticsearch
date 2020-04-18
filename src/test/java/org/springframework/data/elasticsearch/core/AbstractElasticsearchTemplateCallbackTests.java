@@ -86,7 +86,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		Person saved = template.save(entity);
 
-		verify(afterSaveCallback).onAfterSave(eq(entity));
+		verify(afterSaveCallback).onAfterSave(eq(entity), any());
 		assertThat(saved.id).isEqualTo("after-save");
 	}
 
@@ -97,7 +97,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		Person saved = template.save(entity, index);
 
-		verify(afterSaveCallback).onAfterSave(eq(entity));
+		verify(afterSaveCallback).onAfterSave(eq(entity), eq(index));
 		assertThat(saved.id).isEqualTo("after-save");
 	}
 
@@ -109,7 +109,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		Iterable<Person> saved = template.save(entity1, entity2);
 
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
+		verify(afterSaveCallback, times(2)).onAfterSave(any(), any());
 		Iterator<Person> savedIterator = saved.iterator();
 		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
 		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
@@ -123,7 +123,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		Iterable<Person> saved = template.save(Arrays.asList(entity1, entity2));
 
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
+		verify(afterSaveCallback, times(2)).onAfterSave(any(), any());
 		Iterator<Person> savedIterator = saved.iterator();
 		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
 		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
@@ -137,7 +137,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		Iterable<Person> saved = template.save(Arrays.asList(entity1, entity2), index);
 
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
+		verify(afterSaveCallback, times(2)).onAfterSave(any(), eq(index));
 		Iterator<Person> savedIterator = saved.iterator();
 		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
 		assertThat(savedIterator.next().getId()).isEqualTo("after-save");
@@ -151,7 +151,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 		IndexQuery indexQuery = indexQueryForEntity(entity);
 		template.index(indexQuery, index);
 
-		verify(afterSaveCallback).onAfterSave(eq(entity));
+		verify(afterSaveCallback).onAfterSave(eq(entity), eq(index));
 		Person savedPerson = (Person) indexQuery.getObject();
 		assertThat(savedPerson.id).isEqualTo("after-save");
 	}
@@ -172,7 +172,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 		IndexQuery query2 = indexQueryForEntity(entity2);
 		template.bulkIndex(Arrays.asList(query1, query2), index);
 
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
+		verify(afterSaveCallback, times(2)).onAfterSave(any(), eq(index));
 		Person savedPerson1 = (Person) query1.getObject();
 		Person savedPerson2 = (Person) query2.getObject();
 		assertThat(savedPerson1.getId()).isEqualTo("after-save");
@@ -189,7 +189,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 		IndexQuery query2 = indexQueryForEntity(entity2);
 		template.bulkIndex(Arrays.asList(query1, query2), BulkOptions.defaultOptions(), index);
 
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
+		verify(afterSaveCallback, times(2)).onAfterSave(any(), eq(index));
 		Person savedPerson1 = (Person) query1.getObject();
 		Person savedPerson2 = (Person) query2.getObject();
 		assertThat(savedPerson1.getId()).isEqualTo("after-save");
@@ -530,7 +530,7 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 			implements AfterSaveCallback<Person> {
 
 		@Override
-		public Person onAfterSave(Person entity) {
+		public Person onAfterSave(Person entity, IndexCoordinates index) {
 
 			capture(entity);
 			return new Person() {
