@@ -410,6 +410,12 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 */
 	@Override
 	public Flux<Aggregation> aggregate(HttpHeaders headers, SearchRequest searchRequest) {
+		
+		Assert.notNull(headers, "headers must not be null");
+		Assert.notNull(searchRequest, "searchRequest must not be null");
+		
+		searchRequest.source().size(0);
+		
 		return sendRequest(searchRequest, requestCreator.search(), SearchResponse.class, headers) //
 				.map(SearchResponse::getAggregations) //
 				.flatMap(Flux::fromIterable);
