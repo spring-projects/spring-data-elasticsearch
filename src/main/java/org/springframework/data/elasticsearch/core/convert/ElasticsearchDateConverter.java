@@ -17,7 +17,9 @@ package org.springframework.data.elasticsearch.core.convert;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.Instant;
 import java.time.temporal.TemporalAccessor;
+import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.elasticsearch.common.time.DateFormatter;
@@ -73,7 +75,23 @@ final public class ElasticsearchDateConverter {
 	 * @return the formatted object
 	 */
 	public String format(TemporalAccessor accessor) {
+
+		Assert.notNull(accessor, "accessor must not be null");
+
 		return dateFormatter.format(accessor);
+	}
+
+	/**
+	 * Formats the given {@link TemporalAccessor} int a String
+	 *
+	 * @param date must not be {@literal null}
+	 * @return the formatted object
+	 */
+	public String format(Date date) {
+
+		Assert.notNull(date, "accessor must not be null");
+
+		return dateFormatter.format(Instant.ofEpochMilli(date.getTime()));
 	}
 
 	/**
@@ -95,5 +113,15 @@ final public class ElasticsearchDateConverter {
 		} catch (IllegalAccessException | InvocationTargetException e) {
 			throw new ConversionException("could not create object of class " + type.getName(), e);
 		}
+	}
+
+	/**
+	 * Parses a String into a Date.
+	 *
+	 * @param input the String to parse, must not be {@literal null}.
+	 * @return the new created object
+	 */
+	public Date parse(String input) {
+		return new Date(Instant.from(dateFormatter.parse(input)).toEpochMilli());
 	}
 }
