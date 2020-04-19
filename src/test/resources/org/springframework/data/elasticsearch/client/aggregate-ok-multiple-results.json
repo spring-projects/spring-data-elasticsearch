@@ -8,43 +8,9 @@
     "failed": 0
   },
   "hits": {
-    "total": 2,
-    "max_score": 0.2876821,
-    "hits": [
-      {
-        "_index": "twitter",
-        "_type": "doc",
-        "_id": "2",
-        "_score": 0.2876821,
-        "_source": {
-          "user": "kimchy",
-          "post_date": "2009-11-15T14:13:14",
-          "message": "First tweet"
-        }
-      },
-      {
-        "_index": "twitter",
-        "_type": "doc",
-        "_id": "2",
-        "_score": 0.2876821,
-        "_source": {
-          "user": "kimchy",
-          "post_date": "2009-11-15T14:12:12",
-          "message": "Another tweet, will it be indexed?"
-        }
-      },
-      {
-        "_index": "twitter",
-        "_type": "doc",
-        "_id": "3",
-        "_score": 0.2876821,
-        "_source": {
-          "user": "elastic",
-          "post_date": "2010-01-15T01:46:38",
-          "message": "Building the site, should be kewl"
-        }
-      }
-    ]
+    "total": 0,
+    "max_score": null,
+    "hits": [ ]
   },
   "aggregations": {
     "sterms#users": {

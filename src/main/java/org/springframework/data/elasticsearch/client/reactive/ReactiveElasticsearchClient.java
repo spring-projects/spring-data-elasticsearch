@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.client.reactive;
 
 import org.elasticsearch.search.aggregations.Aggregation;
+import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -422,11 +423,12 @@ public interface ReactiveElasticsearchClient {
 	 * @since 4.0
 	 */
 	default Flux<Aggregation> aggregate(Consumer<SearchRequest> consumer) {
-    Assert.notNull(consumer, "consumer must not be null"):
+		Assert.notNull(consumer, "consumer must not be null");
 		SearchRequest request = new SearchRequest();
 		consumer.accept(request);
 		return aggregate(request);
 	}
+
 	/**
 	 * Execute the given {@link SearchRequest} with aggregations against the {@literal search} API.
 	 *
@@ -446,7 +448,7 @@ public interface ReactiveElasticsearchClient {
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html">Search API on
 	 *      elastic.co</a>
 	 * @return the {@link Flux} emitting {@link Aggregation} one by one.
- 	 * @since 4.0
+	 * @since 4.0
 	 */
 	Flux<Aggregation> aggregate(HttpHeaders headers, SearchRequest searchRequest);
 
