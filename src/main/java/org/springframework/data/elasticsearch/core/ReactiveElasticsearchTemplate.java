@@ -19,12 +19,12 @@ import static org.elasticsearch.index.VersionType.*;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -185,12 +185,15 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Assert.notNull(entity, "Entity must not be null!");
 
-		AdaptibleEntity<T> adaptableEntity = operations.forEntity(entity, converter.getConversionService());
-
-		return doIndex(entity, adaptableEntity, index) //
+		return maybeCallBeforeConvert(entity, index)
+				.flatMap(entityAfterBeforeConversionCallback -> doIndex(entityAfterBeforeConversionCallback, index)) //
 				.map(it -> {
-					return adaptableEntity.populateIdIfNecessary(it.getId());
-				}).flatMap(saved -> maybeCallAfterSave(saved, index));
+					T savedEntity = it.getT1();
+					IndexResponse indexResponse = it.getT2();
+					AdaptibleEntity<T> adaptableEntity = operations.forEntity(savedEntity, converter.getConversionService());
+					return adaptableEntity.populateIdIfNecessary(indexResponse.getId());
+				})
+				.flatMap(saved -> maybeCallAfterSave(saved, index));
 	}
 
 	@Override
@@ -199,32 +202,35 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public <T> Flux<T> saveAll(Mono<? extends Collection<? extends T>> entities, IndexCoordinates index) {
+	public <T> Flux<T> saveAll(Mono<? extends Collection<? extends T>> entitiesPublisher, IndexCoordinates index) {
 
-		Assert.notNull(entities, "Entities must not be null!");
+		Assert.notNull(entitiesPublisher, "Entities must not be null!");
 
-		return entities.flatMapMany(entityList -> {
+		return entitiesPublisher
+				.flatMapMany(entities -> {
+					return Flux.fromIterable(entities) //
+							.concatMap(entity -> maybeCallBeforeConvert(entity, index));
+				})
+				.collectList()
+				.map(Entities::new)
+				.flatMapMany(entities -> {
+					if (entities.isEmpty()) {
+						return Flux.empty();
+					}
 
-			List<AdaptibleEntity<? extends T>> adaptibleEntities = entityList.stream() //
-					.map(e -> operations.forEntity(e, converter.getConversionService())) //
-					.collect(Collectors.toList());
+					return doBulkOperation(entities.indexQueries(), BulkOptions.defaultOptions(), index) //
+							.index()
+							.flatMap(indexAndResponse -> {
+								T savedEntity = entities.entityAt(indexAndResponse.getT1());
+								BulkItemResponse bulkItemResponse = indexAndResponse.getT2();
 
-			if (adaptibleEntities.isEmpty()) {
-				return Flux.empty();
-			}
+								AdaptibleEntity<T> adaptibleEntity = operations.forEntity(savedEntity,
+										converter.getConversionService());
+								adaptibleEntity.populateIdIfNecessary(bulkItemResponse.getResponse().getId());
 
-			Iterator<AdaptibleEntity<? extends T>> iterator = adaptibleEntities.iterator();
-			List<IndexQuery> indexRequests = adaptibleEntities.stream() //
-					.map(e -> getIndexQuery(e.getBean(), e)) //
-					.collect(Collectors.toList());
-			return doBulkOperation(indexRequests, BulkOptions.defaultOptions(), index) //
-					.flatMap(bulkItemResponse -> {
-
-						AdaptibleEntity<? extends T> mappedEntity = iterator.next();
-						mappedEntity.populateIdIfNecessary(bulkItemResponse.getResponse().getId());
-						return maybeCallAfterSave(mappedEntity.getBean(), index);
-					});
-		});
+								return maybeCallAfterSave(savedEntity, index);
+							});
+				});
 	}
 
 	@Override
@@ -330,13 +336,12 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				.onErrorReturn(NoSuchIndexException.class, false);
 	}
 
-	private Mono<IndexResponse> doIndex(Object value, AdaptibleEntity<?> entity, IndexCoordinates index) {
+	private <T> Mono<Tuple2<T, IndexResponse>> doIndex(T entity, IndexCoordinates index) {
 
-		return maybeCallBeforeConvert(value, index).flatMap(it -> {
-			IndexRequest request = getIndexRequest(value, entity, index);
-			request = prepareIndexRequest(value, request);
-			return doIndex(request);
-		});
+		AdaptibleEntity<?> adaptibleEntity = operations.forEntity(entity, converter.getConversionService());
+		IndexRequest request = getIndexRequest(entity, adaptibleEntity, index);
+		request = prepareIndexRequest(entity, request);
+		return Mono.just(entity).zipWith(doIndex(request));
 	}
 
 	private IndexRequest getIndexRequest(Object value, AdaptibleEntity<?> entity, IndexCoordinates index) {
@@ -359,7 +364,9 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return request;
 	}
 
-	private IndexQuery getIndexQuery(Object value, AdaptibleEntity<?> entity) {
+	private IndexQuery getIndexQuery(Object value) {
+		AdaptibleEntity<?> entity = operations.forEntity(value, converter.getConversionService());
+
 		Object id = entity.getId();
 		IndexQuery query = new IndexQuery();
 		if (id != null) {
@@ -957,6 +964,32 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		public Mono<SearchHit<T>> doWith(SearchDocument response) {
 			return delegate.doWith(response)
 					.map(entity -> SearchHitMapping.mappingFor(type, converter.getMappingContext()).mapHit(response, entity));
+		}
+	}
+
+	private class Entities<T> {
+		private final List<T> entities;
+
+		private Entities(List<T> entities) {
+			Assert.notNull(entities, "entities cannot be null");
+
+			this.entities = entities;
+		}
+
+		private boolean isEmpty() {
+			return entities.isEmpty();
+		}
+
+		private List<IndexQuery> indexQueries() {
+			return entities.stream()
+					.map(ReactiveElasticsearchTemplate.this::getIndexQuery)
+					.collect(Collectors.toList());
+		}
+
+		private T entityAt(long index) {
+			// it's safe to cast to int because the original indexed colleciton was fitting in memory
+			int intIndex = (int) index;
+			return entities.get(intIndex);
 		}
 	}
 }
