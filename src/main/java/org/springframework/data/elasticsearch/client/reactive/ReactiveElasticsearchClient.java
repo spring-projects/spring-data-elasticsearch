@@ -434,6 +434,7 @@ public interface ReactiveElasticsearchClient {
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html">Search API on
 	 *      elastic.co</a>
 	 * @return the {@link Flux} emitting {@link Aggregation} one by one.
+	 * @since 4.0
 	 */
 	default Flux<Aggregation> aggregate(SearchRequest searchRequest) { return aggregate(HttpHeaders.EMPTY, searchRequest); }
 
