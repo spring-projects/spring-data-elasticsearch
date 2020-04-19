@@ -19,8 +19,11 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
@@ -114,7 +117,9 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 	void shouldConvertFromLegacyDate() {
 		SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(DatesProperty.class);
 		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getRequiredPersistentProperty("legacyDate");
-		Date legacyDate = new GregorianCalendar(2020, 3, 19, 21, 44).getTime();
+		GregorianCalendar calendar = GregorianCalendar
+				.from(ZonedDateTime.of(LocalDateTime.of(2020, 4, 19, 19, 44), ZoneId.of("UTC")));
+		Date legacyDate = calendar.getTime();
 
 		String converted = persistentProperty.getPropertyConverter().write(legacyDate);
 
@@ -129,7 +134,10 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		Object converted = persistentProperty.getPropertyConverter().read("20200419T194400.000Z");
 
 		assertThat(converted).isInstanceOf(Date.class);
-		assertThat(converted).isEqualTo(new GregorianCalendar(2020, 3, 19, 21, 44).getTime());
+		GregorianCalendar calendar = GregorianCalendar
+				.from(ZonedDateTime.of(LocalDateTime.of(2020, 4, 19, 19, 44), ZoneId.of("UTC")));
+		Date legacyDate = calendar.getTime();
+		assertThat(converted).isEqualTo(legacyDate);
 	}
 
 	static class InvalidScoreProperty {

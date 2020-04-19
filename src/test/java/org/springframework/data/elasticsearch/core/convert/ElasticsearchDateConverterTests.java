@@ -3,6 +3,9 @@ package org.springframework.data.elasticsearch.core.convert;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
@@ -52,21 +55,25 @@ class ElasticsearchDateConverterTests {
 
 	@Test // DATAES-792
 	void shouldConvertLegacyDateToString() {
-		Date date = new GregorianCalendar(2020, 3, 19, 21, 44).getTime();
+		GregorianCalendar calendar = GregorianCalendar
+				.from(ZonedDateTime.of(LocalDateTime.of(2020, 04, 19, 19, 44), ZoneId.of("UTC")));
+		Date legacyDate = calendar.getTime();
 		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.basic_date_time);
 
-		String formatted = converter.format(date);
+		String formatted = converter.format(legacyDate);
 
 		assertThat(formatted).isEqualTo("20200419T194400.000Z");
 	}
 
 	@Test // DATAES-792
 	void shouldParseLegacyDateFromString() {
-		Date date = new GregorianCalendar(2020, 3, 19, 21, 44).getTime();
+		GregorianCalendar calendar = GregorianCalendar
+				.from(ZonedDateTime.of(LocalDateTime.of(2020, 04, 19, 19, 44), ZoneId.of("UTC")));
+		Date legacyDate = calendar.getTime();
 		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.basic_date_time);
 
 		Date parsed = converter.parse("20200419T194400.000Z");
 
-		assertThat(parsed).isEqualTo(date);
+		assertThat(parsed).isEqualTo(legacyDate);
 	}
 }
