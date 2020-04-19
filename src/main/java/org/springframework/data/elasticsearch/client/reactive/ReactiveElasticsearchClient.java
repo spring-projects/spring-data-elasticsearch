@@ -422,7 +422,7 @@ public interface ReactiveElasticsearchClient {
 	 * @since 4.0
 	 */
 	default Flux<Aggregation> aggregate(Consumer<SearchRequest> consumer) {
-
+    Assert.notNull(consumer, "consumer must not be null"):
 		SearchRequest request = new SearchRequest();
 		consumer.accept(request);
 		return aggregate(request);
