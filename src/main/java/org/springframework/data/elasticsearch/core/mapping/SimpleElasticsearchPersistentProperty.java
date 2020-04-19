@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.elasticsearch.annotations.DateFormat;
@@ -95,11 +96,14 @@ public class SimpleElasticsearchPersistentProperty extends
 	/**
 	 * Initializes an {@link ElasticsearchPersistentPropertyConverter} if this property is annotated as a Field with type
 	 * {@link FieldType#Date}, has a {@link DateFormat} set and if the type of the property is one of the Java8 temporal
-	 * classes.
+	 * classes or java.util.Date.
 	 */
 	private void initDateConverter() {
 		Field field = findAnnotation(Field.class);
-		if (field != null && field.type() == FieldType.Date && TemporalAccessor.class.isAssignableFrom(getType())) {
+		boolean isTemporalAccessor = TemporalAccessor.class.isAssignableFrom(getType());
+		boolean isDate = Date.class.isAssignableFrom(getType());
+
+		if (field != null && field.type() == FieldType.Date && (isTemporalAccessor || isDate)) {
 			DateFormat dateFormat = field.format();
 
 			ElasticsearchDateConverter converter = null;
@@ -119,13 +123,21 @@ public class SimpleElasticsearchPersistentProperty extends
 				propertyConverter = new ElasticsearchPersistentPropertyConverter() {
 					@Override
 					public String write(Object property) {
-						return dateConverter.format((TemporalAccessor) property);
+						if (isTemporalAccessor) {
+							return dateConverter.format((TemporalAccessor) property);
+						} else { // must be Date
+							return dateConverter.format((Date) property);
+						}
 					}
 
 					@SuppressWarnings("unchecked")
 					@Override
 					public Object read(String s) {
-						return dateConverter.parse(s, (Class<? extends TemporalAccessor>) getType());
+						if (isTemporalAccessor) {
+							return dateConverter.parse(s, (Class<? extends TemporalAccessor>) getType());
+						} else { // must be date
+							return dateConverter.parse(s);
+						}
 					}
 				};
 			}

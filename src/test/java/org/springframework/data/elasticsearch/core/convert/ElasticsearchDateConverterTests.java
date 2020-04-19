@@ -3,6 +3,8 @@ package org.springframework.data.elasticsearch.core.convert;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -14,7 +16,7 @@ import org.springframework.data.elasticsearch.annotations.DateFormat;
  */
 class ElasticsearchDateConverterTests {
 
-	@ParameterizedTest
+	@ParameterizedTest // DATAES-716
 	@EnumSource(DateFormat.class)
 	void shouldCreateConvertersForAllKnownFormats(DateFormat dateFormat) {
 
@@ -28,8 +30,8 @@ class ElasticsearchDateConverterTests {
 		assertThat(converter).isNotNull();
 	}
 
-	@Test
-	void shouldConvertToString() {
+	@Test // DATAES-716
+	void shouldConvertTemporalAccessorToString() {
 		LocalDate localDate = LocalDate.of(2019, 12, 27);
 		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.basic_date);
 
@@ -38,13 +40,33 @@ class ElasticsearchDateConverterTests {
 		assertThat(formatted).isEqualTo("20191227");
 	}
 
-	@Test
-	void shouldParseFromString() {
+	@Test // DATAES-716
+	void shouldParseTemporalAccessorFromString() {
 		LocalDate localDate = LocalDate.of(2019, 12, 27);
 		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.basic_date);
 
 		LocalDate parsed = converter.parse("20191227", LocalDate.class);
 
 		assertThat(parsed).isEqualTo(localDate);
+	}
+
+	@Test // DATAES-792
+	void shouldConvertLegacyDateToString() {
+		Date date = new GregorianCalendar(2020, 3, 19, 21, 44).getTime();
+		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.basic_date_time);
+
+		String formatted = converter.format(date);
+
+		assertThat(formatted).isEqualTo("20200419T194400.000Z");
+	}
+
+	@Test // DATAES-792
+	void shouldParseLegacyDateFromString() {
+		Date date = new GregorianCalendar(2020, 3, 19, 21, 44).getTime();
+		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.basic_date_time);
+
+		Date parsed = converter.parse("20200419T194400.000Z");
+
+		assertThat(parsed).isEqualTo(date);
 	}
 }

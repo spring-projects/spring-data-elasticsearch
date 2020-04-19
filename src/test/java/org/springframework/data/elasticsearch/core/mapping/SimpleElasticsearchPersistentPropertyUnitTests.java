@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
@@ -69,25 +70,25 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(persistentProperty.getFieldName()).isEqualTo("by-value");
 	}
 
-	@Test
-	// DATAES-716
+	@Test // DATAES-716, DATAES-792
 	void shouldSetPropertyConverters() {
 		SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(DatesProperty.class);
 
-		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getRequiredPersistentProperty("date");
-		assertThat(persistentProperty.hasPropertyConverter()).isFalse();
-
-		persistentProperty = persistentEntity.getRequiredPersistentProperty("localDate");
+		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getRequiredPersistentProperty("localDate");
 		assertThat(persistentProperty.hasPropertyConverter()).isTrue();
 		assertThat(persistentProperty.getPropertyConverter()).isNotNull();
 
 		persistentProperty = persistentEntity.getRequiredPersistentProperty("localDateTime");
 		assertThat(persistentProperty.hasPropertyConverter()).isTrue();
 		assertThat(persistentProperty.getPropertyConverter()).isNotNull();
+
+		persistentProperty = persistentEntity.getRequiredPersistentProperty("legacyDate");
+		assertThat(persistentProperty.hasPropertyConverter()).isTrue();
+		assertThat(persistentProperty.getPropertyConverter()).isNotNull();
+
 	}
 
-	@Test
-	// DATAES-716
+	@Test // DATAES-716
 	void shouldConvertFromLocalDate() {
 		SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(DatesProperty.class);
 		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getRequiredPersistentProperty("localDate");
@@ -98,8 +99,7 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(converted).isEqualTo("27.12.2019");
 	}
 
-	@Test
-	// DATAES-716
+	@Test // DATAES-716
 	void shouldConvertToLocalDate() {
 		SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(DatesProperty.class);
 		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getRequiredPersistentProperty("localDate");
@@ -108,6 +108,28 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 
 		assertThat(converted).isInstanceOf(LocalDate.class);
 		assertThat(converted).isEqualTo(LocalDate.of(2019, 12, 27));
+	}
+
+	@Test // DATAES_792
+	void shouldConvertFromLegacyDate() {
+		SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(DatesProperty.class);
+		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getRequiredPersistentProperty("legacyDate");
+		Date legacyDate = new GregorianCalendar(2020, 3, 19, 21, 44).getTime();
+
+		String converted = persistentProperty.getPropertyConverter().write(legacyDate);
+
+		assertThat(converted).isEqualTo("20200419T194400.000Z");
+	}
+
+	@Test // DATES-792
+	void shouldConvertToLegacyDate() {
+		SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(DatesProperty.class);
+		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getRequiredPersistentProperty("legacyDate");
+
+		Object converted = persistentProperty.getPropertyConverter().read("20200419T194400.000Z");
+
+		assertThat(converted).isInstanceOf(Date.class);
+		assertThat(converted).isEqualTo(new GregorianCalendar(2020, 3, 19, 21, 44).getTime());
 	}
 
 	static class InvalidScoreProperty {
@@ -123,8 +145,8 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 	}
 
 	static class DatesProperty {
-		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date) Date date;
 		@Nullable @Field(type = FieldType.Date, format = DateFormat.custom, pattern = "dd.MM.uuuu") LocalDate localDate;
 		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date_time) LocalDateTime localDateTime;
+		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date_time) Date legacyDate;
 	}
 }
