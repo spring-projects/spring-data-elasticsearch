@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.elasticsearch.index.VersionType.*;
 
+import org.elasticsearch.search.aggregations.Aggregation;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -102,6 +103,7 @@ import org.springframework.util.Assert;
  * @author Mathias Teier
  * @author Aleksei Arsenev
  * @author Roman Puchkovskiy
+ * @author Russell Parry
  * @since 3.2
  */
 public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations, ApplicationContextAware {
@@ -609,6 +611,27 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
+	public Flux<Aggregation> aggregate(Query query, Class<?> entityType) {
+		return aggregate(query, entityType, getIndexCoordinatesFor(entityType));
+	}
+
+	@Override
+	public Flux<Aggregation> aggregate(Query query, Class<?> entityType, IndexCoordinates index) {
+		return doAggregate(query, entityType, index);
+	}
+
+	private Flux<Aggregation> doAggregate(Query query, Class<?> entityType, IndexCoordinates index) {
+		return Flux.defer(() -> {
+			SearchRequest request = requestFactory.searchRequest(query, entityType, index);
+			request = prepareSearchRequest(request);
+			request.source().size(0);
+			request.source().trackTotalHits(false);
+
+			return doAggregate(request);
+		});
+	}
+
+	@Override
 	public Mono<Long> count(Query query, Class<?> entityType) {
 		return count(query, entityType, getIndexCoordinatesFor(entityType));
 	}
@@ -680,6 +703,22 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		return Flux.from(execute(client -> client.search(request))).map(DocumentAdapters::from) //
 				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link SearchRequest} ready to be executed.
+	 * @return a {@link Flux} emitting the result of the operation.
+	 */
+	protected Flux<Aggregation> doAggregate(SearchRequest request) {
+
+		if (QUERY_LOGGER.isDebugEnabled()) {
+			QUERY_LOGGER.debug("Executing doCount: {}", request);
+		}
+
+		return Flux.from(execute(client -> client.aggregate(request))) //
+				.onErrorResume(NoSuchIndexException.class, it -> Flux.empty());
 	}
 
 	/**

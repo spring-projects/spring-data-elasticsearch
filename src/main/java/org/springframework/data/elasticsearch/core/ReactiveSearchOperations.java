@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.elasticsearch.search.aggregations.Aggregation;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -30,6 +31,7 @@ import org.springframework.data.elasticsearch.core.query.StringQuery;
  * APIs</a>.
  *
  * @author Peter-Josef Meisch
+ * @author Russell Parry
  * @since 4.0
  */
 public interface ReactiveSearchOperations {
@@ -183,4 +185,25 @@ public interface ReactiveSearchOperations {
 	default <T> Flux<SearchHit<T>> search(Query query, Class<T> entityType, IndexCoordinates index) {
 		return search(query, entityType, entityType, index);
 	}
+
+	/**
+	 * Perform an aggregation specified by the given {@link Query query}. <br />
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @return a {@link Flux} emitting matching aggregations one by one.
+	 * @since 4.0
+	 */
+	Flux<Aggregation> aggregate(Query query, Class<?> entityType);
+
+	/**
+	 * Perform an aggregation specified by the given {@link Query query}. <br />
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param index the target index, must not be {@literal null}
+	 * @return a {@link Flux} emitting matching aggregations one by one.
+	 * @since 4.0
+	 */
+	Flux<Aggregation> aggregate(Query query, Class<?> entityType, IndexCoordinates index);
 }

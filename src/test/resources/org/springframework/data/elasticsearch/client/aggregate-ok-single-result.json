@@ -1,0 +1,31 @@
+{
+  "took": 52,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 0,
+    "max_score": null,
+    "hits": [ ]
+  },
+  "aggregations": {
+    "sterms#users": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "kimchy",
+          "doc_count": 2
+        },
+        {
+          "key": "elastic",
+          "doc_count": 1
+        }
+      ]
+    }
+  }
+}

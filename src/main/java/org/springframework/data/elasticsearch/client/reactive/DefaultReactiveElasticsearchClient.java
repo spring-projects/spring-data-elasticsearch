@@ -94,6 +94,7 @@ import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientLogger;
@@ -101,6 +102,7 @@ import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
 import org.springframework.data.elasticsearch.client.reactive.HostProvider.Verification;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices;
+import org.springframework.data.elasticsearch.client.util.NamedXContents;
 import org.springframework.data.util.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -128,6 +130,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  * @author Huw Ayling-Miller
  * @author Henrique Amaral
  * @author Roman Puchkovskiy
+ * @author Russell Parry
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
@@ -398,6 +401,23 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		return sendRequest(searchRequest, requestCreator.search(), SearchResponse.class, headers) //
 				.map(SearchResponse::getHits) //
+				.flatMap(Flux::fromIterable);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#aggregate(org.springframework.http.HttpHeaders, org.elasticsearch.action.search.SearchRequest)
+	 */
+	@Override
+	public Flux<Aggregation> aggregate(HttpHeaders headers, SearchRequest searchRequest) {
+		
+		Assert.notNull(headers, "headers must not be null");
+		Assert.notNull(searchRequest, "searchRequest must not be null");
+		
+		searchRequest.source().size(0);
+		
+		return sendRequest(searchRequest, requestCreator.search(), SearchResponse.class, headers) //
+				.map(SearchResponse::getAggregations) //
 				.flatMap(Flux::fromIterable);
 	}
 
@@ -751,10 +771,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	}
 
 	private static XContentParser createParser(String mediaType, String content) throws IOException {
-
 		return XContentType.fromMediaTypeOrFormat(mediaType) //
 				.xContent() //
-				.createParser(NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION, content);
+				.createParser(new NamedXContentRegistry(NamedXContents.getDefaultNamedXContents()), DeprecationHandler.THROW_UNSUPPORTED_OPERATION, content);
 	}
 
 	private static <T> Publisher<? extends T> handleServerError(Request request, ClientResponse response) {

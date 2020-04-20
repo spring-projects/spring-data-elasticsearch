@@ -24,6 +24,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -78,6 +80,7 @@ import org.springframework.util.StringUtils;
  * @author Farid Azaza
  * @author Martin Choraine
  * @author Aleksei Arsenev
+ * @author Russell Parry
  */
 @SpringIntegrationTest
 public class ReactiveElasticsearchTemplateTests {
@@ -483,6 +486,41 @@ public class ReactiveElasticsearchTemplateTests {
 
 		template.search(query, SampleEntity.class).as(StepVerifier::create) //
 				.expectNextCount(100) //
+				.verifyComplete();
+	}
+
+	@Test // DATAES-567
+	public void aggregateShouldReturnAggregations() {
+
+		SampleEntity sampleEntity1 = randomEntity("some message");
+		SampleEntity sampleEntity2 = randomEntity("some message");
+		SampleEntity sampleEntity3 = randomEntity("other message");
+
+		index(sampleEntity1, sampleEntity2, sampleEntity3);
+
+		NativeSearchQuery query = new NativeSearchQueryBuilder()
+				.withQuery(matchAllQuery())
+				.addAggregation(AggregationBuilders.terms("messages").field("message"))
+				.build();
+
+		template.aggregate(query, SampleEntity.class) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(aggregation -> {
+					assertThat(aggregation.getName()).isEqualTo("messages");
+					assertThat(aggregation instanceof ParsedStringTerms);
+					ParsedStringTerms parsedStringTerms = (ParsedStringTerms) aggregation;
+					assertThat(parsedStringTerms.getBuckets().size()).isEqualTo(3);
+					assertThat(parsedStringTerms.getBucketByKey("message").getDocCount()).isEqualTo(3);
+					assertThat(parsedStringTerms.getBucketByKey("some").getDocCount()).isEqualTo(2);
+					assertThat(parsedStringTerms.getBucketByKey("other").getDocCount()).isEqualTo(1);
+				}).verifyComplete();
+	}
+
+	@Test // DATAES-567
+	public void aggregateShouldReturnEmptyWhenIndexDoesNotExist() {
+		template.aggregate(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
+				IndexCoordinates.of("no-such-index")) //
+				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
 
