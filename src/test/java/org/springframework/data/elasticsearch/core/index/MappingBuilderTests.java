@@ -380,7 +380,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		// given
 		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"circular-property\":{\"type\":\"object\",\"properties\":{\"id-property\":{}}}" + "}}";
+				+ "\"circular-property\":{\"type\":\"object\",\"properties\":{}}" + "}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.CircularEntity.class);
@@ -438,19 +438,15 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 				"            \"storeTrue\": {\n" + //
 				"                \"store\": true\n" + //
 				"            },\n" + //
-				"            \"storeFalse\": {},\n" + //
-				"            \"indexTrue\": {},\n" + //
 				"            \"indexFalse\": {\n" + //
 				"                \"index\": false\n" + //
 				"            },\n" + //
-				"            \"coerceTrue\": {},\n" + //
 				"            \"coerceFalse\": {\n" + //
 				"                \"coerce\": false\n" + //
 				"            },\n" + //
 				"            \"fielddataTrue\": {\n" + //
 				"                \"fielddata\": true\n" + //
 				"            },\n" + //
-				"            \"fielddataFalse\": {},\n" + //
 				"            \"type\": {\n" + //
 				"                \"type\": \"integer\"\n" + //
 				"            },\n" + //
@@ -476,15 +472,12 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 				"                \"type\": \"keyword\",\n" + //
 				"                \"doc_values\": false\n" + //
 				"            },\n" + //
-				"            \"ignoreMalformedFalse\": {},\n" + //
 				"            \"ignoreMalformedTrue\": {\n" + //
 				"                \"ignore_malformed\": true\n" + //
 				"            },\n" + //
 				"            \"indexPhrasesTrue\": {\n" + //
 				"                \"index_phrases\": true\n" + //
 				"            },\n" + //
-				"            \"indexPhrasesFalse\": {},\n" + //
-				"            \"indexOptionsNone\": {},\n" + //
 				"            \"indexOptionsPositions\": {\n" + //
 				"                \"index_options\": \"positions\"\n" + //
 				"            },\n" + //
@@ -494,22 +487,18 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 				"            \"customIndexPrefixes\": {\n" + //
 				"                \"index_prefixes\":{\"min_chars\":1,\"max_chars\":10}" + //
 				"            },\n" + //
-				"            \"normsTrue\": {},\n" + //
 				"            \"normsFalse\": {\n" + //
 				"                \"norms\": false\n" + //
 				"            },\n" + //
-				"            \"nullValueNotSet\": {},\n" + //
 				"            \"nullValueSet\": {\n" + //
 				"                \"null_value\": \"NULLNULL\"\n" + //
 				"            },\n" + //
 				"            \"positionIncrementGap\": {\n" + //
 				"                \"position_increment_gap\": 42\n" + //
 				"            },\n" + //
-				"            \"similarityDefault\": {},\n" + //
 				"            \"similarityBoolean\": {\n" + //
 				"                \"similarity\": \"boolean\"\n" + //
 				"            },\n" + //
-				"            \"termVectorDefault\": {},\n" + //
 				"            \"termVectorWithOffsets\": {\n" + //
 				"                \"term_vector\": \"with_offsets\"\n" + //
 				"            },\n" + //
@@ -1018,6 +1007,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		@Nullable @Field private String termVectorDefault;
 		@Nullable @Field(termVector = TermVector.with_offsets) private String termVectorWithOffsets;
 		@Nullable @Field(type = FieldType.Scaled_Float, scalingFactor = 100.0) Double scaledFloat;
+		@Nullable @Field(type = Auto) String autoField;
 	}
 
 	@Document(indexName = "test-index-configure-dynamic-mapping")

@@ -313,6 +313,15 @@ public class MappingBuilder {
 	private void addSingleFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property,
 			Field annotation, boolean nestedOrObjectField) throws IOException {
 
+		// build the property json, if empty skip it as this is no valid mapping
+		XContentBuilder propertyBuilder = jsonBuilder().startObject();
+		addFieldMappingParameters(propertyBuilder, annotation, nestedOrObjectField);
+		propertyBuilder.endObject().close();
+
+		if ("{}".equals(propertyBuilder.getOutputStream().toString())) {
+			return;
+		}
+
 		builder.startObject(property.getFieldName());
 		addFieldMappingParameters(builder, annotation, nestedOrObjectField);
 		builder.endObject();
