@@ -24,8 +24,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -41,6 +39,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.AfterEach;
@@ -498,10 +498,8 @@ public class ReactiveElasticsearchTemplateTests {
 
 		index(sampleEntity1, sampleEntity2, sampleEntity3);
 
-		NativeSearchQuery query = new NativeSearchQueryBuilder()
-				.withQuery(matchAllQuery())
-				.addAggregation(AggregationBuilders.terms("messages").field("message"))
-				.build();
+		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.addAggregation(AggregationBuilders.terms("messages").field("message")).build();
 
 		template.aggregate(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
@@ -518,8 +516,9 @@ public class ReactiveElasticsearchTemplateTests {
 
 	@Test // DATAES-567
 	public void aggregateShouldReturnEmptyWhenIndexDoesNotExist() {
-		template.aggregate(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
-				IndexCoordinates.of("no-such-index")) //
+		template
+				.aggregate(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
+						IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}

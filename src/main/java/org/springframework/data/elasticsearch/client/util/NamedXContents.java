@@ -15,6 +15,11 @@
  */
 package org.springframework.data.elasticsearch.client.util;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.xcontent.ContextParser;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
@@ -76,15 +81,11 @@ import org.elasticsearch.search.suggest.term.TermSuggestion;
 import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 /**
  * <p>
- * Original implementation source {@link org.elasticsearch.client.RestHighLevelClient#getDefaultNamedXContents()} by {@literal Elasticsearch}
- * (<a href="https://www.elastic.co">https://www.elastic.co</a>) licensed under the Apache License, Version 2.0.
+ * Original implementation source {@link org.elasticsearch.client.RestHighLevelClient#getDefaultNamedXContents()} by
+ * {@literal Elasticsearch} (<a href="https://www.elastic.co">https://www.elastic.co</a>) licensed under the Apache
+ * License, Version 2.0.
  * </p>
  * Modified for usage with {@link ReactiveElasticsearchClient}.
  * <p>
@@ -106,8 +107,10 @@ public class NamedXContents {
 		map.put(InternalHDRPercentileRanks.NAME, (p, c) -> ParsedHDRPercentileRanks.fromXContent(p, (String) c));
 		map.put(InternalTDigestPercentiles.NAME, (p, c) -> ParsedTDigestPercentiles.fromXContent(p, (String) c));
 		map.put(InternalTDigestPercentileRanks.NAME, (p, c) -> ParsedTDigestPercentileRanks.fromXContent(p, (String) c));
-		map.put(PercentilesBucketPipelineAggregationBuilder.NAME, (p, c) -> ParsedPercentilesBucket.fromXContent(p, (String) c));
-		map.put(MedianAbsoluteDeviationAggregationBuilder.NAME, (p, c) -> ParsedMedianAbsoluteDeviation.fromXContent(p, (String) c));
+		map.put(PercentilesBucketPipelineAggregationBuilder.NAME,
+				(p, c) -> ParsedPercentilesBucket.fromXContent(p, (String) c));
+		map.put(MedianAbsoluteDeviationAggregationBuilder.NAME,
+				(p, c) -> ParsedMedianAbsoluteDeviation.fromXContent(p, (String) c));
 		map.put(MinAggregationBuilder.NAME, (p, c) -> ParsedMin.fromXContent(p, (String) c));
 		map.put(MaxAggregationBuilder.NAME, (p, c) -> ParsedMax.fromXContent(p, (String) c));
 		map.put(SumAggregationBuilder.NAME, (p, c) -> ParsedSum.fromXContent(p, (String) c));
@@ -149,15 +152,18 @@ public class NamedXContents {
 		map.put(IpRangeAggregationBuilder.NAME, (p, c) -> ParsedBinaryRange.fromXContent(p, (String) c));
 		map.put(TopHitsAggregationBuilder.NAME, (p, c) -> ParsedTopHits.fromXContent(p, (String) c));
 		map.put(CompositeAggregationBuilder.NAME, (p, c) -> ParsedComposite.fromXContent(p, (String) c));
-		List<NamedXContentRegistry.Entry> entries = map.entrySet().stream()
-				.map(entry -> new NamedXContentRegistry.Entry(Aggregation.class, new ParseField(entry.getKey()), entry.getValue()))
+		List<NamedXContentRegistry.Entry> entries = map.entrySet().stream().map(
+				entry -> new NamedXContentRegistry.Entry(Aggregation.class, new ParseField(entry.getKey()), entry.getValue()))
 				.collect(Collectors.toList());
-		entries.add(new NamedXContentRegistry.Entry(Suggest.Suggestion.class, new ParseField(TermSuggestionBuilder.SUGGESTION_NAME),
-				(parser, context) -> TermSuggestion.fromXContent(parser, (String)context)));
-		entries.add(new NamedXContentRegistry.Entry(Suggest.Suggestion.class, new ParseField(PhraseSuggestionBuilder.SUGGESTION_NAME),
-				(parser, context) -> PhraseSuggestion.fromXContent(parser, (String)context)));
-		entries.add(new NamedXContentRegistry.Entry(Suggest.Suggestion.class, new ParseField(CompletionSuggestionBuilder.SUGGESTION_NAME),
-				(parser, context) -> CompletionSuggestion.fromXContent(parser, (String)context)));
+		entries.add(
+				new NamedXContentRegistry.Entry(Suggest.Suggestion.class, new ParseField(TermSuggestionBuilder.SUGGESTION_NAME),
+						(parser, context) -> TermSuggestion.fromXContent(parser, (String) context)));
+		entries.add(new NamedXContentRegistry.Entry(Suggest.Suggestion.class,
+				new ParseField(PhraseSuggestionBuilder.SUGGESTION_NAME),
+				(parser, context) -> PhraseSuggestion.fromXContent(parser, (String) context)));
+		entries.add(new NamedXContentRegistry.Entry(Suggest.Suggestion.class,
+				new ParseField(CompletionSuggestionBuilder.SUGGESTION_NAME),
+				(parser, context) -> CompletionSuggestion.fromXContent(parser, (String) context)));
 		return entries;
 	}
 }

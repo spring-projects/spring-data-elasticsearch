@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.elasticsearch.index.VersionType.*;
 
-import org.elasticsearch.search.aggregations.Aggregation;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -50,6 +49,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.WrapperQueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
@@ -624,9 +624,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return Flux.defer(() -> {
 			SearchRequest request = requestFactory.searchRequest(query, entityType, index);
 			request = prepareSearchRequest(request);
-			request.source().size(0);
-			request.source().trackTotalHits(false);
-
 			return doAggregate(request);
 		});
 	}

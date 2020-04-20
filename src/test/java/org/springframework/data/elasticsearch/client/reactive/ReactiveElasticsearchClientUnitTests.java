@@ -19,9 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive.*;
 
-import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
-import org.elasticsearch.search.aggregations.metrics.ParsedMax;
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -43,6 +40,8 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
+import org.elasticsearch.search.aggregations.metrics.ParsedMax;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -637,7 +636,8 @@ public class ReactiveElasticsearchClientUnitTests {
 					assertThat(aggregation.getName()).isEqualTo("max_post_date");
 					assertThat(aggregation instanceof ParsedMax);
 					ParsedMax parsedMax = (ParsedMax) aggregation;
-					assertThat(Instant.ofEpochMilli((long)parsedMax.getValue())).isEqualTo(Instant.parse("2010-01-15T01:46:38Z"));
+					assertThat(Instant.ofEpochMilli((long) parsedMax.getValue()))
+							.isEqualTo(Instant.parse("2010-01-15T01:46:38Z"));
 				}).verifyComplete();
 	}
 
@@ -647,7 +647,6 @@ public class ReactiveElasticsearchClientUnitTests {
 		hostProvider.when(HOST) //
 				.receive(Receive::json) //
 				.body(fromPath("aggregate-ok-no-results"));
-
 
 		client.aggregate(new SearchRequest("twitter")) //
 				.as(StepVerifier::create) //

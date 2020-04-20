@@ -18,11 +18,6 @@ package org.springframework.data.elasticsearch.client.reactive;
 import static org.assertj.core.api.Assertions.*;
 
 import lombok.SneakyThrows;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.client.indices.PutMappingRequest;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
-import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -47,12 +42,16 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -218,9 +217,9 @@ public class ReactiveElasticsearchClientTests {
 		String id2 = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
 
 		MultiGetRequest request = new MultiGetRequest() //
-				.add(INDEX_I,id1) //
-				.add(INDEX_I,"this-one-does-not-exist") //
-				.add(INDEX_I,id2); //
+				.add(INDEX_I, id1) //
+				.add(INDEX_I, "this-one-does-not-exist") //
+				.add(INDEX_I, id2); //
 
 		client.multiGet(request) //
 				.map(GetResult::getId) //
@@ -236,8 +235,7 @@ public class ReactiveElasticsearchClientTests {
 		String id2 = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
 
 		client.multiGet(new MultiGetRequest() //
-				.add(INDEX_II, id1)
-				.add(INDEX_II, id2)) //
+				.add(INDEX_II, id1).add(INDEX_II, id2)) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
@@ -661,7 +659,7 @@ public class ReactiveElasticsearchClientTests {
 				}).verifyComplete();
 	}
 
-	@Test //DATAES-567
+	@Test // DATAES-567
 	public void aggregateReturnsAggregationResults() throws IOException {
 		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
 		Map<String, Object> jsonMap = Collections.singletonMap("properties",
@@ -676,10 +674,8 @@ public class ReactiveElasticsearchClientTests {
 		SearchRequest request = new SearchRequest(INDEX_I) //
 				.source(searchSourceBuilder);
 
-		client.aggregate(request)
-				.as(StepVerifier::create)
-				.expectNextMatches(aggregation -> aggregation.getType().equals(StringTerms.NAME))
-				.verifyComplete();
+		client.aggregate(request).as(StepVerifier::create)
+				.expectNextMatches(aggregation -> aggregation.getType().equals(StringTerms.NAME)).verifyComplete();
 	}
 
 	private AddToIndexOfType addSourceDocument() {

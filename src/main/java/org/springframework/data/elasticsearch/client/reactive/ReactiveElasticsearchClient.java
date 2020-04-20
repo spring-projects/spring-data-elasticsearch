@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
-import org.elasticsearch.search.aggregations.Aggregation;
-import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -49,9 +47,11 @@ import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.http.HttpHeaders;
+import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -416,14 +416,17 @@ public interface ReactiveElasticsearchClient {
 	/**
 	 * Execute the given {@link SearchRequest} with aggregations against the {@literal search} API.
 	 *
-	 * @param consumer never {@literal null}.
-	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html">Search API on
-	 *      elastic.co</a>
+	 * @param consumer
+	 *     never {@literal null}.
 	 * @return the {@link Flux} emitting {@link Aggregation} one by one.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html">Search API on
+	 * elastic.co</a>
 	 * @since 4.0
 	 */
 	default Flux<Aggregation> aggregate(Consumer<SearchRequest> consumer) {
+
 		Assert.notNull(consumer, "consumer must not be null");
+
 		SearchRequest request = new SearchRequest();
 		consumer.accept(request);
 		return aggregate(request);
@@ -438,7 +441,9 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Flux} emitting {@link Aggregation} one by one.
 	 * @since 4.0
 	 */
-	default Flux<Aggregation> aggregate(SearchRequest searchRequest) { return aggregate(HttpHeaders.EMPTY, searchRequest); }
+	default Flux<Aggregation> aggregate(SearchRequest searchRequest) {
+		return aggregate(HttpHeaders.EMPTY, searchRequest);
+	}
 
 	/**
 	 * Execute the given {@link SearchRequest} with aggregations against the {@literal search} API.
