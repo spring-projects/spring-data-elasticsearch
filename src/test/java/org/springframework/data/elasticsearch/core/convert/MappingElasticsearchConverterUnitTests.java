@@ -68,6 +68,7 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Konrad Kurdej
  */
 public class MappingElasticsearchConverterUnitTests {
 
@@ -662,6 +663,20 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(notification.params.get("content")).isNull();
 	}
 
+	@Test // DATAES-795
+	void readGenericMapWithSimpleTypes() {
+		Map<String, Object> mapWithSimpleValues = new HashMap<>();
+		mapWithSimpleValues.put("int", 1);
+		mapWithSimpleValues.put("string", "string");
+		mapWithSimpleValues.put("boolean", true);
+
+		Document document = Document.create();
+		document.put("schemaLessObject", mapWithSimpleValues);
+
+		SchemaLessObjectWrapper wrapper = mappingElasticsearchConverter.read(SchemaLessObjectWrapper.class, document);
+		assertThat(wrapper.getSchemaLessObject()).isEqualTo(mapWithSimpleValues);
+	}
+
 	private String pointTemplate(String name, Point point) {
 		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
 	}
@@ -859,5 +874,13 @@ public class MappingElasticsearchConverterUnitTests {
 		@GeoPointField private String pointC;
 
 		@GeoPointField private double[] pointD;
+	}
+
+	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
+	static class SchemaLessObjectWrapper {
+
+		private Map<String, Object> schemaLessObject;
 	}
 }
