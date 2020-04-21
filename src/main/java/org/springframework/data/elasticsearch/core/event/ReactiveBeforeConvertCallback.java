@@ -16,12 +16,14 @@
 package org.springframework.data.elasticsearch.core.event;
 
 import org.reactivestreams.Publisher;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.mapping.callback.EntityCallback;
 
 /**
  * Callback being invoked before a domain object is converted to be persisted.
  *
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  * @since 4.0
  */
 @FunctionalInterface
@@ -32,7 +34,8 @@ public interface ReactiveBeforeConvertCallback<T> extends EntityCallback<T> {
 	 * the domain entity class.
 	 * 
 	 * @param entity the entity being converted
+	 * @param index must not be {@literal null}.
 	 * @return the entity to be converted
 	 */
-	Publisher<T> onBeforeConvert(T entity);
+	Publisher<T> onBeforeConvert(T entity, IndexCoordinates index);
 }

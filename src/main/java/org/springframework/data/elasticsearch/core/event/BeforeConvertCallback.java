@@ -15,12 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core.event;
 
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.mapping.callback.EntityCallback;
 
 /**
  * Callback being invoked before a domain object is converted to be persisted.
  *
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  * @since 4.0
  */
 @FunctionalInterface
@@ -31,7 +33,8 @@ public interface BeforeConvertCallback<T> extends EntityCallback<T> {
 	 * the domain entity class.
 	 * 
 	 * @param entity the entity being converted
+	 * @param index must not be {@literal null}.
 	 * @return the entity to be converted
 	 */
-	T onBeforeConvert(T entity);
+	T onBeforeConvert(T entity, IndexCoordinates index);
 }

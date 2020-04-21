@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.event;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDateTime;
@@ -38,6 +39,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 @ExtendWith(MockitoExtension.class)
 class ReactiveAuditingEntityCallbackTests {
@@ -68,7 +70,7 @@ class ReactiveAuditingEntityCallbackTests {
 	void shouldCallHandler() {
 		Sample entity = new Sample();
 		entity.setId("42");
-		callback.onBeforeConvert(entity);
+		callback.onBeforeConvert(entity, IndexCoordinates.of("index"));
 
 		verify(handler).markAudited(eq(entity));
 	}
@@ -81,7 +83,7 @@ class ReactiveAuditingEntityCallbackTests {
 		sample2.setId("2");
 		doReturn(sample2).when(handler).markAudited(any());
 
-		callback.onBeforeConvert(sample1) //
+		callback.onBeforeConvert(sample1, IndexCoordinates.of("index")) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(it -> { //
 					assertThat(it).isSameAs(sample2); //

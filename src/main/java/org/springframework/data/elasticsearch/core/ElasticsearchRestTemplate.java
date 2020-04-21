@@ -136,7 +136,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	public String index(IndexQuery query, IndexCoordinates index) {
 
-		maybeCallbackBeforeConvertWithQuery(query);
+		maybeCallbackBeforeConvertWithQuery(query, index);
 
 		IndexRequest request = requestFactory.indexRequest(query, index);
 		String documentId = execute(client -> client.index(request, RequestOptions.DEFAULT).getId());
@@ -147,7 +147,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 			setPersistentEntityId(queryObject, documentId);
 		}
 
-		maybeCallbackAfterSaveWithQuery(query);
+		maybeCallbackAfterSaveWithQuery(query, index);
 
 		return documentId;
 	}
@@ -232,11 +232,11 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	private List<String> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
-		maybeCallbackBeforeConvertWithQueries(queries);
+		maybeCallbackBeforeConvertWithQueries(queries, index);
 		BulkRequest bulkRequest = requestFactory.bulkRequest(queries, bulkOptions, index);
 		List<String> ids = checkForBulkOperationFailure(
 				execute(client -> client.bulk(bulkRequest, RequestOptions.DEFAULT)));
-		maybeCallbackAfterSaveWithQueries(queries);
+		maybeCallbackAfterSaveWithQueries(queries, index);
 		return ids;
 	}
 	// endregion

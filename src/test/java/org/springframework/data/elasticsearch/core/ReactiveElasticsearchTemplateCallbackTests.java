@@ -46,6 +46,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -55,6 +56,7 @@ import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsea
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterConvertCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterSaveCallback;
+import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
@@ -81,6 +83,10 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 	@Mock private org.elasticsearch.search.SearchHit searchHit;
 
 	private final IndexCoordinates index = IndexCoordinates.of("index");
+
+	@Spy private ValueCapturingAfterSaveCallback afterSaveCallback = new ValueCapturingAfterSaveCallback();
+	@Spy private ValueCapturingAfterConvertCallback afterConvertCallback = new ValueCapturingAfterConvertCallback();
+	@Spy private ValueCapturingBeforeConvertCallback beforeConvertCallback = new ValueCapturingBeforeConvertCallback();
 
 	@BeforeEach
 	public void setUp() {
@@ -122,22 +128,18 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 	@Test // DATAES-771
 	void saveOneShouldInvokeAfterSaveCallbacks() {
 
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterSaveCallback));
 
 		Person entity = new Person("init", "luke");
 
 		Person saved = template.save(entity).block(Duration.ofSeconds(1));
 
-		verify(afterSaveCallback).onAfterSave(eq(entity));
-		assertThat(saved.id).isEqualTo("after-save");
+		verify(afterSaveCallback).onAfterSave(eq(entity), any());
+		assertThat(saved.firstname).isEqualTo("after-save");
 	}
 
 	@Test // DATAES-771
 	void saveOneFromPublisherShouldInvokeAfterSaveCallbacks() {
-
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterSaveCallback));
 
@@ -145,80 +147,70 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		Person saved = template.save(Mono.just(entity)).block(Duration.ofSeconds(1));
 
-		verify(afterSaveCallback).onAfterSave(eq(entity));
-		assertThat(saved.id).isEqualTo("after-save");
+		verify(afterSaveCallback).onAfterSave(eq(entity), any());
+		assertThat(saved.firstname).isEqualTo("after-save");
 	}
 
 	@Test // DATAES-771
 	void saveWithIndexCoordinatesShouldInvokeAfterSaveCallbacks() {
 
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterSaveCallback));
 
 		Person entity = new Person("init", "luke");
 
-		Person saved = template.save(entity, IndexCoordinates.of("index")).block(Duration.ofSeconds(1));
+		Person saved = template.save(entity, index).block(Duration.ofSeconds(1));
 
-		verify(afterSaveCallback).onAfterSave(eq(entity));
-		assertThat(saved.id).isEqualTo("after-save");
+		verify(afterSaveCallback).onAfterSave(eq(entity), eq(index));
+		assertThat(saved.firstname).isEqualTo("after-save");
 	}
 
 	@Test // DATAES-771
 	void saveFromPublisherWithIndexCoordinatesShouldInvokeAfterSaveCallbacks() {
 
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterSaveCallback));
 
 		Person entity = new Person("init", "luke");
 
-		Person saved = template.save(Mono.just(entity), IndexCoordinates.of("index")).block(Duration.ofSeconds(1));
+		Person saved = template.save(Mono.just(entity), index).block(Duration.ofSeconds(1));
 
-		verify(afterSaveCallback).onAfterSave(eq(entity));
-		assertThat(saved.id).isEqualTo("after-save");
+		verify(afterSaveCallback).onAfterSave(eq(entity), eq(index));
+		assertThat(saved.firstname).isEqualTo("after-save");
 	}
 
 	@Test // DATAES-771
 	void saveAllShouldInvokeAfterSaveCallbacks() {
 
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterSaveCallback));
 
 		Person entity1 = new Person("init1", "luke1");
 		Person entity2 = new Person("init2", "luke2");
 
-		List<Person> saved = template.saveAll(Arrays.asList(entity1, entity2), IndexCoordinates.of("index")).toStream()
+		List<Person> saved = template.saveAll(Arrays.asList(entity1, entity2), index).toStream()
 				.collect(Collectors.toList());
 
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
-		assertThat(saved.get(0).getId()).isEqualTo("after-save");
-		assertThat(saved.get(1).getId()).isEqualTo("after-save");
+		verify(afterSaveCallback, times(2)).onAfterSave(any(), eq(index));
+		assertThat(saved.get(0).firstname).isEqualTo("after-save");
+		assertThat(saved.get(1).firstname).isEqualTo("after-save");
 	}
 
 	@Test // DATAES-771
 	void saveFromMonoAllShouldInvokeAfterSaveCallbacks() {
 
-		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
-
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterSaveCallback));
 
 		Person entity1 = new Person("init1", "luke1");
 		Person entity2 = new Person("init2", "luke2");
 
-		List<Person> saved = template.saveAll(Mono.just(Arrays.asList(entity1, entity2)), IndexCoordinates.of("index"))
+		List<Person> saved = template.saveAll(Mono.just(Arrays.asList(entity1, entity2)), index)
 				.toStream().collect(Collectors.toList());
 
-		verify(afterSaveCallback, times(2)).onAfterSave(any());
-		assertThat(saved.get(0).getId()).isEqualTo("after-save");
-		assertThat(saved.get(1).getId()).isEqualTo("after-save");
+		verify(afterSaveCallback, times(2)).onAfterSave(any(), eq(index));
+		assertThat(saved.get(0).firstname).isEqualTo("after-save");
+		assertThat(saved.get(1).firstname).isEqualTo("after-save");
 	}
 
 	@Test // DATAES-772
 	void multiGetShouldInvokeAfterConvertCallbacks() {
-
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
@@ -227,14 +219,12 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
 				eq(index));
-		assertThat(results.get(0).id).isEqualTo("after-convert");
-		assertThat(results.get(1).id).isEqualTo("after-convert");
+		assertThat(results.get(0).firstname).isEqualTo("after-convert");
+		assertThat(results.get(1).firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772
 	void findByIdShouldInvokeAfterConvertCallbacks() {
-
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
@@ -242,13 +232,11 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		Person result = template.findById("init", Person.class).block(Duration.ofSeconds(1));
 
 		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
-		assertThat(result.id).isEqualTo("after-convert");
+		assertThat(result.firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772
 	void findByIdWithIndexCoordinatesShouldInvokeAfterConvertCallbacks() {
-
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
@@ -256,39 +244,33 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		Person result = template.findById("init", Person.class, index).block(Duration.ofSeconds(1));
 
 		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
-		assertThat(result.id).isEqualTo("after-convert");
+		assertThat(result.firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772
 	void getShouldInvokeAfterConvertCallbacks() {
-
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
 		Person result = template.get("init", Person.class).block(Duration.ofSeconds(1));
 
 		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
-		assertThat(result.id).isEqualTo("after-convert");
+		assertThat(result.firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772
 	void getWithIndexCoordinatesShouldInvokeAfterConvertCallbacks() {
-
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
 		Person result = template.get("init", Person.class, index).block(Duration.ofSeconds(1));
 
 		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
-		assertThat(result.id).isEqualTo("after-convert");
+		assertThat(result.firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772
 	void findUsingPageableShouldInvokeAfterConvertCallbacks() {
-
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
@@ -297,8 +279,8 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 				.collect(Collectors.toList());
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
-		assertThat(results.get(0).id).isEqualTo("after-convert");
-		assertThat(results.get(1).id).isEqualTo("after-convert");
+		assertThat(results.get(0).firstname).isEqualTo("after-convert");
+		assertThat(results.get(1).firstname).isEqualTo("after-convert");
 	}
 
 	private Query pagedQueryForTwo() {
@@ -313,8 +295,6 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 	@Test // DATAES-772
 	void findUsingScrollShouldInvokeAfterConvertCallbacks() {
 
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
-
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
 		@SuppressWarnings("deprecation") // we know what we test
@@ -322,8 +302,8 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 				.collect(Collectors.toList());
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
-		assertThat(results.get(0).id).isEqualTo("after-convert");
-		assertThat(results.get(1).id).isEqualTo("after-convert");
+		assertThat(results.get(0).firstname).isEqualTo("after-convert");
+		assertThat(results.get(1).firstname).isEqualTo("after-convert");
 	}
 
 	private Query scrollingQueryForTwo() {
@@ -333,8 +313,6 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 	@Test // DATAES-772
 	void findWithIndexCoordinatesShouldInvokeAfterConvertCallbacks() {
 
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
-
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
 		@SuppressWarnings("deprecation") // we know what we test
@@ -343,14 +321,12 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
 				eq(index));
-		assertThat(results.get(0).id).isEqualTo("after-convert");
-		assertThat(results.get(1).id).isEqualTo("after-convert");
+		assertThat(results.get(0).firstname).isEqualTo("after-convert");
+		assertThat(results.get(1).firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772
 	void findWithReturnTypeShouldInvokeAfterConvertCallbacks() {
-
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
@@ -359,14 +335,12 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 				.toStream().collect(Collectors.toList());
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
-		assertThat(results.get(0).id).isEqualTo("after-convert");
-		assertThat(results.get(1).id).isEqualTo("after-convert");
+		assertThat(results.get(0).firstname).isEqualTo("after-convert");
+		assertThat(results.get(1).firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772
 	void findWithReturnTypeAndIndexCoordinatesShouldInvokeAfterConvertCallbacks() {
-
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
@@ -376,14 +350,12 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
 				eq(index));
-		assertThat(results.get(0).id).isEqualTo("after-convert");
-		assertThat(results.get(1).id).isEqualTo("after-convert");
+		assertThat(results.get(0).firstname).isEqualTo("after-convert");
+		assertThat(results.get(1).firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772
 	void searchShouldInvokeAfterConvertCallbacks() {
-
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
@@ -391,14 +363,12 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 				.toStream().collect(Collectors.toList());
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
-		assertThat(results.get(0).getContent().id).isEqualTo("after-convert");
-		assertThat(results.get(1).getContent().id).isEqualTo("after-convert");
+		assertThat(results.get(0).getContent().firstname).isEqualTo("after-convert");
+		assertThat(results.get(1).getContent().firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772
 	void searchWithIndexCoordinatesShouldInvokeAfterConvertCallbacks() {
-
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
@@ -407,14 +377,12 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
 				eq(index));
-		assertThat(results.get(0).getContent().id).isEqualTo("after-convert");
-		assertThat(results.get(1).getContent().id).isEqualTo("after-convert");
+		assertThat(results.get(0).getContent().firstname).isEqualTo("after-convert");
+		assertThat(results.get(1).getContent().firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772
 	void searchWithResultTypeShouldInvokeAfterConvertCallbacks() {
-
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
@@ -422,14 +390,12 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 				.timeout(Duration.ofSeconds(1)).toStream().collect(Collectors.toList());
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
-		assertThat(results.get(0).getContent().id).isEqualTo("after-convert");
-		assertThat(results.get(1).getContent().id).isEqualTo("after-convert");
+		assertThat(results.get(0).getContent().firstname).isEqualTo("after-convert");
+		assertThat(results.get(1).getContent().firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772
 	void searchWithResultTypeAndIndexCoordinatesShouldInvokeAfterConvertCallbacks() {
-
-		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
@@ -438,8 +404,37 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
 				eq(index));
-		assertThat(results.get(0).getContent().id).isEqualTo("after-convert");
-		assertThat(results.get(1).getContent().id).isEqualTo("after-convert");
+		assertThat(results.get(0).getContent().firstname).isEqualTo("after-convert");
+		assertThat(results.get(1).getContent().firstname).isEqualTo("after-convert");
+	}
+
+	@Test // DATAES-785
+	void saveOneShouldInvokeBeforeConvertCallbacks() {
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(beforeConvertCallback));
+
+		Person entity = new Person("init1", "luke1");
+
+		Person saved = template.save(entity, index).block(Duration.ofSeconds(1));
+
+		verify(beforeConvertCallback).onBeforeConvert(any(), eq(index));
+		assertThat(saved.firstname).isEqualTo("before-convert");
+	}
+
+	@Test // DATAES-785
+	void saveAllShouldInvokeBeforeConvertCallbacks() {
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(beforeConvertCallback));
+
+		Person entity1 = new Person("init1", "luke1");
+		Person entity2 = new Person("init2", "luke2");
+
+		List<Person> saved = template.saveAll(Arrays.asList(entity1, entity2), index).toStream()
+				.collect(Collectors.toList());
+
+		verify(beforeConvertCallback, times(2)).onBeforeConvert(any(), eq(index));
+		assertThat(saved.get(0).firstname).isEqualTo("before-convert");
+		assertThat(saved.get(1).firstname).isEqualTo("before-convert");
 	}
 
 	@Data
@@ -474,14 +469,14 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 			implements ReactiveAfterSaveCallback<Person> {
 
 		@Override
-		public Mono<Person> onAfterSave(Person entity) {
+		public Mono<Person> onAfterSave(Person entity, IndexCoordinates index) {
 
 			return Mono.defer(() -> {
 				capture(entity);
 				Person newPerson = new Person() {
 					{
-						id = "after-save";
-						firstname = entity.firstname;
+						id = entity.id;
+						firstname = "after-save";
 					}
 				};
 				return Mono.just(newPerson);
@@ -499,8 +494,27 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 				capture(entity);
 				Person newPerson = new Person() {
 					{
-						id = "after-convert";
-						firstname = entity.firstname;
+						id = entity.id;
+						firstname = "after-convert";
+					}
+				};
+				return Mono.just(newPerson);
+			});
+		}
+	}
+
+	static class ValueCapturingBeforeConvertCallback extends ValueCapturingEntityCallback<Person>
+			implements ReactiveBeforeConvertCallback<Person> {
+
+		@Override
+		public Mono<Person> onBeforeConvert(Person entity, IndexCoordinates index) {
+
+			return Mono.defer(() -> {
+				capture(entity);
+				Person newPerson = new Person() {
+					{
+						id = entity.id;
+						firstname = "before-convert";
 					}
 				};
 				return Mono.just(newPerson);

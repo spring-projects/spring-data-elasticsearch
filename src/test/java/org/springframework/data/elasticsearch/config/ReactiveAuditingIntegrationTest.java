@@ -33,6 +33,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCallback;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -42,6 +43,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ReactiveAuditingIntegrationTest.Config.class })
@@ -81,7 +83,7 @@ public class ReactiveAuditingIntegrationTest {
 
 		Entity entity = new Entity();
 		entity.setId("1");
-		entity = callbacks.callback(ReactiveBeforeConvertCallback.class, entity).block();
+		entity = callbacks.callback(ReactiveBeforeConvertCallback.class, entity, IndexCoordinates.of("index")).block();
 
 		assertThat(entity.getCreated()).isNotNull();
 		assertThat(entity.getModified()).isEqualTo(entity.created);
@@ -90,7 +92,7 @@ public class ReactiveAuditingIntegrationTest {
 
 		Thread.sleep(10);
 
-		entity = callbacks.callback(ReactiveBeforeConvertCallback.class, entity).block();
+		entity = callbacks.callback(ReactiveBeforeConvertCallback.class, entity, IndexCoordinates.of("index")).block();
 
 		assertThat(entity.getCreated()).isNotNull();
 		assertThat(entity.getModified()).isNotEqualTo(entity.created);
