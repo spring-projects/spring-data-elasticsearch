@@ -70,6 +70,7 @@ import org.springframework.util.ObjectUtils;
  * @author Peter-Josef Meisch
  * @author Mark Paluch
  * @author Roman Puchkovskiy
+ * @author Konrad Kurdej
  * @since 3.2
  */
 public class MappingElasticsearchConverter
@@ -319,7 +320,7 @@ public class MappingElasticsearchConverter
 				target.put(entryKey, null);
 			} else if (isSimpleType(entryValue)) {
 				target.put(entryKey,
-						readSimpleValue(entryValue, targetType.isMap() ? targetType.getComponentType() : targetType));
+						readSimpleValue(entryValue, targetType.isMap() ? targetType.getMapValueType() : targetType));
 			} else {
 
 				ElasticsearchPersistentEntity<?> targetEntity = computeGenericValueTypeForRead(property, entryValue);
