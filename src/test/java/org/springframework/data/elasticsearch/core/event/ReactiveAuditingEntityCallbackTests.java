@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.core.event;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDateTime;
@@ -33,6 +32,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.lang.Nullable;

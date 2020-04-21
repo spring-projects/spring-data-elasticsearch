@@ -201,8 +201,8 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		Person entity1 = new Person("init1", "luke1");
 		Person entity2 = new Person("init2", "luke2");
 
-		List<Person> saved = template.saveAll(Mono.just(Arrays.asList(entity1, entity2)), index)
-				.toStream().collect(Collectors.toList());
+		List<Person> saved = template.saveAll(Mono.just(Arrays.asList(entity1, entity2)), index).toStream()
+				.collect(Collectors.toList());
 
 		verify(afterSaveCallback, times(2)).onAfterSave(any(), eq(index));
 		assertThat(saved.get(0).firstname).isEqualTo("after-save");

@@ -593,7 +593,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		private final Class<T> type;
 
 		public ReadSearchScrollDocumentResponseCallback(Class<T> type, IndexCoordinates index) {
-			
+
 			Assert.notNull(type, "type is null");
 
 			this.delegate = new ReadDocumentCallback<>(elasticsearchConverter, type, index);

@@ -194,8 +194,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 					IndexResponse indexResponse = it.getT2();
 					AdaptibleEntity<T> adaptableEntity = operations.forEntity(savedEntity, converter.getConversionService());
 					return adaptableEntity.populateIdIfNecessary(indexResponse.getId());
-				})
-				.flatMap(saved -> maybeCallAfterSave(saved, index));
+				}).flatMap(saved -> maybeCallAfterSave(saved, index));
 	}
 
 	@Override
@@ -208,31 +207,25 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Assert.notNull(entitiesPublisher, "Entities must not be null!");
 
-		return entitiesPublisher
-				.flatMapMany(entities -> {
-					return Flux.fromIterable(entities) //
-							.concatMap(entity -> maybeCallBeforeConvert(entity, index));
-				})
-				.collectList()
-				.map(Entities::new)
-				.flatMapMany(entities -> {
-					if (entities.isEmpty()) {
-						return Flux.empty();
-					}
+		return entitiesPublisher.flatMapMany(entities -> {
+			return Flux.fromIterable(entities) //
+					.concatMap(entity -> maybeCallBeforeConvert(entity, index));
+		}).collectList().map(Entities::new).flatMapMany(entities -> {
+			if (entities.isEmpty()) {
+				return Flux.empty();
+			}
 
-					return doBulkOperation(entities.indexQueries(), BulkOptions.defaultOptions(), index) //
-							.index()
-							.flatMap(indexAndResponse -> {
-								T savedEntity = entities.entityAt(indexAndResponse.getT1());
-								BulkItemResponse bulkItemResponse = indexAndResponse.getT2();
+			return doBulkOperation(entities.indexQueries(), BulkOptions.defaultOptions(), index) //
+					.index().flatMap(indexAndResponse -> {
+						T savedEntity = entities.entityAt(indexAndResponse.getT1());
+						BulkItemResponse bulkItemResponse = indexAndResponse.getT2();
 
-								AdaptibleEntity<T> adaptibleEntity = operations.forEntity(savedEntity,
-										converter.getConversionService());
-								adaptibleEntity.populateIdIfNecessary(bulkItemResponse.getResponse().getId());
+						AdaptibleEntity<T> adaptibleEntity = operations.forEntity(savedEntity, converter.getConversionService());
+						adaptibleEntity.populateIdIfNecessary(bulkItemResponse.getResponse().getId());
 
-								return maybeCallAfterSave(savedEntity, index);
-							});
-				});
+						return maybeCallAfterSave(savedEntity, index);
+					});
+		});
 	}
 
 	@Override
@@ -1017,9 +1010,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		}
 
 		private List<IndexQuery> indexQueries() {
-			return entities.stream()
-					.map(ReactiveElasticsearchTemplate.this::getIndexQuery)
-					.collect(Collectors.toList());
+			return entities.stream().map(ReactiveElasticsearchTemplate.this::getIndexQuery).collect(Collectors.toList());
 		}
 
 		private T entityAt(long index) {
