@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.config;
 
-import lombok.SneakyThrows;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -62,7 +60,6 @@ public class ElasticsearchConfigurationSupport {
 	 * @return never {@literal null}.
 	 */
 	@Bean
-	@SneakyThrows
 	public SimpleElasticsearchMappingContext elasticsearchMappingContext() {
 
 		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
@@ -103,9 +100,8 @@ public class ElasticsearchConfigurationSupport {
 	 *
 	 * @see #getMappingBasePackages()
 	 * @return never {@literal null}.
-	 * @throws ClassNotFoundException
 	 */
-	protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+	protected Set<Class<?>> getInitialEntitySet() {
 
 		Set<Class<?>> initialEntitySet = new HashSet<>();
 
@@ -122,9 +118,8 @@ public class ElasticsearchConfigurationSupport {
 	 *
 	 * @param basePackage must not be {@literal null}.
 	 * @return never {@literal null}.
-	 * @throws ClassNotFoundException
 	 */
-	protected Set<Class<?>> scanForEntities(String basePackage) throws ClassNotFoundException {
+	protected Set<Class<?>> scanForEntities(String basePackage) {
 
 		if (!StringUtils.hasText(basePackage)) {
 			return Collections.emptySet();
@@ -132,17 +127,20 @@ public class ElasticsearchConfigurationSupport {
 
 		Set<Class<?>> initialEntitySet = new HashSet<>();
 
-		if (StringUtils.hasText(basePackage)) {
+		ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
+				false);
+		componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
+		componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
 
-			ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
-					false);
-			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
-			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
+		for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
 
-			for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
+			String beanClassName = candidate.getBeanClassName();
 
-				initialEntitySet.add(ClassUtils.forName(candidate.getBeanClassName(),
-						AbstractReactiveElasticsearchConfiguration.class.getClassLoader()));
+			if (beanClassName != null) {
+				try {
+					initialEntitySet.add(
+							ClassUtils.forName(beanClassName, AbstractReactiveElasticsearchConfiguration.class.getClassLoader()));
+				} catch (ClassNotFoundException | LinkageError ignored) {}
 			}
 		}
 
