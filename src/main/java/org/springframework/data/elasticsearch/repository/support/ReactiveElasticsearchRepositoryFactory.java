@@ -15,9 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Optional;
@@ -128,12 +125,24 @@ public class ReactiveElasticsearchRepositoryFactory extends ReactiveRepositoryFa
 	/**
 	 * @author Christoph Strobl
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	private static class ElasticsearchQueryLookupStrategy implements QueryLookupStrategy {
 
 		private final ReactiveElasticsearchOperations operations;
 		private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 		private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
+
+		public ElasticsearchQueryLookupStrategy(ReactiveElasticsearchOperations operations,
+				QueryMethodEvaluationContextProvider evaluationContextProvider,
+				MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
+
+			Assert.notNull(operations, "operations must not be null");
+			Assert.notNull(evaluationContextProvider, "evaluationContextProvider must not be null");
+			Assert.notNull(mappingContext, "mappingContext must not be null");
+
+			this.operations = operations;
+			this.evaluationContextProvider = evaluationContextProvider;
+			this.mappingContext = mappingContext;
+		}
 
 		/*
 		 * (non-Javadoc)

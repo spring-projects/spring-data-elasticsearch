@@ -15,15 +15,41 @@
  */
 package org.springframework.data.elasticsearch.core.client.support;
 
-import lombok.Data;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-@Data
 public class AliasData {
-	String filter = null;
-	String routing = null;
-	String search_routing = null;
-	String index_routing = null;
+	private String filter = null;
+	private String routing = null;
+	private String search_routing = null;
+	private String index_routing = null;
+
+	public String getFilter() {
+		return filter;
+	}
+
+	public void setFilter(String filter) {
+		this.filter = filter;
+	}
+
+	public String getRouting() {
+		return routing;
+	}
+
+	public void setRouting(String routing) {
+		this.routing = routing;
+	}
+
+	public String getSearch_routing() {
+		return search_routing;
+	}
+
+	public void setSearch_routing(String search_routing) {
+		this.search_routing = search_routing;
+	}
+
+	public String getIndex_routing() {
+		return index_routing;
+	}
+
+	public void setIndex_routing(String index_routing) {
+		this.index_routing = index_routing;
+	}
 }

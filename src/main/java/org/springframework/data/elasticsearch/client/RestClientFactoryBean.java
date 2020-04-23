@@ -15,14 +15,14 @@
  */
 package org.springframework.data.elasticsearch.client;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.net.URL;
 import java.util.ArrayList;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.FactoryBeanNotInitializedException;
@@ -36,8 +36,9 @@ import org.springframework.util.Assert;
  * @author Don Wellington
  * @author Peter-Josef Meisch
  */
-@Slf4j
 public class RestClientFactoryBean implements FactoryBean<RestHighLevelClient>, InitializingBean, DisposableBean {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(RestClientFactoryBean.class);
 
 	private @Nullable RestHighLevelClient client;
 	private String hosts = "http://localhost:9200";
@@ -46,12 +47,12 @@ public class RestClientFactoryBean implements FactoryBean<RestHighLevelClient>, 
 	@Override
 	public void destroy() {
 		try {
-			log.info("Closing elasticSearch  client");
+			LOGGER.info("Closing elasticSearch  client");
 			if (client != null) {
 				client.close();
 			}
 		} catch (final Exception e) {
-			log.error("Error closing ElasticSearch client: ", e);
+			LOGGER.error("Error closing ElasticSearch client: ", e);
 		}
 	}
 

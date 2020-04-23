@@ -15,10 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Map;
 
 import org.springframework.core.convert.ConversionService;
@@ -46,11 +42,14 @@ class EntityOperations {
 	private static final String ID_FIELD = "id";
 
 	public EntityOperations(
-			@NonNull MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context) {
+			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context) {
+
+		Assert.notNull(context, "context must not be null");
+
 		this.context = context;
 	}
 
-	private final @NonNull MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context;
+	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context;
 
 	/**
 	 * Creates a new {@link Entity} for the given bean.
@@ -264,8 +263,14 @@ class EntityOperations {
 	 * @author Christoph Strobl
 	 * @since 3.2
 	 */
-	@RequiredArgsConstructor
 	private static class MapBackedEntity<T extends Map<String, Object>> implements AdaptibleEntity<T> {
+
+		public MapBackedEntity(T map) {
+
+			Assert.notNull(map, "map must not be null");
+
+			this.map = map;
+		}
 
 		private final T map;
 
@@ -406,12 +411,23 @@ class EntityOperations {
 	 * @param <T>
 	 * @since 3.2
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 	private static class MappedEntity<T> implements Entity<T> {
 
 		private final ElasticsearchPersistentEntity<?> entity;
 		private final IdentifierAccessor idAccessor;
 		private final PersistentPropertyAccessor<T> propertyAccessor;
+
+		private MappedEntity(ElasticsearchPersistentEntity<?> entity, IdentifierAccessor idAccessor,
+				PersistentPropertyAccessor<T> propertyAccessor) {
+
+			Assert.notNull(entity, "entity must not ne null");
+			Assert.notNull(idAccessor, "idAccessor must not ne null");
+			Assert.notNull(propertyAccessor, "propertyAccessor must not ne null");
+
+			this.entity = entity;
+			this.idAccessor = idAccessor;
+			this.propertyAccessor = propertyAccessor;
+		}
 
 		private static <T> MappedEntity<T> of(T bean,
 				MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context) {
