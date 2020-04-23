@@ -677,6 +677,24 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(wrapper.getSchemaLessObject()).isEqualTo(mapWithSimpleValues);
 	}
 
+	@Test // DATAES-797
+	void readGenericListWithMaps() {
+		Map<String, Object> simpleMap = new HashMap<>();
+		simpleMap.put("int", 1);
+
+		List<Map<String, Object>> listWithSimpleMap = new ArrayList<>();
+		listWithSimpleMap.add(simpleMap);
+
+		Map<String, List<Map<String, Object>>> mapWithSimpleList = new HashMap<>();
+		mapWithSimpleList.put("someKey", listWithSimpleMap);
+
+		Document document = Document.create();
+		document.put("schemaLessObject", mapWithSimpleList);
+
+		SchemaLessObjectWrapper wrapper = mappingElasticsearchConverter.read(SchemaLessObjectWrapper.class, document);
+		assertThat(wrapper.getSchemaLessObject()).isEqualTo(mapWithSimpleList);
+	}
+
 	private String pointTemplate(String name, Point point) {
 		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
 	}

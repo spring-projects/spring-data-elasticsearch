@@ -288,6 +288,8 @@ public class MappingElasticsearchConverter
 
 				if (value instanceof List) {
 					target.add(readValue(value, property, property.getTypeInformation().getActualType()));
+				} else if (value instanceof Map) {
+					target.add(readMapValue((Map<String, Object>) value, property, property.getTypeInformation().getActualType()));
 				} else {
 					target.add(readEntity(computeGenericValueTypeForRead(property, value), (Map<String, Object>) value));
 				}
