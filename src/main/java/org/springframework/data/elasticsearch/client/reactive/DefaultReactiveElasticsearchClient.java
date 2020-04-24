@@ -386,6 +386,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 */
 	@Override
 	public Mono<Long> count(HttpHeaders headers, SearchRequest searchRequest) {
+		searchRequest.source().trackTotalHits(true);
+		searchRequest.source().size(0);
+		searchRequest.source().fetchSource(false);
 		return sendRequest(searchRequest, requestCreator.search(), SearchResponse.class, headers) //
 				.map(SearchResponse::getHits) //
 				.map(searchHits -> searchHits.getTotalHits().value) //
