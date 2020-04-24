@@ -643,8 +643,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 			SearchRequest request = requestFactory.searchRequest(query, entityType, index);
 			request = prepareSearchRequest(request);
-			request.source().size(0);
-			request.source().trackTotalHits(true);
 			return doCount(request);
 		});
 	}
