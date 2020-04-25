@@ -15,10 +15,12 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import org.springframework.http.HttpHeaders;
 import reactor.core.publisher.Mono;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;
+import java.util.function.Supplier;
 
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost.State;
@@ -35,12 +37,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 class SingleNodeHostProvider implements HostProvider {
 
 	private final WebClientProvider clientProvider;
+	private final Supplier<HttpHeaders> headersSupplier;
 	private final InetSocketAddress endpoint;
 	private volatile ElasticsearchHost state;
 
-	SingleNodeHostProvider(WebClientProvider clientProvider, InetSocketAddress endpoint) {
+	SingleNodeHostProvider(WebClientProvider clientProvider, Supplier<HttpHeaders> headersSupplier, InetSocketAddress endpoint) {
 
 		this.clientProvider = clientProvider;
+		this.headersSupplier = headersSupplier;
 		this.endpoint = endpoint;
 		this.state = new ElasticsearchHost(this.endpoint, State.UNKNOWN);
 	}
@@ -53,9 +57,10 @@ class SingleNodeHostProvider implements HostProvider {
 	public Mono<ClusterInformation> clusterInfo() {
 
 		return createWebClient(endpoint) //
-				.head().uri("/").exchange() //
+				.head().uri("/")
+				.headers(httpHeaders -> httpHeaders.addAll(headersSupplier.get())) //
+				.exchange() //
 				.flatMap(it -> {
-
 					if (it.statusCode().isError()) {
 						state = ElasticsearchHost.offline(endpoint);
 					} else {

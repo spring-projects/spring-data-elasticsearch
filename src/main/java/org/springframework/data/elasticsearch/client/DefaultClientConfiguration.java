@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -50,12 +51,13 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	private final @Nullable String pathPrefix;
 	private final @Nullable HostnameVerifier hostnameVerifier;
 	private final @Nullable String proxy;
-	private final @Nullable Function<WebClient, WebClient> webClientConfigurer;
+	private final Function<WebClient, WebClient> webClientConfigurer;
+	private final Supplier<HttpHeaders> headersSupplier;
 
 	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
 			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout, @Nullable String pathPrefix,
 			@Nullable HostnameVerifier hostnameVerifier, @Nullable String proxy,
-			@Nullable Function<WebClient, WebClient> webClientConfigurer) {
+			Function<WebClient, WebClient> webClientConfigurer, Supplier<HttpHeaders> headersSupplier) {
 
 		this.hosts = Collections.unmodifiableList(new ArrayList<>(hosts));
 		this.headers = new HttpHeaders(headers);
@@ -67,6 +69,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		this.hostnameVerifier = hostnameVerifier;
 		this.proxy = proxy;
 		this.webClientConfigurer = webClientConfigurer;
+		this.headersSupplier = headersSupplier;
 	}
 
 	@Override
@@ -117,6 +120,11 @@ class DefaultClientConfiguration implements ClientConfiguration {
 
 	@Override
 	public Function<WebClient, WebClient> getWebClientConfigurer() {
-		return webClientConfigurer != null ? webClientConfigurer : Function.identity();
+		return webClientConfigurer;
+	}
+
+	@Override
+	public Supplier<HttpHeaders> getHeadersSupplier() {
+		return headersSupplier;
 	}
 }

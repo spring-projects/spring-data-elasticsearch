@@ -83,10 +83,10 @@ public class ReactiveMockClientTestsUtils {
 
 		if (hosts.length == 1) {
 
-			delegate = new SingleNodeHostProvider(clientProvider, getInetSocketAddress(hosts[0])) {};
+			delegate = new SingleNodeHostProvider(clientProvider, HttpHeaders::new, getInetSocketAddress(hosts[0])) {};
 		} else {
 
-			delegate = new MultiNodeHostProvider(clientProvider, Arrays.stream(hosts)
+			delegate = new MultiNodeHostProvider(clientProvider,HttpHeaders::new, Arrays.stream(hosts)
 					.map(ReactiveMockClientTestsUtils::getInetSocketAddress).toArray(InetSocketAddress[]::new)) {};
 		}
 

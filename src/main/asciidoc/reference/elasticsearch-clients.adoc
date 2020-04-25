@@ -143,39 +143,46 @@ NOTE: The ReactiveClient response, especially for search operations, is bound to
 [[elasticsearch.clients.configuration]]
 == Client Configuration
 
-Client behaviour can be changed via the `ClientConfiguration` that allows to set options for SSL, connect and socket timeouts.
+Client behaviour can be changed via the `ClientConfiguration` that allows to set options for SSL, connect and socket timeouts, headers and other parameters.
 
 .Client Configuration
 ====
 [source,java]
 ----
-// optional if Basic Auhtentication is needed
 HttpHeaders httpHeaders = new HttpHeaders();
-httpHeaders.add("es-security-runas-user", "some-user")                  <1>
+httpHeaders.add("some-header", "on every request")                      <1>
 
 ClientConfiguration clientConfiguration = ClientConfiguration.builder()
   .connectedTo("localhost:9200", "localhost:9291")                      <2>
-  .withProxy("localhost:8888")                                          <3>
-  .withPathPrefix("ela")                                                <4>
-  .withConnectTimeout(Duration.ofSeconds(5))                            <5>
-  .withSocketTimeout(Duration.ofSeconds(3))                             <6>
-  .useSsl()                                                             <7>
+  .useSsl()                                                             <3>
+  .withProxy("localhost:8888")                                          <4>
+  .withPathPrefix("ela")                                                <5>
+  .withConnectTimeout(Duration.ofSeconds(5))                            <6>
+  .withSocketTimeout(Duration.ofSeconds(3))                             <7>
   .withDefaultHeaders(defaultHeaders)                                   <8>
   .withBasicAuth(username, password)                                    <9>
+  .withHeaders(() -> {                                                  <10>
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("currentTime", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+    return headers;
+  })
   . // ... other options
   .build();
 
 ----
 <1> Define default headers, if they need to be customized
 <2> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
-<3> Optionally set a proxy footnote:notreactive[not yet implemented for the reactive client].
-<4> Optionally set a path prefix, mostly used when different clusters a behind some reverse proxy.
-<5> Set the connection timeout. Default is 10 sec.
-<6> Set the socket timeout. Default is 5 sec.
-<7> Optionally enable SSL.
+<3> Optionally enable SSL.
+<4> Optionally set a proxy.
+<5> Optionally set a path prefix, mostly used when different clusters a behind some reverse proxy.
+<6> Set the connection timeout. Default is 10 sec.
+<7> Set the socket timeout. Default is 5 sec.
 <8> Optionally set headers.
 <9> Add basic authentication.
+<10> A `Supplier<Header>` function can be specified which is called every time before a request is sent to Elasticsearch - here, as an example, the current time is written in a header.
 ====
+
+IMPORTANT: Adding a Header supplier as shown in above example allows to inject headers that may change over the time, like authentication JWT tokens. If this is used in the reactive setup, the supplier function *must not* block!
 
 [[elasticsearch.clients.logging]]
 == Client Logging

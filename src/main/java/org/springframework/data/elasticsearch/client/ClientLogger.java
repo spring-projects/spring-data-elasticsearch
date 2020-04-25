@@ -20,6 +20,7 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -90,7 +91,7 @@ public abstract class ClientLogger {
 	 * @param logId the correlation Id, see {@link #newLogId()}.
 	 * @param statusCode the HTTP status code.
 	 */
-	public static void logRawResponse(String logId, HttpStatus statusCode) {
+	public static void logRawResponse(String logId, @Nullable HttpStatus statusCode) {
 
 		if (isEnabled()) {
 			WIRE_LOGGER.trace("[{}] Received raw response: {}", logId, statusCode);
