@@ -53,6 +53,7 @@ import org.springframework.util.Assert;
  * @author Sascha Woo
  * @author Ivan Greene
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
@@ -70,6 +71,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private @Nullable String parentType;
 	private @Nullable ElasticsearchPersistentProperty parentIdProperty;
 	private @Nullable ElasticsearchPersistentProperty scoreProperty;
+	private @Nullable ElasticsearchPersistentProperty seqNoPrimaryTermProperty;
 	private @Nullable String settingPath;
 	private @Nullable VersionType versionType;
 	private boolean createIndexAndMapping;
@@ -231,6 +233,20 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 			this.scoreProperty = property;
 		}
+
+		if (property.isSeqNoPrimaryTermProperty()) {
+
+			ElasticsearchPersistentProperty seqNoPrimaryTermProperty = this.seqNoPrimaryTermProperty;
+
+			if (seqNoPrimaryTermProperty != null) {
+				throw new MappingException(String.format(
+						"Attempt to add SeqNoPrimaryTerm property %s but already have property %s registered "
+								+ "as SeqNoPrimaryTerm property. Check your mapping configuration!",
+						property.getField(), seqNoPrimaryTermProperty.getField()));
+			}
+
+			this.seqNoPrimaryTermProperty = property;
+		}
 	}
 
 	/*
@@ -261,5 +277,16 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 			return propertyRef.get();
 		});
+	}
+
+	@Override
+	public boolean hasSeqNoPrimaryTermProperty() {
+		return seqNoPrimaryTermProperty != null;
+	}
+
+	@Override
+	@Nullable
+	public ElasticsearchPersistentProperty getSeqNoPrimaryTermProperty() {
+		return seqNoPrimaryTermProperty;
 	}
 }

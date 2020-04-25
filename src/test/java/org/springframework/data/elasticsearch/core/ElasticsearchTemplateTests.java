@@ -58,6 +58,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
@@ -74,6 +75,7 @@ import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
@@ -100,6 +102,7 @@ import org.springframework.lang.Nullable;
  * @author Martin Choraine
  * @author Farid Azaza
  * @author Gyula Attila Csorogi
+ * @author Roman Puchkovskiy
  */
 public abstract class ElasticsearchTemplateTests {
 
@@ -3067,6 +3070,23 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(operations.exists("42", index)).isTrue();
 	}
 
+	@Test // DATAES-799
+	void shouldThrowOptimisticLockingFailureExceptionWhenConcurrentUpdateOccursOnEntityWithSeqNoPrimaryTermProperty() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = operations.save(original);
+
+		OptimisticEntity forEdit1 = operations.get(saved.getId(), OptimisticEntity.class);
+		OptimisticEntity forEdit2 = operations.get(saved.getId(), OptimisticEntity.class);
+		
+		forEdit1.setMessage("It'll be ok");
+		operations.save(forEdit1);
+
+		forEdit2.setMessage("It'll be great");
+		assertThatThrownBy(() -> operations.save(forEdit2))
+				.isInstanceOf(OptimisticLockingFailureException.class);
+	}
+
 	protected RequestFactory getRequestFactory() {
 		return ((AbstractElasticsearchTemplate) operations).getRequestFactory();
 	}
@@ -3229,5 +3249,13 @@ public abstract class ElasticsearchTemplateTests {
 	static class HighlightEntity {
 		@Id private String id;
 		private String message;
+	}
+
+	@Data
+	@Document(indexName = "test-index-optimistic-entity-template")
+	static class OptimisticEntity {
+		@Id private String id;
+		private String message;
+		private SeqNoPrimaryTerm seqNoPrimaryTerm;
 	}
 }

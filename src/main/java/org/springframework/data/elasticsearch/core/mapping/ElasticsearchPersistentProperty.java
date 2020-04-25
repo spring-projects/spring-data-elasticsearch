@@ -28,6 +28,7 @@ import org.springframework.lang.Nullable;
  * @author Sascha Woo
  * @author Oliver Gierke
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 public interface ElasticsearchPersistentProperty extends PersistentProperty<ElasticsearchPersistentProperty> {
 
@@ -63,6 +64,14 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 * @since 3.1
 	 */
 	boolean isParentProperty();
+
+	/**
+	 * Returns whether the current property is a {@link SeqNoPrimaryTerm} property.
+	 *
+	 * @return true if the type is {@link SeqNoPrimaryTerm}
+	 * @since 4.0
+	 */
+	boolean isSeqNoPrimaryTermProperty();
 
 	/**
 	 * @return true if an {@link ElasticsearchPersistentPropertyConverter} is available for this instance.

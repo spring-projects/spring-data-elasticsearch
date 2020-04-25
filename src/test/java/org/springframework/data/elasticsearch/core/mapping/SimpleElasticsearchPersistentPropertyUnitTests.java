@@ -38,6 +38,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Oliver Gierke
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 public class SimpleElasticsearchPersistentPropertyUnitTests {
 
@@ -126,7 +127,7 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(converted).isEqualTo("20200419T194400.000Z");
 	}
 
-	@Test // DATES-792
+	@Test // DATAES-792
 	void shouldConvertToLegacyDate() {
 		SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(DatesProperty.class);
 		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getRequiredPersistentProperty("legacyDate");
@@ -138,6 +139,22 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 				.from(ZonedDateTime.of(LocalDateTime.of(2020, 4, 19, 19, 44), ZoneId.of("UTC")));
 		Date legacyDate = calendar.getTime();
 		assertThat(converted).isEqualTo(legacyDate);
+	}
+
+	@Test //DATAES-799
+	void shouldReportSeqNoPrimaryTermPropertyWhenTheTypeIsSeqNoPrimaryTerm() {
+		SimpleElasticsearchPersistentEntity<?> entity = context.getRequiredPersistentEntity(SeqNoPrimaryTermProperty.class);
+		ElasticsearchPersistentProperty seqNoProperty = entity.getRequiredPersistentProperty("seqNoPrimaryTerm");
+
+		assertThat(seqNoProperty.isSeqNoPrimaryTermProperty()).isTrue();
+	}
+
+	@Test //DATAES-799
+	void shouldNotReportSeqNoPrimaryTermPropertyWhenTheTypeIsNotSeqNoPrimaryTerm() {
+		SimpleElasticsearchPersistentEntity<?> entity = context.getRequiredPersistentEntity(SeqNoPrimaryTermProperty.class);
+		ElasticsearchPersistentProperty stringProperty = entity.getRequiredPersistentProperty("string");
+
+		assertThat(stringProperty.isSeqNoPrimaryTermProperty()).isFalse();
 	}
 
 	static class InvalidScoreProperty {
@@ -156,5 +173,10 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		@Nullable @Field(type = FieldType.Date, format = DateFormat.custom, pattern = "dd.MM.uuuu") LocalDate localDate;
 		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date_time) LocalDateTime localDateTime;
 		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date_time) Date legacyDate;
+	}
+
+	static class SeqNoPrimaryTermProperty {
+		SeqNoPrimaryTerm seqNoPrimaryTerm;
+		String string;
 	}
 }

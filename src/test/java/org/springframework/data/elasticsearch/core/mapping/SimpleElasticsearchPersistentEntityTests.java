@@ -36,6 +36,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Mark Paluch
  * @author Oliver Gierke
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 public class SimpleElasticsearchPersistentEntityTests {
 
@@ -95,6 +96,52 @@ public class SimpleElasticsearchPersistentEntityTests {
 		assertThat(persistentProperty.getFieldName()).isEqualTo("renamed-field");
 	}
 
+	@Test // DATAES-799
+	void shouldReportThatThereIsNoSeqNoPrimaryTermPropertyWhenThereIsNoSuchProperty() {
+		TypeInformation<EntityWithoutSeqNoPrimaryTerm> typeInformation = ClassTypeInformation.from(EntityWithoutSeqNoPrimaryTerm.class);
+		SimpleElasticsearchPersistentEntity<EntityWithoutSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
+				typeInformation);
+
+		assertThat(entity.hasSeqNoPrimaryTermProperty()).isFalse();
+	}
+
+	@Test // DATAES-799
+	void shouldReportThatThereIsSeqNoPrimaryTermPropertyWhenThereIsSuchProperty() {
+		TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation.from(EntityWithSeqNoPrimaryTerm.class);
+		SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
+				typeInformation);
+
+		entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
+
+		assertThat(entity.hasSeqNoPrimaryTermProperty()).isTrue();
+	}
+
+	@Test // DATAES-799
+	void shouldReturnSeqNoPrimaryTermPropertyWhenThereIsSuchProperty() {
+		TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation.from(EntityWithSeqNoPrimaryTerm.class);
+		SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
+				typeInformation);
+		entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
+		EntityWithSeqNoPrimaryTerm instance = new EntityWithSeqNoPrimaryTerm();
+		SeqNoPrimaryTerm seqNoPrimaryTerm = new SeqNoPrimaryTerm();
+
+		ElasticsearchPersistentProperty property = entity.getSeqNoPrimaryTermProperty();
+		entity.getPropertyAccessor(instance).setProperty(property, seqNoPrimaryTerm);
+
+		assertThat(instance.seqNoPrimaryTerm).isSameAs(seqNoPrimaryTerm);
+	}
+
+	@Test // DATAES-799
+	void shouldNotAllowMoreThanOneSeqNoPrimaryTermProperties() {
+		TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation.from(EntityWithSeqNoPrimaryTerm.class);
+		SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
+				typeInformation);
+		entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
+
+		assertThatThrownBy(() -> entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm2")))
+				.isInstanceOf(MappingException.class);
+	}
+
 	private static SimpleElasticsearchPersistentProperty createProperty(SimpleElasticsearchPersistentEntity<?> entity,
 			String field) {
 
@@ -152,5 +199,13 @@ public class SimpleElasticsearchPersistentEntityTests {
 	private static class FieldNameEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(name = "renamed-field") private String renamedField;
+	}
+
+	private static class EntityWithoutSeqNoPrimaryTerm {
+	}
+
+	private static class EntityWithSeqNoPrimaryTerm {
+		private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		private SeqNoPrimaryTerm seqNoPrimaryTerm2;
 	}
 }

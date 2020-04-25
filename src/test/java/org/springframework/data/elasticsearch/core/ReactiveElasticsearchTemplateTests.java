@@ -24,6 +24,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.elasticsearch.core.mapping.SeqNoPrimaryTerm;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -81,6 +83,7 @@ import org.springframework.util.StringUtils;
  * @author Martin Choraine
  * @author Aleksei Arsenev
  * @author Russell Parry
+ * @author Roman Puchkovskiy
  */
 @SpringIntegrationTest
 public class ReactiveElasticsearchTemplateTests {
@@ -855,6 +858,25 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
+	@Test // DATAES-799
+	void shouldThrowOptimisticLockingFailureExceptionWhenConcurrentUpdateOccursOnEntityWithSeqNoPrimaryTermProperty() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = template.save(original).block();
+
+		OptimisticEntity forEdit1 = template.get(saved.getId(), OptimisticEntity.class).block();
+		OptimisticEntity forEdit2 = template.get(saved.getId(), OptimisticEntity.class).block();
+
+		forEdit1.setMessage("It'll be ok");
+		template.save(forEdit1).block();
+
+		forEdit2.setMessage("It'll be great");
+		template.save(forEdit2)
+				.as(StepVerifier::create)
+				.expectError(OptimisticLockingFailureException.class)
+				.verify();
+	}
+
 	@Data
 	@Document(indexName = "marvel")
 	static class Person {
@@ -927,5 +949,13 @@ public class ReactiveElasticsearchTemplateTests {
 		private int rate;
 		@Version private Long version;
 		@Score private float score;
+	}
+
+	@Data
+	@Document(indexName = DEFAULT_INDEX)
+	static class OptimisticEntity {
+		@Id private String id;
+		private String message;
+		private SeqNoPrimaryTerm seqNoPrimaryTerm;
 	}
 }
