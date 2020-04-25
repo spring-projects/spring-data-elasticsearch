@@ -83,6 +83,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author Roman Puchkovskiy
  * @since 4.0
  */
 class RequestFactory {
@@ -340,6 +341,13 @@ class RequestFactory {
 			indexRequest.version(query.getVersion());
 			VersionType versionType = retrieveVersionTypeFromPersistentEntity(query.getObject().getClass());
 			indexRequest.versionType(versionType);
+		}
+
+		if (query.getSeqNo() != null) {
+			indexRequest.setIfSeqNo(query.getSeqNo());
+		}
+		if (query.getPrimaryTerm() != null) {
+			indexRequest.setIfPrimaryTerm(query.getPrimaryTerm());
 		}
 
 		return indexRequest;

@@ -46,6 +46,7 @@ import org.springframework.data.elasticsearch.core.event.BeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -438,6 +439,22 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		return null;
 	}
 
+	@Nullable
+	private SeqNoPrimaryTerm getEntitySeqNoPrimaryTerm(Object entity) {
+		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
+		ElasticsearchPersistentProperty property = persistentEntity.getSeqNoPrimaryTermProperty();
+
+		if (property != null) {
+			Object seqNoPrimaryTerm = persistentEntity.getPropertyAccessor(entity).getProperty(property);
+
+			if (seqNoPrimaryTerm != null && SeqNoPrimaryTerm.class.isAssignableFrom(seqNoPrimaryTerm.getClass())) {
+				return (SeqNoPrimaryTerm) seqNoPrimaryTerm;
+			}
+		}
+
+		return null;
+	}
+
 	private <T> IndexQuery getIndexQuery(T entity) {
 		String id = getEntityId(entity);
 
@@ -445,11 +462,15 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			id = elasticsearchConverter.convertId(id);
 		}
 
-		return new IndexQueryBuilder() //
+		IndexQueryBuilder builder = new IndexQueryBuilder() //
 				.withId(id) //
 				.withVersion(getEntityVersion(entity)) //
-				.withObject(entity) //
-				.build();
+				.withObject(entity);
+		SeqNoPrimaryTerm seqNoPrimaryTerm = getEntitySeqNoPrimaryTerm(entity);
+		if (seqNoPrimaryTerm != null) {
+			builder.withSeqNoPrimaryTerm(seqNoPrimaryTerm);
+		}
+		return builder.build();
 	}
 
 	/**

@@ -23,8 +23,8 @@ import org.springframework.lang.Nullable;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
-
 public class IndexQuery {
 
 	@Nullable private String id;
@@ -32,6 +32,8 @@ public class IndexQuery {
 	@Nullable private Long version;
 	@Nullable private String source;
 	@Nullable private String parentId;
+	@Nullable private Long seqNo;
+	@Nullable private Long primaryTerm;
 
 	@Nullable
 	public String getId() {
@@ -86,5 +88,23 @@ public class IndexQuery {
 	@Deprecated
 	public void setParentId(String parentId) {
 		this.parentId = parentId;
+	}
+
+	@Nullable
+	public Long getSeqNo() {
+		return seqNo;
+	}
+
+	public void setSeqNo(Long seqNo) {
+		this.seqNo = seqNo;
+	}
+
+	@Nullable
+	public Long getPrimaryTerm() {
+		return primaryTerm;
+	}
+
+	public void setPrimaryTerm(Long primaryTerm) {
+		this.primaryTerm = primaryTerm;
 	}
 }
