@@ -15,17 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
@@ -43,6 +34,7 @@ import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
+import org.springframework.data.elasticsearch.core.mapping.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
@@ -205,6 +197,12 @@ public class MappingElasticsearchConverter
 					targetEntity.getPropertyAccessor(result).setProperty(versionProperty, version);
 				}
 			}
+
+			if (targetEntity.hasSeqNoPrimaryTermProperty() && (document.hasSeqNo() || document.hasPrimaryTerm())) {
+				SeqNoPrimaryTerm seqNoPrimaryTerm = fillSeqNoPrimaryTermFromDocument(document);
+				ElasticsearchPersistentProperty property = targetEntity.getSeqNoPrimaryTermProperty();
+				targetEntity.getPropertyAccessor(result).setProperty(property, seqNoPrimaryTerm);
+			}
 		}
 
 		if (source instanceof SearchDocument) {
@@ -218,6 +216,17 @@ public class MappingElasticsearchConverter
 
 		return result;
 
+	}
+
+	private SeqNoPrimaryTerm fillSeqNoPrimaryTermFromDocument(Document document) {
+		SeqNoPrimaryTerm seqNoPrimaryTerm = new SeqNoPrimaryTerm();
+		if (document.hasSeqNo()) {
+			seqNoPrimaryTerm.setSequenceNumber(document.getSeqNo());
+		}
+		if (document.hasPrimaryTerm()) {
+			seqNoPrimaryTerm.setPrimaryTerm(document.getPrimaryTerm());
+		}
+		return seqNoPrimaryTerm;
 	}
 
 	protected <R> R readProperties(ElasticsearchPersistentEntity<?> entity, R instance,

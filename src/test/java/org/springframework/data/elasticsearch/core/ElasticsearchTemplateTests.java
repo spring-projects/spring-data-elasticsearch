@@ -3071,6 +3071,21 @@ public abstract class ElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-799
+	void getShouldReturnSeqNoPrimaryTerm() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = operations.save(original);
+
+		OptimisticEntity retrieved = operations.get(saved.getId(), OptimisticEntity.class);
+		
+		assertThat(retrieved.seqNoPrimaryTerm).isNotNull();
+		assertThat(retrieved.seqNoPrimaryTerm.getSequenceNumber()).isNotNull();
+		assertThat(retrieved.seqNoPrimaryTerm.getSequenceNumber()).isNotNegative();
+		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isNotNull();
+		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isPositive();
+	}
+
+	@Test // DATAES-799
 	void shouldThrowOptimisticLockingFailureExceptionWhenConcurrentUpdateOccursOnEntityWithSeqNoPrimaryTermProperty() {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
