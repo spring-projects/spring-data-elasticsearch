@@ -250,7 +250,7 @@ public interface DocumentOperations {
 	 * @param clazz the type of the object to be returned
 	 * @param index the index from which the object is read.
 	 * @return the found object
-	 * @deprecated since 4.0, use {@link #getById(String, Class, IndexCoordinates)}
+	 * @deprecated since 4.0, use {@link #get(String, Class, IndexCoordinates)}
 	 */
 	@Deprecated
 	@Nullable

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static java.util.Collections.*;
 import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -3077,12 +3078,71 @@ public abstract class ElasticsearchTemplateTests {
 		OptimisticEntity saved = operations.save(original);
 
 		OptimisticEntity retrieved = operations.get(saved.getId(), OptimisticEntity.class);
-		
+
+		assertThatSeqNoPrimaryTermIsFilled(retrieved);
+	}
+
+	private void assertThatSeqNoPrimaryTermIsFilled(OptimisticEntity retrieved) {
 		assertThat(retrieved.seqNoPrimaryTerm).isNotNull();
 		assertThat(retrieved.seqNoPrimaryTerm.getSequenceNumber()).isNotNull();
 		assertThat(retrieved.seqNoPrimaryTerm.getSequenceNumber()).isNotNegative();
 		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isNotNull();
 		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isPositive();
+	}
+
+	@Test // DATAES-799
+	void multigetShouldReturnSeqNoPrimaryTerm() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = operations.save(original);
+
+		List<OptimisticEntity> retrievedList = operations.multiGet(queryForOne(saved.getId()), OptimisticEntity.class,
+				operations.getIndexCoordinatesFor(OptimisticEntity.class));
+		OptimisticEntity retrieved = retrievedList.get(0);
+
+		assertThatSeqNoPrimaryTermIsFilled(retrieved);
+	}
+
+	private Query queryForOne(String id) {
+		return new NativeSearchQueryBuilder().withIds(singletonList(id)).build();
+	}
+
+	@Test // DATAES-799
+	void searchShouldReturnSeqNoPrimaryTerm() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = operations.save(original);
+
+		SearchHits<OptimisticEntity> retrievedHits = operations.search(queryForOne(saved.getId()), OptimisticEntity.class);
+		OptimisticEntity retrieved = retrievedHits.getSearchHit(0).getContent();
+
+		assertThatSeqNoPrimaryTermIsFilled(retrieved);
+	}
+
+	@Test // DATAES-799
+	void multiSearchShouldReturnSeqNoPrimaryTerm() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = operations.save(original);
+
+		List<SearchHits<OptimisticEntity>> retrievedHits = operations.multiSearch(singletonList(queryForOne(saved.getId())),
+				OptimisticEntity.class, operations.getIndexCoordinatesFor(OptimisticEntity.class));
+		OptimisticEntity retrieved = retrievedHits.get(0).getSearchHit(0).getContent();
+
+		assertThatSeqNoPrimaryTermIsFilled(retrieved);
+	}
+
+	@Test // DATAES-799
+	void searchForStreamShouldReturnSeqNoPrimaryTerm() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = operations.save(original);
+
+		SearchHitsIterator<OptimisticEntity> retrievedHits = operations.searchForStream(queryForOne(saved.getId()),
+				OptimisticEntity.class);
+		OptimisticEntity retrieved = retrievedHits.next().getContent();
+
+		assertThatSeqNoPrimaryTermIsFilled(retrieved);
 	}
 
 	@Test // DATAES-799
@@ -3093,7 +3153,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		OptimisticEntity forEdit1 = operations.get(saved.getId(), OptimisticEntity.class);
 		OptimisticEntity forEdit2 = operations.get(saved.getId(), OptimisticEntity.class);
-		
+
 		forEdit1.setMessage("It'll be ok");
 		operations.save(forEdit1);
 

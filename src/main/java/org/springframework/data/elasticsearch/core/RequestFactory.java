@@ -626,6 +626,9 @@ class RequestFactory {
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 		sourceBuilder.version(true);
 		sourceBuilder.trackScores(query.getTrackScores());
+		if (hasSeqNoPrimaryTermProperty(clazz)) {
+			sourceBuilder.seqNoAndPrimaryTerm(true);
+		}
 
 		if (query.getSourceFilter() != null) {
 			SourceFilter sourceFilter = query.getSourceFilter();
@@ -689,7 +692,20 @@ class RequestFactory {
 		return request;
 	}
 
-	@SuppressWarnings("unchecked")
+	private boolean hasSeqNoPrimaryTermProperty(@Nullable Class<?> entityClass) {
+
+		if (entityClass == null) {
+			return false;
+		}
+
+		if (!elasticsearchConverter.getMappingContext().hasPersistentEntityFor(entityClass)) {
+			return false;
+		}
+
+		ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(entityClass);
+		return entity.hasSeqNoPrimaryTermProperty();
+	}
+
 	public PutMappingRequest putMappingRequest(IndexCoordinates index, Document mapping) {
 		PutMappingRequest request = new PutMappingRequest(index.getIndexName());
 		request.source(mapping);

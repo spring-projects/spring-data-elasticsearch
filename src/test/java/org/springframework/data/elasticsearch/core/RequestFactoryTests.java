@@ -20,7 +20,8 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.mockito.Mockito.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.HashSet;
 
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchAction;
@@ -41,6 +42,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
@@ -65,7 +67,7 @@ class RequestFactoryTests {
 	@BeforeAll
 	static void setUpAll() {
 		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
-		mappingContext.setInitialEntitySet(Collections.singleton(Person.class));
+		mappingContext.setInitialEntitySet(new HashSet<>(Arrays.asList(Person.class, EntityWithSeqNoAndPrimaryTerm.class)));
 		mappingContext.afterPropertiesSet();
 
 		converter = new MappingElasticsearchConverter(mappingContext, new GenericConversionService());
@@ -169,9 +171,41 @@ class RequestFactoryTests {
 		assertThat(request.ifPrimaryTerm()).isEqualTo(2L);
 	}
 
+	@Test // DATAES-799
+	void shouldNotRequestSeqNoAndPrimartyTermViaSearchRequestWhenEntityClassDoesNotContainSeqNoPrimaryTermProperty() {
+		Query query = new NativeSearchQueryBuilder().build();
+
+		SearchRequest request = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
+
+		assertThat(request.source().seqNoAndPrimaryTerm()).isNull();
+	}
+
+	@Test // DATAES-799
+	void shouldRequestSeqNoAndPrimartyTermViaSearchRequestWhenEntityClassContainsSeqNoPrimaryTermProperty() {
+		Query query = new NativeSearchQueryBuilder().build();
+
+		SearchRequest request = requestFactory.searchRequest(query, EntityWithSeqNoAndPrimaryTerm.class,
+				IndexCoordinates.of("seqNoPrimaryTerm"));
+
+		assertThat(request.source().seqNoAndPrimaryTerm()).isTrue();
+	}
+
+	@Test // DATAES-799
+	void shouldNotRequestSeqNoAndPrimartyTermViaSearchRequestWhenEntityClassIsNull() {
+		Query query = new NativeSearchQueryBuilder().build();
+
+		SearchRequest request = requestFactory.searchRequest(query, null, IndexCoordinates.of("persons"));
+
+		assertThat(request.source().seqNoAndPrimaryTerm()).isNull();
+	}
+
 	static class Person {
 		@Nullable @Id String id;
 		@Nullable @Field(name = "last-name") String lastName;
 		@Nullable @Field(name = "current-location") GeoPoint location;
+	}
+
+	static class EntityWithSeqNoAndPrimaryTerm {
+		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
 	}
 }
