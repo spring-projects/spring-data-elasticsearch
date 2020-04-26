@@ -38,6 +38,7 @@ import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
 import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.elasticsearch.core.SequenceNumbers;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -260,7 +261,7 @@ public class DocumentAdapters {
 		 */
 		@Override
 		public boolean hasSeqNo() {
-			return this.seqNo >= 0;
+			return SequenceNumbers.isAssignedSeqNo(this.seqNo);
 		}
 
 		/*
@@ -283,7 +284,7 @@ public class DocumentAdapters {
 		 */
 		@Override
 		public boolean hasPrimaryTerm() {
-			return this.primaryTerm > 0;
+			return SequenceNumbers.isAssignedPrimaryTerm(this.primaryTerm);
 		}
 
 		/*
