@@ -80,7 +80,7 @@ while (scroll.hasSearchHits()) {
 template.searchScrollClear(scrollId);
 ----
 
-Additionally, the scroll API can be used by defining the return type as `Stream` in the Elasticsearch Repository.
+To use the Scroll API with repository methods, the return type must defined as `Stream` in the Elasticsearch Repository. The implementation of the method will then use the scroll methods from the ElasticsearchTemplate.
 
 [source,java]
 ----
