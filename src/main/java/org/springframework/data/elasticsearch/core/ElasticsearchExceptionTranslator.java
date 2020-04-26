@@ -22,6 +22,7 @@ import java.util.List;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.common.ValidationException;
+import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.rest.RestStatus;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -75,15 +76,22 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 	}
 
 	private boolean isSeqNoConflict(ElasticsearchException exception) {
-		if (!(exception instanceof ElasticsearchStatusException)) {
-			return false;
+
+		if (exception instanceof ElasticsearchStatusException) {
+			ElasticsearchStatusException statusException = (ElasticsearchStatusException) exception;
+			return statusException.status() == RestStatus.CONFLICT
+					&& statusException.getMessage() != null
+					&& statusException.getMessage().contains("type=version_conflict_engine_exception")
+					&& statusException.getMessage().contains("version conflict, required seqNo");
 		}
 
-		ElasticsearchStatusException statusException = (ElasticsearchStatusException) exception;
-		return statusException.status() == RestStatus.CONFLICT
-				&& statusException.getMessage() != null
-				&& statusException.getMessage().contains("type=version_conflict_engine_exception")
-				&& statusException.getMessage().contains("version conflict, required seqNo");
+		if (exception instanceof VersionConflictEngineException) {
+			VersionConflictEngineException versionConflictEngineException = (VersionConflictEngineException) exception;
+			return versionConflictEngineException.getMessage() != null
+					&& versionConflictEngineException.getMessage().contains("version conflict, required seqNo");
+		}
+
+		return false;
 	}
 
 	private boolean indexAvailable(ElasticsearchException ex) {

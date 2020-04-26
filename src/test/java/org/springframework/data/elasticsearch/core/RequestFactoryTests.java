@@ -23,7 +23,9 @@ import static org.skyscreamer.jsonassert.JSONAssert.*;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.elasticsearch.action.index.IndexAction;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -172,7 +174,23 @@ class RequestFactoryTests {
 	}
 
 	@Test // DATAES-799
-	void shouldNotRequestSeqNoAndPrimartyTermViaSearchRequestWhenEntityClassDoesNotContainSeqNoPrimaryTermProperty() {
+	void shouldIncludeSeqNoAndPrimaryTermFromIndexQueryToIndexRequestBuilder() {
+		when(client.prepareIndex(anyString(), anyString()))
+				.thenReturn(new IndexRequestBuilder(client, IndexAction.INSTANCE));
+
+		IndexQuery query = new IndexQuery();
+		query.setObject(new Person());
+		query.setSeqNo(1L);
+		query.setPrimaryTerm(2L);
+
+		IndexRequestBuilder builder = requestFactory.indexRequestBuilder(client, query, IndexCoordinates.of("persons"));
+
+		assertThat(builder.request().ifSeqNo()).isEqualTo(1L);
+		assertThat(builder.request().ifPrimaryTerm()).isEqualTo(2L);
+	}
+
+	@Test // DATAES-799
+	void shouldNotRequestSeqNoAndPrimaryTermViaSearchRequestWhenEntityClassDoesNotContainSeqNoPrimaryTermProperty() {
 		Query query = new NativeSearchQueryBuilder().build();
 
 		SearchRequest request = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
@@ -181,7 +199,7 @@ class RequestFactoryTests {
 	}
 
 	@Test // DATAES-799
-	void shouldRequestSeqNoAndPrimartyTermViaSearchRequestWhenEntityClassContainsSeqNoPrimaryTermProperty() {
+	void shouldRequestSeqNoAndPrimaryTermViaSearchRequestWhenEntityClassContainsSeqNoPrimaryTermProperty() {
 		Query query = new NativeSearchQueryBuilder().build();
 
 		SearchRequest request = requestFactory.searchRequest(query, EntityWithSeqNoPrimaryTerm.class,
@@ -191,12 +209,45 @@ class RequestFactoryTests {
 	}
 
 	@Test // DATAES-799
-	void shouldNotRequestSeqNoAndPrimartyTermViaSearchRequestWhenEntityClassIsNull() {
+	void shouldNotRequestSeqNoAndPrimaryTermViaSearchRequestWhenEntityClassIsNull() {
 		Query query = new NativeSearchQueryBuilder().build();
 
 		SearchRequest request = requestFactory.searchRequest(query, null, IndexCoordinates.of("persons"));
 
 		assertThat(request.source().seqNoAndPrimaryTerm()).isNull();
+	}
+
+	@Test // DATAES-799
+	void shouldNotRequestSeqNoAndPrimaryTermViaSearchRequestBuilderWhenEntityClassDoesNotContainSeqNoPrimaryTermProperty() {
+		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
+		Query query = new NativeSearchQueryBuilder().build();
+
+		SearchRequestBuilder builder = requestFactory.searchRequestBuilder(client, query, Person.class,
+				IndexCoordinates.of("persons"));
+
+		assertThat(builder.request().source().seqNoAndPrimaryTerm()).isNull();
+	}
+
+	@Test // DATAES-799
+	void shouldRequestSeqNoAndPrimaryTermViaSearchRequestBuilderWhenEntityClassContainsSeqNoPrimaryTermProperty() {
+		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
+		Query query = new NativeSearchQueryBuilder().build();
+
+		SearchRequestBuilder builder = requestFactory.searchRequestBuilder(client, query,
+				EntityWithSeqNoPrimaryTerm.class, IndexCoordinates.of("seqNoPrimaryTerm"));
+
+		assertThat(builder.request().source().seqNoAndPrimaryTerm()).isTrue();
+	}
+
+	@Test // DATAES-799
+	void shouldNotRequestSeqNoAndPrimaryTermViaSearchRequestBuilderWhenEntityClassIsNull() {
+		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
+		Query query = new NativeSearchQueryBuilder().build();
+
+		SearchRequestBuilder builder = requestFactory.searchRequestBuilder(client, query, null,
+				IndexCoordinates.of("persons"));
+
+		assertThat(builder.request().source().seqNoAndPrimaryTerm()).isNull();
 	}
 
 	static class Person {

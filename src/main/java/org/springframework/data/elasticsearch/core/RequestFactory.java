@@ -382,6 +382,13 @@ class RequestFactory {
 			indexRequestBuilder.setVersionType(versionType);
 		}
 
+		if (query.getSeqNo() != null) {
+			indexRequestBuilder.setIfSeqNo(query.getSeqNo());
+		}
+		if (query.getPrimaryTerm() != null) {
+			indexRequestBuilder.setIfPrimaryTerm(query.getPrimaryTerm());
+		}
+
 		return indexRequestBuilder;
 	}
 
@@ -808,6 +815,9 @@ class RequestFactory {
 				.setSearchType(query.getSearchType()) //
 				.setVersion(true) //
 				.setTrackScores(query.getTrackScores());
+		if (hasSeqNoPrimaryTermProperty(clazz)) {
+			searchRequestBuilder.seqNoAndPrimaryTerm(true);
+		}
 
 		if (query.getSourceFilter() != null) {
 			SourceFilter sourceFilter = query.getSourceFilter();
