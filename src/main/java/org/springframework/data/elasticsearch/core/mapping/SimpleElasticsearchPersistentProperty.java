@@ -96,6 +96,16 @@ public class SimpleElasticsearchPersistentProperty extends
 		return propertyConverter;
 	}
 
+	@Override
+	public boolean isWritable() {
+		return super.isWritable() && !isSeqNoPrimaryTermProperty();
+	}
+
+	@Override
+	public boolean isReadable() {
+		return !isTransient() && !isSeqNoPrimaryTermProperty();
+	}
+
 	/**
 	 * Initializes an {@link ElasticsearchPersistentPropertyConverter} if this property is annotated as a Field with type
 	 * {@link FieldType#Date}, has a {@link DateFormat} set and if the type of the property is one of the Java8 temporal

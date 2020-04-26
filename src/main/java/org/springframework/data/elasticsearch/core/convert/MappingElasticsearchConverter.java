@@ -237,7 +237,7 @@ public class MappingElasticsearchConverter
 
 		for (ElasticsearchPersistentProperty prop : entity) {
 
-			if (entity.isConstructorArgument(prop) || prop.isScoreProperty()) {
+			if (entity.isConstructorArgument(prop) || prop.isScoreProperty() || !prop.isReadable()) {
 				continue;
 			}
 

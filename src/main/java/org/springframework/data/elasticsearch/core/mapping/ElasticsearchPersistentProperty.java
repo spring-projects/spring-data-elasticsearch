@@ -86,6 +86,14 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	@Nullable
 	ElasticsearchPersistentPropertyConverter getPropertyConverter();
 
+	/**
+	 * Returns true if the property may be read.
+	 *
+	 * @return true if readable, false otherwise
+	 * @since 4.0
+	 */
+	boolean isReadable();
+
 	enum PropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
 
 		INSTANCE;

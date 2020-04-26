@@ -141,7 +141,7 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(converted).isEqualTo(legacyDate);
 	}
 
-	@Test //DATAES-799
+	@Test // DATAES-799
 	void shouldReportSeqNoPrimaryTermPropertyWhenTheTypeIsSeqNoPrimaryTerm() {
 		SimpleElasticsearchPersistentEntity<?> entity = context.getRequiredPersistentEntity(SeqNoPrimaryTermProperty.class);
 		ElasticsearchPersistentProperty seqNoProperty = entity.getRequiredPersistentProperty("seqNoPrimaryTerm");
@@ -149,12 +149,28 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(seqNoProperty.isSeqNoPrimaryTermProperty()).isTrue();
 	}
 
-	@Test //DATAES-799
+	@Test // DATAES-799
 	void shouldNotReportSeqNoPrimaryTermPropertyWhenTheTypeIsNotSeqNoPrimaryTerm() {
 		SimpleElasticsearchPersistentEntity<?> entity = context.getRequiredPersistentEntity(SeqNoPrimaryTermProperty.class);
 		ElasticsearchPersistentProperty stringProperty = entity.getRequiredPersistentProperty("string");
 
 		assertThat(stringProperty.isSeqNoPrimaryTermProperty()).isFalse();
+	}
+
+	@Test // DATAES-799
+	void seqNoPrimaryTermPropertyShouldNotBeWritable() {
+		SimpleElasticsearchPersistentEntity<?> entity = context.getRequiredPersistentEntity(SeqNoPrimaryTermProperty.class);
+		ElasticsearchPersistentProperty seqNoProperty = entity.getRequiredPersistentProperty("seqNoPrimaryTerm");
+
+		assertThat(seqNoProperty.isWritable()).isFalse();
+	}
+
+	@Test // DATAES-799
+	void seqNoPrimaryTermPropertyShouldNotBeReadable() {
+		SimpleElasticsearchPersistentEntity<?> entity = context.getRequiredPersistentEntity(SeqNoPrimaryTermProperty.class);
+		ElasticsearchPersistentProperty seqNoProperty = entity.getRequiredPersistentProperty("seqNoPrimaryTerm");
+
+		assertThat(seqNoProperty.isReadable()).isFalse();
 	}
 
 	static class InvalidScoreProperty {

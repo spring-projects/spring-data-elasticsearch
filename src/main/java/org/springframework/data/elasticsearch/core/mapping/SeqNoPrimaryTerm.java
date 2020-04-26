@@ -10,6 +10,14 @@ public class SeqNoPrimaryTerm {
 	@Nullable private Long sequenceNumber;
 	@Nullable private Long primaryTerm;
 
+	public SeqNoPrimaryTerm() {
+	}
+
+	public SeqNoPrimaryTerm(@Nullable Long sequenceNumber, @Nullable Long primaryTerm) {
+		this.sequenceNumber = sequenceNumber;
+		this.primaryTerm = primaryTerm;
+	}
+
 	@Nullable
 	public Long getSequenceNumber() {
 		return sequenceNumber;
@@ -26,5 +34,13 @@ public class SeqNoPrimaryTerm {
 
 	public void setPrimaryTerm(@Nullable Long primaryTerm) {
 		this.primaryTerm = primaryTerm;
+	}
+
+	@Override
+	public String toString() {
+		return "SeqNoPrimaryTerm{" +
+				"sequenceNumber=" + sequenceNumber +
+				", primaryTerm=" + primaryTerm +
+				'}';
 	}
 }

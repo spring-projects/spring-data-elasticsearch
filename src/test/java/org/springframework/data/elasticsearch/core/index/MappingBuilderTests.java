@@ -24,6 +24,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -57,6 +58,7 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
@@ -79,6 +81,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Sascha Woo
  * @author Peter-Josef Meisch
  * @author Xiao Yu
+ * @author Roman Puchkovskiy
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
@@ -572,6 +575,13 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
+	@Test // DATAES-799
+	void shouldNotIncludeSeqNoPrimaryTermPropertyFromMappingWhenNotAnnotatedWithField() {
+		String propertyMapping = getMappingBuilder().buildPropertyMapping(EntityWithSeqNoPrimaryTerm.class);
+		
+		assertThat(propertyMapping).doesNotContain("seqNoPrimaryTerm");
+	}
+
 	/**
 	 * @author Xiao Yu
 	 */
@@ -1051,5 +1061,12 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		@CompletionField(contexts = { @CompletionContext(name = "location", type = ContextMapping.Type.GEO,
 				path = "proppath") }) private Completion suggest;
+	}
+
+	@Data
+	@Document(indexName = "test-index-entity-with-seq-no-primary-term-mapping-builder")
+	static class EntityWithSeqNoPrimaryTerm {
+
+		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
 	}
 }
