@@ -21,6 +21,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
@@ -35,6 +36,7 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  * @since 3.2
  */
 class EntityOperations {
@@ -256,6 +258,21 @@ class EntityOperations {
 		@Override
 		@Nullable
 		Number getVersion();
+
+		/**
+		 * Returns whether there is a property with type SeqNoPrimaryTerm in this entity.
+		 *
+		 * @return true if there is SeqNoPrimaryTerm property
+		 * @since 4.0
+		 */
+		boolean hasSeqNoPrimaryTerm();
+
+		/**
+		 * Returns SeqNoPropertyTerm for this entity.
+		 *
+		 * @return SeqNoPrimaryTerm, may be {@literal null}
+		 */
+		@Nullable SeqNoPrimaryTerm getSeqNoPrimaryTerm();
 	}
 
 	/**
@@ -330,6 +347,16 @@ class EntityOperations {
 		@Override
 		@Nullable
 		public Number getVersion() {
+			return null;
+		}
+
+		@Override
+		public boolean hasSeqNoPrimaryTerm() {
+			return false;
+		}
+
+		@Override
+		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
 			return null;
 		}
 
@@ -586,6 +613,19 @@ class EntityOperations {
 			ElasticsearchPersistentProperty versionProperty = entity.getRequiredVersionProperty();
 
 			return propertyAccessor.getProperty(versionProperty, Number.class);
+		}
+
+		@Override
+		public boolean hasSeqNoPrimaryTerm() {
+			return entity.hasSeqNoPrimaryTermProperty();
+		}
+
+		@Override
+		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
+
+			ElasticsearchPersistentProperty seqNoPrimaryTermProperty = entity.getRequiredSeqNoPrimaryTermProperty();
+
+			return propertyAccessor.getProperty(seqNoPrimaryTermProperty, SeqNoPrimaryTerm.class);
 		}
 
 		/* 

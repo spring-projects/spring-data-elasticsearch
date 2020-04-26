@@ -117,4 +117,14 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	 */
 	@Nullable
 	ElasticsearchPersistentProperty getSeqNoPrimaryTermProperty();
+	
+	default ElasticsearchPersistentProperty getRequiredSeqNoPrimaryTermProperty() {
+		ElasticsearchPersistentProperty property = this.getSeqNoPrimaryTermProperty();
+		if (property != null) {
+			return property;
+		} else {
+			throw new IllegalStateException(String.format("Required SeqNoPrimaryTerm property not found for %s!",
+					this.getType()));
+		}
+	}
 }

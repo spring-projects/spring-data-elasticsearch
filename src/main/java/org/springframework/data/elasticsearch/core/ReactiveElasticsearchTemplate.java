@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.elasticsearch.index.VersionType.*;
 
+import org.springframework.data.elasticsearch.core.mapping.SeqNoPrimaryTerm;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -347,7 +348,23 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		request.source(converter.mapObject(value).toJson(), Requests.INDEX_CONTENT_TYPE);
 
-		if (entity.isVersionedEntity()) {
+		boolean usingSeqNo = false;
+		if (entity.hasSeqNoPrimaryTerm()) {
+			SeqNoPrimaryTerm seqNoPrimaryTerm = entity.getSeqNoPrimaryTerm();
+
+			if (seqNoPrimaryTerm != null) {
+				if (seqNoPrimaryTerm.getSequenceNumber() != null) {
+					request.setIfSeqNo(seqNoPrimaryTerm.getSequenceNumber());
+					usingSeqNo = true;
+				}
+				if (seqNoPrimaryTerm.getPrimaryTerm() != null) {
+					request.setIfPrimaryTerm(seqNoPrimaryTerm.getPrimaryTerm());
+				}
+			}
+		}
+
+		// seq_no and version are incompatible in the same request
+		if (!usingSeqNo && entity.isVersionedEntity()) {
 
 			Number version = entity.getVersion();
 
@@ -356,6 +373,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				request.versionType(EXTERNAL);
 			}
 		}
+
 		return request;
 	}
 
