@@ -20,12 +20,10 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -87,37 +85,31 @@ public final class RestClients {
 		HttpHeaders headers = clientConfiguration.getDefaultHeaders();
 
 		if (!headers.isEmpty()) {
-
-			Header[] httpHeaders = headers.toSingleValueMap().entrySet().stream()
-					.map(it -> new BasicHeader(it.getKey(), it.getValue())).toArray(Header[]::new);
-			builder.setDefaultHeaders(httpHeaders);
+			builder.setDefaultHeaders(toHeaderArray(headers));
 		}
 
 		builder.setHttpClientConfigCallback(clientBuilder -> {
-
-			Optional<SSLContext> sslContext = clientConfiguration.getSslContext();
-			Optional<HostnameVerifier> hostNameVerifier = clientConfiguration.getHostNameVerifier();
-			sslContext.ifPresent(clientBuilder::setSSLContext);
-			hostNameVerifier.ifPresent(clientBuilder::setSSLHostnameVerifier);
+			clientConfiguration.getSslContext().ifPresent(clientBuilder::setSSLContext);
+			clientConfiguration.getHostNameVerifier().ifPresent(clientBuilder::setSSLHostnameVerifier);
+			clientBuilder.addInterceptorLast(new CustomHeaderInjector(clientConfiguration.getHeadersSupplier()));
 
 			if (ClientLogger.isEnabled()) {
-
 				HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
 
 				clientBuilder.addInterceptorLast((HttpRequestInterceptor) interceptor);
 				clientBuilder.addInterceptorLast((HttpResponseInterceptor) interceptor);
 			}
 
-			Duration connectTimeout = clientConfiguration.getConnectTimeout();
-			Duration timeout = clientConfiguration.getSocketTimeout();
-
 			Builder requestConfigBuilder = RequestConfig.custom();
+			Duration connectTimeout = clientConfiguration.getConnectTimeout();
 
 			if (!connectTimeout.isNegative()) {
 
 				requestConfigBuilder.setConnectTimeout(Math.toIntExact(connectTimeout.toMillis()));
 				requestConfigBuilder.setConnectionRequestTimeout(Math.toIntExact(connectTimeout.toMillis()));
 			}
+
+			Duration timeout = clientConfiguration.getSocketTimeout();
 
 			if (!timeout.isNegative()) {
 				requestConfigBuilder.setSocketTimeout(Math.toIntExact(timeout.toMillis()));
@@ -134,8 +126,16 @@ public final class RestClients {
 		return () -> client;
 	}
 
+	private static Header[] toHeaderArray(HttpHeaders headers) {
+		return headers.entrySet().stream() //
+				.flatMap(entry -> entry.getValue().stream() //
+						.map(value -> new BasicHeader(entry.getKey(), value))) //
+				.toArray(Header[]::new);
+	}
+
 	private static List<String> formattedHosts(List<InetSocketAddress> hosts, boolean useSsl) {
-		return hosts.stream().map(it -> (useSsl ? "https" : "http") + "://" + it.getHostString() + ":" + it.getPort()).collect(Collectors.toList());
+		return hosts.stream().map(it -> (useSsl ? "https" : "http") + "://" + it.getHostString() + ":" + it.getPort())
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -180,7 +180,6 @@ public final class RestClients {
 			String logId = (String) context.getAttribute(RestClients.LOG_ID_ATTRIBUTE);
 
 			if (logId == null) {
-
 				logId = ClientLogger.newLogId();
 				context.setAttribute(RestClients.LOG_ID_ATTRIBUTE, logId);
 			}
@@ -205,10 +204,31 @@ public final class RestClients {
 
 		@Override
 		public void process(HttpResponse response, HttpContext context) {
-
 			String logId = (String) context.getAttribute(RestClients.LOG_ID_ATTRIBUTE);
-
 			ClientLogger.logRawResponse(logId, HttpStatus.resolve(response.getStatusLine().getStatusCode()));
+		}
+	}
+
+	/**
+	 * Interceptor to inject custom supplied headers.
+	 * 
+	 * @since 4.0
+	 */
+	private static class CustomHeaderInjector implements HttpRequestInterceptor {
+
+		public CustomHeaderInjector(Supplier<HttpHeaders> headersSupplier) {
+			this.headersSupplier = headersSupplier;
+		}
+
+		private final Supplier<HttpHeaders> headersSupplier;
+
+		@Override
+		public void process(HttpRequest request, HttpContext context) {
+			HttpHeaders httpHeaders = headersSupplier.get();
+
+			if (httpHeaders != null && httpHeaders != HttpHeaders.EMPTY) {
+				Arrays.stream(toHeaderArray(httpHeaders)).forEach(request::addHeader);
+			}
 		}
 	}
 }

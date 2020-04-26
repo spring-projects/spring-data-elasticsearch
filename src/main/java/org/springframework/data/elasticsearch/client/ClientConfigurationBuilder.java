@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.net.ssl.HostnameVerifier;
@@ -58,7 +59,8 @@ class ClientConfigurationBuilder
 	private @Nullable String password;
 	private @Nullable String pathPrefix;
 	private @Nullable String proxy;
-	private @Nullable Function<WebClient, WebClient> webClientConfigurer;
+	private Function<WebClient, WebClient> webClientConfigurer = Function.identity();
+	private Supplier<HttpHeaders> headersSupplier = () -> HttpHeaders.EMPTY;
 
 	/*
 	 * (non-Javadoc)
@@ -196,11 +198,21 @@ class ClientConfigurationBuilder
 	}
 
 	@Override
-	public TerminalClientConfigurationBuilder withWebClientConfigurer(Function<WebClient, WebClient> webClientConfigurer) {
+	public TerminalClientConfigurationBuilder withWebClientConfigurer(
+			Function<WebClient, WebClient> webClientConfigurer) {
 
 		Assert.notNull(webClientConfigurer, "webClientConfigurer must not be null");
 
 		this.webClientConfigurer = webClientConfigurer;
+		return this;
+	}
+
+	@Override
+	public TerminalClientConfigurationBuilder withHeaders(Supplier<HttpHeaders> headers) {
+
+		Assert.notNull(headers, "headersSupplier must not be null");
+
+		this.headersSupplier = headers;
 		return this;
 	}
 
@@ -219,7 +231,7 @@ class ClientConfigurationBuilder
 		}
 
 		return new DefaultClientConfiguration(hosts, headers, useSsl, sslContext, soTimeout, connectTimeout, pathPrefix,
-				hostnameVerifier, proxy, webClientConfigurer);
+				hostnameVerifier, proxy, webClientConfigurer, headersSupplier);
 	}
 
 	private static InetSocketAddress parse(String hostAndPort) {

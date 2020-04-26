@@ -20,9 +20,11 @@ import reactor.core.publisher.Mono;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -40,18 +42,20 @@ public interface HostProvider {
 	 * Create a new {@link HostProvider} best suited for the given {@link WebClientProvider} and number of hosts.
 	 *
 	 * @param clientProvider must not be {@literal null} .
+	 * @param headersSupplier  to supply custom headers, must not be {@literal null}
 	 * @param endpoints must not be {@literal null} nor empty.
 	 * @return new instance of {@link HostProvider}.
 	 */
-	static HostProvider provider(WebClientProvider clientProvider, InetSocketAddress... endpoints) {
+	static HostProvider provider(WebClientProvider clientProvider, Supplier<HttpHeaders> headersSupplier,
+			InetSocketAddress... endpoints) {
 
 		Assert.notNull(clientProvider, "WebClientProvider must not be null");
 		Assert.notEmpty(endpoints, "Please provide at least one endpoint to connect to.");
 
 		if (endpoints.length == 1) {
-			return new SingleNodeHostProvider(clientProvider, endpoints[0]);
+			return new SingleNodeHostProvider(clientProvider, headersSupplier, endpoints[0]);
 		} else {
-			return new MultiNodeHostProvider(clientProvider, endpoints);
+			return new MultiNodeHostProvider(clientProvider,headersSupplier, endpoints);
 		}
 	}
 

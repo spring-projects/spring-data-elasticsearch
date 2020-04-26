@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import org.springframework.http.HttpHeaders;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -27,6 +28,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost.State;
@@ -45,11 +47,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 class MultiNodeHostProvider implements HostProvider {
 
 	private final WebClientProvider clientProvider;
+	private final Supplier<HttpHeaders> headersSupplier;
 	private final Map<InetSocketAddress, ElasticsearchHost> hosts;
 
-	MultiNodeHostProvider(WebClientProvider clientProvider, InetSocketAddress... endpoints) {
+	MultiNodeHostProvider(WebClientProvider clientProvider, Supplier<HttpHeaders> headersSupplier, InetSocketAddress... endpoints) {
 
 		this.clientProvider = clientProvider;
+		this.headersSupplier = headersSupplier;
 		this.hosts = new ConcurrentHashMap<>();
 		for (InetSocketAddress endpoint : endpoints) {
 			this.hosts.put(endpoint, new ElasticsearchHost(endpoint, State.UNKNOWN));
@@ -133,8 +137,9 @@ class MultiNodeHostProvider implements HostProvider {
 				.flatMap(host -> {
 
 					Mono<ClientResponse> exchange = createWebClient(host) //
-							.head().uri("/").exchange().doOnError(throwable -> {
-
+							.head().uri("/") //
+							.headers(httpHeaders -> httpHeaders.addAll(headersSupplier.get())) //
+							.exchange().doOnError(throwable -> {
 								hosts.put(host, new ElasticsearchHost(host, State.OFFLINE));
 								clientProvider.getErrorListener().accept(throwable);
 							});

@@ -44,6 +44,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.net.ssl.SSLContext;
 
@@ -138,8 +139,8 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
 public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearchClient, Indices {
 
 	private final HostProvider hostProvider;
-
 	private final RequestCreator requestCreator;
+	private Supplier<HttpHeaders> headersSupplier = () -> HttpHeaders.EMPTY;
 
 	/**
 	 * Create a new {@link DefaultReactiveElasticsearchClient} using the given {@link HostProvider} to obtain server
@@ -165,6 +166,13 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		this.hostProvider = hostProvider;
 		this.requestCreator = requestCreator;
+	}
+
+	public void setHeadersSupplier(Supplier<HttpHeaders> headersSupplier) {
+
+		Assert.notNull(headersSupplier, "headersSupplier must not be null");
+
+		this.headersSupplier = headersSupplier;
 	}
 
 	/**
@@ -216,9 +224,14 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		WebClientProvider provider = getWebClientProvider(clientConfiguration);
 
-		HostProvider hostProvider = HostProvider.provider(provider,
+		HostProvider hostProvider = HostProvider.provider(provider, clientConfiguration.getHeadersSupplier(),
 				clientConfiguration.getEndpoints().toArray(new InetSocketAddress[0]));
-		return new DefaultReactiveElasticsearchClient(hostProvider, requestCreator);
+
+		DefaultReactiveElasticsearchClient client = new DefaultReactiveElasticsearchClient(hostProvider, requestCreator);
+
+		client.setHeadersSupplier(clientConfiguration.getHeadersSupplier());
+
+		return client;
 	}
 
 	private static WebClientProvider getWebClientProvider(ClientConfiguration clientConfiguration) {
@@ -697,6 +710,12 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 						if (!ObjectUtils.isEmpty(request.getOptions().getHeaders())) {
 							request.getOptions().getHeaders().forEach(it -> theHeaders.add(it.getName(), it.getValue()));
 						}
+					}
+
+					// plus the ones from the supplier
+					HttpHeaders suppliedHeaders = headersSupplier.get();
+					if (suppliedHeaders != null && suppliedHeaders != HttpHeaders.EMPTY) {
+						theHeaders.addAll(suppliedHeaders);
 					}
 				});
 
