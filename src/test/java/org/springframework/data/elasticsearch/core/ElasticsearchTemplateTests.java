@@ -3095,6 +3095,7 @@ public abstract class ElasticsearchTemplateTests {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
 		OptimisticEntity saved = operations.save(original);
+		operations.refresh(OptimisticEntity.class);
 
 		List<OptimisticEntity> retrievedList = operations.multiGet(queryForOne(saved.getId()), OptimisticEntity.class,
 				operations.getIndexCoordinatesFor(OptimisticEntity.class));
@@ -3112,6 +3113,7 @@ public abstract class ElasticsearchTemplateTests {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
 		OptimisticEntity saved = operations.save(original);
+		operations.refresh(OptimisticEntity.class);
 
 		SearchHits<OptimisticEntity> retrievedHits = operations.search(queryForOne(saved.getId()), OptimisticEntity.class);
 		OptimisticEntity retrieved = retrievedHits.getSearchHit(0).getContent();
@@ -3124,8 +3126,10 @@ public abstract class ElasticsearchTemplateTests {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
 		OptimisticEntity saved = operations.save(original);
+		operations.refresh(OptimisticEntity.class);
 
-		List<SearchHits<OptimisticEntity>> retrievedHits = operations.multiSearch(singletonList(queryForOne(saved.getId())),
+		List<Query> queries = singletonList(queryForOne(saved.getId()));
+		List<SearchHits<OptimisticEntity>> retrievedHits = operations.multiSearch(queries,
 				OptimisticEntity.class, operations.getIndexCoordinatesFor(OptimisticEntity.class));
 		OptimisticEntity retrieved = retrievedHits.get(0).getSearchHit(0).getContent();
 
@@ -3137,6 +3141,7 @@ public abstract class ElasticsearchTemplateTests {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
 		OptimisticEntity saved = operations.save(original);
+		operations.refresh(OptimisticEntity.class);
 
 		SearchHitsIterator<OptimisticEntity> retrievedHits = operations.searchForStream(queryForOne(saved.getId()),
 				OptimisticEntity.class);
