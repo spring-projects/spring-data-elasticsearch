@@ -464,11 +464,13 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		IndexQueryBuilder builder = new IndexQueryBuilder() //
 				.withId(id) //
-				.withVersion(getEntityVersion(entity)) //
 				.withObject(entity);
 		SeqNoPrimaryTerm seqNoPrimaryTerm = getEntitySeqNoPrimaryTerm(entity);
 		if (seqNoPrimaryTerm != null) {
 			builder.withSeqNoPrimaryTerm(seqNoPrimaryTerm);
+		} else {
+			// version cannot be used together with seq_no and primary_term
+			builder.withVersion(getEntityVersion(entity));
 		}
 		return builder.build();
 	}

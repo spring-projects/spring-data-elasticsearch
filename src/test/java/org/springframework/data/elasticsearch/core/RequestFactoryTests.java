@@ -67,7 +67,7 @@ class RequestFactoryTests {
 	@BeforeAll
 	static void setUpAll() {
 		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
-		mappingContext.setInitialEntitySet(new HashSet<>(Arrays.asList(Person.class, EntityWithSeqNoAndPrimaryTerm.class)));
+		mappingContext.setInitialEntitySet(new HashSet<>(Arrays.asList(Person.class, EntityWithSeqNoPrimaryTerm.class)));
 		mappingContext.afterPropertiesSet();
 
 		converter = new MappingElasticsearchConverter(mappingContext, new GenericConversionService());
@@ -184,7 +184,7 @@ class RequestFactoryTests {
 	void shouldRequestSeqNoAndPrimartyTermViaSearchRequestWhenEntityClassContainsSeqNoPrimaryTermProperty() {
 		Query query = new NativeSearchQueryBuilder().build();
 
-		SearchRequest request = requestFactory.searchRequest(query, EntityWithSeqNoAndPrimaryTerm.class,
+		SearchRequest request = requestFactory.searchRequest(query, EntityWithSeqNoPrimaryTerm.class,
 				IndexCoordinates.of("seqNoPrimaryTerm"));
 
 		assertThat(request.source().seqNoAndPrimaryTerm()).isTrue();
@@ -205,7 +205,7 @@ class RequestFactoryTests {
 		@Nullable @Field(name = "current-location") GeoPoint location;
 	}
 
-	static class EntityWithSeqNoAndPrimaryTerm {
+	static class EntityWithSeqNoPrimaryTerm {
 		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
 	}
 }

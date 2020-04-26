@@ -3162,6 +3162,35 @@ public abstract class ElasticsearchTemplateTests {
 				.isInstanceOf(OptimisticLockingFailureException.class);
 	}
 
+	@Test // DATAES-799
+	void shouldThrowOptimisticLockingFailureExceptionWhenConcurrentUpdateOccursOnVersionedEntityWithSeqNoPrimaryTermProperty() {
+		OptimisticAndVersionedEntity original = new OptimisticAndVersionedEntity();
+		original.setMessage("It's fine");
+		OptimisticAndVersionedEntity saved = operations.save(original);
+
+		OptimisticAndVersionedEntity forEdit1 = operations.get(saved.getId(), OptimisticAndVersionedEntity.class);
+		OptimisticAndVersionedEntity forEdit2 = operations.get(saved.getId(), OptimisticAndVersionedEntity.class);
+
+		forEdit1.setMessage("It'll be ok");
+		operations.save(forEdit1);
+
+		forEdit2.setMessage("It'll be great");
+		assertThatThrownBy(() -> operations.save(forEdit2))
+				.isInstanceOf(OptimisticLockingFailureException.class);
+	}
+
+	@Test // DATAES-799
+	void shouldAllowFullReplaceOfEntityWithBothSeqNoPrimaryTermAndVersion() {
+		OptimisticAndVersionedEntity original = new OptimisticAndVersionedEntity();
+		original.setMessage("It's fine");
+		OptimisticAndVersionedEntity saved = operations.save(original);
+
+		OptimisticAndVersionedEntity forEdit = operations.get(saved.getId(), OptimisticAndVersionedEntity.class);
+
+		forEdit.setMessage("It'll be ok");
+		operations.save(forEdit);
+	}
+
 	protected RequestFactory getRequestFactory() {
 		return ((AbstractElasticsearchTemplate) operations).getRequestFactory();
 	}
@@ -3332,5 +3361,14 @@ public abstract class ElasticsearchTemplateTests {
 		@Id private String id;
 		private String message;
 		private SeqNoPrimaryTerm seqNoPrimaryTerm;
+	}
+
+	@Data
+	@Document(indexName = "test-index-optimistic-and-versioned-entity-template")
+	static class OptimisticAndVersionedEntity {
+		@Id private String id;
+		private String message;
+		private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		@Version private Long version;
 	}
 }
