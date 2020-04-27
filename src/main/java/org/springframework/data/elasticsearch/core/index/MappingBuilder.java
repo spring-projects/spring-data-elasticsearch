@@ -167,6 +167,13 @@ public class MappingBuilder {
 						return;
 					}
 
+					if (property.isSeqNoPrimaryTermProperty()) {
+						logger.warn("Property {} of {} is annotated for inclusion in mapping, but its type is " + //
+								"SeqNoPrimaryTerm that is never mapped, so it is skipped", //
+								property.getFieldName(), entity.getType());
+						return;
+					}
+
 					buildPropertyMapping(builder, isRootObject, property);
 				} catch (IOException e) {
 					logger.warn("error mapping property with name {}", property.getName(), e);

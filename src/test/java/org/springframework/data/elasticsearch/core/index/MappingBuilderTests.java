@@ -576,7 +576,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-799
-	void shouldNotIncludeSeqNoPrimaryTermPropertyFromMappingWhenNotAnnotatedWithField() {
+	void shouldNotIncludeSeqNoPrimaryTermPropertyInMappingEvenWhenAnnotatedWithField() {
 		String propertyMapping = getMappingBuilder().buildPropertyMapping(EntityWithSeqNoPrimaryTerm.class);
 		
 		assertThat(propertyMapping).doesNotContain("seqNoPrimaryTerm");
@@ -1067,6 +1067,6 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@Document(indexName = "test-index-entity-with-seq-no-primary-term-mapping-builder")
 	static class EntityWithSeqNoPrimaryTerm {
 
-		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		@Field(type = Object) private SeqNoPrimaryTerm seqNoPrimaryTerm;
 	}
 }
