@@ -902,6 +902,7 @@ public class ReactiveElasticsearchTemplateTests {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
 		OptimisticEntity saved = template.save(original).block();
+		restTemplate.refresh(OptimisticEntity.class);
 
 		template.search(searchQueryForOne(saved.getId()), OptimisticEntity.class, template.getIndexCoordinatesFor(OptimisticEntity.class))
 				.map(SearchHit::getContent)
