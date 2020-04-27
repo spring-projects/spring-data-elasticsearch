@@ -90,7 +90,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	private Client client;
 	@Nullable private String searchTimeout;
 
-	// TODO: is it correct to use it here?
 	private final ElasticsearchExceptionTranslator exceptionTranslator = new ElasticsearchExceptionTranslator();
 
 	// region Initialization
