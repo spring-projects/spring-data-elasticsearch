@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.elasticsearch.index.VersionType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -57,6 +59,8 @@ import org.springframework.util.Assert;
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
+
+	private static final Logger logger = LoggerFactory.getLogger(SimpleElasticsearchPersistentEntity.class);
 
 	private final StandardEvaluationContext context;
 	private final SpelExpressionParser parser;
@@ -246,6 +250,16 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			}
 
 			this.seqNoPrimaryTermProperty = property;
+
+			if (hasVersionProperty()) {
+				logger.warn("Both SeqNoPrimaryTerm and @Version properties are defined on {}. Version will not be sent in index requests when seq_no is sent!", getType());
+			}
+		}
+
+		if (property.isVersionProperty()) {
+			if (hasSeqNoPrimaryTermProperty()) {
+				logger.warn("Both SeqNoPrimaryTerm and @Version properties are defined on {}. Version will not be sent in index requests when seq_no is sent!", getType());
+			}
 		}
 	}
 
