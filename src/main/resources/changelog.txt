@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.7.RELEASE (2020-04-28)
+---------------------------------------------
+* DATAES-780 - Upgrade 3.2.x to Elasticsearch 6.8.8.
+* DATAES-778 - Fix SSL setup in the reactive client.
+* DATAES-770 - Release 3.2.7 (Moore SR7).
+
+
 Changes in version 3.1.17.RELEASE (2020-04-28)
 ----------------------------------------------
 * DATAES-793 - Upgrade to Elasticsearch 6.2.4.
@@ -1067,6 +1074,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
