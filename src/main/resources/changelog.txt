@@ -1,6 +1,36 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.0.RC2 (2020-04-28)
+-----------------------------------------
+* DATAES-803 - Move count request setup from reactive template to reactive client.
+* DATAES-802 - Update documentation for using scroll API with repository methods.
+* DATAES-801 - Implement callback to enable adding custom headers in the REST HTTP request.
+* DATAES-800 - De-Lombok production code.
+* DATAES-797 - Fix MappingElasticsearchConverter recursive descent when reading Map objetcsa.
+* DATAES-795 - Fix MappingElasticsearchConverter conversion from Document into Map<String, Object>.
+* DATAES-794 - MappingBuilder must not write empty mapping properties.
+* DATAES-792 - Add java.util.Date to the supported types for Field annonation date times.
+* DATAES-791 - DocumentOperations.multiGet() implementations must return null values for  not found entities.
+* DATAES-790 - Deprecate noRefresh repository method.
+* DATAES-789 - Make ElasticsearchRestTemplate.ClientCallback public.
+* DATAES-788 - Add missing path mapping to completion context.
+* DATAES-787 - Use JDK 14 for Java.NEXT CI testing.
+* DATAES-786 - Move the creation of SearchHit(s) from ElasticsearchConverter closer to ElasticsearchTemplate.
+* DATAES-785 - Various entity callbacks implementation improvements.
+* DATAES-784 - MappingBuilder should use @Field annotation with custom value objects.
+* DATAES-782 - Make underlying TransportClient accessible.
+* DATAES-781 - Upgrade to Elasticsearch 7.6.2.
+* DATAES-778 - Fix SSL setup in the reactive client.
+* DATAES-777 - SearchHitsSupport must preserve pageable when unwrapping to AggregatedPage.
+* DATAES-776 - Adapt RestClients class to change in InetSocketAddress class in JDK14.
+* DATAES-775 - Fix test runner setup.
+* DATAES-774 - Release 4.0 RC2 (Neumann).
+* DATAES-773 - Add search-as-you-type field support to index mappings.
+* DATAES-772 - Add after-convert entity callbacks support.
+* DATAES-567 - Unable to read aggregations via Reactive*Operations.
+
+
 Changes in version 3.2.7.RELEASE (2020-04-28)
 ---------------------------------------------
 * DATAES-780 - Upgrade 3.2.x to Elasticsearch 6.8.8.
@@ -1074,6 +1104,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
