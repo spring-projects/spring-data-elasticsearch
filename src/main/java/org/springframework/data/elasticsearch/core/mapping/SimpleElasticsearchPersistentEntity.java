@@ -60,7 +60,7 @@ import org.springframework.util.Assert;
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
 
-	private static final Logger logger = LoggerFactory.getLogger(SimpleElasticsearchPersistentEntity.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleElasticsearchPersistentEntity.class);
 
 	private final StandardEvaluationContext context;
 	private final SpelExpressionParser parser;
