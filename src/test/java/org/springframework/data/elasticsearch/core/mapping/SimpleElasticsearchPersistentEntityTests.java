@@ -124,7 +124,7 @@ public class SimpleElasticsearchPersistentEntityTests {
 				typeInformation);
 		entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
 		EntityWithSeqNoPrimaryTerm instance = new EntityWithSeqNoPrimaryTerm();
-		SeqNoPrimaryTerm seqNoPrimaryTerm = new SeqNoPrimaryTerm();
+		SeqNoPrimaryTerm seqNoPrimaryTerm = SeqNoPrimaryTerm.of(1, 2);
 
 		ElasticsearchPersistentProperty property = entity.getSeqNoPrimaryTermProperty();
 		entity.getPropertyAccessor(instance).setProperty(property, seqNoPrimaryTerm);

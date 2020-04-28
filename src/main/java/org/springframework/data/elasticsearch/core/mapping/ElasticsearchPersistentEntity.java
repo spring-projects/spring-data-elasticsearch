@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import org.elasticsearch.index.VersionType;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.lang.Nullable;
 

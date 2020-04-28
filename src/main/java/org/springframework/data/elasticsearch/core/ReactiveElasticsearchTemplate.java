@@ -353,13 +353,9 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			SeqNoPrimaryTerm seqNoPrimaryTerm = entity.getSeqNoPrimaryTerm();
 
 			if (seqNoPrimaryTerm != null) {
-				if (seqNoPrimaryTerm.getSequenceNumber() != null) {
-					request.setIfSeqNo(seqNoPrimaryTerm.getSequenceNumber());
-					usingSeqNo = true;
-				}
-				if (seqNoPrimaryTerm.getPrimaryTerm() != null) {
-					request.setIfPrimaryTerm(seqNoPrimaryTerm.getPrimaryTerm());
-				}
+				request.setIfSeqNo(seqNoPrimaryTerm.getSequenceNumber());
+				request.setIfPrimaryTerm(seqNoPrimaryTerm.getPrimaryTerm());
+				usingSeqNo = true;
 			}
 		}
 

@@ -15,7 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.springframework.lang.Nullable;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * <p>A container for seq_no and primary_term values. When an entity class contains a field of this type,
@@ -29,42 +30,72 @@ import org.springframework.lang.Nullable;
  * seq_no + primary_term pair already has different values for the given document. See Elasticsearch documentation
  * for more information: https://www.elastic.co/guide/en/elasticsearch/reference/current/optimistic-concurrency-control.html
  * </p>
- * <p>
- * A property of this type is implicitly @{@link org.springframework.data.annotation.Transient} and never gets included
+ * <p>A property of this type is implicitly @{@link org.springframework.data.annotation.Transient} and never gets included
  * into a mapping at Elasticsearch side.
+ * </p>
+ * <p>Please note that an instance constructed via {@link SeqNoPrimaryTerm#of(long, long)} may contain unassigned values
+ * for seq_no and primary_term. Such values will be accepted by Elasticsearch as if they were not provided at all.
+ * {@link SeqNoPrimaryTerm#ofAssigned(long, long)} may be used to get either an instance with assigned seq_no and
+ * primary_term values, or no instance at all.
  * </p>
  *
  * @author Roman Puchkovskiy
  * @since 4.0
  */
-public class SeqNoPrimaryTerm {
-	@Nullable private Long sequenceNumber;
-	@Nullable private Long primaryTerm;
+public final class SeqNoPrimaryTerm {
+	private final long sequenceNumber;
+	private final long primaryTerm;
 
-	public SeqNoPrimaryTerm() {
+	/**
+	 * Returns an instance of SeqNoPrimaryTerm with the given seq_no and primary_term. No validation is made of whether
+	 * the passed values are valid (and assigned) seq_no and primary_term. If you need such a validation to be
+	 * performed, please use {@link #ofAssigned(long, long)},
+	 *
+	 * @param sequenceNumber seq_no
+	 * @param primaryTerm    primary_term
+	 * @return SeqNoPrimaryTerm instance with the given seq_no and primary_term
+	 * @see #ofAssigned(long, long)
+	 */
+	public static SeqNoPrimaryTerm of(long sequenceNumber, long primaryTerm) {
+		return new SeqNoPrimaryTerm(sequenceNumber, primaryTerm);
 	}
 
-	public SeqNoPrimaryTerm(@Nullable Long sequenceNumber, @Nullable Long primaryTerm) {
+	/**
+	 * Returns either an instance with valid (and assigned) values of seq_no and primary_term, or nothing.
+	 * seq_no is valid and assigned when it is non-negative. primary_term is valid and assigned when it is positive.
+	 *
+	 * @param sequenceNumber seq_no
+	 * @param primaryTerm    primary_term
+	 * @return either an instance with valid (and assigned) values of seq_no and primary_term, or nothing
+	 */
+	public static Optional<SeqNoPrimaryTerm> ofAssigned(long sequenceNumber, long primaryTerm) {
+
+		if (isAssignedSeqNo(sequenceNumber) && isAssignedPrimaryTerm(primaryTerm)) {
+			return Optional.of(SeqNoPrimaryTerm.of(sequenceNumber, primaryTerm));
+		}
+
+		return Optional.empty();
+	}
+
+	private static boolean isAssignedSeqNo(long seqNo) {
+		return seqNo >= 0;
+	}
+
+	private static boolean isAssignedPrimaryTerm(long primaryTerm) {
+		return primaryTerm > 0;
+	}
+
+	private SeqNoPrimaryTerm(long sequenceNumber, long primaryTerm) {
 		this.sequenceNumber = sequenceNumber;
 		this.primaryTerm = primaryTerm;
 	}
 
-	@Nullable
-	public Long getSequenceNumber() {
+	public long getSequenceNumber() {
 		return sequenceNumber;
 	}
 
-	public void setSequenceNumber(@Nullable Long sequenceNumber) {
-		this.sequenceNumber = sequenceNumber;
-	}
-
-	@Nullable
-	public Long getPrimaryTerm() {
+	public long getPrimaryTerm() {
 		return primaryTerm;
-	}
-
-	public void setPrimaryTerm(@Nullable Long primaryTerm) {
-		this.primaryTerm = primaryTerm;
 	}
 
 	@Override
@@ -73,5 +104,23 @@ public class SeqNoPrimaryTerm {
 				"sequenceNumber=" + sequenceNumber +
 				", primaryTerm=" + primaryTerm +
 				'}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		SeqNoPrimaryTerm that = (SeqNoPrimaryTerm) o;
+		return sequenceNumber == that.sequenceNumber &&
+				primaryTerm == that.primaryTerm;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(sequenceNumber, primaryTerm);
 	}
 }

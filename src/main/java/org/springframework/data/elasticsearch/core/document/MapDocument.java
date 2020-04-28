@@ -22,7 +22,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 
 import org.springframework.data.elasticsearch.ElasticsearchException;
-import org.springframework.data.elasticsearch.core.SequenceNumbers;
 import org.springframework.lang.Nullable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -124,7 +123,7 @@ class MapDocument implements Document {
 	 */
 	@Override
 	public boolean hasSeqNo() {
-		return this.seqNo != null && SequenceNumbers.isAssignedSeqNo(this.seqNo);
+		return this.seqNo != null;
 	}
 
 	/*
@@ -155,7 +154,7 @@ class MapDocument implements Document {
 	 */
 	@Override
 	public boolean hasPrimaryTerm() {
-		return this.primaryTerm != null && SequenceNumbers.isAssignedPrimaryTerm(this.primaryTerm);
+		return this.primaryTerm != null;
 	}
 
 	/*

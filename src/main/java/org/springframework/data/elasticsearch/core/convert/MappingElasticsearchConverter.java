@@ -198,10 +198,11 @@ public class MappingElasticsearchConverter
 				}
 			}
 
-			if (targetEntity.hasSeqNoPrimaryTermProperty() && (document.hasSeqNo() || document.hasPrimaryTerm())) {
-				SeqNoPrimaryTerm seqNoPrimaryTerm = fillSeqNoPrimaryTermFromDocument(document);
-				ElasticsearchPersistentProperty property = targetEntity.getSeqNoPrimaryTermProperty();
-				targetEntity.getPropertyAccessor(result).setProperty(property, seqNoPrimaryTerm);
+			if (targetEntity.hasSeqNoPrimaryTermProperty() && document.hasSeqNo() && document.hasPrimaryTerm()) {
+				SeqNoPrimaryTerm.ofAssigned(document.getSeqNo(), document.getPrimaryTerm()).ifPresent(seqNoPrimaryTerm -> {
+					ElasticsearchPersistentProperty property = targetEntity.getRequiredSeqNoPrimaryTermProperty();
+					targetEntity.getPropertyAccessor(result).setProperty(property, seqNoPrimaryTerm);
+				});
 			}
 		}
 
@@ -216,17 +217,6 @@ public class MappingElasticsearchConverter
 
 		return result;
 
-	}
-
-	private SeqNoPrimaryTerm fillSeqNoPrimaryTermFromDocument(Document document) {
-		SeqNoPrimaryTerm seqNoPrimaryTerm = new SeqNoPrimaryTerm();
-		if (document.hasSeqNo()) {
-			seqNoPrimaryTerm.setSequenceNumber(document.getSeqNo());
-		}
-		if (document.hasPrimaryTerm()) {
-			seqNoPrimaryTerm.setPrimaryTerm(document.getPrimaryTerm());
-		}
-		return seqNoPrimaryTerm;
 	}
 
 	protected <R> R readProperties(ElasticsearchPersistentEntity<?> entity, R instance,
