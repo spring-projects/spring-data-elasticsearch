@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.springframework.data.elasticsearch.core.mapping.SeqNoPrimaryTerm;
 import org.springframework.lang.Nullable;
 
 /**

@@ -252,13 +252,13 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.seqNoPrimaryTermProperty = property;
 
 			if (hasVersionProperty()) {
-				logger.warn("Both SeqNoPrimaryTerm and @Version properties are defined on {}. Version will not be sent in index requests when seq_no is sent!", getType());
+				LOGGER.warn("Both SeqNoPrimaryTerm and @Version properties are defined on {}. Version will not be sent in index requests when seq_no is sent!", getType());
 			}
 		}
 
 		if (property.isVersionProperty()) {
 			if (hasSeqNoPrimaryTermProperty()) {
-				logger.warn("Both SeqNoPrimaryTerm and @Version properties are defined on {}. Version will not be sent in index requests when seq_no is sent!", getType());
+				LOGGER.warn("Both SeqNoPrimaryTerm and @Version properties are defined on {}. Version will not be sent in index requests when seq_no is sent!", getType());
 			}
 		}
 	}
