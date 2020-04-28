@@ -167,7 +167,7 @@ public class MappingBuilder {
 						return;
 					}
 
-					if (property.isSeqNoPrimaryTermProperty()) {
+					if (property.isSeqNoPrimaryTermProperty() && property.isAnnotationPresent(Field.class)) {
 						logger.warn("Property {} of {} is annotated for inclusion in mapping, but its type is " + //
 								"SeqNoPrimaryTerm that is never mapped, so it is skipped", //
 								property.getFieldName(), entity.getType());
