@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.17.RELEASE (2020-04-28)
+----------------------------------------------
+* DATAES-793 - Upgrade to Elasticsearch 6.2.4.
+* DATAES-755 - Release 3.1.17 (Lovelace SR17).
+
+
 Changes in version 4.0.0.RC1 (2020-03-31)
 -----------------------------------------
 * DATAES-771 - Add after-save entity callbacks support.
@@ -1061,6 +1067,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
