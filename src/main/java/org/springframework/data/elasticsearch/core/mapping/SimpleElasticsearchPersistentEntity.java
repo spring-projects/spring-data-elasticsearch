@@ -245,7 +245,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			if (seqNoPrimaryTermProperty != null) {
 				throw new MappingException(String.format(
 						"Attempt to add SeqNoPrimaryTerm property %s but already have property %s registered "
-								+ "as SeqNoPrimaryTerm property. Check your mapping configuration!",
+								+ "as SeqNoPrimaryTerm property. Check your entity configuration!",
 						property.getField(), seqNoPrimaryTermProperty.getField()));
 			}
 
