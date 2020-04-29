@@ -43,8 +43,8 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 * Returns whether the current property is a <em>potential</em> score property of the owning
 	 * {@link ElasticsearchPersistentEntity}. This method is mainly used by {@link ElasticsearchPersistentEntity}
 	 * implementation to discover score property candidates on {@link ElasticsearchPersistentEntity} creation you should
-	 * rather call {@link ElasticsearchPersistentEntity#getScoreProperty()} to determine whether the
-	 * current property is the score property of that {@link ElasticsearchPersistentEntity} under consideration.
+	 * rather call {@link ElasticsearchPersistentEntity#getScoreProperty()} to determine whether the current property is
+	 * the score property of that {@link ElasticsearchPersistentEntity} under consideration.
 	 *
 	 * @return
 	 * @since 3.1

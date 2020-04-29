@@ -25,8 +25,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
-import java.util.UUID;
-
 /**
  * @author Roman Puchkovskiy
  */
@@ -48,8 +46,8 @@ class ElasticsearchExceptionTranslatorTests {
 
 	@Test // DATAES-799
 	void shouldConvertVersionConflictEngineExceptionWithSeqNoConflictToOptimisticLockingFailureException() {
-		VersionConflictEngineException ex = new VersionConflictEngineException(
-				new ShardId("index", "uuid", 1), "exception-id",
+		VersionConflictEngineException ex = new VersionConflictEngineException(new ShardId("index", "uuid", 1),
+				"exception-id",
 				"Elasticsearch exception [type=version_conflict_engine_exception, reason=[WPUUsXEB6uuA6j8_A7AB]: version conflict, required seqNo [34], primary term [16]. current document has seqNo [35] and primary term [16]]");
 
 		DataAccessException translated = translator.translateExceptionIfPossible(ex);

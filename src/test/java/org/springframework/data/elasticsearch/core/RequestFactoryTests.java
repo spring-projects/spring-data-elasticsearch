@@ -233,8 +233,8 @@ class RequestFactoryTests {
 		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
 		Query query = new NativeSearchQueryBuilder().build();
 
-		SearchRequestBuilder builder = requestFactory.searchRequestBuilder(client, query,
-				EntityWithSeqNoPrimaryTerm.class, IndexCoordinates.of("seqNoPrimaryTerm"));
+		SearchRequestBuilder builder = requestFactory.searchRequestBuilder(client, query, EntityWithSeqNoPrimaryTerm.class,
+				IndexCoordinates.of("seqNoPrimaryTerm"));
 
 		assertThat(builder.request().source().seqNoAndPrimaryTerm()).isTrue();
 	}

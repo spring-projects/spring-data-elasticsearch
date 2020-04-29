@@ -18,21 +18,25 @@ package org.springframework.data.elasticsearch.core.query;
 import java.util.Objects;
 
 /**
- * <p>A container for seq_no and primary_term values. When an entity class contains a field of this type,
- * it will be automatically filled with SeqNoPrimaryTerm instance on read operations (like get or search),
- * and also, when the SeqNoPrimaryTerm is not {@literal null} and filled with seq_no and primary_term,
- * they will be sent to Elasticsearch when indexing such an entity.
+ * <p>
+ * A container for seq_no and primary_term values. When an entity class contains a field of this type, it will be
+ * automatically filled with SeqNoPrimaryTerm instance on read operations (like get or search), and also, when the
+ * SeqNoPrimaryTerm is not {@literal null} and filled with seq_no and primary_term, they will be sent to Elasticsearch
+ * when indexing such an entity.
  * </p>
- * <p>This allows to implement optimistic locking pattern for full-update scenario, when an entity is first
- * read from Elasticsearch and then gets reindexed with new _content.
- * Index operations will throw an {@link org.springframework.dao.OptimisticLockingFailureException} if the
- * seq_no + primary_term pair already has different values for the given document. See Elasticsearch documentation
- * for more information: https://www.elastic.co/guide/en/elasticsearch/reference/current/optimistic-concurrency-control.html
+ * <p>
+ * This allows to implement optimistic locking pattern for full-update scenario, when an entity is first read from
+ * Elasticsearch and then gets reindexed with new _content. Index operations will throw an
+ * {@link org.springframework.dao.OptimisticLockingFailureException} if the seq_no + primary_term pair already has
+ * different values for the given document. See Elasticsearch documentation for more information:
+ * https://www.elastic.co/guide/en/elasticsearch/reference/current/optimistic-concurrency-control.html
  * </p>
- * <p>A property of this type is implicitly @{@link org.springframework.data.annotation.Transient} and never gets included
+ * <p>
+ * A property of this type is implicitly @{@link org.springframework.data.annotation.Transient} and never gets included
  * into a mapping at Elasticsearch side.
  * </p>
- * <p>A SeqNoPrimaryTerm instance cannot contain an invalid or unassigned seq_no or primary_term.
+ * <p>
+ * A SeqNoPrimaryTerm instance cannot contain an invalid or unassigned seq_no or primary_term.
  * </p>
  *
  * @author Roman Puchkovskiy
@@ -44,11 +48,11 @@ public final class SeqNoPrimaryTerm {
 
 	/**
 	 * Creates an instance of SeqNoPrimaryTerm with the given seq_no and primary_term. The passed values are validated:
-	 * sequenceNumber must be non-negative, primaryTerm must be positive. If validation fails,
-	 * an IllegalArgumentException is thrown.
+	 * sequenceNumber must be non-negative, primaryTerm must be positive. If validation fails, an IllegalArgumentException
+	 * is thrown.
 	 *
 	 * @param sequenceNumber seq_no, must not be negative
-	 * @param primaryTerm    primary_term, must be positive
+	 * @param primaryTerm primary_term, must be positive
 	 * @throws IllegalArgumentException if seq_no or primary_term is not valid
 	 */
 	public SeqNoPrimaryTerm(long sequenceNumber, long primaryTerm) {
@@ -73,10 +77,7 @@ public final class SeqNoPrimaryTerm {
 
 	@Override
 	public String toString() {
-		return "SeqNoPrimaryTerm{" +
-				"sequenceNumber=" + sequenceNumber +
-				", primaryTerm=" + primaryTerm +
-				'}';
+		return "SeqNoPrimaryTerm{" + "sequenceNumber=" + sequenceNumber + ", primaryTerm=" + primaryTerm + '}';
 	}
 
 	@Override
@@ -88,8 +89,7 @@ public final class SeqNoPrimaryTerm {
 			return false;
 		}
 		SeqNoPrimaryTerm that = (SeqNoPrimaryTerm) o;
-		return sequenceNumber == that.sequenceNumber &&
-				primaryTerm == that.primaryTerm;
+		return sequenceNumber == that.sequenceNumber && primaryTerm == that.primaryTerm;
 	}
 
 	@Override

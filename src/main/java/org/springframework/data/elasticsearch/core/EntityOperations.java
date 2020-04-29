@@ -272,7 +272,8 @@ class EntityOperations {
 		 *
 		 * @return SeqNoPrimaryTerm, may be {@literal null}
 		 */
-		@Nullable SeqNoPrimaryTerm getSeqNoPrimaryTerm();
+		@Nullable
+		SeqNoPrimaryTerm getSeqNoPrimaryTerm();
 	}
 
 	/**

@@ -77,8 +77,8 @@ public class DocumentAdapters {
 		}
 
 		if (source.isSourceEmpty()) {
-			return fromDocumentFields(source, source.getId(), source.getVersion(),
-					source.getSeqNo(), source.getPrimaryTerm());
+			return fromDocumentFields(source, source.getId(), source.getVersion(), source.getSeqNo(),
+					source.getPrimaryTerm());
 		}
 
 		Document document = Document.from(source.getSourceAsMap());
@@ -108,8 +108,8 @@ public class DocumentAdapters {
 		}
 
 		if (source.isSourceEmpty()) {
-			return fromDocumentFields(source, source.getId(), source.getVersion(),
-					source.getSeqNo(), source.getPrimaryTerm());
+			return fromDocumentFields(source, source.getId(), source.getVersion(), source.getSeqNo(),
+					source.getPrimaryTerm());
 		}
 
 		Document document = Document.from(source.getSource());
@@ -157,8 +157,7 @@ public class DocumentAdapters {
 
 		if (sourceRef == null || sourceRef.length() == 0) {
 			return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(), highlightFields,
-					fromDocumentFields(source, source.getId(), source.getVersion(),
-							source.getSeqNo(), source.getPrimaryTerm()));
+					fromDocumentFields(source, source.getId(), source.getVersion(), source.getSeqNo(), source.getPrimaryTerm()));
 		}
 
 		Document document = Document.from(source.getSourceAsMap());
@@ -180,8 +179,8 @@ public class DocumentAdapters {
 	 * @param documentFields the {@link DocumentField}s backing the {@link Document}.
 	 * @return the adapted {@link Document}.
 	 */
-	public static Document fromDocumentFields(Iterable<DocumentField> documentFields, String id, long version,
-			long seqNo, long primaryTerm) {
+	public static Document fromDocumentFields(Iterable<DocumentField> documentFields, String id, long version, long seqNo,
+			long primaryTerm) {
 
 		if (documentFields instanceof Collection) {
 			return new DocumentFieldAdapter((Collection<DocumentField>) documentFields, id, version, seqNo, primaryTerm);
@@ -204,8 +203,8 @@ public class DocumentAdapters {
 		private final long seqNo;
 		private final long primaryTerm;
 
-		DocumentFieldAdapter(Collection<DocumentField> documentFields, String id, long version,
-				long seqNo, long primaryTerm) {
+		DocumentFieldAdapter(Collection<DocumentField> documentFields, String id, long version, long seqNo,
+				long primaryTerm) {
 			this.documentFields = documentFields;
 			this.id = id;
 			this.version = version;
@@ -618,7 +617,7 @@ public class DocumentAdapters {
 		public void setVersion(long version) {
 			delegate.setVersion(version);
 		}
-		
+
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.document.Document#hasSeqNo()
@@ -645,7 +644,7 @@ public class DocumentAdapters {
 		public void setSeqNo(long seqNo) {
 			delegate.setSeqNo(seqNo);
 		}
-		
+
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.document.Document#hasPrimaryTerm()

@@ -60,7 +60,8 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 
 	String settingPath();
 
-	@Nullable VersionType getVersionType();
+	@Nullable
+	VersionType getVersionType();
 
 	boolean isCreateIndexAndMapping();
 
@@ -109,11 +110,11 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	boolean hasSeqNoPrimaryTermProperty();
 
 	/**
-	 * Returns the {@link SeqNoPrimaryTerm} property of the {@link ElasticsearchPersistentEntity}. Can be
-	 * {@literal null} in case no such property is available on the entity.
+	 * Returns the {@link SeqNoPrimaryTerm} property of the {@link ElasticsearchPersistentEntity}. Can be {@literal null}
+	 * in case no such property is available on the entity.
 	 *
 	 * @return the {@link SeqNoPrimaryTerm} {@link ElasticsearchPersistentProperty} of the {@link PersistentEntity} or
-	 * {@literal null} if not defined.
+	 *         {@literal null} if not defined.
 	 * @since 4.0
 	 */
 	@Nullable
@@ -131,8 +132,8 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 		if (property != null) {
 			return property;
 		} else {
-			throw new IllegalStateException(String.format("Required SeqNoPrimaryTerm property not found for %s!",
-					this.getType()));
+			throw new IllegalStateException(
+					String.format("Required SeqNoPrimaryTerm property not found for %s!", this.getType()));
 		}
 	}
 }

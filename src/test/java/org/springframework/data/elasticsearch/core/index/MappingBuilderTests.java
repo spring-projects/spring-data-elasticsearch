@@ -579,7 +579,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@Test // DATAES-799
 	void shouldNotIncludeSeqNoPrimaryTermPropertyInMappingEvenWhenAnnotatedWithField() {
 		String propertyMapping = getMappingBuilder().buildPropertyMapping(EntityWithSeqNoPrimaryTerm.class);
-		
+
 		assertThat(propertyMapping).doesNotContain("seqNoPrimaryTerm");
 	}
 

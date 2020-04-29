@@ -15,8 +15,17 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
@@ -297,7 +306,8 @@ public class MappingElasticsearchConverter
 				if (value instanceof List) {
 					target.add(readValue(value, property, property.getTypeInformation().getActualType()));
 				} else if (value instanceof Map) {
-					target.add(readMapValue((Map<String, Object>) value, property, property.getTypeInformation().getActualType()));
+					target
+							.add(readMapValue((Map<String, Object>) value, property, property.getTypeInformation().getActualType()));
 				} else {
 					target.add(readEntity(computeGenericValueTypeForRead(property, value), (Map<String, Object>) value));
 				}

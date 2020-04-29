@@ -182,8 +182,8 @@ public interface Document extends Map<String, Object> {
 	 * {@link #hasSeqNo()} prior to calling this method.
 	 *
 	 * @return the seq_no associated with this {@link Document}.
-	 * @throws IllegalStateException if the underlying implementation supports seq_no's but no seq_no was yet
-	 * 		   associated with the document.
+	 * @throws IllegalStateException if the underlying implementation supports seq_no's but no seq_no was yet associated
+	 *           with the document.
 	 */
 	default long getSeqNo() {
 		throw new UnsupportedOperationException();
@@ -214,8 +214,8 @@ public interface Document extends Map<String, Object> {
 	 * {@link #hasPrimaryTerm()} prior to calling this method.
 	 *
 	 * @return the primary_term associated with this {@link Document}.
-	 * @throws IllegalStateException if the underlying implementation supports primary_term's but no primary_term was
-	 * 			 yet associated with the document.
+	 * @throws IllegalStateException if the underlying implementation supports primary_term's but no primary_term was yet
+	 *           associated with the document.
 	 */
 	default long getPrimaryTerm() {
 		throw new UnsupportedOperationException();

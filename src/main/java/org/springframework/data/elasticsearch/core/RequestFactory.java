@@ -709,7 +709,8 @@ class RequestFactory {
 			return false;
 		}
 
-		ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(entityClass);
+		ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext()
+				.getRequiredPersistentEntity(entityClass);
 		return entity.hasSeqNoPrimaryTermProperty();
 	}
 

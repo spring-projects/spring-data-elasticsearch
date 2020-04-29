@@ -79,8 +79,7 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 
 		if (exception instanceof ElasticsearchStatusException) {
 			ElasticsearchStatusException statusException = (ElasticsearchStatusException) exception;
-			return statusException.status() == RestStatus.CONFLICT
-					&& statusException.getMessage() != null
+			return statusException.status() == RestStatus.CONFLICT && statusException.getMessage() != null
 					&& statusException.getMessage().contains("type=version_conflict_engine_exception")
 					&& statusException.getMessage().contains("version conflict, required seqNo");
 		}

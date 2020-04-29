@@ -703,7 +703,7 @@ public class MappingElasticsearchConverterUnitTests {
 		EntityWithSeqNoPrimaryTerm entity = new EntityWithSeqNoPrimaryTerm();
 		entity.seqNoPrimaryTerm = new SeqNoPrimaryTerm(1L, 2L);
 		Document document = Document.create();
-		
+
 		mappingElasticsearchConverter.write(entity, document);
 
 		assertThat(document).doesNotContainKey("seqNoPrimaryTerm");
@@ -926,7 +926,8 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	@Data
-	@org.springframework.data.elasticsearch.annotations.Document(indexName = "test-index-entity-with-seq-no-primary-term-mapper")
+	@org.springframework.data.elasticsearch.annotations.Document(
+			indexName = "test-index-entity-with-seq-no-primary-term-mapper")
 	static class EntityWithSeqNoPrimaryTerm {
 
 		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;

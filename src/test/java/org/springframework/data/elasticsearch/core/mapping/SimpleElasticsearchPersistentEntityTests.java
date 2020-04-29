@@ -99,7 +99,8 @@ public class SimpleElasticsearchPersistentEntityTests {
 
 	@Test // DATAES-799
 	void shouldReportThatThereIsNoSeqNoPrimaryTermPropertyWhenThereIsNoSuchProperty() {
-		TypeInformation<EntityWithoutSeqNoPrimaryTerm> typeInformation = ClassTypeInformation.from(EntityWithoutSeqNoPrimaryTerm.class);
+		TypeInformation<EntityWithoutSeqNoPrimaryTerm> typeInformation = ClassTypeInformation
+				.from(EntityWithoutSeqNoPrimaryTerm.class);
 		SimpleElasticsearchPersistentEntity<EntityWithoutSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 				typeInformation);
 
@@ -108,7 +109,8 @@ public class SimpleElasticsearchPersistentEntityTests {
 
 	@Test // DATAES-799
 	void shouldReportThatThereIsSeqNoPrimaryTermPropertyWhenThereIsSuchProperty() {
-		TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation.from(EntityWithSeqNoPrimaryTerm.class);
+		TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation
+				.from(EntityWithSeqNoPrimaryTerm.class);
 		SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 				typeInformation);
 
@@ -119,7 +121,8 @@ public class SimpleElasticsearchPersistentEntityTests {
 
 	@Test // DATAES-799
 	void shouldReturnSeqNoPrimaryTermPropertyWhenThereIsSuchProperty() {
-		TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation.from(EntityWithSeqNoPrimaryTerm.class);
+		TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation
+				.from(EntityWithSeqNoPrimaryTerm.class);
 		SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 				typeInformation);
 		entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
@@ -134,7 +137,8 @@ public class SimpleElasticsearchPersistentEntityTests {
 
 	@Test // DATAES-799
 	void shouldNotAllowMoreThanOneSeqNoPrimaryTermProperties() {
-		TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation.from(EntityWithSeqNoPrimaryTerm.class);
+		TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation
+				.from(EntityWithSeqNoPrimaryTerm.class);
 		SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 				typeInformation);
 		entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
@@ -202,8 +206,7 @@ public class SimpleElasticsearchPersistentEntityTests {
 		@Nullable @Field(name = "renamed-field") private String renamedField;
 	}
 
-	private static class EntityWithoutSeqNoPrimaryTerm {
-	}
+	private static class EntityWithoutSeqNoPrimaryTerm {}
 
 	private static class EntityWithSeqNoPrimaryTerm {
 		private SeqNoPrimaryTerm seqNoPrimaryTerm;
