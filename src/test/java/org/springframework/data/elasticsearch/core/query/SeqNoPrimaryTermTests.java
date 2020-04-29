@@ -17,8 +17,6 @@ package org.springframework.data.elasticsearch.core.query;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.util.Optional;
-
 import org.elasticsearch.index.seqno.SequenceNumbers;
 import org.junit.jupiter.api.Test;
 
@@ -27,32 +25,28 @@ import org.junit.jupiter.api.Test;
  */
 class SeqNoPrimaryTermTests {
 	@Test
-	void ofAssignedShouldReturnSomeSeqNoPrimaryTermWhenBothSeqNoAndPrimaryTermAreAssigned() {
-		Optional<SeqNoPrimaryTerm> maybeSeqNoPrimaryTerm = SeqNoPrimaryTerm.ofAssigned(1, 2);
+	void shouldConstructInstanceWithAssignedSeqNoAndPrimaryTerm() {
+		SeqNoPrimaryTerm instance = new SeqNoPrimaryTerm(1, 2);
 
-		assertThat(maybeSeqNoPrimaryTerm).contains(SeqNoPrimaryTerm.of(1, 2));
+		assertThat(instance.getSequenceNumber()).isEqualTo(1);
+		assertThat(instance.getPrimaryTerm()).isEqualTo(2);
 	}
 
 	@Test
-	void ofAssignedShouldReturnEmptyWhenSeqNoIsUnassigned() {
-		Optional<SeqNoPrimaryTerm> maybeSeqNoPrimaryTerm = SeqNoPrimaryTerm.ofAssigned(SequenceNumbers.UNASSIGNED_SEQ_NO, 2);
-
-		assertThat(maybeSeqNoPrimaryTerm).isEmpty();
+	void shouldThrowAnExceptionWhenTryingToConstructWithUnassignedSeqNo() {
+		assertThatThrownBy(() -> new SeqNoPrimaryTerm(SequenceNumbers.UNASSIGNED_SEQ_NO, 2))
+				.isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
-	void ofAssignedShouldReturnEmptyWhenSeqNoIsNoOpsPerformed() {
-		Optional<SeqNoPrimaryTerm> maybeSeqNoPrimaryTerm = SeqNoPrimaryTerm.ofAssigned(
-				SequenceNumbers.NO_OPS_PERFORMED, 2);
-
-		assertThat(maybeSeqNoPrimaryTerm).isEmpty();
+	void shouldThrowAnExceptionWhenTryingToConstructWithSeqNoForNoOpsPerformed() {
+		assertThatThrownBy(() -> new SeqNoPrimaryTerm(SequenceNumbers.NO_OPS_PERFORMED, 2))
+				.isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
-	void ofAssignedShouldReturnEmptyWhenPrimaryTermIsUnassigned() {
-		Optional<SeqNoPrimaryTerm> maybeSeqNoPrimaryTerm = SeqNoPrimaryTerm.ofAssigned(1,
-				SequenceNumbers.UNASSIGNED_PRIMARY_TERM);
-
-		assertThat(maybeSeqNoPrimaryTerm).isEmpty();
+	void shouldThrowAnExceptionWhenTryingToConstructWithUnassignedPrimaryTerm() {
+		assertThatThrownBy(() -> new SeqNoPrimaryTerm(1, SequenceNumbers.UNASSIGNED_PRIMARY_TERM))
+				.isInstanceOf(IllegalArgumentException.class);
 	}
 }

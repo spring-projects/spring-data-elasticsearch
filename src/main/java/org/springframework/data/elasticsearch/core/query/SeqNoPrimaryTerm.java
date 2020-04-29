@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * <p>A container for seq_no and primary_term values. When an entity class contains a field of this type,
@@ -33,10 +32,7 @@ import java.util.Optional;
  * <p>A property of this type is implicitly @{@link org.springframework.data.annotation.Transient} and never gets included
  * into a mapping at Elasticsearch side.
  * </p>
- * <p>Please note that an instance constructed via {@link SeqNoPrimaryTerm#of(long, long)} may contain unassigned values
- * for seq_no and primary_term. Such values will be accepted by Elasticsearch as if they were not provided at all.
- * {@link SeqNoPrimaryTerm#ofAssigned(long, long)} may be used to get either an instance with assigned seq_no and
- * primary_term values, or no instance at all.
+ * <p>A SeqNoPrimaryTerm instance cannot contain an invalid or unassigned seq_no or primary_term.
  * </p>
  *
  * @author Roman Puchkovskiy
@@ -47,45 +43,22 @@ public final class SeqNoPrimaryTerm {
 	private final long primaryTerm;
 
 	/**
-	 * Returns an instance of SeqNoPrimaryTerm with the given seq_no and primary_term. No validation is made of whether
-	 * the passed values are valid (and assigned) seq_no and primary_term. If you need such a validation to be
-	 * performed, please use {@link #ofAssigned(long, long)},
+	 * Creates an instance of SeqNoPrimaryTerm with the given seq_no and primary_term. The passed values are validated:
+	 * sequenceNumber must be non-negative, primaryTerm must be positive. If validation fails,
+	 * an IllegalArgumentException is thrown.
 	 *
-	 * @param sequenceNumber seq_no
-	 * @param primaryTerm    primary_term
-	 * @return SeqNoPrimaryTerm instance with the given seq_no and primary_term
-	 * @see #ofAssigned(long, long)
+	 * @param sequenceNumber seq_no, must not be negative
+	 * @param primaryTerm    primary_term, must be positive
+	 * @throws IllegalArgumentException if seq_no or primary_term is not valid
 	 */
-	public static SeqNoPrimaryTerm of(long sequenceNumber, long primaryTerm) {
-		return new SeqNoPrimaryTerm(sequenceNumber, primaryTerm);
-	}
-
-	/**
-	 * Returns either an instance with valid (and assigned) values of seq_no and primary_term, or nothing.
-	 * seq_no is valid and assigned when it is non-negative. primary_term is valid and assigned when it is positive.
-	 *
-	 * @param sequenceNumber seq_no
-	 * @param primaryTerm    primary_term
-	 * @return either an instance with valid (and assigned) values of seq_no and primary_term, or nothing
-	 */
-	public static Optional<SeqNoPrimaryTerm> ofAssigned(long sequenceNumber, long primaryTerm) {
-
-		if (isAssignedSeqNo(sequenceNumber) && isAssignedPrimaryTerm(primaryTerm)) {
-			return Optional.of(SeqNoPrimaryTerm.of(sequenceNumber, primaryTerm));
+	public SeqNoPrimaryTerm(long sequenceNumber, long primaryTerm) {
+		if (sequenceNumber < 0) {
+			throw new IllegalArgumentException("seq_no should not be negative, but it's " + sequenceNumber);
+		}
+		if (primaryTerm <= 0) {
+			throw new IllegalArgumentException("primary_term should be positive, but it's " + primaryTerm);
 		}
 
-		return Optional.empty();
-	}
-
-	private static boolean isAssignedSeqNo(long seqNo) {
-		return seqNo >= 0;
-	}
-
-	private static boolean isAssignedPrimaryTerm(long primaryTerm) {
-		return primaryTerm > 0;
-	}
-
-	private SeqNoPrimaryTerm(long sequenceNumber, long primaryTerm) {
 		this.sequenceNumber = sequenceNumber;
 		this.primaryTerm = primaryTerm;
 	}

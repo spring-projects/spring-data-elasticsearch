@@ -199,10 +199,11 @@ public class MappingElasticsearchConverter
 			}
 
 			if (targetEntity.hasSeqNoPrimaryTermProperty() && document.hasSeqNo() && document.hasPrimaryTerm()) {
-				SeqNoPrimaryTerm.ofAssigned(document.getSeqNo(), document.getPrimaryTerm()).ifPresent(seqNoPrimaryTerm -> {
+				if (isAssignedSeqNo(document.getSeqNo()) && isAssignedPrimaryTerm(document.getPrimaryTerm())) {
+					SeqNoPrimaryTerm seqNoPrimaryTerm = new SeqNoPrimaryTerm(document.getSeqNo(), document.getPrimaryTerm());
 					ElasticsearchPersistentProperty property = targetEntity.getRequiredSeqNoPrimaryTermProperty();
 					targetEntity.getPropertyAccessor(result).setProperty(property, seqNoPrimaryTerm);
-				});
+				}
 			}
 		}
 
@@ -217,6 +218,14 @@ public class MappingElasticsearchConverter
 
 		return result;
 
+	}
+
+	private boolean isAssignedSeqNo(long seqNo) {
+		return seqNo >= 0;
+	}
+
+	private boolean isAssignedPrimaryTerm(long primaryTerm) {
+		return primaryTerm > 0;
 	}
 
 	protected <R> R readProperties(ElasticsearchPersistentEntity<?> entity, R instance,

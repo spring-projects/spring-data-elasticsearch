@@ -701,7 +701,7 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test // DATAES-799
 	void shouldNotWriteSeqNoPrimaryTermProperty() {
 		EntityWithSeqNoPrimaryTerm entity = new EntityWithSeqNoPrimaryTerm();
-		entity.seqNoPrimaryTerm = SeqNoPrimaryTerm.of(1L, 2L);
+		entity.seqNoPrimaryTerm = new SeqNoPrimaryTerm(1L, 2L);
 		Document document = Document.create();
 		
 		mappingElasticsearchConverter.write(entity, document);
