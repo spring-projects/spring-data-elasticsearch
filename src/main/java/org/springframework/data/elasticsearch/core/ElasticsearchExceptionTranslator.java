@@ -22,9 +22,12 @@ import java.util.List;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.common.ValidationException;
+import org.elasticsearch.index.engine.VersionConflictEngineException;
+import org.elasticsearch.rest.RestStatus;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
@@ -35,6 +38,7 @@ import org.springframework.util.StringUtils;
 /**
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  * @since 3.2
  */
 public class ElasticsearchExceptionTranslator implements PersistenceExceptionTranslator {
@@ -50,6 +54,12 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 				return new NoSuchIndexException(ObjectUtils.nullSafeToString(elasticsearchException.getMetadata("es.index")),
 						ex);
 			}
+
+			if (isSeqNoConflict(elasticsearchException)) {
+				return new OptimisticLockingFailureException("Cannot index a document due to seq_no+primary_term conflict",
+						elasticsearchException);
+			}
+
 			return new UncategorizedElasticsearchException(ex.getMessage(), ex);
 		}
 
@@ -63,6 +73,25 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 		}
 
 		return null;
+	}
+
+	private boolean isSeqNoConflict(ElasticsearchException exception) {
+
+		if (exception instanceof ElasticsearchStatusException) {
+			ElasticsearchStatusException statusException = (ElasticsearchStatusException) exception;
+			return statusException.status() == RestStatus.CONFLICT
+					&& statusException.getMessage() != null
+					&& statusException.getMessage().contains("type=version_conflict_engine_exception")
+					&& statusException.getMessage().contains("version conflict, required seqNo");
+		}
+
+		if (exception instanceof VersionConflictEngineException) {
+			VersionConflictEngineException versionConflictEngineException = (VersionConflictEngineException) exception;
+			return versionConflictEngineException.getMessage() != null
+					&& versionConflictEngineException.getMessage().contains("version conflict, required seqNo");
+		}
+
+		return false;
 	}
 
 	private boolean indexAvailable(ElasticsearchException ex) {

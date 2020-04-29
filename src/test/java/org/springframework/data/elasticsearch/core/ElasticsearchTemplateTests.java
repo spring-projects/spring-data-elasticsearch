@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static java.util.Collections.*;
 import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -58,6 +59,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
@@ -100,6 +102,7 @@ import org.springframework.lang.Nullable;
  * @author Martin Choraine
  * @author Farid Azaza
  * @author Gyula Attila Csorogi
+ * @author Roman Puchkovskiy
  */
 public abstract class ElasticsearchTemplateTests {
 
@@ -3067,6 +3070,131 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(operations.exists("42", index)).isTrue();
 	}
 
+	@Test // DATAES-799
+	void getShouldReturnSeqNoPrimaryTerm() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = operations.save(original);
+
+		OptimisticEntity retrieved = operations.get(saved.getId(), OptimisticEntity.class);
+
+		assertThatSeqNoPrimaryTermIsFilled(retrieved);
+	}
+
+	private void assertThatSeqNoPrimaryTermIsFilled(OptimisticEntity retrieved) {
+		assertThat(retrieved.seqNoPrimaryTerm).isNotNull();
+		assertThat(retrieved.seqNoPrimaryTerm.getSequenceNumber()).isNotNull();
+		assertThat(retrieved.seqNoPrimaryTerm.getSequenceNumber()).isNotNegative();
+		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isNotNull();
+		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isPositive();
+	}
+
+	@Test // DATAES-799
+	void multigetShouldReturnSeqNoPrimaryTerm() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = operations.save(original);
+		operations.refresh(OptimisticEntity.class);
+
+		List<OptimisticEntity> retrievedList = operations.multiGet(queryForOne(saved.getId()), OptimisticEntity.class,
+				operations.getIndexCoordinatesFor(OptimisticEntity.class));
+		OptimisticEntity retrieved = retrievedList.get(0);
+
+		assertThatSeqNoPrimaryTermIsFilled(retrieved);
+	}
+
+	private Query queryForOne(String id) {
+		return new NativeSearchQueryBuilder().withIds(singletonList(id)).build();
+	}
+
+	@Test // DATAES-799
+	void searchShouldReturnSeqNoPrimaryTerm() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = operations.save(original);
+		operations.refresh(OptimisticEntity.class);
+
+		SearchHits<OptimisticEntity> retrievedHits = operations.search(queryForOne(saved.getId()), OptimisticEntity.class);
+		OptimisticEntity retrieved = retrievedHits.getSearchHit(0).getContent();
+
+		assertThatSeqNoPrimaryTermIsFilled(retrieved);
+	}
+
+	@Test // DATAES-799
+	void multiSearchShouldReturnSeqNoPrimaryTerm() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = operations.save(original);
+		operations.refresh(OptimisticEntity.class);
+
+		List<Query> queries = singletonList(queryForOne(saved.getId()));
+		List<SearchHits<OptimisticEntity>> retrievedHits = operations.multiSearch(queries,
+				OptimisticEntity.class, operations.getIndexCoordinatesFor(OptimisticEntity.class));
+		OptimisticEntity retrieved = retrievedHits.get(0).getSearchHit(0).getContent();
+
+		assertThatSeqNoPrimaryTermIsFilled(retrieved);
+	}
+
+	@Test // DATAES-799
+	void searchForStreamShouldReturnSeqNoPrimaryTerm() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = operations.save(original);
+		operations.refresh(OptimisticEntity.class);
+
+		SearchHitsIterator<OptimisticEntity> retrievedHits = operations.searchForStream(queryForOne(saved.getId()),
+				OptimisticEntity.class);
+		OptimisticEntity retrieved = retrievedHits.next().getContent();
+
+		assertThatSeqNoPrimaryTermIsFilled(retrieved);
+	}
+
+	@Test // DATAES-799
+	void shouldThrowOptimisticLockingFailureExceptionWhenConcurrentUpdateOccursOnEntityWithSeqNoPrimaryTermProperty() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = operations.save(original);
+
+		OptimisticEntity forEdit1 = operations.get(saved.getId(), OptimisticEntity.class);
+		OptimisticEntity forEdit2 = operations.get(saved.getId(), OptimisticEntity.class);
+
+		forEdit1.setMessage("It'll be ok");
+		operations.save(forEdit1);
+
+		forEdit2.setMessage("It'll be great");
+		assertThatThrownBy(() -> operations.save(forEdit2))
+				.isInstanceOf(OptimisticLockingFailureException.class);
+	}
+
+	@Test // DATAES-799
+	void shouldThrowOptimisticLockingFailureExceptionWhenConcurrentUpdateOccursOnVersionedEntityWithSeqNoPrimaryTermProperty() {
+		OptimisticAndVersionedEntity original = new OptimisticAndVersionedEntity();
+		original.setMessage("It's fine");
+		OptimisticAndVersionedEntity saved = operations.save(original);
+
+		OptimisticAndVersionedEntity forEdit1 = operations.get(saved.getId(), OptimisticAndVersionedEntity.class);
+		OptimisticAndVersionedEntity forEdit2 = operations.get(saved.getId(), OptimisticAndVersionedEntity.class);
+
+		forEdit1.setMessage("It'll be ok");
+		operations.save(forEdit1);
+
+		forEdit2.setMessage("It'll be great");
+		assertThatThrownBy(() -> operations.save(forEdit2))
+				.isInstanceOf(OptimisticLockingFailureException.class);
+	}
+
+	@Test // DATAES-799
+	void shouldAllowFullReplaceOfEntityWithBothSeqNoPrimaryTermAndVersion() {
+		OptimisticAndVersionedEntity original = new OptimisticAndVersionedEntity();
+		original.setMessage("It's fine");
+		OptimisticAndVersionedEntity saved = operations.save(original);
+
+		OptimisticAndVersionedEntity forEdit = operations.get(saved.getId(), OptimisticAndVersionedEntity.class);
+
+		forEdit.setMessage("It'll be ok");
+		operations.save(forEdit);
+	}
+
 	protected RequestFactory getRequestFactory() {
 		return ((AbstractElasticsearchTemplate) operations).getRequestFactory();
 	}
@@ -3229,5 +3357,22 @@ public abstract class ElasticsearchTemplateTests {
 	static class HighlightEntity {
 		@Id private String id;
 		private String message;
+	}
+
+	@Data
+	@Document(indexName = "test-index-optimistic-entity-template")
+	static class OptimisticEntity {
+		@Id private String id;
+		private String message;
+		private SeqNoPrimaryTerm seqNoPrimaryTerm;
+	}
+
+	@Data
+	@Document(indexName = "test-index-optimistic-and-versioned-entity-template")
+	static class OptimisticAndVersionedEntity {
+		@Id private String id;
+		private String message;
+		private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		@Version private Long version;
 	}
 }

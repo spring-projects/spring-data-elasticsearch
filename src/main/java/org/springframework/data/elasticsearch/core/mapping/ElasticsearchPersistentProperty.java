@@ -28,6 +28,7 @@ import org.springframework.lang.Nullable;
  * @author Sascha Woo
  * @author Oliver Gierke
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 public interface ElasticsearchPersistentProperty extends PersistentProperty<ElasticsearchPersistentProperty> {
 
@@ -65,6 +66,14 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	boolean isParentProperty();
 
 	/**
+	 * Returns whether the current property is a {@link SeqNoPrimaryTerm} property.
+	 *
+	 * @return true if the type is {@link SeqNoPrimaryTerm}
+	 * @since 4.0
+	 */
+	boolean isSeqNoPrimaryTermProperty();
+
+	/**
 	 * @return true if an {@link ElasticsearchPersistentPropertyConverter} is available for this instance.
 	 * @since 4.0
 	 */
@@ -76,6 +85,14 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 */
 	@Nullable
 	ElasticsearchPersistentPropertyConverter getPropertyConverter();
+
+	/**
+	 * Returns true if the property may be read.
+	 *
+	 * @return true if readable, false otherwise
+	 * @since 4.0
+	 */
+	boolean isReadable();
 
 	enum PropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
 

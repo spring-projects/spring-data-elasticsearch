@@ -54,6 +54,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
  *
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  * @since 4.0
  */
 public class DocumentAdapters {
@@ -76,12 +77,15 @@ public class DocumentAdapters {
 		}
 
 		if (source.isSourceEmpty()) {
-			return fromDocumentFields(source, source.getId(), source.getVersion());
+			return fromDocumentFields(source, source.getId(), source.getVersion(),
+					source.getSeqNo(), source.getPrimaryTerm());
 		}
 
 		Document document = Document.from(source.getSourceAsMap());
 		document.setId(source.getId());
 		document.setVersion(source.getVersion());
+		document.setSeqNo(source.getSeqNo());
+		document.setPrimaryTerm(source.getPrimaryTerm());
 
 		return document;
 	}
@@ -104,12 +108,15 @@ public class DocumentAdapters {
 		}
 
 		if (source.isSourceEmpty()) {
-			return fromDocumentFields(source, source.getId(), source.getVersion());
+			return fromDocumentFields(source, source.getId(), source.getVersion(),
+					source.getSeqNo(), source.getPrimaryTerm());
 		}
 
 		Document document = Document.from(source.getSource());
 		document.setId(source.getId());
 		document.setVersion(source.getVersion());
+		document.setSeqNo(source.getSeqNo());
+		document.setPrimaryTerm(source.getPrimaryTerm());
 
 		return document;
 	}
@@ -150,7 +157,8 @@ public class DocumentAdapters {
 
 		if (sourceRef == null || sourceRef.length() == 0) {
 			return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(), highlightFields,
-					fromDocumentFields(source, source.getId(), source.getVersion()));
+					fromDocumentFields(source, source.getId(), source.getVersion(),
+							source.getSeqNo(), source.getPrimaryTerm()));
 		}
 
 		Document document = Document.from(source.getSourceAsMap());
@@ -159,6 +167,8 @@ public class DocumentAdapters {
 		if (source.getVersion() >= 0) {
 			document.setVersion(source.getVersion());
 		}
+		document.setSeqNo(source.getSeqNo());
+		document.setPrimaryTerm(source.getPrimaryTerm());
 
 		return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(), highlightFields,
 				document);
@@ -170,10 +180,11 @@ public class DocumentAdapters {
 	 * @param documentFields the {@link DocumentField}s backing the {@link Document}.
 	 * @return the adapted {@link Document}.
 	 */
-	public static Document fromDocumentFields(Iterable<DocumentField> documentFields, String id, long version) {
+	public static Document fromDocumentFields(Iterable<DocumentField> documentFields, String id, long version,
+			long seqNo, long primaryTerm) {
 
 		if (documentFields instanceof Collection) {
-			return new DocumentFieldAdapter((Collection<DocumentField>) documentFields, id, version);
+			return new DocumentFieldAdapter((Collection<DocumentField>) documentFields, id, version, seqNo, primaryTerm);
 		}
 
 		List<DocumentField> fields = new ArrayList<>();
@@ -181,7 +192,7 @@ public class DocumentAdapters {
 			fields.add(documentField);
 		}
 
-		return new DocumentFieldAdapter(fields, id, version);
+		return new DocumentFieldAdapter(fields, id, version, seqNo, primaryTerm);
 	}
 
 	// TODO: Performance regarding keys/values/entry-set
@@ -190,11 +201,16 @@ public class DocumentAdapters {
 		private final Collection<DocumentField> documentFields;
 		private final String id;
 		private final long version;
+		private final long seqNo;
+		private final long primaryTerm;
 
-		DocumentFieldAdapter(Collection<DocumentField> documentFields, String id, long version) {
+		DocumentFieldAdapter(Collection<DocumentField> documentFields, String id, long version,
+				long seqNo, long primaryTerm) {
 			this.documentFields = documentFields;
 			this.id = id;
 			this.version = version;
+			this.seqNo = seqNo;
+			this.primaryTerm = primaryTerm;
 		}
 
 		/*
@@ -236,6 +252,52 @@ public class DocumentAdapters {
 			}
 
 			return this.version;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#hasSeqNo()
+		 */
+		@Override
+		public boolean hasSeqNo() {
+			return true;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#getSeqNo()
+		 */
+		@Override
+		public long getSeqNo() {
+
+			if (!hasSeqNo()) {
+				throw new IllegalStateException("No seq_no associated with this Document");
+			}
+
+			return this.seqNo;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#hasPrimaryTerm()
+		 */
+		@Override
+		public boolean hasPrimaryTerm() {
+			return true;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#getPrimaryTerm()
+		 */
+		@Override
+		public long getPrimaryTerm() {
+
+			if (!hasPrimaryTerm()) {
+				throw new IllegalStateException("No primary_term associated with this Document");
+			}
+
+			return this.primaryTerm;
 		}
 
 		/*
@@ -555,6 +617,60 @@ public class DocumentAdapters {
 		@Override
 		public void setVersion(long version) {
 			delegate.setVersion(version);
+		}
+		
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#hasSeqNo()
+		 */
+		@Override
+		public boolean hasSeqNo() {
+			return delegate.hasSeqNo();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#getSeqNo()
+		 */
+		@Override
+		public long getSeqNo() {
+			return delegate.getSeqNo();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#setSeqNo(long)
+		 */
+		@Override
+		public void setSeqNo(long seqNo) {
+			delegate.setSeqNo(seqNo);
+		}
+		
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#hasPrimaryTerm()
+		 */
+		@Override
+		public boolean hasPrimaryTerm() {
+			return delegate.hasPrimaryTerm();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#getPrimaryTerm()
+		 */
+		@Override
+		public long getPrimaryTerm() {
+			return delegate.getPrimaryTerm();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.elasticsearch.core.document.Document#setPrimaryTerm(long)
+		 */
+		@Override
+		public void setPrimaryTerm(long primaryTerm) {
+			delegate.setPrimaryTerm(primaryTerm);
 		}
 
 		/*

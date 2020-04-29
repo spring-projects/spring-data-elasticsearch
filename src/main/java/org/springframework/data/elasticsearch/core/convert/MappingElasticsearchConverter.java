@@ -15,17 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
@@ -44,6 +35,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -205,6 +197,14 @@ public class MappingElasticsearchConverter
 					targetEntity.getPropertyAccessor(result).setProperty(versionProperty, version);
 				}
 			}
+
+			if (targetEntity.hasSeqNoPrimaryTermProperty() && document.hasSeqNo() && document.hasPrimaryTerm()) {
+				if (isAssignedSeqNo(document.getSeqNo()) && isAssignedPrimaryTerm(document.getPrimaryTerm())) {
+					SeqNoPrimaryTerm seqNoPrimaryTerm = new SeqNoPrimaryTerm(document.getSeqNo(), document.getPrimaryTerm());
+					ElasticsearchPersistentProperty property = targetEntity.getRequiredSeqNoPrimaryTermProperty();
+					targetEntity.getPropertyAccessor(result).setProperty(property, seqNoPrimaryTerm);
+				}
+			}
 		}
 
 		if (source instanceof SearchDocument) {
@@ -220,6 +220,14 @@ public class MappingElasticsearchConverter
 
 	}
 
+	private boolean isAssignedSeqNo(long seqNo) {
+		return seqNo >= 0;
+	}
+
+	private boolean isAssignedPrimaryTerm(long primaryTerm) {
+		return primaryTerm > 0;
+	}
+
 	protected <R> R readProperties(ElasticsearchPersistentEntity<?> entity, R instance,
 			ElasticsearchPropertyValueProvider valueProvider) {
 
@@ -228,7 +236,7 @@ public class MappingElasticsearchConverter
 
 		for (ElasticsearchPersistentProperty prop : entity) {
 
-			if (entity.isConstructorArgument(prop) || prop.isScoreProperty()) {
+			if (entity.isConstructorArgument(prop) || prop.isScoreProperty() || !prop.isReadable()) {
 				continue;
 			}
 

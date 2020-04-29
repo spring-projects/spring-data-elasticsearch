@@ -53,6 +53,7 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.util.CloseableIterator;
@@ -438,6 +439,22 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		return null;
 	}
 
+	@Nullable
+	private SeqNoPrimaryTerm getEntitySeqNoPrimaryTerm(Object entity) {
+		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
+		ElasticsearchPersistentProperty property = persistentEntity.getSeqNoPrimaryTermProperty();
+
+		if (property != null) {
+			Object seqNoPrimaryTerm = persistentEntity.getPropertyAccessor(entity).getProperty(property);
+
+			if (seqNoPrimaryTerm != null && SeqNoPrimaryTerm.class.isAssignableFrom(seqNoPrimaryTerm.getClass())) {
+				return (SeqNoPrimaryTerm) seqNoPrimaryTerm;
+			}
+		}
+
+		return null;
+	}
+
 	private <T> IndexQuery getIndexQuery(T entity) {
 		String id = getEntityId(entity);
 
@@ -445,11 +462,17 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			id = elasticsearchConverter.convertId(id);
 		}
 
-		return new IndexQueryBuilder() //
+		IndexQueryBuilder builder = new IndexQueryBuilder() //
 				.withId(id) //
-				.withVersion(getEntityVersion(entity)) //
-				.withObject(entity) //
-				.build();
+				.withObject(entity);
+		SeqNoPrimaryTerm seqNoPrimaryTerm = getEntitySeqNoPrimaryTerm(entity);
+		if (seqNoPrimaryTerm != null) {
+			builder.withSeqNoPrimaryTerm(seqNoPrimaryTerm);
+		} else {
+			// version cannot be used together with seq_no and primary_term
+			builder.withVersion(getEntityVersion(entity));
+		}
+		return builder.build();
 	}
 
 	/**

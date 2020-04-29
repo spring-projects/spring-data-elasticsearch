@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.elasticsearch.index.VersionType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -53,9 +55,12 @@ import org.springframework.util.Assert;
  * @author Sascha Woo
  * @author Ivan Greene
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleElasticsearchPersistentEntity.class);
 
 	private final StandardEvaluationContext context;
 	private final SpelExpressionParser parser;
@@ -70,6 +75,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private @Nullable String parentType;
 	private @Nullable ElasticsearchPersistentProperty parentIdProperty;
 	private @Nullable ElasticsearchPersistentProperty scoreProperty;
+	private @Nullable ElasticsearchPersistentProperty seqNoPrimaryTermProperty;
 	private @Nullable String settingPath;
 	private @Nullable VersionType versionType;
 	private boolean createIndexAndMapping;
@@ -231,6 +237,36 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 			this.scoreProperty = property;
 		}
+
+		if (property.isSeqNoPrimaryTermProperty()) {
+
+			ElasticsearchPersistentProperty seqNoPrimaryTermProperty = this.seqNoPrimaryTermProperty;
+
+			if (seqNoPrimaryTermProperty != null) {
+				throw new MappingException(String.format(
+						"Attempt to add SeqNoPrimaryTerm property %s but already have property %s registered "
+								+ "as SeqNoPrimaryTerm property. Check your entity configuration!",
+						property.getField(), seqNoPrimaryTermProperty.getField()));
+			}
+
+			this.seqNoPrimaryTermProperty = property;
+
+			if (hasVersionProperty()) {
+				warnAboutBothSeqNoPrimaryTermAndVersionProperties();
+			}
+		}
+
+		if (property.isVersionProperty()) {
+			if (hasSeqNoPrimaryTermProperty()) {
+				warnAboutBothSeqNoPrimaryTermAndVersionProperties();
+			}
+		}
+	}
+
+	private void warnAboutBothSeqNoPrimaryTermAndVersionProperties() {
+		LOGGER.warn(
+				"Both SeqNoPrimaryTerm and @Version properties are defined on {}. Version will not be sent in index requests when seq_no is sent!",
+				getType());
 	}
 
 	/*
@@ -261,5 +297,16 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 			return propertyRef.get();
 		});
+	}
+
+	@Override
+	public boolean hasSeqNoPrimaryTermProperty() {
+		return seqNoPrimaryTermProperty != null;
+	}
+
+	@Override
+	@Nullable
+	public ElasticsearchPersistentProperty getSeqNoPrimaryTermProperty() {
+		return seqNoPrimaryTermProperty;
 	}
 }

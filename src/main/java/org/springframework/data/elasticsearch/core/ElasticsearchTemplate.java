@@ -27,6 +27,7 @@ import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -89,6 +90,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	private Client client;
 	@Nullable private String searchTimeout;
 
+	private final ElasticsearchExceptionTranslator exceptionTranslator = new ElasticsearchExceptionTranslator();
+
 	// region Initialization
 	public ElasticsearchTemplate(Client client) {
 		this.client = client;
@@ -145,7 +148,14 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		maybeCallbackBeforeConvertWithQuery(query, index);
 
 		IndexRequestBuilder indexRequestBuilder = requestFactory.indexRequestBuilder(client, query, index);
-		String documentId = indexRequestBuilder.execute().actionGet().getId();
+		ActionFuture<IndexResponse> future = indexRequestBuilder.execute();
+		IndexResponse response;
+		try {
+			response = future.actionGet();
+		} catch (RuntimeException e) {
+			throw translateException(e);
+		}
+		String documentId = response.getId();
 
 		// We should call this because we are not going through a mapper.
 		Object queryObject = query.getObject();
@@ -360,4 +370,22 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		return client;
 	}
 	// endregion
+
+	/**
+	 * translates an Exception if possible. Exceptions that are no {@link RuntimeException}s are wrapped in a
+	 * RuntimeException
+	 *
+	 * @param exception the Exception to map
+	 * @return the potentially translated RuntimeException.
+	 * @since 4.0
+	 */
+	private RuntimeException translateException(Exception exception) {
+
+		RuntimeException runtimeException = exception instanceof RuntimeException ? (RuntimeException) exception
+				: new RuntimeException(exception.getMessage(), exception);
+		RuntimeException potentiallyTranslatedException = exceptionTranslator
+				.translateExceptionIfPossible(runtimeException);
+
+		return potentiallyTranslatedException != null ? potentiallyTranslatedException : runtimeException;
+	}
 }

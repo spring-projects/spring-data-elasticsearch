@@ -26,6 +26,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
+import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
@@ -44,6 +45,7 @@ import org.springframework.util.StringUtils;
  * @author Sascha Woo
  * @author Oliver Gierke
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 public class SimpleElasticsearchPersistentProperty extends
 		AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements ElasticsearchPersistentProperty {
@@ -53,6 +55,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	private final boolean isScore;
 	private final boolean isParent;
 	private final boolean isId;
+	private final boolean isSeqNoPrimaryTerm;
 	private final @Nullable String annotatedFieldName;
 	@Nullable private ElasticsearchPersistentPropertyConverter propertyConverter;
 
@@ -65,6 +68,7 @@ public class SimpleElasticsearchPersistentProperty extends
 		this.isId = super.isIdProperty() || SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName());
 		this.isScore = isAnnotationPresent(Score.class);
 		this.isParent = isAnnotationPresent(Parent.class);
+		this.isSeqNoPrimaryTerm = SeqNoPrimaryTerm.class.isAssignableFrom(getRawType());
 
 		if (isVersionProperty() && !getType().equals(Long.class)) {
 			throw new MappingException(String.format("Version property %s must be of type Long!", property.getName()));
@@ -91,6 +95,16 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Override
 	public ElasticsearchPersistentPropertyConverter getPropertyConverter() {
 		return propertyConverter;
+	}
+
+	@Override
+	public boolean isWritable() {
+		return super.isWritable() && !isSeqNoPrimaryTermProperty();
+	}
+
+	@Override
+	public boolean isReadable() {
+		return !isTransient() && !isSeqNoPrimaryTermProperty();
 	}
 
 	/**
@@ -208,5 +222,14 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Override
 	public boolean isParentProperty() {
 		return isParent;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty#isSeqNoPrimaryTermProperty()
+	 */
+	@Override
+	public boolean isSeqNoPrimaryTermProperty() {
+		return isSeqNoPrimaryTerm;
 	}
 }

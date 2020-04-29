@@ -20,10 +20,12 @@ import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Object;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -60,6 +62,7 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.geo.Box;
@@ -79,6 +82,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Sascha Woo
  * @author Peter-Josef Meisch
  * @author Xiao Yu
+ * @author Roman Puchkovskiy
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
@@ -572,6 +576,13 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
+	@Test // DATAES-799
+	void shouldNotIncludeSeqNoPrimaryTermPropertyInMappingEvenWhenAnnotatedWithField() {
+		String propertyMapping = getMappingBuilder().buildPropertyMapping(EntityWithSeqNoPrimaryTerm.class);
+		
+		assertThat(propertyMapping).doesNotContain("seqNoPrimaryTerm");
+	}
+
 	/**
 	 * @author Xiao Yu
 	 */
@@ -1051,5 +1062,12 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		@CompletionField(contexts = { @CompletionContext(name = "location", type = ContextMapping.Type.GEO,
 				path = "proppath") }) private Completion suggest;
+	}
+
+	@Data
+	@Document(indexName = "test-index-entity-with-seq-no-primary-term-mapping-builder")
+	static class EntityWithSeqNoPrimaryTerm {
+
+		@Field(type = Object) private SeqNoPrimaryTerm seqNoPrimaryTerm;
 	}
 }

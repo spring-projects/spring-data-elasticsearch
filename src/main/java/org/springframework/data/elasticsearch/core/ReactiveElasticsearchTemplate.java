@@ -84,6 +84,7 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.support.VersionInfo;
@@ -347,7 +348,19 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		request.source(converter.mapObject(value).toJson(), Requests.INDEX_CONTENT_TYPE);
 
-		if (entity.isVersionedEntity()) {
+		boolean usingSeqNo = false;
+		if (entity.hasSeqNoPrimaryTerm()) {
+			SeqNoPrimaryTerm seqNoPrimaryTerm = entity.getSeqNoPrimaryTerm();
+
+			if (seqNoPrimaryTerm != null) {
+				request.setIfSeqNo(seqNoPrimaryTerm.getSequenceNumber());
+				request.setIfPrimaryTerm(seqNoPrimaryTerm.getPrimaryTerm());
+				usingSeqNo = true;
+			}
+		}
+
+		// seq_no and version are incompatible in the same request
+		if (!usingSeqNo && entity.isVersionedEntity()) {
 
 			Number version = entity.getVersion();
 
@@ -356,6 +369,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				request.versionType(EXTERNAL);
 			}
 		}
+
 		return request;
 	}
 

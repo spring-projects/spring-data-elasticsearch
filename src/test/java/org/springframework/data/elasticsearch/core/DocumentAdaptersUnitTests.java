@@ -38,6 +38,7 @@ import org.springframework.data.elasticsearch.core.document.SearchDocument;
  *
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 public class DocumentAdaptersUnitTests {
 
@@ -47,7 +48,7 @@ public class DocumentAdaptersUnitTests {
 		Map<String, DocumentField> fields = Collections.singletonMap("field",
 				new DocumentField("field", Collections.singletonList("value")));
 
-		GetResult getResult = new GetResult("index", "type", "my-id", 1, 1, 42, true, null, fields, null);
+		GetResult getResult = new GetResult("index", "type", "my-id", 1, 2, 42, true, null, fields, null);
 		GetResponse response = new GetResponse(getResult);
 
 		Document document = DocumentAdapters.from(response);
@@ -57,6 +58,10 @@ public class DocumentAdaptersUnitTests {
 		assertThat(document.hasVersion()).isTrue();
 		assertThat(document.getVersion()).isEqualTo(42);
 		assertThat(document.get("field")).isEqualTo("value");
+		assertThat(document.hasSeqNo()).isTrue();
+		assertThat(document.getSeqNo()).isEqualTo(1);
+		assertThat(document.hasPrimaryTerm()).isTrue();
+		assertThat(document.getPrimaryTerm()).isEqualTo(2);
 	}
 
 	@Test // DATAES-628
@@ -64,7 +69,7 @@ public class DocumentAdaptersUnitTests {
 
 		BytesArray source = new BytesArray("{\"field\":\"value\"}");
 
-		GetResult getResult = new GetResult("index", "type", "my-id", 1, 1, 42, true, source, Collections.emptyMap(), null);
+		GetResult getResult = new GetResult("index", "type", "my-id", 1, 2, 42, true, source, Collections.emptyMap(), null);
 		GetResponse response = new GetResponse(getResult);
 
 		Document document = DocumentAdapters.from(response);
@@ -74,6 +79,51 @@ public class DocumentAdaptersUnitTests {
 		assertThat(document.hasVersion()).isTrue();
 		assertThat(document.getVersion()).isEqualTo(42);
 		assertThat(document.get("field")).isEqualTo("value");
+		assertThat(document.hasSeqNo()).isTrue();
+		assertThat(document.getSeqNo()).isEqualTo(1);
+		assertThat(document.hasPrimaryTerm()).isTrue();
+		assertThat(document.getPrimaryTerm()).isEqualTo(2);
+	}
+
+	@Test // DATAES-799
+	public void shouldAdaptGetResult() {
+
+		Map<String, DocumentField> fields = Collections.singletonMap("field",
+				new DocumentField("field", Collections.singletonList("value")));
+
+		GetResult getResult = new GetResult("index", "type", "my-id", 1, 2, 42, true, null, fields, null);
+
+		Document document = DocumentAdapters.from(getResult);
+
+		assertThat(document.hasId()).isTrue();
+		assertThat(document.getId()).isEqualTo("my-id");
+		assertThat(document.hasVersion()).isTrue();
+		assertThat(document.getVersion()).isEqualTo(42);
+		assertThat(document.get("field")).isEqualTo("value");
+		assertThat(document.hasSeqNo()).isTrue();
+		assertThat(document.getSeqNo()).isEqualTo(1);
+		assertThat(document.hasPrimaryTerm()).isTrue();
+		assertThat(document.getPrimaryTerm()).isEqualTo(2);
+	}
+
+	@Test // DATAES-799
+	public void shouldAdaptGetResultSource() {
+
+		BytesArray source = new BytesArray("{\"field\":\"value\"}");
+
+		GetResult getResult = new GetResult("index", "type", "my-id", 1, 2, 42, true, source, Collections.emptyMap(), null);
+
+		Document document = DocumentAdapters.from(getResult);
+
+		assertThat(document.hasId()).isTrue();
+		assertThat(document.getId()).isEqualTo("my-id");
+		assertThat(document.hasVersion()).isTrue();
+		assertThat(document.getVersion()).isEqualTo(42);
+		assertThat(document.get("field")).isEqualTo("value");
+		assertThat(document.hasSeqNo()).isTrue();
+		assertThat(document.getSeqNo()).isEqualTo(1);
+		assertThat(document.hasPrimaryTerm()).isTrue();
+		assertThat(document.getPrimaryTerm()).isEqualTo(2);
 	}
 
 	@Test // DATAES-628
@@ -83,6 +133,8 @@ public class DocumentAdaptersUnitTests {
 				new DocumentField("field", Collections.singletonList("value")));
 
 		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields);
+		searchHit.setSeqNo(1);
+		searchHit.setPrimaryTerm(2);
 		searchHit.score(42);
 
 		SearchDocument document = DocumentAdapters.from(searchHit);
@@ -92,6 +144,10 @@ public class DocumentAdaptersUnitTests {
 		assertThat(document.hasVersion()).isFalse();
 		assertThat(document.getScore()).isBetween(42f, 42f);
 		assertThat(document.get("field")).isEqualTo("value");
+		assertThat(document.hasSeqNo()).isTrue();
+		assertThat(document.getSeqNo()).isEqualTo(1);
+		assertThat(document.hasPrimaryTerm()).isTrue();
+		assertThat(document.getPrimaryTerm()).isEqualTo(2);
 	}
 
 	@Test // DATAES-628
@@ -151,6 +207,8 @@ public class DocumentAdaptersUnitTests {
 		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), Collections.emptyMap());
 		searchHit.sourceRef(source).score(42);
 		searchHit.version(22);
+		searchHit.setSeqNo(1);
+		searchHit.setPrimaryTerm(2);
 
 		SearchDocument document = DocumentAdapters.from(searchHit);
 
@@ -160,5 +218,9 @@ public class DocumentAdaptersUnitTests {
 		assertThat(document.getVersion()).isEqualTo(22);
 		assertThat(document.getScore()).isBetween(42f, 42f);
 		assertThat(document.get("field")).isEqualTo("value");
+		assertThat(document.hasSeqNo()).isTrue();
+		assertThat(document.getSeqNo()).isEqualTo(1);
+		assertThat(document.hasPrimaryTerm()).isTrue();
+		assertThat(document.getPrimaryTerm()).isEqualTo(2);
 	}
 }

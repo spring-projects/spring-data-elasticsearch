@@ -23,6 +23,7 @@ import org.springframework.lang.Nullable;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  */
 public class IndexQueryBuilder {
 
@@ -31,6 +32,8 @@ public class IndexQueryBuilder {
 	@Nullable private Long version;
 	@Nullable private String source;
 	@Nullable private String parentId;
+	@Nullable private Long seqNo;
+	@Nullable private Long primaryTerm;
 
 	public IndexQueryBuilder withId(String id) {
 		this.id = id;
@@ -57,6 +60,12 @@ public class IndexQueryBuilder {
 		return this;
 	}
 
+	public IndexQueryBuilder withSeqNoPrimaryTerm(SeqNoPrimaryTerm seqNoPrimaryTerm) {
+		this.seqNo = seqNoPrimaryTerm.getSequenceNumber();
+		this.primaryTerm = seqNoPrimaryTerm.getPrimaryTerm();
+		return this;
+	}
+
 	public IndexQuery build() {
 		IndexQuery indexQuery = new IndexQuery();
 		indexQuery.setId(id);
@@ -64,6 +73,8 @@ public class IndexQueryBuilder {
 		indexQuery.setParentId(parentId);
 		indexQuery.setSource(source);
 		indexQuery.setVersion(version);
+		indexQuery.setSeqNo(seqNo);
+		indexQuery.setPrimaryTerm(primaryTerm);
 		return indexQuery;
 	}
 }

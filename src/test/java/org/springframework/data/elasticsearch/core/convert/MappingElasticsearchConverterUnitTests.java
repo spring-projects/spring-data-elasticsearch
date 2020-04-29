@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
+import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
@@ -55,6 +56,7 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
@@ -69,6 +71,7 @@ import org.springframework.lang.Nullable;
  * @author Mark Paluch
  * @author Peter-Josef Meisch
  * @author Konrad Kurdej
+ * @author Roman Puchkovskiy
  */
 public class MappingElasticsearchConverterUnitTests {
 
@@ -695,6 +698,26 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(wrapper.getSchemaLessObject()).isEqualTo(mapWithSimpleList);
 	}
 
+	@Test // DATAES-799
+	void shouldNotWriteSeqNoPrimaryTermProperty() {
+		EntityWithSeqNoPrimaryTerm entity = new EntityWithSeqNoPrimaryTerm();
+		entity.seqNoPrimaryTerm = new SeqNoPrimaryTerm(1L, 2L);
+		Document document = Document.create();
+		
+		mappingElasticsearchConverter.write(entity, document);
+
+		assertThat(document).doesNotContainKey("seqNoPrimaryTerm");
+	}
+
+	@Test // DATAES-799
+	void shouldNotReadSeqNoPrimaryTermProperty() {
+		Document document = Document.create().append("seqNoPrimaryTerm", emptyMap());
+
+		EntityWithSeqNoPrimaryTerm entity = mappingElasticsearchConverter.read(EntityWithSeqNoPrimaryTerm.class, document);
+
+		assertThat(entity.seqNoPrimaryTerm).isNull();
+	}
+
 	private String pointTemplate(String name, Point point) {
 		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
 	}
@@ -900,5 +923,12 @@ public class MappingElasticsearchConverterUnitTests {
 	static class SchemaLessObjectWrapper {
 
 		private Map<String, Object> schemaLessObject;
+	}
+
+	@Data
+	@org.springframework.data.elasticsearch.annotations.Document(indexName = "test-index-entity-with-seq-no-primary-term-mapper")
+	static class EntityWithSeqNoPrimaryTerm {
+
+		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
 	}
 }

@@ -39,6 +39,7 @@ import org.springframework.util.Assert;
  *
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  * @since 4.0
  */
 public interface Document extends Map<String, Object> {
@@ -162,6 +163,70 @@ public interface Document extends Map<String, Object> {
 	 * The default implementation throws {@link UnsupportedOperationException}.
 	 */
 	default void setVersion(long version) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Return {@literal true} if this {@link Document} is associated with a seq_no.
+	 *
+	 * @return {@literal true} if this {@link Document} is associated with a seq_no, {@literal false} otherwise.
+	 */
+	default boolean hasSeqNo() {
+		return false;
+	}
+
+	/**
+	 * Retrieve the seq_no associated with this {@link Document}.
+	 * <p>
+	 * The default implementation throws {@link UnsupportedOperationException}. It's recommended to check
+	 * {@link #hasSeqNo()} prior to calling this method.
+	 *
+	 * @return the seq_no associated with this {@link Document}.
+	 * @throws IllegalStateException if the underlying implementation supports seq_no's but no seq_no was yet
+	 * 		   associated with the document.
+	 */
+	default long getSeqNo() {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Set the seq_no for this {@link Document}.
+	 * <p>
+	 * The default implementation throws {@link UnsupportedOperationException}.
+	 */
+	default void setSeqNo(long seqNo) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Return {@literal true} if this {@link Document} is associated with a primary_term.
+	 *
+	 * @return {@literal true} if this {@link Document} is associated with a primary_term, {@literal false} otherwise.
+	 */
+	default boolean hasPrimaryTerm() {
+		return false;
+	}
+
+	/**
+	 * Retrieve the primary_term associated with this {@link Document}.
+	 * <p>
+	 * The default implementation throws {@link UnsupportedOperationException}. It's recommended to check
+	 * {@link #hasPrimaryTerm()} prior to calling this method.
+	 *
+	 * @return the primary_term associated with this {@link Document}.
+	 * @throws IllegalStateException if the underlying implementation supports primary_term's but no primary_term was
+	 * 			 yet associated with the document.
+	 */
+	default long getPrimaryTerm() {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Set the primary_term for this {@link Document}.
+	 * <p>
+	 * The default implementation throws {@link UnsupportedOperationException}.
+	 */
+	default void setPrimaryTerm(long primaryTerm) {
 		throw new UnsupportedOperationException();
 	}
 

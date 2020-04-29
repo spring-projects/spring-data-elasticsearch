@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
@@ -39,6 +40,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -47,6 +49,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
@@ -59,14 +62,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.Criteria;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersion;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.util.StringUtils;
@@ -81,6 +77,7 @@ import org.springframework.util.StringUtils;
  * @author Martin Choraine
  * @author Aleksei Arsenev
  * @author Russell Parry
+ * @author Roman Puchkovskiy
  */
 @SpringIntegrationTest
 public class ReactiveElasticsearchTemplateTests {
@@ -855,6 +852,115 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
+	@Test // DATAES-799
+	void getShouldReturnSeqNoPrimaryTerm() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = template.save(original).block();
+
+		template.get(saved.getId(), OptimisticEntity.class)
+				.as(StepVerifier::create)
+				.assertNext(this::assertThatSeqNoPrimaryTermIsFilled)
+				.verifyComplete();
+	}
+
+	private void assertThatSeqNoPrimaryTermIsFilled(OptimisticEntity retrieved) {
+		assertThat(retrieved.seqNoPrimaryTerm).isNotNull();
+		assertThat(retrieved.seqNoPrimaryTerm.getSequenceNumber()).isNotNull();
+		assertThat(retrieved.seqNoPrimaryTerm.getSequenceNumber()).isNotNegative();
+		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isNotNull();
+		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isPositive();
+	}
+
+	@Test // DATAES-799
+	void multiGetShouldReturnSeqNoPrimaryTerm() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = template.save(original).block();
+
+		template.multiGet(multiGetQueryForOne(saved.getId()), OptimisticEntity.class, template.getIndexCoordinatesFor(OptimisticEntity.class))
+				.as(StepVerifier::create)
+				.assertNext(this::assertThatSeqNoPrimaryTermIsFilled)
+				.verifyComplete();
+	}
+
+	private Query multiGetQueryForOne(String id) {
+		return new NativeSearchQueryBuilder().withIds(singletonList(id)).build();
+	}
+
+	@Test // DATAES-799
+	void searchShouldReturnSeqNoPrimaryTerm() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = template.save(original).block();
+		restTemplate.refresh(OptimisticEntity.class);
+
+		template.search(searchQueryForOne(saved.getId()), OptimisticEntity.class, template.getIndexCoordinatesFor(OptimisticEntity.class))
+				.map(SearchHit::getContent)
+				.as(StepVerifier::create)
+				.assertNext(this::assertThatSeqNoPrimaryTermIsFilled)
+				.verifyComplete();
+	}
+
+	private Query searchQueryForOne(String id) {
+		return new NativeSearchQueryBuilder()
+				.withFilter(new IdsQueryBuilder().addIds(id))
+				.build();
+	}
+
+	@Test // DATAES-799
+	void shouldThrowOptimisticLockingFailureExceptionWhenConcurrentUpdateOccursOnEntityWithSeqNoPrimaryTermProperty() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = template.save(original).block();
+
+		OptimisticEntity forEdit1 = template.get(saved.getId(), OptimisticEntity.class).block();
+		OptimisticEntity forEdit2 = template.get(saved.getId(), OptimisticEntity.class).block();
+
+		forEdit1.setMessage("It'll be ok");
+		template.save(forEdit1).block();
+
+		forEdit2.setMessage("It'll be great");
+		template.save(forEdit2)
+				.as(StepVerifier::create)
+				.expectError(OptimisticLockingFailureException.class)
+				.verify();
+	}
+	
+	@Test // DATAES-799
+	void shouldThrowOptimisticLockingFailureExceptionWhenConcurrentUpdateOccursOnVersionedEntityWithSeqNoPrimaryTermProperty() {
+		OptimisticAndVersionedEntity original = new OptimisticAndVersionedEntity();
+		original.setMessage("It's fine");
+		OptimisticAndVersionedEntity saved = template.save(original).block();
+
+		OptimisticAndVersionedEntity forEdit1 = template.get(saved.getId(), OptimisticAndVersionedEntity.class).block();
+		OptimisticAndVersionedEntity forEdit2 = template.get(saved.getId(), OptimisticAndVersionedEntity.class).block();
+
+		forEdit1.setMessage("It'll be ok");
+		template.save(forEdit1).block();
+
+		forEdit2.setMessage("It'll be great");
+		template.save(forEdit2)
+				.as(StepVerifier::create)
+				.expectError(OptimisticLockingFailureException.class)
+				.verify();
+	}
+
+	@Test // DATAES-799
+	void shouldAllowFullReplaceOfEntityWithBothSeqNoPrimaryTermAndVersion() {
+		OptimisticAndVersionedEntity original = new OptimisticAndVersionedEntity();
+		original.setMessage("It's fine");
+		OptimisticAndVersionedEntity saved = template.save(original).block();
+
+		OptimisticAndVersionedEntity forEdit = template.get(saved.getId(), OptimisticAndVersionedEntity.class).block();
+
+		forEdit.setMessage("It'll be ok");
+		template.save(forEdit)
+				.as(StepVerifier::create)
+				.expectNextCount(1)
+				.verifyComplete();
+	}
+
 	@Data
 	@Document(indexName = "marvel")
 	static class Person {
@@ -927,5 +1033,22 @@ public class ReactiveElasticsearchTemplateTests {
 		private int rate;
 		@Version private Long version;
 		@Score private float score;
+	}
+
+	@Data
+	@Document(indexName = "test-index-reactive-optimistic-entity-template")
+	static class OptimisticEntity {
+		@Id private String id;
+		private String message;
+		private SeqNoPrimaryTerm seqNoPrimaryTerm;
+	}
+
+	@Data
+	@Document(indexName = "test-index-reactive-optimistic-and-versioned-entity-template")
+	static class OptimisticAndVersionedEntity {
+		@Id private String id;
+		private String message;
+		private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		@Version private Long version;
 	}
 }

@@ -83,6 +83,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author Roman Puchkovskiy
  * @since 4.0
  */
 class RequestFactory {
@@ -342,6 +343,13 @@ class RequestFactory {
 			indexRequest.versionType(versionType);
 		}
 
+		if (query.getSeqNo() != null) {
+			indexRequest.setIfSeqNo(query.getSeqNo());
+		}
+		if (query.getPrimaryTerm() != null) {
+			indexRequest.setIfPrimaryTerm(query.getPrimaryTerm());
+		}
+
 		return indexRequest;
 	}
 
@@ -372,6 +380,13 @@ class RequestFactory {
 			indexRequestBuilder.setVersion(query.getVersion());
 			VersionType versionType = retrieveVersionTypeFromPersistentEntity(query.getObject().getClass());
 			indexRequestBuilder.setVersionType(versionType);
+		}
+
+		if (query.getSeqNo() != null) {
+			indexRequestBuilder.setIfSeqNo(query.getSeqNo());
+		}
+		if (query.getPrimaryTerm() != null) {
+			indexRequestBuilder.setIfPrimaryTerm(query.getPrimaryTerm());
 		}
 
 		return indexRequestBuilder;
@@ -618,6 +633,9 @@ class RequestFactory {
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 		sourceBuilder.version(true);
 		sourceBuilder.trackScores(query.getTrackScores());
+		if (hasSeqNoPrimaryTermProperty(clazz)) {
+			sourceBuilder.seqNoAndPrimaryTerm(true);
+		}
 
 		if (query.getSourceFilter() != null) {
 			SourceFilter sourceFilter = query.getSourceFilter();
@@ -681,7 +699,20 @@ class RequestFactory {
 		return request;
 	}
 
-	@SuppressWarnings("unchecked")
+	private boolean hasSeqNoPrimaryTermProperty(@Nullable Class<?> entityClass) {
+
+		if (entityClass == null) {
+			return false;
+		}
+
+		if (!elasticsearchConverter.getMappingContext().hasPersistentEntityFor(entityClass)) {
+			return false;
+		}
+
+		ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(entityClass);
+		return entity.hasSeqNoPrimaryTermProperty();
+	}
+
 	public PutMappingRequest putMappingRequest(IndexCoordinates index, Document mapping) {
 		PutMappingRequest request = new PutMappingRequest(index.getIndexName());
 		request.source(mapping);
@@ -784,6 +815,9 @@ class RequestFactory {
 				.setSearchType(query.getSearchType()) //
 				.setVersion(true) //
 				.setTrackScores(query.getTrackScores());
+		if (hasSeqNoPrimaryTermProperty(clazz)) {
+			searchRequestBuilder.seqNoAndPrimaryTerm(true);
+		}
 
 		if (query.getSourceFilter() != null) {
 			SourceFilter sourceFilter = query.getSourceFilter();
