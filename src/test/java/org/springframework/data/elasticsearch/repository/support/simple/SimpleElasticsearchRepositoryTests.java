@@ -678,14 +678,18 @@ public class SimpleElasticsearchRepositoryTests {
 	}
 
 	private static List<SampleEntity> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
+
 		List<SampleEntity> sampleEntities = new ArrayList<>();
+		long idBase = (long) (Math.random() * 100);
+		long versionBase = System.currentTimeMillis();
+
 		for (int i = 0; i < numberOfEntities; i++) {
-			String documentId = randomNumeric(5);
+			String documentId = String.valueOf(idBase + i);
 			SampleEntity sampleEntity = new SampleEntity();
 			sampleEntity.setId(documentId);
 			sampleEntity.setMessage(message);
 			sampleEntity.setRate(2);
-			sampleEntity.setVersion(System.currentTimeMillis());
+			sampleEntity.setVersion(versionBase + i);
 			sampleEntities.add(sampleEntity);
 		}
 		return sampleEntities;
