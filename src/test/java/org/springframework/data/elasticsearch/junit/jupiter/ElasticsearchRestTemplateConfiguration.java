@@ -21,9 +21,13 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 
 /**
  * Configuration for Spring Data Elasticsearch using
@@ -55,5 +59,23 @@ public class ElasticsearchRestTemplateConfiguration extends AbstractElasticsearc
 				.withSocketTimeout(Duration.ofSeconds(3)) //
 				.build()) //
 				.rest();
+	}
+
+	@Override
+	public ElasticsearchOperations elasticsearchOperations(ElasticsearchConverter elasticsearchConverter) {
+		RestHighLevelClient client = elasticsearchClient();
+		return new ElasticsearchRestTemplate(client, elasticsearchConverter) {
+			@Override
+			public <T> T execute(ClientCallback<T> callback) {
+				try {
+					return super.execute(callback);
+				} catch (DataAccessResourceFailureException e) {
+					try {
+						Thread.sleep(1_000);
+					} catch (InterruptedException ignored) {}
+					return super.execute(callback);
+				}
+			}
+		};
 	}
 }
