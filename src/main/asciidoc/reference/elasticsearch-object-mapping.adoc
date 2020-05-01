@@ -9,7 +9,7 @@ The main reasons for the removal of the Jackson based mapper are:
 
 * Custom mappings of fields needed to be done with annotations like `@JsonFormat` or `@JsonInclude`. This often caused problems when the same object was used in different JSON based datastores or sent over a JSON based API.
 * Custom field types and formats also need to be stored into the Elasticsearch index mappings. The Jackson based annotations did not fully provide all the information that is necessary to represent the types of Elasticsearch.
-* Fields must be mapped not only when converting fromand to entities, but also an query argument, returned data and on other places.
+* Fields must be mapped not only when converting from and to entities, but also in query argument, returned data and on other places.
 
 Using the `MappingElasticsearchConverter` now covers all these cases.
 
@@ -29,23 +29,23 @@ The following annotations are available:
 
 * `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database. The most important attributes are:
 ** `indexName`: the name of the index to store this entity in
-** `type`: the mapping type. If not set, the lowercased simple name of the class is used.
+** `type`: [line-through]#the mapping type. If not set, the lowercased simple name of the class is used.# (deprecated since version 4.0)
 ** `shards`: the number of shards for the index.
 ** `replicas`: the number of replicas for the index.
 ** `refreshIntervall`: Refresh interval for the index. Used for index creation. Default value is _"1s"_.
 ** `indexStoreType`:  Index storage type for the index. Used for index creation. Default value is _"fs"_.
 ** `createIndex`: Configuration whether to create an index on repository bootstrapping. Default value is _true_.
 ** `versionType`: Configuration of version management. Default value is _EXTERNAL_.
+
 * `@Id`: Applied at the field level to mark the field used for identity purpose.
-* `@Transient`: By default all private fields are mapped to the document, this annotation excludes the field where it is applied from being stored in the database
+* `@Transient`: By default all fields are mapped to the document when it is stored or retrieved, this annotation excludes the field.
 * `@PersistenceConstructor`: Marks a given constructor - even a package protected one - to use when instantiating the object from the database. Constructor arguments are mapped by name to the key values in the retrieved Document.
-* `@Field`: Applied at the field level and defines properties of the field, most of the attributes map to the respective https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html[Elasticsearch Mapping] definitions:
+* `@Field`: Applied at the field level and defines properties of the field, most of the attributes map to the respective https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html[Elasticsearch Mapping] definitions (the following list is not complete, check the annotation Javadoc for a complete reference):
 ** `name`: The name of the field as it will be represented in the Elasticsearch document, if not set, the Java field name is used.
-** `type`: the field type, can be one of _Text, Integer, Long, Date, Float, Double, Boolean, Object, Auto, Nested, Ip, Attachment, Keyword_. See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html[Elasticsearch Mapping Types]
+** `type`: the field type, can be one of _Text, Keyword, Long, Integer, Short, Byte, Double, Float, Half_Float, Scaled_Float, Date, Date_Nanos, Boolean, Binary, Integer_Range, Float_Range, Long_Range, Double_Range, Date_Range, Ip_Range, Object, Nested, Ip, TokenCount, Percolator, Flattened, Search_As_You_Type_. See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html[Elasticsearch Mapping Types]
 ** `format` and `pattern` custom definitions for the _Date_ type.
 ** `store`: Flag wether the original field value should be store in Elasticsearch, default value is _false_.
 ** `analyzer`, `searchAnalyzer`, `normalizer` for specifying custom custom analyzers and normalizer.
-** `copy_to`: the target field to copy multiple document fields to.
 * `@GeoPoint`: marks a field as _geo_point_ datatype. Can be omitted if the field is an instance of the `GeoPoint` class.
 
 The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic.

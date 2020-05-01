@@ -5,13 +5,14 @@ BioMed Central Development Team; Oliver Drotbohm; Greg Turnquist; Christoph Stro
 ifdef::backend-epub3[:front-cover-image: image:epub-cover.png[Front Cover,1050,1600]]
 :spring-data-commons-docs: ../../../../spring-data-commons/src/main/asciidoc
 
-(C) 2013-2019 The original author(s).
+(C) 2013-2020 The original author(s).
 
 NOTE: Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
 
 toc::[]
 
 include::preface.adoc[]
+
 :leveloffset: +1
 include::{spring-data-commons-docs}/repositories.adoc[]
 :leveloffset: -1
@@ -23,9 +24,15 @@ include::{spring-data-commons-docs}/repositories.adoc[]
 include::reference/elasticsearch-clients.adoc[]
 include::reference/elasticsearch-object-mapping.adoc[]
 include::reference/elasticsearch-operations.adoc[]
+
 include::reference/elasticsearch-repositories.adoc[]
+
 include::{spring-data-commons-docs}/auditing.adoc[]
 include::reference/elasticsearch-auditing.adoc[]
+
+include::{spring-data-commons-docs}/entity-callbacks.adoc[]
+include::reference/elasticsearch-entity-callbacks.adoc[leveloffset=+1]
+
 include::reference/elasticsearch-misc.adoc[]
 :leveloffset: -1
 
