@@ -25,6 +25,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.web.client.HttpClientErrorException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -213,12 +214,12 @@ public class ReactiveElasticsearchTemplateTests {
 		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
-	@Test // DATAES-519
-	public void getByIdShouldCompleteWhenIndexDoesNotExist() {
+	@Test // DATAES-519, DATAES-767
+	public void getByIdShouldErrorWhenIndexDoesNotExist() {
 
 		template.get("foo", SampleEntity.class, IndexCoordinates.of("no-such-index").withTypes("test-type")) //
 				.as(StepVerifier::create) //
-				.verifyComplete();
+				.expectError(HttpClientErrorException.class);
 	}
 
 	@Test // DATAES-504
@@ -326,14 +327,14 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-519
+	@Test // DATAES-519, DATAES-767
 	public void searchShouldCompleteWhenIndexDoesNotExist() {
 
 		template
 				.search(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
 						IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
-				.verifyComplete();
+				.expectError(HttpClientErrorException.class);
 	}
 
 	@Test // DATAES-504
@@ -430,7 +431,7 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-595
+	@Test // DATAES-595, DATAES-767
 	public void shouldThrowElasticsearchStatusExceptionWhenInvalidPreferenceForGivenCriteria() {
 
 		SampleEntity sampleEntity1 = randomEntity("test message");
@@ -445,7 +446,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		template.search(queryWithInvalidPreference, SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.expectError(UncategorizedElasticsearchException.class).verify();
+				.expectError(HttpClientErrorException.class).verify();
 	}
 
 	@Test // DATAES-504
@@ -520,22 +521,20 @@ public class ReactiveElasticsearchTemplateTests {
 				}).verifyComplete();
 	}
 
-	@Test // DATAES-567
-	public void aggregateShouldReturnEmptyWhenIndexDoesNotExist() {
-		template
-				.aggregate(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
+	@Test // DATAES-567, DATAES-767
+	public void aggregateShouldErrorWhenIndexDoesNotExist() {
+		template.aggregate(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
 						IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
-				.verifyComplete();
+				.expectError(HttpClientErrorException.class);
 	}
 
-	@Test // DATAES-519
+	@Test // DATAES-519, DATAES-767
 	public void countShouldReturnZeroWhenIndexDoesNotExist() {
 
 		template.count(SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.expectNext(0L) //
-				.verifyComplete();
+				.expectError(HttpClientErrorException.class);
 	}
 
 	@Test // DATAES-504
@@ -562,12 +561,12 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-519
-	public void deleteShouldCompleteWhenIndexDoesNotExist() {
+	@Test // DATAES-519, DATAES-767
+	public void deleteShouldErrorWhenIndexDoesNotExist() {
 
 		template.delete("does-not-exists", IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create)//
-				.verifyComplete();
+				.expectError(HttpClientErrorException.class);
 	}
 
 	@Test // DATAES-504
@@ -926,7 +925,10 @@ public class ReactiveElasticsearchTemplateTests {
 		template.save(forEdit1).block();
 
 		forEdit2.setMessage("It'll be great");
-		template.save(forEdit2).as(StepVerifier::create).expectError(OptimisticLockingFailureException.class).verify();
+		template.save(forEdit2) //
+				.as(StepVerifier::create) //
+				.expectError(OptimisticLockingFailureException.class) //
+				.verify();
 	}
 
 	@Test // DATAES-799

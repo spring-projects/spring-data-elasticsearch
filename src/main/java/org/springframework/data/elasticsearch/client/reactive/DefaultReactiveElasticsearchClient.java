@@ -49,6 +49,7 @@ import java.util.function.Supplier;
 import javax.net.ssl.SSLContext;
 
 import org.apache.http.util.EntityUtils;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
@@ -115,6 +116,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -764,6 +766,12 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 			return handleServerError(request, response);
 		}
 
+		if (response.statusCode().is4xxClientError()) {
+
+			ClientLogger.logRawResponse(logId, response.statusCode());
+			return handleClientError(logId, request, response, responseType);
+		}
+
 		return response.body(BodyExtractors.toMono(byte[].class)) //
 				.map(it -> new String(it, StandardCharsets.UTF_8)) //
 				.doOnNext(it -> ClientLogger.logResponse(logId, response.statusCode(), it)) //
@@ -800,13 +808,68 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 						DeprecationHandler.THROW_UNSUPPORTED_OPERATION, content);
 	}
 
-	private static <T> Publisher<? extends T> handleServerError(Request request, ClientResponse response) {
+	private <T> Publisher<? extends T> handleServerError(Request request, ClientResponse response) {
 
 		return Mono.error(
 				new HttpServerErrorException(response.statusCode(), String.format("%s request to %s returned error code %s.",
 						request.getMethod(), request.getEndpoint(), response.statusCode().value())));
 	}
 
+	private <T> Publisher<? extends T> handleClientError(String logId, Request request, ClientResponse response,
+			Class<T> responseType) {
+
+		return response.body(BodyExtractors.toMono(byte[].class)) //
+				.map(bytes -> new String(bytes, StandardCharsets.UTF_8)) //
+				.flatMap(content -> {
+					String mediaType = response.headers().contentType().map(MediaType::toString)
+							.orElse(XContentType.JSON.mediaType());
+					try {
+						ElasticsearchException exception = getElasticsearchException(response, content, mediaType);
+						if (exception != null) {
+							StringBuilder sb = new StringBuilder();
+							buildExceptionMessages(sb, exception);
+							return Mono.error(new HttpClientErrorException(response.statusCode(), sb.toString()));
+						}
+					} catch (Exception e) {
+						return Mono
+								.error(new ElasticsearchStatusException(content, RestStatus.fromCode(response.statusCode().value())));
+					}
+					return Mono.just(content);
+				})
+				.doOnNext(it -> ClientLogger.logResponse(logId, response.statusCode(), it)) //
+				.flatMap(content -> doDecode(response, responseType, content));
+	}
+
+	// region ElasticsearchException helper
+	@Nullable
+	private ElasticsearchException getElasticsearchException(ClientResponse response, String content, String mediaType)
+			throws IOException {
+
+		XContentParser parser = createParser(mediaType, content);
+		// we have a JSON object with an error and a status field
+		XContentParser.Token token = parser.nextToken(); // Skip START_OBJECT
+
+		do {
+			token = parser.nextToken();
+
+			if (parser.currentName().equals("error")) {
+				return ElasticsearchException.failureFromXContent(parser);
+			}
+		} while (token == XContentParser.Token.FIELD_NAME);
+		return null;
+	}
+
+	private static void buildExceptionMessages(StringBuilder sb, Throwable t) {
+
+		sb.append(t.getMessage());
+		for (Throwable throwable : t.getSuppressed()) {
+			sb.append(", ");
+			buildExceptionMessages(sb, throwable);
+		}
+	}
+	// endregion
+
+	// region internal classes
 	/**
 	 * Reactive client {@link ReactiveElasticsearchClient.Status} implementation.
 	 *
@@ -867,4 +930,5 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 			}
 		}
 	}
+	// endregion
 }

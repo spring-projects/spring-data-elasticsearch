@@ -34,6 +34,7 @@ import org.springframework.data.elasticsearch.UncategorizedElasticsearchExceptio
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
 
 /**
  * @author Christoph Strobl
@@ -63,6 +64,15 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 			return new UncategorizedElasticsearchException(ex.getMessage(), ex);
 		}
 
+		if (ex instanceof HttpClientErrorException) {
+			HttpClientErrorException httpClientErrorException = (HttpClientErrorException) ex;
+
+			if (isSeqNoConflict(httpClientErrorException)) {
+				return new OptimisticLockingFailureException("Cannot index a document due to seq_no+primary_term conflict",
+						httpClientErrorException);
+			}
+		}
+
 		if (ex instanceof ValidationException) {
 			return new DataIntegrityViolationException(ex.getMessage(), ex);
 		}
@@ -75,7 +85,7 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 		return null;
 	}
 
-	private boolean isSeqNoConflict(ElasticsearchException exception) {
+	private boolean isSeqNoConflict(Exception exception) {
 
 		if (exception instanceof ElasticsearchStatusException) {
 			ElasticsearchStatusException statusException = (ElasticsearchStatusException) exception;
@@ -90,6 +100,13 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 					&& versionConflictEngineException.getMessage().contains("version conflict, required seqNo");
 		}
 
+		if (exception instanceof HttpClientErrorException) {
+			HttpClientErrorException httpClientErrorException = (HttpClientErrorException) exception;
+
+			return httpClientErrorException.getMessage() != null
+					&& httpClientErrorException.getMessage().contains("version conflict, required seqNo");
+
+		}
 		return false;
 	}
 
