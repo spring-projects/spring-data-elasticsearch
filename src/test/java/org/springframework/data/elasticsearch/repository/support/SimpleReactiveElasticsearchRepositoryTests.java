@@ -66,10 +66,11 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
 
 /**
  * @author Christoph Strobl
- * @currentRead Fool's Fate - Robin Hobb
+ * @author Peter-Josef Meisch
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration
@@ -92,6 +93,11 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 
 	@Before
 	public void setUp() {
+		TestUtils.deleteIndex(INDEX);
+	}
+
+	@After
+	public void after() {
 		TestUtils.deleteIndex(INDEX);
 	}
 
@@ -125,9 +131,11 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-519
-	public void findByIdShouldCompleteIfIndexDoesNotExist() {
-		repository.findById("id-two").as(StepVerifier::create).verifyComplete();
+	@Test // DATAES-519, DATAES-767
+	public void findByIdShouldErrorIfIndexDoesNotExist() {
+		repository.findById("id-two") //
+				.as(StepVerifier::create) //
+				.expectError(HttpClientErrorException.class);
 	}
 
 	@Test // DATAES-519
@@ -287,9 +295,12 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 		repository.deleteById("does-not-exist").as(StepVerifier::create).verifyComplete();
 	}
 
-	@Test // DATAES-519
-	public void deleteByIdShouldCompleteWhenIndexDoesNotExist() {
-		repository.deleteById("does-not-exist").as(StepVerifier::create).verifyComplete();
+	@Test // DATAES-519, DATAES-767
+	public void deleteByIdShouldErrorWhenIndexDoesNotExist() {
+		repository.deleteById("does-not-exist") //
+				.as(StepVerifier::create) //
+				.verifyError(HttpClientErrorException.class);
+		;
 	}
 
 	@Test // DATAES-519

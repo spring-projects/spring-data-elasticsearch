@@ -24,6 +24,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.web.client.HttpClientErrorException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -203,12 +204,12 @@ public class ReactiveElasticsearchTemplateTests {
 		template.save(null);
 	}
 
-	@Test // DATAES-519
-	public void findByIdShouldCompleteWhenIndexDoesNotExist() {
+	@Test // DATAES-519, DATAES-767
+	public void getByIdShouldCompleteWhenIndexDoesNotExist() {
 
 		template.findById("foo", SampleEntity.class, "no-such-index") //
 				.as(StepVerifier::create) //
-				.verifyComplete();
+				.expectError(HttpClientErrorException.class);
 	}
 
 	@Test // DATAES-504
@@ -312,12 +313,12 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-519
-	public void findShouldCompleteWhenIndexDoesNotExist() {
+	@Test // DATAES-519, DATAES-767
+	public void searchShouldCompleteWhenIndexDoesNotExist() {
 
 		template.find(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class, "no-such-index") //
 				.as(StepVerifier::create) //
-				.verifyComplete();
+				.expectError(HttpClientErrorException.class);
 	}
 
 	@Test // DATAES-504
@@ -410,7 +411,7 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-595
+	@Test // DATAES-595, DATAES-767
 	public void shouldThrowElasticsearchStatusExceptionWhenInvalidPreferenceForGivenCriteria() {
 
 		SampleEntity sampleEntity1 = randomEntity("test message");
@@ -425,7 +426,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		template.find(queryWithInvalidPreference, SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.expectError(ElasticsearchStatusException.class).verify();
+				.expectError(HttpClientErrorException.class).verify();
 	}
 
 	@Test // DATAES-504
@@ -480,13 +481,12 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-519
+	@Test // DATAES-519, DATAES-767
 	public void countShouldReturnZeroWhenIndexDoesNotExist() {
 
 		template.count(SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.expectNext(0L) //
-				.verifyComplete();
+				.expectError(HttpClientErrorException.class);
 	}
 
 	@Test // DATAES-504
@@ -513,12 +513,12 @@ public class ReactiveElasticsearchTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-519
-	public void deleteByIdShouldCompleteWhenIndexDoesNotExist() {
+	@Test // DATAES-519, DATAES-767
+	public void deleteShouldErrorWhenIndexDoesNotExist() {
 
 		template.deleteById("does-not-exists", SampleEntity.class, "no-such-index") //
 				.as(StepVerifier::create)//
-				.verifyComplete();
+				.expectError(HttpClientErrorException.class);
 	}
 
 	@Test // DATAES-504
