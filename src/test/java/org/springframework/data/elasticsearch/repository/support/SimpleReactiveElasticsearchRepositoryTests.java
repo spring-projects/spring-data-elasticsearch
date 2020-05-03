@@ -41,11 +41,11 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
@@ -177,9 +177,11 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-519
+	@Test // DATAES-519, DATAES-767
 	public void findAllByIdByIdShouldCompleteIfIndexDoesNotExist() {
-		repository.findAllById(Arrays.asList("id-two", "id-two")).as(StepVerifier::create).verifyComplete();
+		repository.findAllById(Arrays.asList("id-two", "id-two")).as(StepVerifier::create)
+				.expectError(HttpClientErrorException.class);
+
 	}
 
 	@Test // DATAES-519
@@ -207,9 +209,10 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-519
+	@Test // DATAES-519, DATAE-767
 	public void countShouldReturnZeroWhenIndexDoesNotExist() {
-		repository.count().as(StepVerifier::create).expectNext(0L).verifyComplete();
+		repository.count().as(StepVerifier::create).expectNext(0L).expectError(HttpClientErrorException.class);
+
 	}
 
 	@Test // DATAES-519
