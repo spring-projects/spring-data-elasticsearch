@@ -1,7 +1,0 @@
-dist: xenial
-
-language: java
-
-sudo: true
-
-script: "./mvnw -Pjava11 clean dependency:list test -Dsort -U -B"
