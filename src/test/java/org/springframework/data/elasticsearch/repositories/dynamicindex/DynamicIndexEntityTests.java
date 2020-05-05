@@ -96,6 +96,21 @@ public class DynamicIndexEntityTests {
 		assertThat(repository.count()).isEqualTo(0L);
 	}
 
+	@Test // DATAES-821
+	void indexOpsShouldUseDynamicallyProvidedName() {
+
+		indexNameProvider.setIndexName("test-dynamic");
+		IndexOperations indexOps = operations.indexOps(DynamicIndexEntity.class);
+
+		int initialCallsCount = indexNameProvider.callsCount;
+		indexOps.create();
+		indexOps.refresh();
+		indexOps.refresh();
+		indexOps.delete();
+
+		assertThat(indexNameProvider.callsCount - initialCallsCount).isEqualTo(4);
+	}
+
 	static class IndexNameProvider {
 
 		private String indexName;
