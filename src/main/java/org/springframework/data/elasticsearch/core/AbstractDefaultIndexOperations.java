@@ -55,7 +55,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	protected final RequestFactory requestFactory;
 
 	@Nullable protected final Class<?> boundClass;
-	protected final IndexCoordinates boundIndex;
+	private final IndexCoordinates boundIndex;
 
 	public AbstractDefaultIndexOperations(ElasticsearchConverter elasticsearchConverter, Class<?> boundClass) {
 		this.elasticsearchConverter = elasticsearchConverter;
@@ -87,7 +87,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 		if (boundClass != null) {
 			Class<?> clazz = boundClass;
-			String indexName = boundIndex.getIndexName();
+			String indexName = getIndexCoordinates().getIndexName();
 
 			if (clazz.isAnnotationPresent(Setting.class)) {
 				String settingPath = clazz.getAnnotation(Setting.class).settingPath();
@@ -104,40 +104,40 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 			}
 			return doCreate(indexName, getDefaultSettings(getRequiredPersistentEntity(clazz)));
 		}
-		return doCreate(boundIndex.getIndexName(), null);
+		return doCreate(getIndexCoordinates().getIndexName(), null);
 	}
 
 	@Override
 	public boolean create(Document settings) {
-		return doCreate(boundIndex.getIndexName(), settings);
+		return doCreate(getIndexCoordinates().getIndexName(), settings);
 	}
 
 	protected abstract boolean doCreate(String indexName, @Nullable Document settings);
 
 	@Override
 	public boolean delete() {
-		return doDelete(boundIndex.getIndexName());
+		return doDelete(getIndexCoordinates().getIndexName());
 	}
 
 	protected abstract boolean doDelete(String indexName);
 
 	@Override
 	public boolean exists() {
-		return doExists(boundIndex.getIndexName());
+		return doExists(getIndexCoordinates().getIndexName());
 	}
 
 	protected abstract boolean doExists(String indexName);
 
 	@Override
 	public boolean putMapping(Document mapping) {
-		return doPutMapping(boundIndex, mapping);
+		return doPutMapping(getIndexCoordinates(), mapping);
 	}
 
 	protected abstract boolean doPutMapping(IndexCoordinates index, Document mapping);
 
 	@Override
 	public Map<String, Object> getMapping() {
-		return doGetMapping(boundIndex);
+		return doGetMapping(getIndexCoordinates());
 	}
 
 	abstract protected Map<String, Object> doGetMapping(IndexCoordinates index);
@@ -149,35 +149,35 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 	@Override
 	public Map<String, Object> getSettings(boolean includeDefaults) {
-		return doGetSettings(boundIndex.getIndexName(), includeDefaults);
+		return doGetSettings(getIndexCoordinates().getIndexName(), includeDefaults);
 	}
 
 	protected abstract Map<String, Object> doGetSettings(String indexName, boolean includeDefaults);
 
 	@Override
 	public void refresh() {
-		doRefresh(boundIndex);
+		doRefresh(getIndexCoordinates());
 	}
 
 	protected abstract void doRefresh(IndexCoordinates indexCoordinates);
 
 	@Override
 	public boolean addAlias(AliasQuery query) {
-		return doAddAlias(query, boundIndex);
+		return doAddAlias(query, getIndexCoordinates());
 	}
 
 	protected abstract boolean doAddAlias(AliasQuery query, IndexCoordinates index);
 
 	@Override
 	public List<AliasMetaData> queryForAlias() {
-		return doQueryForAlias(boundIndex.getIndexName());
+		return doQueryForAlias(getIndexCoordinates().getIndexName());
 	}
 
 	protected abstract List<AliasMetaData> doQueryForAlias(String indexName);
 
 	@Override
 	public boolean removeAlias(AliasQuery query) {
-		return doRemoveAlias(query, boundIndex);
+		return doRemoveAlias(query, getIndexCoordinates());
 	}
 
 	protected abstract boolean doRemoveAlias(AliasQuery query, IndexCoordinates index);
@@ -236,6 +236,16 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 	ElasticsearchPersistentEntity<?> getRequiredPersistentEntity(Class<?> clazz) {
 		return elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(clazz);
+	}
+
+	/**
+	 * get the current {@link IndexCoordinates}. These may change over time when the entity class has a SpEL constructed
+	 * index name. When this IndexOperations is not bound to a class, the bound IndexCoordinates are returned.
+	 *
+	 * @return IndexCoordinates
+	 */
+	protected IndexCoordinates getIndexCoordinates() {
+		return (boundClass != null) ? getIndexCoordinatesFor(boundClass) : boundIndex;
 	}
 
 	public IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {
