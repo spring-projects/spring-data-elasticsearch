@@ -273,7 +273,7 @@ Repository methods can be defined to have the following return types for returni
 * `List<T>`
 * `Stream<T>`
 * `SearchHits<T>`
-* `List<SearchHits<T>>`
+* `List<SearchHit<T>>`
 * `Stream<SearchHit<T>>`
 * `SearchPage<T>`
 
