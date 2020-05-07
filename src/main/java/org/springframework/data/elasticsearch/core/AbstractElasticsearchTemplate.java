@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -341,7 +342,14 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	/*
 	 * internal use only, not for public API
 	 */
-	abstract protected void searchScrollClear(String scrollId);
+	protected void searchScrollClear(String scrollId) {
+		searchScrollClear(Collections.singletonList(scrollId));
+	}
+
+	/*
+	 * internal use only, not for public API
+	 */
+	abstract protected void searchScrollClear(List<String> scrollIds);
 
 	abstract protected MultiSearchResponse.Item[] getMultiSearchResult(MultiSearchRequest request);
 	// endregion

@@ -299,9 +299,9 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public void searchScrollClear(String scrollId) {
+	public void searchScrollClear(List<String> scrollIds) {
 		ClearScrollRequest request = new ClearScrollRequest();
-		request.addScrollId(scrollId);
+		request.scrollIds(scrollIds);
 		execute(client -> client.clearScroll(request, RequestOptions.DEFAULT));
 	}
 
