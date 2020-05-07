@@ -16,11 +16,13 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.springframework.data.elasticsearch.client.util.ScrollState;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -38,12 +40,12 @@ abstract class StreamQueries {
 	 *
 	 * @param searchHits the initial hits
 	 * @param continueScrollFunction function to continue scrolling applies to the current scrollId.
-	 * @param clearScrollConsumer consumer to clear the scroll context by accepting the current scrollId.
+	 * @param clearScrollConsumer consumer to clear the scroll context by accepting the scrollIds to clear.
 	 * @param <T>
 	 * @return the {@link SearchHitsIterator}.
 	 */
 	static <T> SearchHitsIterator<T> streamResults(SearchScrollHits<T> searchHits,
-			Function<String, SearchScrollHits<T>> continueScrollFunction, Consumer<String> clearScrollConsumer) {
+			Function<String, SearchScrollHits<T>> continueScrollFunction, Consumer<List<String>> clearScrollConsumer) {
 
 		Assert.notNull(searchHits, "searchHits must not be null.");
 		Assert.notNull(searchHits.getScrollId(), "scrollId of searchHits must not be null.");
@@ -59,17 +61,17 @@ abstract class StreamQueries {
 
 			// As we couldn't retrieve single result with scroll, store current hits.
 			private volatile Iterator<SearchHit<T>> scrollHits = searchHits.iterator();
-			private volatile String scrollId = searchHits.getScrollId();
 			private volatile boolean continueScroll = scrollHits.hasNext();
+			private volatile ScrollState scrollState = new ScrollState(searchHits.getScrollId());
 
 			@Override
 			public void close() {
 
 				try {
-					clearScrollConsumer.accept(scrollId);
+					clearScrollConsumer.accept(scrollState.getScrollIds());
 				} finally {
 					scrollHits = null;
-					scrollId = null;
+					scrollState = null;
 				}
 			}
 
@@ -102,9 +104,9 @@ abstract class StreamQueries {
 				}
 
 				if (!scrollHits.hasNext()) {
-					SearchScrollHits<T> nextPage = continueScrollFunction.apply(scrollId);
+					SearchScrollHits<T> nextPage = continueScrollFunction.apply(scrollState.getScrollId());
 					scrollHits = nextPage.iterator();
-					scrollId = nextPage.getScrollId();
+					scrollState.updateScrollId(nextPage.getScrollId());
 					continueScroll = scrollHits.hasNext();
 				}
 
@@ -127,6 +129,5 @@ abstract class StreamQueries {
 	}
 
 	// utility constructor
-	private StreamQueries() {
-	}
+	private StreamQueries() {}
 }

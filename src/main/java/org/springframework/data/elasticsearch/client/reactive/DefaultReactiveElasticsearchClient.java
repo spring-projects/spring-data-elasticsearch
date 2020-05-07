@@ -36,10 +36,7 @@ import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -93,7 +90,6 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestStatus;
-import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -105,6 +101,7 @@ import org.springframework.data.elasticsearch.client.NoReachableHostException;
 import org.springframework.data.elasticsearch.client.reactive.HostProvider.Verification;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices;
 import org.springframework.data.elasticsearch.client.util.NamedXContents;
+import org.springframework.data.elasticsearch.client.util.ScrollState;
 import org.springframework.data.util.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -115,7 +112,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.BodyExtractors;
@@ -835,8 +831,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 								.error(new ElasticsearchStatusException(content, RestStatus.fromCode(response.statusCode().value())));
 					}
 					return Mono.just(content);
-				})
-				.doOnNext(it -> ClientLogger.logResponse(logId, response.statusCode(), it)) //
+				}).doOnNext(it -> ClientLogger.logResponse(logId, response.statusCode(), it)) //
 				.flatMap(content -> doDecode(response, responseType, content));
 	}
 
@@ -893,42 +888,5 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		}
 	}
 
-	/**
-	 * Mutable state object holding scrollId to be used for {@link SearchScrollRequest#scroll(Scroll)}
-	 *
-	 * @author Christoph Strobl
-	 * @since 3.2
-	 */
-	private static class ScrollState {
-
-		private final Object lock = new Object();
-
-		private final List<String> pastIds = new ArrayList<>(1);
-		@Nullable private String scrollId;
-
-		@Nullable
-		String getScrollId() {
-			return scrollId;
-		}
-
-		List<String> getScrollIds() {
-
-			synchronized (lock) {
-				return Collections.unmodifiableList(new ArrayList<>(pastIds));
-			}
-		}
-
-		void updateScrollId(String scrollId) {
-
-			if (StringUtils.hasText(scrollId)) {
-
-				synchronized (lock) {
-
-					this.scrollId = scrollId;
-					pastIds.add(scrollId);
-				}
-			}
-		}
-	}
 	// endregion
 }

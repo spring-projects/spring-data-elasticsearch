@@ -18,19 +18,17 @@ package org.springframework.data.elasticsearch.core;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.elasticsearch.search.aggregations.Aggregations;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Sascha Woo
+ * @author Peter-Josef Meisch
  */
 public class StreamQueriesTest {
 
@@ -41,15 +39,15 @@ public class StreamQueriesTest {
 		List<SearchHit<String>> hits = new ArrayList<>();
 		hits.add(new SearchHit<String>(null, 0, null, null, "one"));
 
-		SearchScrollHits<String> searchHits = newSearchScrollHits(hits);
+		SearchScrollHits<String> searchHits = newSearchScrollHits(hits, "1234");
 
 		AtomicBoolean clearScrollCalled = new AtomicBoolean(false);
 
 		// when
 		SearchHitsIterator<String> iterator = StreamQueries.streamResults( //
 				searchHits, //
-				scrollId -> newSearchScrollHits(Collections.emptyList()), //
-				scrollId -> clearScrollCalled.set(true));
+				scrollId -> newSearchScrollHits(Collections.emptyList(), scrollId), //
+				scrollIds -> clearScrollCalled.set(true));
 
 		while (iterator.hasNext()) {
 			iterator.next();
@@ -68,21 +66,47 @@ public class StreamQueriesTest {
 		List<SearchHit<String>> hits = new ArrayList<>();
 		hits.add(new SearchHit<String>(null, 0, null, null, "one"));
 
-		SearchScrollHits<String> searchHits = newSearchScrollHits(hits);
+		SearchScrollHits<String> searchHits = newSearchScrollHits(hits, "1234");
 
 		// when
 		SearchHitsIterator<String> iterator = StreamQueries.streamResults( //
 				searchHits, //
-				scrollId -> newSearchScrollHits(Collections.emptyList()), //
-				scrollId -> {
-				});
+				scrollId -> newSearchScrollHits(Collections.emptyList(), scrollId), //
+				scrollId -> {});
 
 		// then
 		assertThat(iterator.getTotalHits()).isEqualTo(1);
 
 	}
 
-	private SearchScrollHits<String> newSearchScrollHits(List<SearchHit<String>> hits) {
-		return new SearchHitsImpl<String>(hits.size(), TotalHitsRelation.EQUAL_TO, 0, "1234", hits, null);
+	@Test // DATAES-817
+	void shouldClearAllScrollIds() {
+
+		SearchScrollHits<String> searchHits1 = newSearchScrollHits(
+				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-1");
+		SearchScrollHits<String> searchHits2 = newSearchScrollHits(
+				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-2");
+		SearchScrollHits<String> searchHits3 = newSearchScrollHits(
+				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-2");
+		SearchScrollHits<String> searchHits4 = newSearchScrollHits(Collections.emptyList(), "s-3");
+
+		Iterator<SearchScrollHits<String>> searchScrollHitsIterator = Arrays.asList(searchHits1, searchHits2, searchHits3,searchHits4).iterator();
+
+		List<String> clearedScrollIds = new ArrayList<>();
+		SearchHitsIterator<String> iterator = StreamQueries.streamResults( //
+				searchScrollHitsIterator.next(), //
+				scrollId -> searchScrollHitsIterator.next(), //
+				scrollIds -> clearedScrollIds.addAll(scrollIds));
+
+		while (iterator.hasNext()) {
+			iterator.next();
+		}
+		iterator.close();
+
+		assertThat(clearedScrollIds).isEqualTo(Arrays.asList("s-1", "s-2", "s-3"));
+	}
+
+	private SearchScrollHits<String> newSearchScrollHits(List<SearchHit<String>> hits, String scrollId) {
+		return new SearchHitsImpl<String>(hits.size(), TotalHitsRelation.EQUAL_TO, 0, scrollId, hits, null);
 	}
 }
