@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-15 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
@@ -71,7 +71,7 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 	}
 
 	@Configuration
-	@Import({ ElasticsearchTemplateConfiguration.class })
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
 	@EnableElasticsearchRepositories
 	static class Config {}
 

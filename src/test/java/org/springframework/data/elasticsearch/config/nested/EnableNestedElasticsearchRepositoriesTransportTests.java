@@ -25,7 +25,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  */
 @ContextConfiguration(classes = { EnableNestedElasticsearchRepositoriesTransportTests.Config.class })
-public class EnableNestedElasticsearchRepositoriesTransportTests {
+public class EnableNestedElasticsearchRepositoriesTransportTests extends EnableNestedElasticsearchRepositoriesTests {
 	@Configuration
 	@Import({ ElasticsearchTemplateConfiguration.class })
 	@EnableElasticsearchRepositories(considerNestedRepositories = true)

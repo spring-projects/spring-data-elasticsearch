@@ -26,10 +26,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
-import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * Dynamic templates tests
@@ -37,8 +34,6 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Petr Kukral
  * @author Peter-Josef Meisch
  */
-@SpringIntegrationTest
-@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
 public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests {
 
 	@Test // DATAES-568
