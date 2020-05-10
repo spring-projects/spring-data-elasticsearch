@@ -190,13 +190,20 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate
 			aliasAction.filter(query.getFilterBuilder());
 		} else if (query.getFilter() != null) {
 			aliasAction.filter(query.getFilter());
-		} else if (!StringUtils.isEmpty(query.getRouting())) {
+		}
+
+		if (!StringUtils.isEmpty(query.getRouting())) {
 			aliasAction.routing(query.getRouting());
-		} else if (!StringUtils.isEmpty(query.getSearchRouting())) {
+		}
+
+		if (!StringUtils.isEmpty(query.getSearchRouting())) {
 			aliasAction.searchRouting(query.getSearchRouting());
-		} else if (!StringUtils.isEmpty(query.getIndexRouting())) {
+		}
+
+		if (!StringUtils.isEmpty(query.getIndexRouting())) {
 			aliasAction.indexRouting(query.getIndexRouting());
 		}
+
 		return client.admin().indices().prepareAliases().addAliasAction(aliasAction).execute().actionGet().isAcknowledged();
 	}
 
