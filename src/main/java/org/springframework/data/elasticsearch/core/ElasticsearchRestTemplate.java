@@ -209,11 +209,17 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate
 			aliasAction.filter(query.getFilterBuilder());
 		} else if (query.getFilter() != null) {
 			aliasAction.filter(query.getFilter());
-		} else if (hasText(query.getRouting())) {
+		}
+
+		if (hasText(query.getRouting())) {
 			aliasAction.routing(query.getRouting());
-		} else if (hasText(query.getSearchRouting())) {
+		}
+
+		if (hasText(query.getSearchRouting())) {
 			aliasAction.searchRouting(query.getSearchRouting());
-		} else if (hasText(query.getIndexRouting())) {
+		}
+
+		if (hasText(query.getIndexRouting())) {
 			aliasAction.indexRouting(query.getIndexRouting());
 		}
 
