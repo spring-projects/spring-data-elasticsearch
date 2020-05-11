@@ -22,10 +22,9 @@ import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.shard.ShardId;
 import org.elasticsearch.rest.RestStatus;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.client.HttpClientErrorException;
 
 /**
  * @author Roman Puchkovskiy
@@ -60,15 +59,4 @@ class ElasticsearchExceptionTranslatorTests {
 		assertThat(translated.getCause()).isSameAs(ex);
 	}
 
-	@Test // DATAES-767
-	void shouldConvertHttpClientErrorExceptionWithSeqNoConflictToOptimisticLockingFailureException() {
-		HttpClientErrorException ex = new HttpClientErrorException(HttpStatus.BAD_REQUEST,
-				"Elasticsearch exception [type=version_conflict_engine_exception, reason=[WPUUsXEB6uuA6j8_A7AB]: version conflict, required seqNo [34], primary term [16]. current document has seqNo [35] and primary term [16]]");
-
-		DataAccessException translated = translator.translateExceptionIfPossible(ex);
-
-		assertThat(translated).isInstanceOf(OptimisticLockingFailureException.class);
-		assertThat(translated.getMessage()).startsWith("Cannot index a document due to seq_no+primary_term conflict");
-		assertThat(translated.getCause()).isSameAs(ex);
-	}
 }

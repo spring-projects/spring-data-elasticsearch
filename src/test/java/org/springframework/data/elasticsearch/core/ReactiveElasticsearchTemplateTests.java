@@ -25,7 +25,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.web.client.HttpClientErrorException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -41,6 +40,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
@@ -49,6 +49,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
@@ -214,12 +215,12 @@ public class ReactiveElasticsearchTemplateTests {
 		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
-	@Test // DATAES-519, DATAES-767
+	@Test // DATAES-519, DATAES-767, DATAES-822
 	public void getByIdShouldErrorWhenIndexDoesNotExist() {
 
 		template.get("foo", SampleEntity.class, IndexCoordinates.of("no-such-index").withTypes("test-type")) //
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class);
+				.expectError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-504
@@ -334,7 +335,7 @@ public class ReactiveElasticsearchTemplateTests {
 				.search(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
 						IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class);
+				.expectError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-504
@@ -446,7 +447,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		template.search(queryWithInvalidPreference, SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class).verify();
+				.expectError(UncategorizedElasticsearchException.class).verify();
 	}
 
 	@Test // DATAES-504
@@ -526,7 +527,7 @@ public class ReactiveElasticsearchTemplateTests {
 		template.aggregate(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
 						IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class);
+				.expectError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-519, DATAES-767
@@ -534,7 +535,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		template.count(SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class);
+				.expectError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-504
@@ -566,7 +567,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		template.delete("does-not-exists", IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create)//
-				.expectError(HttpClientErrorException.class);
+				.expectError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-504

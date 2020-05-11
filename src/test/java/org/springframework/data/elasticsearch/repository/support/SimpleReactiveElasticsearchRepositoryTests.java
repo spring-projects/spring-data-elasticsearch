@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
@@ -47,6 +48,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -57,6 +59,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.TestUtils;
+import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Highlight;
@@ -72,7 +75,6 @@ import org.springframework.data.elasticsearch.repository.config.EnableReactiveEl
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.HttpClientErrorException;
 
 /**
  * @author Christoph Strobl
@@ -130,11 +132,11 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-519, DATAES-767
+	@Test // DATAES-519, DATAES-767, DATAES-822
 	public void findByIdShouldErrorIfIndexDoesNotExist() {
 		repository.findById("id-two") //
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class);
+				.expectError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-519
@@ -267,11 +269,11 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-519, DATAES-767
+	@Test // DATAES-519, DATAES-767, DATAES-822
 	public void countShouldErrorWhenIndexDoesNotExist() {
 		repository.count() //
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class);
+				.expectError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-519
@@ -357,12 +359,11 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 		repository.deleteById("does-not-exist").as(StepVerifier::create).verifyComplete();
 	}
 
-	@Test // DATAES-519, DATAES-767
+	@Test // DATAES-519, DATAES-767, DATAES-822
 	public void deleteByIdShouldErrorWhenIndexDoesNotExist() {
 		repository.deleteById("does-not-exist") //
 				.as(StepVerifier::create) //
-				.verifyError(HttpClientErrorException.class);
-		;
+				.verifyError(UncategorizedElasticsearchException.class);
 	}
 
 	@Test // DATAES-519

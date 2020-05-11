@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
@@ -24,6 +23,7 @@ import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.common.ValidationException;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.rest.RestStatus;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -34,18 +34,26 @@ import org.springframework.data.elasticsearch.UncategorizedElasticsearchExceptio
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.HttpClientErrorException;
 
 /**
+ * Simple {@link PersistenceExceptionTranslator} for Elasticsearch. Convert the given runtime exception to an
+ * appropriate exception from the {@code org.springframework.dao} hierarchy. Return {@literal null} if no translation is
+ * appropriate: any other exception may have resulted from user code, and should not be translated.
+ * 
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
+ * @author Mark Paluch
  * @since 3.2
  */
 public class ElasticsearchExceptionTranslator implements PersistenceExceptionTranslator {
 
 	@Override
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
+
+		if (isSeqNoConflict(ex)) {
+			return new OptimisticLockingFailureException("Cannot index a document due to seq_no+primary_term conflict", ex);
+		}
 
 		if (ex instanceof ElasticsearchException) {
 
@@ -56,21 +64,7 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 						ex);
 			}
 
-			if (isSeqNoConflict(elasticsearchException)) {
-				return new OptimisticLockingFailureException("Cannot index a document due to seq_no+primary_term conflict",
-						elasticsearchException);
-			}
-
 			return new UncategorizedElasticsearchException(ex.getMessage(), ex);
-		}
-
-		if (ex instanceof HttpClientErrorException) {
-			HttpClientErrorException httpClientErrorException = (HttpClientErrorException) ex;
-
-			if (isSeqNoConflict(httpClientErrorException)) {
-				return new OptimisticLockingFailureException("Cannot index a document due to seq_no+primary_term conflict",
-						httpClientErrorException);
-			}
 		}
 
 		if (ex instanceof ValidationException) {
@@ -88,25 +82,22 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 	private boolean isSeqNoConflict(Exception exception) {
 
 		if (exception instanceof ElasticsearchStatusException) {
+
 			ElasticsearchStatusException statusException = (ElasticsearchStatusException) exception;
+
 			return statusException.status() == RestStatus.CONFLICT && statusException.getMessage() != null
 					&& statusException.getMessage().contains("type=version_conflict_engine_exception")
 					&& statusException.getMessage().contains("version conflict, required seqNo");
 		}
 
 		if (exception instanceof VersionConflictEngineException) {
+
 			VersionConflictEngineException versionConflictEngineException = (VersionConflictEngineException) exception;
+
 			return versionConflictEngineException.getMessage() != null
 					&& versionConflictEngineException.getMessage().contains("version conflict, required seqNo");
 		}
 
-		if (exception instanceof HttpClientErrorException) {
-			HttpClientErrorException httpClientErrorException = (HttpClientErrorException) exception;
-
-			return httpClientErrorException.getMessage() != null
-					&& httpClientErrorException.getMessage().contains("version conflict, required seqNo");
-
-		}
 		return false;
 	}
 

@@ -94,6 +94,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientLogger;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
@@ -112,7 +113,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -819,16 +819,17 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.flatMap(content -> {
 					String mediaType = response.headers().contentType().map(MediaType::toString)
 							.orElse(XContentType.JSON.mediaType());
+					RestStatus status = RestStatus.fromCode(response.statusCode().value());
 					try {
 						ElasticsearchException exception = getElasticsearchException(response, content, mediaType);
 						if (exception != null) {
 							StringBuilder sb = new StringBuilder();
 							buildExceptionMessages(sb, exception);
-							return Mono.error(new HttpClientErrorException(response.statusCode(), sb.toString()));
+							return Mono.error(new ElasticsearchStatusException(sb.toString(), status, exception));
 						}
 					} catch (Exception e) {
 						return Mono
-								.error(new ElasticsearchStatusException(content, RestStatus.fromCode(response.statusCode().value())));
+								.error(new ElasticsearchStatusException(content, status));
 					}
 					return Mono.just(content);
 				}).doOnNext(it -> ClientLogger.logResponse(logId, response.statusCode(), it)) //

@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive.*;
 
-import org.springframework.web.client.HttpClientErrorException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -460,7 +459,7 @@ public class ReactiveElasticsearchClientUnitTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-488, DATAES-767
+	@Test // DATAES-488, DATAES-767, DATAES-822
 	public void updateShouldEmitErrorWhenNotFound() {
 
 		hostProvider.when(HOST) //
@@ -468,7 +467,7 @@ public class ReactiveElasticsearchClientUnitTests {
 
 		client.update(new UpdateRequest("twitter", "doc", "1").doc(Collections.singletonMap("user", "cstrobl")))
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class) //
+				.expectError(ElasticsearchStatusException.class) //
 				.verify();
 	}
 
