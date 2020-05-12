@@ -24,7 +24,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.web.client.HttpClientErrorException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -209,7 +208,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		template.findById("foo", SampleEntity.class, "no-such-index") //
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class);
+				.expectError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-504
@@ -318,7 +317,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		template.find(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class, "no-such-index") //
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class);
+				.expectError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-504
@@ -426,7 +425,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		template.find(queryWithInvalidPreference, SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class).verify();
+				.expectError(ElasticsearchStatusException.class).verify();
 	}
 
 	@Test // DATAES-504
@@ -486,7 +485,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		template.count(SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class);
+				.expectError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-504
@@ -518,7 +517,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		template.deleteById("does-not-exists", SampleEntity.class, "no-such-index") //
 				.as(StepVerifier::create)//
-				.expectError(HttpClientErrorException.class);
+				.expectError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-504

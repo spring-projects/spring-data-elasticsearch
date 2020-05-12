@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.client.reactive;
 import static org.assertj.core.api.Assertions.*;
 
 import lombok.SneakyThrows;
-import org.springframework.web.client.HttpClientErrorException;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -149,7 +148,7 @@ public class ReactiveElasticsearchClientTests {
 
 		client.get(new GetRequest(INDEX_I, TYPE_I, "nonono")) //
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class) //
+				.expectError(ElasticsearchStatusException.class) //
 				.verify();
 	}
 
@@ -321,7 +320,7 @@ public class ReactiveElasticsearchClientTests {
 
 		client.index(request) //
 				.as(StepVerifier::create) //
-				.verifyError(HttpClientErrorException.class);
+				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-488
@@ -370,7 +369,7 @@ public class ReactiveElasticsearchClientTests {
 
 		client.update(request) //
 				.as(StepVerifier::create) //
-				.verifyError(HttpClientErrorException.class);
+				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-488
@@ -537,7 +536,7 @@ public class ReactiveElasticsearchClientTests {
 
 		client.indices().createIndex(request -> request.index(INDEX_I)) //
 				.as(StepVerifier::create) //
-				.verifyError(HttpClientErrorException.class);
+				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-569
@@ -557,7 +556,7 @@ public class ReactiveElasticsearchClientTests {
 
 		client.indices().deleteIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
-				.verifyError(HttpClientErrorException.class);
+				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-569
@@ -575,7 +574,7 @@ public class ReactiveElasticsearchClientTests {
 
 		client.indices().openIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
-				.verifyError(HttpClientErrorException.class);
+				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-569
@@ -593,7 +592,7 @@ public class ReactiveElasticsearchClientTests {
 
 		client.indices().closeIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
-				.verifyError(HttpClientErrorException.class);
+				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-569
@@ -611,7 +610,7 @@ public class ReactiveElasticsearchClientTests {
 
 		client.indices().refreshIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
-				.verifyError(HttpClientErrorException.class);
+				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-569
@@ -635,7 +634,7 @@ public class ReactiveElasticsearchClientTests {
 
 		client.indices().updateMapping(request -> request.indices(INDEX_I).type(TYPE_I).source(jsonMap)) //
 				.as(StepVerifier::create) //
-				.verifyError(HttpClientErrorException.class);
+				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-569
@@ -653,7 +652,7 @@ public class ReactiveElasticsearchClientTests {
 
 		client.indices().flushIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
-				.verifyError(HttpClientErrorException.class);
+				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-684

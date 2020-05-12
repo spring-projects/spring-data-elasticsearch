@@ -115,8 +115,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -725,9 +723,10 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	private <T> Publisher<? extends T> handleServerError(Request request, ClientResponse response) {
 
-		return Mono.error(
-				new HttpServerErrorException(response.statusCode(), String.format("%s request to %s returned error code %s.",
-						request.getMethod(), request.getEndpoint(), response.statusCode().value())));
+		RestStatus status = RestStatus.fromCode(response.statusCode().value());
+
+		return Mono.error(new ElasticsearchStatusException(String.format("%s request to %s returned error code %s.",
+				request.getMethod(), request.getEndpoint(), response.statusCode().value()), status));
 	}
 
 	private <T> Publisher<? extends T> handleClientError(String logId, Request request, ClientResponse response,
@@ -738,20 +737,19 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.flatMap(content -> {
 					String mediaType = response.headers().contentType().map(MediaType::toString)
 							.orElse(XContentType.JSON.mediaType());
+					RestStatus status = RestStatus.fromCode(response.statusCode().value());
 					try {
 						ElasticsearchException exception = getElasticsearchException(response, content, mediaType);
 						if (exception != null) {
 							StringBuilder sb = new StringBuilder();
 							buildExceptionMessages(sb, exception);
-							return Mono.error(new HttpClientErrorException(response.statusCode(), sb.toString()));
+							return Mono.error(new ElasticsearchStatusException(sb.toString(), status, exception));
 						}
 					} catch (Exception e) {
-						return Mono
-								.error(new ElasticsearchStatusException(content, RestStatus.fromCode(response.statusCode().value())));
+						return Mono.error(new ElasticsearchStatusException(content, status));
 					}
 					return Mono.just(content);
-				})
-				.doOnNext(it -> ClientLogger.logResponse(logId, response.statusCode(), it)) //
+				}).doOnNext(it -> ClientLogger.logResponse(logId, response.statusCode(), it)) //
 				.flatMap(content -> doDecode(response, responseType, content));
 	}
 
