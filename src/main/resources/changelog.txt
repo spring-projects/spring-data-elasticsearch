@@ -1,6 +1,25 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.0.RELEASE (2020-05-12)
+---------------------------------------------
+* DATAES-822 - ElasticsearchRestTemplate should not use `spring-web`.
+* DATAES-821 - Fix code for adding an alias.
+* DATAES-819 - Test refactorings.
+* DATAES-817 - StreamQueries does only delete the last scrollid.
+* DATAES-814 - Fix documentation.
+* DATAES-812 - IndexOperations should use SpEL index name from entity.
+* DATAES-811 - Remove Travis CI.
+* DATAES-809 - Creation of test data may lead to duplicate values.
+* DATAES-808 - Release 4.0 GA (Neumann).
+* DATAES-799 - Support optimistic locking for full update scenario using seq_no + primary_term.
+* DATAES-767 - Fix ReactiveElasticsearch handling of 4xx HTTP responses.
+* DATAES-750 - Migration guide and documentation update.
+* DATAES-602 - add support for refreshAsync into ElasticsearchRestTemplate.
+* DATAES-587 - Add lifecycle events.
+* DATAES-267 - ElasticSearch should allow to create nested not analyzed fields.
+
+
 Changes in version 4.0.0.RC2 (2020-04-28)
 -----------------------------------------
 * DATAES-803 - Move count request setup from reactive template to reactive client.
@@ -1104,6 +1123,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
