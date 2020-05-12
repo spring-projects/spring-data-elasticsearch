@@ -5,7 +5,7 @@
 
 	<groupId>org.springframework.data</groupId>
 	<artifactId>spring-data-elasticsearch</artifactId>
-	<version>4.0.0.RELEASE</version>
+	<version>4.0.1.BUILD-SNAPSHOT</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
