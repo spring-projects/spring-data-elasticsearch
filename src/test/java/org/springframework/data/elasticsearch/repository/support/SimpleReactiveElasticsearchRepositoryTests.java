@@ -23,6 +23,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.elasticsearch.ElasticsearchStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -66,7 +67,6 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.HttpClientErrorException;
 
 /**
  * @author Christoph Strobl
@@ -135,7 +135,7 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 	public void findByIdShouldErrorIfIndexDoesNotExist() {
 		repository.findById("id-two") //
 				.as(StepVerifier::create) //
-				.expectError(HttpClientErrorException.class);
+				.expectError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-519
@@ -180,7 +180,7 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 	@Test // DATAES-519, DATAES-767
 	public void findAllByIdByIdShouldCompleteIfIndexDoesNotExist() {
 		repository.findAllById(Arrays.asList("id-two", "id-two")).as(StepVerifier::create)
-				.expectError(HttpClientErrorException.class);
+				.expectError(ElasticsearchStatusException.class);
 
 	}
 
@@ -211,7 +211,7 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 
 	@Test // DATAES-519, DATAE-767
 	public void countShouldReturnZeroWhenIndexDoesNotExist() {
-		repository.count().as(StepVerifier::create).expectNext(0L).expectError(HttpClientErrorException.class);
+		repository.count().as(StepVerifier::create).expectNext(0L).expectError(ElasticsearchStatusException.class);
 
 	}
 
@@ -302,7 +302,7 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 	public void deleteByIdShouldErrorWhenIndexDoesNotExist() {
 		repository.deleteById("does-not-exist") //
 				.as(StepVerifier::create) //
-				.verifyError(HttpClientErrorException.class);
+				.verifyError(ElasticsearchStatusException.class);
 		;
 	}
 
