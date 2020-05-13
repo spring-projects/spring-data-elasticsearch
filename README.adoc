@@ -123,7 +123,7 @@ Add the Maven dependency:
 // Always change both files!
 **Compatibility Matrix**
 
-The compatibility between Spring Data Elasticsearch, Elasticsearch client drivers and Spring Boot versions can be found in the https://docs.spring.io/spring-data/elasticsearch/docs/3.2.0.RC3/reference/html/#preface.versions[reference documentation].
+The compatibility between Spring Data Elasticsearch, Elasticsearch client drivers and Spring Boot versions can be found in the https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/#preface.versions[reference documentation].
 
 To use the Release candidate versions of the upcoming major version, use our Maven milestone repository and declare the appropriate dependency version:
 
