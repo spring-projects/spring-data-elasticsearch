@@ -67,7 +67,7 @@ public class ReactiveElasticsearchOperationsCallbackTest {
 	void setUp() {
 		IndexOperations indexOps = nonreactiveOperations.indexOps(SampleEntity.class);
 		indexOps.create();
-		indexOps.putMapping(indexOps.createMapping(SampleEntity.class));
+		indexOps.putMapping(SampleEntity.class);
 	}
 
 	@AfterEach

@@ -123,15 +123,15 @@ public abstract class ElasticsearchTemplateTests {
 		deleteIndices();
 
 		indexOperations.create();
-		indexOperations.putMapping(indexOperations.createMapping(SampleEntity.class));
+		indexOperations.putMapping(SampleEntity.class);
 
 		IndexOperations indexOpsSampleEntityUUIDKeyed = operations.indexOps(SampleEntityUUIDKeyed.class);
 		indexOpsSampleEntityUUIDKeyed.create();
-		indexOpsSampleEntityUUIDKeyed.putMapping(indexOpsSampleEntityUUIDKeyed.createMapping(SampleEntityUUIDKeyed.class));
+		indexOpsSampleEntityUUIDKeyed.putMapping(SampleEntityUUIDKeyed.class);
 
 		IndexOperations indexOpsSearchHitsEntity = operations.indexOps(SearchHitsEntity.class);
 		indexOpsSearchHitsEntity.create();
-		indexOpsSearchHitsEntity.putMapping(indexOpsSearchHitsEntity.createMapping(SearchHitsEntity.class));
+		indexOpsSearchHitsEntity.putMapping(SearchHitsEntity.class);
 	}
 
 	@AfterEach
@@ -1419,7 +1419,7 @@ public abstract class ElasticsearchTemplateTests {
 		// when
 
 		// then
-		assertThat(indexOperations.putMapping(indexOperations.createMapping(entityClass))).isTrue();
+		assertThat(indexOperations.putMapping(entityClass)).isTrue();
 	}
 
 	@Test // DATAES-305
@@ -1432,7 +1432,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations1.create();
 
 		// when
-		indexOperations1.putMapping(indexOperations1.createMapping(entity));
+		indexOperations1.putMapping(entity);
 
 		// then
 		Map<String, Object> mapping = indexOperations.getMapping();
@@ -1622,7 +1622,7 @@ public abstract class ElasticsearchTemplateTests {
 		IndexOperations bookIndexOperations = operations.indexOps(Book.class);
 		bookIndexOperations.delete();
 		bookIndexOperations.create();
-		indexOperations.putMapping(indexOperations.createMapping(clazz));
+		indexOperations.putMapping(clazz);
 		bookIndexOperations.refresh();
 
 		IndexCoordinates bookIndex = IndexCoordinates.of("test-index-book-core-template").withTypes("book");
@@ -2263,7 +2263,7 @@ public abstract class ElasticsearchTemplateTests {
 		// when
 		indexOperations.delete();
 		indexOperations.create(parse(settings));
-		indexOperations.putMapping(indexOperations.createMapping(SampleEntity.class));
+		indexOperations.putMapping(SampleEntity.class);
 		indexOperations.refresh();
 
 		// then

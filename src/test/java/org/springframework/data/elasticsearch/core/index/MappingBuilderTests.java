@@ -108,7 +108,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	public void shouldNotFailOnCircularReference() {
 
 		operations.indexOps(SimpleRecursiveEntity.class).create();
-		indexOperations.putMapping(indexOperations.createMapping(SimpleRecursiveEntity.class));
+		indexOperations.putMapping(SimpleRecursiveEntity.class);
 		indexOperations.refresh();
 	}
 
@@ -144,7 +144,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		// When
 		indexOps.create();
-		indexOps.putMapping(indexOps.createMapping(StockPrice.class));
+		indexOps.putMapping(StockPrice.class);
 		String symbol = "AU";
 		double price = 2.34;
 		String id = "abc";
@@ -197,7 +197,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		// when
 		indexOps.create();
-		indexOps.putMapping(indexOps.createMapping(SampleInheritedEntity.class));
+		indexOps.putMapping(SampleInheritedEntity.class);
 		Date createdDate = new Date();
 		String message = "msg";
 		String id = "abc";
@@ -238,11 +238,11 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		// given
 		IndexOperations indexOpsUser = operations.indexOps(User.class);
 		indexOpsUser.create();
-		indexOpsUser.putMapping(indexOpsUser.createMapping(User.class));
+		indexOpsUser.putMapping(User.class);
 
 		IndexOperations indexOpsGroup = operations.indexOps(Group.class);
 		indexOpsGroup.create();
-		indexOpsGroup.putMapping(indexOpsGroup.createMapping(Group.class));
+		indexOpsGroup.putMapping(Group.class);
 
 		// when
 
@@ -255,7 +255,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		// given
 		IndexOperations indexOps = operations.indexOps(Book.class);
 		indexOps.create();
-		indexOps.putMapping(indexOps.createMapping(Book.class));
+		indexOps.putMapping(Book.class);
 
 		// when
 
@@ -268,7 +268,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		// given
 		IndexOperations indexOps = this.operations.indexOps(Book.class);
 		indexOps.create();
-		indexOps.putMapping(indexOps.createMapping(Book.class));
+		indexOps.putMapping(Book.class);
 
 		// when
 		Map mapping = indexOps.getMapping();
@@ -310,7 +310,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		// given
 		IndexOperations indexOps = operations.indexOps(CopyToEntity.class);
 		indexOps.create();
-		indexOps.putMapping(indexOps.createMapping(CopyToEntity.class));
+		indexOps.putMapping(CopyToEntity.class);
 
 		// when
 		Map mapping = indexOps.getMapping();
