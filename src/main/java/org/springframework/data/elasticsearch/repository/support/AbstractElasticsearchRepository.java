@@ -88,7 +88,7 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 		this.entityClass = this.entityInformation.getJavaType();
 		this.indexOperations = operations.indexOps(this.entityClass);
 		try {
-			if (createIndexAndMapping()) {
+			if (createIndexAndMapping() && !indexOperations.exists()) {
 				createIndex();
 				putMapping();
 			}
