@@ -34,6 +34,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -146,7 +147,7 @@ public class LogEntityTests {
 
 		@Field(type = Ip) private String ip;
 
-		@Field(type = Date) private java.util.Date date;
+		@Field(type = Date, format = DateFormat.date_time) private java.util.Date date;
 
 		private LogEntity() {}
 

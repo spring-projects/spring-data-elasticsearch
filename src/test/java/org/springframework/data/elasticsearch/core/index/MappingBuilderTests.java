@@ -859,7 +859,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		@Nullable @Id private String id;
 
-		@Nullable @Field(type = FieldType.Date, index = false) private Date createdDate;
+		@Nullable @Field(type = FieldType.Date, format = DateFormat.date_time, index = false) private Date createdDate;
 
 		@Nullable
 		public String getId() {

@@ -43,7 +43,7 @@ The following annotations are available:
 * `@Field`: Applied at the field level and defines properties of the field, most of the attributes map to the respective https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html[Elasticsearch Mapping] definitions (the following list is not complete, check the annotation Javadoc for a complete reference):
 ** `name`: The name of the field as it will be represented in the Elasticsearch document, if not set, the Java field name is used.
 ** `type`: the field type, can be one of _Text, Keyword, Long, Integer, Short, Byte, Double, Float, Half_Float, Scaled_Float, Date, Date_Nanos, Boolean, Binary, Integer_Range, Float_Range, Long_Range, Double_Range, Date_Range, Ip_Range, Object, Nested, Ip, TokenCount, Percolator, Flattened, Search_As_You_Type_. See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html[Elasticsearch Mapping Types]
-** `format` and `pattern` custom definitions for the _Date_ type.
+** `format` and `pattern` definitions for the _Date_ type. `format` must be defined for date types.
 ** `store`: Flag wether the original field value should be store in Elasticsearch, default value is _false_.
 ** `analyzer`, `searchAnalyzer`, `normalizer` for specifying custom custom analyzers and normalizer.
 * `@GeoPoint`: marks a field as _geo_point_ datatype. Can be omitted if the field is an instance of the `GeoPoint` class.
