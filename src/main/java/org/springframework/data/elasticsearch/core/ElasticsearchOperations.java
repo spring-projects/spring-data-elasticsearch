@@ -186,7 +186,7 @@ default boolean createIndex(String indexName) {
 	@Deprecated
 	default boolean putMapping(Class<?> clazz) {
 		IndexOperations indexOps = indexOps(clazz);
-		return indexOps.putMapping(indexOps.createMapping(clazz));
+		return indexOps.putMapping(clazz);
 	}
 
 	/**
@@ -202,7 +202,7 @@ default boolean createIndex(String indexName) {
 	@Deprecated
 	default boolean putMapping(IndexCoordinates index, Class<?> clazz) {
 		IndexOperations indexOps = indexOps(index);
-		return indexOps.putMapping(indexOps.createMapping(clazz));
+		return indexOps.putMapping(clazz);
 	}
 
 	/**

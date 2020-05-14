@@ -108,7 +108,7 @@ public class ReactiveElasticsearchTemplateTests {
 		deleteIndices();
 
 		indexOperations.create();
-		indexOperations.putMapping(indexOperations.createMapping(SampleEntity.class));
+		indexOperations.putMapping(SampleEntity.class);
 		indexOperations.refresh();
 
 		template = new ReactiveElasticsearchTemplate(TestUtils.reactiveClient(), restTemplate.getElasticsearchConverter());

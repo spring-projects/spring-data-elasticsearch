@@ -55,7 +55,7 @@ abstract class ElasticsearchOperationsCallbackTest {
 		IndexOperations indexOps = operations.indexOps(SampleEntity.class);
 		indexOps.delete();
 		indexOps.create();
-		indexOps.putMapping(indexOps.createMapping(SampleEntity.class));
+		indexOps.putMapping(SampleEntity.class);
 	}
 
 	@AfterEach

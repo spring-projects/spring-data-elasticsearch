@@ -74,7 +74,7 @@ public class CriteriaQueryTests {
 		indexOperations = operations.indexOps(SampleEntity.class);
 		indexOperations.delete();
 		indexOperations.create();
-		indexOperations.putMapping(indexOperations.createMapping(SampleEntity.class));
+		indexOperations.putMapping(SampleEntity.class);
 		indexOperations.refresh();
 	}
 

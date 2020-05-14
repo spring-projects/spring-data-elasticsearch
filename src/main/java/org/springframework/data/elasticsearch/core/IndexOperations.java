@@ -94,6 +94,16 @@ public interface IndexOperations {
 	boolean putMapping(Document mapping);
 
 	/**
+	 * Creates the index mapping for the given class and writes it to the index.
+	 * @param clazz the clazz to create a mapping for
+	 * @return {@literal true} if the mapping could be stored
+	 * @since 4.1
+	 */
+	default boolean putMapping(Class<?> clazz) {
+		return putMapping(createMapping(clazz));
+	}
+
+	/**
 	 * Get mapping for an index defined by a class.
 	 *
 	 * @return the mapping
