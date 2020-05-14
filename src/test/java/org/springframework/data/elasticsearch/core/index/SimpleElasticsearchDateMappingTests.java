@@ -41,10 +41,10 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 
 	private static final String EXPECTED_MAPPING = "{\"properties\":{\"message\":{\"store\":true,"
 			+ "\"type\":\"text\",\"index\":false,\"analyzer\":\"standard\"},\"customFormatDate\":{\"type\":\"date\",\"format\":\"dd.MM.uuuu hh:mm\"},"
-			+ "\"defaultFormatDate\":{\"type\":\"date\"},\"basicFormatDate\":{\""
+			+ "\"basicFormatDate\":{\""
 			+ "type\":\"date\",\"format\":\"basic_date\"}}}";
 
-	@Test // DATAES-568
+	@Test // DATAES-568, DATAES-828
 	public void testCorrectDateMappings() {
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleDateMappingEntity.class);
@@ -66,8 +66,6 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 
 		@Field(type = Date, format = DateFormat.custom,
 				pattern = "dd.MM.uuuu hh:mm") private LocalDateTime customFormatDate;
-
-		@Field(type = FieldType.Date) private LocalDateTime defaultFormatDate;
 
 		@Field(type = FieldType.Date, format = DateFormat.basic_date) private LocalDateTime basicFormatDate;
 	}
