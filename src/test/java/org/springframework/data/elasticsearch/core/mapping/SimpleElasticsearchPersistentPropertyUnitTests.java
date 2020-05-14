@@ -173,6 +173,20 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(seqNoProperty.isReadable()).isFalse();
 	}
 
+	@Test // DATAES-828
+	void shouldRequireFormatForDateField() {
+		assertThatExceptionOfType(MappingException.class) //
+				.isThrownBy(() -> context.getRequiredPersistentEntity(DateFieldWithNoFormat.class)) //
+				.withMessageContaining("date");
+	}
+
+	@Test // DATAES-828
+	void shouldRequireFormatForDateNanosField() {
+		assertThatExceptionOfType(MappingException.class) //
+				.isThrownBy(() -> context.getRequiredPersistentEntity(DateNanosFieldWithNoFormat.class)) //
+				.withMessageContaining("date");
+	}
+
 	static class InvalidScoreProperty {
 		@Nullable @Score String scoreProperty;
 	}
@@ -194,5 +208,13 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 	static class SeqNoPrimaryTermProperty {
 		SeqNoPrimaryTerm seqNoPrimaryTerm;
 		String string;
+	}
+
+	static class DateFieldWithNoFormat {
+		@Field(type = FieldType.Date) LocalDateTime datetime;
+	}
+
+	static class DateNanosFieldWithNoFormat {
+		@Field(type = FieldType.Date_Nanos) LocalDateTime datetime;
 	}
 }

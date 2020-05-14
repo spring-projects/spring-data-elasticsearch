@@ -117,8 +117,14 @@ public class SimpleElasticsearchPersistentProperty extends
 		boolean isTemporalAccessor = TemporalAccessor.class.isAssignableFrom(getType());
 		boolean isDate = Date.class.isAssignableFrom(getType());
 
-		if (field != null && field.type() == FieldType.Date && (isTemporalAccessor || isDate)) {
+		if (field != null && (field.type() == FieldType.Date || field.type() == FieldType.Date_Nanos)
+				&& (isTemporalAccessor || isDate)) {
 			DateFormat dateFormat = field.format();
+
+			if (dateFormat == DateFormat.none) {
+				throw new MappingException(String.format("property %s is annotated with FieldType.%s but has no DateFormat defined",
+						getName(), field.type().name()));
+			}
 
 			ElasticsearchDateConverter converter = null;
 
