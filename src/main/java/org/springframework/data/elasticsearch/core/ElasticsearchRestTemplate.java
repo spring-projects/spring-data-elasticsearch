@@ -40,6 +40,8 @@ import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
@@ -87,6 +89,8 @@ import org.springframework.util.Assert;
  * @author Massimiliano Poggi
  */
 public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
 
 	private RestHighLevelClient client;
 	private ElasticsearchExceptionTranslator exceptionTranslator;
@@ -300,9 +304,13 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public void searchScrollClear(List<String> scrollIds) {
-		ClearScrollRequest request = new ClearScrollRequest();
-		request.scrollIds(scrollIds);
-		execute(client -> client.clearScroll(request, RequestOptions.DEFAULT));
+		try {
+			ClearScrollRequest request = new ClearScrollRequest();
+			request.scrollIds(scrollIds);
+			execute(client -> client.clearScroll(request, RequestOptions.DEFAULT));
+		} catch (Exception e) {
+			LOGGER.warn("Could not clear scroll: {}", e.getMessage());
+		}
 	}
 
 	@Override

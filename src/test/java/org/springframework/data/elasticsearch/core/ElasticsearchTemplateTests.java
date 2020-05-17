@@ -77,7 +77,7 @@ import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
-import org.springframework.data.util.CloseableIterator;
+import org.springframework.data.util.StreamUtils;
 import org.springframework.lang.Nullable;
 
 /**
@@ -1298,27 +1298,33 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(sampleEntities).hasSize(30);
 	}
 
-	@Test // DATAES-167
-	public void shouldReturnResultsWithStreamForGivenCriteriaQuery() {
+	@Test // DATAES-167, DATAES-831
+	public void shouldReturnAllResultsWithStreamForGivenCriteriaQuery() {
 
-		// given
-		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
-
-		// when
-		operations.bulkIndex(entities, index);
+		operations.bulkIndex(createSampleEntitiesWithMessage("Test message", 30), index);
 		indexOperations.refresh();
-
-		// then
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 		criteriaQuery.setPageable(PageRequest.of(0, 10));
 
-		CloseableIterator<SearchHit<SampleEntity>> stream = operations.searchForStream(criteriaQuery, SampleEntity.class,
-				index);
-		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
-		while (stream.hasNext()) {
-			sampleEntities.add(stream.next());
-		}
-		assertThat(sampleEntities).hasSize(30);
+		long count = StreamUtils
+				.createStreamFromIterator(operations.searchForStream(criteriaQuery, SampleEntity.class, index)).count();
+
+		assertThat(count).isEqualTo(30);
+	}
+
+	@Test // DATAES-831
+	void shouldLimitStreamResultToRequestedSize() {
+
+		operations.bulkIndex(createSampleEntitiesWithMessage("Test message", 30), index);
+		indexOperations.refresh();
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
+		criteriaQuery.setMaxResults(10);
+
+		long count = StreamUtils
+				.createStreamFromIterator(operations.searchForStream(criteriaQuery, SampleEntity.class, index)).count();
+
+		assertThat(count).isEqualTo(10);
 	}
 
 	private static List<IndexQuery> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
@@ -3128,8 +3134,8 @@ public abstract class ElasticsearchTemplateTests {
 		operations.refresh(OptimisticEntity.class);
 
 		List<Query> queries = singletonList(queryForOne(saved.getId()));
-		List<SearchHits<OptimisticEntity>> retrievedHits = operations.multiSearch(queries,
-				OptimisticEntity.class, operations.getIndexCoordinatesFor(OptimisticEntity.class));
+		List<SearchHits<OptimisticEntity>> retrievedHits = operations.multiSearch(queries, OptimisticEntity.class,
+				operations.getIndexCoordinatesFor(OptimisticEntity.class));
 		OptimisticEntity retrieved = retrievedHits.get(0).getSearchHit(0).getContent();
 
 		assertThatSeqNoPrimaryTermIsFilled(retrieved);
@@ -3162,8 +3168,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(forEdit1);
 
 		forEdit2.setMessage("It'll be great");
-		assertThatThrownBy(() -> operations.save(forEdit2))
-				.isInstanceOf(OptimisticLockingFailureException.class);
+		assertThatThrownBy(() -> operations.save(forEdit2)).isInstanceOf(OptimisticLockingFailureException.class);
 	}
 
 	@Test // DATAES-799
@@ -3179,8 +3184,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(forEdit1);
 
 		forEdit2.setMessage("It'll be great");
-		assertThatThrownBy(() -> operations.save(forEdit2))
-				.isInstanceOf(OptimisticLockingFailureException.class);
+		assertThatThrownBy(() -> operations.save(forEdit2)).isInstanceOf(OptimisticLockingFailureException.class);
 	}
 
 	@Test // DATAES-799
