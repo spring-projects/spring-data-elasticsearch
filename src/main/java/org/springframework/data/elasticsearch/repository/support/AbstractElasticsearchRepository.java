@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -155,7 +156,8 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 	public Iterable<T> findAllById(Iterable<ID> ids) {
 		Assert.notNull(ids, "ids can't be null.");
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(stringIdsRepresentation(ids)).build();
-		return operations.multiGet(query, getEntityClass(), getIndexCoordinates());
+		return operations.multiGet(query, getEntityClass(), getIndexCoordinates()).stream().filter(Objects::nonNull)
+				.collect(Collectors.toList());
 	}
 
 	@Override

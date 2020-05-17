@@ -25,12 +25,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.IOException;
 import java.lang.Long;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,6 +58,7 @@ import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTes
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.data.util.StreamUtils;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -360,6 +363,14 @@ public class SimpleElasticsearchRepositoryTests {
 
 	@Test
 	public void shouldDeleteAll() {
+
+		// given
+		String documentId = randomNumeric(5);
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setMessage("hello world.");
+		sampleEntity.setVersion(System.currentTimeMillis());
+		repository.save(sampleEntity);
 
 		// when
 		repository.deleteAll();
@@ -675,6 +686,32 @@ public class SimpleElasticsearchRepositoryTests {
 		Iterable<SampleEntity> savedEntities = repository.saveAll(Collections.emptyList());
 
 		assertThat(savedEntities).hasSize(0);
+	}
+
+	@Test // DATAES-832
+	void shouldNotReturnNullValuesInFindAllById() {
+
+		// given
+		String documentId1 = "id-one";
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(documentId1);
+		repository.save(sampleEntity1);
+		String documentId2 = "id-two";
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		repository.save(sampleEntity2);
+		String documentId3 = "id-three";
+		SampleEntity sampleEntity3 = new SampleEntity();
+		sampleEntity3.setId(documentId3);
+		repository.save(sampleEntity3);
+
+		Iterable<SampleEntity> allById = repository
+				.findAllById(Arrays.asList("id-one", "does-not-exist", "id-two", "where-am-i", "id-three"));
+		List<SampleEntity> results = StreamUtils.createStreamFromIterator(allById.iterator()).collect(Collectors.toList());
+
+		assertThat(results).hasSize(3);
+		assertThat(results.stream().map(SampleEntity::getId).collect(Collectors.toList()))
+				.containsExactlyInAnyOrder("id-one", "id-two", "id-three");
 	}
 
 	private static List<SampleEntity> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
