@@ -19,6 +19,7 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -153,8 +154,8 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 	public Iterable<T> findAllById(Iterable<ID> ids) {
 		Assert.notNull(ids, "ids can't be null.");
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(stringIdsRepresentation(ids)).build();
-		// noinspection ConstantConditions
-		return execute(operations -> operations.multiGet(query, entityClass, getIndexCoordinates()));
+		return execute(operations1 -> operations1.multiGet(query, entityClass, getIndexCoordinates())).stream()
+				.filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
 	@Override
@@ -214,7 +215,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		if (count == 0) {
 			return new PageImpl<>(Collections.emptyList());
 		}
-		searchQuery.setPageable(PageRequest.of(0, (int)count));
+		searchQuery.setPageable(PageRequest.of(0, (int) count));
 		SearchHits<T> searchHits = execute(
 				operations -> operations.search(searchQuery, entityClass, getIndexCoordinates()));
 		AggregatedPage<SearchHit<T>> page = SearchHitSupport.page(searchHits, searchQuery.getPageable());
