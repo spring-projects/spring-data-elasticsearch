@@ -258,7 +258,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
 
+		// noinspection ConstantConditions
+		int maxCount = query.isLimiting() ? query.getMaxResults() : 0;
+
 		return StreamQueries.streamResults( //
+				maxCount, //
 				searchScrollStart(scrollTimeInMillis, query, clazz, index), //
 				scrollId -> searchScrollContinue(scrollId, scrollTimeInMillis, clazz, index), //
 				this::searchScrollClear);

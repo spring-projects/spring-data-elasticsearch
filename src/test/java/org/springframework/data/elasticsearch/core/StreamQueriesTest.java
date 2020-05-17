@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.data.util.StreamUtils;
 
 /**
  * @author Sascha Woo
@@ -45,6 +46,7 @@ public class StreamQueriesTest {
 
 		// when
 		SearchHitsIterator<String> iterator = StreamQueries.streamResults( //
+				0, //
 				searchHits, //
 				scrollId -> newSearchScrollHits(Collections.emptyList(), scrollId), //
 				scrollIds -> clearScrollCalled.set(true));
@@ -70,6 +72,7 @@ public class StreamQueriesTest {
 
 		// when
 		SearchHitsIterator<String> iterator = StreamQueries.streamResults( //
+				0, //
 				searchHits, //
 				scrollId -> newSearchScrollHits(Collections.emptyList(), scrollId), //
 				scrollId -> {});
@@ -90,10 +93,12 @@ public class StreamQueriesTest {
 				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-2");
 		SearchScrollHits<String> searchHits4 = newSearchScrollHits(Collections.emptyList(), "s-3");
 
-		Iterator<SearchScrollHits<String>> searchScrollHitsIterator = Arrays.asList(searchHits1, searchHits2, searchHits3,searchHits4).iterator();
+		Iterator<SearchScrollHits<String>> searchScrollHitsIterator = Arrays
+				.asList(searchHits1, searchHits2, searchHits3, searchHits4).iterator();
 
 		List<String> clearedScrollIds = new ArrayList<>();
 		SearchHitsIterator<String> iterator = StreamQueries.streamResults( //
+				0, //
 				searchScrollHitsIterator.next(), //
 				scrollId -> searchScrollHitsIterator.next(), //
 				scrollIds -> clearedScrollIds.addAll(scrollIds));
@@ -104,6 +109,56 @@ public class StreamQueriesTest {
 		iterator.close();
 
 		assertThat(clearedScrollIds).isEqualTo(Arrays.asList("s-1", "s-2", "s-3"));
+	}
+
+	@Test // DATAES-831
+	void shouldReturnAllForRequestedSizeOf0() {
+
+		SearchScrollHits<String> searchHits1 = newSearchScrollHits(
+				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-1");
+		SearchScrollHits<String> searchHits2 = newSearchScrollHits(
+				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-2");
+		SearchScrollHits<String> searchHits3 = newSearchScrollHits(
+				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-2");
+		SearchScrollHits<String> searchHits4 = newSearchScrollHits(Collections.emptyList(), "s-3");
+
+		Iterator<SearchScrollHits<String>> searchScrollHitsIterator = Arrays
+				.asList(searchHits1, searchHits2, searchHits3, searchHits4).iterator();
+
+		SearchHitsIterator<String> iterator = StreamQueries.streamResults( //
+				0, //
+				searchScrollHitsIterator.next(), //
+				scrollId -> searchScrollHitsIterator.next(), //
+				scrollIds -> {});
+
+		long count = StreamUtils.createStreamFromIterator(iterator).count();
+
+		assertThat(count).isEqualTo(3);
+	}
+
+	@Test // DATAES-831
+	void shouldOnlyReturnRequestedCount() {
+
+		SearchScrollHits<String> searchHits1 = newSearchScrollHits(
+				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-1");
+		SearchScrollHits<String> searchHits2 = newSearchScrollHits(
+				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-2");
+		SearchScrollHits<String> searchHits3 = newSearchScrollHits(
+				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-2");
+		SearchScrollHits<String> searchHits4 = newSearchScrollHits(Collections.emptyList(), "s-3");
+
+		Iterator<SearchScrollHits<String>> searchScrollHitsIterator = Arrays
+				.asList(searchHits1, searchHits2, searchHits3, searchHits4).iterator();
+
+		SearchHitsIterator<String> iterator = StreamQueries.streamResults( //
+				2, //
+				searchScrollHitsIterator.next(), //
+				scrollId -> searchScrollHitsIterator.next(), //
+				scrollIds -> {});
+
+		long count = StreamUtils.createStreamFromIterator(iterator).count();
+
+		assertThat(count).isEqualTo(2);
 	}
 
 	private SearchScrollHits<String> newSearchScrollHits(List<SearchHit<String>> hits, String scrollId) {

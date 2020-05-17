@@ -86,6 +86,7 @@ import org.springframework.util.Assert;
 public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	private static final Logger QUERY_LOGGER = LoggerFactory
 			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
+	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchTemplate.class);
 
 	private Client client;
 	@Nullable private String searchTimeout;
@@ -322,7 +323,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public void searchScrollClear(List<String> scrollIds) {
-		client.prepareClearScroll().setScrollIds(scrollIds).execute().actionGet();
+		try {
+			client.prepareClearScroll().setScrollIds(scrollIds).execute().actionGet();
+		} catch (Exception e) {
+			LOGGER.warn("Could not clear scroll: {}", e.getMessage());
+		}
 	}
 
 	@Override
