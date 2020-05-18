@@ -17,9 +17,9 @@ package org.springframework.data.elasticsearch.repository.support;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -152,10 +152,23 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 	@Override
 	public Iterable<T> findAllById(Iterable<ID> ids) {
+
 		Assert.notNull(ids, "ids can't be null.");
+
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(stringIdsRepresentation(ids)).build();
-		return execute(operations1 -> operations1.multiGet(query, entityClass, getIndexCoordinates())).stream()
-				.filter(Objects::nonNull).collect(Collectors.toList());
+		List<T> result = new ArrayList<>();
+		List<T> multiGetEntities = execute(operations -> operations.multiGet(query, entityClass, getIndexCoordinates()));
+
+		if (multiGetEntities != null) {
+			multiGetEntities.forEach(entity -> {
+
+				if (entity != null) {
+					result.add(entity);
+				}
+			});
+		}
+
+		return result;
 	}
 
 	@Override
