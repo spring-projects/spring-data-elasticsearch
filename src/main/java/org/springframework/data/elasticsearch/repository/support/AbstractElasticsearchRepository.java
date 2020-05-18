@@ -154,10 +154,21 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 	@Override
 	public Iterable<T> findAllById(Iterable<ID> ids) {
+
 		Assert.notNull(ids, "ids can't be null.");
+
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(stringIdsRepresentation(ids)).build();
-		return operations.multiGet(query, getEntityClass(), getIndexCoordinates()).stream().filter(Objects::nonNull)
-				.collect(Collectors.toList());
+		List<T> result = new ArrayList<>();
+		List<T> multiGetEntities = operations.multiGet(query, getEntityClass(), getIndexCoordinates());
+
+		multiGetEntities.forEach(entity -> {
+
+			if (entity != null) {
+				result.add(entity);
+			}
+		});
+
+		return result;
 	}
 
 	@Override
