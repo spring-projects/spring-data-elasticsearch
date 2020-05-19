@@ -48,6 +48,8 @@ The following annotations are available:
 ** `analyzer`, `searchAnalyzer`, `normalizer` for specifying custom custom analyzers and normalizer.
 * `@GeoPoint`: marks a field as _geo_point_ datatype. Can be omitted if the field is an instance of the `GeoPoint` class.
 
+NOTE: If you are using a custom date format, you need to use _uuuu_ for the year instead of _yyyy_. This is due to a https://www.elastic.co/guide/en/elasticsearch/reference/current/migrate-to-java-time.html#java-time-migration-incompatible-date-formats[change in Elasticsearch 7].
+
 The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic.
 
 [[elasticsearch.mapping.meta-model.rules]]
