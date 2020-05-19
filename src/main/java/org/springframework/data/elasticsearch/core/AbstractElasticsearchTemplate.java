@@ -32,6 +32,7 @@ import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
+import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -48,6 +49,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
@@ -55,6 +57,7 @@ import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.util.CloseableIterator;
@@ -200,6 +203,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
+	public <T> List<T> multiGet(Query query, Class<T> clazz) {
+		return multiGet(query, clazz, getIndexCoordinatesFor(clazz));
+	}
+
+	@Override
 	@Nullable
 	public <T> T queryForObject(GetQuery query, Class<T> clazz) {
 		return get(query.getId(), clazz, getIndexCoordinatesFor(clazz));
@@ -227,6 +235,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
+	public void delete(Query query, Class<?> clazz) {
+		delete(query, getIndexCoordinatesFor(clazz));
+	}
+
+	@Override
 	public String delete(Object entity) {
 		return delete(entity, getIndexCoordinatesFor(entity.getClass()));
 	}
@@ -235,6 +248,22 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	public String delete(Object entity, IndexCoordinates index) {
 		return this.delete(getEntityId(entity), index);
 	}
+
+	@Override
+	public List<String> bulkIndex(List<IndexQuery> queries, Class<?> clazz) {
+		return bulkIndex(queries, getIndexCoordinatesFor(clazz));
+	}
+
+	@Override
+	public List<String> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, Class<?> clazz) {
+		return bulkIndex(queries, bulkOptions, getIndexCoordinatesFor(clazz));
+	}
+
+	@Override
+	public void bulkUpdate(List<UpdateQuery> queries, Class<?> clazz) {
+		bulkUpdate(queries, getIndexCoordinatesFor(clazz));
+	}
+
 	// endregion
 
 	// region SearchOperations
@@ -283,6 +312,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
+	public <T> List<SearchHits<T>> multiSearch(List<? extends Query> queries, Class<T> clazz) {
+		return multiSearch(queries, clazz, getIndexCoordinatesFor(clazz));
+	}
+
+	@Override
 	public <T> List<SearchHits<T>> multiSearch(List<? extends Query> queries, Class<T> clazz, IndexCoordinates index) {
 		MultiSearchRequest request = new MultiSearchRequest();
 		for (Query query : queries) {
@@ -301,8 +335,45 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
+	public List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes) {
+
+		Assert.notNull(queries, "queries must not be null");
+		Assert.notNull(classes, "classes must not be null");
+		Assert.isTrue(queries.size() == classes.size(), "queries and classes must have the same size");
+
+		MultiSearchRequest request = new MultiSearchRequest();
+		Iterator<Class<?>> it = classes.iterator();
+		for (Query query : queries) {
+			Class<?> clazz = it.next();
+			request.add(requestFactory.searchRequest(query, clazz, getIndexCoordinatesFor(clazz)));
+		}
+
+		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
+
+		List<SearchHits<?>> res = new ArrayList<>(queries.size());
+		int c = 0;
+		Iterator<Class<?>> it1 = classes.iterator();
+		for (Query query : queries) {
+			Class entityClass = it1.next();
+
+			SearchDocumentResponseCallback<SearchHits<?>> callback = new ReadSearchDocumentResponseCallback<>(entityClass,
+					getIndexCoordinatesFor(entityClass));
+
+			SearchResponse response = items[c++].getResponse();
+			res.add(callback.doWith(SearchDocumentResponse.from(response)));
+		}
+		return res;
+	}
+
+	@Override
 	public List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes,
 			IndexCoordinates index) {
+
+		Assert.notNull(queries, "queries must not be null");
+		Assert.notNull(classes, "classes must not be null");
+		Assert.notNull(index, "index must not be null");
+		Assert.isTrue(queries.size() == classes.size(), "queries and classes must have the same size");
+
 		MultiSearchRequest request = new MultiSearchRequest();
 		Iterator<Class<?>> it = classes.iterator();
 		for (Query query : queries) {
@@ -356,6 +427,12 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	abstract protected void searchScrollClear(List<String> scrollIds);
 
 	abstract protected MultiSearchResponse.Item[] getMultiSearchResult(MultiSearchRequest request);
+
+	@Override
+	public SearchResponse suggest(SuggestBuilder suggestion, Class<?> clazz) {
+		return suggest(suggestion, getIndexCoordinatesFor(clazz));
+	}
+
 	// endregion
 
 	// region Helper methods

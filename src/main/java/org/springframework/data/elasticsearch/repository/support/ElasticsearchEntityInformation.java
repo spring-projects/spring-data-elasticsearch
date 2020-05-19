@@ -39,6 +39,7 @@ public interface ElasticsearchEntityInformation<T, ID> extends EntityInformation
 	@Nullable
 	Long getVersion(T entity);
 
+	@Nullable
 	VersionType getVersionType();
 
 	@Nullable

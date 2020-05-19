@@ -73,8 +73,12 @@ public interface ElasticsearchConverter
 	 * @return will not be {@literal null}.
 	 */
 	default Document mapObject(@Nullable Object source) {
+
 		Document target = Document.create();
-		write(source, target);
+
+		if (source != null) {
+			write(source, target);
+		}
 		return target;
 	}
 	// endregion

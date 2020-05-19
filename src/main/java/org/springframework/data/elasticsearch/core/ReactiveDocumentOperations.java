@@ -38,7 +38,7 @@ import org.springframework.util.Assert;
  */
 public interface ReactiveDocumentOperations {
 	/**
-	 * Index the given entity, once available, extracting index and type from entity metadata.
+	 * Index the given entity, once available, extracting index from entity metadata.
 	 *
 	 * @param entityPublisher must not be {@literal null}.
 	 * @param <T>
@@ -49,15 +49,6 @@ public interface ReactiveDocumentOperations {
 		Assert.notNull(entityPublisher, "EntityPublisher must not be null!");
 		return entityPublisher.flatMap(this::save);
 	}
-
-	/**
-	 * Index the given entity extracting index and type from entity metadata.
-	 *
-	 * @param entity must not be {@literal null}.
-	 * @param <T>
-	 * @return a {@link Mono} emitting the saved entity.
-	 */
-	<T> Mono<T> save(T entity);
 
 	/**
 	 * Index the entity, once available, under the given {@literal type} in the given {@literal index}. If the
@@ -76,6 +67,15 @@ public interface ReactiveDocumentOperations {
 	}
 
 	/**
+	 * Index the given entity extracting index from entity metadata.
+	 *
+	 * @param entity must not be {@literal null}.
+	 * @param <T>
+	 * @return a {@link Mono} emitting the saved entity.
+	 */
+	<T> Mono<T> save(T entity);
+
+	/**
 	 * Index the entity under the given {@literal type} in the given {@literal index}. If the {@literal index} is
 	 * {@literal null} or empty the index name provided via entity metadata is used. Same for the {@literal type}.
 	 *
@@ -87,7 +87,21 @@ public interface ReactiveDocumentOperations {
 	<T> Mono<T> save(T entity, IndexCoordinates index);
 
 	/**
-	 * Index entities under the given {@literal type} in the given {@literal index}. If the {@literal index} is
+	 * Index entities the index extracted from entity metadata.
+	 *
+	 * @param entities must not be {@literal null}.
+	 * @param clazz the entity class, used to determine the index
+	 * @return a {@link Flux} emitting saved entities.
+	 * @since 4.1
+	 */
+	default <T> Flux<T> saveAll(Iterable<T> entities, Class<T> clazz) {
+		List<T> entityList = new ArrayList<>();
+		entities.forEach(entityList::add);
+		return saveAll(Mono.just(entityList), clazz);
+	}
+
+	/**
+	 * Index entities in the given {@literal index}. If the {@literal index} is
 	 * {@literal null} or empty the index name provided via entity metadata is used.
 	 *
 	 * @param entities must not be {@literal null}.
@@ -103,7 +117,17 @@ public interface ReactiveDocumentOperations {
 	}
 
 	/**
-	 * Index entities under the given {@literal type} in the given {@literal index}. If the {@literal index} is
+	 * Index entities in the index extracted from entity metadata.
+	 *
+	 * @param entities must not be {@literal null}.
+	 * @param clazz the entity class, used to determine the index
+	 * @return a {@link Flux} emitting saved entities.
+	 * @since 4.1
+	 */
+	<T> Flux<T> saveAll(Mono<? extends Collection<? extends T>> entities, Class<T> clazz);
+
+	/**
+	 * Index entities in the given {@literal index}. If the {@literal index} is
 	 * {@literal null} or empty the index name provided via entity metadata is used.
 	 *
 	 * @param entities must not be {@literal null}.
@@ -113,6 +137,16 @@ public interface ReactiveDocumentOperations {
 	 * @since 4.0
 	 */
 	<T> Flux<T> saveAll(Mono<? extends Collection<? extends T>> entities, IndexCoordinates index);
+
+	/**
+	 * Execute a multiGet against elasticsearch for the given ids.
+	 *
+	 * @param query the query defining the ids of the objects to get
+	 * @param clazz the type of the object to be returned, used to determine the index
+	 * @return flux with list of nullable objects
+	 * @since 4.1
+	 */
+	<T> Flux<T> multiGet(Query query, Class<T> clazz);
 
 	/**
 	 * Execute a multiGet against elasticsearch for the given ids.
@@ -223,7 +257,7 @@ public interface ReactiveDocumentOperations {
 	Mono<Boolean> exists(String id, Class<?> entityType, IndexCoordinates index);
 
 	/**
-	 * Delete the given entity extracting index and type from entity metadata.
+	 * Delete the given entity extracting index from entity metadata.
 	 *
 	 * @param entity must not be {@literal null}.
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
@@ -231,7 +265,7 @@ public interface ReactiveDocumentOperations {
 	Mono<String> delete(Object entity);
 
 	/**
-	 * Delete the given entity extracting index and type from entity metadata.
+	 * Delete the given entity extracting index from entity metadata.
 	 *
 	 * @param entity must not be {@literal null}.
 	 * @param index the target index, must not be {@literal null}
@@ -249,7 +283,7 @@ public interface ReactiveDocumentOperations {
 	Mono<String> delete(String id, IndexCoordinates index);
 
 	/**
-	 * Delete the entity with given {@literal id} extracting index and type from entity metadata.
+	 * Delete the entity with given {@literal id} extracting index from entity metadata.
 	 *
 	 * @param id must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
@@ -259,7 +293,7 @@ public interface ReactiveDocumentOperations {
 	Mono<String> delete(String id, Class<?> entityType);
 
 	/**
-	 * Delete the entity with given {@literal id} extracting index and type from entity metadata.
+	 * Delete the entity with given {@literal id} extracting index from entity metadata.
 	 *
 	 * @param id must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
@@ -273,7 +307,7 @@ public interface ReactiveDocumentOperations {
 	}
 
 	/**
-	 * Delete the documents matching the given {@link Query} extracting index and type from entity metadata.
+	 * Delete the documents matching the given {@link Query} extracting index from entity metadata.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
@@ -282,7 +316,7 @@ public interface ReactiveDocumentOperations {
 	Mono<Long> delete(Query query, Class<?> entityType);
 
 	/**
-	 * Delete the documents matching the given {@link Query} extracting index and type from entity metadata.
+	 * Delete the documents matching the given {@link Query} extracting index from entity metadata.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.

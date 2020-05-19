@@ -28,7 +28,6 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * Common operations performed on an entity in the context of it's mapping metadata.
@@ -43,6 +42,8 @@ class EntityOperations {
 
 	private static final String ID_FIELD = "id";
 
+	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context;
+
 	public EntityOperations(
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context) {
 
@@ -50,8 +51,6 @@ class EntityOperations {
 
 		this.context = context;
 	}
-
-	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context;
 
 	/**
 	 * Creates a new {@link Entity} for the given bean.
@@ -100,9 +99,24 @@ class EntityOperations {
 	 * @param index index name override can be {@literal null}.
 	 * @param type index type override can be {@literal null}.
 	 * @return the {@link IndexCoordinates} containing index name and index type.
+	 * @deprecated since 4.1, use {@link EntityOperations#determineIndex(Entity, String)}
 	 */
+	@Deprecated
 	IndexCoordinates determineIndex(Entity<?> entity, @Nullable String index, @Nullable String type) {
 		return determineIndex(entity.getPersistentEntity(), index, type);
+	}
+
+	/**
+	 * Determine index name and type name from {@link Entity} with {@code index} and {@code type} overrides. Allows using
+	 * preferred values for index and type if provided, otherwise fall back to index and type defined on entity level.
+	 *
+	 * @param entity the entity to determine the index name. Can be {@literal null} if {@code index} and {@literal type}
+	 *          are provided.
+	 * @param index index name override can be {@literal null}.
+	 * @return the {@link IndexCoordinates} containing index name and index type.
+	 */
+	IndexCoordinates determineIndex(Entity<?> entity, @Nullable String index) {
+		return determineIndex(entity.getPersistentEntity(), index);
 	}
 
 	/**
@@ -115,20 +129,27 @@ class EntityOperations {
 	 * @param index index name override can be {@literal null}.
 	 * @param type index type override can be {@literal null}.
 	 * @return the {@link IndexCoordinates} containing index name and index type.
+	 * @deprecated since 4.1, use {@link EntityOperations#determineIndex(ElasticsearchPersistentEntity, String)}
 	 */
+	@Deprecated
 	IndexCoordinates determineIndex(ElasticsearchPersistentEntity<?> persistentEntity, @Nullable String index,
 			@Nullable String type) {
-		return persistentEntity.getIndexCoordinates();
+		return determineIndex(persistentEntity, index);
 	}
 
-	private static String indexName(@Nullable ElasticsearchPersistentEntity<?> entity, @Nullable String index) {
-
-		if (StringUtils.isEmpty(index)) {
-			Assert.notNull(entity, "Cannot determine index name");
-			return entity.getIndexCoordinates().getIndexName();
-		}
-
-		return index;
+	/**
+	 * Determine index name and type name from {@link ElasticsearchPersistentEntity} with {@code index} and {@code type}
+	 * overrides. Allows using preferred values for index and type if provided, otherwise fall back to index and type
+	 * defined on entity level.
+	 *
+	 * @param persistentEntity the entity to determine the index name. Can be {@literal null} if {@code index} and
+	 *          {@literal type} are provided.
+	 * @param index index name override can be {@literal null}.
+	 * @return the {@link IndexCoordinates} containing index name and index type.
+	 * @since 4.1
+	 */
+	IndexCoordinates determineIndex(ElasticsearchPersistentEntity<?> persistentEntity, @Nullable String index) {
+		return index != null ? IndexCoordinates.of(index) : persistentEntity.getIndexCoordinates();
 	}
 
 	/**

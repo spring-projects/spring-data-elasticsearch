@@ -25,11 +25,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
+import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.MultiGetRequest;
@@ -44,6 +51,8 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.unit.DistanceUnit;
@@ -67,6 +76,7 @@ import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortMode;
 import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -98,11 +108,15 @@ class RequestFactory {
 		this.elasticsearchConverter = elasticsearchConverter;
 	}
 
+	// region alias
 	public IndicesAliasesRequest.AliasActions aliasAction(AliasQuery query, IndexCoordinates index) {
+
 		Assert.notNull(index, "No index defined for Alias");
 		Assert.notNull(query.getAliasName(), "No alias defined");
+
+		String[] indexNames = index.getIndexNames();
 		IndicesAliasesRequest.AliasActions aliasAction = IndicesAliasesRequest.AliasActions.add()
-				.alias(query.getAliasName()).index(index.getIndexName());
+				.alias(query.getAliasName()).indices(indexNames);
 
 		if (query.getFilterBuilder() != null) {
 			aliasAction.filter(query.getFilterBuilder());
@@ -125,6 +139,40 @@ class RequestFactory {
 		return aliasAction;
 	}
 
+	public GetAliasesRequest getAliasesRequest(IndexCoordinates index) {
+
+		String[] indexNames = index.getIndexNames();
+		return new GetAliasesRequest().indices(indexNames);
+	}
+
+	public IndicesAliasesRequest indicesAddAliasesRequest(AliasQuery query, IndexCoordinates index) {
+		IndicesAliasesRequest.AliasActions aliasAction = aliasAction(query, index);
+		IndicesAliasesRequest request = new IndicesAliasesRequest();
+		request.addAliasAction(aliasAction);
+		return request;
+	}
+
+	public IndicesAliasesRequest indicesRemoveAliasesRequest(AliasQuery query, IndexCoordinates index) {
+
+		String[] indexNames = index.getIndexNames();
+		IndicesAliasesRequest.AliasActions aliasAction = IndicesAliasesRequest.AliasActions.remove() //
+				.indices(indexNames) //
+				.alias(query.getAliasName());
+
+		return Requests.indexAliasesRequest() //
+				.addAliasAction(aliasAction);
+	}
+
+	IndicesAliasesRequestBuilder indicesRemoveAliasesRequestBuilder(Client client, AliasQuery query,
+			IndexCoordinates index) {
+
+		String indexName = index.getIndexName();
+		return client.admin().indices().prepareAliases().removeAlias(indexName, query.getAliasName());
+	}
+
+	// endregion
+
+	// region bulk
 	public BulkRequest bulkRequest(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
 		BulkRequest bulkRequest = new BulkRequest();
 
@@ -195,9 +243,12 @@ class RequestFactory {
 		return bulkRequestBuilder;
 	}
 
-	@SuppressWarnings("unchecked")
-	public CreateIndexRequest createIndexRequest(String indexName, @Nullable Document settings) {
-		CreateIndexRequest request = new CreateIndexRequest(indexName);
+	// endregion
+
+	// region index management
+	public CreateIndexRequest createIndexRequest(IndexCoordinates index, @Nullable Document settings) {
+
+		CreateIndexRequest request = new CreateIndexRequest(index.getIndexName());
 
 		if (settings != null) {
 			request.settings(settings);
@@ -205,9 +256,10 @@ class RequestFactory {
 		return request;
 	}
 
-	@SuppressWarnings("unchecked")
-	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, String indexName,
+	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, IndexCoordinates index,
 			@Nullable Document settings) {
+
+		String indexName = index.getIndexName();
 		CreateIndexRequestBuilder createIndexRequestBuilder = client.admin().indices().prepareCreate(indexName);
 
 		if (settings != null) {
@@ -216,9 +268,71 @@ class RequestFactory {
 		return createIndexRequestBuilder;
 	}
 
+	public GetIndexRequest getIndexRequest(IndexCoordinates index) {
+		return new GetIndexRequest(index.getIndexNames());
+	}
+
+	public IndicesExistsRequest indicesExistsRequest(IndexCoordinates index) {
+
+		String[] indexNames = index.getIndexNames();
+		return new IndicesExistsRequest(indexNames);
+	}
+
+	public DeleteIndexRequest deleteIndexRequest(IndexCoordinates index) {
+
+		String[] indexNames = index.getIndexNames();
+		return new DeleteIndexRequest(indexNames);
+	}
+
+	public RefreshRequest refreshRequest(IndexCoordinates index) {
+
+		String[] indexNames = index.getIndexNames();
+		return new RefreshRequest(indexNames);
+	}
+
+	public GetSettingsRequest getSettingsRequest(IndexCoordinates index, boolean includeDefaults) {
+
+		String[] indexNames = index.getIndexNames();
+		return new GetSettingsRequest().indices(indexNames).includeDefaults(includeDefaults);
+	}
+
+	public PutMappingRequest putMappingRequest(IndexCoordinates index, Document mapping) {
+
+		PutMappingRequest request = new PutMappingRequest(index.getIndexNames());
+		request.source(mapping);
+		return request;
+	}
+
+	public PutMappingRequestBuilder putMappingRequestBuilder(Client client, IndexCoordinates index, Document mapping) {
+
+		String[] indexNames = index.getIndexNames();
+		PutMappingRequestBuilder requestBuilder = client.admin().indices().preparePutMapping(indexNames)
+				.setType(IndexCoordinates.TYPE);
+		requestBuilder.setSource(mapping);
+		return requestBuilder;
+	}
+
+	public GetMappingsRequest getMappingsRequest(IndexCoordinates index) {
+
+		String[] indexNames = index.getIndexNames();
+		return new GetMappingsRequest().indices(indexNames);
+	}
+
+	public org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest getMappingsRequest(Client client,
+			IndexCoordinates index) {
+
+		String[] indexNames = index.getIndexNames();
+		return new org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest().indices(indexNames);
+	}
+
+	// endregion
+
+	// region delete
 	@Deprecated
 	public DeleteByQueryRequest deleteByQueryRequest(DeleteQuery deleteQuery, IndexCoordinates index) {
-		DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(index.getIndexNames()) //
+
+		String[] indexNames = index.getIndexNames();
+		DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(indexNames) //
 				.setQuery(deleteQuery.getQuery()) //
 				.setAbortOnVersionConflict(false) //
 				.setRefresh(true);
@@ -251,14 +365,23 @@ class RequestFactory {
 	}
 
 	public DeleteRequest deleteRequest(String id, IndexCoordinates index) {
-		return new DeleteRequest(index.getIndexName(), id);
+		String indexName = index.getIndexName();
+		return new DeleteRequest(indexName, id);
+	}
+
+	public DeleteRequestBuilder deleteRequestBuilder(Client client, String id, IndexCoordinates index) {
+		String indexName = index.getIndexName();
+		return client.prepareDelete(indexName, IndexCoordinates.TYPE, id);
 	}
 
 	@Deprecated
 	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, DeleteQuery deleteQuery,
 			IndexCoordinates index) {
+
+		String[] indexNames = index.getIndexNames();
+
 		DeleteByQueryRequestBuilder requestBuilder = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE) //
-				.source(index.getIndexNames()) //
+				.source(indexNames) //
 				.filter(deleteQuery.getQuery()) //
 				.abortOnVersionConflict(false) //
 				.refresh(true);
@@ -283,16 +406,20 @@ class RequestFactory {
 		SearchRequestBuilder source = requestBuilder.source();
 
 		if (query.isLimiting()) {
+			// noinspection ConstantConditions
 			source.setSize(query.getMaxResults());
 		}
 
 		if (query.hasScrollTime()) {
+			// noinspection ConstantConditions
 			source.setScroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
 		}
 
 		return requestBuilder;
 	}
+	// endregion
 
+	// region get
 	public GetRequest getRequest(String id, IndexCoordinates index) {
 		return new GetRequest(index.getIndexName(), id);
 	}
@@ -301,36 +428,45 @@ class RequestFactory {
 		return client.prepareGet(index.getIndexName(), null, id);
 	}
 
-	@Nullable
-	public HighlightBuilder highlightBuilder(Query query) {
-		HighlightBuilder highlightBuilder = query.getHighlightQuery().map(HighlightQuery::getHighlightBuilder).orElse(null);
-
-		if (highlightBuilder == null) {
-
-			if (query instanceof NativeSearchQuery) {
-				NativeSearchQuery searchQuery = (NativeSearchQuery) query;
-
-				if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
-					highlightBuilder = searchQuery.getHighlightBuilder();
-
-					if (highlightBuilder == null) {
-						highlightBuilder = new HighlightBuilder();
-					}
-
-					if (searchQuery.getHighlightFields() != null) {
-						for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
-							highlightBuilder.field(highlightField);
-						}
-					}
-				}
-			}
-		}
-		return highlightBuilder;
+	public MultiGetRequest multiGetRequest(Query query, IndexCoordinates index) {
+		MultiGetRequest multiGetRequest = new MultiGetRequest();
+		getMultiRequestItems(query, index).forEach(multiGetRequest::add);
+		return multiGetRequest;
 	}
 
-	public IndexRequest indexRequest(IndexQuery query, IndexCoordinates index) {
-		String indexName = index.getIndexName();
+	public MultiGetRequestBuilder multiGetRequestBuilder(Client client, Query searchQuery, IndexCoordinates index) {
+		MultiGetRequestBuilder multiGetRequestBuilder = client.prepareMultiGet();
+		getMultiRequestItems(searchQuery, index).forEach(multiGetRequestBuilder::add);
+		return multiGetRequestBuilder;
+	}
 
+	private List<MultiGetRequest.Item> getMultiRequestItems(Query searchQuery, IndexCoordinates index) {
+		List<MultiGetRequest.Item> items = new ArrayList<>();
+
+		if (!isEmpty(searchQuery.getFields())) {
+			searchQuery.addSourceFilter(new FetchSourceFilter(toArray(searchQuery.getFields()), null));
+		}
+
+		if (!isEmpty(searchQuery.getIds())) {
+			String indexName = index.getIndexName();
+			for (String id : searchQuery.getIds()) {
+				MultiGetRequest.Item item = new MultiGetRequest.Item(indexName, id);
+
+				if (searchQuery.getRoute() != null) {
+					item = item.routing(searchQuery.getRoute());
+				}
+				items.add(item);
+			}
+		}
+		return items;
+	}
+
+	// endregion
+
+	// region indexing
+	public IndexRequest indexRequest(IndexQuery query, IndexCoordinates index) {
+
+		String indexName = index.getIndexName();
 		IndexRequest indexRequest;
 
 		if (query.getObject() != null) {
@@ -405,9 +541,40 @@ class RequestFactory {
 
 		return indexRequestBuilder;
 	}
+	// endregion
+
+	// region search
+	@Nullable
+	public HighlightBuilder highlightBuilder(Query query) {
+		HighlightBuilder highlightBuilder = query.getHighlightQuery().map(HighlightQuery::getHighlightBuilder).orElse(null);
+
+		if (highlightBuilder == null) {
+
+			if (query instanceof NativeSearchQuery) {
+				NativeSearchQuery searchQuery = (NativeSearchQuery) query;
+
+				if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
+					highlightBuilder = searchQuery.getHighlightBuilder();
+
+					if (highlightBuilder == null) {
+						highlightBuilder = new HighlightBuilder();
+					}
+
+					if (searchQuery.getHighlightFields() != null) {
+						for (HighlightBuilder.Field highlightField : searchQuery.getHighlightFields()) {
+							highlightBuilder.field(highlightField);
+						}
+					}
+				}
+			}
+		}
+		return highlightBuilder;
+	}
 
 	public MoreLikeThisQueryBuilder moreLikeThisQueryBuilder(MoreLikeThisQuery query, IndexCoordinates index) {
-		MoreLikeThisQueryBuilder.Item item = new MoreLikeThisQueryBuilder.Item(index.getIndexName(), query.getId());
+
+		String indexName = index.getIndexName();
+		MoreLikeThisQueryBuilder.Item item = new MoreLikeThisQueryBuilder.Item(indexName, query.getId());
 
 		String[] fields = null;
 		if (query.getFields() != null) {
@@ -452,6 +619,21 @@ class RequestFactory {
 		return moreLikeThisQueryBuilder;
 	}
 
+	public SearchRequest searchRequest(SuggestBuilder suggestion, IndexCoordinates index) {
+
+		String[] indexNames = index.getIndexNames();
+		SearchRequest searchRequest = new SearchRequest(indexNames);
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+		sourceBuilder.suggest(suggestion);
+		searchRequest.source(sourceBuilder);
+		return searchRequest;
+	}
+
+	public SearchRequestBuilder searchRequestBuilder(Client client, SuggestBuilder suggestion, IndexCoordinates index) {
+		String[] indexNames = index.getIndexNames();
+		return client.prepareSearch(indexNames).suggest(suggestion);
+	}
+
 	public SearchRequest searchRequest(Query query, @Nullable Class<?> clazz, IndexCoordinates index) {
 
 		SearchRequest searchRequest = prepareSearchRequest(query, clazz, index);
@@ -492,158 +674,13 @@ class RequestFactory {
 		return searchRequestBuilder;
 	}
 
-	public UpdateRequest updateRequest(UpdateQuery query, IndexCoordinates index) {
+	private SearchRequest prepareSearchRequest(Query query, @Nullable Class<?> clazz, IndexCoordinates indexCoordinates) {
 
-		UpdateRequest updateRequest = new UpdateRequest(index.getIndexName(), query.getId());
+		String[] indexNames = indexCoordinates.getIndexNames();
+		Assert.notNull(indexNames, "No index defined for Query");
+		Assert.notEmpty(indexNames, "No index defined for Query");
 
-		if (query.getScript() != null) {
-			Map<String, Object> params = query.getParams();
-
-			if (params == null) {
-				params = new HashMap<>();
-			}
-			Script script = new Script(ScriptType.INLINE, query.getLang(), query.getScript(), params);
-			updateRequest.script(script);
-		}
-
-		if (query.getDocument() != null) {
-			updateRequest.doc(query.getDocument());
-		}
-
-		if (query.getUpsert() != null) {
-			updateRequest.upsert(query.getUpsert());
-		}
-
-		if (query.getRouting() != null) {
-			updateRequest.routing(query.getRouting());
-		}
-
-		if (query.getScriptedUpsert() != null) {
-			updateRequest.scriptedUpsert(query.getScriptedUpsert());
-		}
-
-		if (query.getDocAsUpsert() != null) {
-			updateRequest.docAsUpsert(query.getDocAsUpsert());
-		}
-
-		if (query.getFetchSource() != null) {
-			updateRequest.fetchSource(query.getFetchSource());
-		}
-
-		if (query.getFetchSourceIncludes() != null || query.getFetchSourceExcludes() != null) {
-			List<String> includes = query.getFetchSourceIncludes() != null ? query.getFetchSourceIncludes()
-					: Collections.emptyList();
-			List<String> excludes = query.getFetchSourceExcludes() != null ? query.getFetchSourceExcludes()
-					: Collections.emptyList();
-			updateRequest.fetchSource(includes.toArray(new String[0]), excludes.toArray(new String[0]));
-		}
-
-		if (query.getIfSeqNo() != null) {
-			updateRequest.setIfSeqNo(query.getIfSeqNo());
-		}
-
-		if (query.getIfPrimaryTerm() != null) {
-			updateRequest.setIfPrimaryTerm(query.getIfPrimaryTerm());
-		}
-
-		if (query.getRefresh() != null) {
-			updateRequest.setRefreshPolicy(query.getRefresh().name().toLowerCase());
-		}
-
-		if (query.getRetryOnConflict() != null) {
-			updateRequest.retryOnConflict(query.getRetryOnConflict());
-		}
-
-		if (query.getTimeout() != null) {
-			updateRequest.timeout(query.getTimeout());
-		}
-
-		if (query.getWaitForActiveShards() != null) {
-			updateRequest.waitForActiveShards(ActiveShardCount.parseString(query.getWaitForActiveShards()));
-		}
-
-		return updateRequest;
-	}
-
-	public UpdateRequestBuilder updateRequestBuilderFor(Client client, UpdateQuery query, IndexCoordinates index) {
-
-		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(index.getIndexName(), IndexCoordinates.TYPE,
-				query.getId());
-
-		if (query.getScript() != null) {
-			Map<String, Object> params = query.getParams();
-
-			if (params == null) {
-				params = new HashMap<>();
-			}
-			Script script = new Script(ScriptType.INLINE, query.getLang(), query.getScript(), params);
-			updateRequestBuilder.setScript(script);
-		}
-
-		if (query.getDocument() != null) {
-			updateRequestBuilder.setDoc(query.getDocument());
-		}
-
-		if (query.getUpsert() != null) {
-			updateRequestBuilder.setUpsert(query.getUpsert());
-		}
-
-		if (query.getRouting() != null) {
-			updateRequestBuilder.setRouting(query.getRouting());
-		}
-
-		if (query.getScriptedUpsert() != null) {
-			updateRequestBuilder.setScriptedUpsert(query.getScriptedUpsert());
-		}
-
-		if (query.getDocAsUpsert() != null) {
-			updateRequestBuilder.setDocAsUpsert(query.getDocAsUpsert());
-		}
-
-		if (query.getFetchSource() != null) {
-			updateRequestBuilder.setFetchSource(query.getFetchSource());
-		}
-
-		if (query.getFetchSourceIncludes() != null || query.getFetchSourceExcludes() != null) {
-			List<String> includes = query.getFetchSourceIncludes() != null ? query.getFetchSourceIncludes()
-					: Collections.emptyList();
-			List<String> excludes = query.getFetchSourceExcludes() != null ? query.getFetchSourceExcludes()
-					: Collections.emptyList();
-			updateRequestBuilder.setFetchSource(includes.toArray(new String[0]), excludes.toArray(new String[0]));
-		}
-
-		if (query.getIfSeqNo() != null) {
-			updateRequestBuilder.setIfSeqNo(query.getIfSeqNo());
-		}
-
-		if (query.getIfPrimaryTerm() != null) {
-			updateRequestBuilder.setIfPrimaryTerm(query.getIfPrimaryTerm());
-		}
-
-		if (query.getRefresh() != null) {
-			updateRequestBuilder.setRefreshPolicy(query.getRefresh().name().toLowerCase());
-		}
-
-		if (query.getRetryOnConflict() != null) {
-			updateRequestBuilder.setRetryOnConflict(query.getRetryOnConflict());
-		}
-
-		if (query.getTimeout() != null) {
-			updateRequestBuilder.setTimeout(query.getTimeout());
-		}
-
-		if (query.getWaitForActiveShards() != null) {
-			updateRequestBuilder.setWaitForActiveShards(ActiveShardCount.parseString(query.getWaitForActiveShards()));
-		}
-
-		return updateRequestBuilder;
-	}
-
-	private SearchRequest prepareSearchRequest(Query query, @Nullable Class<?> clazz, IndexCoordinates index) {
-		Assert.notNull(index.getIndexNames(), "No index defined for Query");
-		Assert.notEmpty(index.getIndexNames(), "No index defined for Query");
-
-		SearchRequest request = new SearchRequest(index.getIndexNames());
+		SearchRequest request = new SearchRequest(indexNames);
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 		sourceBuilder.version(true);
 		sourceBuilder.trackScores(query.getTrackScores());
@@ -684,9 +721,7 @@ class RequestFactory {
 			request.preference(query.getPreference());
 		}
 
-		if (query.getSearchType() != null) {
-			request.searchType(query.getSearchType());
-		}
+		request.searchType(query.getSearchType());
 
 		prepareSort(query, sourceBuilder, getPersistentEntity(clazz));
 
@@ -713,120 +748,14 @@ class RequestFactory {
 		return request;
 	}
 
-	private boolean hasSeqNoPrimaryTermProperty(@Nullable Class<?> entityClass) {
-
-		if (entityClass == null) {
-			return false;
-		}
-
-		if (!elasticsearchConverter.getMappingContext().hasPersistentEntityFor(entityClass)) {
-			return false;
-		}
-
-		ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext()
-				.getRequiredPersistentEntity(entityClass);
-		return entity.hasSeqNoPrimaryTermProperty();
-	}
-
-	public PutMappingRequest putMappingRequest(IndexCoordinates index, Document mapping) {
-		PutMappingRequest request = new PutMappingRequest(index.getIndexName());
-		request.source(mapping);
-		return request;
-	}
-
-	@SuppressWarnings("rawtypes")
-	public PutMappingRequestBuilder putMappingRequestBuilder(Client client, IndexCoordinates index, Document mapping) {
-		PutMappingRequestBuilder requestBuilder = client.admin().indices().preparePutMapping(index.getIndexName())
-				.setType(IndexCoordinates.TYPE);
-		requestBuilder.setSource(mapping);
-		return requestBuilder;
-	}
-
-	public MultiGetRequest multiGetRequest(Query query, IndexCoordinates index) {
-		MultiGetRequest multiGetRequest = new MultiGetRequest();
-		getMultiRequestItems(query, index).forEach(multiGetRequest::add);
-		return multiGetRequest;
-	}
-
-	public MultiGetRequestBuilder multiGetRequestBuilder(Client client, Query searchQuery, IndexCoordinates index) {
-		MultiGetRequestBuilder multiGetRequestBuilder = client.prepareMultiGet();
-		getMultiRequestItems(searchQuery, index).forEach(multiGetRequestBuilder::add);
-		return multiGetRequestBuilder;
-	}
-
-	private List<MultiGetRequest.Item> getMultiRequestItems(Query searchQuery, IndexCoordinates index) {
-		List<MultiGetRequest.Item> items = new ArrayList<>();
-		if (!isEmpty(searchQuery.getFields())) {
-			searchQuery.addSourceFilter(new FetchSourceFilter(toArray(searchQuery.getFields()), null));
-		}
-
-		for (String id : searchQuery.getIds()) {
-			MultiGetRequest.Item item = new MultiGetRequest.Item(index.getIndexName(), id);
-
-			if (searchQuery.getRoute() != null) {
-				item = item.routing(searchQuery.getRoute());
-			}
-			items.add(item);
-		}
-		return items;
-	}
-
-	private void prepareNativeSearch(NativeSearchQuery query, SearchSourceBuilder sourceBuilder) {
-
-		if (!query.getScriptFields().isEmpty()) {
-			for (ScriptField scriptedField : query.getScriptFields()) {
-				sourceBuilder.scriptField(scriptedField.fieldName(), scriptedField.script());
-			}
-		}
-
-		if (query.getCollapseBuilder() != null) {
-			sourceBuilder.collapse(query.getCollapseBuilder());
-		}
-
-		if (!isEmpty(query.getIndicesBoost())) {
-			for (IndexBoost indexBoost : query.getIndicesBoost()) {
-				sourceBuilder.indexBoost(indexBoost.getIndexName(), indexBoost.getBoost());
-			}
-		}
-
-		if (!isEmpty(query.getAggregations())) {
-			for (AbstractAggregationBuilder<?> aggregationBuilder : query.getAggregations()) {
-				sourceBuilder.aggregation(aggregationBuilder);
-			}
-		}
-
-	}
-
-	private void prepareNativeSearch(SearchRequestBuilder searchRequestBuilder, NativeSearchQuery nativeSearchQuery) {
-		if (!isEmpty(nativeSearchQuery.getScriptFields())) {
-			for (ScriptField scriptedField : nativeSearchQuery.getScriptFields()) {
-				searchRequestBuilder.addScriptField(scriptedField.fieldName(), scriptedField.script());
-			}
-		}
-
-		if (nativeSearchQuery.getCollapseBuilder() != null) {
-			searchRequestBuilder.setCollapse(nativeSearchQuery.getCollapseBuilder());
-		}
-
-		if (!isEmpty(nativeSearchQuery.getIndicesBoost())) {
-			for (IndexBoost indexBoost : nativeSearchQuery.getIndicesBoost()) {
-				searchRequestBuilder.addIndexBoost(indexBoost.getIndexName(), indexBoost.getBoost());
-			}
-		}
-
-		if (!isEmpty(nativeSearchQuery.getAggregations())) {
-			for (AbstractAggregationBuilder<?> aggregationBuilder : nativeSearchQuery.getAggregations()) {
-				searchRequestBuilder.addAggregation(aggregationBuilder);
-			}
-		}
-	}
-
 	private SearchRequestBuilder prepareSearchRequestBuilder(Query query, Client client, @Nullable Class<?> clazz,
 			IndexCoordinates index) {
-		Assert.notNull(index.getIndexNames(), "No index defined for Query");
-		Assert.notEmpty(index.getIndexNames(), "No index defined for Query");
 
-		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(index.getIndexNames()) //
+		String[] indexNames = index.getIndexNames();
+		Assert.notNull(indexNames, "No index defined for Query");
+		Assert.notEmpty(indexNames, "No index defined for Query");
+
+		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(indexNames) //
 				.setSearchType(query.getSearchType()) //
 				.setVersion(true) //
 				.setTrackScores(query.getTrackScores());
@@ -888,6 +817,56 @@ class RequestFactory {
 		}
 
 		return searchRequestBuilder;
+	}
+
+	private void prepareNativeSearch(NativeSearchQuery query, SearchSourceBuilder sourceBuilder) {
+
+		if (!query.getScriptFields().isEmpty()) {
+			for (ScriptField scriptedField : query.getScriptFields()) {
+				sourceBuilder.scriptField(scriptedField.fieldName(), scriptedField.script());
+			}
+		}
+
+		if (query.getCollapseBuilder() != null) {
+			sourceBuilder.collapse(query.getCollapseBuilder());
+		}
+
+		if (!isEmpty(query.getIndicesBoost())) {
+			for (IndexBoost indexBoost : query.getIndicesBoost()) {
+				sourceBuilder.indexBoost(indexBoost.getIndexName(), indexBoost.getBoost());
+			}
+		}
+
+		if (!isEmpty(query.getAggregations())) {
+			for (AbstractAggregationBuilder<?> aggregationBuilder : query.getAggregations()) {
+				sourceBuilder.aggregation(aggregationBuilder);
+			}
+		}
+
+	}
+
+	private void prepareNativeSearch(SearchRequestBuilder searchRequestBuilder, NativeSearchQuery nativeSearchQuery) {
+		if (!isEmpty(nativeSearchQuery.getScriptFields())) {
+			for (ScriptField scriptedField : nativeSearchQuery.getScriptFields()) {
+				searchRequestBuilder.addScriptField(scriptedField.fieldName(), scriptedField.script());
+			}
+		}
+
+		if (nativeSearchQuery.getCollapseBuilder() != null) {
+			searchRequestBuilder.setCollapse(nativeSearchQuery.getCollapseBuilder());
+		}
+
+		if (!isEmpty(nativeSearchQuery.getIndicesBoost())) {
+			for (IndexBoost indexBoost : nativeSearchQuery.getIndicesBoost()) {
+				searchRequestBuilder.addIndexBoost(indexBoost.getIndexName(), indexBoost.getBoost());
+			}
+		}
+
+		if (!isEmpty(nativeSearchQuery.getAggregations())) {
+			for (AbstractAggregationBuilder<?> aggregationBuilder : nativeSearchQuery.getAggregations()) {
+				searchRequestBuilder.addAggregation(aggregationBuilder);
+			}
+		}
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -961,7 +940,159 @@ class RequestFactory {
 			}
 		}
 	}
+	// endregion
 
+	// region update
+	public UpdateRequest updateRequest(UpdateQuery query, IndexCoordinates index) {
+
+		String indexName = index.getIndexName();
+		UpdateRequest updateRequest = new UpdateRequest(indexName, query.getId());
+
+		if (query.getScript() != null) {
+			Map<String, Object> params = query.getParams();
+
+			if (params == null) {
+				params = new HashMap<>();
+			}
+			Script script = new Script(ScriptType.INLINE, query.getLang(), query.getScript(), params);
+			updateRequest.script(script);
+		}
+
+		if (query.getDocument() != null) {
+			updateRequest.doc(query.getDocument());
+		}
+
+		if (query.getUpsert() != null) {
+			updateRequest.upsert(query.getUpsert());
+		}
+
+		if (query.getRouting() != null) {
+			updateRequest.routing(query.getRouting());
+		}
+
+		if (query.getScriptedUpsert() != null) {
+			updateRequest.scriptedUpsert(query.getScriptedUpsert());
+		}
+
+		if (query.getDocAsUpsert() != null) {
+			updateRequest.docAsUpsert(query.getDocAsUpsert());
+		}
+
+		if (query.getFetchSource() != null) {
+			updateRequest.fetchSource(query.getFetchSource());
+		}
+
+		if (query.getFetchSourceIncludes() != null || query.getFetchSourceExcludes() != null) {
+			List<String> includes = query.getFetchSourceIncludes() != null ? query.getFetchSourceIncludes()
+					: Collections.emptyList();
+			List<String> excludes = query.getFetchSourceExcludes() != null ? query.getFetchSourceExcludes()
+					: Collections.emptyList();
+			updateRequest.fetchSource(includes.toArray(new String[0]), excludes.toArray(new String[0]));
+		}
+
+		if (query.getIfSeqNo() != null) {
+			updateRequest.setIfSeqNo(query.getIfSeqNo());
+		}
+
+		if (query.getIfPrimaryTerm() != null) {
+			updateRequest.setIfPrimaryTerm(query.getIfPrimaryTerm());
+		}
+
+		if (query.getRefresh() != null) {
+			updateRequest.setRefreshPolicy(query.getRefresh().name().toLowerCase());
+		}
+
+		if (query.getRetryOnConflict() != null) {
+			updateRequest.retryOnConflict(query.getRetryOnConflict());
+		}
+
+		if (query.getTimeout() != null) {
+			updateRequest.timeout(query.getTimeout());
+		}
+
+		if (query.getWaitForActiveShards() != null) {
+			updateRequest.waitForActiveShards(ActiveShardCount.parseString(query.getWaitForActiveShards()));
+		}
+
+		return updateRequest;
+	}
+
+	public UpdateRequestBuilder updateRequestBuilderFor(Client client, UpdateQuery query, IndexCoordinates index) {
+
+		String indexName = index.getIndexName();
+		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, IndexCoordinates.TYPE, query.getId());
+
+		if (query.getScript() != null) {
+			Map<String, Object> params = query.getParams();
+
+			if (params == null) {
+				params = new HashMap<>();
+			}
+			Script script = new Script(ScriptType.INLINE, query.getLang(), query.getScript(), params);
+			updateRequestBuilder.setScript(script);
+		}
+
+		if (query.getDocument() != null) {
+			updateRequestBuilder.setDoc(query.getDocument());
+		}
+
+		if (query.getUpsert() != null) {
+			updateRequestBuilder.setUpsert(query.getUpsert());
+		}
+
+		if (query.getRouting() != null) {
+			updateRequestBuilder.setRouting(query.getRouting());
+		}
+
+		if (query.getScriptedUpsert() != null) {
+			updateRequestBuilder.setScriptedUpsert(query.getScriptedUpsert());
+		}
+
+		if (query.getDocAsUpsert() != null) {
+			updateRequestBuilder.setDocAsUpsert(query.getDocAsUpsert());
+		}
+
+		if (query.getFetchSource() != null) {
+			updateRequestBuilder.setFetchSource(query.getFetchSource());
+		}
+
+		if (query.getFetchSourceIncludes() != null || query.getFetchSourceExcludes() != null) {
+			List<String> includes = query.getFetchSourceIncludes() != null ? query.getFetchSourceIncludes()
+					: Collections.emptyList();
+			List<String> excludes = query.getFetchSourceExcludes() != null ? query.getFetchSourceExcludes()
+					: Collections.emptyList();
+			updateRequestBuilder.setFetchSource(includes.toArray(new String[0]), excludes.toArray(new String[0]));
+		}
+
+		if (query.getIfSeqNo() != null) {
+			updateRequestBuilder.setIfSeqNo(query.getIfSeqNo());
+		}
+
+		if (query.getIfPrimaryTerm() != null) {
+			updateRequestBuilder.setIfPrimaryTerm(query.getIfPrimaryTerm());
+		}
+
+		if (query.getRefresh() != null) {
+			updateRequestBuilder.setRefreshPolicy(query.getRefresh().name().toLowerCase());
+		}
+
+		if (query.getRetryOnConflict() != null) {
+			updateRequestBuilder.setRetryOnConflict(query.getRetryOnConflict());
+		}
+
+		if (query.getTimeout() != null) {
+			updateRequestBuilder.setTimeout(query.getTimeout());
+		}
+
+		if (query.getWaitForActiveShards() != null) {
+			updateRequestBuilder.setWaitForActiveShards(ActiveShardCount.parseString(query.getWaitForActiveShards()));
+		}
+
+		return updateRequestBuilder;
+	}
+	// endregion
+
+	// region helper functions
 	private QueryBuilder getQuery(Query query) {
 		QueryBuilder elasticsearchQuery;
 
@@ -981,22 +1112,7 @@ class RequestFactory {
 		return elasticsearchQuery;
 	}
 
-	public IndicesAliasesRequest indicesAddAliasesRequest(AliasQuery query, IndexCoordinates index) {
-		IndicesAliasesRequest.AliasActions aliasAction = aliasAction(query, index);
-		IndicesAliasesRequest request = new IndicesAliasesRequest();
-		request.addAliasAction(aliasAction);
-		return request;
-	}
-
-	public IndicesAliasesRequest indicesRemoveAliasesRequest(AliasQuery query, IndexCoordinates index) {
-		IndicesAliasesRequest.AliasActions aliasAction = IndicesAliasesRequest.AliasActions.remove() //
-				.index(index.getIndexName()) //
-				.alias(query.getAliasName());
-
-		return Requests.indexAliasesRequest() //
-				.addAliasAction(aliasAction);
-	}
-
+	@Nullable
 	private QueryBuilder getFilter(Query query) {
 		QueryBuilder elasticsearchFilter;
 
@@ -1036,15 +1152,32 @@ class RequestFactory {
 
 	private VersionType retrieveVersionTypeFromPersistentEntity(Class<?> clazz) {
 
-		if (clazz != null) {
-			return elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(clazz).getVersionType();
-		}
-		return VersionType.EXTERNAL;
+		VersionType versionType = elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(clazz)
+				.getVersionType();
+
+		return versionType != null ? versionType : VersionType.EXTERNAL;
 	}
 
 	private String[] toArray(List<String> values) {
 		String[] valuesAsArray = new String[values.size()];
 		return values.toArray(valuesAsArray);
 	}
+
+	private boolean hasSeqNoPrimaryTermProperty(@Nullable Class<?> entityClass) {
+
+		if (entityClass == null) {
+			return false;
+		}
+
+		if (!elasticsearchConverter.getMappingContext().hasPersistentEntityFor(entityClass)) {
+			return false;
+		}
+
+		ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext()
+				.getRequiredPersistentEntity(entityClass);
+		return entity.hasSeqNoPrimaryTermProperty();
+	}
+
+	// endregion
 
 }

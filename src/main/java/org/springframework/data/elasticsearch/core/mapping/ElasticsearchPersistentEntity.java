@@ -58,6 +58,7 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	@Nullable
 	ElasticsearchPersistentProperty getParentIdProperty();
 
+	@Nullable
 	String settingPath();
 
 	@Nullable
