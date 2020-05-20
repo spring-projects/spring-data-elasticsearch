@@ -35,8 +35,6 @@ IndexCoordinates index = IndexCoordinates.of("sample-index");
 
 SearchQuery searchQuery = new NativeSearchQueryBuilder()
   .withQuery(matchAllQuery())
-  .withIndices(INDEX_NAME)
-  .withTypes(TYPE_NAME)
   .withFields("message")
   .withPageable(PageRequest.of(0, 10))
   .build();
@@ -62,8 +60,6 @@ IndexCoordinates index = IndexCoordinates.of("sample-index");
 
 SearchQuery searchQuery = new NativeSearchQueryBuilder()
   .withQuery(matchAllQuery())
-  .withIndices(INDEX_NAME)
-  .withTypes(TYPE_NAME)
   .withFields("message")
   .withPageable(PageRequest.of(0, 10))
   .build();
