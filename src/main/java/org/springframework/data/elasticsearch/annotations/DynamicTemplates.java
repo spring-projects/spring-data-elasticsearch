@@ -12,7 +12,7 @@ import org.springframework.data.annotation.Persistent;
  * Elasticsearch dynamic templates mapping.
  * This annotation is handy if you prefer apply dynamic templates on fields with annotation e.g. {@link Field}
  * with type = FieldType.Object etc. instead of static mapping on Document via {@link Mapping} annotation.
- * DynamicTemplates annotation is ommited if {@link Mapping} annotation is used.
+ * DynamicTemplates annotation is omitted if {@link Mapping} annotation is used.
  *
  * @author Petr Kukral
  */
