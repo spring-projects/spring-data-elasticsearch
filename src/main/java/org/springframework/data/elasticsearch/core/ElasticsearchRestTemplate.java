@@ -210,7 +210,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		DeleteRequest request = new DeleteRequest(index.getIndexName(), elasticsearchConverter.convertId(id));
+		DeleteRequest request = requestFactory.deleteRequest(elasticsearchConverter.convertId(id), index);
 		return execute(client -> client.delete(request, RequestOptions.DEFAULT).getId());
 	}
 
