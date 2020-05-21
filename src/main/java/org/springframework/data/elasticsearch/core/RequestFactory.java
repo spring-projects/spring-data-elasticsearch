@@ -29,6 +29,7 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.MultiGetRequest;
@@ -249,6 +250,10 @@ class RequestFactory {
 		return deleteByQueryRequest;
 	}
 
+	public DeleteRequest deleteRequest(String id, IndexCoordinates index) {
+		return new DeleteRequest(index.getIndexName(), id);
+	}
+
 	@Deprecated
 	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, DeleteQuery deleteQuery,
 			IndexCoordinates index) {
@@ -344,6 +349,7 @@ class RequestFactory {
 			throw new ElasticsearchException(
 					"object or source is null, failed to index the document [id: " + query.getId() + ']');
 		}
+
 		if (query.getVersion() != null) {
 			indexRequest.version(query.getVersion());
 			VersionType versionType = retrieveVersionTypeFromPersistentEntity(query.getObject().getClass());
@@ -353,6 +359,7 @@ class RequestFactory {
 		if (query.getSeqNo() != null) {
 			indexRequest.setIfSeqNo(query.getSeqNo());
 		}
+
 		if (query.getPrimaryTerm() != null) {
 			indexRequest.setIfPrimaryTerm(query.getPrimaryTerm());
 		}

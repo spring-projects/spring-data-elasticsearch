@@ -36,7 +36,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.convert.EntityReader;
-import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -405,7 +405,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 				if (item.isFailed())
 					failedDocuments.put(item.getId(), item.getFailureMessage());
 			}
-			throw new ElasticsearchException(
+			throw new BulkFailureException(
 					"Bulk operation has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
 							+ failedDocuments + ']',
 					failedDocuments);

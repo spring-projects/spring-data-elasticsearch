@@ -15,15 +15,23 @@
  */
 package org.springframework.data.elasticsearch;
 
-import org.springframework.dao.UncategorizedDataAccessException;
+import org.springframework.dao.DataRetrievalFailureException;
+
+import java.util.Map;
 
 /**
  * @author Peter-Josef Meisch
- * @since 4.0
+ * @since 4.0.1 (ported back from master (4.1) branch)
  */
-public class UncategorizedElasticsearchException extends UncategorizedDataAccessException {
+public class BulkFailureException extends DataRetrievalFailureException {
+	private final Map<String, String> failedDocuments;
 
-	public UncategorizedElasticsearchException(String msg, Throwable cause) {
-		super(msg, cause);
+	public BulkFailureException(String msg, Map<String, String> failedDocuments) {
+		super(msg);
+		this.failedDocuments = failedDocuments;
+	}
+
+	public Map<String, String> getFailedDocuments() {
+		return failedDocuments;
 	}
 }
