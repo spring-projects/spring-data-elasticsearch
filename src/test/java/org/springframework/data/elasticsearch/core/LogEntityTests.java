@@ -61,7 +61,7 @@ public class LogEntityTests {
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
 	static class Config {}
 
-	private final IndexCoordinates index = IndexCoordinates.of("test-index-log-core").withTypes("test-log-type");
+	private final IndexCoordinates index = IndexCoordinates.of("test-index-log-core");
 	@Autowired private ElasticsearchOperations operations;
 	private IndexOperations indexOperations;
 

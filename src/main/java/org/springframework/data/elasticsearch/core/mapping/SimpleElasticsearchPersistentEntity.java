@@ -15,9 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
-import static org.springframework.util.StringUtils.*;
-
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -66,7 +63,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private final SpelExpressionParser parser;
 
 	private @Nullable String indexName;
-	private @Nullable String indexType;
 	private boolean useServerConfiguration;
 	private short shards;
 	private short replicas;
@@ -93,7 +89,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			Assert.hasText(document.indexName(),
 					" Unknown indexName. Make sure the indexName is defined. e.g @Document(indexName=\"foo\")");
 			this.indexName = document.indexName();
-			this.indexType = hasText(document.type()) ? document.type() : clazz.getSimpleName().toLowerCase(Locale.ENGLISH);
 			this.useServerConfiguration = document.useServerConfiguration();
 			this.shards = document.shards();
 			this.replicas = document.replicas();
@@ -124,19 +119,9 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		return getTypeInformation().getType().getSimpleName();
 	}
 
-	private String getIndexType() {
-
-		if (indexType != null) {
-			Expression expression = parser.parseExpression(indexType, ParserContext.TEMPLATE_EXPRESSION);
-			return expression.getValue(context, String.class);
-		}
-
-		return "";
-	}
-
 	@Override
 	public IndexCoordinates getIndexCoordinates() {
-		return IndexCoordinates.of(getIndexName()).withTypes(getIndexType());
+		return IndexCoordinates.of(getIndexName());
 	}
 
 	@Nullable

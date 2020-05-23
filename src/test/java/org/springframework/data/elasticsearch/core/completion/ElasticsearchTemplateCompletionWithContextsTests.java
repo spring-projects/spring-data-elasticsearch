@@ -110,8 +110,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		indexQueries.add(new ContextCompletionEntityBuilder("4").name("Artur Konczak")
 				.suggest(new String[] { "Artur", "Konczak" }, context4).buildIndex());
 
-		operations.bulkIndex(indexQueries,
-				IndexCoordinates.of("test-index-context-completion").withTypes("context-completion-type"));
+		operations.bulkIndex(indexQueries, IndexCoordinates.of("test-index-context-completion"));
 		operations.indexOps(ContextCompletionEntity.class).refresh();
 	}
 
@@ -137,7 +136,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		// when
 		SearchResponse suggestResponse = ((AbstractElasticsearchTemplate) operations).suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
-				IndexCoordinates.of("test-index-context-completion").withTypes("context-completion-type"));
+				IndexCoordinates.of("test-index-context-completion"));
 		assertThat(suggestResponse.getSuggest()).isNotNull();
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
@@ -169,7 +168,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		// when
 		SearchResponse suggestResponse = ((AbstractElasticsearchTemplate) operations).suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
-				IndexCoordinates.of("test-index-context-completion").withTypes("context-completion-type"));
+				IndexCoordinates.of("test-index-context-completion"));
 		assertThat(suggestResponse.getSuggest()).isNotNull();
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
@@ -201,7 +200,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		// when
 		SearchResponse suggestResponse = ((AbstractElasticsearchTemplate) operations).suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
-				IndexCoordinates.of("test-index-context-completion").withTypes("context-completion-type"));
+				IndexCoordinates.of("test-index-context-completion"));
 		assertThat(suggestResponse.getSuggest()).isNotNull();
 		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
 		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();

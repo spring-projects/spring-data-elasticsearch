@@ -49,7 +49,6 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
@@ -201,7 +200,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 		Map<String, Object> map = new LinkedHashMap<>(Collections.singletonMap("foo", "bar"));
 
-		template.save(map, IndexCoordinates.of(ALTERNATE_INDEX).withTypes("singleton-map")) //
+		template.save(map, IndexCoordinates.of(ALTERNATE_INDEX)) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 					assertThat(map).containsKey("id");
@@ -218,7 +217,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@Test // DATAES-519, DATAES-767, DATAES-822
 	public void getByIdShouldErrorWhenIndexDoesNotExist() {
 
-		template.get("foo", SampleEntity.class, IndexCoordinates.of("no-such-index").withTypes("test-type")) //
+		template.get("foo", SampleEntity.class, IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
 				.expectError(ElasticsearchStatusException.class);
 	}
@@ -276,8 +275,8 @@ public class ReactiveElasticsearchTemplateTests {
 
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 
-		IndexCoordinates defaultIndex = IndexCoordinates.of(DEFAULT_INDEX).withTypes("test-type");
-		IndexCoordinates alternateIndex = IndexCoordinates.of(ALTERNATE_INDEX).withTypes("test-type");
+		IndexCoordinates defaultIndex = IndexCoordinates.of(DEFAULT_INDEX);
+		IndexCoordinates alternateIndex = IndexCoordinates.of(ALTERNATE_INDEX);
 
 		restTemplate.index(indexQuery, alternateIndex);
 		indexOperations.refresh();
@@ -524,7 +523,8 @@ public class ReactiveElasticsearchTemplateTests {
 
 	@Test // DATAES-567, DATAES-767
 	public void aggregateShouldErrorWhenIndexDoesNotExist() {
-		template.aggregate(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
+		template
+				.aggregate(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
 						IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
 				.expectError(ElasticsearchStatusException.class);
@@ -588,7 +588,7 @@ public class ReactiveElasticsearchTemplateTests {
 		SampleEntity sampleEntity = randomEntity("test message");
 		index(sampleEntity);
 
-		template.delete(sampleEntity.getId(), IndexCoordinates.of(DEFAULT_INDEX).withTypes("test-type")) //
+		template.delete(sampleEntity.getId(), IndexCoordinates.of(DEFAULT_INDEX)) //
 				.as(StepVerifier::create)//
 				.expectNext(sampleEntity.getId()) //
 				.verifyComplete();
@@ -1001,7 +1001,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 	private void index(SampleEntity... entities) {
 
-		IndexCoordinates indexCoordinates = IndexCoordinates.of(DEFAULT_INDEX).withTypes("test-type");
+		IndexCoordinates indexCoordinates = IndexCoordinates.of(DEFAULT_INDEX);
 
 		if (entities.length == 1) {
 			restTemplate.index(getIndexQuery(entities[0]), indexCoordinates);

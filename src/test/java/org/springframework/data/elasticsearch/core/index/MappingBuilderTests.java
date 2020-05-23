@@ -149,7 +149,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		double price = 2.34;
 		String id = "abc";
 
-		IndexCoordinates index = IndexCoordinates.of("test-index-stock-mapping-builder").withTypes("price");
+		IndexCoordinates index = IndexCoordinates.of("test-index-stock-mapping-builder");
 		operations.index(buildIndex(StockPrice.builder() //
 				.id(id) //
 				.symbol(symbol) //
@@ -192,7 +192,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@Test // DATAES-76
 	public void shouldAddSampleInheritedEntityDocumentToIndex() {
 		// given
-		IndexCoordinates index = IndexCoordinates.of("test-index-sample-inherited-mapping-builder").withTypes("mapping");
+		IndexCoordinates index = IndexCoordinates.of("test-index-sample-inherited-mapping-builder");
 		IndexOperations indexOps = operations.indexOps(index);
 
 		// when

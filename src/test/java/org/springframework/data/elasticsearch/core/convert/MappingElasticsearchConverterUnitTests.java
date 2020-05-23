@@ -897,7 +897,7 @@ public class MappingElasticsearchConverterUnitTests {
 	@AllArgsConstructor
 	@Builder
 	@org.springframework.data.elasticsearch.annotations.Document(indexName = "test-index-geo-core-entity-mapper",
-			type = "geo-test-index", replicas = 0, refreshInterval = "-1")
+			replicas = 0, refreshInterval = "-1")
 	static class GeoEntity {
 
 		@Id private String id;
