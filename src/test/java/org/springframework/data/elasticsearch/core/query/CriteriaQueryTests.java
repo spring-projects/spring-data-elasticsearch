@@ -64,7 +64,7 @@ public class CriteriaQueryTests {
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
 	static class Config {}
 
-	private final IndexCoordinates index = IndexCoordinates.of("test-index-sample-core-query").withTypes("test-type");
+	private final IndexCoordinates index = IndexCoordinates.of("test-index-sample-core-query");
 
 	@Autowired private ElasticsearchOperations operations;
 	private IndexOperations indexOperations;

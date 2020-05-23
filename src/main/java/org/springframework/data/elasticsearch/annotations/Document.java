@@ -54,17 +54,6 @@ public @interface Document {
 	String indexName();
 
 	/**
-	 * Mapping type name. <br/>
-	 * deprecated as Elasticsearch does not support this anymore
-	 * (@see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.3/removal-of-types.html">Elastisearch removal of types documentation</a>) and will remove it in
-	 * Elasticsearch 8.
-	 *
-	 * @deprecated since 4.0
-	 */
-	@Deprecated
-	String type() default "";
-
-	/**
 	 * Use server-side settings when creating the index.
 	 */
 	boolean useServerConfiguration() default false;

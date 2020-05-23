@@ -1,0 +1,9 @@
+[[elasticsearch-migration-guide-4.0-4.1]]
+== Upgrading from 4.0.x to 4.1.x
+
+This section describes breaking changes from version 4.0.x to 4.1.x and how removed features can be replaced by new introduced features.
+
+=== Removals
+
+The _type mappings_ parameters of the `@Document` annotation and the `IndexCoordinates` object were removed. They had been deprecated in Spring Data Elasticsearch 4.0 and their values weren't used anymore.
+

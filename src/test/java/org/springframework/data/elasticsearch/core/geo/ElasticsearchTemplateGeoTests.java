@@ -71,10 +71,8 @@ public class ElasticsearchTemplateGeoTests {
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
 	static class Config {}
 
-	private final IndexCoordinates locationMarkerIndex = IndexCoordinates.of("test-index-location-marker-core-geo")
-			.withTypes("geo-annotation-point-type");
-	private final IndexCoordinates authorMarkerIndex = IndexCoordinates.of("test-index-author-marker-core-geo")
-			.withTypes("geo-class-point-type");
+	private final IndexCoordinates locationMarkerIndex = IndexCoordinates.of("test-index-location-marker-core-geo");
+	private final IndexCoordinates authorMarkerIndex = IndexCoordinates.of("test-index-author-marker-core-geo");
 
 	@Autowired private ElasticsearchOperations operations;
 

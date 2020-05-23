@@ -24,7 +24,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -56,6 +55,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
@@ -71,7 +71,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 	@Mock ReactiveElasticsearchClient client;
 	ReactiveElasticsearchTemplate template;
 
-	private IndexCoordinates index = IndexCoordinates.of("index").withTypes("type");
+	private IndexCoordinates index = IndexCoordinates.of("index");
 
 	@BeforeEach
 	public void setUp() {
@@ -258,8 +258,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-sample-core-reactive-template-Unit", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-core-reactive-template-Unit", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;

@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import java.util.Arrays;
 
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -34,29 +33,15 @@ public class IndexCoordinates {
 	public static final String TYPE = "_doc";
 
 	private final String[] indexNames;
-	private final String[] typeNames;
 
 	public static IndexCoordinates of(String... indexNames) {
 		Assert.notNull(indexNames, "indexNames must not be null");
-		return new IndexCoordinates(indexNames, null);
+		return new IndexCoordinates(indexNames);
 	}
 
-	private IndexCoordinates(String[] indexNames, @Nullable String[] typeNames) {
+	private IndexCoordinates(String[] indexNames) {
 		Assert.notEmpty(indexNames, "indexNames may not be null or empty");
 		this.indexNames = indexNames;
-		this.typeNames = typeNames != null ? typeNames : new String[] {};
-	}
-
-	/**
-	 * Using Index types is deprecated in Elasticsearch.
-	 * 
-	 * @param typeNames
-	 * @return
-	 */
-	@Deprecated
-	public IndexCoordinates withTypes(String... typeNames) {
-		Assert.notEmpty(typeNames, "typeNames must not be null");
-		return new IndexCoordinates(this.indexNames, typeNames);
 	}
 
 	public String getIndexName() {
@@ -67,20 +52,8 @@ public class IndexCoordinates {
 		return Arrays.copyOf(indexNames, indexNames.length);
 	}
 
-	@Deprecated
-	@Nullable
-	public String getTypeName() {
-		return typeNames.length > 0 ? typeNames[0] : null;
-	}
-
-	@Deprecated
-	public String[] getTypeNames() {
-		return Arrays.copyOf(typeNames, typeNames.length);
-	}
-
 	@Override
 	public String toString() {
-		return "IndexCoordinates{" + "indexNames=" + Arrays.toString(indexNames) + ", typeNames="
-				+ Arrays.toString(typeNames) + '}';
+		return "IndexCoordinates{" + "indexNames=" + Arrays.toString(indexNames) + '}';
 	}
 }

@@ -97,7 +97,7 @@ public class ElasticsearchTemplateAggregationTests {
 				.addAuthor(RIZWAN_IDREES).addPublishedYear(YEAR_2002).addPublishedYear(YEAR_2001).addPublishedYear(YEAR_2000)
 				.score(40).buildIndex();
 
-		IndexCoordinates index = IndexCoordinates.of(INDEX_NAME).withTypes("article");
+		IndexCoordinates index = IndexCoordinates.of(INDEX_NAME);
 		operations.index(article1, index);
 		operations.index(article2, index);
 		operations.index(article3, index);

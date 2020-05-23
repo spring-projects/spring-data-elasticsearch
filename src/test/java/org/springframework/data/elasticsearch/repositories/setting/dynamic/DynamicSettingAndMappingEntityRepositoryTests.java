@@ -116,8 +116,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(QueryBuilders.termQuery("email", dynamicSettingAndMappingEntity1.getEmail())).build();
 
-		IndexCoordinates index = IndexCoordinates.of("test-index-dynamic-setting-and-mapping")
-				.withTypes("test-setting-type");
+		IndexCoordinates index = IndexCoordinates.of("test-index-dynamic-setting-and-mapping");
 		long count = operations.count(searchQuery, DynamicSettingAndMappingEntity.class, index);
 		SearchHits<DynamicSettingAndMappingEntity> entityList = operations.search(searchQuery,
 				DynamicSettingAndMappingEntity.class, index);

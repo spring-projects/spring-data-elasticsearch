@@ -10,6 +10,7 @@ You will notice similarities to the Spring data solr and mongodb support in the 
 
 include::reference/elasticsearch-new.adoc[leveloffset=+1]
 include::reference/elasticsearch-migration-guide-3.2-4.0.adoc[leveloffset=+1]
+include::reference/elasticsearch-migration-guide-4.0-4.1.adoc[leveloffset=+1]
 
 [[preface.metadata]]
 == Project Metadata

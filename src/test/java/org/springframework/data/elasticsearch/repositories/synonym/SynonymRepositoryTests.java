@@ -91,7 +91,7 @@ public class SynonymRepositoryTests {
 
 		SearchHits<SynonymEntity> synonymEntities = operations.search(
 				new NativeSearchQueryBuilder().withQuery(QueryBuilders.termQuery("text", "british")).build(),
-				SynonymEntity.class, IndexCoordinates.of("test-index-synonym").withTypes("synonym-type"));
+				SynonymEntity.class, IndexCoordinates.of("test-index-synonym"));
 		assertThat(synonymEntities).hasSize(1);
 	}
 
