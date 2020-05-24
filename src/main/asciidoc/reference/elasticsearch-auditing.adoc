@@ -37,18 +37,18 @@ public class Person implements Persistable<Long> {
     private Instant lastModifiedDate;
     private String lastModifiedBy;
 
-    public Long getId() {                                                 <1>
+    public Long getId() {                                                 // <.>
         return id;
     }
 
     @Override
     public boolean isNew() {
-        return id == null || (createdDate == null && createdBy == null);  <2>
+        return id == null || (createdDate == null && createdBy == null);  // <.>
     }
 }
 ----
-<1> the getter also is the required implementation from the interface
-<2> an object is new if it either has no `id` or none of fields containing creation attributes are set.
+<.> the getter is the required implementation from the interface
+<.> an object is new if it either has no `id` or none of fields containing creation attributes are set.
 
 === Activating auditing
 
