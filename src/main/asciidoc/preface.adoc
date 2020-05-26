@@ -9,7 +9,6 @@ The Spring Data Elasticsearch project applies core Spring concepts to the develo
 You will notice similarities to the Spring data solr and mongodb support in the Spring Framework.
 
 include::reference/elasticsearch-new.adoc[leveloffset=+1]
-include::reference/elasticsearch-migration-guide-3.2-4.0.adoc[leveloffset=+1]
 
 [[preface.metadata]]
 == Project Metadata

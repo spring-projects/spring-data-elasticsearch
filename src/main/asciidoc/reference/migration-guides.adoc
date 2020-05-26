@@ -1,0 +1,6 @@
+[[elasticsearch.migration]]
+= Appendix E: Migration Guides
+
+:leveloffset: +1
+include::elasticsearch-migration-guide-3.2-4.0.adoc[]
+:leveloffset: -1
