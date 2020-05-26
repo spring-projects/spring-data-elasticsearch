@@ -1,0 +1,9 @@
+[[elasticsearch.migration]]
+= Appendix E: Migration Guides
+
+// line breaks required otherwise the TOC breaks due to joining of first/last lines.
+:leveloffset: +1
+include::elasticsearch-migration-guide-3.2-4.0.adoc[]
+
+include::elasticsearch-migration-guide-4.0-4.1.adoc[]
+:leveloffset: -1

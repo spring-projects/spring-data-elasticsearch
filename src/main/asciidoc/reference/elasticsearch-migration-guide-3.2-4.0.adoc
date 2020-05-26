@@ -1,25 +1,25 @@
 [[elasticsearch-migration-guide-3.2-4.0]]
-== Upgrading from 3.2.x to 4.0.x
+= Upgrading from 3.2.x to 4.0.x
 
 This section describes breaking changes from version 3.2.x to 4.0.x and how removed features can be replaced by new introduced features.
 
-
-=== Removal of the used Jackson Mapper.
+[[elasticsearch-migration-guide-3.2-4.0.jackson-removal]]
+== Removal of the used Jackson Mapper
 
 One of the changes in version 4.0.x is that Spring Data Elasticsearch does not use the Jackson Mapper anymore to map an entity to the JSON representation needed for Elasticsearch (see <<elasticsearch.mapping>>). In version 3.2.x the Jackson Mapper was the default that was used. It was possible to switch to the meta-model based converter (named `ElasticsearchEntityMapper`) by explicitly configuring it (<<elasticsearch.mapping.meta-model>>).
 
 In version 4.0.x the meta-model based converter is the only one that is available and does not need to be configured explicitly. If you had a custom configuration to enable the meta-model converter by providing a bean like this:
 
-[code,java]
+[source,java]
 ----
 @Bean
 @Override
-public EntityMapper entityMapper() {                                 
+public EntityMapper entityMapper() {
 
   ElasticsearchEntityMapper entityMapper = new ElasticsearchEntityMapper(
-    elasticsearchMappingContext(), new DefaultConversionService()    
+    elasticsearchMappingContext(), new DefaultConversionService()
   );
-  entityMapper.setConversions(elasticsearchCustomConversions());     
+  entityMapper.setConversions(elasticsearchCustomConversions());
 
   return entityMapper;
 }
@@ -30,15 +30,15 @@ You now have to remove this bean, the `ElasticsearchEntityMapper` interface has 
 .Entity configuration
 Some users had custom Jackson annotations on the entity class, for example in order to define a custom name for the mapped document in Elasticsearch or to configure date conversions. These are not taken into account anymore. The needed functionality is now provided with Spring Data Elasticsearch's `@Field` annotation. Please see <<elasticsearch.mapping.meta-model.annotations>> for detailed information.
 
-
-=== Removal of implicit index name from query objects
+[[elasticsearch-migration-guide-3.2-4.0.implicit-index-name]]
+== Removal of implicit index name from query objects
 
 In 3.2.x the different query classes like `IndexQuery` or `SearchQuery` had properties that were taking the index name or index names that they were operating upon. If these were not set, the passed in entity was inspected to retrieve the index name that was set in the `@Document` annotation. +
 In 4.0.x the index name(s) must now be provided in an additional parameter of type `IndexCoordinates`. By separating this, it now is possible to use one query object against different indices.
 
 So for example the following code:
 
-[code,java]
+[source,java]
 ----
 IndexQuery indexQuery = new IndexQueryBuilder()
   .withId(person.getId().toString())
@@ -50,7 +50,7 @@ String documentId = elasticsearchOperations.index(indexQuery);
 
 must be changed to:
 
-[code,java]
+[source,java]
 ----
 IndexCoordinates indexCoordinates = elasticsearchOperations.getIndexCoordinatesFor(person.getClass());
 
@@ -58,14 +58,14 @@ IndexQuery indexQuery = new IndexQueryBuilder()
   .withId(person.getId().toString())
   .withObject(person)
   .build();
-  
+
 String documentId = elasticsearchOperations.index(indexQuery, indexCoordinates);
 ----
 
 To make it easier to work with entities and use the index name that is contained in the entitie's `@Document` annotation, new methods have been added like `DocumentOperations.save(T entity)`;
 
-
-=== The new Operations interfaces
+[[elasticsearch-migration-guide-3.2-4.0.new-operations]]
+== The new Operations interfaces
 
 In version 3.2 there was the `ElasticsearchOperations` interface that defined all the methods for the `ElasticsearchTemplate` class. In version 4 the functions have been split into different interfaces, aligning these interfaces with the Elasticsearch API:
 
@@ -77,10 +77,10 @@ In version 3.2 there was the `ElasticsearchOperations` interface that defined al
 
 NOTE: All the functions from the `ElasticsearchOperations` interface in version 3.2 that are now moved to the `IndexOperations` interface are still available, they are marked as deprecated and have default implementations that delegate to the new implementation:
 
-[code,java]
+[source,java]
 ----
 /**
- * Create an index for given indexName .
+ * Create an index for given indexName.
  *
  * @param indexName the name of the index
  * @return {@literal true} if the index was created
@@ -92,17 +92,17 @@ default boolean createIndex(String indexName) {
 }
 ----
 
+[[elasticsearch-migration-guide-3.2-4.0.deprecations]]
+== Deprecations
 
-=== Deprecations 
-
-==== Methods and classes
+=== Methods and classes
 
 Many functions and classes have been deprecated. These functions still work, but the Javadocs show with what they should be replaced.
 
 .Example from ElasticsearchOperations
-[code,java]
+[source,java]
 ----
-/**
+/*
  * Retrieves an object from an index.
  *
  * @param query the query defining the id of the object to get
@@ -113,15 +113,16 @@ Many functions and classes have been deprecated. These functions still work, but
 @Deprecated
 @Nullable
 <T> T queryForObject(GetQuery query, Class<T> clazz);
-----    
+----
 
-==== Elasticsearch deprecations
+=== Elasticsearch deprecations
 
 Since version 7 the Elasticsearch `TransportClient` is deprecated, it will be removed with Elasticsearch version 8. Spring Data Elasticsearch deprecates the `ElasticsearchTemplate` class which uses the `TransportClient` in version 4.0.
 
 Mapping types were removed from Elasticsearch 7, they still exist as deprecated values in the Spring Data `@Document` annotation and the `IndexCoordinates` class but they are not used anymore internally.
 
-=== Removals
+[[elasticsearch-migration-guide-3.2-4.0.removal]]
+== Removals
 
 * As already described, the `ElasticsearchEntityMapper` interface has been removed.
 
@@ -130,4 +131,3 @@ Mapping types were removed from Elasticsearch 7, they still exist as deprecated 
 * The method `org.springframework.data.elasticsearch.core.ElasticsearchOperations.query(SearchQuery query, ResultsExtractor<T> resultsExtractor);` and the `org.springframework.data.elasticsearch.core.ResultsExtractor` interface have been removed. These could be used to parse the result from Elasticsearch for cases in which the response mapping done with the Jackson based mapper was not enough. Since version 4.0, there are the new <<elasticsearch.operations.searchresulttypes>>  to return the information from an Elasticsearch response, so there is no need to expose this low level functionality.
 
 * The low level methods `startScroll`, `continueScroll` and `clearScroll` have been removed from the `ElasticsearchOperations` interface. For low level scroll API access, there now are `searchScrollStart`, `searchScrollContinue` and `searchScrollClear` methods on the `ElasticsearchRestTemplate` class.
-
