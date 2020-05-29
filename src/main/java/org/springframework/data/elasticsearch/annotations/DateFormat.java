@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.annotations;
 
 /**
  * @author Jakub Vavrik
+ * @author Tim te Beek
  *         Values based on reference doc - https://www.elastic.co/guide/reference/mapping/date-format/
  */
 public enum DateFormat {

@@ -17,6 +17,7 @@ import org.springframework.data.elasticsearch.annotations.DateFormat;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Tim te Beek
  */
 class ElasticsearchDateConverterTests {
 
