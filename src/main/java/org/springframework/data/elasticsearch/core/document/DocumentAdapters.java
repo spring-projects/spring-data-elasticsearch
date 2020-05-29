@@ -77,11 +77,12 @@ public class DocumentAdapters {
 		}
 
 		if (source.isSourceEmpty()) {
-			return fromDocumentFields(source, source.getId(), source.getVersion(), source.getSeqNo(),
+			return fromDocumentFields(source, source.getIndex(), source.getId(), source.getVersion(), source.getSeqNo(),
 					source.getPrimaryTerm());
 		}
 
 		Document document = Document.from(source.getSourceAsMap());
+		document.setIndex(source.getIndex());
 		document.setId(source.getId());
 		document.setVersion(source.getVersion());
 		document.setSeqNo(source.getSeqNo());
@@ -108,11 +109,12 @@ public class DocumentAdapters {
 		}
 
 		if (source.isSourceEmpty()) {
-			return fromDocumentFields(source, source.getId(), source.getVersion(), source.getSeqNo(),
+			return fromDocumentFields(source, source.getIndex(), source.getId(), source.getVersion(), source.getSeqNo(),
 					source.getPrimaryTerm());
 		}
 
 		Document document = Document.from(source.getSource());
+		document.setIndex(source.getIndex());
 		document.setId(source.getId());
 		document.setVersion(source.getVersion());
 		document.setSeqNo(source.getSeqNo());
@@ -157,10 +159,12 @@ public class DocumentAdapters {
 
 		if (sourceRef == null || sourceRef.length() == 0) {
 			return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(), highlightFields,
-					fromDocumentFields(source, source.getId(), source.getVersion(), source.getSeqNo(), source.getPrimaryTerm()));
+					fromDocumentFields(source, source.getIndex(), source.getId(), source.getVersion(), source.getSeqNo(),
+							source.getPrimaryTerm()));
 		}
 
 		Document document = Document.from(source.getSourceAsMap());
+		document.setIndex(source.getIndex());
 		document.setId(source.getId());
 
 		if (source.getVersion() >= 0) {
@@ -177,13 +181,15 @@ public class DocumentAdapters {
 	 * Create an unmodifiable {@link Document} from {@link Iterable} of {@link DocumentField}s.
 	 *
 	 * @param documentFields the {@link DocumentField}s backing the {@link Document}.
+	 * @param index
 	 * @return the adapted {@link Document}.
 	 */
-	public static Document fromDocumentFields(Iterable<DocumentField> documentFields, String id, long version, long seqNo,
-			long primaryTerm) {
+	public static Document fromDocumentFields(Iterable<DocumentField> documentFields, String index, String id,
+			long version, long seqNo, long primaryTerm) {
 
 		if (documentFields instanceof Collection) {
-			return new DocumentFieldAdapter((Collection<DocumentField>) documentFields, id, version, seqNo, primaryTerm);
+			return new DocumentFieldAdapter((Collection<DocumentField>) documentFields, index, id, version, seqNo,
+					primaryTerm);
 		}
 
 		List<DocumentField> fields = new ArrayList<>();
@@ -191,58 +197,49 @@ public class DocumentAdapters {
 			fields.add(documentField);
 		}
 
-		return new DocumentFieldAdapter(fields, id, version, seqNo, primaryTerm);
+		return new DocumentFieldAdapter(fields, index, id, version, seqNo, primaryTerm);
 	}
 
 	// TODO: Performance regarding keys/values/entry-set
 	static class DocumentFieldAdapter implements Document {
 
 		private final Collection<DocumentField> documentFields;
+		private final String index;
 		private final String id;
 		private final long version;
 		private final long seqNo;
 		private final long primaryTerm;
 
-		DocumentFieldAdapter(Collection<DocumentField> documentFields, String id, long version, long seqNo,
+		DocumentFieldAdapter(Collection<DocumentField> documentFields, String index, String id, long version, long seqNo,
 				long primaryTerm) {
 			this.documentFields = documentFields;
+			this.index = index;
 			this.id = id;
 			this.version = version;
 			this.seqNo = seqNo;
 			this.primaryTerm = primaryTerm;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#hasId()
-		 */
+		@Override
+		public String getIndex() {
+			return index;
+		}
+
 		@Override
 		public boolean hasId() {
 			return StringUtils.hasLength(id);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#getId()
-		 */
 		@Override
 		public String getId() {
 			return this.id;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#hasVersion()
-		 */
 		@Override
 		public boolean hasVersion() {
 			return this.version >= 0;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#getVersion()
-		 */
 		@Override
 		public long getVersion() {
 
@@ -253,19 +250,11 @@ public class DocumentAdapters {
 			return this.version;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#hasSeqNo()
-		 */
 		@Override
 		public boolean hasSeqNo() {
 			return true;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#getSeqNo()
-		 */
 		@Override
 		public long getSeqNo() {
 
@@ -276,19 +265,11 @@ public class DocumentAdapters {
 			return this.seqNo;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#hasPrimaryTerm()
-		 */
 		@Override
 		public boolean hasPrimaryTerm() {
 			return true;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#getPrimaryTerm()
-		 */
 		@Override
 		public long getPrimaryTerm() {
 
@@ -299,28 +280,16 @@ public class DocumentAdapters {
 			return this.primaryTerm;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#size()
-		 */
 		@Override
 		public int size() {
 			return documentFields.size();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#isEmpty()
-		 */
 		@Override
 		public boolean isEmpty() {
 			return documentFields.isEmpty();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#containsKey(java.lang.Object)
-		 */
 		@Override
 		public boolean containsKey(Object key) {
 
@@ -333,10 +302,6 @@ public class DocumentAdapters {
 			return false;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#containsValue(java.lang.Object)
-		 */
 		@Override
 		public boolean containsValue(Object value) {
 
@@ -351,10 +316,6 @@ public class DocumentAdapters {
 			return false;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#get(java.lang.Object)
-		 */
 		@Override
 		@Nullable
 		public Object get(Object key) {
@@ -365,74 +326,42 @@ public class DocumentAdapters {
 
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#put(java.lang.Object, java.lang.Object)
-		 */
 		@Override
 		public Object put(String key, Object value) {
 			throw new UnsupportedOperationException();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#remove(java.lang.Object)
-		 */
 		@Override
 		public Object remove(Object key) {
 			throw new UnsupportedOperationException();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#putAll(Map)
-		 */
 		@Override
 		public void putAll(Map<? extends String, ?> m) {
 			throw new UnsupportedOperationException();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#clear()
-		 */
 		@Override
 		public void clear() {
 			throw new UnsupportedOperationException();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#keySet()
-		 */
 		@Override
 		public Set<String> keySet() {
 			return documentFields.stream().map(DocumentField::getName).collect(Collectors.toCollection(LinkedHashSet::new));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#values()
-		 */
 		@Override
 		public Collection<Object> values() {
 			return documentFields.stream().map(DocumentFieldAdapter::getValue).collect(Collectors.toList());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#entrySet()
-		 */
 		@Override
 		public Set<Entry<String, Object>> entrySet() {
 			return documentFields.stream().collect(Collectors.toMap(DocumentField::getName, DocumentFieldAdapter::getValue))
 					.entrySet();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#forEach(java.util.function.BiConsumer)
-		 */
 		@Override
 		public void forEach(BiConsumer<? super String, ? super Object> action) {
 
@@ -441,10 +370,6 @@ public class DocumentAdapters {
 			documentFields.forEach(field -> action.accept(field.getName(), getValue(field)));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#toJson()
-		 */
 		@Override
 		public String toJson() {
 
@@ -472,10 +397,6 @@ public class DocumentAdapters {
 			}
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
 		@Override
 		public String toString() {
 			return getClass().getSimpleName() + '@' + this.id + '#' + this.version + ' ' + toJson();
@@ -517,10 +438,6 @@ public class DocumentAdapters {
 			this.highlightFields.putAll(highlightFields);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#append(java.lang.String, java.lang.Object)
-		 */
 		@Override
 		public SearchDocument append(String key, Object value) {
 			delegate.append(key, value);
@@ -528,281 +445,162 @@ public class DocumentAdapters {
 			return this;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.SearchDocument#getScore()
-		 */
 		@Override
 		public float getScore() {
 			return score;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.SearchDocument#getFields()
-		 */
 		@Override
 		public Map<String, List<Object>> getFields() {
 			return fields;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.SearchDocument#getSortValues()
-		 */
 		@Override
 		public Object[] getSortValues() {
 			return sortValues;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.SearchDocument#getHighlightFields()
-		 */
 		@Override
 		public Map<String, List<String>> getHighlightFields() {
 			return highlightFields;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#hasId()
-		 */
+		@Override
+		public String getIndex() {
+			return delegate.getIndex();
+		}
+
 		@Override
 		public boolean hasId() {
 			return delegate.hasId();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#getId()
-		 */
 		@Override
 		public String getId() {
 			return delegate.getId();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#setId(java.lang.String)
-		 */
 		@Override
 		public void setId(String id) {
 			delegate.setId(id);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#hasVersion()
-		 */
 		@Override
 		public boolean hasVersion() {
 			return delegate.hasVersion();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#getVersion()
-		 */
 		@Override
 		public long getVersion() {
 			return delegate.getVersion();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#setVersion(long)
-		 */
 		@Override
 		public void setVersion(long version) {
 			delegate.setVersion(version);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#hasSeqNo()
-		 */
 		@Override
 		public boolean hasSeqNo() {
 			return delegate.hasSeqNo();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#getSeqNo()
-		 */
 		@Override
 		public long getSeqNo() {
 			return delegate.getSeqNo();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#setSeqNo(long)
-		 */
 		@Override
 		public void setSeqNo(long seqNo) {
 			delegate.setSeqNo(seqNo);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#hasPrimaryTerm()
-		 */
 		@Override
 		public boolean hasPrimaryTerm() {
 			return delegate.hasPrimaryTerm();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#getPrimaryTerm()
-		 */
 		@Override
 		public long getPrimaryTerm() {
 			return delegate.getPrimaryTerm();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#setPrimaryTerm(long)
-		 */
 		@Override
 		public void setPrimaryTerm(long primaryTerm) {
 			delegate.setPrimaryTerm(primaryTerm);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#get(java.lang.Object, java.lang.Class)
-		 */
 		@Override
 		@Nullable
 		public <T> T get(Object key, Class<T> type) {
 			return delegate.get(key, type);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.document.Document#toJson()
-		 */
 		@Override
 		public String toJson() {
 			return delegate.toJson();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#size()
-		 */
 		@Override
 		public int size() {
 			return delegate.size();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#isEmpty()
-		 */
 		@Override
 		public boolean isEmpty() {
 			return delegate.isEmpty();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#containsKey(java.lang.Object)
-		 */
 		@Override
 		public boolean containsKey(Object key) {
 			return delegate.containsKey(key);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#containsValue(java.lang.Object)
-		 */
 		@Override
 		public boolean containsValue(Object value) {
 			return delegate.containsValue(value);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#get(java.lang.Object)
-		 */
 		@Override
 		public Object get(Object key) {
 			return delegate.get(key);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#put(java.lang.Object, java.lang.Object)
-		 */
 		@Override
 		public Object put(String key, Object value) {
 			return delegate.put(key, value);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#remove(java.lang.Object)
-		 */
 		@Override
 		public Object remove(Object key) {
 			return delegate.remove(key);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#putAll(Map)
-		 */
 		@Override
 		public void putAll(Map<? extends String, ?> m) {
 			delegate.putAll(m);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#clear()
-		 */
 		@Override
 		public void clear() {
 			delegate.clear();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#keySet()
-		 */
 		@Override
 		public Set<String> keySet() {
 			return delegate.keySet();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#values()
-		 */
 		@Override
 		public Collection<Object> values() {
 			return delegate.values();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#entrySet()
-		 */
 		@Override
 		public Set<Entry<String, Object>> entrySet() {
 			return delegate.entrySet();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) {
@@ -815,37 +613,21 @@ public class DocumentAdapters {
 			return Float.compare(that.score, score) == 0 && delegate.equals(that.delegate);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
 		@Override
 		public int hashCode() {
 			return delegate.hashCode();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#forEach(java.util.function.BiConsumer)
-		 */
 		@Override
 		public void forEach(BiConsumer<? super String, ? super Object> action) {
 			delegate.forEach(action);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Map#remove(java.lang.Object, java.lang.Object)
-		 */
 		@Override
 		public boolean remove(Object key, Object value) {
 			return delegate.remove(key, value);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
 		@Override
 		public String toString() {
 

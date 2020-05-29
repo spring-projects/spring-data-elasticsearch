@@ -84,7 +84,7 @@ class SearchHitSupportTest {
 		@Override
 		public SearchHit<String> next() {
 			String nextString = iterator.next();
-			return new SearchHit<>("id", 1.0f, new Object[0], emptyMap(), nextString);
+			return new SearchHit<>("index", "id", 1.0f, new Object[0], emptyMap(), nextString);
 		}
 	}
 }

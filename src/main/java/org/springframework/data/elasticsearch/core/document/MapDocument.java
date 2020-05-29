@@ -40,6 +40,7 @@ class MapDocument implements Document {
 
 	private final LinkedHashMap<String, Object> documentAsMap;
 
+	private @Nullable String index;
 	private @Nullable String id;
 	private @Nullable Long version;
 	private @Nullable Long seqNo;
@@ -51,6 +52,17 @@ class MapDocument implements Document {
 
 	MapDocument(Map<String, ? extends Object> documentAsMap) {
 		this.documentAsMap = new LinkedHashMap<>(documentAsMap);
+	}
+
+	@Override
+	public void setIndex(@Nullable String index) {
+		this.index = index;
+	}
+
+	@Nullable
+	@Override
+	public String getIndex() {
+		return index;
 	}
 
 	/*

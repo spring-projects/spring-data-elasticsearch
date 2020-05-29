@@ -112,6 +112,27 @@ public interface Document extends Map<String, Object> {
 	}
 
 	/**
+	 * @return the index if this document was retrieved from an index
+	 * @since 4.1
+	 */
+	@Nullable
+	default String getIndex() {
+		return null;
+	}
+
+	/**
+	 * Sets the index name for this document
+	 * 
+	 * @param index index name
+	 *          <p>
+	 *          The default implementation throws {@link UnsupportedOperationException}.
+	 * @since 4.1
+	 */
+	default void setIndex(@Nullable String index) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
 	 * Retrieve the identifier associated with this {@link Document}.
 	 * <p>
 	 * The default implementation throws {@link UnsupportedOperationException}. It's recommended to check {@link #hasId()}
@@ -461,4 +482,5 @@ public interface Document extends Map<String, Object> {
 	 * @return a JSON representation of this document.
 	 */
 	String toJson();
+
 }

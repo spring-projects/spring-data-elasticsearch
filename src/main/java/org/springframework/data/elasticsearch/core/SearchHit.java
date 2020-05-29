@@ -35,14 +35,16 @@ import org.springframework.util.Assert;
  */
 public class SearchHit<T> {
 
-	private final String id;
+	@Nullable private final String index;
+	@Nullable private final String id;
 	private final float score;
 	private final List<Object> sortValues;
 	private final T content;
 	private final Map<String, List<String>> highlightFields = new LinkedHashMap<>();
 
-	public SearchHit(@Nullable String id, float score, @Nullable Object[] sortValues,
+	public SearchHit(@Nullable String index, @Nullable String id, float score, @Nullable Object[] sortValues,
 			@Nullable Map<String, List<String>> highlightFields, T content) {
+		this.index = index;
 		this.id = id;
 		this.score = score;
 		this.sortValues = (sortValues != null) ? Arrays.asList(sortValues) : new ArrayList<>();
@@ -51,6 +53,15 @@ public class SearchHit<T> {
 		}
 
 		this.content = content;
+	}
+
+	/**
+	 * @return the index name where the hit's document was found
+	 * @since 4.1
+	 */
+	@Nullable
+	public String getIndex() {
+		return index;
 	}
 
 	@Nullable
