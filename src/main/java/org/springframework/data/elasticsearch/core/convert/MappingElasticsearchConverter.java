@@ -595,8 +595,14 @@ public class MappingElasticsearchConverter
 				: Streamable.of(ObjectUtils.toObjectArray(value));
 
 		List<Object> target = new ArrayList<>();
-		if (!typeHint.getActualType().getType().equals(Object.class) && isSimpleType(typeHint.getActualType().getType())) {
-			collectionSource.map(this::getWriteSimpleValue).forEach(target::add);
+		TypeInformation<?> actualType = typeHint.getActualType();
+		Class<?> type = actualType != null ? actualType.getType() : null;
+
+		if (type != null && !type.equals(Object.class) && isSimpleType(type)) {
+			// noinspection ReturnOfNull
+			collectionSource //
+					.map(element -> element != null ? getWriteSimpleValue(element) : null) //
+					.forEach(target::add);
 		} else {
 
 			collectionSource.map(it -> {
@@ -670,10 +676,6 @@ public class MappingElasticsearchConverter
 
 	/**
 	 * Compute the type to use by checking the given entity against the store type;
-	 *
-	 * @param entity
-	 * @param source
-	 * @return
 	 */
 	private ElasticsearchPersistentEntity<?> computeClosestEntity(ElasticsearchPersistentEntity<?> entity,
 			Map<String, Object> source) {
