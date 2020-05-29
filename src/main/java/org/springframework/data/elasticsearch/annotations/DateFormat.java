@@ -28,5 +28,5 @@ public enum DateFormat {
 	date_time, date_time_no_millis, epoch_millis, epoch_second, hour, hour_minute, hour_minute_second,
 	hour_minute_second_fraction, hour_minute_second_millis, ordinal_date, ordinal_date_time,
 	ordinal_date_time_no_millis, time, time_no_millis, t_time, t_time_no_millis, week_date, week_date_time,
-	weekDateTimeNoMillis, week_year, weekyearWeek, weekyearWeekDay, year, year_month, year_month_day
+	week_date_time_no_millis, weekyear, weekyear_week, weekyear_week_day, year, year_month, year_month_day
 }
