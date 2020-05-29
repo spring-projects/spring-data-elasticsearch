@@ -62,12 +62,13 @@ class SearchHitMapping<T> {
 		Assert.notNull(searchDocument, "searchDocument is null");
 		Assert.notNull(content, "content is null");
 
+		String index = searchDocument.getIndex();
 		String id = searchDocument.hasId() ? searchDocument.getId() : null;
 		float score = searchDocument.getScore();
 		Object[] sortValues = searchDocument.getSortValues();
 		Map<String, List<String>> highlightFields = getHighlightsAndRemapFieldNames(searchDocument);
 
-		return new SearchHit<>(id, score, sortValues, highlightFields, content);
+		return new SearchHit<>(index, id, score, sortValues, highlightFields, content);
 	}
 
 	SearchHits<T> mapHits(SearchDocumentResponse searchDocumentResponse, List<T> contents) {

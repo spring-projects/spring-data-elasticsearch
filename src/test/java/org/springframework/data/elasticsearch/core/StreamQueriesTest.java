@@ -38,7 +38,7 @@ public class StreamQueriesTest {
 
 		// given
 		List<SearchHit<String>> hits = new ArrayList<>();
-		hits.add(new SearchHit<String>(null, 0, null, null, "one"));
+		hits.add(new SearchHit<String>(null, null, 0, null, null, "one"));
 
 		SearchScrollHits<String> searchHits = newSearchScrollHits(hits, "1234");
 
@@ -66,7 +66,7 @@ public class StreamQueriesTest {
 
 		// given
 		List<SearchHit<String>> hits = new ArrayList<>();
-		hits.add(new SearchHit<String>(null, 0, null, null, "one"));
+		hits.add(new SearchHit<String>(null, null, 0, null, null, "one"));
 
 		SearchScrollHits<String> searchHits = newSearchScrollHits(hits, "1234");
 
@@ -86,11 +86,11 @@ public class StreamQueriesTest {
 	void shouldClearAllScrollIds() {
 
 		SearchScrollHits<String> searchHits1 = newSearchScrollHits(
-				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-1");
+				Collections.singletonList(new SearchHit<String>(null, null, 0, null, null, "one")), "s-1");
 		SearchScrollHits<String> searchHits2 = newSearchScrollHits(
-				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-2");
+				Collections.singletonList(new SearchHit<String>(null, null, 0, null, null, "one")), "s-2");
 		SearchScrollHits<String> searchHits3 = newSearchScrollHits(
-				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-2");
+				Collections.singletonList(new SearchHit<String>(null, null, 0, null, null, "one")), "s-2");
 		SearchScrollHits<String> searchHits4 = newSearchScrollHits(Collections.emptyList(), "s-3");
 
 		Iterator<SearchScrollHits<String>> searchScrollHitsIterator = Arrays
@@ -115,11 +115,11 @@ public class StreamQueriesTest {
 	void shouldReturnAllForRequestedSizeOf0() {
 
 		SearchScrollHits<String> searchHits1 = newSearchScrollHits(
-				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-1");
+				Collections.singletonList(new SearchHit<String>(null, null, 0, null, null, "one")), "s-1");
 		SearchScrollHits<String> searchHits2 = newSearchScrollHits(
-				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-2");
+				Collections.singletonList(new SearchHit<String>(null, null, 0, null, null, "one")), "s-2");
 		SearchScrollHits<String> searchHits3 = newSearchScrollHits(
-				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-2");
+				Collections.singletonList(new SearchHit<String>(null, null, 0, null, null, "one")), "s-2");
 		SearchScrollHits<String> searchHits4 = newSearchScrollHits(Collections.emptyList(), "s-3");
 
 		Iterator<SearchScrollHits<String>> searchScrollHitsIterator = Arrays
@@ -140,11 +140,11 @@ public class StreamQueriesTest {
 	void shouldOnlyReturnRequestedCount() {
 
 		SearchScrollHits<String> searchHits1 = newSearchScrollHits(
-				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-1");
+				Collections.singletonList(new SearchHit<String>(null, null, 0, null, null, "one")), "s-1");
 		SearchScrollHits<String> searchHits2 = newSearchScrollHits(
-				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-2");
+				Collections.singletonList(new SearchHit<String>(null, null, 0, null, null, "one")), "s-2");
 		SearchScrollHits<String> searchHits3 = newSearchScrollHits(
-				Collections.singletonList(new SearchHit<String>(null, 0, null, null, "one")), "s-2");
+				Collections.singletonList(new SearchHit<String>(null, null, 0, null, null, "one")), "s-2");
 		SearchScrollHits<String> searchHits4 = newSearchScrollHits(Collections.emptyList(), "s-3");
 
 		Iterator<SearchScrollHits<String>> searchScrollHitsIterator = Arrays

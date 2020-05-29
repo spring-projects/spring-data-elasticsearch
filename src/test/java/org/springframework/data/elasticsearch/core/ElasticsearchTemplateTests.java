@@ -1728,6 +1728,23 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(ids).hasSize(30);
 	}
 
+	@Test // DATAES-848
+	public void shouldReturnIndexName() {
+		// given
+		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 3);
+		// when
+		operations.bulkIndex(entities, index);
+		indexOperations.refresh();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("message", "message"))
+				.withPageable(PageRequest.of(0, 100)).build();
+		// then
+		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class);
+
+		searchHits.forEach(searchHit -> {
+			assertThat(searchHit.getIndex()).isEqualTo(INDEX_NAME_SAMPLE_ENTITY);
+		});
+	}
+
 	@Test
 	public void shouldReturnDocumentAboveMinimalScoreGivenQuery() {
 		// given

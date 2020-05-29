@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -27,7 +28,9 @@ import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.get.GetResult;
+import org.elasticsearch.index.shard.ShardId;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchShardTarget;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
@@ -42,7 +45,7 @@ import org.springframework.data.elasticsearch.core.document.SearchDocument;
  */
 public class DocumentAdaptersUnitTests {
 
-	@Test // DATAES-628
+	@Test // DATAES-628, DATAES-848
 	public void shouldAdaptGetResponse() {
 
 		Map<String, DocumentField> fields = Collections.singletonMap("field",
@@ -53,6 +56,7 @@ public class DocumentAdaptersUnitTests {
 
 		Document document = DocumentAdapters.from(response);
 
+		assertThat(document.getIndex()).isEqualTo("index");
 		assertThat(document.hasId()).isTrue();
 		assertThat(document.getId()).isEqualTo("my-id");
 		assertThat(document.hasVersion()).isTrue();
@@ -64,7 +68,7 @@ public class DocumentAdaptersUnitTests {
 		assertThat(document.getPrimaryTerm()).isEqualTo(2);
 	}
 
-	@Test // DATAES-628
+	@Test // DATAES-628, DATAES-848
 	public void shouldAdaptGetResponseSource() {
 
 		BytesArray source = new BytesArray("{\"field\":\"value\"}");
@@ -74,6 +78,7 @@ public class DocumentAdaptersUnitTests {
 
 		Document document = DocumentAdapters.from(response);
 
+		assertThat(document.getIndex()).isEqualTo("index");
 		assertThat(document.hasId()).isTrue();
 		assertThat(document.getId()).isEqualTo("my-id");
 		assertThat(document.hasVersion()).isTrue();
@@ -85,7 +90,7 @@ public class DocumentAdaptersUnitTests {
 		assertThat(document.getPrimaryTerm()).isEqualTo(2);
 	}
 
-	@Test // DATAES-799
+	@Test // DATAES-799, DATAES-848
 	public void shouldAdaptGetResult() {
 
 		Map<String, DocumentField> fields = Collections.singletonMap("field",
@@ -95,6 +100,7 @@ public class DocumentAdaptersUnitTests {
 
 		Document document = DocumentAdapters.from(getResult);
 
+		assertThat(document.getIndex()).isEqualTo("index");
 		assertThat(document.hasId()).isTrue();
 		assertThat(document.getId()).isEqualTo("my-id");
 		assertThat(document.hasVersion()).isTrue();
@@ -106,7 +112,7 @@ public class DocumentAdaptersUnitTests {
 		assertThat(document.getPrimaryTerm()).isEqualTo(2);
 	}
 
-	@Test // DATAES-799
+	@Test // DATAES-799, DATAES-848
 	public void shouldAdaptGetResultSource() {
 
 		BytesArray source = new BytesArray("{\"field\":\"value\"}");
@@ -115,6 +121,7 @@ public class DocumentAdaptersUnitTests {
 
 		Document document = DocumentAdapters.from(getResult);
 
+		assertThat(document.getIndex()).isEqualTo("index");
 		assertThat(document.hasId()).isTrue();
 		assertThat(document.getId()).isEqualTo("my-id");
 		assertThat(document.hasVersion()).isTrue();
@@ -126,19 +133,22 @@ public class DocumentAdaptersUnitTests {
 		assertThat(document.getPrimaryTerm()).isEqualTo(2);
 	}
 
-	@Test // DATAES-628
-	public void shouldAdaptSearchResponse() {
+	@Test // DATAES-628, DATAES-848
+	public void shouldAdaptSearchResponse() throws IOException {
 
 		Map<String, DocumentField> fields = Collections.singletonMap("field",
 				new DocumentField("field", Collections.singletonList("value")));
 
+		SearchShardTarget shard = new SearchShardTarget("node", new ShardId("index", "uuid", 42), null, null);
 		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields);
+		searchHit.shard(shard);
 		searchHit.setSeqNo(1);
 		searchHit.setPrimaryTerm(2);
 		searchHit.score(42);
 
 		SearchDocument document = DocumentAdapters.from(searchHit);
 
+		assertThat(document.getIndex()).isEqualTo("index");
 		assertThat(document.hasId()).isTrue();
 		assertThat(document.getId()).isEqualTo("my-id");
 		assertThat(document.hasVersion()).isFalse();
@@ -199,12 +209,14 @@ public class DocumentAdaptersUnitTests {
 		assertThat(document.toJson()).isEqualTo("{\"string\":\"value\",\"bool\":[true,true,false]}");
 	}
 
-	@Test // DATAES-628
+	@Test // DATAES-628, DATAES-848
 	public void shouldAdaptSearchResponseSource() {
 
 		BytesArray source = new BytesArray("{\"field\":\"value\"}");
 
+		SearchShardTarget shard = new SearchShardTarget("node", new ShardId("index", "uuid", 42), null, null);
 		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), Collections.emptyMap());
+		searchHit.shard(shard);
 		searchHit.sourceRef(source).score(42);
 		searchHit.version(22);
 		searchHit.setSeqNo(1);
@@ -212,6 +224,7 @@ public class DocumentAdaptersUnitTests {
 
 		SearchDocument document = DocumentAdapters.from(searchHit);
 
+		assertThat(document.getIndex()).isEqualTo("index");
 		assertThat(document.hasId()).isTrue();
 		assertThat(document.getId()).isEqualTo("my-id");
 		assertThat(document.hasVersion()).isTrue();
