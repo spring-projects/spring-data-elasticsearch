@@ -79,7 +79,7 @@ class ElasticsearchDateConverterTests {
 		assertThat(parsed).isEqualTo(legacyDate);
 	}
 
-	@Test
+	@Test // DATAES-847
 	void shouldParseEpochMillisString() {
 		Instant instant = Instant.ofEpochMilli(1234568901234L);
 		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.epoch_millis);
@@ -89,7 +89,7 @@ class ElasticsearchDateConverterTests {
 		assertThat(parsed.toInstant()).isEqualTo(instant);
 	}
 
-	@Test
+	@Test // DATAES-847
 	void shouldConvertInstantToString() {
 		Instant instant = Instant.ofEpochMilli(1234568901234L);
 		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.epoch_millis);
