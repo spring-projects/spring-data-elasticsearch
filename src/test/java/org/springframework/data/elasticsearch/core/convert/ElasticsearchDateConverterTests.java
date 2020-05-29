@@ -2,6 +2,7 @@ package org.springframework.data.elasticsearch.core.convert;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -16,6 +17,7 @@ import org.springframework.data.elasticsearch.annotations.DateFormat;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Tim te Beek
  */
 class ElasticsearchDateConverterTests {
 
@@ -75,5 +77,25 @@ class ElasticsearchDateConverterTests {
 		Date parsed = converter.parse("20200419T194400.000Z");
 
 		assertThat(parsed).isEqualTo(legacyDate);
+	}
+
+	@Test
+	void shouldParseEpochMillisString() {
+		Instant instant = Instant.ofEpochMilli(1234568901234L);
+		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.epoch_millis);
+
+		Date parsed = converter.parse("1234568901234");
+
+		assertThat(parsed.toInstant()).isEqualTo(instant);
+	}
+
+	@Test
+	void shouldConvertInstantToString() {
+		Instant instant = Instant.ofEpochMilli(1234568901234L);
+		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.epoch_millis);
+
+		String formatted = converter.format(instant);
+
+		assertThat(formatted).isEqualTo("1234568901234");
 	}
 }
