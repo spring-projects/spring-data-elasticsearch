@@ -718,6 +718,23 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(entity.seqNoPrimaryTerm).isNull();
 	}
 
+	@Test // DATAES-845
+	void shouldWriteCollectionsWithNullValues() throws JSONException {
+		EntityWithListProperty entity = new EntityWithListProperty();
+		entity.setId("42");
+		entity.setValues(Arrays.asList(null, "two", null, "four"));
+
+		String expected = '{' + //
+				"  \"id\": \"42\"," + //
+				"  \"values\": [null, \"two\", null, \"four\"]" + //
+				'}';
+		Document document = Document.create();
+		mappingElasticsearchConverter.write(entity, document);
+		String json = document.toJson();
+
+		assertEquals(expected, json, false);
+	}
+
 	private String pointTemplate(String name, Point point) {
 		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
 	}
@@ -931,5 +948,12 @@ public class MappingElasticsearchConverterUnitTests {
 	static class EntityWithSeqNoPrimaryTerm {
 
 		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
+	}
+
+	@Data
+	static class EntityWithListProperty {
+		@Id private String id;
+
+		private List<String> values;
 	}
 }
