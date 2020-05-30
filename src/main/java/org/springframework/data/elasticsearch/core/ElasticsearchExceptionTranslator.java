@@ -23,7 +23,6 @@ import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.common.ValidationException;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.rest.RestStatus;
-
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -105,10 +104,15 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 
 		List<String> metadata = ex.getMetadata("es.index_uuid");
 		if (metadata == null) {
+
+			if (ex.getCause() instanceof ElasticsearchException) {
+				return indexAvailable((ElasticsearchException) ex.getCause());
+			}
+
 			if (ex instanceof ElasticsearchStatusException) {
 				return StringUtils.hasText(ObjectUtils.nullSafeToString(ex.getIndex()));
 			}
-			return false;
+			return true;
 		}
 		return !CollectionUtils.contains(metadata.iterator(), "_na_");
 	}

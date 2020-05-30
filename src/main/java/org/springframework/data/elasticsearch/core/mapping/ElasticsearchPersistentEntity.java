@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import org.elasticsearch.index.VersionType;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.lang.Nullable;
@@ -137,4 +138,12 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 					String.format("Required SeqNoPrimaryTerm property not found for %s!", this.getType()));
 		}
 	}
+
+	/**
+	 * returns the default settings for an index.
+	 * 
+	 * @return settings as {@link Document}
+	 * @since 4.1
+	 */
+	Document getDefaultSettings();
 }

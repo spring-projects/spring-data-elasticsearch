@@ -29,8 +29,11 @@ import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -52,9 +55,11 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.geo.GeoDistance;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
@@ -246,11 +251,38 @@ class RequestFactory {
 	// endregion
 
 	// region index management
+	/**
+	 * creates a CreateIndexRequest from the rest-high-level-client library.
+	 *
+	 * @param index name of the index
+	 * @param settings optional settings
+	 * @return request
+	 */
+	@SuppressWarnings("unchecked")
 	public CreateIndexRequest createIndexRequest(IndexCoordinates index, @Nullable Document settings) {
-
 		CreateIndexRequest request = new CreateIndexRequest(index.getIndexName());
 
-		if (settings != null) {
+		if (settings != null && !settings.isEmpty()) {
+			request.settings(settings);
+		}
+		return request;
+	}
+
+	/**
+	 * creates a CreateIndexRequest from the elasticsearch library, used by the reactive methods.
+	 *
+	 * @param indexName name of the index
+	 * @param settings optional settings
+	 * @return request
+	 */
+	public org.elasticsearch.action.admin.indices.create.CreateIndexRequest createIndexRequestReactive(String indexName,
+			@Nullable Document settings) {
+
+		org.elasticsearch.action.admin.indices.create.CreateIndexRequest request = new org.elasticsearch.action.admin.indices.create.CreateIndexRequest(
+				indexName);
+		request.index(indexName);
+
+		if (settings != null && !settings.isEmpty()) {
 			request.settings(settings);
 		}
 		return request;
@@ -268,8 +300,28 @@ class RequestFactory {
 		return createIndexRequestBuilder;
 	}
 
+	/**
+	 * creates a GetIndexRequest from the rest-high-level-client library.
+	 *
+	 * @param index name of the index
+	 * @return request
+	 */
 	public GetIndexRequest getIndexRequest(IndexCoordinates index) {
 		return new GetIndexRequest(index.getIndexNames());
+	}
+
+
+	/**
+	 * creates a CreateIndexRequest from the elasticsearch library, used by the reactive methods.
+	 *
+	 * @param indexName name of the index
+	 * @return request
+	 */
+	public org.elasticsearch.action.admin.indices.get.GetIndexRequest getIndexRequestReactive(String indexName) {
+
+		org.elasticsearch.action.admin.indices.get.GetIndexRequest request = new org.elasticsearch.action.admin.indices.get.GetIndexRequest();
+		request.indices(indexName);
+		return request;
 	}
 
 	public IndicesExistsRequest indicesExistsRequest(IndexCoordinates index) {
@@ -303,6 +355,15 @@ class RequestFactory {
 		return request;
 	}
 
+	public org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest putMappingRequestReactive(
+			IndexCoordinates index, Document mapping) {
+		org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest request = new org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest(
+				index.getIndexName());
+		request.type("not-used-but-must-be-there");
+		request.source(mapping);
+		return request;
+	}
+
 	public PutMappingRequestBuilder putMappingRequestBuilder(Client client, IndexCoordinates index, Document mapping) {
 
 		String[] indexNames = index.getIndexNames();
@@ -311,6 +372,18 @@ class RequestFactory {
 		requestBuilder.setSource(mapping);
 		return requestBuilder;
 	}
+
+	public org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest getMappingRequestReactive(
+			IndexCoordinates index) {
+		org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest request = new org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest();
+		request.indices(index.getIndexName());
+		return request;
+	}
+
+	public GetSettingsRequest getSettingsRequest(String indexName, boolean includeDefaults) {
+		return new GetSettingsRequest().indices(indexName).includeDefaults(includeDefaults);
+	}
+
 
 	public GetMappingsRequest getMappingsRequest(IndexCoordinates index) {
 
@@ -337,11 +410,13 @@ class RequestFactory {
 				.setAbortOnVersionConflict(false) //
 				.setRefresh(true);
 
-		if (deleteQuery.getPageSize() != null)
+		if (deleteQuery.getPageSize() != null) {
 			deleteByQueryRequest.setBatchSize(deleteQuery.getPageSize());
+		}
 
-		if (deleteQuery.getScrollTimeInMillis() != null)
+		if (deleteQuery.getScrollTimeInMillis() != null) {
 			deleteByQueryRequest.setScroll(TimeValue.timeValueMillis(deleteQuery.getScrollTimeInMillis()));
+		}
 
 		return deleteByQueryRequest;
 	}
@@ -388,8 +463,9 @@ class RequestFactory {
 
 		SearchRequestBuilder source = requestBuilder.source();
 
-		if (deleteQuery.getScrollTimeInMillis() != null)
+		if (deleteQuery.getScrollTimeInMillis() != null) {
 			source.setScroll(TimeValue.timeValueMillis(deleteQuery.getScrollTimeInMillis()));
+		}
 
 		return requestBuilder;
 	}
@@ -721,7 +797,9 @@ class RequestFactory {
 			request.preference(query.getPreference());
 		}
 
-		request.searchType(query.getSearchType());
+		if (query.getSearchType() != null) {
+			request.searchType(query.getSearchType());
+		}
 
 		prepareSort(query, sourceBuilder, getPersistentEntity(clazz));
 
@@ -1131,6 +1209,38 @@ class RequestFactory {
 		return elasticsearchFilter;
 	}
 
+	// region response stuff
+
+	/**
+	 * extract the index settings information for a given index
+	 *
+	 * @param response the Elasticsearch response
+	 * @param indexName the index name
+	 * @return settings as {@link Document}
+	 */
+	public Document fromSettingsResponse(GetSettingsResponse response, String indexName) {
+
+		Document settings = Document.create();
+
+		if (!response.getIndexToDefaultSettings().isEmpty()) {
+			Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);
+			for (String key : defaultSettings.keySet()) {
+				settings.put(key, defaultSettings.get(key));
+			}
+		}
+
+		if (!response.getIndexToSettings().isEmpty()) {
+			Settings customSettings = response.getIndexToSettings().get(indexName);
+			for (String key : customSettings.keySet()) {
+				settings.put(key, customSettings.get(key));
+			}
+		}
+
+		return settings;
+	}
+	// endregion
+
+	// region helper functions
 	@Nullable
 	private ElasticsearchPersistentEntity<?> getPersistentEntity(@Nullable Class<?> clazz) {
 		return clazz != null ? elasticsearchConverter.getMappingContext().getPersistentEntity(clazz) : null;
@@ -1162,6 +1272,7 @@ class RequestFactory {
 		String[] valuesAsArray = new String[values.size()];
 		return values.toArray(valuesAsArray);
 	}
+	// endregion
 
 	private boolean hasSeqNoPrimaryTermProperty(@Nullable Class<?> entityClass) {
 

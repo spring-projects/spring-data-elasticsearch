@@ -86,6 +86,14 @@ public interface IndexOperations {
 	Document createMapping(Class<?> clazz);
 
 	/**
+	 * Writes the mapping to the index for the class this IndexOperations is bound to.
+	 * @return {@literal true} if the mapping could be stored
+	 * @since 4.1
+	 */
+	default boolean putMapping() {
+		return putMapping(createMapping());}
+
+	/**
 	 * writes a mapping to the index
 	 * 
 	 * @param mapping the Document with the mapping definitions
@@ -141,9 +149,9 @@ public interface IndexOperations {
 	Map<String, Object> getSettings();
 
 	/**
-	 * Get settings for a given indexName.
+	 * Get the index settings.
 	 *
-	 * @param includeDefaults wehther or not to include all the default settings
+	 * @param includeDefaults whether or not to include all the default settings
 	 * @return the settings
 	 */
 	Map<String, Object> getSettings(boolean includeDefaults);

@@ -55,10 +55,14 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushResponse;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -551,26 +555,20 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.next();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#deleteIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest)
-	 */
 	@Override
-	public Mono<Void> deleteIndex(HttpHeaders headers, DeleteIndexRequest request) {
+	public Mono<Boolean> deleteIndex(HttpHeaders headers, DeleteIndexRequest request) {
 
 		return sendRequest(request, requestCreator.indexDelete(), AcknowledgedResponse.class, headers) //
-				.then();
+				.map(AcknowledgedResponse::isAcknowledged) //
+				.next();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#createIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.create.CreateIndexRequest)
-	 */
 	@Override
-	public Mono<Void> createIndex(HttpHeaders headers, CreateIndexRequest createIndexRequest) {
+	public Mono<Boolean> createIndex(HttpHeaders headers, CreateIndexRequest createIndexRequest) {
 
 		return sendRequest(createIndexRequest, requestCreator.indexCreate(), AcknowledgedResponse.class, headers) //
-				.then();
+				.map(AcknowledgedResponse::isAcknowledged) //
+				.next();
 	}
 
 	/*
@@ -606,15 +604,12 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.then();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#updateMapping(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest)
-	 */
 	@Override
-	public Mono<Void> updateMapping(HttpHeaders headers, PutMappingRequest putMappingRequest) {
+	public Mono<Boolean> putMapping(HttpHeaders headers, PutMappingRequest putMappingRequest) {
 
 		return sendRequest(putMappingRequest, requestCreator.putMapping(), AcknowledgedResponse.class, headers) //
-				.then();
+				.map(AcknowledgedResponse::isAcknowledged) //
+				.next();
 	}
 
 	/*
@@ -626,6 +621,16 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		return sendRequest(flushRequest, requestCreator.flushIndex(), FlushResponse.class, headers) //
 				.then();
+	}
+
+	@Override
+	public Mono<GetMappingsResponse> getMapping(HttpHeaders headers, GetMappingsRequest getMappingsRequest) {
+		return sendRequest(getMappingsRequest, requestCreator.getMapping(), GetMappingsResponse.class, headers).next();
+	}
+
+	@Override
+	public Mono<GetSettingsResponse> getSettings(HttpHeaders headers, GetSettingsRequest getSettingsRequest) {
+		return sendRequest(getSettingsRequest, requestCreator.getSettings(), GetSettingsResponse.class, headers).next();
 	}
 
 	/*

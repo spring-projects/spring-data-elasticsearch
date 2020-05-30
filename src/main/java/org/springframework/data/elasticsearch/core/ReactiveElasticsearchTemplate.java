@@ -145,6 +145,32 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	/**
+	 * Set the default {@link RefreshPolicy} to apply when writing to Elasticsearch.
+	 *
+	 * @param refreshPolicy can be {@literal null}.
+	 */
+	public void setRefreshPolicy(@Nullable RefreshPolicy refreshPolicy) {
+		this.refreshPolicy = refreshPolicy;
+	}
+
+	/**
+	 * @return the current {@link RefreshPolicy}.
+	 */
+	@Nullable
+	public RefreshPolicy getRefreshPolicy() {
+		return refreshPolicy;
+	}
+
+	/**
+	 * Set the default {@link IndicesOptions} for {@link SearchRequest search requests}.
+	 *
+	 * @param indicesOptions can be {@literal null}.
+	 */
+	public void setIndicesOptions(@Nullable IndicesOptions indicesOptions) {
+		this.indicesOptions = indicesOptions;
+	}
+
+	/**
 	 * Set the {@link ReactiveEntityCallbacks} instance to use when invoking {@link ReactiveEntityCallbacks callbacks}
 	 * like the {@link ReactiveBeforeConvertCallback}.
 	 * <p />
@@ -160,7 +186,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		this.entityCallbacks = entityCallbacks;
 	}
-
 	// endregion
 
 	// region DocumentOperations
@@ -199,25 +224,29 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Assert.notNull(entitiesPublisher, "Entities must not be null!");
 
-		return entitiesPublisher.flatMapMany(entities -> {
-			return Flux.fromIterable(entities) //
-					.concatMap(entity -> maybeCallBeforeConvert(entity, index));
-		}).collectList().map(Entities::new).flatMapMany(entities -> {
-			if (entities.isEmpty()) {
-				return Flux.empty();
-			}
+		return entitiesPublisher //
+				.flatMapMany(entities -> Flux.fromIterable(entities) //
+						.concatMap(entity -> maybeCallBeforeConvert(entity, index)) //
+				).collectList() //
+				.map(Entities::new) //
+				.flatMapMany(entities -> {
 
-			return doBulkOperation(entities.indexQueries(), BulkOptions.defaultOptions(), index) //
-					.index().flatMap(indexAndResponse -> {
-						T savedEntity = entities.entityAt(indexAndResponse.getT1());
-						BulkItemResponse bulkItemResponse = indexAndResponse.getT2();
+					if (entities.isEmpty()) {
+						return Flux.empty();
+					}
 
-						AdaptibleEntity<T> adaptibleEntity = operations.forEntity(savedEntity, converter.getConversionService());
-						adaptibleEntity.populateIdIfNecessary(bulkItemResponse.getResponse().getId());
+					return doBulkOperation(entities.indexQueries(), BulkOptions.defaultOptions(), index) //
+							.index().flatMap(indexAndResponse -> {
+								T savedEntity = entities.entityAt(indexAndResponse.getT1());
+								BulkItemResponse bulkItemResponse = indexAndResponse.getT2();
 
-						return maybeCallAfterSave(savedEntity, index);
-					});
-		});
+								AdaptibleEntity<T> adaptibleEntity = operations.forEntity(savedEntity,
+										converter.getConversionService());
+								adaptibleEntity.populateIdIfNecessary(bulkItemResponse.getResponse().getId());
+
+								return maybeCallAfterSave(savedEntity, index);
+							});
+				});
 	}
 
 	@Override
@@ -730,42 +759,29 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	// endregion
 
-	// Property Setters / Getters
-
-	/**
-	 * Set the default {@link RefreshPolicy} to apply when writing to Elasticsearch.
-	 *
-	 * @param refreshPolicy can be {@literal null}.
-	 */
-	public void setRefreshPolicy(@Nullable RefreshPolicy refreshPolicy) {
-		this.refreshPolicy = refreshPolicy;
-	}
-
-	/**
-	 * Set the default {@link IndicesOptions} for {@link SearchRequest search requests}.
-	 *
-	 * @param indicesOptions can be {@literal null}.
-	 */
-	public void setIndicesOptions(@Nullable IndicesOptions indicesOptions) {
-		this.indicesOptions = indicesOptions;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exctute(ClientCallback)
-	 */
 	@Override
 	public <T> Publisher<T> execute(ClientCallback<Publisher<T>> callback) {
 		return Flux.defer(() -> callback.doWithClient(getClient())).onErrorMap(this::translateException);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#getElasticsearchConverter()
-	 */
+	@Override
+	public <T> Publisher<T> executeWithIndicesClient(IndicesClientCallback<Publisher<T>> callback) {
+		return Flux.defer(() -> callback.doWithClient(getIndicesClient())).onErrorMap(this::translateException);
+	}
+
 	@Override
 	public ElasticsearchConverter getElasticsearchConverter() {
 		return converter;
+	}
+
+	@Override
+	public ReactiveIndexOperations indexOps(IndexCoordinates index) {
+		return new DefaultReactiveIndexOperations(this, index);
+	}
+
+	@Override
+	public ReactiveIndexOperations indexOps(Class<?> clazz) {
+		return new DefaultReactiveIndexOperations(this, clazz);
 	}
 
 	@Override
@@ -786,6 +802,20 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 */
 	protected ReactiveElasticsearchClient getClient() {
 		return this.client;
+	}
+
+	/**
+	 * Obtain the {@link ReactiveElasticsearchClient.Indices} to operate upon.
+	 *
+	 * @return never {@literal null}.
+	 */
+	protected ReactiveElasticsearchClient.Indices getIndicesClient() {
+
+		if (client instanceof ReactiveElasticsearchClient.Indices) {
+			return (ReactiveElasticsearchClient.Indices) client;
+		}
+
+		throw new UncategorizedElasticsearchException("No ReactiveElasticsearchClient.Indices implementation available");
 	}
 
 	// endregion

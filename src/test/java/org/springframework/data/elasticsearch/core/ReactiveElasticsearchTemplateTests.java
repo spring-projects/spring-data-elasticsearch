@@ -847,6 +847,7 @@ public class ReactiveElasticsearchTemplateTests {
 				.expectNext(entity1) //
 				.expectNext(entity2) //
 				.verifyComplete();
+		indexOperations.refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		template.search(searchQuery, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
@@ -978,8 +979,6 @@ public class ReactiveElasticsearchTemplateTests {
 			this.age = age;
 		}
 	}
-
-	// TODO: check field mapping !!!
 
 	// --> JUST some helpers
 

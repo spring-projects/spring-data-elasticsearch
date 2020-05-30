@@ -17,13 +17,11 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.springframework.util.StringUtils.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
-import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,37 +88,22 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	@Override
 	public boolean create() {
 
-		IndexCoordinates index;
 		Document settings = null;
 
 		if (boundClass != null) {
 			Class<?> clazz = boundClass;
-			ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(clazz);
-			index = persistentEntity.getIndexCoordinates();
 
 			if (clazz.isAnnotationPresent(Setting.class)) {
 				String settingPath = clazz.getAnnotation(Setting.class).settingPath();
-
-				if (hasText(settingPath)) {
-					String fileSettings = ResourceUtil.readFileFromClasspath(settingPath);
-
-					if (hasText(fileSettings)) {
-						settings = Document.parse(fileSettings);
-					}
-				} else {
-					LOGGER.info("settingPath in @Setting has to be defined. Using default instead.");
-				}
+				settings = loadSettings(settingPath);
 			}
 
 			if (settings == null) {
-				settings = getDefaultSettings(persistentEntity);
+				settings = getRequiredPersistentEntity(clazz).getDefaultSettings();
 			}
-		} else {
-			index = boundIndex;
 		}
 
-		// noinspection ConstantConditions
-		return doCreate(index, settings);
+		return doCreate(getIndexCoordinates(), settings);
 	}
 
 	@Override
@@ -236,42 +219,41 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	// endregion
 
 	// region Helper functions
-	private <T> Document getDefaultSettings(ElasticsearchPersistentEntity<T> persistentEntity) {
-
-		if (persistentEntity.isUseServerConfiguration()) {
-			return Document.create();
-		}
-
-		Map<String, String> map = new MapBuilder<String, String>()
-				.put("index.number_of_shards", String.valueOf(persistentEntity.getShards()))
-				.put("index.number_of_replicas", String.valueOf(persistentEntity.getReplicas()))
-				.put("index.refresh_interval", persistentEntity.getRefreshInterval())
-				.put("index.store.type", persistentEntity.getIndexStoreType()).map();
-		return Document.from(map);
-	}
-
 	ElasticsearchPersistentEntity<?> getRequiredPersistentEntity(Class<?> clazz) {
 		return elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(clazz);
 	}
 
+	/**
+	 * get the current {@link IndexCoordinates}. These may change over time when the entity class has a SpEL constructed
+	 * index name. When this IndexOperations is not bound to a class, the bound IndexCoordinates are returned.
+	 *
+	 * @return IndexCoordinates
+	 */
 	protected IndexCoordinates getIndexCoordinates() {
-
-		if (boundClass != null) {
-			return getIndexCoordinatesFor(boundClass);
-		}
-
-		Assert.notNull(boundIndex, "boundIndex may not be null");
-
-		return boundIndex;
+		return (boundClass != null) ? getIndexCoordinatesFor(boundClass) : boundIndex;
 	}
 
 	public IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {
 		return getRequiredPersistentEntity(clazz).getIndexCoordinates();
 	}
 
-	protected Map<String, Object> convertSettingsResponseToMap(GetSettingsResponse response, String indexName) {
+	@Nullable
+	private Document loadSettings(String settingPath) {
+		if (hasText(settingPath)) {
+			String settingsFile = ResourceUtil.readFileFromClasspath(settingPath);
 
-		Map<String, Object> settings = new HashMap<>();
+			if (hasText(settingsFile)) {
+				return Document.parse(settingsFile);
+			}
+		} else {
+			LOGGER.info("settingPath in @Setting has to be defined. Using default instead.");
+		}
+		return null;
+	}
+
+	protected Document convertSettingsResponseToMap(GetSettingsResponse response, String indexName) {
+
+		Document settings = Document.create();
 
 		if (!response.getIndexToDefaultSettings().isEmpty()) {
 			Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);

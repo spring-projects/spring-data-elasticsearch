@@ -18,12 +18,18 @@ package org.springframework.data.elasticsearch.repository.support;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
@@ -39,24 +45,53 @@ import org.springframework.util.Assert;
  */
 public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveElasticsearchRepository<T, ID> {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleElasticsearchRepository.class);
+
 	private final ElasticsearchEntityInformation<T, ID> entityInformation;
-	private final ReactiveElasticsearchOperations elasticsearchOperations;
+	private final ReactiveElasticsearchOperations operations;
+	private final ReactiveIndexOperations indexOperations;
 
 	public SimpleReactiveElasticsearchRepository(ElasticsearchEntityInformation<T, ID> entityInformation,
-			ReactiveElasticsearchOperations elasticsearchOperations) {
+			ReactiveElasticsearchOperations operations) {
 
 		Assert.notNull(entityInformation, "EntityInformation must not be null!");
-		Assert.notNull(elasticsearchOperations, "ElasticsearchOperations must not be null!");
+		Assert.notNull(operations, "ElasticsearchOperations must not be null!");
 
 		this.entityInformation = entityInformation;
-		this.elasticsearchOperations = elasticsearchOperations;
+		this.operations = operations;
+		this.indexOperations = operations.indexOps(entityInformation.getJavaType());
+
+		createIndexAndMappingIfNeeded();
+	}
+
+	private void createIndexAndMappingIfNeeded() {
+		try {
+
+			if (shouldCreateIndexAndMapping()) {
+				indexOperations.exists() //
+						.flatMap(exists -> exists ? Mono.empty() : indexOperations.create()) //
+						.flatMap(success -> success ? indexOperations.putMapping() : Mono.empty()) //
+						.block();
+			}
+		} catch (Exception exception) {
+			LOGGER.warn("Cannot create index: {}", exception.getMessage());
+		}
+	}
+
+	private boolean shouldCreateIndexAndMapping() {
+
+		final ElasticsearchPersistentEntity<?> entity = operations.getElasticsearchConverter().getMappingContext()
+				.getRequiredPersistentEntity(entityInformation.getJavaType());
+		return entity.isCreateIndexAndMapping();
 	}
 
 	@Override
 	public <S extends T> Mono<S> save(S entity) {
 
 		Assert.notNull(entity, "Entity must not be null!");
-		return elasticsearchOperations.save(entity, entityInformation.getIndexCoordinates());
+
+		return operations.save(entity, entityInformation.getIndexCoordinates())
+				.flatMap(saved -> doRefresh().thenReturn(saved));
 	}
 
 	@Override
@@ -71,16 +106,15 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		Assert.notNull(entityStream, "EntityStream must not be null!");
 
-		return elasticsearchOperations.saveAll(Flux.from(entityStream).collectList(),
-				entityInformation.getIndexCoordinates());
+		return operations.saveAll(Flux.from(entityStream).collectList(), entityInformation.getIndexCoordinates())
+				.concatWith(doRefresh().then(Mono.empty()));
 	}
 
 	@Override
 	public Mono<T> findById(ID id) {
 
 		Assert.notNull(id, "Id must not be null!");
-		return elasticsearchOperations.get(convertId(id), entityInformation.getJavaType(),
-				entityInformation.getIndexCoordinates());
+		return operations.get(convertId(id), entityInformation.getJavaType(), entityInformation.getIndexCoordinates());
 	}
 
 	@Override
@@ -94,8 +128,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public Mono<Boolean> existsById(ID id) {
 
 		Assert.notNull(id, "Id must not be null!");
-		return elasticsearchOperations.exists(convertId(id), entityInformation.getJavaType(),
-				entityInformation.getIndexCoordinates());
+		return operations.exists(convertId(id), entityInformation.getIndexCoordinates());
 	}
 
 	@Override
@@ -108,14 +141,14 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	@Override
 	public Flux<T> findAll() {
 
-		return elasticsearchOperations.search(Query.findAll().setPageable(Pageable.unpaged()),
-				entityInformation.getJavaType(), entityInformation.getIndexCoordinates()).map(SearchHit::getContent);
+		return operations.search(Query.findAll().setPageable(Pageable.unpaged()), entityInformation.getJavaType(),
+				entityInformation.getIndexCoordinates()).map(SearchHit::getContent);
 	}
 
 	@Override
 	public Flux<T> findAll(Sort sort) {
 
-		return elasticsearchOperations.search(Query.findAll().addSort(sort).setPageable(Pageable.unpaged()),
+		return operations.search(Query.findAll().addSort(sort).setPageable(Pageable.unpaged()),
 				entityInformation.getJavaType(), entityInformation.getIndexCoordinates()).map(SearchHit::getContent);
 	}
 
@@ -138,24 +171,22 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 				.flatMapMany(query -> {
 
 					IndexCoordinates index = entityInformation.getIndexCoordinates();
-					return elasticsearchOperations.multiGet(query, entityInformation.getJavaType(), index);
+					return operations.multiGet(query, entityInformation.getJavaType(), index);
 				});
 	}
 
 	@Override
 	public Mono<Long> count() {
 
-		return elasticsearchOperations.count(Query.findAll(), entityInformation.getJavaType(),
-				entityInformation.getIndexCoordinates());
+		return operations.count(Query.findAll(), entityInformation.getJavaType(), entityInformation.getIndexCoordinates());
 	}
 
 	@Override
 	public Mono<Void> deleteById(ID id) {
 
 		Assert.notNull(id, "Id must not be null!");
-		return elasticsearchOperations
-				.delete(convertId(id), entityInformation.getIndexCoordinates()) //
-				.then();
+		return operations.delete(convertId(id), entityInformation.getIndexCoordinates()) //
+				.then(doRefresh());
 	}
 
 	@Override
@@ -169,8 +200,8 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public Mono<Void> delete(T entity) {
 
 		Assert.notNull(entity, "Entity must not be null!");
-		return elasticsearchOperations.delete(entity, entityInformation.getIndexCoordinates()) //
-				.then();
+		return operations.delete(entity, entityInformation.getIndexCoordinates()) //
+				.then(doRefresh());
 	}
 
 	@Override
@@ -192,29 +223,37 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 						throw new IllegalStateException("Entity id must not be null!");
 					}
 					return convertId(id);
-				}).collectList().map(objects -> {
-
-					return new StringQuery(QueryBuilders.idsQuery() //
-							.addIds(objects.toArray(new String[0])) //
-							.toString());
-				}) //
-				.flatMap(query -> {
-
-					return elasticsearchOperations.delete(query, entityInformation.getJavaType(),
-							entityInformation.getIndexCoordinates());
-				}) //
-				.then();
+				}).collectList().map(objects -> new StringQuery(QueryBuilders.idsQuery() //
+						.addIds(objects.toArray(new String[0])) //
+						.toString())) //
+				.flatMap(
+						query -> operations.delete(query, entityInformation.getJavaType(), entityInformation.getIndexCoordinates())) //
+				.then(doRefresh());
 	}
 
 	@Override
 	public Mono<Void> deleteAll() {
 
-		return elasticsearchOperations
-				.delete(Query.findAll(), entityInformation.getJavaType(), entityInformation.getIndexCoordinates()) //
-				.then();
+		return operations.delete(Query.findAll(), entityInformation.getJavaType(), entityInformation.getIndexCoordinates()) //
+				.then(doRefresh());
 	}
 
 	private String convertId(Object id) {
-		return elasticsearchOperations.getElasticsearchConverter().convertId(id);
+		return operations.getElasticsearchConverter().convertId(id);
 	}
+
+	private Mono<Void> doRefresh() {
+		RefreshPolicy refreshPolicy = null;
+
+		if (operations instanceof ReactiveElasticsearchTemplate) {
+			refreshPolicy = ((ReactiveElasticsearchTemplate) operations).getRefreshPolicy();
+		}
+
+		if (refreshPolicy == null || refreshPolicy == RefreshPolicy.NONE) {
+			return indexOperations.refresh();
+		}
+
+		return Mono.empty();
+	}
+
 }
