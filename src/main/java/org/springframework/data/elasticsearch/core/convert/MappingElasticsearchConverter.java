@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,7 +27,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -77,6 +81,8 @@ import org.springframework.util.ObjectUtils;
 public class MappingElasticsearchConverter
 		implements ElasticsearchConverter, ApplicationContextAware, InitializingBean {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(MappingElasticsearchConverter.class);
+
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	private final GenericConversionService conversionService;
 
@@ -84,6 +90,8 @@ public class MappingElasticsearchConverter
 	private EntityInstantiators instantiators = new EntityInstantiators();
 
 	private ElasticsearchTypeMapper typeMapper;
+
+	private ConcurrentHashMap<String, Integer> propertyWarnings = new ConcurrentHashMap<>();
 
 	public MappingElasticsearchConverter(
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
@@ -267,11 +275,26 @@ public class MappingElasticsearchConverter
 			return null;
 		}
 
+		Class<R> rawType = targetType.getType();
+
 		if (property.hasPropertyConverter() && String.class.isAssignableFrom(source.getClass())) {
 			source = property.getPropertyConverter().read((String) source);
+		} else if (TemporalAccessor.class.isAssignableFrom(property.getType())
+				&& !conversions.hasCustomReadTarget(source.getClass(), rawType)) {
+
+			// log at most 5 times
+			String propertyName = property.getOwner().getType().getSimpleName() + '.' + property.getName();
+			String key = propertyName + "-read";
+			int count = propertyWarnings.computeIfAbsent(key, k -> 0);
+			if (count < 5) {
+				LOGGER.warn(
+						"Type {} of property {} is a TemporalAccessor class but has neither a @Field annotation defining the date type nor a registered converter for reading!"
+								+ " It cannot be mapped from a complex object in Elasticsearch!",
+						property.getType().getSimpleName(), propertyName);
+				propertyWarnings.put(key, count + 1);
+			}
 		}
 
-		Class<R> rawType = targetType.getType();
 		if (conversions.hasCustomReadTarget(source.getClass(), rawType)) {
 			return rawType.cast(conversionService.convert(source, rawType));
 		} else if (source instanceof List) {
@@ -473,6 +496,20 @@ public class MappingElasticsearchConverter
 			if (property.hasPropertyConverter()) {
 				ElasticsearchPersistentPropertyConverter propertyConverter = property.getPropertyConverter();
 				value = propertyConverter.write(value);
+			} else if (TemporalAccessor.class.isAssignableFrom(property.getType())
+					&& !conversions.hasCustomWriteTarget(value.getClass())) {
+
+				// log at most 5 times
+				String propertyName = entity.getType().getSimpleName() + '.' + property.getName();
+				String key = propertyName + "-write";
+				int count = propertyWarnings.computeIfAbsent(key, k -> 0);
+				if (count < 5) {
+					LOGGER.warn(
+							"Type {} of property {} is a TemporalAccessor class but has neither a @Field annotation defining the date type nor a registered converter for writing!"
+									+ " It will be mapped to a complex object in Elasticsearch!",
+							property.getType().getSimpleName(), propertyName);
+					propertyWarnings.put(key, count + 1);
+				}
 			}
 
 			if (!isSimpleType(value)) {

@@ -122,8 +122,9 @@ public class SimpleElasticsearchPersistentProperty extends
 			DateFormat dateFormat = field.format();
 
 			if (dateFormat == DateFormat.none) {
-				throw new MappingException(String.format("property %s is annotated with FieldType.%s but has no DateFormat defined",
-						getName(), field.type().name()));
+				throw new MappingException(
+						String.format("Property %s is annotated with FieldType.%s but has no DateFormat defined",
+								getOwner().getType().getSimpleName() + "." + getName(), field.type().name()));
 			}
 
 			ElasticsearchDateConverter converter = null;
