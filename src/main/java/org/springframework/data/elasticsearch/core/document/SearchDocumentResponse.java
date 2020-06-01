@@ -22,7 +22,9 @@ import java.util.stream.StreamSupport;
 
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -42,7 +44,7 @@ public class SearchDocumentResponse {
 	private final Aggregations aggregations;
 
 	private SearchDocumentResponse(long totalHits, String totalHitsRelation, float maxScore, String scrollId,
-								   List<SearchDocument> searchDocuments, Aggregations aggregations) {
+			List<SearchDocument> searchDocuments, Aggregations aggregations) {
 		this.totalHits = totalHits;
 		this.totalHitsRelation = totalHitsRelation;
 		this.maxScore = maxScore;
@@ -78,27 +80,45 @@ public class SearchDocumentResponse {
 	/**
 	 * creates a SearchDocumentResponse from the {@link SearchResponse}
 	 *
-	 * @param searchResponse
-	 * 		must not be {@literal null}
+	 * @param searchResponse must not be {@literal null}
 	 * @return the SearchDocumentResponse
 	 */
 	public static SearchDocumentResponse from(SearchResponse searchResponse) {
+
 		Assert.notNull(searchResponse, "searchResponse must not be null");
 
-		TotalHits responseTotalHits = searchResponse.getHits().getTotalHits();
+		Aggregations aggregations = searchResponse.getAggregations();
+		String scrollId = searchResponse.getScrollId();
+
+		SearchHits searchHits = searchResponse.getHits();
+
+		SearchDocumentResponse searchDocumentResponse = from(searchHits, scrollId, aggregations);
+		return searchDocumentResponse;
+	}
+
+	/**
+	 * creates a {@link SearchDocumentResponse} from {@link SearchHits} with the given scrollId and aggregations
+	 * 
+	 * @param searchHits the {@link SearchHits} to process
+	 * @param scrollId scrollId
+	 * @param aggregations aggregations
+	 * @return the {@link SearchDocumentResponse}
+	 * @since 4.1
+	 */
+	public static SearchDocumentResponse from(SearchHits searchHits, @Nullable String scrollId,
+			@Nullable Aggregations aggregations) {
+		TotalHits responseTotalHits = searchHits.getTotalHits();
 		long totalHits = responseTotalHits.value;
 		String totalHitsRelation = responseTotalHits.relation.name();
 
-		float maxScore = searchResponse.getHits().getMaxScore();
-		String scrollId = searchResponse.getScrollId();
+		float maxScore = searchHits.getMaxScore();
 
-		List<SearchDocument> searchDocuments = StreamSupport.stream(searchResponse.getHits().spliterator(), false) //
+		List<SearchDocument> searchDocuments = StreamSupport.stream(searchHits.spliterator(), false) //
 				.filter(Objects::nonNull) //
 				.map(DocumentAdapters::from) //
 				.collect(Collectors.toList());
 
-		Aggregations aggregations = searchResponse.getAggregations();
-
 		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, scrollId, searchDocuments, aggregations);
 	}
+
 }
