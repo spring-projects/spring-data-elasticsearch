@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.elasticsearch.core.document.NestedMetaData;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -41,16 +42,31 @@ public class SearchHit<T> {
 	private final List<Object> sortValues;
 	private final T content;
 	private final Map<String, List<String>> highlightFields = new LinkedHashMap<>();
+	private final Map<String, SearchHits<?>> innerHits = new LinkedHashMap<>();
+	@Nullable private final NestedMetaData nestedMetaData;
 
 	public SearchHit(@Nullable String index, @Nullable String id, float score, @Nullable Object[] sortValues,
 			@Nullable Map<String, List<String>> highlightFields, T content) {
+		this(index, id, score, sortValues, highlightFields, null, null, content);
+	}
+
+	public SearchHit(@Nullable String index, @Nullable String id, float score, @Nullable Object[] sortValues,
+			@Nullable Map<String, List<String>> highlightFields, @Nullable Map<String, SearchHits<?>> innerHits,
+			@Nullable NestedMetaData nestedMetaData, T content) {
 		this.index = index;
 		this.id = id;
 		this.score = score;
 		this.sortValues = (sortValues != null) ? Arrays.asList(sortValues) : new ArrayList<>();
+
 		if (highlightFields != null) {
 			this.highlightFields.putAll(highlightFields);
 		}
+
+		if (innerHits != null) {
+			this.innerHits.putAll(innerHits);
+		}
+
+		this.nestedMetaData = nestedMetaData;
 
 		this.content = content;
 	}
@@ -90,6 +106,9 @@ public class SearchHit<T> {
 		return Collections.unmodifiableList(sortValues);
 	}
 
+	/**
+	 * @return the map from field names to highlight values, never {@literal null}
+	 */
 	public Map<String, List<String>> getHighlightFields() {
 		return Collections.unmodifiableMap(highlightFields.entrySet().stream()
 				.collect(Collectors.toMap(Map.Entry::getKey, entry -> Collections.unmodifiableList(entry.getValue()))));
@@ -106,6 +125,39 @@ public class SearchHit<T> {
 		Assert.notNull(field, "field must not be null");
 
 		return Collections.unmodifiableList(highlightFields.getOrDefault(field, Collections.emptyList()));
+	}
+
+	/**
+	 * returns the {@link SearchHits} for the inner hits with the given name. If the inner hits could be mapped to a
+	 * nested entity class, the returned data will be of this type, otherwise
+	 * {{@link org.springframework.data.elasticsearch.core.document.SearchDocument}} instances are returned in this
+	 * {@link SearchHits} object.
+	 * 
+	 * @param name the inner hits name
+	 * @return {@link SearchHits} if available, otherwise {@literal null}
+	 */
+	@Nullable
+	public SearchHits<?> getInnerHits(String name) {
+		return innerHits.get(name);
+	}
+
+	/**
+	 * @return the map from inner_hits names to inner hits, in a {@link SearchHits} object, never {@literal null}
+	 * @since 4.1
+	 */
+	public Map<String, SearchHits<?>> getInnerHits() {
+		return innerHits;
+	}
+
+	/**
+	 * If this is a nested inner hit, return the nested metadata information
+	 * 
+	 * @return {{@link NestedMetaData}
+	 * @since 4.1
+	 */
+	@Nullable
+	public NestedMetaData getNestedMetaData() {
+		return nestedMetaData;
 	}
 
 	@Override

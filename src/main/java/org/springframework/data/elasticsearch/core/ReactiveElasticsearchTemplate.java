@@ -878,7 +878,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		@Override
 		public Mono<SearchHit<T>> doWith(SearchDocument response) {
 			return delegate.doWith(response)
-					.map(entity -> SearchHitMapping.mappingFor(type, converter.getMappingContext()).mapHit(response, entity));
+					.map(entity -> SearchHitMapping.mappingFor(type, converter).mapHit(response, entity));
 		}
 	}
 

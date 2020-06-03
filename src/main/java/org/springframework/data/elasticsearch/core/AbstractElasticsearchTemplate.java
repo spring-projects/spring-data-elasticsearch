@@ -624,7 +624,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		@Override
 		public SearchHits<T> doWith(SearchDocumentResponse response) {
 			List<T> entities = response.getSearchDocuments().stream().map(delegate::doWith).collect(Collectors.toList());
-			return SearchHitMapping.mappingFor(type, elasticsearchConverter.getMappingContext()).mapHits(response, entities);
+			return SearchHitMapping.mappingFor(type, elasticsearchConverter).mapHits(response, entities);
 		}
 	}
 
@@ -644,8 +644,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		@Override
 		public SearchScrollHits<T> doWith(SearchDocumentResponse response) {
 			List<T> entities = response.getSearchDocuments().stream().map(delegate::doWith).collect(Collectors.toList());
-			return SearchHitMapping.mappingFor(type, elasticsearchConverter.getMappingContext()).mapScrollHits(response,
-					entities);
+			return SearchHitMapping.mappingFor(type, elasticsearchConverter).mapScrollHits(response, entities);
 		}
 	}
 	// endregion

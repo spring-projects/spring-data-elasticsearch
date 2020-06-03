@@ -134,6 +134,7 @@ Contains the following information:
 * Score
 * Sort Values
 * Highlight fields
+* Inner hits (this is an embedded `SearchHits` object containing eventually returned inner hits)
 * The retrieved entity of type <T>
 
 .SearchHits<T>

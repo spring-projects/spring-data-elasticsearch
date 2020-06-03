@@ -69,5 +69,24 @@ public interface SearchDocument extends Document {
 	 */
 	@Nullable
 	default Map<String, List<String>> getHighlightFields() {
-		return null;}
+		return null;
+	}
+
+	/**
+	 * @return the innerHits for the SearchHit
+	 * @since 4.1
+	 */
+	@Nullable
+	default Map<String, SearchDocumentResponse> getInnerHits() {
+		return null;
+	}
+
+	/**
+	 * @return the nested metadata in case this is a nested inner hit.
+	 * @since 4.1
+	 */
+	@Nullable
+	default NestedMetaData getNestedMetaData() {
+		return null;
+	}
 }

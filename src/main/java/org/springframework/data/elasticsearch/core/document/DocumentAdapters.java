@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -155,12 +157,28 @@ public class DocumentAdapters {
 				.collect(Collectors.toMap(Map.Entry::getKey,
 						entry -> Arrays.stream(entry.getValue().getFragments()).map(Text::string).collect(Collectors.toList()))));
 
+		Map<String, SearchDocumentResponse> innerHits = new LinkedHashMap<>();
+		Map<String, SearchHits> sourceInnerHits = source.getInnerHits();
+
+		if (sourceInnerHits != null) {
+			sourceInnerHits.forEach((name, searchHits) -> {
+				innerHits.put(name, SearchDocumentResponse.from(searchHits, null, null));
+			});
+		}
+
+		NestedMetaData nestedMetaData = null;
+
+		if (source.getNestedIdentity() != null) {
+			 nestedMetaData = from(source.getNestedIdentity());
+		}
+
 		BytesReference sourceRef = source.getSourceRef();
 
 		if (sourceRef == null || sourceRef.length() == 0) {
-			return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(), highlightFields,
-					fromDocumentFields(source, source.getIndex(), source.getId(), source.getVersion(), source.getSeqNo(),
-							source.getPrimaryTerm()));
+			return new SearchDocumentAdapter(
+					source.getScore(), source.getSortValues(), source.getFields(), highlightFields, fromDocumentFields(source,
+							source.getIndex(), source.getId(), source.getVersion(), source.getSeqNo(), source.getPrimaryTerm()),
+					innerHits, nestedMetaData);
 		}
 
 		Document document = Document.from(source.getSourceAsMap());
@@ -174,7 +192,18 @@ public class DocumentAdapters {
 		document.setPrimaryTerm(source.getPrimaryTerm());
 
 		return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(), highlightFields,
-				document);
+				document, innerHits, nestedMetaData);
+	}
+
+	private static NestedMetaData from(SearchHit.NestedIdentity nestedIdentity) {
+
+		NestedMetaData child = null;
+
+		if (nestedIdentity.getChild() != null) {
+			child = from(nestedIdentity.getChild());
+		}
+
+		return NestedMetaData.of(nestedIdentity.getField().string(), nestedIdentity.getOffset(), child);
 	}
 
 	/**
@@ -427,15 +456,20 @@ public class DocumentAdapters {
 		private final Map<String, List<Object>> fields = new HashMap<>();
 		private final Document delegate;
 		private final Map<String, List<String>> highlightFields = new HashMap<>();
+		private final Map<String, SearchDocumentResponse> innerHits = new HashMap<>();
+		@Nullable private final NestedMetaData nestedMetaData;
 
 		SearchDocumentAdapter(float score, Object[] sortValues, Map<String, DocumentField> fields,
-				Map<String, List<String>> highlightFields, Document delegate) {
+				Map<String, List<String>> highlightFields, Document delegate, Map<String, SearchDocumentResponse> innerHits,
+				@Nullable NestedMetaData nestedMetaData) {
 
 			this.score = score;
 			this.sortValues = sortValues;
 			this.delegate = delegate;
 			fields.forEach((name, documentField) -> this.fields.put(name, documentField.getValues()));
 			this.highlightFields.putAll(highlightFields);
+			this.innerHits.putAll(innerHits);
+			this.nestedMetaData = nestedMetaData;
 		}
 
 		@Override
@@ -528,6 +562,17 @@ public class DocumentAdapters {
 		@Override
 		public void setPrimaryTerm(long primaryTerm) {
 			delegate.setPrimaryTerm(primaryTerm);
+		}
+
+		@Override
+		public Map<String, SearchDocumentResponse> getInnerHits() {
+			return innerHits;
+		}
+
+		@Override
+		@Nullable
+		public NestedMetaData getNestedMetaData() {
+			return nestedMetaData;
 		}
 
 		@Override
