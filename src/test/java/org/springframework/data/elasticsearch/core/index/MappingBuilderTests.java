@@ -47,6 +47,7 @@ import java.util.Set;
 import org.assertj.core.data.Percentage;
 import org.elasticsearch.search.suggest.completion.context.ContextMapping;
 import org.json.JSONException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,8 +92,9 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	@Autowired private ElasticsearchOperations operations;
 	private IndexOperations indexOperations;
 
+	@AfterEach
 	@BeforeEach
-	public void before() {
+	public void deleteIndices() {
 		indexOperations = operations.indexOps(SimpleRecursiveEntity.class);
 		indexOperations.delete();
 		operations.indexOps(StockPrice.class).delete();

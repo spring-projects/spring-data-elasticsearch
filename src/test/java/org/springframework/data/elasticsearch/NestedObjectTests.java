@@ -34,6 +34,7 @@ import java.util.Map;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,11 +68,16 @@ public class NestedObjectTests {
 
 	@Autowired private ElasticsearchOperations operations;
 
+	private final List<Class<?>> entityClasses = Arrays.asList(Book.class, Person.class, PersonMultipleLevelNested.class);
+
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(operations.indexOps(Book.class));
-		IndexInitializer.init(operations.indexOps(Person.class));
-		IndexInitializer.init(operations.indexOps(PersonMultipleLevelNested.class));
+		entityClasses.stream().map(operations::indexOps).forEach(IndexInitializer::init);
+	}
+
+	@AfterEach
+	void tearDown() {
+		entityClasses.forEach(clazz -> operations.indexOps(clazz).delete());
 	}
 
 	@Test

@@ -24,6 +24,7 @@ import java.lang.Double;
 import java.lang.Long;
 import java.util.UUID;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.BeansException;
@@ -42,6 +43,7 @@ import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -88,6 +90,12 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 	public void before() {
 		indexOperations = operations.indexOps(SampleEntity.class);
 		IndexInitializer.init(indexOperations);
+	}
+
+	@AfterEach
+	void tearDown() {
+		operations.indexOps(IndexCoordinates.of("test-index-sample-config-not-nested")).delete();
+		operations.indexOps(IndexCoordinates.of("test-index-uuid-keyed-config-not-nested")).delete();
 	}
 
 	@Test
