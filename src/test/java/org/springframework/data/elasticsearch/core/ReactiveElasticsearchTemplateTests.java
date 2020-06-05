@@ -119,7 +119,9 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	private void deleteIndices() {
-		TestUtils.deleteIndex(DEFAULT_INDEX, ALTERNATE_INDEX, "rx-template-test-index-this", "rx-template-test-index-that");
+		TestUtils.deleteIndex(DEFAULT_INDEX, ALTERNATE_INDEX, "rx-template-test-index-this", "rx-template-test-index-that",
+				"test-index-reactive-optimistic-entity-template",
+				"test-index-reactive-optimistic-and-versioned-entity-template");
 	}
 
 	@Test // DATAES-504

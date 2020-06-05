@@ -151,6 +151,8 @@ public abstract class ElasticsearchTemplateTests {
 		operations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).delete();
 		operations.indexOps(SearchHitsEntity.class).delete();
 		operations.indexOps(HighlightEntity.class).delete();
+		operations.indexOps(OptimisticEntity.class).delete();
+		operations.indexOps(OptimisticAndVersionedEntity.class).delete();
 	}
 
 	@Test // DATAES-106
