@@ -178,10 +178,10 @@ class SearchHitMapping<T> {
 			ElasticsearchPersistentEntityWithNestedMetaData persistentEntityWithNestedMetaData = getPersistentEntity(
 					mappingContext.getPersistentEntity(type), nestedMetaData);
 
-			List<SearchHit<Object>> convertedSearchHits = new ArrayList<>();
-
 			if (persistentEntityWithNestedMetaData.entity != null) {
+				List<SearchHit<Object>> convertedSearchHits = new ArrayList<>();
 				Class<?> targetType = persistentEntityWithNestedMetaData.entity.getType();
+
 				// convert the list of SearchHit<SearchDocument> to list of SearchHit<Object>
 				searchHits.getSearchHits().forEach(searchHit -> {
 					SearchDocument searchDocument = searchHit.getContent();
@@ -192,7 +192,7 @@ class SearchHitMapping<T> {
 							searchDocument.getScore(), //
 							searchDocument.getSortValues(), //
 							searchDocument.getHighlightFields(), //
-							mapInnerHits(searchDocument), //
+							searchHit.getInnerHits(), //
 							persistentEntityWithNestedMetaData.nestedMetaData, //
 							targetObject));
 				});
@@ -221,9 +221,9 @@ class SearchHitMapping<T> {
 	 * 
 	 * @param persistentEntity base entity
 	 * @param nestedMetaData nested metadata
-	 * @return The found entity or null
+	 * @return A {@link ElasticsearchPersistentEntityWithNestedMetaData} containing the found entity or null together with
+	 *         the {@link NestedMetaData} that has mapped field names.
 	 */
-	@Nullable
 	private ElasticsearchPersistentEntityWithNestedMetaData getPersistentEntity(
 			@Nullable ElasticsearchPersistentEntity<?> persistentEntity, @Nullable NestedMetaData nestedMetaData) {
 
