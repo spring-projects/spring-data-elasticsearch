@@ -316,14 +316,17 @@ public class MappingElasticsearchConverter
 		}
 
 		Collection<Object> target = createCollectionForValue(targetType, source.size());
+		TypeInformation<?> componentType = targetType.getComponentType();
 
 		for (Object value : source) {
 
 			if (value == null) {
 				target.add(null);
+			} else if (componentType != null && !ClassTypeInformation.OBJECT.equals(componentType)
+					&& isSimpleType(componentType.getType())) {
+				target.add(readSimpleValue(value, componentType));
 			} else if (isSimpleType(value)) {
-				target.add(
-						readSimpleValue(value, targetType.getComponentType() != null ? targetType.getComponentType() : targetType));
+				target.add(readSimpleValue(value, componentType != null ? componentType : targetType));
 			} else {
 
 				if (value instanceof List) {
