@@ -17,10 +17,10 @@ package org.springframework.data.elasticsearch.repositories.setting.dynamic;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.core.document.Document.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import java.util.Map;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -99,14 +99,14 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 
 		// given
 		DynamicSettingAndMappingEntity dynamicSettingAndMappingEntity1 = new DynamicSettingAndMappingEntity();
-		dynamicSettingAndMappingEntity1.setId(RandomStringUtils.randomNumeric(5));
+		dynamicSettingAndMappingEntity1.setId(nextIdAsString());
 		dynamicSettingAndMappingEntity1.setName("test-setting1");
 		dynamicSettingAndMappingEntity1.setEmail("test_setting1@Test.com");
 
 		repository.save(dynamicSettingAndMappingEntity1);
 
 		DynamicSettingAndMappingEntity dynamicSettingAndMappingEntity2 = new DynamicSettingAndMappingEntity();
-		dynamicSettingAndMappingEntity2.setId(RandomStringUtils.randomNumeric(5));
+		dynamicSettingAndMappingEntity2.setId(nextIdAsString());
 		dynamicSettingAndMappingEntity2.setName("test-setting2");
 		dynamicSettingAndMappingEntity2.setEmail("test_setting2@Test.com");
 

@@ -16,11 +16,11 @@
 package org.springframework.data.elasticsearch.repositories.integer;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import java.util.Arrays;
 import java.util.Optional;
 
-import org.apache.commons.lang.math.RandomUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,13 +76,13 @@ public class IntegerIDRepositoryTests {
 	public void shouldDoBulkIndexDocument() {
 
 		// given
-		Integer documentId1 = RandomUtils.nextInt();
+		Integer documentId1 = nextIdAsInt();
 		IntegerIDEntity sampleEntity1 = new IntegerIDEntity();
 		sampleEntity1.setId(documentId1);
 		sampleEntity1.setMessage("some message");
 		sampleEntity1.setVersion(System.currentTimeMillis());
 
-		Integer documentId2 = RandomUtils.nextInt();
+		Integer documentId2 = nextIdAsInt();
 		IntegerIDEntity sampleEntity2 = new IntegerIDEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("some message");
@@ -103,7 +103,7 @@ public class IntegerIDRepositoryTests {
 	public void shouldSaveDocument() {
 
 		// given
-		Integer documentId = RandomUtils.nextInt();
+		Integer documentId = nextIdAsInt();
 		IntegerIDEntity sampleEntity = new IntegerIDEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("some message");

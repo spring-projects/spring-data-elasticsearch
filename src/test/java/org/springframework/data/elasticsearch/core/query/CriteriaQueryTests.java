@@ -15,9 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 import lombok.AllArgsConstructor;
@@ -87,7 +87,7 @@ public class CriteriaQueryTests {
 	public void shouldPerformAndOperation() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("some test message");
@@ -116,7 +116,7 @@ public class CriteriaQueryTests {
 		List<IndexQuery> indexQueries = new ArrayList<>();
 
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setMessage("some message");
@@ -128,7 +128,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("test message");
@@ -159,7 +159,7 @@ public class CriteriaQueryTests {
 		List<IndexQuery> indexQueries = new ArrayList<>();
 
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("some message");
@@ -190,7 +190,7 @@ public class CriteriaQueryTests {
 		List<IndexQuery> indexQueries = new ArrayList<>();
 
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("some message");
@@ -219,7 +219,7 @@ public class CriteriaQueryTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("some message");
@@ -249,7 +249,7 @@ public class CriteriaQueryTests {
 		List<IndexQuery> indexQueries = new ArrayList<>();
 
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setMessage("some message");
@@ -261,7 +261,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("test message");
@@ -291,7 +291,7 @@ public class CriteriaQueryTests {
 		List<IndexQuery> indexQueries = new ArrayList<>();
 
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setMessage("some message");
@@ -303,7 +303,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("test message end");
@@ -333,7 +333,7 @@ public class CriteriaQueryTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setMessage("start some message");
@@ -345,7 +345,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("test message");
@@ -375,7 +375,7 @@ public class CriteriaQueryTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setMessage("contains some message");
@@ -387,7 +387,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("test message");
@@ -416,7 +416,7 @@ public class CriteriaQueryTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setMessage("elasticsearch search");
@@ -428,7 +428,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("test message");
@@ -457,7 +457,7 @@ public class CriteriaQueryTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setMessage("some message search");
@@ -469,7 +469,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("test test message");
@@ -499,7 +499,7 @@ public class CriteriaQueryTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setMessage("bar");
@@ -511,7 +511,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("foo");
@@ -541,7 +541,7 @@ public class CriteriaQueryTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setRate(100);
@@ -554,7 +554,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setRate(200);
@@ -583,7 +583,7 @@ public class CriteriaQueryTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setRate(300);
@@ -596,7 +596,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setRate(400);
@@ -626,7 +626,7 @@ public class CriteriaQueryTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setRate(500);
@@ -639,7 +639,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setRate(600);
@@ -669,7 +669,7 @@ public class CriteriaQueryTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setRate(700);
@@ -682,7 +682,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setRate(800);
@@ -712,7 +712,7 @@ public class CriteriaQueryTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setRate(900);
@@ -725,7 +725,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setRate(1000);
@@ -755,7 +755,7 @@ public class CriteriaQueryTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setRate(700);
@@ -768,7 +768,7 @@ public class CriteriaQueryTests {
 		indexQueries.add(indexQuery1);
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setRate(800);
@@ -819,7 +819,7 @@ public class CriteriaQueryTests {
 	public void shouldEscapeValue() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("Hello World!");

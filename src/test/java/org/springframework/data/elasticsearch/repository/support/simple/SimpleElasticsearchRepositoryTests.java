@@ -15,10 +15,10 @@
  */
 package org.springframework.data.elasticsearch.repository.support.simple;
 
-import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -101,13 +101,13 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldDoBulkIndexDocument() {
 
 		// given
-		String documentId1 = randomNumeric(5);
+		String documentId1 = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId1);
 		sampleEntity1.setMessage("some message");
 		sampleEntity1.setVersion(System.currentTimeMillis());
 
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("some message");
@@ -128,7 +128,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldSaveDocument() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("some message");
@@ -158,7 +158,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldFindDocumentById() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("some message");
@@ -177,7 +177,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldReturnCountOfDocuments() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("some message");
@@ -205,7 +205,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldDeleteDocument() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("some message");
@@ -224,7 +224,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldSearchDocumentsGivenSearchQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("some test message");
@@ -245,7 +245,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldSearchDocumentsGivenElasticsearchQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("hello world.");
@@ -264,14 +264,14 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldFindAllByIdQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("hello world.");
 		sampleEntity.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntity);
 
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("hello world.");
@@ -289,13 +289,13 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldSaveIterableEntities() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setMessage("hello world.");
 		sampleEntity1.setVersion(System.currentTimeMillis());
 
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("hello world.");
@@ -315,7 +315,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldReturnTrueGivenDocumentWithIdExists() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("hello world.");
@@ -333,7 +333,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldReturnFalseGivenDocumentWithIdDoesNotExist() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 
 		// when
 		boolean exist = repository.existsById(documentId);
@@ -346,7 +346,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldReturnResultsForGivenSearchQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("hello world.");
@@ -365,7 +365,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldDeleteAll() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("hello world.");
@@ -385,7 +385,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldDeleteById() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("hello world.");
@@ -406,21 +406,21 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldDeleteByMessageAndReturnList() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setMessage("hello world 1");
 		sampleEntity1.setAvailable(true);
 		sampleEntity1.setVersion(System.currentTimeMillis());
 
-		documentId = randomNumeric(5);
+		documentId = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId);
 		sampleEntity2.setMessage("hello world 2");
 		sampleEntity2.setAvailable(true);
 		sampleEntity2.setVersion(System.currentTimeMillis());
 
-		documentId = randomNumeric(5);
+		documentId = nextIdAsString();
 		SampleEntity sampleEntity3 = new SampleEntity();
 		sampleEntity3.setId(documentId);
 		sampleEntity3.setMessage("hello world 3");
@@ -442,19 +442,19 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldDeleteByListForMessage() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setMessage("hello world 1");
 		sampleEntity1.setVersion(System.currentTimeMillis());
 
-		documentId = randomNumeric(5);
+		documentId = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId);
 		sampleEntity2.setMessage("hello world 2");
 		sampleEntity2.setVersion(System.currentTimeMillis());
 
-		documentId = randomNumeric(5);
+		documentId = nextIdAsString();
 		SampleEntity sampleEntity3 = new SampleEntity();
 		sampleEntity3.setId(documentId);
 		sampleEntity3.setMessage("hello world 3");
@@ -475,19 +475,19 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldDeleteByType() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setType("book");
 		sampleEntity1.setVersion(System.currentTimeMillis());
 
-		documentId = randomNumeric(5);
+		documentId = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId);
 		sampleEntity2.setType("article");
 		sampleEntity2.setVersion(System.currentTimeMillis());
 
-		documentId = randomNumeric(5);
+		documentId = nextIdAsString();
 		SampleEntity sampleEntity3 = new SampleEntity();
 		sampleEntity3.setId(documentId);
 		sampleEntity3.setType("image");
@@ -507,7 +507,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldDeleteEntity() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("hello world.");
@@ -527,14 +527,14 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldReturnIterableEntities() {
 
 		// given
-		String documentId1 = randomNumeric(5);
+		String documentId1 = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId1);
 		sampleEntity1.setMessage("hello world.");
 		sampleEntity1.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntity1);
 
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("hello world.");
@@ -552,13 +552,13 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldDeleteIterableEntities() {
 
 		// given
-		String documentId1 = randomNumeric(5);
+		String documentId1 = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId1);
 		sampleEntity1.setMessage("hello world.");
 		sampleEntity1.setVersion(System.currentTimeMillis());
 
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("hello world.");
@@ -579,7 +579,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldIndexEntity() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setVersion(System.currentTimeMillis());
@@ -597,7 +597,7 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldIndexWithoutRefreshEntity() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setVersion(System.currentTimeMillis());
@@ -620,13 +620,13 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldSortByGivenField() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("world");
 		repository.save(sampleEntity);
 
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("hello");
@@ -664,13 +664,13 @@ public class SimpleElasticsearchRepositoryTests {
 	public void shouldIndexNotEmptyList() {
 		// given
 		List<SampleEntity> list = new ArrayList<>();
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(documentId);
 		sampleEntity1.setMessage("world");
 		list.add(sampleEntity1);
 
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = new SampleEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("hello");

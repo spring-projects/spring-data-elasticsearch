@@ -16,11 +16,11 @@
 package org.springframework.data.elasticsearch.repositories.doubleid;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import java.util.Arrays;
 import java.util.Optional;
 
-import org.apache.commons.lang.math.RandomUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,13 +75,13 @@ public class DoubleIDRepositoryTests {
 	public void shouldDoBulkIndexDocument() {
 
 		// given
-		Double documentId1 = RandomUtils.nextDouble();
+		Double documentId1 = nextIdAsDouble();
 		DoubleIDEntity sampleEntity1 = new DoubleIDEntity();
 		sampleEntity1.setId(documentId1);
 		sampleEntity1.setMessage("some message");
 		sampleEntity1.setVersion(System.currentTimeMillis());
 
-		Double documentId2 = RandomUtils.nextDouble();
+		Double documentId2 = nextIdAsDouble();
 		DoubleIDEntity sampleEntity2 = new DoubleIDEntity();
 		sampleEntity2.setId(documentId2);
 		sampleEntity2.setMessage("some message");
@@ -102,7 +102,7 @@ public class DoubleIDRepositoryTests {
 	public void shouldSaveDocument() {
 
 		// given
-		Double documentId = RandomUtils.nextDouble();
+		Double documentId = nextIdAsDouble();
 		DoubleIDEntity sampleEntity = new DoubleIDEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("some message");
