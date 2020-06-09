@@ -17,6 +17,8 @@ package org.springframework.data.elasticsearch.core.geo;
 
 import org.springframework.data.geo.Point;
 
+import java.util.Objects;
+
 /**
  * geo-location used for #{@link org.springframework.data.elasticsearch.core.query.Criteria}.
  *
@@ -58,6 +60,20 @@ public class GeoPoint {
 
 	public static Point toPoint(GeoPoint point) {
 		return new Point(point.getLat(), point.getLon());
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		GeoPoint geoPoint = (GeoPoint) o;
+		return Double.compare(geoPoint.lat, lat) == 0 &&
+				Double.compare(geoPoint.lon, lon) == 0;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(lat, lon);
 	}
 
 	@Override
