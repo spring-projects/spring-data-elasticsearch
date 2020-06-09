@@ -16,8 +16,8 @@
 
 package org.springframework.data.elasticsearch.repositories.nestedobject;
 
-import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -85,7 +85,7 @@ public class InnerObjectTests {
 	public void shouldIndexInnerObject() {
 
 		// given
-		String id = randomAlphanumeric(5);
+		String id = nextIdAsString();
 		Book book = new Book();
 		book.setId(id);
 		book.setName("xyz");

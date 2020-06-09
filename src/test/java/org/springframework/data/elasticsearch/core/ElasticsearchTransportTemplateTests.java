@@ -15,9 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import lombok.Data;
 import lombok.val;
@@ -65,7 +65,7 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		// when
 		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
 				.create();
-		UpdateQuery updateQuery = UpdateQuery.builder(randomNumeric(5)).withDocument(document).build();
+		UpdateQuery updateQuery = UpdateQuery.builder(nextIdAsString()).withDocument(document).build();
 		assertThatThrownBy(() -> operations.update(updateQuery, index)).isInstanceOf(DocumentMissingException.class);
 	}
 

@@ -15,9 +15,9 @@
  */
 package org.springframework.data.elasticsearch;
 
-import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import lombok.Data;
 import lombok.Getter;
@@ -343,10 +343,10 @@ public class NestedObjectTests {
 		Book book1 = new Book();
 		Book book2 = new Book();
 
-		book1.setId(randomNumeric(5));
+		book1.setId(nextIdAsString());
 		book1.setName("testBook1");
 
-		book2.setId(randomNumeric(5));
+		book2.setId(nextIdAsString());
 		book2.setName("testBook2");
 
 		Map<Integer, Collection<String>> map1 = new HashMap<>();

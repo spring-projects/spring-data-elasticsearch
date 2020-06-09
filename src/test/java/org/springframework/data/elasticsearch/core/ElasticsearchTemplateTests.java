@@ -16,11 +16,11 @@
 package org.springframework.data.elasticsearch.core;
 
 import static java.util.Collections.*;
-import static org.apache.commons.lang.RandomStringUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.core.document.Document.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 import lombok.AllArgsConstructor;
@@ -159,7 +159,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnCountForGivenCriteriaQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -181,7 +181,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnCountForGivenSearchQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -202,7 +202,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnObjectForGivenId() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
@@ -220,12 +220,12 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -249,12 +249,12 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -264,7 +264,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.refresh();
 
 		// when
-		List<String> idsToSearch = Arrays.asList(documentId, randomNumeric(5), documentId2);
+		List<String> idsToSearch = Arrays.asList(documentId, nextIdAsString(), documentId2);
 		assertThat(idsToSearch).hasSize(3);
 
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(idsToSearch).build();
@@ -282,12 +282,12 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("some message").type("type1")
 				.version(System.currentTimeMillis()).build();
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("some message").type("type2")
 				.version(System.currentTimeMillis()).build();
 
@@ -309,7 +309,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnSearchHitsForGivenSearchQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -333,7 +333,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnSearchHitsUsingLocalPreferenceForGivenSearchQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -357,7 +357,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldThrowExceptionWhenInvalidPreferenceForSearchQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -378,7 +378,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldPassIndicesOptionsForGivenSearchQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -406,12 +406,12 @@ public abstract class ElasticsearchTemplateTests {
 		List<IndexQuery> indexQueries = new ArrayList<>();
 
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -432,7 +432,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldDoBulkUpdate() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		String messageBeforeUpdate = "some test message";
 		String messageAfterUpdate = "test message";
 
@@ -466,7 +466,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldDeleteDocumentForGivenId() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -489,7 +489,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldDeleteEntityForGivenId() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -511,7 +511,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldDeleteDocumentForGivenQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -540,12 +540,12 @@ public abstract class ElasticsearchTemplateTests {
 				.version(System.currentTimeMillis()) //
 				.build();
 
-		IndexQuery idxQuery1 = new IndexQueryBuilder().withId(randomNumeric(5)).withObject(sampleEntity).build();
+		IndexQuery idxQuery1 = new IndexQueryBuilder().withId(nextIdAsString()).withObject(sampleEntity).build();
 
 		operations.index(idxQuery1, IndexCoordinates.of(INDEX_1_NAME));
 		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
 
-		IndexQuery idxQuery2 = new IndexQueryBuilder().withId(randomNumeric(5)).withObject(sampleEntity).build();
+		IndexQuery idxQuery2 = new IndexQueryBuilder().withId(nextIdAsString()).withObject(sampleEntity).build();
 
 		operations.index(idxQuery2, IndexCoordinates.of(INDEX_2_NAME));
 		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).refresh();
@@ -572,12 +572,12 @@ public abstract class ElasticsearchTemplateTests {
 				.version(System.currentTimeMillis()) //
 				.build();
 
-		IndexQuery idxQuery1 = new IndexQueryBuilder().withId(randomNumeric(5)).withObject(sampleEntity).build();
+		IndexQuery idxQuery1 = new IndexQueryBuilder().withId(nextIdAsString()).withObject(sampleEntity).build();
 
 		operations.index(idxQuery1, IndexCoordinates.of(INDEX_1_NAME));
 		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
 
-		IndexQuery idxQuery2 = new IndexQueryBuilder().withId(randomNumeric(5)).withObject(sampleEntity).build();
+		IndexQuery idxQuery2 = new IndexQueryBuilder().withId(nextIdAsString()).withObject(sampleEntity).build();
 
 		operations.index(idxQuery2, IndexCoordinates.of(INDEX_2_NAME));
 		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).refresh();
@@ -600,7 +600,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldFilterSearchResultsForGivenFilter() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -624,17 +624,17 @@ public abstract class ElasticsearchTemplateTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("abc").rate(10)
 				.version(System.currentTimeMillis()).build();
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("xyz").rate(5)
 				.version(System.currentTimeMillis()).build();
 
 		// third document
-		String documentId3 = randomNumeric(5);
+		String documentId3 = nextIdAsString();
 		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3).message("xyz").rate(15)
 				.version(System.currentTimeMillis()).build();
 
@@ -660,17 +660,17 @@ public abstract class ElasticsearchTemplateTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("abc").rate(10)
 				.version(System.currentTimeMillis()).build();
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("xyz").rate(5)
 				.version(System.currentTimeMillis()).build();
 
 		// third document
-		String documentId3 = randomNumeric(5);
+		String documentId3 = nextIdAsString();
 		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3).message("xyz").rate(15)
 				.version(System.currentTimeMillis()).build();
 
@@ -699,17 +699,17 @@ public abstract class ElasticsearchTemplateTests {
 		List<IndexQuery> indexQueries;
 
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("abc").rate(15)
 				.version(System.currentTimeMillis()).build();
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("xyz").rate(5)
 				.version(System.currentTimeMillis()).build();
 
 		// third document
-		String documentId3 = randomNumeric(5);
+		String documentId3 = nextIdAsString();
 		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3).rate(10).version(System.currentTimeMillis())
 				.build();
 
@@ -737,17 +737,17 @@ public abstract class ElasticsearchTemplateTests {
 		List<IndexQuery> indexQueries;
 
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("abc").rate(15)
 				.version(System.currentTimeMillis()).build();
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("xyz").rate(5)
 				.version(System.currentTimeMillis()).build();
 
 		// third document
-		String documentId3 = randomNumeric(5);
+		String documentId3 = nextIdAsString();
 		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3).rate(10).version(System.currentTimeMillis())
 				.build();
 
@@ -798,7 +798,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldExecuteStringQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -820,7 +820,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldUseScriptedFields() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setRate(2);
@@ -852,7 +852,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnPageableResultsGivenStringQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -874,7 +874,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnSortedResultsGivenStringQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
 		sampleEntity.setMessage("some message");
@@ -901,7 +901,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnObjectMatchingGivenStringQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -936,7 +936,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldExecuteGivenCriteriaQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("test message")
 				.version(System.currentTimeMillis()).build();
 
@@ -957,7 +957,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldDeleteGivenCriteriaQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("test message")
 				.version(System.currentTimeMillis()).build();
 
@@ -982,7 +982,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnSpecifiedFields() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		String message = "some test message";
 		String type = "some type";
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message(message).type(type)
@@ -1011,7 +1011,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnFieldsBasedOnSourceFilter() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		String message = "some test message";
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message(message)
 				.version(System.currentTimeMillis()).build();
@@ -1046,7 +1046,7 @@ public abstract class ElasticsearchTemplateTests {
 				+ "we want our search server to be always available, we want to be able to start with one machine and scale to hundreds, "
 				+ "we want real-time search, we want simple multi-tenancy, and we want a solution that is built for the cloud.";
 
-		String documentId1 = randomNumeric(5);
+		String documentId1 = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId1).message(sampleMessage)
 				.version(System.currentTimeMillis()).build();
 
@@ -1054,7 +1054,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		operations.index(indexQuery, index);
 
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 
 		operations.index(
 				getIndexQuery(
@@ -1351,17 +1351,17 @@ public abstract class ElasticsearchTemplateTests {
 		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("test message")
 				.version(System.currentTimeMillis()).build();
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("test test").rate(5)
 				.version(System.currentTimeMillis()).build();
 
 		// third document
-		String documentId3 = randomNumeric(5);
+		String documentId3 = nextIdAsString();
 		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3).message("some message").rate(15)
 				.version(System.currentTimeMillis()).build();
 
@@ -1388,17 +1388,17 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("test message")
 				.version(System.currentTimeMillis()).build();
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("test test").rate(5)
 				.version(System.currentTimeMillis()).build();
 
 		// third document
-		String documentId3 = randomNumeric(5);
+		String documentId3 = nextIdAsString();
 		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3).message("some message").rate(15)
 				.version(System.currentTimeMillis()).build();
 
@@ -1463,7 +1463,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldDoPartialUpdateForExistingDocument() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		String messageBeforeUpdate = "some test message";
 		String messageAfterUpdate = "test message";
 
@@ -1541,7 +1541,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldDoUpsertIfDocumentDoesNotExist() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
 				.create();
 		document.put("message", "test message");
@@ -1563,7 +1563,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		long scrollTimeInMillis = 3000;
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -1662,7 +1662,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldDeleteDocumentBySpecifiedTypeUsingDeleteQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -1901,7 +1901,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldIndexGteEntityWithVersionType() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		GTEVersionEntity entity = GTEVersionEntity.builder().id(documentId).name("FooBar")
 				.version(System.currentTimeMillis()).build();
 
@@ -1931,7 +1931,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldIndexSampleEntityWithIndexAndTypeAtRuntime() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -1954,7 +1954,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnCountForGivenCriteriaQueryWithGivenIndexUsingCriteriaQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -1974,7 +1974,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnCountForGivenSearchQueryWithGivenIndexUsingSearchQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -1994,7 +1994,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnCountForGivenCriteriaQueryWithGivenIndexAndTypeUsingCriteriaQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -2014,7 +2014,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnCountForGivenSearchQueryWithGivenIndexAndTypeUsingSearchQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -2035,13 +2035,13 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		cleanUpIndices();
-		String documentId1 = randomNumeric(5);
+		String documentId1 = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId1).message("some message")
 				.version(System.currentTimeMillis()).build();
 
 		IndexQuery indexQuery1 = new IndexQueryBuilder().withId(sampleEntity1.getId()).withObject(sampleEntity1).build();
 
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("some test message")
 				.version(System.currentTimeMillis()).build();
 
@@ -2066,13 +2066,13 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		cleanUpIndices();
-		String documentId1 = randomNumeric(5);
+		String documentId1 = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId1).message("some message")
 				.version(System.currentTimeMillis()).build();
 
 		IndexQuery indexQuery1 = new IndexQueryBuilder().withId(sampleEntity1.getId()).withObject(sampleEntity1).build();
 
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("some test message")
 				.version(System.currentTimeMillis()).build();
 
@@ -2136,13 +2136,13 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		cleanUpIndices();
-		String documentId1 = randomNumeric(5);
+		String documentId1 = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId1).message("some message")
 				.version(System.currentTimeMillis()).build();
 
 		IndexQuery indexQuery1 = new IndexQueryBuilder().withId(sampleEntity1.getId()).withObject(sampleEntity1).build();
 
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("some test message")
 				.version(System.currentTimeMillis()).build();
 
@@ -2167,13 +2167,13 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		cleanUpIndices();
-		String documentId1 = randomNumeric(5);
+		String documentId1 = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId1).message("some message")
 				.version(System.currentTimeMillis()).build();
 
 		IndexQuery indexQuery1 = new IndexQueryBuilder().withId(sampleEntity1.getId()).withObject(sampleEntity1).build();
 
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("some test message")
 				.version(System.currentTimeMillis()).build();
 
@@ -2197,7 +2197,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldThrowAnExceptionForGivenCriteriaQueryWhenNoIndexSpecifiedForCountQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -2215,7 +2215,7 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldThrowAnExceptionForGivenSearchQueryWhenNoIndexSpecifiedForCountQuery() {
 
 		// given
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
@@ -2302,13 +2302,13 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldTestResultsAcrossMultipleIndices() {
 
 		// given
-		String documentId1 = randomNumeric(5);
+		String documentId1 = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId1).message("some message")
 				.version(System.currentTimeMillis()).build();
 
 		IndexQuery indexQuery1 = new IndexQueryBuilder().withId(sampleEntity1.getId()).withObject(sampleEntity1).build();
 
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("some test message")
 				.version(System.currentTimeMillis()).build();
 
@@ -2336,8 +2336,8 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldComposeObjectsReturnedFromHeterogeneousIndexes() {
 
 		// given
-		HetroEntity1 entity1 = new HetroEntity1(randomNumeric(3), "aFirstName");
-		HetroEntity2 entity2 = new HetroEntity2(randomNumeric(4), "aLastName");
+		HetroEntity1 entity1 = new HetroEntity1(nextIdAsString(), "aFirstName");
+		HetroEntity2 entity2 = new HetroEntity2(nextIdAsString(), "aLastName");
 
 		IndexQuery indexQuery1 = new IndexQueryBuilder().withId(entity1.getId()).withObject(entity1).build();
 		IndexQuery indexQuery2 = new IndexQueryBuilder().withId(entity2.getId()).withObject(entity2).build();
@@ -2588,17 +2588,17 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("abc").rate(10)
 				.version(System.currentTimeMillis()).build();
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("xyz").rate(5)
 				.version(System.currentTimeMillis()).build();
 
 		// third document
-		String documentId3 = randomNumeric(5);
+		String documentId3 = nextIdAsString();
 		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3).message("xyz").rate(10)
 				.version(System.currentTimeMillis()).build();
 
@@ -2635,17 +2635,17 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		// first document
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = SampleEntity.builder().id(documentId).message("abc").rate(10)
 				.version(System.currentTimeMillis()).build();
 
 		// second document
-		String documentId2 = randomNumeric(5);
+		String documentId2 = nextIdAsString();
 		SampleEntity sampleEntity2 = SampleEntity.builder().id(documentId2).message("xyz").rate(5)
 				.version(System.currentTimeMillis()).build();
 
 		// third document
-		String documentId3 = randomNumeric(5);
+		String documentId3 = nextIdAsString();
 		SampleEntity sampleEntity3 = SampleEntity.builder().id(documentId3).message("xyz").rate(10)
 				.version(System.currentTimeMillis()).build();
 
@@ -2682,11 +2682,11 @@ public abstract class ElasticsearchTemplateTests {
 	public void shouldReturnDocumentWithCollapsedField() {
 
 		// given
-		SampleEntity sampleEntity = SampleEntity.builder().id(randomNumeric(5)).message("message 1").rate(1)
+		SampleEntity sampleEntity = SampleEntity.builder().id(nextIdAsString()).message("message 1").rate(1)
 				.version(System.currentTimeMillis()).build();
-		SampleEntity sampleEntity2 = SampleEntity.builder().id(randomNumeric(5)).message("message 2").rate(2)
+		SampleEntity sampleEntity2 = SampleEntity.builder().id(nextIdAsString()).message("message 2").rate(2)
 				.version(System.currentTimeMillis()).build();
-		SampleEntity sampleEntity3 = SampleEntity.builder().id(randomNumeric(5)).message("message 1").rate(1)
+		SampleEntity sampleEntity3 = SampleEntity.builder().id(nextIdAsString()).message("message 1").rate(1)
 				.version(System.currentTimeMillis()).build();
 
 		List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(sampleEntity, sampleEntity2, sampleEntity3));
@@ -2761,7 +2761,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.addAlias(aliasQuery1);
 		indexOperations.addAlias(aliasQuery2);
 
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity entity = SampleEntity.builder() //
 				.id(documentId) //
 				.message("some message") //
@@ -2809,7 +2809,7 @@ public abstract class ElasticsearchTemplateTests {
 		// when
 		indexOperations.addAlias(aliasQuery);
 
-		String documentId = randomNumeric(5);
+		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder() //
 				.id(documentId) //
 				.message("some message") //
