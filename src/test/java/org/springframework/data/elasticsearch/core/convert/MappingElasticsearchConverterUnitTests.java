@@ -735,6 +735,60 @@ public class MappingElasticsearchConverterUnitTests {
 		assertEquals(expected, json, false);
 	}
 
+	@Test // DATAES-857
+	void shouldWriteEntityWithListOfGeoPoints() throws JSONException {
+
+		GeoPointListEntity entity = new GeoPointListEntity();
+		entity.setId("42");
+		List<GeoPoint> locations = Arrays.asList(new GeoPoint(12.34, 23.45), new GeoPoint(34.56, 45.67));
+		entity.setLocations(locations);
+
+		String expected = "{\n" + //
+				"  \"id\": \"42\",\n" + //
+				"  \"locations\": [\n" + //
+				"    {\n" + //
+				"      \"lat\": 12.34,\n" + //
+				"      \"lon\": 23.45\n" + //
+				"    },\n" + //
+				"    {\n" + //
+				"      \"lat\": 34.56,\n" + //
+				"      \"lon\": 45.67\n" + //
+				"    }\n" + //
+				"  ]\n" + //
+				"}"; //
+		Document document = Document.create();
+
+		mappingElasticsearchConverter.write(entity, document);
+		String json = document.toJson();
+
+		assertEquals(expected, json, false);
+	}
+
+	@Test // DATAES-857
+	void shouldReadEntityWithListOfGeoPoints() {
+
+		String json = "{\n" + //
+				"  \"id\": \"42\",\n" + //
+				"  \"locations\": [\n" + //
+				"    {\n" + //
+				"      \"lat\": 12.34,\n" + //
+				"      \"lon\": 23.45\n" + //
+				"    },\n" + //
+				"    {\n" + //
+				"      \"lat\": 34.56,\n" + //
+				"      \"lon\": 45.67\n" + //
+				"    }\n" + //
+				"  ]\n" + //
+				"}"; //
+
+		Document document = Document.parse(json);
+
+		GeoPointListEntity entity = mappingElasticsearchConverter.read(GeoPointListEntity.class, document);
+
+		assertThat(entity.id).isEqualTo("42");
+		assertThat(entity.locations).containsExactly(new GeoPoint(12.34, 23.45), new GeoPoint(34.56, 45.67));
+	}
+
 	private String pointTemplate(String name, Point point) {
 		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
 	}
@@ -955,5 +1009,11 @@ public class MappingElasticsearchConverterUnitTests {
 		@Id private String id;
 
 		private List<String> values;
+	}
+
+	@Data
+	static class GeoPointListEntity {
+		@Id String id;
+		List<GeoPoint> locations;
 	}
 }
