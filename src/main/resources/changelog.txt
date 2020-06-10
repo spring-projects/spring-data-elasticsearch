@@ -1,6 +1,21 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.1.RELEASE (2020-06-10)
+---------------------------------------------
+* DATAES-857 - Registered simple types are not read from list.
+* DATAES-850 - Add warning and documentation for missing TemporalAccessor configuration.
+* DATAES-845 - MappingElasticsearchConverter crashes when writing lists containing null values.
+* DATAES-844 - Improve TOC formatting for migration guides.
+* DATAES-839 - ReactiveElasticsearchTemplate should use RequestFactory.
+* DATAES-835 - Fix code sample in documentation for scroll API.
+* DATAES-832 - findAllById repository method returns iterable with null elements for not found ids.
+* DATAES-831 - SearchOperations.searchForStream does not use requested maxResults.
+* DATAES-828 - Fields of type date need to have a format defined.
+* DATAES-827 - Repositories should not try to create an index when it already exists.
+* DATAES-823 - Release 4.0.1 (Neumann SR1).
+
+
 Changes in version 3.2.8.RELEASE (2020-06-10)
 ---------------------------------------------
 * DATAES-851 - Upgrade to Elasticsearch 6.8.10.
@@ -1121,6 +1136,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
