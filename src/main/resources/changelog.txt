@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.18.RELEASE (2020-06-10)
+----------------------------------------------
+* DATAES-811 - Remove Travis CI.
+* DATAES-806 - Release 3.1.18 (Lovelace SR18).
+
+
 Changes in version 4.0.0.RELEASE (2020-05-12)
 ---------------------------------------------
 * DATAES-822 - ElasticsearchRestTemplate should not use `spring-web`.
