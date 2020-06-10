@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.18.RELEASE (2020-06-10)
+----------------------------------------------
+* DATAES-811 - Remove Travis CI.
+* DATAES-806 - Release 3.1.18 (Lovelace SR18).
+
+
 Changes in version 4.0.0.RC2 (2020-04-28)
 -----------------------------------------
 * DATAES-803 - Move count request setup from reactive template to reactive client.
@@ -1104,6 +1110,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
