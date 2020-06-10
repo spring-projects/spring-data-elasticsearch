@@ -1,6 +1,17 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.8.RELEASE (2020-06-10)
+---------------------------------------------
+* DATAES-851 - Upgrade to Elasticsearch 6.8.10.
+* DATAES-837 - Update to Elasticsearch 6.8.9.
+* DATAES-821 - Fix code for adding an alias.
+* DATAES-811 - Remove Travis CI.
+* DATAES-807 - Release 3.2.8 (Moore SR8).
+* DATAES-776 - Adapt RestClients class to change in InetSocketAddress class in JDK14.
+* DATAES-767 - Fix ReactiveElasticsearch handling of 4xx HTTP responses.
+
+
 Changes in version 3.1.18.RELEASE (2020-06-10)
 ----------------------------------------------
 * DATAES-811 - Remove Travis CI.
@@ -1110,6 +1121,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
