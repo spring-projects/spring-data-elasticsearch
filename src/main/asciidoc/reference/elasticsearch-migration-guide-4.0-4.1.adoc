@@ -3,8 +3,16 @@
 
 This section describes breaking changes from version 4.0.x to 4.1.x and how removed features can be replaced by new introduced features.
 
+== Deprecations
+
+.Definition of the id property
+It is possible to define a property of en entity as the id property by naming it either `id` or  `document`. This behaviour is now deprecated and  will produce a warning. PLease us the `@Id` annotation to mark a property as being the id property.
+
 [[elasticsearch-migration-guide-4.0-4.1.removal]]
 == Removals
 
+.Type mappings
 The _type mappings_ parameters of the `@Document` annotation and the `IndexCoordinates` object were removed. They had been deprecated in Spring Data Elasticsearch 4.0 and their values weren't used anymore.
+
+=== Breaking changes
 

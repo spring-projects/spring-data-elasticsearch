@@ -60,17 +60,17 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	IndexCoordinates getIndexCoordinatesFor(Class<?> clazz);
 
 	// region IndexOperations
-/**
- * Create an index for given indexName .
- *
- * @param indexName the name of the index
- * @return {@literal true} if the index was created
- * @deprecated since 4.0, use {@link IndexOperations#create()}
- */
-@Deprecated
-default boolean createIndex(String indexName) {
-	return indexOps(IndexCoordinates.of(indexName)).create();
-}
+	/**
+	 * Create an index for given indexName .
+	 *
+	 * @param indexName the name of the index
+	 * @return {@literal true} if the index was created
+	 * @deprecated since 4.0, use {@link IndexOperations#create()}
+	 */
+	@Deprecated
+	default boolean createIndex(String indexName) {
+		return indexOps(IndexCoordinates.of(indexName)).create();
+	}
 
 	/**
 	 * Create an index for given indexName and Settings.

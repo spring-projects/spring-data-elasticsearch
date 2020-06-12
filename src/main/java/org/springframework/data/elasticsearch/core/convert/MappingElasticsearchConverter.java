@@ -87,9 +87,9 @@ public class MappingElasticsearchConverter
 	private final GenericConversionService conversionService;
 
 	private CustomConversions conversions = new ElasticsearchCustomConversions(Collections.emptyList());
-	private EntityInstantiators instantiators = new EntityInstantiators();
+	private final EntityInstantiators instantiators = new EntityInstantiators();
 
-	private ElasticsearchTypeMapper typeMapper;
+	private final ElasticsearchTypeMapper typeMapper;
 
 	private ConcurrentHashMap<String, Integer> propertyWarnings = new ConcurrentHashMap<>();
 

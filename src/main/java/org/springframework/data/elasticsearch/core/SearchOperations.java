@@ -245,6 +245,16 @@ public interface SearchOperations {
 	 * Does a suggest query
 	 *
 	 * @param suggestion the query
+	 * @param the entity class
+	 * @return the suggest response
+	 * @since 4.1
+	 */
+	SearchResponse suggest(SuggestBuilder suggestion, Class<?> clazz);
+
+	/**
+	 * Does a suggest query
+	 *
+	 * @param suggestion the query
 	 * @param index the index to run the query against
 	 * @return the suggest response
 	 */
@@ -281,12 +291,33 @@ public interface SearchOperations {
 	 * Execute the multi search query against elasticsearch and return result as {@link List} of {@link SearchHits}.
 	 *
 	 * @param queries the queries to execute
+	 * @param clazz the entity clazz
+	 * @param <T> element return type
+	 * @return list of SearchHits
+	 * @since 4.1
+	 */
+	<T> List<SearchHits<T>> multiSearch(List<? extends Query> queries, Class<T> clazz);
+
+	/**
+	 * Execute the multi search query against elasticsearch and return result as {@link List} of {@link SearchHits}.
+	 *
+	 * @param queries the queries to execute
 	 * @param clazz the entity clazz used for property mapping
 	 * @param index the index to run the query against
 	 * @param <T> element return type
 	 * @return list of SearchHits
 	 */
 	<T> List<SearchHits<T>> multiSearch(List<? extends Query> queries, Class<T> clazz, IndexCoordinates index);
+
+	/**
+	 * Execute the multi search query against elasticsearch and return result as {@link List} of {@link SearchHits}.
+	 *
+	 * @param queries the queries to execute
+	 * @param classes the entity classes
+	 * @return list of SearchHits
+	 * @since 4.1
+	 */
+	List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes);
 
 	/**
 	 * Execute the multi search query against elasticsearch and return result as {@link List} of {@link SearchHits}.

@@ -23,6 +23,7 @@ import org.elasticsearch.action.admin.cluster.node.info.NodesInfoAction;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequestBuilder;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetRequestBuilder;
@@ -227,8 +228,9 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		return client.prepareDelete(index.getIndexName(), IndexCoordinates.TYPE, elasticsearchConverter.convertId(id))
-				.execute().actionGet().getId();
+		DeleteRequestBuilder deleteRequestBuilder = requestFactory.deleteRequestBuilder(client,
+				elasticsearchConverter.convertId(id), index);
+		return deleteRequestBuilder.execute().actionGet().getId();
 	}
 
 	@Override
@@ -293,8 +295,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(query.getPageable(), "pageable of query must not be null.");
 
-		ActionFuture<SearchResponse> action = requestFactory //
-				.searchRequestBuilder(client, query, clazz, index) //
+		ActionFuture<SearchResponse> action = requestFactory.searchRequestBuilder(client, query, clazz, index) //
 				.setScroll(TimeValue.timeValueMillis(scrollTimeInMillis)) //
 				.execute();
 
@@ -332,7 +333,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index) {
-		return client.prepareSearch(index.getIndexNames()).suggest(suggestion).get();
+		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, suggestion, index);
+		return searchRequestBuilder.get();
 	}
 
 	@Override

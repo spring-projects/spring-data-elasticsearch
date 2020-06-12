@@ -190,6 +190,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
+	public <T> Flux<T> saveAll(Mono<? extends Collection<? extends T>> entities, Class<T> clazz) {
+		return saveAll(entities, getIndexCoordinatesFor(clazz));
+	}
+
+	@Override
 	public <T> Flux<T> saveAll(Mono<? extends Collection<? extends T>> entitiesPublisher, IndexCoordinates index) {
 
 		Assert.notNull(entitiesPublisher, "Entities must not be null!");
@@ -213,6 +218,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 						return maybeCallAfterSave(savedEntity, index);
 					});
 		});
+	}
+
+	@Override
+	public <T> Flux<T> multiGet(Query query, Class<T> clazz) {
+		return multiGet(query, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override

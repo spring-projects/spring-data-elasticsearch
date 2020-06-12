@@ -119,6 +119,16 @@ public interface DocumentOperations {
 	 *
 	 * @param query the query defining the ids of the objects to get
 	 * @param clazz the type of the object to be returned
+	 * @return list of objects, contains null values for ids that are not found
+	 * @since 4.1
+	 */
+	<T> List<T> multiGet(Query query, Class<T> clazz);
+
+	/**
+	 * Execute a multiGet against elasticsearch for the given ids.
+	 *
+	 * @param query the query defining the ids of the objects to get
+	 * @param clazz the type of the object to be returned
 	 * @param index the index(es) from which the objects are read.
 	 * @return list of objects, contains null values for ids that are not found
 	 */
@@ -146,11 +156,34 @@ public interface DocumentOperations {
 	 * Bulk index all objects. Will do save or update.
 	 *
 	 * @param queries the queries to execute in bulk
+	 * @param clazz the entity class
+	 * @return the ids of the indexed objects
+	 * @since 4.1
+	 */
+	default List<String> bulkIndex(List<IndexQuery> queries, Class<?> clazz) {
+		return bulkIndex(queries, BulkOptions.defaultOptions(), clazz);
+	}
+
+	/**
+	 * Bulk index all objects. Will do save or update.
+	 *
+	 * @param queries the queries to execute in bulk
 	 * @return the ids of the indexed objects
 	 */
 	default List<String> bulkIndex(List<IndexQuery> queries, IndexCoordinates index) {
 		return bulkIndex(queries, BulkOptions.defaultOptions(), index);
 	}
+
+	/**
+	 * Bulk index all objects. Will do save or update.
+	 *
+	 * @param queries the queries to execute in bulk
+	 * @param bulkOptions options to be added to the bulk request
+	 * @param clazz the entity class
+	 * @return the ids of the indexed objects
+	 * @since 4.1
+	 */
+	List<String> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, Class<?> clazz);
 
 	/**
 	 * Bulk index all objects. Will do save or update.
@@ -169,6 +202,14 @@ public interface DocumentOperations {
 	default void bulkUpdate(List<UpdateQuery> queries, IndexCoordinates index) {
 		bulkUpdate(queries, BulkOptions.defaultOptions(), index);
 	}
+
+	/**
+	 * Bulk update all objects. Will do update.
+	 * @param clazz the entity class
+	 * @param queries the queries to execute in bulk
+	 * @since 4.1
+	 */
+	void bulkUpdate(List<UpdateQuery> queries, Class<?> clazz);
 
 	/**
 	 * Bulk update all objects. Will do update.
@@ -212,6 +253,16 @@ public interface DocumentOperations {
 	 * @return documentId of the document deleted
 	 */
 	String delete(Object entity, IndexCoordinates index);
+
+	/**
+	 * Delete all records matching the query.
+	 *
+	 * @param query query defining the objects
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @since 4.1
+	 */
+	void delete(Query query, Class<?> clazz);
 
 	/**
 	 * Delete all records matching the query.

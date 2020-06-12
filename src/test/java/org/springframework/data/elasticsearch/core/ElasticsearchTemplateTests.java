@@ -2781,13 +2781,23 @@ public abstract class ElasticsearchTemplateTests {
 
 		AliasMetaData aliasMetaData1 = aliasMetaData.get(0);
 		assertThat(aliasMetaData1).isNotNull();
-		assertThat(aliasMetaData1.alias()).isEqualTo(alias1);
-		assertThat(aliasMetaData1.indexRouting()).isEqualTo("0");
+		if (aliasMetaData1.alias().equals(alias1)) {
+			assertThat(aliasMetaData1.indexRouting()).isEqualTo("0");
+		} else if (aliasMetaData1.alias().equals(alias2)) {
+			assertThat(aliasMetaData1.searchRouting()).isEqualTo("1");
+		} else {
+			fail("unknown alias");
+		}
 
 		AliasMetaData aliasMetaData2 = aliasMetaData.get(1);
 		assertThat(aliasMetaData2).isNotNull();
-		assertThat(aliasMetaData2.alias()).isEqualTo(alias2);
-		assertThat(aliasMetaData2.searchRouting()).isEqualTo("1");
+		if (aliasMetaData2.alias().equals(alias1)) {
+			assertThat(aliasMetaData2.indexRouting()).isEqualTo("0");
+		} else if (aliasMetaData2.alias().equals(alias2)) {
+			assertThat(aliasMetaData2.searchRouting()).isEqualTo("1");
+		} else {
+			fail("unknown alias");
+		}
 
 		// cleanup
 		indexOperations.removeAlias(aliasQuery1);

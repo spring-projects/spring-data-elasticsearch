@@ -16,9 +16,9 @@
 package org.springframework.data.elasticsearch.repository.support;
 
 import org.elasticsearch.index.VersionType;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
 
 /**
@@ -35,44 +35,34 @@ import org.springframework.data.repository.core.support.PersistentEntityInformat
  * @author Christoph Strobl
  * @author Ivan Greene
  * @author Sylvain Laurent
+ * @author Peter-Josef Meisch
  */
 public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEntityInformation<T, ID>
 		implements ElasticsearchEntityInformation<T, ID> {
 
-	private final ElasticsearchPersistentEntity<T> entityMetadata;
-	private final IndexCoordinates indexCoordinates;
-	private final VersionType versionType;
+	private final ElasticsearchPersistentEntity<T> persistentEntity;
 
-	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity) {
-		this(entity, entity.getIndexCoordinates(), entity.getVersionType());
-	}
-
-	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> entity,
-			IndexCoordinates indexCoordinates, VersionType versionType) {
-		super(entity);
-
-		this.entityMetadata = entity;
-		this.indexCoordinates = indexCoordinates;
-		this.versionType = versionType;
+	public MappingElasticsearchEntityInformation(ElasticsearchPersistentEntity<T> persistentEntity) {
+		super(persistentEntity);
+		this.persistentEntity = persistentEntity;
 	}
 
 	@Override
 	public String getIdAttribute() {
-		return entityMetadata.getRequiredIdProperty().getFieldName();
+		return persistentEntity.getRequiredIdProperty().getFieldName();
 	}
-
 
 	@Override
 	public IndexCoordinates getIndexCoordinates() {
-		return indexCoordinates;
+		return persistentEntity.getIndexCoordinates();
 	}
 
 	@Override
 	public Long getVersion(T entity) {
 
-		ElasticsearchPersistentProperty versionProperty = entityMetadata.getVersionProperty();
+		ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
 		try {
-			return versionProperty != null ? (Long) entityMetadata.getPropertyAccessor(entity).getProperty(versionProperty)
+			return versionProperty != null ? (Long) persistentEntity.getPropertyAccessor(entity).getProperty(versionProperty)
 					: null;
 		} catch (Exception e) {
 			throw new IllegalStateException("failed to load version field", e);
@@ -81,15 +71,15 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 
 	@Override
 	public VersionType getVersionType() {
-		return versionType;
+		return persistentEntity.getVersionType();
 	}
 
 	@Override
 	public String getParentId(T entity) {
 
-		ElasticsearchPersistentProperty parentProperty = entityMetadata.getParentIdProperty();
+		ElasticsearchPersistentProperty parentProperty = persistentEntity.getParentIdProperty();
 		try {
-			return parentProperty != null ? (String) entityMetadata.getPropertyAccessor(entity).getProperty(parentProperty)
+			return parentProperty != null ? (String) persistentEntity.getPropertyAccessor(entity).getProperty(parentProperty)
 					: null;
 		} catch (Exception e) {
 			throw new IllegalStateException("failed to load parent ID: " + e, e);

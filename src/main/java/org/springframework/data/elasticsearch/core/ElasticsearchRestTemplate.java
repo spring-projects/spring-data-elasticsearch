@@ -37,7 +37,6 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
@@ -315,10 +314,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index) {
-		SearchRequest searchRequest = new SearchRequest(index.getIndexNames());
-		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-		sourceBuilder.suggest(suggestion);
-		searchRequest.source(sourceBuilder);
+		SearchRequest searchRequest = requestFactory.searchRequest(suggestion, index);
 		return execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
 	}
 

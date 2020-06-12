@@ -15,14 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 
 /**
  * SimpleElasticsearchMappingContext
@@ -30,31 +26,19 @@ import org.springframework.lang.Nullable;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  */
 public class SimpleElasticsearchMappingContext
-		extends AbstractMappingContext<SimpleElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty>
-		implements ApplicationContextAware {
-
-	private @Nullable ApplicationContext context;
+		extends AbstractMappingContext<SimpleElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> {
 
 	@Override
 	protected <T> SimpleElasticsearchPersistentEntity<?> createPersistentEntity(TypeInformation<T> typeInformation) {
-		SimpleElasticsearchPersistentEntity<T> persistentEntity = new SimpleElasticsearchPersistentEntity<>(
-				typeInformation);
-		if (context != null) {
-			persistentEntity.setApplicationContext(context);
-		}
-		return persistentEntity;
+		return new SimpleElasticsearchPersistentEntity<>(typeInformation);
 	}
 
 	@Override
 	protected ElasticsearchPersistentProperty createPersistentProperty(Property property,
 			SimpleElasticsearchPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
 		return new SimpleElasticsearchPersistentProperty(property, owner, simpleTypeHolder);
-	}
-
-	@Override
-	public void setApplicationContext(ApplicationContext context) throws BeansException {
-		this.context = context;
 	}
 }

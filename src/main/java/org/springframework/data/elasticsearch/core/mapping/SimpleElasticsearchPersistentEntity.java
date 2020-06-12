@@ -22,11 +22,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.elasticsearch.index.VersionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.expression.BeanFactoryAccessor;
-import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Setting;
@@ -35,10 +30,11 @@ import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
+import org.springframework.expression.common.LiteralExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -55,12 +51,10 @@ import org.springframework.util.Assert;
  * @author Roman Puchkovskiy
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
-		implements ElasticsearchPersistentEntity<T>, ApplicationContextAware {
+		implements ElasticsearchPersistentEntity<T> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleElasticsearchPersistentEntity.class);
-
-	private final StandardEvaluationContext context;
-	private final SpelExpressionParser parser;
+	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	private @Nullable String indexName;
 	private boolean useServerConfiguration;
@@ -76,12 +70,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private @Nullable VersionType versionType;
 	private boolean createIndexAndMapping;
 	private final Map<String, ElasticsearchPersistentProperty> fieldNamePropertyCache = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Expression> indexNameExpressions = new ConcurrentHashMap<>();
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 
 		super(typeInformation);
-		this.context = new StandardEvaluationContext();
-		this.parser = new SpelExpressionParser();
 
 		Class<T> clazz = typeInformation.getType();
 		if (clazz.isAnnotationPresent(Document.class)) {
@@ -102,26 +95,13 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		}
 	}
 
-	@Override
-	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-		context.addPropertyAccessor(new BeanFactoryAccessor());
-		context.setBeanResolver(new BeanFactoryResolver(applicationContext));
-		context.setRootObject(applicationContext);
-	}
-
 	private String getIndexName() {
-
-		if (indexName != null) {
-			Expression expression = parser.parseExpression(indexName, ParserContext.TEMPLATE_EXPRESSION);
-			return expression.getValue(context, String.class);
-		}
-
-		return getTypeInformation().getType().getSimpleName();
+		return indexName != null ? indexName : getTypeInformation().getType().getSimpleName();
 	}
 
 	@Override
 	public IndexCoordinates getIndexCoordinates() {
-		return IndexCoordinates.of(getIndexName());
+		return resolve(IndexCoordinates.of(getIndexName()));
 	}
 
 	@Nullable
@@ -294,4 +274,47 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	public ElasticsearchPersistentProperty getSeqNoPrimaryTermProperty() {
 		return seqNoPrimaryTermProperty;
 	}
+
+	// region SpEL handling
+	/**
+	 * resolves all the names in the IndexCoordinates object. If a name cannot be resolved, the original name is returned.
+	 *
+	 * @param indexCoordinates IndexCoordinates with names to resolve
+	 * @return IndexCoordinates with resolved names
+	 */
+	private IndexCoordinates resolve(IndexCoordinates indexCoordinates) {
+
+		EvaluationContext context = getEvaluationContext(null);
+
+		String[] indexNames = indexCoordinates.getIndexNames();
+		String[] resolvedNames = new String[indexNames.length];
+
+		for (int i = 0; i < indexNames.length; i++) {
+			String indexName = indexNames[i];
+			resolvedNames[i] = resolve(context, indexName);
+		}
+
+		return IndexCoordinates.of(resolvedNames);
+	}
+
+	/**
+	 * tries to resolve the given name. If this is not successful, the original value is returned
+	 *
+	 * @param context SpEL evaluation context
+	 * @param name name to resolve
+	 * @return the resolved name or the input name if it cannot be resolved
+	 */
+	private String resolve(EvaluationContext context, String name) {
+
+		Assert.notNull(name, "name must not be null");
+
+		Expression expression = indexNameExpressions.computeIfAbsent(name, s -> {
+			Expression expr = PARSER.parseExpression(name, ParserContext.TEMPLATE_EXPRESSION);
+			return expr instanceof LiteralExpression ? null : expr;
+		});
+
+		String resolvedName = expression != null ? expression.getValue(context, String.class) : null;
+		return resolvedName != null ? resolvedName : name;
+	}
+	// endregion
 }

@@ -492,6 +492,7 @@ class ElasticsearchPartQueryTests {
 
 	private String getQueryBuilder(String methodName, Class<?>[] parameterClasses, Object[] parameters)
 			throws NoSuchMethodException {
+
 		Method method = SampleRepository.class.getMethod(methodName, parameterClasses);
 		ElasticsearchQueryMethod queryMethod = new ElasticsearchQueryMethod(method,
 				new DefaultRepositoryMetadata(SampleRepository.class), new SpelAwareProxyProjectionFactory(),

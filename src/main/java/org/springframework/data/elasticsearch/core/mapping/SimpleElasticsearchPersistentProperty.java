@@ -20,6 +20,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -50,6 +53,8 @@ import org.springframework.util.StringUtils;
 public class SimpleElasticsearchPersistentProperty extends
 		AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements ElasticsearchPersistentProperty {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleElasticsearchPersistentProperty.class);
+
 	private static final List<String> SUPPORTED_ID_PROPERTY_NAMES = Arrays.asList("id", "document");
 
 	private final boolean isScore;
@@ -66,6 +71,15 @@ public class SimpleElasticsearchPersistentProperty extends
 
 		this.annotatedFieldName = getAnnotatedFieldName();
 		this.isId = super.isIdProperty() || SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName());
+
+		// deprecated since 4.1
+		@Deprecated
+		boolean isIdWithoutAnnotation = isId && !isAnnotationPresent(Id.class);
+		if (isIdWithoutAnnotation) {
+			LOGGER.warn("Using the property name of '{}' to identify the id property is deprecated."
+					+ " Please annotate the id property with '@Id'", getName());
+		}
+
 		this.isScore = isAnnotationPresent(Score.class);
 		this.isParent = isAnnotationPresent(Parent.class);
 		this.isSeqNoPrimaryTerm = SeqNoPrimaryTerm.class.isAssignableFrom(getRawType());
