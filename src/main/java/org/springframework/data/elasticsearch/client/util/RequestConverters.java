@@ -38,9 +38,11 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.explain.ExplainRequest;
@@ -751,12 +753,12 @@ public class RequestConverters {
 		}
 
 		Request request = new Request(HttpMethod.PUT.name(),
-				RequestConverters.endpoint(putMappingRequest.indices(), "_mapping", putMappingRequest.type()));
+				RequestConverters.endpoint(putMappingRequest.indices(), "_mapping"));
 
 		RequestConverters.Params parameters = new RequestConverters.Params(request) //
 				.withTimeout(putMappingRequest.timeout()) //
 				.withMasterTimeout(putMappingRequest.masterNodeTimeout()) //
-				.withIncludeTypeName(true);
+				.withIncludeTypeName(false);
 		request.setEntity(RequestConverters.createEntity(putMappingRequest, RequestConverters.REQUEST_BODY_CONTENT_TYPE));
 		return request;
 	}
@@ -769,6 +771,34 @@ public class RequestConverters {
 		parameters.withIndicesOptions(flushRequest.indicesOptions());
 		parameters.putParam("wait_if_ongoing", Boolean.toString(flushRequest.waitIfOngoing()));
 		parameters.putParam("force", Boolean.toString(flushRequest.force()));
+		return request;
+	}
+
+	public static Request getMapping(GetMappingsRequest getMappingsRequest) {
+		String[] indices = getMappingsRequest.indices() == null ? Strings.EMPTY_ARRAY : getMappingsRequest.indices();
+		String[] types = getMappingsRequest.types() == null ? Strings.EMPTY_ARRAY : getMappingsRequest.types();
+
+		Request request = new Request(HttpMethod.GET.name(), RequestConverters.endpoint(indices, "_mapping", types));
+
+		RequestConverters.Params parameters = new RequestConverters.Params(request);
+		parameters.withMasterTimeout(getMappingsRequest.masterNodeTimeout());
+		parameters.withIndicesOptions(getMappingsRequest.indicesOptions());
+		parameters.withLocal(getMappingsRequest.local());
+		parameters.withIncludeTypeName(false);
+		return request;
+	}
+
+	public static Request getSettings(GetSettingsRequest getSettingsRequest) {
+		String[] indices = getSettingsRequest.indices() == null ? Strings.EMPTY_ARRAY : getSettingsRequest.indices();
+		String[] names = getSettingsRequest.names() == null ? Strings.EMPTY_ARRAY : getSettingsRequest.names();
+
+		Request request = new Request(HttpMethod.GET.name(), RequestConverters.endpoint(indices, "_settings", names));
+
+		RequestConverters.Params parameters = new RequestConverters.Params(request);
+		parameters.withIndicesOptions(getSettingsRequest.indicesOptions());
+		parameters.withLocal(getSettingsRequest.local());
+		parameters.withIncludeDefaults(getSettingsRequest.includeDefaults());
+		parameters.withMasterTimeout(getSettingsRequest.masterNodeTimeout());
 		return request;
 	}
 

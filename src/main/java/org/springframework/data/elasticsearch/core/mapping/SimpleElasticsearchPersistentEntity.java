@@ -19,12 +19,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.index.VersionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
@@ -77,8 +78,9 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		super(typeInformation);
 
 		Class<T> clazz = typeInformation.getType();
-		if (clazz.isAnnotationPresent(Document.class)) {
-			Document document = clazz.getAnnotation(Document.class);
+		if (clazz.isAnnotationPresent(org.springframework.data.elasticsearch.annotations.Document.class)) {
+			org.springframework.data.elasticsearch.annotations.Document document = clazz
+					.getAnnotation(org.springframework.data.elasticsearch.annotations.Document.class);
 			Assert.hasText(document.indexName(),
 					" Unknown indexName. Make sure the indexName is defined. e.g @Document(indexName=\"foo\")");
 			this.indexName = document.indexName();
@@ -317,4 +319,19 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		return resolvedName != null ? resolvedName : name;
 	}
 	// endregion
+
+	@Override
+	public Document getDefaultSettings() {
+
+		if (isUseServerConfiguration()) {
+			return Document.create();
+		}
+
+		Map<String, String> map = new MapBuilder<String, String>()
+				.put("index.number_of_shards", String.valueOf(getShards()))
+				.put("index.number_of_replicas", String.valueOf(getReplicas()))
+				.put("index.refresh_interval", getRefreshInterval()).put("index.store.type", getIndexStoreType()).map();
+		return Document.from(map);
+	}
+
 }

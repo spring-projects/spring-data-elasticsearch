@@ -49,7 +49,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	IndexOperations indexOps(Class<?> clazz);
 
 	/**
-	 * get an {@link IndexOperations} that is bound to the given class
+	 * get an {@link IndexOperations} that is bound to the given index
 	 * 
 	 * @return IndexOperations
 	 */

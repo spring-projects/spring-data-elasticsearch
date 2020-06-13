@@ -8,9 +8,11 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
@@ -24,7 +26,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.util.RequestConverters;
 
 /**
@@ -88,7 +90,7 @@ public interface RequestCreator {
 			try {
 				return RequestConverters.bulk(request);
 			} catch (IOException e) {
-				throw new ElasticsearchException("Could not parse request", e);
+				throw new UncategorizedElasticsearchException("Could not parse request", e);
 			}
 		};
 	}
@@ -129,6 +131,20 @@ public interface RequestCreator {
 
 	default Function<CountRequest, Request> count() {
 		return RequestConverters::count;
+	}
+
+	/**
+	 * @since 4.1
+	 */
+	default Function<GetSettingsRequest, Request> getSettings() {
+		return RequestConverters::getSettings;
+	}
+
+	/**
+	 * @since 4.1
+	 */
+	default Function<GetMappingsRequest, Request> getMapping() {
+		return RequestConverters::getMapping;
 	}
 
 }

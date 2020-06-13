@@ -146,7 +146,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 				.getSettings(getSettingsRequest) //
 				.actionGet();
 
-		return convertSettingsResponseToMap(response, getSettingsRequest.indices()[0]);
+		return requestFactory.fromSettingsResponse(response, index.getIndexName());
 	}
 
 	@Override

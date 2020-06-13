@@ -40,10 +40,20 @@ public interface ReactiveElasticsearchOperations extends ReactiveDocumentOperati
 	 * Execute within a {@link ClientCallback} managing resources and translating errors.
 	 *
 	 * @param callback must not be {@literal null}.
-	 * @param <T>
+	 * @param <T> the type the Publisher emits
 	 * @return the {@link Publisher} emitting results.
 	 */
 	<T> Publisher<T> execute(ClientCallback<Publisher<T>> callback);
+
+	/**
+	 * Execute within a {@link IndicesClientCallback} managing resources and translating errors.
+	 *
+	 * @param callback must not be {@literal null}.
+	 * @param <T> the type the Publisher emits
+	 * @return the {@link Publisher} emitting results.
+	 * @since 4.1
+	 */
+	<T> Publisher<T> executeWithIndicesClient(IndicesClientCallback<Publisher<T>> callback);
 
 	/**
 	 * Get the {@link ElasticsearchConverter} used.
@@ -63,6 +73,22 @@ public interface ReactiveElasticsearchOperations extends ReactiveDocumentOperati
 	IndexCoordinates getIndexCoordinatesFor(Class<?> clazz);
 
 	/**
+	 * Creates a {@link ReactiveIndexOperations} that is bound to the given index
+	 * @param index IndexCoordinates specifying the index
+	 * @return ReactiveIndexOperations implementation
+	 * @since 4.1
+	 */
+	ReactiveIndexOperations indexOps(IndexCoordinates index);
+
+	/**
+	 * Creates a {@link ReactiveIndexOperations} that is bound to the given class
+	 * @param clazz the entity clazz specifiying the index information
+	 * @return ReactiveIndexOperations implementation
+	 * @since 4.1
+	 */
+	ReactiveIndexOperations indexOps(Class<?> clazz);
+
+	/**
 	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on
 	 * {@link ReactiveElasticsearchClient}.
 	 *
@@ -73,5 +99,16 @@ public interface ReactiveElasticsearchOperations extends ReactiveDocumentOperati
 	interface ClientCallback<T extends Publisher<?>> {
 
 		T doWithClient(ReactiveElasticsearchClient client);
+	}
+
+	/**
+	 * Callback interface to be used with {@link #executeWithIndicesClient(IndicesClientCallback)} for operating directly on
+	 * {@link ReactiveElasticsearchClient.Indices}.
+	 *
+	 * @param <T> the return type
+	 * @since 4.1
+	 */
+	interface IndicesClientCallback<T extends Publisher<?>> {
+		T doWithClient(ReactiveElasticsearchClient.Indices client);
 	}
 }

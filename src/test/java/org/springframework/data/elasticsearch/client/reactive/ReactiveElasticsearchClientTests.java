@@ -497,11 +497,12 @@ public class ReactiveElasticsearchClientTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-569
+	@Test // DATAES-569, DATAES-678
 	public void createIndex() throws IOException {
 
 		client.indices().createIndex(request -> request.index(INDEX_I)) //
 				.as(StepVerifier::create) //
+				.expectNext(true) //
 				.verifyComplete();
 
 		assertThat(syncClient.indices().exists(new GetIndexRequest(INDEX_I), RequestOptions.DEFAULT)).isTrue();
@@ -517,13 +518,14 @@ public class ReactiveElasticsearchClientTests {
 				.verifyError(ElasticsearchStatusException.class);
 	}
 
-	@Test // DATAES-569
+	@Test // DATAES-569, DATAES-678
 	public void deleteExistingIndex() throws IOException {
 
 		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
 
 		client.indices().deleteIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
+				.expectNext(true) //
 				.verifyComplete();
 
 		assertThat(syncClient.indices().exists(new GetIndexRequest(INDEX_I), RequestOptions.DEFAULT)).isFalse();
@@ -601,6 +603,7 @@ public class ReactiveElasticsearchClientTests {
 
 		client.indices().updateMapping(request -> request.indices(INDEX_I).type(TYPE_I).source(jsonMap)) //
 				.as(StepVerifier::create) //
+				.expectNext(true) //
 				.verifyComplete();
 	}
 

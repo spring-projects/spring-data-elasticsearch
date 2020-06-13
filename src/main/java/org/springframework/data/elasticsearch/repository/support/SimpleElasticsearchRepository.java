@@ -85,25 +85,18 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		this.entityInformation = metadata;
 		this.entityClass = this.entityInformation.getJavaType();
 		this.indexOperations = operations.indexOps(this.entityClass);
+
 		try {
-			if (createIndexAndMapping() && !indexOperations.exists()) {
-				createIndex();
-				putMapping();
+			if (shouldCreateIndexAndMapping() && !indexOperations.exists()) {
+				indexOperations.create();
+				indexOperations.putMapping(entityClass);
 			}
 		} catch (Exception exception) {
 			LOGGER.warn("Cannot create index: {}", exception.getMessage());
 		}
 	}
 
-	private void createIndex() {
-		indexOperations.create();
-	}
-
-	private void putMapping() {
-		indexOperations.putMapping(entityClass);
-	}
-
-	private boolean createIndexAndMapping() {
+	private boolean shouldCreateIndexAndMapping() {
 
 		final ElasticsearchPersistentEntity<?> entity = operations.getElasticsearchConverter().getMappingContext()
 				.getRequiredPersistentEntity(entityClass);

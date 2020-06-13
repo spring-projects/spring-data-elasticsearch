@@ -48,7 +48,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -59,7 +58,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.TestUtils;
-import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Highlight;
@@ -359,11 +357,11 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 		repository.deleteById("does-not-exist").as(StepVerifier::create).verifyComplete();
 	}
 
-	@Test // DATAES-519, DATAES-767, DATAES-822
-	public void deleteByIdShouldErrorWhenIndexDoesNotExist() {
+	@Test // DATAES-519, DATAES-767, DATAES-822, DATAES-678
+	public void deleteByIdShouldCompleteWhenIndexDoesNotExist() {
 		repository.deleteById("does-not-exist") //
 				.as(StepVerifier::create) //
-				.verifyError(UncategorizedElasticsearchException.class);
+				.verifyComplete();
 	}
 
 	@Test // DATAES-519
