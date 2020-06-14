@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
@@ -35,6 +36,8 @@ import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.index.AliasActions;
+import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
@@ -143,6 +146,23 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 			String index1 = getAliasesRequest.indices()[0];
 			return new ArrayList<>(alias.getAliases().get(index1));
 		});
+	}
+
+	@Override
+	protected Map<String, Set<AliasData>> doGetAliases(@Nullable String[] aliasNames, @Nullable String[] indexNames) {
+
+		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(aliasNames, indexNames);
+
+		return restTemplate.execute(client -> requestFactory
+				.convertAliasesResponse(client.indices().getAlias(getAliasesRequest, RequestOptions.DEFAULT).getAliases()));
+	}
+
+	@Override
+	public boolean alias(AliasActions aliasActions) {
+
+		IndicesAliasesRequest request = requestFactory.indicesAliasesRequest(aliasActions);
+		return restTemplate
+				.execute(client -> client.indices().updateAliases(request, RequestOptions.DEFAULT).isAcknowledged());
 	}
 
 	@Override

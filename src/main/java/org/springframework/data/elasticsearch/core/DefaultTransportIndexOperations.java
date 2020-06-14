@@ -15,10 +15,11 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.elasticsearch.client.Requests.*;
-
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
@@ -33,8 +34,11 @@ import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.index.AliasActions;
+import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
@@ -133,6 +137,27 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(index);
 		return client.admin().indices().getAliases(getAliasesRequest).actionGet().getAliases().get(index.getIndexName());
+	}
+
+	@Override
+	protected Map<String, Set<AliasData>> doGetAliases(String[] aliasNames, String[] indexNames) {
+
+		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(aliasNames, indexNames);
+
+		ImmutableOpenMap<String, List<AliasMetaData>> aliases = client.admin().indices().getAliases(getAliasesRequest)
+				.actionGet().getAliases();
+
+		Map<String, Set<AliasMetaData>> aliasesResponse = new LinkedHashMap<>();
+		aliases.keysIt().forEachRemaining(index -> aliasesResponse.put(index, new HashSet<>(aliases.get(index))));
+		return requestFactory.convertAliasesResponse(aliasesResponse);
+	}
+
+	@Override
+	public boolean alias(AliasActions aliasActions) {
+
+		IndicesAliasesRequestBuilder indicesAliasesRequestBuilder = requestFactory.indicesAliasesRequestBuilder(client,
+				aliasActions);
+		return indicesAliasesRequestBuilder.execute().actionGet().isAcknowledged();
 	}
 
 	@Override

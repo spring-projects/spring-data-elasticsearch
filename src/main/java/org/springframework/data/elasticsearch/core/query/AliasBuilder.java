@@ -18,12 +18,14 @@ package org.springframework.data.elasticsearch.core.query;
 import java.util.Map;
 
 import org.elasticsearch.index.query.QueryBuilder;
+import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
+ * @deprecated since 4.1, use {@link org.springframework.data.elasticsearch.core.IndexOperations#alias(AliasActions)}.
  */
 public class AliasBuilder {
 

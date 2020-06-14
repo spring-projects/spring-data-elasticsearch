@@ -17,7 +17,13 @@ package org.springframework.data.elasticsearch.core;
 
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
+import java.util.Set;
+
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.index.AliasActions;
+import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 
 /**
  * Interface defining operations on indexes for the reactive stack.
@@ -27,6 +33,7 @@ import org.springframework.data.elasticsearch.core.document.Document;
  */
 public interface ReactiveIndexOperations {
 
+	// region index management
 	/**
 	 * Create an index.
 	 *
@@ -65,7 +72,9 @@ public interface ReactiveIndexOperations {
 	 * @return a {@link Mono} signalling operation completion.
 	 */
 	Mono<Void> refresh();
+	// endregion
 
+	// region mappings
 	/**
 	 * Creates the index mapping for the entity this IndexOperations is bound to.
 	 *
@@ -114,7 +123,9 @@ public interface ReactiveIndexOperations {
 	 * @return the mapping
 	 */
 	Mono<Document> getMapping();
+	// endregion
 
+	// region settings
 	/**
 	 * get the settings for the index
 	 * 
@@ -131,4 +142,46 @@ public interface ReactiveIndexOperations {
 	 * @return a {@link Mono} with a {@link Document} containing the index settings
 	 */
 	Mono<Document> getSettings(boolean includeDefaults);
+	// endregion
+
+	// region aliases
+	/**
+	 * Executes the given {@link AliasActions}.
+	 *
+	 * @param aliasActions the actions to execute
+	 * @return if the operation is acknowledged by Elasticsearch
+	 * @since 4.1
+	 */
+	Mono<Boolean> alias(AliasActions aliasActions);
+
+	/**
+	 * gets information about aliases
+	 * 
+	 * @param aliasNames alias names, must not be {@literal null}
+	 * @return a {@link Mono} of {@link Map} from index names to {@link AliasData} for that index
+	 * @since 4.1
+	 */
+	Mono<Map<String, Set<AliasData>>> getAliases(String... aliasNames);
+
+	/**
+	 * gets information about aliases
+	 * 
+	 * @param indexNames alias names, must not be {@literal null}
+	 * @return a {@link Mono} of {@link Map} from index names to {@link AliasData} for that index
+	 * @since 4.1
+	 */
+	Mono<Map<String, Set<AliasData>>> getAliasesForIndex(String... indexNames);
+	// endregion
+
+	// region helper functions
+	/**
+	 * get the current {@link IndexCoordinates}. These may change over time when the entity class has a SpEL constructed
+	 * index name. When this IndexOperations is not bound to a class, the bound IndexCoordinates are returned.
+	 *
+	 * @return IndexCoordinates
+	 * @ince 4.1
+	 */
+	IndexCoordinates getIndexCoordinates();
+
+	// endregion
 }

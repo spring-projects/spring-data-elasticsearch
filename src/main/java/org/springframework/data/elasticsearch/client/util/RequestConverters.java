@@ -25,6 +25,8 @@ import java.util.Locale;
 import java.util.StringJoiner;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.lucene.util.BytesRef;
@@ -33,6 +35,8 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.storedscripts.DeleteStoredScriptRequest;
 import org.elasticsearch.action.admin.cluster.storedscripts.GetStoredScriptRequest;
 import org.elasticsearch.action.admin.cluster.storedscripts.PutStoredScriptRequest;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -799,6 +803,31 @@ public class RequestConverters {
 		parameters.withLocal(getSettingsRequest.local());
 		parameters.withIncludeDefaults(getSettingsRequest.includeDefaults());
 		parameters.withMasterTimeout(getSettingsRequest.masterNodeTimeout());
+		return request;
+	}
+
+	public static Request updateAliases(IndicesAliasesRequest indicesAliasesRequest) {
+		Request request = new Request(HttpPost.METHOD_NAME, "/_aliases");
+
+		RequestConverters.Params parameters = new RequestConverters.Params(request);
+		parameters.withTimeout(indicesAliasesRequest.timeout());
+		parameters.withMasterTimeout(indicesAliasesRequest.masterNodeTimeout());
+		request
+				.setEntity(RequestConverters.createEntity(indicesAliasesRequest, RequestConverters.REQUEST_BODY_CONTENT_TYPE));
+		return request;
+	}
+
+	public static Request getAlias(GetAliasesRequest getAliasesRequest) {
+
+		String[] indices = getAliasesRequest.indices() == null ? Strings.EMPTY_ARRAY : getAliasesRequest.indices();
+		String[] aliases = getAliasesRequest.aliases() == null ? Strings.EMPTY_ARRAY : getAliasesRequest.aliases();
+		String endpoint = RequestConverters.endpoint(indices, "_alias", aliases);
+
+		Request request = new Request(HttpGet.METHOD_NAME, endpoint);
+
+		RequestConverters.Params params = new RequestConverters.Params(request);
+		params.withIndicesOptions(getAliasesRequest.indicesOptions());
+		params.withLocal(getAliasesRequest.local());
 		return request;
 	}
 

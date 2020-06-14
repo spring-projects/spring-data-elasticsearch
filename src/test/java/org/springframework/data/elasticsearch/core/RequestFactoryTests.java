@@ -20,9 +20,11 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.mockito.Mockito.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.index.IndexAction;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexRequestBuilder;
@@ -30,6 +32,9 @@ import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.xcontent.ToXContent;
+import org.elasticsearch.common.xcontent.XContentHelper;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -43,6 +48,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.index.AliasAction;
+import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
+import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.Criteria;
@@ -248,6 +256,123 @@ class RequestFactoryTests {
 				IndexCoordinates.of("persons"));
 
 		assertThat(builder.request().source().seqNoAndPrimaryTerm()).isNull();
+	}
+
+	@Test // DATAES-864
+	void shouldBuildIndicesAliasRequest() throws IOException, JSONException {
+
+		AliasActions aliasActions = new AliasActions();
+
+		aliasActions.add(new AliasAction.Add(
+				AliasActionParameters.builder().withIndices("index1", "index2").withAliases("alias1").build()));
+		aliasActions.add(
+				new AliasAction.Remove(AliasActionParameters.builder().withIndices("index3").withAliases("alias1").build()));
+
+		aliasActions.add(new AliasAction.RemoveIndex(AliasActionParameters.builder().withIndices("index3").build()));
+
+		aliasActions.add(new AliasAction.Add(AliasActionParameters.builder().withIndices("index4").withAliases("alias4")
+				.withRouting("routing").withIndexRouting("indexRouting").withSearchRouting("searchRouting").withIsHidden(true)
+				.withIsWriteIndex(true).build()));
+
+		Query query = new CriteriaQuery(new Criteria("lastName").is("Smith"));
+		aliasActions.add(new AliasAction.Add(AliasActionParameters.builder().withIndices("index5").withAliases("alias5")
+				.withFilterQuery(query, Person.class).build()));
+
+		String expected = "{\n" + //
+				"  \"actions\": [\n" + //
+				"    {\n" + //
+				"      \"add\": {\n" + //
+				"        \"indices\": [\n" + //
+				"          \"index1\",\n" + //
+				"          \"index2\"\n" + //
+				"        ],\n" + //
+				"        \"aliases\": [\n" + //
+				"          \"alias1\"\n" + //
+				"        ]\n" + //
+				"      }\n" + //
+				"    },\n" + //
+				"    {\n" + //
+				"      \"remove\": {\n" + //
+				"        \"indices\": [\n" + //
+				"          \"index3\"\n" + //
+				"        ],\n" + //
+				"        \"aliases\": [\n" + //
+				"          \"alias1\"\n" + //
+				"        ]\n" + //
+				"      }\n" + //
+				"    },\n" + //
+				"    {\n" + //
+				"      \"remove_index\": {\n" + //
+				"        \"indices\": [\n" + //
+				"          \"index3\"\n" + //
+				"        ]\n" + //
+				"      }\n" + //
+				"    },\n" + //
+				"    {\n" + //
+				"      \"add\": {\n" + //
+				"        \"indices\": [\n" + //
+				"          \"index4\"\n" + //
+				"        ],\n" + //
+				"        \"aliases\": [\n" + //
+				"          \"alias4\"\n" + //
+				"        ],\n" + //
+				"        \"routing\": \"routing\",\n" + //
+				"        \"index_routing\": \"indexRouting\",\n" + //
+				"        \"search_routing\": \"searchRouting\",\n" + //
+				"        \"is_write_index\": true,\n" + //
+				"        \"is_hidden\": true\n" + //
+				"      }\n" + //
+				"    },\n" + //
+				"    {\n" + //
+				"      \"add\": {\n" + //
+				"        \"indices\": [\n" + //
+				"          \"index5\"\n" + //
+				"        ],\n" + //
+				"        \"aliases\": [\n" + //
+				"          \"alias5\"\n" + //
+				"        ],\n" + //
+				"        \"filter\": {\n" + //
+				"          \"bool\": {\n" + //
+				"            \"must\": [\n" + //
+				"              {\n" + //
+				"                \"query_string\": {\n" + //
+				"                  \"query\": \"Smith\",\n" + //
+				"                  \"fields\": [\n" + //
+				"                    \"last-name^1.0\"\n" + //
+				"                  ],\n" + //
+				"                  \"type\": \"best_fields\",\n" + //
+				"                  \"default_operator\": \"and\",\n" + //
+				"                  \"max_determinized_states\": 10000,\n" + //
+				"                  \"enable_position_increments\": true,\n" + //
+				"                  \"fuzziness\": \"AUTO\",\n" + //
+				"                  \"fuzzy_prefix_length\": 0,\n" + //
+				"                  \"fuzzy_max_expansions\": 50,\n" + //
+				"                  \"phrase_slop\": 0,\n" + //
+				"                  \"escape\": false,\n" + //
+				"                  \"auto_generate_synonyms_phrase_query\": true,\n" + //
+				"                  \"fuzzy_transpositions\": true,\n" + //
+				"                  \"boost\": 1.0\n" + //
+				"                }\n" + //
+				"              }\n" + //
+				"            ],\n" + //
+				"            \"adjust_pure_negative\": true,\n" + //
+				"            \"boost\": 1.0\n" + //
+				"          }\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  ]\n" + //
+				"}"; //
+
+		IndicesAliasesRequest indicesAliasesRequest = requestFactory.indicesAliasesRequest(aliasActions);
+
+		String json = requestToString(indicesAliasesRequest);
+
+		assertEquals(expected, json, false);
+	}
+
+	private String requestToString(ToXContent request) throws IOException {
+		return XContentHelper.toXContent(request, XContentType.JSON, true).utf8ToString();
 	}
 
 	static class Person {

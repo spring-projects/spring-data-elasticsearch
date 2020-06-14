@@ -21,21 +21,23 @@ import static org.springframework.util.CollectionUtils.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
-import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
-import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -55,9 +57,11 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
+import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
+import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.DistanceUnit;
@@ -86,6 +90,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.index.AliasAction;
+import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
+import org.springframework.data.elasticsearch.core.index.AliasActions;
+import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -150,11 +158,88 @@ class RequestFactory {
 		return new GetAliasesRequest().indices(indexNames);
 	}
 
+	public GetAliasesRequest getAliasesRequest(@Nullable String[] aliasNames, @Nullable String[] indexNames) {
+		return new GetAliasesRequest(aliasNames).indices(indexNames);
+	}
+
 	public IndicesAliasesRequest indicesAddAliasesRequest(AliasQuery query, IndexCoordinates index) {
 		IndicesAliasesRequest.AliasActions aliasAction = aliasAction(query, index);
 		IndicesAliasesRequest request = new IndicesAliasesRequest();
 		request.addAliasAction(aliasAction);
 		return request;
+	}
+
+	public IndicesAliasesRequest indicesAliasesRequest(AliasActions aliasActions) {
+
+		IndicesAliasesRequest request = new IndicesAliasesRequest();
+		aliasActions.getActions().forEach(aliasAction -> {
+
+			IndicesAliasesRequest.AliasActions aliasActionsES = null;
+
+			if (aliasAction instanceof AliasAction.Add) {
+				AliasAction.Add add = (AliasAction.Add) aliasAction;
+				IndicesAliasesRequest.AliasActions addES = IndicesAliasesRequest.AliasActions.add();
+
+				AliasActionParameters parameters = add.getParameters();
+				addES.indices(parameters.getIndices());
+				addES.aliases(parameters.getAliases());
+				addES.routing(parameters.getRouting());
+				addES.indexRouting(parameters.getIndexRouting());
+				addES.searchRouting(parameters.getSearchRouting());
+				addES.isHidden(parameters.getHidden());
+				addES.writeIndex(parameters.getWriteIndex());
+
+				Query filterQuery = parameters.getFilterQuery();
+
+				if (filterQuery != null) {
+
+					if (filterQuery instanceof CriteriaQuery && parameters.getFilterQueryClass() != null) {
+						CriteriaQuery query = (CriteriaQuery) filterQuery;
+						elasticsearchConverter.updateQuery(query, parameters.getFilterQueryClass());
+					}
+
+					QueryBuilder queryBuilder = getFilter(filterQuery);
+
+					if (queryBuilder == null) {
+						queryBuilder = getQuery(filterQuery);
+					}
+
+					addES.filter(queryBuilder);
+				}
+
+				aliasActionsES = addES;
+			} else if (aliasAction instanceof AliasAction.Remove) {
+				AliasAction.Remove remove = (AliasAction.Remove) aliasAction;
+				IndicesAliasesRequest.AliasActions removeES = IndicesAliasesRequest.AliasActions.remove();
+
+				AliasActionParameters parameters = remove.getParameters();
+				removeES.indices(parameters.getIndices());
+				removeES.aliases(parameters.getAliases());
+
+				aliasActionsES = removeES;
+			} else if (aliasAction instanceof AliasAction.RemoveIndex) {
+				AliasAction.RemoveIndex removeIndex = (AliasAction.RemoveIndex) aliasAction;
+				IndicesAliasesRequest.AliasActions removeIndexES = IndicesAliasesRequest.AliasActions.removeIndex();
+
+				AliasActionParameters parameters = removeIndex.getParameters();
+				removeIndexES.indices(parameters.getIndices()[0]);
+
+				aliasActionsES = removeIndexES;
+			}
+
+			if (aliasActionsES != null) {
+				request.addAliasAction(aliasActionsES);
+			}
+		});
+
+		return request;
+	}
+
+	public IndicesAliasesRequestBuilder indicesAliasesRequestBuilder(Client client, AliasActions aliasActions) {
+
+		IndicesAliasesRequestBuilder requestBuilder = client.admin().indices().prepareAliases();
+		indicesAliasesRequest(aliasActions).getAliasActions().forEach(requestBuilder::addAliasAction);
+		return requestBuilder;
 	}
 
 	public IndicesAliasesRequest indicesRemoveAliasesRequest(AliasQuery query, IndexCoordinates index) {
@@ -310,7 +395,6 @@ class RequestFactory {
 		return new GetIndexRequest(index.getIndexNames());
 	}
 
-
 	/**
 	 * creates a CreateIndexRequest from the elasticsearch library, used by the reactive methods.
 	 *
@@ -384,7 +468,6 @@ class RequestFactory {
 		return new GetSettingsRequest().indices(indexName).includeDefaults(includeDefaults);
 	}
 
-
 	public GetMappingsRequest getMappingsRequest(IndexCoordinates index) {
 
 		String[] indexNames = index.getIndexNames();
@@ -396,6 +479,41 @@ class RequestFactory {
 
 		String[] indexNames = index.getIndexNames();
 		return new org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest().indices(indexNames);
+	}
+
+	public Map<String, Set<AliasData>> convertAliasesResponse(
+			ImmutableOpenMap<String, List<AliasMetaData>> aliasesResponse) {
+
+		Map<String, Set<AliasMetaData>> mapped = new LinkedHashMap<>();
+		Iterator<String> keysIt = aliasesResponse.keysIt();
+		while (keysIt.hasNext()) {
+			String key = keysIt.next();
+
+			List<AliasMetaData> aliasMetaData = aliasesResponse.get(key);
+			mapped.put(key, new LinkedHashSet<>(aliasMetaData));
+		}
+
+		return convertAliasesResponse(mapped);
+	}
+
+	public Map<String, Set<AliasData>> convertAliasesResponse(Map<String, Set<AliasMetaData>> aliasesResponse) {
+		Map<String, Set<AliasData>> converted = new LinkedHashMap<>();
+		aliasesResponse.forEach((index, aliasMetaDataSet) -> {
+			Set<AliasData> aliasDataSet = new LinkedHashSet<>();
+
+			aliasMetaDataSet.forEach(aliasMetaData -> {
+				Document filter = null;
+				CompressedXContent aliasMetaDataFilter = aliasMetaData.getFilter();
+				if (aliasMetaDataFilter != null) {
+					filter = Document.parse(aliasMetaDataFilter.string());
+				}
+				aliasDataSet.add(AliasData.of(aliasMetaData.alias(), filter, aliasMetaData.indexRouting(),
+						aliasMetaData.getSearchRouting(), aliasMetaData.writeIndex(), aliasMetaData.isHidden()));
+			});
+
+			converted.put(index, aliasDataSet);
+		});
+		return converted;
 	}
 
 	// endregion

@@ -20,11 +20,17 @@ import static org.springframework.util.StringUtils.*;
 
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
+import java.util.Set;
+
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.elasticsearch.client.GetAliasesResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -33,6 +39,8 @@ import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.index.AliasActions;
+import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -138,7 +146,9 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		return Mono.from(operations.executeWithIndicesClient(
 				client -> client.refreshIndex(refreshRequest(getIndexCoordinates().getIndexNames()))));
 	}
+	// endregion
 
+	// region mappings
 	@Override
 	public Mono<Document> createMapping() {
 		return createMapping(checkForBoundClass());
@@ -176,7 +186,9 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 					return Mono.just(document);
 				});
 	}
+	// endregion
 
+	// region settings
 	@Override
 	public Mono<Document> getSettings(boolean includeDefaults) {
 
@@ -189,14 +201,36 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 	// endregion
 
+	// region aliases
+	@Override
+	public Mono<Boolean> alias(AliasActions aliasActions) {
+
+		IndicesAliasesRequest request = requestFactory.indicesAliasesRequest(aliasActions);
+		return Mono.from(operations.executeWithIndicesClient(client -> client.updateAliases(request)));
+	}
+
+	@Override
+	public Mono<Map<String, Set<AliasData>>> getAliases(String... aliasNames) {
+		return getAliases(aliasNames, null);
+	}
+
+	@Override
+	public Mono<Map<String, Set<AliasData>>> getAliasesForIndex(String... indexNames) {
+		return getAliases(null, indexNames);
+	}
+
+	private Mono<Map<String, Set<AliasData>>> getAliases(@Nullable String[] aliasNames, @Nullable String[] indexNames) {
+
+		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(aliasNames, indexNames);
+		return Mono.from(operations.executeWithIndicesClient(client -> client.getAliases(getAliasesRequest)))
+				.map(GetAliasesResponse::getAliases).map(requestFactory::convertAliasesResponse);
+	}
+
+	// endregion
+
 	// region helper functions
-	/**
-	 * get the current {@link IndexCoordinates}. These may change over time when the entity class has a SpEL constructed
-	 * index name. When this IndexOperations is not bound to a class, the bound IndexCoordinates are returned.
-	 *
-	 * @return IndexCoordinates
-	 */
-	private IndexCoordinates getIndexCoordinates() {
+	@Override
+	public IndexCoordinates getIndexCoordinates() {
 		return (boundClass != null) ? getIndexCoordinatesFor(boundClass) : boundIndex;
 	}
 

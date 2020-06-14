@@ -19,9 +19,11 @@ import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import lombok.Data;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 import org.json.JSONException;
 import org.junit.jupiter.api.AfterEach;
@@ -38,6 +40,10 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.core.index.AliasAction;
+import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
+import org.springframework.data.elasticsearch.core.index.AliasActions;
+import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
@@ -331,6 +337,45 @@ public class ReactiveIndexOperationsTest {
 						fail("", e);
 					}
 				}).verifyComplete();
+	}
+
+	@Test // DATAES-864
+	void shouldCreateAlias() {
+
+		ReactiveIndexOperations indexOps = operations.indexOps(Entity.class);
+
+		AliasActions aliasActions = new AliasActions();
+		aliasActions.add(new AliasAction.Add(AliasActionParameters.builder()
+				.withIndices(indexOps.getIndexCoordinates().getIndexNames()).withAliases("aliasA", "aliasB").build()));
+
+		indexOps.create().flatMap(success -> {
+			if (success) {
+				return indexOps.alias(aliasActions);
+			} else {
+				return Mono.just(false);
+			}
+		}).as(StepVerifier::create).expectNext(true).verifyComplete();
+	}
+
+	@Test // DATAES-864
+	void shouldGetAliasData() {
+
+		ReactiveIndexOperations indexOps = operations.indexOps(Entity.class);
+
+		AliasActions aliasActions = new AliasActions();
+		aliasActions.add(new AliasAction.Add(AliasActionParameters.builder()
+				.withIndices(indexOps.getIndexCoordinates().getIndexNames()).withAliases("aliasA", "aliasB").build()));
+
+		assertThat(indexOps.create().block()).isTrue();
+		assertThat(indexOps.alias(aliasActions).block()).isTrue();
+
+		indexOps.getAliases("aliasA") //
+				.as(StepVerifier::create) //
+				.assertNext(aliasDatas -> { //
+					Set<AliasData> aliasData = aliasDatas.get(indexOps.getIndexCoordinates().getIndexName());
+					assertThat(aliasData.stream().map(AliasData::getAlias)).containsExactly("aliasA");
+				}) //
+				.verifyComplete();
 	}
 
 	@Data
