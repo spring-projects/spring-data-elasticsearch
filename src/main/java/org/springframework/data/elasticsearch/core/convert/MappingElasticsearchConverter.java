@@ -596,7 +596,7 @@ public class MappingElasticsearchConverter
 		Map<Object, Object> target = new LinkedHashMap<>();
 		Streamable<Entry<String, Object>> mapSource = Streamable.of(value.entrySet());
 
-		if (!typeHint.getActualType().getType().equals(Object.class)
+		if (typeHint.getActualType() != null && !typeHint.getActualType().getType().equals(Object.class)
 				&& isSimpleType(typeHint.getMapValueType().getType())) {
 			mapSource.forEach(it -> {
 
