@@ -789,6 +789,30 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(entity.locations).containsExactly(new GeoPoint(12.34, 23.45), new GeoPoint(34.56, 45.67));
 	}
 
+	@Test // DATAES-865
+	void shouldWriteEntityWithMapAsObject() throws JSONException {
+
+		Map<String, Object> map = new LinkedHashMap<>();
+		map.put("foo", "bar");
+
+		EntityWithObject entity = new EntityWithObject();
+		entity.setId("42");
+		entity.setContent(map);
+
+		String expected = "{\n" + //
+				"  \"id\": \"42\",\n" + //
+				"  \"content\": {\n" + //
+				"    \"foo\": \"bar\"\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		Document document = Document.create();
+
+		mappingElasticsearchConverter.write(entity, document);
+
+		assertEquals(expected, document.toJson(), false);
+	}
+
 	private String pointTemplate(String name, Point point) {
 		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
 	}
@@ -1015,5 +1039,11 @@ public class MappingElasticsearchConverterUnitTests {
 	static class GeoPointListEntity {
 		@Id String id;
 		List<GeoPoint> locations;
+	}
+
+	@Data
+	static class EntityWithObject {
+		@Id private String id;
+		private Object content;
 	}
 }
