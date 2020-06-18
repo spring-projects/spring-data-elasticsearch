@@ -96,6 +96,7 @@ import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.suggest.Suggest;
 import org.reactivestreams.Publisher;
 
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
@@ -132,6 +133,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  * @author Henrique Amaral
  * @author Roman Puchkovskiy
  * @author Russell Parry
+ * @author Thomas Geese
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
@@ -884,6 +886,12 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		} catch (IOException e) {
 			return new ElasticsearchStatusException(content, status);
 		}
+	}
+
+	@Override
+	public Flux<Suggest> suggest(HttpHeaders headers, SearchRequest searchRequest) {
+		return sendRequest(searchRequest, requestCreator.search(), SearchResponse.class, headers) //
+				.map(SearchResponse::getSuggest);
 	}
 
 	private static void buildExceptionMessages(StringBuilder sb, Throwable t) {

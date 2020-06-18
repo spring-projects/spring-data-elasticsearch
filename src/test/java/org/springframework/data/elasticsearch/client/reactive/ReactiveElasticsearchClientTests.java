@@ -53,6 +53,8 @@ import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,6 +73,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  * @author Henrique Amaral
  * @author Russell Parry
+ * @author Thomas Geese
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
@@ -679,6 +682,32 @@ public class ReactiveElasticsearchClientTests {
 
 		client.aggregate(request).as(StepVerifier::create)
 				.expectNextMatches(aggregation -> aggregation.getType().equals(StringTerms.NAME)).verifyComplete();
+	}
+
+	@Test // DATAES-866
+	public void suggestReturnsSuggestionResults() throws IOException {
+		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+		Map<String, Object> jsonMap = Collections.singletonMap("properties",
+				Collections.singletonMap("firstname", Collections.singletonMap("type", "completion")));
+		syncClient.indices().putMapping(new PutMappingRequest(INDEX_I).source(jsonMap), RequestOptions.DEFAULT);
+
+		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+
+		SuggestBuilder suggestBuilder = new SuggestBuilder().addSuggestion(
+				"firstname",
+				new CompletionSuggestionBuilder("firstname").prefix("ch")
+		);
+
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder().query(QueryBuilders.matchAllQuery());
+		searchSourceBuilder.suggest(suggestBuilder);
+
+		SearchRequest request = new SearchRequest(INDEX_I) //
+				.source(searchSourceBuilder);
+
+		client
+				.suggest(request).as(StepVerifier::create).expectNextMatches(suggestions -> suggestions
+						.getSuggestion("firstname").getEntries().get(0).getOptions().get(0).getText().string().equals("chade"))
+				.verifyComplete();
 	}
 
 	private AddToIndexOfType addSourceDocument() {

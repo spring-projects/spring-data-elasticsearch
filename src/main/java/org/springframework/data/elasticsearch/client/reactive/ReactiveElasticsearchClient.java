@@ -52,6 +52,7 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.suggest.Suggest;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.http.HttpHeaders;
@@ -67,6 +68,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author Mark Paluch
  * @author Peter-Josef Meisch
  * @author Henrique Amaral
+ * @author Thomas Geese
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
@@ -416,6 +418,27 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
 	 */
 	Flux<SearchHit> search(HttpHeaders headers, SearchRequest searchRequest);
+
+	/**
+	 * Execute the given {@link SearchRequest} against the {@literal search} API.
+	 *
+	 * @param searchRequest must not be {@literal null}.
+	 * @return the {@link Flux} emitting {@link Suggest suggestions} one by one.
+	 * @since 4.1
+	 */
+	default Flux<Suggest> suggest(SearchRequest searchRequest) {
+		return suggest(HttpHeaders.EMPTY, searchRequest);
+	}
+
+	/**
+	 * Execute the given {@link SearchRequest} against the {@literal search} API.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param searchRequest must not be {@literal null}.
+	 * @return the {@link Flux} emitting {@link Suggest suggestions} one by one.
+	 * @since 4.1
+	 */
+	Flux<Suggest> suggest(HttpHeaders headers, SearchRequest searchRequest);
 
 	/**
 	 * Execute the given {@link SearchRequest} with aggregations against the {@literal search} API.
