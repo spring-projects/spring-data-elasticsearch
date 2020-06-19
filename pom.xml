@@ -22,7 +22,7 @@
 		<elasticsearch>7.7.1</elasticsearch>
 		<log4j>2.9.1</log4j>
 		<springdata.commons>2.4.0-SNAPSHOT</springdata.commons>
-		<netty>4.1.39.Final</netty>
+		<netty>4.1.50.Final</netty>
 		<java-module-name>spring.data.elasticsearch</java-module-name>
 	</properties>
 
