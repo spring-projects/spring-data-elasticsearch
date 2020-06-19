@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -26,6 +27,7 @@ import com.github.tomakehurst.wiremock.matching.EqualToPattern;
 /**
  * @author Peter-Josef Meisch
  */
+@Disabled("SocketException: Socket closed happens on the CLI build while running the test individually succeeds")
 public class RestClientsTest {
 
 	@ParameterizedTest // DATAES-700
@@ -125,7 +127,7 @@ public class RestClientsTest {
 
 	/**
 	 * starts a Wiremock server and calls consumer with the server as argument. Stops the server after consumer execution.
-	 * 
+	 *
 	 * @param consumer the consumer
 	 */
 	private void wireMockServer(WiremockConsumer consumer) {
@@ -147,7 +149,7 @@ public class RestClientsTest {
 	interface ClientUnderTest {
 		/**
 		 * Pings the configured server.
-		 * 
+		 *
 		 * @return
 		 */
 		boolean ping() throws Exception;
@@ -215,7 +217,7 @@ public class RestClientsTest {
 
 	/**
 	 * Provides the factories to use in the parameterized tests
-	 * 
+	 *
 	 * @return stream of factories
 	 */
 	static Stream<ClientUnderTestFactory> clientUnderTestFactorySource() {

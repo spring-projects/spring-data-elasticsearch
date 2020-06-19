@@ -27,8 +27,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
-import reactor.netty.tcp.ProxyProvider;
-import reactor.netty.tcp.TcpClient;
+import reactor.netty.transport.ProxyProvider;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -98,6 +97,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientLogger;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
@@ -239,14 +239,14 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		Duration connectTimeout = clientConfiguration.getConnectTimeout();
 		Duration soTimeout = clientConfiguration.getSocketTimeout();
 
-		TcpClient tcpClient = TcpClient.create();
+		HttpClient httpClient = HttpClient.create();
 
 		if (!connectTimeout.isNegative()) {
-			tcpClient = tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.toIntExact(connectTimeout.toMillis()));
+			httpClient = httpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.toIntExact(connectTimeout.toMillis()));
 		}
 
 		if (!soTimeout.isNegative()) {
-			tcpClient = tcpClient.doOnConnected(connection -> connection //
+			httpClient = httpClient.doOnConnected(connection -> connection //
 					.addHandlerLast(new ReadTimeoutHandler(soTimeout.toMillis(), TimeUnit.MILLISECONDS))
 					.addHandlerLast(new WriteTimeoutHandler(soTimeout.toMillis(), TimeUnit.MILLISECONDS)));
 		}
@@ -258,12 +258,11 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 			if (hostPort.length != 2) {
 				throw new IllegalArgumentException("invalid proxy configuration " + proxy + ", should be \"host:port\"");
 			}
-			tcpClient = tcpClient.proxy(proxyOptions -> proxyOptions.type(ProxyProvider.Proxy.HTTP).host(hostPort[0])
+			httpClient = httpClient.proxy(proxyOptions -> proxyOptions.type(ProxyProvider.Proxy.HTTP).host(hostPort[0])
 					.port(Integer.parseInt(hostPort[1])));
 		}
 
 		String scheme = "http";
-		HttpClient httpClient = HttpClient.from(tcpClient);
 
 		if (clientConfiguration.useSsl()) {
 
@@ -839,7 +838,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	/**
 	 * checks if the given content body contains an {@link ElasticsearchException}, if yes it is returned in a Mono.error.
 	 * Otherwise the content is returned in the Mono
-	 * 
+	 *
 	 * @param content the content to analyze
 	 * @param mediaType the returned media type
 	 * @param status the response status
@@ -860,7 +859,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/**
 	 * tries to parse an {@link ElasticsearchException} from the given body content
-	 * 
+	 *
 	 * @param content the content to analyse
 	 * @param mediaType the type of the body content
 	 * @return an {@link ElasticsearchException} or {@literal null}.
