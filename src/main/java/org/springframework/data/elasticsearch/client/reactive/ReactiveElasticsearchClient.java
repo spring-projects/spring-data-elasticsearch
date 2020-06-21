@@ -422,6 +422,20 @@ public interface ReactiveElasticsearchClient {
 	/**
 	 * Execute the given {@link SearchRequest} against the {@literal search} API.
 	 *
+	 * @param consumer never {@literal null}.
+	 * @return the {@link Flux} emitting {@link Suggest suggestions} one by one.
+	 * @since 4.1
+	 */
+	default Flux<Suggest> suggest(Consumer<SearchRequest> consumer) {
+
+		SearchRequest request = new SearchRequest();
+		consumer.accept(request);
+		return suggest(request);
+	}
+
+	/**
+	 * Execute the given {@link SearchRequest} against the {@literal search} API.
+	 *
 	 * @param searchRequest must not be {@literal null}.
 	 * @return the {@link Flux} emitting {@link Suggest suggestions} one by one.
 	 * @since 4.1

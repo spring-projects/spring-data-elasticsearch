@@ -693,10 +693,8 @@ public class ReactiveElasticsearchClientTests {
 
 		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
 
-		SuggestBuilder suggestBuilder = new SuggestBuilder().addSuggestion(
-				"firstname",
-				new CompletionSuggestionBuilder("firstname").prefix("ch")
-		);
+		SuggestBuilder suggestBuilder = new SuggestBuilder().addSuggestion("firstname",
+				new CompletionSuggestionBuilder("firstname").prefix("ch"));
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder().query(QueryBuilders.matchAllQuery());
 		searchSourceBuilder.suggest(suggestBuilder);

@@ -645,7 +645,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	@Override
 	public Flux<Suggest> suggest(SuggestBuilder suggestion, Class<?> entityType) {
-		return suggest(suggestion, getIndexCoordinatesFor(entityType));
+		return doSuggest(suggestion, getIndexCoordinatesFor(entityType));
 	}
 
 	@Override
