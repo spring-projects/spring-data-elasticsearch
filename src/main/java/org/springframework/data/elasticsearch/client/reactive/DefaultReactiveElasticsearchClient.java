@@ -239,7 +239,11 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		Duration connectTimeout = clientConfiguration.getConnectTimeout();
 		Duration soTimeout = clientConfiguration.getSocketTimeout();
 
-		HttpClient httpClient = HttpClient.create();
+		// DATAES-870: previously: HttpClient httpClient = HttpClient.create();
+		// disable pooling of connections (see https://github.com/spring-projects/spring-framework/issues/22464)
+		// otherwise we get errors: "Connection prematurely closed BEFORE response; nested exception is
+		// java.lang.RuntimeException: Connection prematurely closed BEFORE response"
+		HttpClient httpClient = HttpClient.newConnection().compress(true);
 
 		if (!connectTimeout.isNegative()) {
 			httpClient = httpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.toIntExact(connectTimeout.toMillis()));
