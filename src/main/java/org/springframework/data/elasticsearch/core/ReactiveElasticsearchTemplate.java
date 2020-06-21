@@ -41,6 +41,8 @@ import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.suggest.Suggest;
+import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,6 +92,7 @@ import org.springframework.util.Assert;
  * @author Aleksei Arsenev
  * @author Roman Puchkovskiy
  * @author Russell Parry
+ * @author Thomas Geese
  * @since 3.2
  */
 public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations, ApplicationContextAware {
@@ -638,6 +641,23 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	@Override
 	public Flux<Aggregation> aggregate(Query query, Class<?> entityType, IndexCoordinates index) {
 		return doAggregate(query, entityType, index);
+	}
+
+	@Override
+	public Flux<Suggest> suggest(SuggestBuilder suggestion, Class<?> entityType) {
+		return suggest(suggestion, getIndexCoordinatesFor(entityType));
+	}
+
+	@Override
+	public Flux<Suggest> suggest(SuggestBuilder suggestion, IndexCoordinates index) {
+		return doSuggest(suggestion, index);
+	}
+
+	private Flux<Suggest> doSuggest(SuggestBuilder suggestion, IndexCoordinates index) {
+		return Flux.defer(() -> {
+			SearchRequest request = requestFactory.searchRequest(suggestion, index);
+			return Flux.from(execute(client -> client.suggest(request)));
+		});
 	}
 
 	private Flux<Aggregation> doAggregate(Query query, Class<?> entityType, IndexCoordinates index) {
