@@ -44,6 +44,7 @@ import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
+import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
@@ -709,6 +710,13 @@ public class MappingElasticsearchConverter
 
 			if (container.equals(type) && type.getType().equals(actualType)) {
 				return false;
+			}
+
+			if (container.getRawTypeInformation().equals(type)) {
+				Class<?> containerClass = container.getRawTypeInformation().getType();
+				if (containerClass.equals(JoinField.class) && type.getType().equals(actualType)) {
+					return false;
+				}
 			}
 		}
 

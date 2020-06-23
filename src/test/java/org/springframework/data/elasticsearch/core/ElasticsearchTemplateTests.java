@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.assertj.core.util.Lists;
@@ -49,6 +50,8 @@ import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.index.VersionType;
+import org.elasticsearch.index.query.SimpleQueryStringBuilder;
+import org.elasticsearch.join.query.ParentIdQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
@@ -68,20 +71,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.ElasticsearchException;
-import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.InnerField;
-import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.Score;
-import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.lang.Nullable;
 
@@ -117,9 +117,10 @@ public abstract class ElasticsearchTemplateTests {
 	private static final String INDEX_3_NAME = "test-index-3";
 
 	protected final IndexCoordinates index = IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY);
+	protected static final String INDEX_NAME_JOIN_SAMPLE_ENTITY = "test-index-sample-join-template";
 
 	@Autowired protected ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	protected IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
@@ -136,6 +137,10 @@ public abstract class ElasticsearchTemplateTests {
 		IndexOperations indexOpsSearchHitsEntity = operations.indexOps(SearchHitsEntity.class);
 		indexOpsSearchHitsEntity.create();
 		indexOpsSearchHitsEntity.putMapping(SearchHitsEntity.class);
+
+		IndexOperations indexOpsJoinEntity = operations.indexOps(ElasticsearchRestTemplateTests.SampleJoinEntity.class);
+		indexOpsJoinEntity.create();
+		indexOpsJoinEntity.putMapping(ElasticsearchRestTemplateTests.SampleJoinEntity.class);
 	}
 
 	@AfterEach
@@ -158,6 +163,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.indexOps(HighlightEntity.class).delete();
 		operations.indexOps(OptimisticEntity.class).delete();
 		operations.indexOps(OptimisticAndVersionedEntity.class).delete();
+		operations.indexOps(IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY)).delete();
 	}
 
 	@Test // DATAES-106
@@ -171,7 +177,6 @@ public abstract class ElasticsearchTemplateTests {
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 		operations.index(indexQuery, index);
 		indexOperations.refresh();
-		;
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria());
 
 		// when
@@ -3302,6 +3307,135 @@ public abstract class ElasticsearchTemplateTests {
 		operations.save(forEdit);
 	}
 
+	@Test
+	void shouldSupportCRUDOpsForEntityWithJoinFields() throws Exception {
+		String qId1 = java.util.UUID.randomUUID().toString();
+		String qId2 = java.util.UUID.randomUUID().toString();
+		String aId1 = java.util.UUID.randomUUID().toString();
+		String aId2 = java.util.UUID.randomUUID().toString();
+
+		shouldSaveEntityWithJoinFields(qId1, qId2, aId1, aId2);
+		shouldUpdateEntityWithJoinFields(qId1, qId2, aId1, aId2);
+		shouldDeleteEntityWithJoinFields(qId2, aId2);
+	}
+
+	void shouldSaveEntityWithJoinFields(String qId1, String qId2, String aId1, String aId2) throws Exception {
+		SampleJoinEntity sampleQuestionEntity1 = new SampleJoinEntity();
+		sampleQuestionEntity1.setUuid(qId1);
+		sampleQuestionEntity1.setText("This is a question");
+
+		JoinField<String> myQJoinField1 = new JoinField<>("question");
+		sampleQuestionEntity1.setMyJoinField(myQJoinField1);
+
+		SampleJoinEntity sampleQuestionEntity2 = new SampleJoinEntity();
+		sampleQuestionEntity2.setUuid(qId2);
+		sampleQuestionEntity2.setText("This is another question");
+
+		JoinField<String> myQJoinField2 = new JoinField<>("question");
+		sampleQuestionEntity2.setMyJoinField(myQJoinField2);
+
+		SampleJoinEntity sampleAnswerEntity1 = new SampleJoinEntity();
+		sampleAnswerEntity1.setUuid(aId1);
+		sampleAnswerEntity1.setText("This is an answer");
+
+		JoinField<String> myAJoinField1 = new JoinField<>("answer");
+		myAJoinField1.setParent(qId1);
+		sampleAnswerEntity1.setMyJoinField(myAJoinField1);
+
+		SampleJoinEntity sampleAnswerEntity2 = new SampleJoinEntity();
+		sampleAnswerEntity2.setUuid(aId2);
+		sampleAnswerEntity2.setText("This is another answer");
+
+		JoinField<String> myAJoinField2 = new JoinField<>("answer");
+		myAJoinField2.setParent(qId1);
+		sampleAnswerEntity2.setMyJoinField(myAJoinField2);
+
+		operations.save(Arrays.asList(sampleQuestionEntity1, sampleQuestionEntity2,
+				sampleAnswerEntity1, sampleAnswerEntity2), IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY));
+		indexOperations.refresh();
+		Thread.sleep(5000);
+
+		SearchHits<SampleJoinEntity> hits = operations.search(new NativeSearchQueryBuilder().withQuery(
+				new ParentIdQueryBuilder("answer", qId1))
+				.build(), SampleJoinEntity.class);
+
+		List<String> hitIds = hits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
+			@Override
+			public String apply(SearchHit<SampleJoinEntity> sampleJoinEntitySearchHit) {
+				return sampleJoinEntitySearchHit.getId();
+			}
+		}).collect(Collectors.toList());
+
+		assertThat(hitIds.size()).isEqualTo(2);
+		assertThat(hitIds.containsAll(Arrays.asList(aId1, aId2))).isTrue();
+	}
+
+	void shouldUpdateEntityWithJoinFields(String qId1, String qId2, String aId1, String aId2) throws Exception {
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.create();
+		document.put("myJoinField", new JoinField<>("answer", qId2).getAsMap());
+		UpdateQuery updateQuery = UpdateQuery.builder(aId2) //
+				.withDocument(document) //
+				.withRouting(qId2)
+				.build();
+
+		List<UpdateQuery> queries = new ArrayList<>();
+		queries.add(updateQuery);
+
+		// when
+		operations.bulkUpdate(queries, IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY));
+		indexOperations.refresh();
+		Thread.sleep(5000);
+
+		SearchHits<SampleJoinEntity> updatedHits = operations.search(new NativeSearchQueryBuilder().withQuery(
+				new ParentIdQueryBuilder("answer", qId2))
+				.build(), SampleJoinEntity.class);
+
+		List<String> hitIds = updatedHits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
+			@Override
+			public String apply(SearchHit<SampleJoinEntity> sampleJoinEntitySearchHit) {
+				return sampleJoinEntitySearchHit.getId();
+			}
+		}).collect(Collectors.toList());
+		assertThat(hitIds.size()).isEqualTo(1);
+		assertThat(hitIds.get(0)).isEqualTo(aId2);
+
+		updatedHits = operations.search(new NativeSearchQueryBuilder().withQuery(
+				new ParentIdQueryBuilder("answer", qId1))
+				.build(), SampleJoinEntity.class);
+
+		hitIds = updatedHits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
+			@Override
+			public String apply(SearchHit<SampleJoinEntity> sampleJoinEntitySearchHit) {
+				return sampleJoinEntitySearchHit.getId();
+			}
+		}).collect(Collectors.toList());
+		assertThat(hitIds.size()).isEqualTo(1);
+		assertThat(hitIds.get(0)).isEqualTo(aId1);
+	}
+
+	void shouldDeleteEntityWithJoinFields(String qId2, String aId2) throws Exception {
+		Query query = new NativeSearchQueryBuilder()
+				.withQuery(new ParentIdQueryBuilder("answer", qId2))
+				.withRoute(qId2)
+				.build();
+		operations.delete(query, SampleJoinEntity.class, IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY));
+		indexOperations.refresh();
+		Thread.sleep(5000);
+
+		SearchHits<SampleJoinEntity> deletedHits = operations.search(new NativeSearchQueryBuilder().withQuery(
+				new ParentIdQueryBuilder("answer", qId2))
+				.build(), SampleJoinEntity.class);
+
+		List<String> hitIds = deletedHits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
+			@Override
+			public String apply(SearchHit<SampleJoinEntity> sampleJoinEntitySearchHit) {
+				return sampleJoinEntitySearchHit.getId();
+			}
+		}).collect(Collectors.toList());
+		assertThat(hitIds.size()).isEqualTo(0);
+	}
+
 	protected RequestFactory getRequestFactory() {
 		return ((AbstractElasticsearchTemplate) operations).getRequestFactory();
 	}
@@ -3481,5 +3615,19 @@ public abstract class ElasticsearchTemplateTests {
 		private String message;
 		private SeqNoPrimaryTerm seqNoPrimaryTerm;
 		@Version private Long version;
+	}
+
+	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	@Document(indexName = INDEX_NAME_JOIN_SAMPLE_ENTITY)
+	static class SampleJoinEntity {
+		@Id @Field(type = Keyword) private String uuid;
+		@JoinTypeRelations(relations = {
+				@JoinTypeRelation(parent = "question", children = {"answer"})
+		})
+		private JoinField<String> myJoinField;
+		@Field(type = Text) private String text;
 	}
 }

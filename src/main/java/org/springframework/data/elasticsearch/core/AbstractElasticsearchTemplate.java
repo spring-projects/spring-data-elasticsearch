@@ -39,6 +39,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.elasticsearch.BulkFailureException;
+import org.springframework.data.elasticsearch.core.join.JoinField;
+import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -533,6 +535,22 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Nullable
+	private String getEntityRouting(Object entity) {
+		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
+		ElasticsearchPersistentProperty joinProperty = persistentEntity.getJoinFieldProperty();
+
+		if (joinProperty != null) {
+			Object joinField = persistentEntity.getPropertyAccessor(entity).getProperty(joinProperty);
+			if (joinField != null && JoinField.class.isAssignableFrom(joinField.getClass())
+				&& ((JoinField<?>) joinField).getParent() != null) {
+				return elasticsearchConverter.convertId(((JoinField<?>) joinField).getParent());
+			}
+		}
+
+		return null;
+	}
+
+	@Nullable
 	private Long getEntityVersion(Object entity) {
 		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
 		ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
@@ -580,6 +598,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		} else {
 			// version cannot be used together with seq_no and primary_term
 			builder.withVersion(getEntityVersion(entity));
+		}
+
+		String routing = getEntityRouting(entity);
+		if (routing != null) {
+			builder.withRouting(routing);
 		}
 		return builder.build();
 	}

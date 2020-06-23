@@ -40,6 +40,8 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.JoinTypeRelation;
+import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
@@ -47,6 +49,7 @@ import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.MappingException;
@@ -73,6 +76,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Petr Kukral
  * @author Peter-Josef Meisch
  * @author Xiao Yu
+ * @author Subhobrata Dey
  */
 public class MappingBuilder {
 
@@ -93,7 +97,10 @@ public class MappingBuilder {
 	private static final String TYPE_DYNAMIC = "dynamic";
 	private static final String TYPE_VALUE_KEYWORD = "keyword";
 	private static final String TYPE_VALUE_GEO_POINT = "geo_point";
+	private static final String TYPE_VALUE_JOIN = "join";
 	private static final String TYPE_VALUE_COMPLETION = "completion";
+
+	private static final String JOIN_TYPE_RELATIONS = "relations";
 
 	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
 
@@ -210,6 +217,10 @@ public class MappingBuilder {
 		if (isGeoPointProperty(property)) {
 			applyGeoPointFieldMapping(builder, property);
 			return;
+		}
+
+		if (isJoinFieldProperty(property)) {
+			addJoinFieldMapping(builder, property);
 		}
 
 		Field fieldAnnotation = property.findAnnotation(Field.class);
@@ -336,6 +347,36 @@ public class MappingBuilder {
 		builder.endObject();
 	}
 
+	private void addJoinFieldMapping(XContentBuilder builder,
+									 ElasticsearchPersistentProperty property) throws IOException {
+		JoinTypeRelation[] joinTypeRelations = property.getRequiredAnnotation(JoinTypeRelations.class).relations();
+
+		if (joinTypeRelations.length == 0) {
+			logger.warn("Property {}s type is JoinField but its annotation JoinTypeRelation is " + //
+							"not properly maintained", //
+					property.getFieldName());
+			return;
+		}
+		builder.startObject(property.getFieldName());
+
+		builder.field(FIELD_PARAM_TYPE, TYPE_VALUE_JOIN);
+
+		builder.startObject(JOIN_TYPE_RELATIONS);
+
+		for (JoinTypeRelation joinTypeRelation: joinTypeRelations) {
+			String parent = joinTypeRelation.parent();
+			String[] children = joinTypeRelation.children();
+
+			if (children.length > 1) {
+				builder.array(parent, children);
+			} else if (children.length == 1) {
+				builder.field(parent, children[0]);
+			}
+		}
+		builder.endObject();
+		builder.endObject();
+	}
+
 	/**
 	 * Add mapping for @MultiField annotation
 	 *
@@ -421,6 +462,10 @@ public class MappingBuilder {
 
 	private boolean isGeoPointProperty(ElasticsearchPersistentProperty property) {
 		return property.getActualType() == GeoPoint.class || property.isAnnotationPresent(GeoPointField.class);
+	}
+
+	private boolean isJoinFieldProperty(ElasticsearchPersistentProperty property) {
+		return property.getActualType() == JoinField.class;
 	}
 
 	private boolean isCompletionProperty(ElasticsearchPersistentProperty property) {

@@ -34,6 +34,7 @@ public class IndexQueryBuilder {
 	@Deprecated @Nullable private String parentId;
 	@Nullable private Long seqNo;
 	@Nullable private Long primaryTerm;
+	@Nullable private String routing;
 
 	public IndexQueryBuilder withId(String id) {
 		this.id = id;
@@ -67,6 +68,11 @@ public class IndexQueryBuilder {
 		return this;
 	}
 
+	public IndexQueryBuilder withRouting(@Nullable String routing) {
+		this.routing = routing;
+		return this;
+	}
+
 	public IndexQuery build() {
 		IndexQuery indexQuery = new IndexQuery();
 		indexQuery.setId(id);
@@ -76,6 +82,7 @@ public class IndexQueryBuilder {
 		indexQuery.setVersion(version);
 		indexQuery.setSeqNo(seqNo);
 		indexQuery.setPrimaryTerm(primaryTerm);
+		indexQuery.setRouting(routing);
 		return indexQuery;
 	}
 }
