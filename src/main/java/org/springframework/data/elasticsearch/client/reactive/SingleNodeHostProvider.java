@@ -60,13 +60,13 @@ class SingleNodeHostProvider implements HostProvider {
 				.head().uri("/")
 				.headers(httpHeaders -> httpHeaders.addAll(headersSupplier.get())) //
 				.exchange() //
-				.map(it -> {
+				.flatMap(it -> {
 					if (it.statusCode().isError()) {
 						state = ElasticsearchHost.offline(endpoint);
 					} else {
 						state = ElasticsearchHost.online(endpoint);
 					}
-					return state;
+					return it.releaseBody().thenReturn(state);
 				}).onErrorResume(throwable -> {
 
 					state = ElasticsearchHost.offline(endpoint);

@@ -117,9 +117,11 @@ public class MultiNodeHostProviderUnitTests {
 		mock.when(HOST_2).get(requestHeadersUriSpec -> {
 
 			ClientResponse response1 = mock(ClientResponse.class);
+			when(response1.releaseBody()).thenReturn(Mono.empty());
 			Receive.error(response1);
 
 			ClientResponse response2 = mock(ClientResponse.class);
+			when(response2.releaseBody()).thenReturn(Mono.empty());
 			Receive.ok(response2);
 
 			when(requestHeadersUriSpec.exchange()).thenReturn(Mono.just(response1), Mono.just(response2));

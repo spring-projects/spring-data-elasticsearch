@@ -240,11 +240,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		Duration connectTimeout = clientConfiguration.getConnectTimeout();
 		Duration soTimeout = clientConfiguration.getSocketTimeout();
 
-		// DATAES-870: previously: HttpClient httpClient = HttpClient.create();
-		// disable pooling of connections (see https://github.com/spring-projects/spring-framework/issues/22464)
-		// otherwise we get errors: "Connection prematurely closed BEFORE response; nested exception is
-		// java.lang.RuntimeException: Connection prematurely closed BEFORE response"
-		HttpClient httpClient = HttpClient.newConnection().compress(true);
+		HttpClient httpClient = HttpClient.create().compress(true);
 
 		if (!connectTimeout.isNegative()) {
 			httpClient = httpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.toIntExact(connectTimeout.toMillis()));
@@ -305,7 +301,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	public Mono<Boolean> ping(HttpHeaders headers) {
 
 		return sendRequest(new MainRequest(), requestCreator.ping(), RawActionResponse.class, headers) //
-				.map(response -> response.statusCode().is2xxSuccessful()) //
+				.flatMap(response -> response.releaseBody().thenReturn(response.statusCode().is2xxSuccessful())) //
 				.onErrorResume(NoReachableHostException.class, error -> Mono.just(false)).next();
 	}
 
@@ -355,7 +351,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	public Mono<Boolean> exists(HttpHeaders headers, GetRequest getRequest) {
 
 		return sendRequest(getRequest, requestCreator.exists(), RawActionResponse.class, headers) //
-				.map(response -> response.statusCode().is2xxSuccessful()) //
+				.flatMap(response -> response.releaseBody().thenReturn(response.statusCode().is2xxSuccessful())) //
 				.next();
 	}
 
@@ -555,7 +551,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	public Mono<Boolean> existsIndex(HttpHeaders headers, GetIndexRequest request) {
 
 		return sendRequest(request, requestCreator.indexExists(), RawActionResponse.class, headers) //
-				.map(response -> response.statusCode().is2xxSuccessful()) //
+				.flatMap(response -> response.releaseBody().thenReturn(response.statusCode().is2xxSuccessful())) //
 				.next();
 	}
 

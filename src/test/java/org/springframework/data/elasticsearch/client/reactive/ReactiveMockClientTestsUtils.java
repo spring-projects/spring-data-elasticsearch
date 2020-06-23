@@ -243,6 +243,7 @@ public class ReactiveMockClientTestsUtils {
 					Mockito.when(headersUriSpec.exchange()).thenReturn(Mono.just(response));
 					Mockito.when(bodySpy.exchange()).thenReturn(Mono.just(response));
 					Mockito.when(response.statusCode()).thenReturn(HttpStatus.ACCEPTED);
+					Mockito.when(response.releaseBody()).thenReturn(Mono.empty());
 
 					headersUriSpecMap.putIfAbsent(key, headersUriSpec);
 					bodyUriSpecMap.putIfAbsent(key, bodySpy);

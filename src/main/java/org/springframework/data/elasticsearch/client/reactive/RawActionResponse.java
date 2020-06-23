@@ -15,11 +15,12 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
-import org.elasticsearch.common.io.stream.StreamOutput;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 
 import org.elasticsearch.action.ActionResponse;
+import org.elasticsearch.common.io.stream.StreamOutput;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.reactive.ClientHttpResponse;
@@ -72,5 +73,14 @@ class RawActionResponse extends ActionResponse {
 	 */
 	@Override
 	public void writeTo(StreamOutput out) throws IOException {
+	}
+
+	/**
+	 * Ensure the response body is released to properly release the underlying connection.
+	 *
+	 * @return
+	 */
+	public Mono<Void> releaseBody() {
+		return delegate.releaseBody();
 	}
 }

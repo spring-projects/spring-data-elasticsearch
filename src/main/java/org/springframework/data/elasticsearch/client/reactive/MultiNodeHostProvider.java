@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
-import org.springframework.http.HttpHeaders;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -33,6 +32,7 @@ import java.util.function.Supplier;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost.State;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -121,15 +121,15 @@ class MultiNodeHostProvider implements HostProvider {
 				.map(ElasticsearchHost::getEndpoint).next();
 	}
 
-	private ElasticsearchHost updateNodeState(Tuple2<InetSocketAddress, ClientResponse> tuple2) {
+	private ElasticsearchHost updateNodeState(Tuple2<InetSocketAddress, State> tuple2) {
 
-		State state = tuple2.getT2().statusCode().isError() ? State.OFFLINE : State.ONLINE;
+		State state = tuple2.getT2();
 		ElasticsearchHost elasticsearchHost = new ElasticsearchHost(tuple2.getT1(), state);
 		hosts.put(tuple2.getT1(), elasticsearchHost);
 		return elasticsearchHost;
 	}
 
-	private Flux<Tuple2<InetSocketAddress, ClientResponse>> nodes(@Nullable State state) {
+	private Flux<Tuple2<InetSocketAddress, State>> nodes(@Nullable State state) {
 
 		return Flux.fromIterable(hosts()) //
 				.filter(entry -> state == null || entry.getState().equals(state)) //
@@ -144,7 +144,8 @@ class MultiNodeHostProvider implements HostProvider {
 								clientProvider.getErrorListener().accept(throwable);
 							});
 
-					return Mono.just(host).zipWith(exchange);
+					return Mono.just(host).zipWith(exchange
+							.flatMap(it -> it.releaseBody().thenReturn(it.statusCode().isError() ? State.OFFLINE : State.ONLINE)));
 				}) //
 				.onErrorContinue((throwable, o) -> clientProvider.getErrorListener().accept(throwable));
 	}
