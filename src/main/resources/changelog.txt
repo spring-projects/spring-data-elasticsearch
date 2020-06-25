@@ -1,6 +1,42 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.1.0-M1 (2020-06-25)
+----------------------------------------
+* DATAES-870 - Workaround for reactor-netty error.
+* DATAES-868 - Upgrade to Netty 4.1.50.Final.
+* DATAES-867 - Adopt to changes in Reactor Netty 1.0.
+* DATAES-866 - Implement suggest search in reactive client.
+* DATAES-865 - Fix MappingElasticsearchConverter writing an Object property containing a Map.
+* DATAES-863 - Improve server error response handling.
+* DATAES-859 - Don't use randomNumeric() in tests.
+* DATAES-858 - Use standard Spring code of conduct.
+* DATAES-857 - Registered simple types are not read from list.
+* DATAES-853 - Cleanup tests that do not delete test indices.
+* DATAES-852 - Upgrade to Elasticsearch 7.7.1.
+* DATAES-850 - Add warning and documentation for missing TemporalAccessor configuration.
+* DATAES-848 - Add the name of the index to SearchHit.
+* DATAES-847 - Add missing DateFormat values.
+* DATAES-845 - MappingElasticsearchConverter crashes when writing lists containing null values.
+* DATAES-844 - Improve TOC formatting for migration guides.
+* DATAES-841 - Remove deprecated type mappings code.
+* DATAES-840 - Consolidate index name SpEL resolution.
+* DATAES-839 - ReactiveElasticsearchTemplate should use RequestFactory.
+* DATAES-838 - Update to Elasticsearch 7.7.0.
+* DATAES-836 - Fix typo in Javadocs.
+* DATAES-835 - Fix code sample in documentation for scroll API.
+* DATAES-832 - findAllById repository method returns iterable with null elements for not found ids.
+* DATAES-831 - SearchOperations.searchForStream does not use requested maxResults.
+* DATAES-829 - Deprecate AbstractElasticsearchRepository and cleanup SimpleElasticsearchRepository.
+* DATAES-828 - Fields of type date need to have a format defined.
+* DATAES-827 - Repositories should not try to create an index when it already exists.
+* DATAES-826 - Add method to IndexOperations to write an index mapping from a entity class.
+* DATAES-825 - Update readme to use latest spring.io docs.
+* DATAES-824 - Release 4.1 M1 (2020.0.0).
+* DATAES-678 - Introduce ReactiveIndexOperations.
+* DATAES-263 - Inner Hits support.
+
+
 Changes in version 4.0.1.RELEASE (2020-06-10)
 ---------------------------------------------
 * DATAES-857 - Registered simple types are not read from list.
@@ -1136,6 +1172,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
