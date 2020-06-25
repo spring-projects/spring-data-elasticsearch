@@ -19,6 +19,7 @@ import static org.springframework.util.StringUtils.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
@@ -31,6 +32,7 @@ import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -182,6 +184,25 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	protected abstract boolean doRemoveAlias(AliasQuery query, IndexCoordinates index);
 
 	@Override
+	public Map<String, Set<AliasData>> getAliases(String... aliasNames) {
+
+		Assert.notEmpty(aliasNames, "aliasNames must not be empty");
+
+		return doGetAliases(aliasNames, null);
+	}
+
+	@Override
+	public Map<String, Set<AliasData>> getAliasesForIndex(String... indexNames) {
+
+		Assert.notEmpty(indexNames, "indexNames must not be empty");
+
+		return doGetAliases(null, indexNames);
+	}
+
+	protected abstract Map<String, Set<AliasData>> doGetAliases(@Nullable String[] aliasNames,
+			@Nullable String[] indexNames);
+
+	@Override
 	public Document createMapping() {
 		return createMapping(checkForBoundClass());
 	}
@@ -223,13 +244,8 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 		return elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(clazz);
 	}
 
-	/**
-	 * get the current {@link IndexCoordinates}. These may change over time when the entity class has a SpEL constructed
-	 * index name. When this IndexOperations is not bound to a class, the bound IndexCoordinates are returned.
-	 *
-	 * @return IndexCoordinates
-	 */
-	protected IndexCoordinates getIndexCoordinates() {
+	@Override
+	public IndexCoordinates getIndexCoordinates() {
 		return (boundClass != null) ? getIndexCoordinatesFor(boundClass) : boundIndex;
 	}
 

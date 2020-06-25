@@ -22,6 +22,8 @@ import java.net.ConnectException;
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -47,6 +49,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
@@ -1125,5 +1128,73 @@ public interface ReactiveElasticsearchClient {
 		 * @since 4.1
 		 */
 		Mono<GetMappingsResponse> getMapping(HttpHeaders headers, GetMappingsRequest getMappingsRequest);
+
+		/**
+		 * Execute the given {@link IndicesAliasesRequest} against the {@literal indices} API.
+		 * 
+		 * @param consumer never {@literal null}.
+		 * @return a {@link Mono} signalling operation completion.
+		 * @since 4.1
+		 */
+		default Mono<Boolean> updateAliases(Consumer<IndicesAliasesRequest> consumer) {
+			IndicesAliasesRequest indicesAliasesRequest = new IndicesAliasesRequest();
+			consumer.accept(indicesAliasesRequest);
+			return updateAliases(indicesAliasesRequest);
+		}
+
+		/**
+		 * Execute the given {@link IndicesAliasesRequest} against the {@literal indices} API.
+		 * 
+		 * @param indicesAliasesRequest must not be {@literal null}
+		 * @return a {@link Mono} signalling operation completion.
+		 * @since 4.1
+		 */
+		default Mono<Boolean> updateAliases(IndicesAliasesRequest indicesAliasesRequest) {
+			return updateAliases(HttpHeaders.EMPTY, indicesAliasesRequest);
+		}
+
+		/**
+		 * Execute the given {@link IndicesAliasesRequest} against the {@literal indices} API.
+		 * 
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param indicesAliasesRequest must not be {@literal null}
+		 * @return a {@link Mono} signalling operation completion.
+		 * @since 4.1
+		 */
+		Mono<Boolean> updateAliases(HttpHeaders headers, IndicesAliasesRequest indicesAliasesRequest);
+
+		/**
+		 * Execute the given {@link GetAliasesRequest} against the {@literal indices} API.
+		 *
+		 * @param consumer never {@literal null}.
+		 * @return a {@link Mono} signalling operation completion.
+		 * @since 4.1
+		 */
+		default Mono<GetAliasesResponse> getAliases(Consumer<GetAliasesRequest> consumer) {
+			GetAliasesRequest getAliasesRequest = new GetAliasesRequest();
+			consumer.accept(getAliasesRequest);
+			return getAliases(getAliasesRequest);
+		}
+
+		/**
+		 * Execute the given {@link GetAliasesRequest} against the {@literal indices} API.
+		 *
+		 * @param getAliasesRequest must not be {@literal null}
+		 * @return a {@link Mono} signalling operation completion.
+		 * @since 4.1
+		 */
+		default Mono<GetAliasesResponse> getAliases(GetAliasesRequest getAliasesRequest) {
+			return getAliases(HttpHeaders.EMPTY, getAliasesRequest);
+		}
+
+		/**
+		 * Execute the given {@link GetAliasesRequest} against the {@literal indices} API.
+		 *
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param getAliasesRequest must not be {@literal null}
+		 * @return a {@link Mono} signalling operation completion.
+		 * @since 4.1
+		 */
+		Mono<GetAliasesResponse> getAliases(HttpHeaders headers, GetAliasesRequest getAliasesRequest);
 	}
 }

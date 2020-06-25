@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -75,6 +76,10 @@ import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.index.AliasAction;
+import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
+import org.springframework.data.elasticsearch.core.index.AliasActions;
+import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.util.StreamUtils;
@@ -215,7 +220,7 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(sampleEntity1).isEqualTo(sampleEntity);
 	}
 
-	@Test
+	@Test // DATAES-52
 	public void shouldReturnObjectsForGivenIdsUsingMultiGet() {
 
 		// given
@@ -277,7 +282,7 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(sampleEntities.get(2)).isEqualTo(sampleEntity2);
 	}
 
-	@Test
+	@Test // DATAES-52
 	public void shouldReturnObjectsForGivenIdsUsingMultiGetWithFields() {
 
 		// given
@@ -2737,6 +2742,54 @@ public abstract class ElasticsearchTemplateTests {
 		List<AliasMetaData> aliases = indexOperations.queryForAlias();
 		assertThat(aliases).isNotNull();
 		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
+	}
+
+	@Test // DATAES-864
+	void shouldAddAliasesWithAliasActions() {
+
+		AliasActions aliasActions = new AliasActions();
+		aliasActions.add(new AliasAction.Add(AliasActionParameters.builder()
+				.withIndices(indexOperations.getIndexCoordinates().getIndexNames()).withAliases("aliasA", "aliasB").build()));
+
+		indexOperations.alias(aliasActions);
+
+		List<AliasMetaData> aliases = indexOperations.queryForAlias();
+		assertThat(aliases).hasSize(2);
+		assertThat(aliases.stream().map(AliasMetaData::alias).collect(Collectors.toList())).contains("aliasA", "aliasB");
+	}
+
+	@Test // DATAES-864
+	void shouldRemoveAliasesWithAliasActions() {
+
+		AliasActions aliasActions = new AliasActions();
+		aliasActions.add(new AliasAction.Add(AliasActionParameters.builder()
+				.withIndices(indexOperations.getIndexCoordinates().getIndexNames()).withAliases("aliasA", "aliasB").build()));
+
+		indexOperations.alias(aliasActions);
+
+		aliasActions = new AliasActions();
+		aliasActions.add(new AliasAction.Remove(AliasActionParameters.builder()
+				.withIndices(indexOperations.getIndexCoordinates().getIndexNames()).withAliases("aliasA", "aliasB").build()));
+
+		indexOperations.alias(aliasActions);
+
+		List<AliasMetaData> aliases = indexOperations.queryForAlias();
+		assertThat(aliases).hasSize(0);
+	}
+
+	@Test // DATAES-864
+	void shouldGetAliasData() {
+		AliasActions aliasActions = new AliasActions();
+		aliasActions.add(new AliasAction.Add(AliasActionParameters.builder()
+				.withIndices(indexOperations.getIndexCoordinates().getIndexNames()).withAliases("aliasA", "aliasB").build()));
+
+		indexOperations.alias(aliasActions);
+
+		Map<String, Set<AliasData>> aliasDatas = indexOperations.getAliases("aliasA");
+
+		Set<AliasData> aliasData = aliasDatas.get(indexOperations.getIndexCoordinates().getIndexName());
+
+		assertThat(aliasData.stream().map(AliasData::getAlias)).containsExactly("aliasA");
 	}
 
 	@Test // DATAES-70

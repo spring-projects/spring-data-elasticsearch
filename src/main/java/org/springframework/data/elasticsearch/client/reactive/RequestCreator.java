@@ -3,6 +3,8 @@ package org.springframework.data.elasticsearch.client.reactive;
 import java.io.IOException;
 import java.util.function.Function;
 
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -147,4 +149,14 @@ public interface RequestCreator {
 		return RequestConverters::getMapping;
 	}
 
+	/**
+	 * @since 4.1
+	 */
+	default Function<IndicesAliasesRequest, Request> updateAlias() {
+		return RequestConverters::updateAliases;
+	}
+
+	default Function<GetAliasesRequest, Request> getAlias() {
+		return RequestConverters::getAlias;
+	}
 }

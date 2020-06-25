@@ -48,6 +48,8 @@ import org.apache.http.util.EntityUtils;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionRequest;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -82,6 +84,7 @@ import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
@@ -167,13 +170,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		this.hostProvider = hostProvider;
 		this.requestCreator = requestCreator;
-	}
-
-	public void setHeadersSupplier(Supplier<HttpHeaders> headersSupplier) {
-
-		Assert.notNull(headersSupplier, "headersSupplier must not be null");
-
-		this.headersSupplier = headersSupplier;
 	}
 
 	/**
@@ -291,6 +287,13 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		provider = provider.withDefaultHeaders(clientConfiguration.getDefaultHeaders()) //
 				.withWebClientConfigurer(clientConfiguration.getWebClientConfigurer());
 		return provider;
+	}
+
+	public void setHeadersSupplier(Supplier<HttpHeaders> headersSupplier) {
+
+		Assert.notNull(headersSupplier, "headersSupplier must not be null");
+
+		this.headersSupplier = headersSupplier;
 	}
 
 	/*
@@ -420,6 +423,12 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.flatMap(Flux::fromIterable);
 	}
 
+	@Override
+	public Flux<Suggest> suggest(HttpHeaders headers, SearchRequest searchRequest) {
+		return sendRequest(searchRequest, requestCreator.search(), SearchResponse.class, headers) //
+				.map(SearchResponse::getSuggest);
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#aggregate(org.springframework.http.HttpHeaders, org.elasticsearch.action.search.SearchRequest)
@@ -541,98 +550,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.publishNext();
 	}
 
-	// --> INDICES
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#existsIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.get.GetIndexRequest)
-	 */
-	@Override
-	public Mono<Boolean> existsIndex(HttpHeaders headers, GetIndexRequest request) {
-
-		return sendRequest(request, requestCreator.indexExists(), RawActionResponse.class, headers) //
-				.flatMap(response -> response.releaseBody().thenReturn(response.statusCode().is2xxSuccessful())) //
-				.next();
-	}
-
-	@Override
-	public Mono<Boolean> deleteIndex(HttpHeaders headers, DeleteIndexRequest request) {
-
-		return sendRequest(request, requestCreator.indexDelete(), AcknowledgedResponse.class, headers) //
-				.map(AcknowledgedResponse::isAcknowledged) //
-				.next();
-	}
-
-	@Override
-	public Mono<Boolean> createIndex(HttpHeaders headers, CreateIndexRequest createIndexRequest) {
-
-		return sendRequest(createIndexRequest, requestCreator.indexCreate(), AcknowledgedResponse.class, headers) //
-				.map(AcknowledgedResponse::isAcknowledged) //
-				.next();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#openIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.open.OpenIndexRequest)
-	 */
-	@Override
-	public Mono<Void> openIndex(HttpHeaders headers, OpenIndexRequest request) {
-
-		return sendRequest(request, requestCreator.indexOpen(), AcknowledgedResponse.class, headers) //
-				.then();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#closeIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.close.CloseIndexRequest)
-	 */
-	@Override
-	public Mono<Void> closeIndex(HttpHeaders headers, CloseIndexRequest closeIndexRequest) {
-
-		return sendRequest(closeIndexRequest, requestCreator.indexClose(), AcknowledgedResponse.class, headers) //
-				.then();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#refreshIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.refresh.RefreshRequest)
-	 */
-	@Override
-	public Mono<Void> refreshIndex(HttpHeaders headers, RefreshRequest refreshRequest) {
-
-		return sendRequest(refreshRequest, requestCreator.indexRefresh(), RefreshResponse.class, headers) //
-				.then();
-	}
-
-	@Override
-	public Mono<Boolean> putMapping(HttpHeaders headers, PutMappingRequest putMappingRequest) {
-
-		return sendRequest(putMappingRequest, requestCreator.putMapping(), AcknowledgedResponse.class, headers) //
-				.map(AcknowledgedResponse::isAcknowledged) //
-				.next();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices#flushIndex(org.springframework.http.HttpHeaders, org.elasticsearch.action.admin.indices.flush.FlushRequest)
-	 */
-	@Override
-	public Mono<Void> flushIndex(HttpHeaders headers, FlushRequest flushRequest) {
-
-		return sendRequest(flushRequest, requestCreator.flushIndex(), FlushResponse.class, headers) //
-				.then();
-	}
-
-	@Override
-	public Mono<GetMappingsResponse> getMapping(HttpHeaders headers, GetMappingsRequest getMappingsRequest) {
-		return sendRequest(getMappingsRequest, requestCreator.getMapping(), GetMappingsResponse.class, headers).next();
-	}
-
-	@Override
-	public Mono<GetSettingsResponse> getSettings(HttpHeaders headers, GetSettingsRequest getSettingsRequest) {
-		return sendRequest(getSettingsRequest, requestCreator.getSettings(), GetSettingsResponse.class, headers).next();
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.ReactiveElasticsearchClientCallback)
@@ -738,18 +655,91 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.onErrorReturn(ConnectException.class, ClientResponse.create(HttpStatus.SERVICE_UNAVAILABLE).build());
 	}
 
-	private Lazy<String> bodyExtractor(Request request) {
+	// region indices operations
+	@Override
+	public Mono<Boolean> createIndex(HttpHeaders headers, CreateIndexRequest createIndexRequest) {
 
-		return Lazy.of(() -> {
-
-			try {
-				return EntityUtils.toString(request.getEntity());
-			} catch (IOException e) {
-				throw new RequestBodyEncodingException("Error encoding request", e);
-			}
-		});
+		return sendRequest(createIndexRequest, requestCreator.indexCreate(), AcknowledgedResponse.class, headers) //
+				.map(AcknowledgedResponse::isAcknowledged) //
+				.next();
 	}
 
+	@Override
+	public Mono<Void> closeIndex(HttpHeaders headers, CloseIndexRequest closeIndexRequest) {
+
+		return sendRequest(closeIndexRequest, requestCreator.indexClose(), AcknowledgedResponse.class, headers) //
+				.then();
+	}
+
+	@Override
+	public Mono<Boolean> existsIndex(HttpHeaders headers, GetIndexRequest request) {
+
+		return sendRequest(request, requestCreator.indexExists(), RawActionResponse.class, headers) //
+				.flatMap(response -> response.releaseBody().thenReturn(response.statusCode().is2xxSuccessful())) //
+				.next();
+	}
+
+	@Override
+	public Mono<Boolean> deleteIndex(HttpHeaders headers, DeleteIndexRequest request) {
+
+		return sendRequest(request, requestCreator.indexDelete(), AcknowledgedResponse.class, headers) //
+				.map(AcknowledgedResponse::isAcknowledged) //
+				.next();
+	}
+
+	@Override
+	public Mono<Void> flushIndex(HttpHeaders headers, FlushRequest flushRequest) {
+
+		return sendRequest(flushRequest, requestCreator.flushIndex(), FlushResponse.class, headers) //
+				.then();
+	}
+
+	@Override
+	public Mono<GetMappingsResponse> getMapping(HttpHeaders headers, GetMappingsRequest getMappingsRequest) {
+		return sendRequest(getMappingsRequest, requestCreator.getMapping(), GetMappingsResponse.class, headers).next();
+	}
+
+	@Override
+	public Mono<GetSettingsResponse> getSettings(HttpHeaders headers, GetSettingsRequest getSettingsRequest) {
+		return sendRequest(getSettingsRequest, requestCreator.getSettings(), GetSettingsResponse.class, headers).next();
+	}
+
+	@Override
+	public Mono<Boolean> putMapping(HttpHeaders headers, PutMappingRequest putMappingRequest) {
+
+		return sendRequest(putMappingRequest, requestCreator.putMapping(), AcknowledgedResponse.class, headers) //
+				.map(AcknowledgedResponse::isAcknowledged) //
+				.next();
+	}
+
+	@Override
+	public Mono<Void> openIndex(HttpHeaders headers, OpenIndexRequest request) {
+
+		return sendRequest(request, requestCreator.indexOpen(), AcknowledgedResponse.class, headers) //
+				.then();
+	}
+
+	@Override
+	public Mono<Void> refreshIndex(HttpHeaders headers, RefreshRequest refreshRequest) {
+
+		return sendRequest(refreshRequest, requestCreator.indexRefresh(), RefreshResponse.class, headers) //
+				.then();
+	}
+
+	@Override
+	public Mono<Boolean> updateAliases(HttpHeaders headers, IndicesAliasesRequest indicesAliasesRequest) {
+		return sendRequest(indicesAliasesRequest, requestCreator.updateAlias(), AcknowledgedResponse.class, headers)
+				.map(AcknowledgedResponse::isAcknowledged).next();
+	}
+
+	@Override
+	public Mono<GetAliasesResponse> getAliases(HttpHeaders headers, GetAliasesRequest getAliasesRequest) {
+		return sendRequest(getAliasesRequest, requestCreator.getAlias(), GetAliasesResponse.class, headers).publishNext();
+	}
+
+	// endregion
+
+	// region helper functions
 	private <T> Publisher<? extends T> readResponseBody(String logId, Request request, ClientResponse response,
 			Class<T> responseType) {
 
@@ -807,6 +797,20 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 						DeprecationHandler.THROW_UNSUPPORTED_OPERATION, content);
 	}
 
+	private Lazy<String> bodyExtractor(Request request) {
+
+		return Lazy.of(() -> {
+
+			try {
+				return EntityUtils.toString(request.getEntity());
+			} catch (IOException e) {
+				throw new RequestBodyEncodingException("Error encoding request", e);
+			}
+		});
+	}
+	// endregion
+
+	// region error and exception handling
 	private <T> Publisher<? extends T> handleServerError(Request request, ClientResponse response) {
 
 		int statusCode = response.statusCode().value();
@@ -835,7 +839,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.flatMap(content -> doDecode(response, responseType, content));
 	}
 
-	// region ElasticsearchException helper
 	/**
 	 * checks if the given content body contains an {@link ElasticsearchException}, if yes it is returned in a Mono.error.
 	 * Otherwise the content is returned in the Mono
@@ -885,12 +888,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		} catch (IOException e) {
 			return new ElasticsearchStatusException(content, status);
 		}
-	}
-
-	@Override
-	public Flux<Suggest> suggest(HttpHeaders headers, SearchRequest searchRequest) {
-		return sendRequest(searchRequest, requestCreator.search(), SearchResponse.class, headers) //
-				.map(SearchResponse::getSuggest);
 	}
 
 	private static void buildExceptionMessages(StringBuilder sb, Throwable t) {
