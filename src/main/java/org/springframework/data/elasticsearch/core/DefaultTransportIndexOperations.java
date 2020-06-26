@@ -33,7 +33,7 @@ import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -133,7 +133,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	protected List<AliasMetaData> doQueryForAlias(IndexCoordinates index) {
+	protected List<AliasMetadata> doQueryForAlias(IndexCoordinates index) {
 
 		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(index);
 		return client.admin().indices().getAliases(getAliasesRequest).actionGet().getAliases().get(index.getIndexName());
@@ -144,10 +144,10 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(aliasNames, indexNames);
 
-		ImmutableOpenMap<String, List<AliasMetaData>> aliases = client.admin().indices().getAliases(getAliasesRequest)
+		ImmutableOpenMap<String, List<AliasMetadata>> aliases = client.admin().indices().getAliases(getAliasesRequest)
 				.actionGet().getAliases();
 
-		Map<String, Set<AliasMetaData>> aliasesResponse = new LinkedHashMap<>();
+		Map<String, Set<AliasMetadata>> aliasesResponse = new LinkedHashMap<>();
 		aliases.keysIt().forEachRemaining(index -> aliasesResponse.put(index, new HashSet<>(aliases.get(index))));
 		return requestFactory.convertAliasesResponse(aliasesResponse);
 	}

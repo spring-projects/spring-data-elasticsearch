@@ -47,7 +47,7 @@ import org.assertj.core.util.Lists;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
@@ -2739,7 +2739,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.addAlias(aliasQuery);
 
 		// then
-		List<AliasMetaData> aliases = indexOperations.queryForAlias();
+		List<AliasMetadata> aliases = indexOperations.queryForAlias();
 		assertThat(aliases).isNotNull();
 		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
 	}
@@ -2753,9 +2753,9 @@ public abstract class ElasticsearchTemplateTests {
 
 		indexOperations.alias(aliasActions);
 
-		List<AliasMetaData> aliases = indexOperations.queryForAlias();
+		List<AliasMetadata> aliases = indexOperations.queryForAlias();
 		assertThat(aliases).hasSize(2);
-		assertThat(aliases.stream().map(AliasMetaData::alias).collect(Collectors.toList())).contains("aliasA", "aliasB");
+		assertThat(aliases.stream().map(AliasMetadata::alias).collect(Collectors.toList())).contains("aliasA", "aliasB");
 	}
 
 	@Test // DATAES-864
@@ -2773,7 +2773,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		indexOperations.alias(aliasActions);
 
-		List<AliasMetaData> aliases = indexOperations.queryForAlias();
+		List<AliasMetadata> aliases = indexOperations.queryForAlias();
 		assertThat(aliases).hasSize(0);
 	}
 
@@ -2829,10 +2829,10 @@ public abstract class ElasticsearchTemplateTests {
 		operations.index(indexQuery, IndexCoordinates.of(alias1));
 
 		// then
-		List<AliasMetaData> aliasMetaData = indexOperations.queryForAlias();
+		List<AliasMetadata> aliasMetaData = indexOperations.queryForAlias();
 		assertThat(aliasMetaData).isNotEmpty();
 
-		AliasMetaData aliasMetaData1 = aliasMetaData.get(0);
+		AliasMetadata aliasMetaData1 = aliasMetaData.get(0);
 		assertThat(aliasMetaData1).isNotNull();
 		if (aliasMetaData1.alias().equals(alias1)) {
 			assertThat(aliasMetaData1.indexRouting()).isEqualTo("0");
@@ -2842,7 +2842,7 @@ public abstract class ElasticsearchTemplateTests {
 			fail("unknown alias");
 		}
 
-		AliasMetaData aliasMetaData2 = aliasMetaData.get(1);
+		AliasMetadata aliasMetaData2 = aliasMetaData.get(1);
 		assertThat(aliasMetaData2).isNotNull();
 		if (aliasMetaData2.alias().equals(alias1)) {
 			assertThat(aliasMetaData2.indexRouting()).isEqualTo("0");
@@ -2894,9 +2894,9 @@ public abstract class ElasticsearchTemplateTests {
 		long count = operations.count(query, IndexCoordinates.of(alias));
 
 		// then
-		List<AliasMetaData> aliases = indexOperations.queryForAlias();
+		List<AliasMetadata> aliases = indexOperations.queryForAlias();
 		assertThat(aliases).isNotNull();
-		AliasMetaData aliasMetaData = aliases.get(0);
+		AliasMetadata aliasMetaData = aliases.get(0);
 		assertThat(aliasMetaData.alias()).isEqualTo(alias);
 		assertThat(aliasMetaData.searchRouting()).isEqualTo("0");
 		assertThat(aliasMetaData.indexRouting()).isEqualTo("0");
@@ -2919,7 +2919,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		indexOperations.addAlias(aliasQuery);
-		List<AliasMetaData> aliases = indexOperations.queryForAlias();
+		List<AliasMetadata> aliases = indexOperations.queryForAlias();
 		assertThat(aliases).isNotNull();
 		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
 

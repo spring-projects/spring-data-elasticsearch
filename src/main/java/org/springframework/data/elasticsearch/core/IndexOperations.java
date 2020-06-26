@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
@@ -39,7 +39,7 @@ import org.springframework.data.elasticsearch.core.query.AliasQuery;
  */
 public interface IndexOperations {
 
-	//region index management
+	// region index management
 	/**
 	 * Create an index.
 	 *
@@ -73,9 +73,9 @@ public interface IndexOperations {
 	 * Refresh the index(es) this IndexOperations is bound to
 	 */
 	void refresh();
-	//endregion
+	// endregion
 
-	//region mappings
+	// region mappings
 	/**
 	 * Creates the index mapping for the entity this IndexOperations is bound to.
 	 *
@@ -119,15 +119,16 @@ public interface IndexOperations {
 	default boolean putMapping(Class<?> clazz) {
 		return putMapping(createMapping(clazz));
 	}
-	//endregion
+	// endregion
 
-	//region settings
+	// region settings
 	/**
 	 * Get mapping for an index defined by a class.
 	 *
 	 * @return the mapping
 	 */
 	Map<String, Object> getMapping();
+
 	/**
 	 * Get the index settings.
 	 *
@@ -142,9 +143,9 @@ public interface IndexOperations {
 	 * @return the settings
 	 */
 	Map<String, Object> getSettings(boolean includeDefaults);
-	//endregion
+	// endregion
 
-	//region aliases
+	// region aliases
 	/**
 	 * Add an alias.
 	 *
@@ -162,7 +163,7 @@ public interface IndexOperations {
 	 * @deprecated since 4.1, use {@link #getAliases(String...)} or {@link #getAliasesForIndex(String...)}.
 	 */
 	@Deprecated
-	List<AliasMetaData> queryForAlias();
+	List<AliasMetadata> queryForAlias();
 
 	/**
 	 * Remove an alias.
@@ -185,6 +186,7 @@ public interface IndexOperations {
 
 	/**
 	 * gets information about aliases
+	 * 
 	 * @param aliasNames alias names, must not be {@literal null}
 	 * @return a {@link Map} from index names to {@link AliasData} for that index
 	 * @since 4.1
@@ -193,14 +195,15 @@ public interface IndexOperations {
 
 	/**
 	 * gets information about aliases
+	 * 
 	 * @param indexNames index names, must not be {@literal null}
 	 * @return a {@link Map} from index names to {@link AliasData} for that index
 	 * @since 4.1
 	 */
 	Map<String, Set<AliasData>> getAliasesForIndex(String... indexNames);
-	//endregion
+	// endregion
 
-	//region helper functions
+	// region helper functions
 	/**
 	 * get the current {@link IndexCoordinates}. These may change over time when the entity class has a SpEL constructed
 	 * index name. When this IndexOperations is not bound to a class, the bound IndexCoordinates are returned.
@@ -209,5 +212,5 @@ public interface IndexOperations {
 	 * @since 4.1
 	 */
 	IndexCoordinates getIndexCoordinates();
-	//endregion
+	// endregion
 }

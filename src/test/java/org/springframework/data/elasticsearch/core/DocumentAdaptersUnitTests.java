@@ -140,7 +140,7 @@ public class DocumentAdaptersUnitTests {
 				new DocumentField("field", Collections.singletonList("value")));
 
 		SearchShardTarget shard = new SearchShardTarget("node", new ShardId("index", "uuid", 42), null, null);
-		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields);
+		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields, null);
 		searchHit.shard(shard);
 		searchHit.setSeqNo(1);
 		searchHit.setPrimaryTerm(2);
@@ -168,7 +168,7 @@ public class DocumentAdaptersUnitTests {
 		fields.put("string", new DocumentField("string", Collections.singletonList("value")));
 		fields.put("bool", new DocumentField("bool", Arrays.asList(true, true, false)));
 
-		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields);
+		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields, null);
 
 		SearchDocument document = DocumentAdapters.from(searchHit);
 
@@ -185,7 +185,7 @@ public class DocumentAdaptersUnitTests {
 		fields.put("bool", new DocumentField("bool", Arrays.asList(true, true, false)));
 		fields.put("null", new DocumentField("null", Collections.emptyList()));
 
-		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields);
+		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields, null);
 
 		SearchDocument document = DocumentAdapters.from(searchHit);
 
@@ -202,7 +202,7 @@ public class DocumentAdaptersUnitTests {
 		fields.put("string", new DocumentField("string", Collections.singletonList("value")));
 		fields.put("bool", new DocumentField("bool", Arrays.asList(true, true, false)));
 
-		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields);
+		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields, null);
 
 		SearchDocument document = DocumentAdapters.from(searchHit);
 
@@ -215,7 +215,7 @@ public class DocumentAdaptersUnitTests {
 		BytesArray source = new BytesArray("{\"field\":\"value\"}");
 
 		SearchShardTarget shard = new SearchShardTarget("node", new ShardId("index", "uuid", 42), null, null);
-		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), Collections.emptyMap());
+		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), Collections.emptyMap(), null);
 		searchHit.shard(shard);
 		searchHit.sourceRef(source).score(42);
 		searchHit.version(22);

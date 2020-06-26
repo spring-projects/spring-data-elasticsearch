@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -291,7 +291,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @deprecated since 4.0, use {@link #indexOps(IndexCoordinates)} and {@link IndexOperations#queryForAlias()}
 	 */
 	@Deprecated
-	default List<AliasMetaData> queryForAlias(String indexName) {
+	default List<AliasMetadata> queryForAlias(String indexName) {
 		return indexOps(IndexCoordinates.of(indexName)).queryForAlias();
 	}
 
