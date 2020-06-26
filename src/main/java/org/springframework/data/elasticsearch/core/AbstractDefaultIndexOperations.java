@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
-import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.common.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,11 +170,11 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	protected abstract boolean doAddAlias(AliasQuery query, IndexCoordinates index);
 
 	@Override
-	public List<AliasMetaData> queryForAlias() {
+	public List<AliasMetadata> queryForAlias() {
 		return doQueryForAlias(getIndexCoordinates());
 	}
 
-	protected abstract List<AliasMetaData> doQueryForAlias(IndexCoordinates index);
+	protected abstract List<AliasMetadata> doQueryForAlias(IndexCoordinates index);
 
 	@Override
 	public boolean removeAlias(AliasQuery query) {

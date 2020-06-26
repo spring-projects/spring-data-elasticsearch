@@ -34,7 +34,7 @@ import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.client.indices.PutMappingRequest;
-import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
@@ -136,7 +136,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	protected List<AliasMetaData> doQueryForAlias(IndexCoordinates index) {
+	protected List<AliasMetadata> doQueryForAlias(IndexCoordinates index) {
 
 		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(index);
 

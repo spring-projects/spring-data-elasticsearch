@@ -59,7 +59,7 @@ import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
-import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.geo.GeoDistance;
@@ -482,21 +482,21 @@ class RequestFactory {
 	}
 
 	public Map<String, Set<AliasData>> convertAliasesResponse(
-			ImmutableOpenMap<String, List<AliasMetaData>> aliasesResponse) {
+			ImmutableOpenMap<String, List<AliasMetadata>> aliasesResponse) {
 
-		Map<String, Set<AliasMetaData>> mapped = new LinkedHashMap<>();
+		Map<String, Set<AliasMetadata>> mapped = new LinkedHashMap<>();
 		Iterator<String> keysIt = aliasesResponse.keysIt();
 		while (keysIt.hasNext()) {
 			String key = keysIt.next();
 
-			List<AliasMetaData> aliasMetaData = aliasesResponse.get(key);
+			List<AliasMetadata> aliasMetaData = aliasesResponse.get(key);
 			mapped.put(key, new LinkedHashSet<>(aliasMetaData));
 		}
 
 		return convertAliasesResponse(mapped);
 	}
 
-	public Map<String, Set<AliasData>> convertAliasesResponse(Map<String, Set<AliasMetaData>> aliasesResponse) {
+	public Map<String, Set<AliasData>> convertAliasesResponse(Map<String, Set<AliasMetadata>> aliasesResponse) {
 		Map<String, Set<AliasData>> converted = new LinkedHashMap<>();
 		aliasesResponse.forEach((index, aliasMetaDataSet) -> {
 			Set<AliasData> aliasDataSet = new LinkedHashSet<>();
