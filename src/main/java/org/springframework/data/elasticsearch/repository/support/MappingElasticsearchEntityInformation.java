@@ -74,6 +74,7 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 		return persistentEntity.getVersionType();
 	}
 
+	@Deprecated
 	@Override
 	public String getParentId(T entity) {
 

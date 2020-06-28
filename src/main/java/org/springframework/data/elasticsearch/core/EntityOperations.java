@@ -235,14 +235,18 @@ class EntityOperations {
 		 * Returns whether the entity has a parent.
 		 *
 		 * @return {@literal true} if the entity has a parent that has an {@literal id}.
+		 * @deprecated since 4.1, not supported anymore by Elasticsearch
 		 */
+		@Deprecated
 		boolean hasParent();
 
 		/**
 		 * Returns the parent Id. Can be {@literal null}.
 		 *
 		 * @return can be {@literal null}.
+		 * @deprecated since 4.1, not supported anymore by Elasticsearch
 		 */
+		@Deprecated
 		@Nullable
 		Object getParentId();
 
@@ -589,6 +593,7 @@ class EntityOperations {
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#getParentId()
 		 */
+		@Deprecated
 		@Override
 		public Object getParentId() {
 

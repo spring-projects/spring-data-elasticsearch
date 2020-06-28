@@ -169,16 +169,6 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertThat(entry.getPrice()).isCloseTo(BigDecimal.valueOf(price), Percentage.withPercentage(0.01));
 	}
 
-	@Test // DATAES-568
-	public void shouldCreateMappingForSpecifiedParentType() throws JSONException {
-
-		String expected = "{\"_parent\":{\"type\":\"parentType\"},\"properties\":{}}";
-
-		String mapping = getMappingBuilder().buildPropertyMapping(MinimalChildEntity.class);
-
-		assertEquals(expected, mapping, false);
-	}
-
 	@Test // DATAES-76
 	public void shouldBuildMappingWithSuperclass() throws JSONException {
 
@@ -666,19 +656,6 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 					@InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop", searchAnalyzer = "standard") }) //
 			private String description;
 		}
-	}
-
-	/**
-	 * MinimalChildEntity
-	 *
-	 * @author Peter-Josef Meisch
-	 */
-	@Document(indexName = "test-index-minimal")
-	static class MinimalChildEntity {
-
-		@Nullable @Id private String id;
-
-		@Nullable @Parent(type = "parentType") private String parentId;
 	}
 
 	/**

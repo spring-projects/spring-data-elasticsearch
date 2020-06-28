@@ -23,8 +23,9 @@ import org.springframework.data.annotation.Persistent;
  * Parent
  *
  * @author Philipp Jardas
+ * @deprecated since 4.1, not supported anymore by Elasticsearch
  */
-
+@Deprecated
 @Persistent
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)

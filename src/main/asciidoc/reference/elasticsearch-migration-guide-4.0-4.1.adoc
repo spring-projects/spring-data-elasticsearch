@@ -18,6 +18,9 @@ They do the same, but `putMapping` is consistent with the naming in the Elastics
 .Alias handling
 In the `IndexOperations` interface the methods `addAlias(AliasQuery)`, `removeAlias(AliasQuery)` and `queryForAlias()` have been deprecated. The new methods `alias(AliasAction)`, `getAliases(String...)` and `getAliasesForIndex(String...)` offer more functionality and a cleaner API.
 
+.Parent-ID
+Usage of a parent-id has been removed from Elasticsearch since version 6. We now deprecate the corresponding fields and methods.
+
 [[elasticsearch-migration-guide-4.0-4.1.removal]]
 == Removals
 

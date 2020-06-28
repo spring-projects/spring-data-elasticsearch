@@ -63,8 +63,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private short replicas;
 	private @Nullable String refreshInterval;
 	private @Nullable String indexStoreType;
-	private @Nullable String parentType;
-	private @Nullable ElasticsearchPersistentProperty parentIdProperty;
+	@Deprecated private @Nullable String parentType;
+	@Deprecated private @Nullable ElasticsearchPersistentProperty parentIdProperty;
 	private @Nullable ElasticsearchPersistentProperty scoreProperty;
 	private @Nullable ElasticsearchPersistentProperty seqNoPrimaryTermProperty;
 	private @Nullable String settingPath;
@@ -135,12 +135,14 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 	@Nullable
 	@Override
+	@Deprecated
 	public String getParentType() {
 		return parentType;
 	}
 
 	@Nullable
 	@Override
+	@Deprecated
 	public ElasticsearchPersistentProperty getParentIdProperty() {
 		return parentIdProperty;
 	}
