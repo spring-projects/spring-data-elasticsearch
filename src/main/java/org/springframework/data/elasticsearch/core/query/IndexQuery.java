@@ -31,7 +31,7 @@ public class IndexQuery {
 	@Nullable private Object object;
 	@Nullable private Long version;
 	@Nullable private String source;
-	@Nullable private String parentId;
+	@Deprecated @Nullable private String parentId;
 	@Nullable private Long seqNo;
 	@Nullable private Long primaryTerm;
 

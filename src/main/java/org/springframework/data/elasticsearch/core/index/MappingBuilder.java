@@ -78,7 +78,7 @@ public class MappingBuilder {
 
 	private static final String FIELD_INDEX = "index";
 	private static final String FIELD_PROPERTIES = "properties";
-	private static final String FIELD_PARENT = "_parent";
+	@Deprecated private static final String FIELD_PARENT = "_parent";
 	private static final String FIELD_CONTEXT_NAME = "name";
 	private static final String FIELD_CONTEXT_TYPE = "type";
 	private static final String FIELD_CONTEXT_PATH = "path";

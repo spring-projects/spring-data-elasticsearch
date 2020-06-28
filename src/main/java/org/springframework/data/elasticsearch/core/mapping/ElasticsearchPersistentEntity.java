@@ -53,9 +53,17 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	@Override
 	ElasticsearchPersistentProperty getVersionProperty();
 
+	/**
+	 * @deprecated since 4.1, not supported anymore by Elasticsearch
+	 */
+	@Deprecated
 	@Nullable
 	String getParentType();
 
+	/**
+	 * @deprecated since 4.1, not supported anymore by Elasticsearch
+	 */
+	@Deprecated
 	@Nullable
 	ElasticsearchPersistentProperty getParentIdProperty();
 

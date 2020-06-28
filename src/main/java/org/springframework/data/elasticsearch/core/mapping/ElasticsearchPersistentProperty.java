@@ -62,7 +62,9 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 *
 	 * @return
 	 * @since 3.1
+	 * @deprecated since 4.1, not supported anymore by Elasticsearch
 	 */
+	@Deprecated
 	boolean isParentProperty();
 
 	/**

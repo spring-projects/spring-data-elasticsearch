@@ -31,7 +31,7 @@ public class IndexQueryBuilder {
 	@Nullable private Object object;
 	@Nullable private Long version;
 	@Nullable private String source;
-	@Nullable private String parentId;
+	@Deprecated @Nullable private String parentId;
 	@Nullable private Long seqNo;
 	@Nullable private Long primaryTerm;
 
@@ -55,6 +55,7 @@ public class IndexQueryBuilder {
 		return this;
 	}
 
+	@Deprecated
 	public IndexQueryBuilder withParentId(String parentId) {
 		this.parentId = parentId;
 		return this;
