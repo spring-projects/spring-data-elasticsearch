@@ -748,7 +748,7 @@ public class MappingElasticsearchConverter
 
 	// region queries
 	@Override
-	public void updateQuery(CriteriaQuery criteriaQuery, Class<?> domainClass) {
+	public void updateCriteriaQuery(CriteriaQuery criteriaQuery, Class<?> domainClass) {
 		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(domainClass);
 
 		if (persistentEntity != null) {
