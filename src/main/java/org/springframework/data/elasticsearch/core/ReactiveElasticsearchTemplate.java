@@ -69,7 +69,6 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
@@ -267,7 +266,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(converter, clazz, index);
 
-		MultiGetRequest request = requestFactory.multiGetRequest(query, index);
+		MultiGetRequest request = requestFactory.multiGetRequest(query, clazz, index);
 		return Flux.from(execute(client -> client.multiGet(request))) //
 				.concatMap(result -> callback.doWith(DocumentAdapters.from(result)));
 	}
@@ -616,10 +615,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	private Flux<SearchDocument> doFind(Query query, Class<?> clazz, IndexCoordinates index) {
-
-		if (query instanceof CriteriaQuery) {
-			converter.updateQuery((CriteriaQuery) query, clazz);
-		}
 
 		return Flux.defer(() -> {
 			SearchRequest request = requestFactory.searchRequest(query, clazz, index);

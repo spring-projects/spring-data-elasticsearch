@@ -186,7 +186,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(index, "index must not be null");
 		Assert.notEmpty(query.getIds(), "No Ids defined for Query");
 
-		MultiGetRequestBuilder builder = requestFactory.multiGetRequestBuilder(client, query, index);
+		MultiGetRequestBuilder builder = requestFactory.multiGetRequestBuilder(client, query, clazz, index);
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
 		List<Document> documents = DocumentAdapters.from(builder.execute().actionGet());

@@ -21,7 +21,6 @@ import static org.springframework.util.CollectionUtils.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -60,7 +59,6 @@ import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
-import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.settings.Settings;
@@ -192,12 +190,7 @@ class RequestFactory {
 				Query filterQuery = parameters.getFilterQuery();
 
 				if (filterQuery != null) {
-
-					if (filterQuery instanceof CriteriaQuery && parameters.getFilterQueryClass() != null) {
-						CriteriaQuery query = (CriteriaQuery) filterQuery;
-						elasticsearchConverter.updateQuery(query, parameters.getFilterQueryClass());
-					}
-
+					elasticsearchConverter.updateQuery(filterQuery, parameters.getFilterQueryClass());
 					QueryBuilder queryBuilder = getFilter(filterQuery);
 
 					if (queryBuilder == null) {
@@ -343,7 +336,6 @@ class RequestFactory {
 	 * @param settings optional settings
 	 * @return request
 	 */
-	@SuppressWarnings("unchecked")
 	public CreateIndexRequest createIndexRequest(IndexCoordinates index, @Nullable Document settings) {
 		CreateIndexRequest request = new CreateIndexRequest(index.getIndexName());
 
@@ -481,21 +473,6 @@ class RequestFactory {
 		return new org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest().indices(indexNames);
 	}
 
-	public Map<String, Set<AliasData>> convertAliasesResponse(
-			ImmutableOpenMap<String, List<AliasMetadata>> aliasesResponse) {
-
-		Map<String, Set<AliasMetadata>> mapped = new LinkedHashMap<>();
-		Iterator<String> keysIt = aliasesResponse.keysIt();
-		while (keysIt.hasNext()) {
-			String key = keysIt.next();
-
-			List<AliasMetadata> aliasMetaData = aliasesResponse.get(key);
-			mapped.put(key, new LinkedHashSet<>(aliasMetaData));
-		}
-
-		return convertAliasesResponse(mapped);
-	}
-
 	public Map<String, Set<AliasData>> convertAliasesResponse(Map<String, Set<AliasMetadata>> aliasesResponse) {
 		Map<String, Set<AliasData>> converted = new LinkedHashMap<>();
 		aliasesResponse.forEach((index, aliasMetaDataSet) -> {
@@ -622,19 +599,24 @@ class RequestFactory {
 		return client.prepareGet(index.getIndexName(), null, id);
 	}
 
-	public MultiGetRequest multiGetRequest(Query query, IndexCoordinates index) {
+	public MultiGetRequest multiGetRequest(Query query, Class<?> clazz, IndexCoordinates index) {
+
 		MultiGetRequest multiGetRequest = new MultiGetRequest();
-		getMultiRequestItems(query, index).forEach(multiGetRequest::add);
+		getMultiRequestItems(query, clazz, index).forEach(multiGetRequest::add);
 		return multiGetRequest;
 	}
 
-	public MultiGetRequestBuilder multiGetRequestBuilder(Client client, Query searchQuery, IndexCoordinates index) {
+	public MultiGetRequestBuilder multiGetRequestBuilder(Client client, Query searchQuery, Class<?> clazz,
+			IndexCoordinates index) {
+
 		MultiGetRequestBuilder multiGetRequestBuilder = client.prepareMultiGet();
-		getMultiRequestItems(searchQuery, index).forEach(multiGetRequestBuilder::add);
+		getMultiRequestItems(searchQuery, clazz, index).forEach(multiGetRequestBuilder::add);
 		return multiGetRequestBuilder;
 	}
 
-	private List<MultiGetRequest.Item> getMultiRequestItems(Query searchQuery, IndexCoordinates index) {
+	private List<MultiGetRequest.Item> getMultiRequestItems(Query searchQuery, Class<?> clazz, IndexCoordinates index) {
+
+		elasticsearchConverter.updateQuery(searchQuery, clazz);
 		List<MultiGetRequest.Item> items = new ArrayList<>();
 
 		if (!isEmpty(searchQuery.getFields())) {
@@ -830,6 +812,7 @@ class RequestFactory {
 
 	public SearchRequest searchRequest(Query query, @Nullable Class<?> clazz, IndexCoordinates index) {
 
+		elasticsearchConverter.updateQuery(query, clazz);
 		SearchRequest searchRequest = prepareSearchRequest(query, clazz, index);
 		QueryBuilder elasticsearchQuery = getQuery(query);
 		QueryBuilder elasticsearchFilter = getFilter(query);
@@ -851,6 +834,7 @@ class RequestFactory {
 	public SearchRequestBuilder searchRequestBuilder(Client client, Query query, @Nullable Class<?> clazz,
 			IndexCoordinates index) {
 
+		elasticsearchConverter.updateQuery(query, clazz);
 		SearchRequestBuilder searchRequestBuilder = prepareSearchRequestBuilder(query, client, clazz, index);
 		QueryBuilder elasticsearchQuery = getQuery(query);
 		QueryBuilder elasticsearchFilter = getFilter(query);

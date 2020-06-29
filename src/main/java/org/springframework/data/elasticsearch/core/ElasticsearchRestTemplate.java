@@ -171,7 +171,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(index, "index must not be null");
 		Assert.notEmpty(query.getIds(), "No Id define for Query");
 
-		MultiGetRequest request = requestFactory.multiGetRequest(query, index);
+		MultiGetRequest request = requestFactory.multiGetRequest(query, clazz, index);
 		MultiGetResponse result = execute(client -> client.mget(request, RequestOptions.DEFAULT));
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
