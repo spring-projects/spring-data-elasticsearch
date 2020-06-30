@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.search.MultiSearchRequest;
@@ -59,6 +60,7 @@ import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.support.VersionInfo;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Streamable;
@@ -175,11 +177,9 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 				.collect(Collectors.toList());
 
 		if (!indexQueries.isEmpty()) {
-			List<String> ids = bulkIndex(indexQueries, index);
-			Iterator<String> idIterator = ids.iterator();
-			entities.forEach(entity -> {
-				setPersistentEntityId(entity, idIterator.next());
-			});
+			List<IndexedObjectInformation> indexedObjectInformations = bulkIndex(indexQueries, index);
+			Iterator<IndexedObjectInformation> iterator = indexedObjectInformations.iterator();
+			entities.forEach(entity -> updateIndexedObject(entity, iterator.next()));
 		}
 
 		return indexQueries.stream().map(IndexQuery::getObject).map(entity -> (T) entity).collect(Collectors.toList());
@@ -250,12 +250,12 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public List<String> bulkIndex(List<IndexQuery> queries, Class<?> clazz) {
+	public List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, Class<?> clazz) {
 		return bulkIndex(queries, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
-	public List<String> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, Class<?> clazz) {
+	public List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, Class<?> clazz) {
 		return bulkIndex(queries, bulkOptions, getIndexCoordinatesFor(clazz));
 	}
 
@@ -473,7 +473,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	 * @param bulkResponse
 	 * @return the list of the item id's
 	 */
-	protected List<String> checkForBulkOperationFailure(BulkResponse bulkResponse) {
+	protected List<IndexedObjectInformation> checkForBulkOperationFailure(BulkResponse bulkResponse) {
 
 		if (bulkResponse.hasFailures()) {
 			Map<String, String> failedDocuments = new HashMap<>();
@@ -488,17 +488,31 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 					failedDocuments);
 		}
 
-		return Stream.of(bulkResponse.getItems()).map(BulkItemResponse::getId).collect(Collectors.toList());
+		return Stream.of(bulkResponse.getItems()).map(bulkItemResponse -> {
+			DocWriteResponse response = bulkItemResponse.getResponse();
+			if (response != null) {
+				return IndexedObjectInformation.of(response.getId(), response.getSeqNo(), response.getPrimaryTerm());
+			} else {
+				return IndexedObjectInformation.of(bulkItemResponse.getId(), null, null);
+			}
+
+		}).collect(Collectors.toList());
 	}
 
-	protected void setPersistentEntityId(Object entity, String id) {
-
+	protected void updateIndexedObject(Object entity, IndexedObjectInformation indexedObjectInformation) {
 		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
+		PersistentPropertyAccessor<Object> propertyAccessor = persistentEntity.getPropertyAccessor(entity);
 		ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
 
 		// Only deal with text because ES generated Ids are strings!
 		if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
-			persistentEntity.getPropertyAccessor(entity).setProperty(idProperty, id);
+			propertyAccessor.setProperty(idProperty, indexedObjectInformation.getId());
+		}
+
+		if (persistentEntity.hasSeqNoPrimaryTermProperty()) {
+			ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
+			propertyAccessor.setProperty(seqNoPrimaryTermProperty,
+					new SeqNoPrimaryTerm(indexedObjectInformation.getSeqNo(), indexedObjectInformation.getPrimaryTerm()));
 		}
 	}
 
