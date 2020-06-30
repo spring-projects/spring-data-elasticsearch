@@ -157,10 +157,10 @@ public interface DocumentOperations {
 	 *
 	 * @param queries the queries to execute in bulk
 	 * @param clazz the entity class
-	 * @return the ids of the indexed objects
+	 * @return the information about the indexed objects
 	 * @since 4.1
 	 */
-	default List<String> bulkIndex(List<IndexQuery> queries, Class<?> clazz) {
+	default List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, Class<?> clazz) {
 		return bulkIndex(queries, BulkOptions.defaultOptions(), clazz);
 	}
 
@@ -168,9 +168,9 @@ public interface DocumentOperations {
 	 * Bulk index all objects. Will do save or update.
 	 *
 	 * @param queries the queries to execute in bulk
-	 * @return the ids of the indexed objects
+	 * @return the information about of the indexed objects
 	 */
-	default List<String> bulkIndex(List<IndexQuery> queries, IndexCoordinates index) {
+	default List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, IndexCoordinates index) {
 		return bulkIndex(queries, BulkOptions.defaultOptions(), index);
 	}
 
@@ -180,19 +180,19 @@ public interface DocumentOperations {
 	 * @param queries the queries to execute in bulk
 	 * @param bulkOptions options to be added to the bulk request
 	 * @param clazz the entity class
-	 * @return the ids of the indexed objects
+	 * @return the information about of the indexed objects
 	 * @since 4.1
 	 */
-	List<String> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, Class<?> clazz);
+	List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, Class<?> clazz);
 
 	/**
 	 * Bulk index all objects. Will do save or update.
 	 *
 	 * @param queries the queries to execute in bulk
 	 * @param bulkOptions options to be added to the bulk request
-	 * @return the ids of the indexed objects
+	 * @return the information about of the indexed objects
 	 */
-	List<String> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index);
+	List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index);
 
 	/**
 	 * Bulk update all objects. Will do update.

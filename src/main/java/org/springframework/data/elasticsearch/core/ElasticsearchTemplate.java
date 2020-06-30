@@ -162,7 +162,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		// We should call this because we are not going through a mapper.
 		Object queryObject = query.getObject();
 		if (queryObject != null) {
-			setPersistentEntityId(queryObject, documentId);
+			updateIndexedObject(queryObject,
+					IndexedObjectInformation.of(documentId, response.getSeqNo(), response.getPrimaryTerm()));
 		}
 
 		maybeCallbackAfterSaveWithQuery(query, index);
@@ -201,16 +202,17 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public List<String> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index) {
+	public List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions,
+			IndexCoordinates index) {
 
 		Assert.notNull(queries, "List of IndexQuery must not be null");
 		Assert.notNull(bulkOptions, "BulkOptions must not be null");
 
-		List<String> ids = doBulkOperation(queries, bulkOptions, index);
+		List<IndexedObjectInformation> indexedObjectInformations = doBulkOperation(queries, bulkOptions, index);
 
 		maybeCallbackAfterSaveWithQueries(queries, index);
 
-		return ids;
+		return indexedObjectInformations;
 	}
 
 	@Override
@@ -257,7 +259,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		return new UpdateResponse(result);
 	}
 
-	private List<String> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
+	private List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
+			IndexCoordinates index) {
 		maybeCallbackBeforeConvertWithQueries(queries, index);
 		BulkRequestBuilder bulkRequest = requestFactory.bulkRequestBuilder(client, queries, bulkOptions, index);
 		return checkForBulkOperationFailure(bulkRequest.execute().actionGet());

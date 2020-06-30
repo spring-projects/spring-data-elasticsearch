@@ -16,7 +16,8 @@ In the `ReactiveElasticsearchClient.Indices` interface the `updateMapping` metho
 They do the same, but `putMapping` is consistent with the naming in the Elasticsearch API:
 
 .Alias handling
-In the `IndexOperations` interface the methods `addAlias(AliasQuery)`, `removeAlias(AliasQuery)` and `queryForAlias()` have been deprecated. The new methods `alias(AliasAction)`, `getAliases(String...)` and `getAliasesForIndex(String...)` offer more functionality and a cleaner API.
+In the `IndexOperations` interface the methods `addAlias(AliasQuery)`, `removeAlias(AliasQuery)` and `queryForAlias()` have been deprecated.
+The new methods `alias(AliasAction)`, `getAliases(String...)` and `getAliasesForIndex(String...)` offer more functionality and a cleaner API.
 
 .Parent-ID
 Usage of a parent-id has been removed from Elasticsearch since version 6. We now deprecate the corresponding fields and methods.
@@ -38,3 +39,8 @@ With the introduction of the `ReactiveIndexOperations` it became necessary to ch
 
 * the `createIndex`  variants now return a `Mono<Boolean>` instead of a `Mono<Void>` to signal successful index creation.
 * the `updateMapping`  variants now return a `Mono<Boolean>` instead of a `Mono<Void>` to signal successful mappings storage.
+
+=== Return types of DocumentOperartions.bulkIndex methods
+
+These methods were returing a `List<String>` containing the ids of the new indexed records.
+Now they return a `List<IndexedObjectInformation>`; these objects contain the id and information about optimistic locking (seq_no and primary_term)

@@ -26,6 +26,7 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
@@ -142,17 +143,18 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		maybeCallbackBeforeConvertWithQuery(query, index);
 
 		IndexRequest request = requestFactory.indexRequest(query, index);
-		String documentId = execute(client -> client.index(request, RequestOptions.DEFAULT).getId());
+		IndexResponse indexResponse = execute(client -> client.index(request, RequestOptions.DEFAULT));
 
 		// We should call this because we are not going through a mapper.
 		Object queryObject = query.getObject();
 		if (queryObject != null) {
-			setPersistentEntityId(queryObject, documentId);
+			updateIndexedObject(queryObject,
+					IndexedObjectInformation.of(indexResponse.getId(), indexResponse.getSeqNo(), indexResponse.getPrimaryTerm()));
 		}
 
 		maybeCallbackAfterSaveWithQuery(query, index);
 
-		return documentId;
+		return indexResponse.getId();
 	}
 
 	@Override
@@ -186,7 +188,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public List<String> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index) {
+	public List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions,
+			IndexCoordinates index) {
 
 		Assert.notNull(queries, "List of IndexQuery must not be null");
 		Assert.notNull(bulkOptions, "BulkOptions must not be null");
@@ -234,13 +237,14 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		return new UpdateResponse(result);
 	}
 
-	private List<String> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
+	private List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
+			IndexCoordinates index) {
 		maybeCallbackBeforeConvertWithQueries(queries, index);
 		BulkRequest bulkRequest = requestFactory.bulkRequest(queries, bulkOptions, index);
-		List<String> ids = checkForBulkOperationFailure(
+		List<IndexedObjectInformation> indexedObjectInformations = checkForBulkOperationFailure(
 				execute(client -> client.bulk(bulkRequest, RequestOptions.DEFAULT)));
 		maybeCallbackAfterSaveWithQueries(queries, index);
-		return ids;
+		return indexedObjectInformations;
 	}
 	// endregion
 

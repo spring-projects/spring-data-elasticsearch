@@ -3156,6 +3156,29 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(operations.exists("42", index)).isTrue();
 	}
 
+	@Test // DATAES-876
+	void shouldReturnSeqNoPrimaryTermOnSave() {
+		OptimisticEntity original = new OptimisticEntity();
+		original.setMessage("It's fine");
+		OptimisticEntity saved = operations.save(original);
+
+		assertThatSeqNoPrimaryTermIsFilled(saved);
+	}
+
+	@Test // DATAES-876
+	void shouldReturnSeqNoPrimaryTermOnBulkSave() {
+		OptimisticEntity original1 = new OptimisticEntity();
+		original1.setMessage("It's fine 1");
+		OptimisticEntity original2 = new OptimisticEntity();
+		original2.setMessage("It's fine 2");
+
+		Iterable<OptimisticEntity> saved = operations.save(Arrays.asList(original1, original2));
+
+		saved.forEach(optimisticEntity -> {
+			assertThatSeqNoPrimaryTermIsFilled(optimisticEntity);
+		});
+	}
+
 	@Test // DATAES-799
 	void getShouldReturnSeqNoPrimaryTerm() {
 		OptimisticEntity original = new OptimisticEntity();
