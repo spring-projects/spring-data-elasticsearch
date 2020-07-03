@@ -23,7 +23,9 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.json.JSONException;
 import org.junit.jupiter.api.AfterEach;
@@ -44,10 +46,16 @@ import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -378,6 +386,128 @@ public class ReactiveIndexOperationsTest {
 				.verifyComplete();
 	}
 
+	@Test // DATAES-612
+	void shouldPutTemplate() {
+
+		ReactiveIndexOperations indexOps = operations.indexOps(Entity.class);
+
+		org.springframework.data.elasticsearch.core.document.Document mapping = indexOps.createMapping(TemplateClass.class)
+				.block();
+		org.springframework.data.elasticsearch.core.document.Document settings = indexOps
+				.createSettings(TemplateClass.class).block();
+
+		AliasActions aliasActions = new AliasActions(
+				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()));
+		PutTemplateRequest putTemplateRequest = PutTemplateRequest.builder("test-template", "log-*") //
+				.withSettings(settings) //
+				.withMappings(mapping) //
+				.withAliasActions(aliasActions) //
+				.withOrder(11) //
+				.withVersion(42) //
+				.build();
+
+		Boolean acknowledged = indexOps.putTemplate(putTemplateRequest).block();
+		assertThat(acknowledged).isTrue();
+	}
+
+	@Test // DATAES-612
+	void shouldReturnNullOnNonExistingGetTemplate() {
+
+		String templateName = "template" + UUID.randomUUID().toString();
+		ReactiveIndexOperations indexOps = operations.indexOps(Entity.class);
+
+		GetTemplateRequest getTemplateRequest = new GetTemplateRequest(templateName);
+		indexOps.getTemplate(getTemplateRequest).as(StepVerifier::create).verifyComplete();
+	}
+
+	@Test // DATAES-612
+	void shouldGetTemplate() throws JSONException {
+		ReactiveIndexOperations indexOps = operations.indexOps(Entity.class);
+
+		org.springframework.data.elasticsearch.core.document.Document mapping = indexOps.createMapping(TemplateClass.class)
+				.block();
+		org.springframework.data.elasticsearch.core.document.Document settings = indexOps
+				.createSettings(TemplateClass.class).block();
+
+		AliasActions aliasActions = new AliasActions(
+				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()));
+		PutTemplateRequest putTemplateRequest = PutTemplateRequest.builder("test-template", "log-*") //
+				.withSettings(settings) //
+				.withMappings(mapping) //
+				.withAliasActions(aliasActions) //
+				.withOrder(11) //
+				.withVersion(42) //
+				.build();
+
+		Boolean acknowledged = indexOps.putTemplate(putTemplateRequest).block();
+		assertThat(acknowledged).isTrue();
+
+		GetTemplateRequest getTemplateRequest = new GetTemplateRequest(putTemplateRequest.getName());
+		TemplateData templateData = indexOps.getTemplate(getTemplateRequest).block();
+
+		assertThat(templateData).isNotNull();
+		assertThat(templateData.getIndexPatterns()).containsExactlyInAnyOrder(putTemplateRequest.getIndexPatterns());
+		assertEquals(settings.toJson(), templateData.getSettings().toJson(), false);
+		assertEquals(mapping.toJson(), templateData.getMapping().toJson(), false);
+		Map<String, AliasData> aliases = templateData.getAliases();
+		assertThat(aliases).hasSize(2);
+		AliasData alias1 = aliases.get("alias1");
+		assertThat(alias1.getAlias()).isEqualTo("alias1");
+		AliasData alias2 = aliases.get("alias2");
+		assertThat(alias2.getAlias()).isEqualTo("alias2");
+		assertThat(templateData.getOrder()).isEqualTo(putTemplateRequest.getOrder());
+		assertThat(templateData.getVersion()).isEqualTo(putTemplateRequest.getVersion());
+	}
+
+	@Test // DATAES-612
+	void shouldCheckExists() {
+
+		ReactiveIndexOperations indexOps = operations.indexOps(Entity.class);
+
+		String templateName = "template" + UUID.randomUUID().toString();
+		ExistsTemplateRequest existsTemplateRequest = new ExistsTemplateRequest(templateName);
+
+		boolean exists = indexOps.existsTemplate(existsTemplateRequest).block();
+		assertThat(exists).isFalse();
+
+		PutTemplateRequest putTemplateRequest = PutTemplateRequest.builder(templateName, "log-*") //
+				.withOrder(11) //
+				.withVersion(42) //
+				.build();
+
+		boolean acknowledged = indexOps.putTemplate(putTemplateRequest).block();
+		assertThat(acknowledged).isTrue();
+
+		exists = indexOps.existsTemplate(existsTemplateRequest).block();
+		assertThat(exists).isTrue();
+	}
+
+	@Test // DATAES-612
+	void shouldDeleteTemplate() {
+
+		ReactiveIndexOperations indexOps = operations.indexOps(Entity.class);
+
+		String templateName = "template" + UUID.randomUUID().toString();
+		ExistsTemplateRequest existsTemplateRequest = new ExistsTemplateRequest(templateName);
+
+		PutTemplateRequest putTemplateRequest = PutTemplateRequest.builder(templateName, "log-*") //
+				.withOrder(11) //
+				.withVersion(42) //
+				.build();
+
+		boolean acknowledged = indexOps.putTemplate(putTemplateRequest).block();
+		assertThat(acknowledged).isTrue();
+
+		boolean exists = indexOps.existsTemplate(existsTemplateRequest).block();
+		assertThat(exists).isTrue();
+
+		acknowledged = indexOps.deleteTemplate(new DeleteTemplateRequest(templateName)).block();
+		assertThat(acknowledged).isTrue();
+
+		exists = indexOps.existsTemplate(existsTemplateRequest).block();
+		assertThat(exists).isFalse();
+	}
+
 	@Data
 	@Document(indexName = TESTINDEX, shards = 3, replicas = 2, refreshInterval = "4s")
 	static class Entity {
@@ -400,4 +530,29 @@ public class ReactiveIndexOperationsTest {
 	static class EntityWithAnnotatedSettingsAndMappings {
 		@Id private String id;
 	}
+
+	@Document(indexName = "test-template", shards = 3, replicas = 2, refreshInterval = "5s")
+	static class TemplateClass {
+		@Id @Nullable private String id;
+		@Field(type = FieldType.Text) @Nullable private String message;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(String message) {
+			this.message = message;
+		}
+	}
+
 }

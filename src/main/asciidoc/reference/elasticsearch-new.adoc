@@ -7,6 +7,7 @@
 * Upgrade to Elasticsearch 7.8.0
 * Improved API for alias management
 * Introduction of `ReactiveIndexOperations` for index management
+* Index templates support
 
 [[new-features.4-0-0]]
 == New in Spring Data Elasticsearch 4.0

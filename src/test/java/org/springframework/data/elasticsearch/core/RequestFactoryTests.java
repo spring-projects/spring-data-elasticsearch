@@ -32,6 +32,7 @@ import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -51,6 +52,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
+import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.Criteria;
@@ -368,6 +370,71 @@ class RequestFactoryTests {
 
 		String json = requestToString(indicesAliasesRequest);
 
+		assertEquals(expected, json, false);
+	}
+
+	@Test // DATAES-612
+	void shouldCreatePutIndexTemplateRequest() throws JSONException, IOException {
+
+		String expected = "{\n" + //
+				"  \"index_patterns\": [\n" + //
+				"    \"test-*\"\n" + //
+				"  ],\n" + //
+				"  \"order\": 42,\n" + //
+				"  \"version\": 7,\n" + //
+				"  \"settings\": {\n" + //
+				"    \"index\": {\n" + //
+				"      \"number_of_replicas\": \"2\",\n" + //
+				"      \"number_of_shards\": \"3\",\n" + //
+				"      \"refresh_interval\": \"7s\",\n" + //
+				"      \"store\": {\n" + //
+				"        \"type\": \"oops\"\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  },\n" + //
+				"  \"mappings\": {\n" + //
+				"    \"properties\": {\n" + //
+				"      \"price\": {\n" + //
+				"        \"type\": \"double\"\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  },\n" + //
+				"  \"aliases\":{\n" + //
+				"    \"alias1\": {},\n" + //
+				"    \"alias2\": {},\n" + //
+				"    \"alias3\": {\n" + //
+				"      \"routing\": \"11\"\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		org.springframework.data.elasticsearch.core.document.Document settings = org.springframework.data.elasticsearch.core.document.Document
+				.create();
+		settings.put("index.number_of_replicas", 2);
+		settings.put("index.number_of_shards", 3);
+		settings.put("index.refresh_interval", "7s");
+		settings.put("index.store.type", "oops");
+
+		org.springframework.data.elasticsearch.core.document.Document mappings = org.springframework.data.elasticsearch.core.document.Document
+				.parse("{\"properties\":{\"price\":{\"type\":\"double\"}}}");
+
+		AliasActions aliasActions = new AliasActions(
+				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()),
+				new AliasAction.Add(
+						AliasActionParameters.builderForTemplate().withAliases("alias3").withRouting("11").build()));
+
+		PutTemplateRequest putTemplateRequest = PutTemplateRequest.builder("test-template", "test-*") //
+				.withSettings(settings) //
+				.withMappings(mappings) //
+				.withAliasActions(aliasActions) //
+				.withOrder(42) //
+				.withVersion(7) //
+				.build(); //
+
+		PutIndexTemplateRequest putIndexTemplateRequest = requestFactory.putIndexTemplateRequest(putTemplateRequest);
+
+		String json = requestToString(putIndexTemplateRequest);
+		System.out.println(json);
 		assertEquals(expected, json, false);
 	}
 

@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,13 +33,27 @@ import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuild
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
+import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesRequest;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
+import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
+import org.elasticsearch.cluster.metadata.IndexTemplateMetadata;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
+import org.elasticsearch.common.compress.CompressedXContent;
+import org.elasticsearch.common.settings.Settings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
@@ -52,6 +67,8 @@ import org.springframework.util.Assert;
  * @since 4.0
  */
 class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations implements IndexOperations {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTransportIndexOperations.class);
 
 	private final Client client;
 
@@ -140,7 +157,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	protected Map<String, Set<AliasData>> doGetAliases(String[] aliasNames, String[] indexNames) {
+	protected Map<String, Set<AliasData>> doGetAliases(@Nullable String[] aliasNames, @Nullable String[] indexNames) {
 
 		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(aliasNames, indexNames);
 
@@ -183,4 +200,89 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 		client.admin().indices().refresh(request).actionGet();
 	}
 
+	@Override
+	public boolean putTemplate(PutTemplateRequest putTemplateRequest) {
+
+		Assert.notNull(putTemplateRequest, "putTemplateRequest must not be null");
+
+		PutIndexTemplateRequest putIndexTemplateRequest = requestFactory.putIndexTemplateRequest(client,
+				putTemplateRequest);
+		return client.admin().indices().putTemplate(putIndexTemplateRequest).actionGet().isAcknowledged();
+	}
+
+	@Override
+	public TemplateData getTemplate(GetTemplateRequest getTemplateRequest) {
+
+		Assert.notNull(getTemplateRequest, "getTemplateRequest must not be null");
+
+		GetIndexTemplatesRequest getIndexTemplatesRequest = requestFactory.getIndexTemplatesRequest(client,
+				getTemplateRequest);
+		GetIndexTemplatesResponse getIndexTemplatesResponse = client.admin().indices()
+				.getTemplates(getIndexTemplatesRequest).actionGet();
+		for (IndexTemplateMetadata indexTemplateMetadata : getIndexTemplatesResponse.getIndexTemplates()) {
+
+			if (indexTemplateMetadata.getName().equals(getTemplateRequest.getTemplateName())) {
+
+				Document settings = Document.create();
+				Settings templateSettings = indexTemplateMetadata.settings();
+				templateSettings.keySet().forEach(key -> settings.put(key, templateSettings.get(key)));
+
+				Map<String, AliasData> aliases = new LinkedHashMap<>();
+				ImmutableOpenMap<String, AliasMetadata> aliasesResponse = indexTemplateMetadata.aliases();
+				Iterator<String> keysItAliases = aliasesResponse.keysIt();
+				while (keysItAliases.hasNext()) {
+					String key = keysItAliases.next();
+					aliases.put(key, requestFactory.convertAliasMetadata(aliasesResponse.get(key)));
+				}
+
+				Map<String, String> mappingsDoc = new LinkedHashMap<>();
+				ImmutableOpenMap<String, CompressedXContent> mappingsResponse = indexTemplateMetadata.mappings();
+				Iterator<String> keysItMappings = mappingsResponse.keysIt();
+				while (keysItMappings.hasNext()) {
+					String key = keysItMappings.next();
+					mappingsDoc.put(key, mappingsResponse.get(key).string());
+				}
+				String mappingsJson = mappingsDoc.get("_doc");
+				Document mapping = null;
+				if (mappingsJson != null) {
+					try {
+						mapping = Document.from((Map<String, ? extends Object>) Document.parse(mappingsJson).get("_doc"));
+					} catch (Exception e) {
+						LOGGER.warn("Got invalid mappings JSON: {}", mappingsJson);
+					}
+				}
+
+				TemplateData templateData = TemplateData.builder()
+						.withIndexPatterns(indexTemplateMetadata.patterns().toArray(new String[0])) //
+						.withSettings(settings) //
+						.withMapping(mapping) //
+						.withAliases(aliases) //
+						.withOrder(indexTemplateMetadata.order()) //
+						.withVersion(indexTemplateMetadata.version()).build();
+
+				return templateData;
+			}
+		}
+
+		return null;
+	}
+
+	@Override
+	public boolean existsTemplate(ExistsTemplateRequest existsTemplateRequest) {
+
+		Assert.notNull(existsTemplateRequest, "existsTemplateRequest must not be null");
+
+		// client.admin().indices() has no method for checking the existence
+		return getTemplate(new GetTemplateRequest(existsTemplateRequest.getTemplateName())) != null;
+	}
+
+	@Override
+	public boolean deleteTemplate(DeleteTemplateRequest deleteTemplateRequest) {
+
+		Assert.notNull(deleteTemplateRequest, "deleteTemplateRequest must not be null");
+
+		DeleteIndexTemplateRequest deleteIndexTemplateRequest = requestFactory.deleteIndexTemplateRequest(client,
+				deleteTemplateRequest);
+		return client.admin().indices().deleteTemplate(deleteIndexTemplateRequest).actionGet().isAcknowledged();
+	}
 }

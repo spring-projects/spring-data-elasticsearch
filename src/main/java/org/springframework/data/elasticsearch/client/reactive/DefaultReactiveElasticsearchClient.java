@@ -64,6 +64,7 @@ import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
+import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -86,6 +87,10 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.Request;
+import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
+import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
+import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
@@ -266,10 +271,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 			Optional<SSLContext> sslContext = clientConfiguration.getSslContext();
 
 			if (sslContext.isPresent()) {
-				httpClient = httpClient.secure(sslContextSpec -> {
-					sslContextSpec.sslContext(new JdkSslContext(sslContext.get(), true, null, IdentityCipherSuiteFilter.INSTANCE,
-							ApplicationProtocolConfig.DISABLED, ClientAuth.NONE, null, false));
-				});
+				httpClient = httpClient
+						.secure(sslContextSpec -> sslContextSpec.sslContext(new JdkSslContext(sslContext.get(), true, null,
+								IdentityCipherSuiteFilter.INSTANCE, ApplicationProtocolConfig.DISABLED, ClientAuth.NONE, null, false)));
 			} else {
 				httpClient = httpClient.secure();
 			}
@@ -589,8 +593,8 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	// -->
 
-	private <Req extends ActionRequest, Resp> Flux<Resp> sendRequest(Req request, Function<Req, Request> converter,
-			Class<Resp> responseType, HttpHeaders headers) {
+	private <REQ, RESP> Flux<RESP> sendRequest(REQ request, Function<REQ, Request> converter, Class<RESP> responseType,
+			HttpHeaders headers) {
 		return sendRequest(converter.apply(request), responseType, headers);
 	}
 
@@ -737,6 +741,32 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		return sendRequest(getAliasesRequest, requestCreator.getAlias(), GetAliasesResponse.class, headers).publishNext();
 	}
 
+	@Override
+	public Mono<Boolean> putTemplate(HttpHeaders headers, PutIndexTemplateRequest putIndexTemplateRequest) {
+		return sendRequest(putIndexTemplateRequest, requestCreator.putTemplate(), AcknowledgedResponse.class, headers)
+				.map(AcknowledgedResponse::isAcknowledged).next();
+	}
+
+	@Override
+	public Mono<GetIndexTemplatesResponse> getTemplate(HttpHeaders headers,
+			GetIndexTemplatesRequest getIndexTemplatesRequest) {
+		return (sendRequest(getIndexTemplatesRequest, requestCreator.getTemplates(), GetIndexTemplatesResponse.class,
+				headers)).next();
+	}
+
+	@Override
+	public Mono<Boolean> existsTemplate(HttpHeaders headers, IndexTemplatesExistRequest indexTemplatesExistRequest) {
+		return sendRequest(indexTemplatesExistRequest, requestCreator.templatesExist(), RawActionResponse.class, headers) //
+				.flatMap(response -> response.releaseBody().thenReturn(response.statusCode().is2xxSuccessful())) //
+				.next();
+	}
+
+	@Override
+	public Mono<Boolean> deleteTemplate(HttpHeaders headers, DeleteIndexTemplateRequest deleteIndexTemplateRequest) {
+		return sendRequest(deleteIndexTemplateRequest, requestCreator.deleteTemplate(), AcknowledgedResponse.class, headers)
+				.map(AcknowledgedResponse::isAcknowledged).next();
+	}
+
 	// endregion
 
 	// region helper functions
@@ -758,7 +788,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		if (response.statusCode().is4xxClientError()) {
 
 			ClientLogger.logRawResponse(logId, response.statusCode());
-			return handleClientError(logId, request, response, responseType);
+			return handleClientError(logId, response, responseType);
 		}
 
 		return response.body(BodyExtractors.toMono(byte[].class)) //
@@ -825,8 +855,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 								request.getMethod(), request.getEndpoint(), statusCode), status)));
 	}
 
-	private <T> Publisher<? extends T> handleClientError(String logId, Request request, ClientResponse response,
-			Class<T> responseType) {
+	private <T> Publisher<? extends T> handleClientError(String logId, ClientResponse response, Class<T> responseType) {
 
 		int statusCode = response.statusCode().value();
 		RestStatus status = RestStatus.fromCode(statusCode);
@@ -874,12 +903,13 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		try {
 			XContentParser parser = createParser(mediaType, content);
 			// we have a JSON object with an error and a status field
-			XContentParser.Token token = parser.nextToken(); // Skip START_OBJECT
+			parser.nextToken(); // Skip START_OBJECT
 
+			XContentParser.Token token;
 			do {
 				token = parser.nextToken();
 
-				if (parser.currentName().equals("error")) {
+				if ("error".equals(parser.currentName())) {
 					return ElasticsearchException.failureFromXContent(parser);
 				}
 			} while (token == XContentParser.Token.FIELD_NAME);
@@ -906,7 +936,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 *
 	 * @author Christoph Strobl
 	 */
-	class ClientStatus implements Status {
+	static class ClientStatus implements Status {
 
 		private final Collection<ElasticsearchHost> connectedHosts;
 

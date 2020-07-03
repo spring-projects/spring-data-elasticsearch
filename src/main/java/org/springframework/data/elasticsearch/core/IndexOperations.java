@@ -23,8 +23,14 @@ import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.lang.Nullable;
 
 /**
  * The operations for the
@@ -123,6 +129,23 @@ public interface IndexOperations {
 
 	// region settings
 	/**
+	 * Creates the index settings for the entity this IndexOperations is bound to.
+	 * 
+	 * @return a settings document.
+	 * @since 4.1
+	 */
+	Document createSettings();
+
+	/**
+	 * Creates the index settings from the annotations on the given class
+	 *
+	 * @param clazz the class to create the index settings from
+	 * @return a settings document.
+	 * @since 4.1
+	 */
+	Document createSettings(Class<?> clazz);
+
+	/**
 	 * Get mapping for an index defined by a class.
 	 *
 	 * @return the mapping
@@ -157,7 +180,7 @@ public interface IndexOperations {
 	boolean addAlias(AliasQuery query);
 
 	/**
-	 * Get the alias informations for a specified index.
+	 * Get the alias information for a specified index.
 	 *
 	 * @return alias information
 	 * @deprecated since 4.1, use {@link #getAliases(String...)} or {@link #getAliasesForIndex(String...)}.
@@ -203,6 +226,87 @@ public interface IndexOperations {
 	Map<String, Set<AliasData>> getAliasesForIndex(String... indexNames);
 	// endregion
 
+	// region templates
+	/**
+	 * Creates an index template using the legacy Elasticsearch interface (@see
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates-v1.html).
+	 * 
+	 * @param putTemplateRequest template request parameters
+	 * @return true if successful
+	 * @since 4.1
+	 */
+	boolean putTemplate(PutTemplateRequest putTemplateRequest);
+
+	/**
+	 * gets an index template using the legacy Elasticsearch
+	 * interface/Users/peter/Entwicklung/Projekte/spring-data-elasticsearch/src/main/java/org/springframework/data/elasticsearch/core/IndexOperations.java.
+	 *
+	 * @param templateName the template name
+	 * @return TemplateData, {@literal null} if no template with the given name exists.
+	 * @since 4.1
+	 */
+	@Nullable
+	default TemplateData getTemplate(String templateName) {
+		return getTemplate(new GetTemplateRequest(templateName));
+	}
+
+	/**
+	 * gets an index template using the legacy Elasticsearch
+	 * interface/Users/peter/Entwicklung/Projekte/spring-data-elasticsearch/src/main/java/org/springframework/data/elasticsearch/core/IndexOperations.java.
+	 *
+	 * @param getTemplateRequest the request parameters
+	 * @return TemplateData, {@literal null} if no template with the given name exists.
+	 * @since 4.1
+	 */
+	@Nullable
+	TemplateData getTemplate(GetTemplateRequest getTemplateRequest);
+
+	/**
+	 * check if an index template exists using the legacy Elasticsearch
+	 * interface/Users/peter/Entwicklung/Projekte/spring-data-elasticsearch/src/main/java/org/springframework/data/elasticsearch/core/IndexOperations.java.
+	 *
+	 * @param templateName the template name
+	 * @return {@literal true} if the index exists
+	 * @since 4.1
+	 */
+	default boolean existsTemplate(String templateName) {
+		return existsTemplate(new ExistsTemplateRequest(templateName));
+	}
+
+	/**
+	 * check if an index template exists using the legacy Elasticsearch
+	 * interface/Users/peter/Entwicklung/Projekte/spring-data-elasticsearch/src/main/java/org/springframework/data/elasticsearch/core/IndexOperations.java.
+	 *
+	 * @param existsTemplateRequest the request parameters
+	 * @return {@literal true} if the index exists
+	 * @since 4.1
+	 */
+	boolean existsTemplate(ExistsTemplateRequest existsTemplateRequest);
+
+	/**
+	 * Deletes an index template using the legacy Elasticsearch interface (@see
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates-v1.html).
+	 *
+	 * @param templateName the template name
+	 * @return true if successful
+	 * @since 4.1
+	 */
+	default boolean deleteTemplate(String templateName) {
+		return deleteTemplate(new DeleteTemplateRequest(templateName));
+	}
+
+	/**
+	 * Deletes an index template using the legacy Elasticsearch interface (@see
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates-v1.html).
+	 *
+	 * @param deleteTemplateRequest template request parameters
+	 * @return true if successful
+	 * @since 4.1
+	 */
+	boolean deleteTemplate(DeleteTemplateRequest deleteTemplateRequest);
+
+	// endregion
+
 	// region helper functions
 	/**
 	 * get the current {@link IndexCoordinates}. These may change over time when the entity class has a SpEL constructed
@@ -212,5 +316,6 @@ public interface IndexOperations {
 	 * @since 4.1
 	 */
 	IndexCoordinates getIndexCoordinates();
+
 	// endregion
 }

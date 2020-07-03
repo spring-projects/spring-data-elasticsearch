@@ -30,7 +30,11 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.client.GetAliasesResponse;
+import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
+import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -41,7 +45,12 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
+import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.lang.Nullable;
@@ -90,21 +99,12 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	public Mono<Boolean> create() {
 
 		String indexName = getIndexCoordinates().getIndexName();
-		Document settings = null;
 
 		if (boundClass != null) {
-			Class<?> clazz = boundClass;
-
-			if (clazz.isAnnotationPresent(Setting.class)) {
-				String settingPath = clazz.getAnnotation(Setting.class).settingPath();
-
-				return loadDocument(settingPath, "@Setting").flatMap(document -> doCreate(indexName, document));
-			}
-
-			settings = getRequiredPersistentEntity(clazz).getDefaultSettings();
+			return createSettings(boundClass).flatMap(settings -> doCreate(indexName, settings));
+		} else {
+			return doCreate(indexName, null);
 		}
-
-		return doCreate(indexName, settings);
 	}
 
 	@Override
@@ -113,8 +113,8 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	}
 
 	private Mono<Boolean> doCreate(String indexName, @Nullable Document settings) {
-		CreateIndexRequest request = requestFactory.createIndexRequestReactive(getIndexCoordinates().getIndexName(),
-				settings);
+
+		CreateIndexRequest request = requestFactory.createIndexRequestReactive(indexName, settings);
 		return Mono.from(operations.executeWithIndicesClient(client -> client.createIndex(request)));
 	}
 
@@ -189,6 +189,24 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	// endregion
 
 	// region settings
+
+	@Override
+	public Mono<Document> createSettings() {
+		return createSettings(checkForBoundClass());
+	}
+
+	@Override
+	public Mono<Document> createSettings(Class<?> clazz) {
+
+		if (clazz.isAnnotationPresent(Setting.class)) {
+			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
+
+			return loadDocument(settingPath, "@Setting");
+		}
+
+		return Mono.just(getRequiredPersistentEntity(clazz).getDefaultSettings());
+	}
+
 	@Override
 	public Mono<Document> getSettings(boolean includeDefaults) {
 
@@ -224,6 +242,55 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(aliasNames, indexNames);
 		return Mono.from(operations.executeWithIndicesClient(client -> client.getAliases(getAliasesRequest)))
 				.map(GetAliasesResponse::getAliases).map(requestFactory::convertAliasesResponse);
+	}
+	// endregion
+
+	// region templates
+	@Override
+	public Mono<Boolean> putTemplate(PutTemplateRequest putTemplateRequest) {
+
+		Assert.notNull(putTemplateRequest, "putTemplateRequest must not be null");
+
+		PutIndexTemplateRequest putIndexTemplateRequest = requestFactory.putIndexTemplateRequest(putTemplateRequest);
+		return Mono.from(operations.executeWithIndicesClient(client -> client.putTemplate(putIndexTemplateRequest)));
+	}
+
+	@Override
+	public Mono<TemplateData> getTemplate(GetTemplateRequest getTemplateRequest) {
+
+		Assert.notNull(getTemplateRequest, "getTemplateRequest must not be null");
+
+		GetIndexTemplatesRequest getIndexTemplatesRequest = requestFactory.getIndexTemplatesRequest(getTemplateRequest);
+		return Mono.from(operations.executeWithIndicesClient(client -> client.getTemplate(getIndexTemplatesRequest)))
+				.flatMap(response -> {
+					if (response != null) {
+						TemplateData templateData = requestFactory.getTemplateData(response, getTemplateRequest.getTemplateName());
+						if (templateData != null) {
+							return Mono.just(templateData);
+						}
+					}
+					return Mono.empty();
+				});
+	}
+
+	@Override
+	public Mono<Boolean> existsTemplate(ExistsTemplateRequest existsTemplateRequest) {
+
+		Assert.notNull(existsTemplateRequest, "existsTemplateRequest must not be null");
+
+		IndexTemplatesExistRequest indexTemplatesExistRequest = requestFactory
+				.indexTemplatesExistsRequest(existsTemplateRequest);
+		return Mono.from(operations.executeWithIndicesClient(client -> client.existsTemplate(indexTemplatesExistRequest)));
+	}
+
+	@Override
+	public Mono<Boolean> deleteTemplate(DeleteTemplateRequest deleteTemplateRequest) {
+
+		Assert.notNull(deleteTemplateRequest, "deleteTemplateRequest must not be null");
+
+		DeleteIndexTemplateRequest deleteIndexTemplateRequest = requestFactory
+				.deleteIndexTemplateRequest(deleteTemplateRequest);
+		return Mono.from(operations.executeWithIndicesClient(client -> client.deleteTemplate(deleteIndexTemplateRequest)));
 	}
 
 	// endregion

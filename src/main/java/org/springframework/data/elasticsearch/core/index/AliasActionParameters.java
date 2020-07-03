@@ -20,7 +20,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * Value class capturing the arguments for an {@link AliasAction}.  
+ * Value class capturing the arguments for an {@link AliasAction}.
  * 
  * @author Peter-Josef Meisch
  * @since 4.1
@@ -52,6 +52,14 @@ public class AliasActionParameters {
 
 	public static Builder builder() {
 		return new Builder();
+	}
+
+	/**
+	 * a Builder to create AliasActionParameters to be used when creating index templates. Automatically sets the index
+	 * name to an empty string, as this is not used in templates
+	 */
+	public static Builder builderForTemplate() {
+		return new Builder().withIndices("");
 	}
 
 	public String[] getIndices() {
@@ -158,7 +166,7 @@ public class AliasActionParameters {
 
 		public AliasActionParameters build() {
 
-			Assert.notNull(indices, "indices must bes set");
+			Assert.notNull(indices, "indices must be set");
 
 			return new AliasActionParameters(indices, aliases, isHidden, isWriteIndex, routing, indexRouting, searchRouting,
 					filterQuery, filterQueryClass);
