@@ -1,8 +1,8 @@
 = Continuous Integration
 
-image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2Fmaster&subject=Moore%20(master)[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/]
-image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2F3.1.x&subject=Lovelace%20(3.1.x)[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/]
-image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2F2.1.x&subject=Ingalls%20(2.1.x)[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/]
+image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2Fmaster&subject=2020.0.0%20(master)[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/]
+image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2F4.0.x&subject=Neumann%20(4.0.x)[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/]
+image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2F3.2.x&subject=Moore%20(3.2.x)[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/]
 
 == Running CI tasks locally
 
