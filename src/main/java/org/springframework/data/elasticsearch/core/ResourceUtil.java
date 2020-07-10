@@ -38,8 +38,8 @@ public abstract class ResourceUtil {
 	/**
 	 * Read a {@link ClassPathResource} into a {@link String}.
 	 *
-	 * @param url
-	 * @return
+	 * @param url url the file url
+	 * @return the contents of the file or null if it could not be read
 	 */
 	@Nullable
 	public static String readFileFromClasspath(String url) {
@@ -48,7 +48,7 @@ public abstract class ResourceUtil {
 		try (InputStream is = classPathResource.getInputStream()) {
 			return StreamUtils.copyToString(is, Charset.defaultCharset());
 		} catch (Exception e) {
-			LOGGER.debug(String.format("Failed to load file from url: %s: %s", url, e.getMessage()));
+			LOGGER.warn(String.format("Failed to load file from url: %s: %s", url, e.getMessage()));
 			return null;
 		}
 	}

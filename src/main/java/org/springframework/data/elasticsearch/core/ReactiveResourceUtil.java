@@ -65,13 +65,13 @@ public abstract class ReactiveResourceUtil {
 						sink.next(sb.toString());
 						sink.complete();
 					} catch (Exception e) {
-						LOGGER.debug(String.format("Failed to load file from url: %s: %s", url, e.getMessage()));
+						LOGGER.warn(String.format("Failed to load file from url: %s: %s", url, e.getMessage()));
 						sink.complete();
 					} finally {
 						DataBufferUtils.release(it);
 					}
 				}).onErrorResume(throwable -> {
-					LOGGER.debug(String.format("Failed to load file from url: %s: %s", url, throwable.getMessage()));
+					LOGGER.warn(String.format("Failed to load file from url: %s: %s", url, throwable.getMessage()));
 					return Mono.empty();
 				});
 	}
