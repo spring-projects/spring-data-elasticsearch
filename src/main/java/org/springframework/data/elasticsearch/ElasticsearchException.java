@@ -25,7 +25,7 @@ import org.springframework.lang.Nullable;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
- * @deprecated since 4.0, use {@link org.springframework.dao.UncategorizedDataAccessException}
+ * @deprecated since 4.0, use {@link UncategorizedElasticsearchException}
  */
 @Deprecated
 public class ElasticsearchException extends RuntimeException {

@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,17 +26,27 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
+import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.GetMappingsResponse;
+import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
+import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
@@ -111,7 +120,6 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 			GetMappingsResponse mapping = client.indices().getMapping(mappingsRequest, RequestOptions.DEFAULT);
 			// we only return data for the first index name that was requested (always have done so)
 			String index1 = mappingsRequest.indices()[0];
-			Map<String, Object> result = new LinkedHashMap<>();
 			return mapping.mappings().get(index1).getSourceAsMap();
 		});
 	}
@@ -174,7 +182,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 		GetSettingsResponse response = restTemplate.execute(client -> client.indices() //
 				.getSettings(getSettingsRequest, RequestOptions.DEFAULT));
 
-		return convertSettingsResponseToMap(response, getSettingsRequest.indices()[0]);
+		return requestFactory.fromSettingsResponse(response, getSettingsRequest.indices()[0]);
 	}
 
 	@Override
@@ -184,6 +192,54 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 
 		RefreshRequest refreshRequest = requestFactory.refreshRequest(index);
 		restTemplate.execute(client -> client.indices().refresh(refreshRequest, RequestOptions.DEFAULT));
+	}
+
+	@Override
+	public boolean putTemplate(PutTemplateRequest putTemplateRequest) {
+
+		Assert.notNull(putTemplateRequest, "putTemplateRequest must not be null");
+
+		PutIndexTemplateRequest putIndexTemplateRequest = requestFactory.putIndexTemplateRequest(putTemplateRequest);
+		return restTemplate.execute(
+				client -> client.indices().putTemplate(putIndexTemplateRequest, RequestOptions.DEFAULT).isAcknowledged());
+	}
+
+	@Override
+	public TemplateData getTemplate(GetTemplateRequest getTemplateRequest) {
+
+		Assert.notNull(getTemplateRequest, "getTemplateRequest must not be null");
+
+		// getIndexTemplate throws an error on non-existing template names
+		if (!existsTemplate(new ExistsTemplateRequest(getTemplateRequest.getTemplateName()))) {
+			return null;
+		}
+
+		GetIndexTemplatesRequest getIndexTemplatesRequest = requestFactory.getIndexTemplatesRequest(getTemplateRequest);
+		GetIndexTemplatesResponse getIndexTemplatesResponse = restTemplate
+				.execute(client -> client.indices().getIndexTemplate(getIndexTemplatesRequest, RequestOptions.DEFAULT));
+		return requestFactory.getTemplateData(getIndexTemplatesResponse, getTemplateRequest.getTemplateName());
+	}
+
+	@Override
+	public boolean existsTemplate(ExistsTemplateRequest existsTemplateRequest) {
+
+		Assert.notNull(existsTemplateRequest, "existsTemplateRequest must not be null");
+
+		IndexTemplatesExistRequest putIndexTemplateRequest = requestFactory
+				.indexTemplatesExistsRequest(existsTemplateRequest);
+		return restTemplate
+				.execute(client -> client.indices().existsTemplate(putIndexTemplateRequest, RequestOptions.DEFAULT));
+	}
+
+	@Override
+	public boolean deleteTemplate(DeleteTemplateRequest deleteTemplateRequest) {
+
+		Assert.notNull(deleteTemplateRequest, "deleteTemplateRequest must not be null");
+
+		DeleteIndexTemplateRequest deleteIndexTemplateRequest = requestFactory
+				.deleteIndexTemplateRequest(deleteTemplateRequest);
+		return restTemplate.execute(
+				client -> client.indices().deleteTemplate(deleteIndexTemplateRequest, RequestOptions.DEFAULT).isAcknowledged());
 	}
 
 	// endregion

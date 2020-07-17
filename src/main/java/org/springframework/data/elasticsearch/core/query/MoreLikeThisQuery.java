@@ -34,14 +34,14 @@ import org.springframework.lang.Nullable;
 public class MoreLikeThisQuery {
 
 	@Nullable private String id;
-	private List<String> searchIndices = new ArrayList<>();
-	private List<String> searchTypes = new ArrayList<>();
-	private List<String> fields = new ArrayList<>();
+	private final List<String> searchIndices = new ArrayList<>();
+	private final List<String> searchTypes = new ArrayList<>();
+	private final List<String> fields = new ArrayList<>();
 	@Nullable private String routing;
 	@Nullable private Float percentTermsToMatch;
 	@Nullable private Integer minTermFreq;
 	@Nullable private Integer maxQueryTerms;
-	private List<String> stopWords = new ArrayList<>();
+	private final List<String> stopWords = new ArrayList<>();
 	@Nullable private Integer minDocFreq;
 	@Nullable private Integer maxDocFreq;
 	@Nullable private Integer minWordLen;

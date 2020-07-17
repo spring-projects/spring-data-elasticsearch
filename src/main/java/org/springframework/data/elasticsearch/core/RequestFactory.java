@@ -19,14 +19,17 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.util.CollectionUtils.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
@@ -37,6 +40,7 @@ import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuild
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
+import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -56,9 +60,15 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.client.indices.GetMappingsRequest;
+import org.elasticsearch.client.indices.IndexTemplateMetadata;
+import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
+import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.settings.Settings;
@@ -92,6 +102,11 @@ import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -466,8 +481,8 @@ class RequestFactory {
 		return new GetMappingsRequest().indices(indexNames);
 	}
 
-	public org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest getMappingsRequest(Client client,
-			IndexCoordinates index) {
+	public org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest getMappingsRequest(
+			@SuppressWarnings("unused") Client client, IndexCoordinates index) {
 
 		String[] indexNames = index.getIndexNames();
 		return new org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest().indices(indexNames);
@@ -477,22 +492,217 @@ class RequestFactory {
 		Map<String, Set<AliasData>> converted = new LinkedHashMap<>();
 		aliasesResponse.forEach((index, aliasMetaDataSet) -> {
 			Set<AliasData> aliasDataSet = new LinkedHashSet<>();
-
-			aliasMetaDataSet.forEach(aliasMetaData -> {
-				Document filter = null;
-				CompressedXContent aliasMetaDataFilter = aliasMetaData.getFilter();
-				if (aliasMetaDataFilter != null) {
-					filter = Document.parse(aliasMetaDataFilter.string());
-				}
-				aliasDataSet.add(AliasData.of(aliasMetaData.alias(), filter, aliasMetaData.indexRouting(),
-						aliasMetaData.getSearchRouting(), aliasMetaData.writeIndex(), aliasMetaData.isHidden()));
-			});
-
+			aliasMetaDataSet.forEach(aliasMetaData -> aliasDataSet.add(convertAliasMetadata(aliasMetaData)));
 			converted.put(index, aliasDataSet);
 		});
 		return converted;
 	}
 
+	public AliasData convertAliasMetadata(AliasMetadata aliasMetaData) {
+		Document filter = null;
+		CompressedXContent aliasMetaDataFilter = aliasMetaData.getFilter();
+		if (aliasMetaDataFilter != null) {
+			filter = Document.parse(aliasMetaDataFilter.string());
+		}
+		AliasData aliasData = AliasData.of(aliasMetaData.alias(), filter, aliasMetaData.indexRouting(),
+				aliasMetaData.getSearchRouting(), aliasMetaData.writeIndex(), aliasMetaData.isHidden());
+		return aliasData;
+	}
+
+	public PutIndexTemplateRequest putIndexTemplateRequest(PutTemplateRequest putTemplateRequest) {
+
+		PutIndexTemplateRequest request = new PutIndexTemplateRequest(putTemplateRequest.getName())
+				.patterns(Arrays.asList(putTemplateRequest.getIndexPatterns()));
+
+		if (putTemplateRequest.getSettings() != null) {
+			request.settings(putTemplateRequest.getSettings());
+		}
+
+		if (putTemplateRequest.getMappings() != null) {
+			request.mapping(putTemplateRequest.getMappings());
+		}
+
+		request.order(putTemplateRequest.getOrder()).version(putTemplateRequest.getVersion());
+
+		AliasActions aliasActions = putTemplateRequest.getAliasActions();
+
+		if (aliasActions != null) {
+			aliasActions.getActions().forEach(aliasAction -> {
+				AliasActionParameters parameters = aliasAction.getParameters();
+				String[] parametersAliases = parameters.getAliases();
+
+				if (parametersAliases != null) {
+					for (String aliasName : parametersAliases) {
+						Alias alias = new Alias(aliasName);
+
+						if (parameters.getRouting() != null) {
+							alias.routing(parameters.getRouting());
+						}
+
+						if (parameters.getIndexRouting() != null) {
+							alias.indexRouting(parameters.getIndexRouting());
+						}
+
+						if (parameters.getSearchRouting() != null) {
+							alias.searchRouting(parameters.getSearchRouting());
+						}
+
+						if (parameters.getHidden() != null) {
+							alias.isHidden(parameters.getHidden());
+						}
+
+						if (parameters.getWriteIndex() != null) {
+							alias.writeIndex(parameters.getWriteIndex());
+						}
+
+						Query filterQuery = parameters.getFilterQuery();
+
+						if (filterQuery != null) {
+							elasticsearchConverter.updateQuery(filterQuery, parameters.getFilterQueryClass());
+							QueryBuilder queryBuilder = getFilter(filterQuery);
+
+							if (queryBuilder == null) {
+								queryBuilder = getQuery(filterQuery);
+							}
+
+							alias.filter(queryBuilder);
+						}
+
+						request.alias(alias);
+					}
+				}
+			});
+		}
+
+		return request;
+	}
+
+	/**
+	 * The version for the transport client needs a different PutIndexTemplateRequest class
+	 */
+	public org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest putIndexTemplateRequest(
+			@SuppressWarnings("unused") Client client, PutTemplateRequest putTemplateRequest) {
+		org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest request = new org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest(
+				putTemplateRequest.getName()).patterns(Arrays.asList(putTemplateRequest.getIndexPatterns()));
+
+		if (putTemplateRequest.getSettings() != null) {
+			request.settings(putTemplateRequest.getSettings());
+		}
+
+		if (putTemplateRequest.getMappings() != null) {
+			request.mapping("_doc", putTemplateRequest.getMappings());
+		}
+
+		request.order(putTemplateRequest.getOrder()).version(putTemplateRequest.getVersion());
+
+		AliasActions aliasActions = putTemplateRequest.getAliasActions();
+
+		if (aliasActions != null) {
+			aliasActions.getActions().forEach(aliasAction -> {
+				AliasActionParameters parameters = aliasAction.getParameters();
+				String[] parametersAliases = parameters.getAliases();
+				if (parametersAliases != null) {
+
+					for (String aliasName : parametersAliases) {
+						Alias alias = new Alias(aliasName);
+
+						if (parameters.getRouting() != null) {
+							alias.routing(parameters.getRouting());
+						}
+
+						if (parameters.getIndexRouting() != null) {
+							alias.indexRouting(parameters.getIndexRouting());
+						}
+
+						if (parameters.getSearchRouting() != null) {
+							alias.searchRouting(parameters.getSearchRouting());
+						}
+
+						if (parameters.getHidden() != null) {
+							alias.isHidden(parameters.getHidden());
+						}
+
+						if (parameters.getWriteIndex() != null) {
+							alias.writeIndex(parameters.getWriteIndex());
+						}
+
+						Query filterQuery = parameters.getFilterQuery();
+
+						if (filterQuery != null) {
+							elasticsearchConverter.updateQuery(filterQuery, parameters.getFilterQueryClass());
+							QueryBuilder queryBuilder = getFilter(filterQuery);
+
+							if (queryBuilder == null) {
+								queryBuilder = getQuery(filterQuery);
+							}
+
+							alias.filter(queryBuilder);
+						}
+
+						request.alias(alias);
+					}
+				}
+			});
+		}
+
+		return request;
+	}
+
+	public GetIndexTemplatesRequest getIndexTemplatesRequest(GetTemplateRequest getTemplateRequest) {
+		return new GetIndexTemplatesRequest(getTemplateRequest.getTemplateName());
+	}
+
+	@Nullable
+	public TemplateData getTemplateData(GetIndexTemplatesResponse getIndexTemplatesResponse, String templateName) {
+		for (IndexTemplateMetadata indexTemplateMetadata : getIndexTemplatesResponse.getIndexTemplates()) {
+
+			if (indexTemplateMetadata.name().equals(templateName)) {
+
+				Document settings = Document.create();
+				Settings templateSettings = indexTemplateMetadata.settings();
+				templateSettings.keySet().forEach(key -> settings.put(key, templateSettings.get(key)));
+
+				Map<String, AliasData> aliases = new LinkedHashMap<>();
+
+				ImmutableOpenMap<String, AliasMetadata> aliasesResponse = indexTemplateMetadata.aliases();
+				Iterator<String> keysIt = aliasesResponse.keysIt();
+				while (keysIt.hasNext()) {
+					String key = keysIt.next();
+					aliases.put(key, convertAliasMetadata(aliasesResponse.get(key)));
+				}
+				TemplateData templateData = TemplateData.builder()
+						.withIndexPatterns(indexTemplateMetadata.patterns().toArray(new String[0])) //
+						.withSettings(settings) //
+						.withMapping(Document.from(indexTemplateMetadata.mappings().getSourceAsMap())) //
+						.withAliases(aliases) //
+						.withOrder(indexTemplateMetadata.order()) //
+						.withVersion(indexTemplateMetadata.version()).build();
+
+				return templateData;
+			}
+		}
+		return null;
+	}
+
+	public org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesRequest getIndexTemplatesRequest(
+			Client client, GetTemplateRequest getTemplateRequest) {
+		return new org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesRequest(
+				getTemplateRequest.getTemplateName());
+	}
+
+	public IndexTemplatesExistRequest indexTemplatesExistsRequest(ExistsTemplateRequest existsTemplateRequest) {
+		return new IndexTemplatesExistRequest(existsTemplateRequest.getTemplateName());
+	}
+
+	public DeleteIndexTemplateRequest deleteIndexTemplateRequest(DeleteTemplateRequest deleteTemplateRequest) {
+		return new DeleteIndexTemplateRequest(deleteTemplateRequest.getTemplateName());
+	}
+
+	public org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest deleteIndexTemplateRequest(
+			Client client, DeleteTemplateRequest deleteTemplateRequest) {
+		return new org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest(
+				deleteTemplateRequest.getTemplateName());
+	}
 	// endregion
 
 	// region delete
@@ -524,10 +734,12 @@ class RequestFactory {
 				.setRefresh(true);
 
 		if (query.isLimiting()) {
+			// noinspection ConstantConditions
 			deleteByQueryRequest.setBatchSize(query.getMaxResults());
 		}
 
 		if (query.hasScrollTime()) {
+			// noinspection ConstantConditions
 			deleteByQueryRequest.setScroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
 		}
 
@@ -752,10 +964,7 @@ class RequestFactory {
 		String indexName = index.getIndexName();
 		MoreLikeThisQueryBuilder.Item item = new MoreLikeThisQueryBuilder.Item(indexName, query.getId());
 
-		String[] fields = null;
-		if (query.getFields() != null) {
-			fields = query.getFields().toArray(new String[] {});
-		}
+		String[] fields = query.getFields().toArray(new String[] {});
 
 		MoreLikeThisQueryBuilder moreLikeThisQueryBuilder = QueryBuilders.moreLikeThisQuery(fields, null,
 				new MoreLikeThisQueryBuilder.Item[] { item });
@@ -817,11 +1026,7 @@ class RequestFactory {
 		QueryBuilder elasticsearchQuery = getQuery(query);
 		QueryBuilder elasticsearchFilter = getFilter(query);
 
-		if (elasticsearchQuery != null) {
-			searchRequest.source().query(elasticsearchQuery);
-		} else {
-			searchRequest.source().query(QueryBuilders.matchAllQuery());
-		}
+		searchRequest.source().query(elasticsearchQuery);
 
 		if (elasticsearchFilter != null) {
 			searchRequest.source().postFilter(elasticsearchFilter);
@@ -839,11 +1044,7 @@ class RequestFactory {
 		QueryBuilder elasticsearchQuery = getQuery(query);
 		QueryBuilder elasticsearchFilter = getFilter(query);
 
-		if (elasticsearchQuery != null) {
-			searchRequestBuilder.setQuery(elasticsearchQuery);
-		} else {
-			searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
-		}
+		searchRequestBuilder.setQuery(elasticsearchQuery);
 
 		if (elasticsearchFilter != null) {
 			searchRequestBuilder.setPostFilter(elasticsearchFilter);
@@ -888,6 +1089,7 @@ class RequestFactory {
 		}
 
 		if (query.isLimiting()) {
+			// noinspection ConstantConditions
 			sourceBuilder.size(query.getMaxResults());
 		}
 
@@ -899,9 +1101,7 @@ class RequestFactory {
 			request.preference(query.getPreference());
 		}
 
-		if (query.getSearchType() != null) {
-			request.searchType(query.getSearchType());
-		}
+		request.searchType(query.getSearchType());
 
 		prepareSort(query, sourceBuilder, getPersistentEntity(clazz));
 
@@ -965,6 +1165,7 @@ class RequestFactory {
 		}
 
 		if (query.isLimiting()) {
+			// noinspection ConstantConditions
 			searchRequestBuilder.setSize(query.getMaxResults());
 		}
 

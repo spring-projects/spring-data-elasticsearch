@@ -36,6 +36,7 @@ import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
+import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -50,6 +51,10 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.GetAliasesResponse;
+import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
+import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
+import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
@@ -610,6 +615,7 @@ public interface ReactiveElasticsearchClient {
 	 * @param callback the {@link ReactiveElasticsearchClientCallback callback} wielding the actual command to run.
 	 * @return the {@link Mono} emitting the {@link ClientResponse} once subscribed.
 	 */
+	@SuppressWarnings("JavaDoc")
 	Mono<ClientResponse> execute(ReactiveElasticsearchClientCallback callback);
 
 	/**
@@ -1196,5 +1202,144 @@ public interface ReactiveElasticsearchClient {
 		 * @since 4.1
 		 */
 		Mono<GetAliasesResponse> getAliases(HttpHeaders headers, GetAliasesRequest getAliasesRequest);
+
+		/**
+		 * Execute the given {@link PutIndexTemplateRequest} against the {@literal indices} API.
+		 *
+		 * @param consumer never {@literal null}.
+		 * @return a {@link Mono} signalling operation completion.
+		 * @since 4.1
+		 */
+		default Mono<Boolean> putTemplate(Consumer<PutIndexTemplateRequest> consumer, String templateName) {
+			PutIndexTemplateRequest putIndexTemplateRequest = new PutIndexTemplateRequest(templateName);
+			consumer.accept(putIndexTemplateRequest);
+			return putTemplate(putIndexTemplateRequest);
+		}
+
+		/**
+		 * Execute the given {@link PutIndexTemplateRequest} against the {@literal indices} API.
+		 *
+		 * @param putIndexTemplateRequest must not be {@literal null}
+		 * @return a {@link Mono} signalling operation completion.
+		 * @since 4.1
+		 */
+		default Mono<Boolean> putTemplate(PutIndexTemplateRequest putIndexTemplateRequest) {
+			return putTemplate(HttpHeaders.EMPTY, putIndexTemplateRequest);
+		}
+
+		/**
+		 * Execute the given {@link PutIndexTemplateRequest} against the {@literal indices} API.
+		 *
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param putIndexTemplateRequest must not be {@literal null}
+		 * @return a {@link Mono} signalling operation completion.
+		 * @since 4.1
+		 */
+		Mono<Boolean> putTemplate(HttpHeaders headers, PutIndexTemplateRequest putIndexTemplateRequest);
+
+		/**
+		 * Execute the given {@link GetIndexTemplatesRequest} against the {@literal indices} API.
+		 *
+		 * @param consumer never {@literal null}.
+		 * @return a {@link Mono} with the GetIndexTemplatesResponse.
+		 * @since 4.1
+		 */
+		default Mono<GetIndexTemplatesResponse> getTemplate(Consumer<GetIndexTemplatesRequest> consumer) {
+
+			GetIndexTemplatesRequest getIndexTemplatesRequest = new GetIndexTemplatesRequest();
+			consumer.accept(getIndexTemplatesRequest);
+			return getTemplate(getIndexTemplatesRequest);
+		}
+
+		/**
+		 * Execute the given {@link GetIndexTemplatesRequest} against the {@literal indices} API.
+		 *
+		 * @param getIndexTemplatesRequest must not be {@literal null}
+		 * @return a {@link Mono} with the GetIndexTemplatesResponse.
+		 * @since 4.1
+		 */
+		default Mono<GetIndexTemplatesResponse> getTemplate(GetIndexTemplatesRequest getIndexTemplatesRequest) {
+			return getTemplate(HttpHeaders.EMPTY, getIndexTemplatesRequest);
+		}
+
+		/**
+		 * Execute the given {@link GetIndexTemplatesRequest} against the {@literal indices} API.
+		 *
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param getIndexTemplatesRequest must not be {@literal null}
+		 * @return a {@link Mono} with the GetIndexTemplatesResponse.
+		 * @since 4.1
+		 */
+		Mono<GetIndexTemplatesResponse> getTemplate(HttpHeaders headers, GetIndexTemplatesRequest getIndexTemplatesRequest);
+
+		/**
+		 * Execute the given {@link IndexTemplatesExistRequest} against the {@literal indices} API.
+		 *
+		 * @param consumer never {@literal null}.
+		 * @return the {@link Mono} emitting {@literal true} if the template exists, {@literal false} otherwise.
+		 * @since 4.1
+		 */
+		default Mono<Boolean> existsTemplate(Consumer<IndexTemplatesExistRequest> consumer) {
+
+			IndexTemplatesExistRequest indexTemplatesExistRequest = new IndexTemplatesExistRequest();
+			consumer.accept(indexTemplatesExistRequest);
+			return existsTemplate(indexTemplatesExistRequest);
+		}
+
+		/**
+		 * Execute the given {@link IndexTemplatesExistRequest} against the {@literal indices} API.
+		 *
+		 * @param indexTemplatesExistRequest must not be {@literal null}
+		 * @return the {@link Mono} emitting {@literal true} if the template exists, {@literal false} otherwise.
+		 * @since 4.1
+		 */
+		default Mono<Boolean> existsTemplate(IndexTemplatesExistRequest indexTemplatesExistRequest) {
+			return existsTemplate(HttpHeaders.EMPTY, indexTemplatesExistRequest);
+		}
+
+		/**
+		 * Execute the given {@link IndexTemplatesExistRequest} against the {@literal indices} API.
+		 *
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param indexTemplatesExistRequest must not be {@literal null}
+		 * @return the {@link Mono} emitting {@literal true} if the template exists, {@literal false} otherwise.
+		 * @since 4.1
+		 */
+		Mono<Boolean> existsTemplate(HttpHeaders headers, IndexTemplatesExistRequest indexTemplatesExistRequest);
+
+		/**
+		 * Execute the given {@link DeleteIndexTemplateRequest} against the {@literal indices} API.
+		 *
+		 * @param consumer never {@literal null}.
+		 * @return the {@link Mono} emitting {@literal true} if the template exists, {@literal false} otherwise.
+		 * @since 4.1
+		 */
+		default Mono<Boolean> deleteTemplate(Consumer<DeleteIndexTemplateRequest> consumer) {
+
+			DeleteIndexTemplateRequest deleteIndexTemplateRequest = new DeleteIndexTemplateRequest();
+			consumer.accept(deleteIndexTemplateRequest);
+			return deleteTemplate(deleteIndexTemplateRequest);
+		}
+
+		/**
+		 * Execute the given {@link DeleteIndexTemplateRequest} against the {@literal indices} API.
+		 *
+		 * @param deleteIndexTemplateRequest must not be {@literal null}
+		 * @return the {@link Mono} emitting {@literal true} if the template exists, {@literal false} otherwise.
+		 * @since 4.1
+		 */
+		default Mono<Boolean> deleteTemplate(DeleteIndexTemplateRequest deleteIndexTemplateRequest) {
+			return deleteTemplate(HttpHeaders.EMPTY, deleteIndexTemplateRequest);
+		}
+
+		/**
+		 * Execute the given {@link DeleteIndexTemplateRequest} against the {@literal indices} API.
+		 *
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param deleteIndexTemplateRequest must not be {@literal null}
+		 * @return the {@link Mono} emitting {@literal true} if the template exists, {@literal false} otherwise.
+		 * @since 4.1
+		 */
+		Mono<Boolean> deleteTemplate(HttpHeaders headers, DeleteIndexTemplateRequest deleteIndexTemplateRequest);
 	}
 }

@@ -19,15 +19,14 @@ import static org.springframework.util.StringUtils.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
-import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
-import org.elasticsearch.common.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -93,19 +92,29 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 		Document settings = null;
 
 		if (boundClass != null) {
-			Class<?> clazz = boundClass;
-
-			if (clazz.isAnnotationPresent(Setting.class)) {
-				String settingPath = clazz.getAnnotation(Setting.class).settingPath();
-				settings = loadSettings(settingPath);
-			}
-
-			if (settings == null) {
-				settings = getRequiredPersistentEntity(clazz).getDefaultSettings();
-			}
+			settings = createSettings(boundClass);
 		}
 
 		return doCreate(getIndexCoordinates(), settings);
+	}
+
+	@Override
+	public Document createSettings(Class<?> clazz) {
+
+		Assert.notNull(clazz, "clazz must not be null");
+
+		Document settings = null;
+
+		if (clazz.isAnnotationPresent(Setting.class)) {
+			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
+			settings = loadSettings(settingPath);
+		}
+
+		if (settings == null) {
+			settings = getRequiredPersistentEntity(clazz).getDefaultSettings();
+		}
+
+		return settings;
 	}
 
 	@Override
@@ -234,9 +243,15 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 			String mapping = new MappingBuilder(elasticsearchConverter).buildPropertyMapping(clazz);
 			return Document.parse(mapping);
 		} catch (Exception e) {
-			throw new ElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
+			throw new UncategorizedElasticsearchException("Failed to build mapping for " + clazz.getSimpleName(), e);
 		}
 	}
+
+	@Override
+	public Document createSettings() {
+		return createSettings(checkForBoundClass());
+	}
+
 	// endregion
 
 	// region Helper functions
@@ -246,7 +261,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 	@Override
 	public IndexCoordinates getIndexCoordinates() {
-		return (boundClass != null) ? getIndexCoordinatesFor(boundClass) : boundIndex;
+		return (boundClass != null) ? getIndexCoordinatesFor(boundClass) : Objects.requireNonNull(boundIndex);
 	}
 
 	public IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {
@@ -266,27 +281,5 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 		}
 		return null;
 	}
-
-	protected Document convertSettingsResponseToMap(GetSettingsResponse response, String indexName) {
-
-		Document settings = Document.create();
-
-		if (!response.getIndexToDefaultSettings().isEmpty()) {
-			Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);
-			for (String key : defaultSettings.keySet()) {
-				settings.put(key, defaultSettings.get(key));
-			}
-		}
-
-		if (!response.getIndexToSettings().isEmpty()) {
-			Settings customSettings = response.getIndexToSettings().get(indexName);
-			for (String key : customSettings.keySet()) {
-				settings.put(key, customSettings.get(key));
-			}
-		}
-
-		return settings;
-	}
 	// endregion
-
 }

@@ -15,6 +15,7 @@ import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
@@ -27,6 +28,9 @@ import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
+import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.util.RequestConverters;
@@ -156,7 +160,38 @@ public interface RequestCreator {
 		return RequestConverters::updateAliases;
 	}
 
+	/**
+	 * @since 4.1
+	 */
 	default Function<GetAliasesRequest, Request> getAlias() {
 		return RequestConverters::getAlias;
+	}
+
+	/**
+	 * @since 4.1
+	 */
+	default Function<PutIndexTemplateRequest, Request> putTemplate() {
+		return RequestConverters::putTemplate;
+	}
+
+	/**
+	 * @since 4.1
+	 */
+	default Function<GetIndexTemplatesRequest, Request> getTemplates() {
+		return RequestConverters::getTemplates;
+	}
+
+	/**
+	 * @since 4.1
+	 */
+	default Function<IndexTemplatesExistRequest, Request> templatesExist() {
+		return RequestConverters::templatesExist;
+	}
+
+	/**
+	 * @since 4.1
+	 */
+	default Function<DeleteIndexTemplateRequest, Request> deleteTemplate() {
+		return RequestConverters::deleteTemplate;
 	}
 }

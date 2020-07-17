@@ -15,17 +15,20 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.springframework.lang.Nullable;
+
 /**
  * SourceFilter implementation for providing includes and excludes.
  *
- * @Author Jon Tsiros
+ * @author Jon Tsiros
+ * @author Peter-Josef Meisch
  */
 public class FetchSourceFilter implements SourceFilter {
 
-	private final String[] includes;
-	private final String[] excludes;
+	@Nullable private final String[] includes;
+	@Nullable private final String[] excludes;
 
-	public FetchSourceFilter(final String[] includes, final String[] excludes) {
+	public FetchSourceFilter(@Nullable final String[] includes, @Nullable final String[] excludes) {
 		this.includes = includes;
 		this.excludes = excludes;
 	}

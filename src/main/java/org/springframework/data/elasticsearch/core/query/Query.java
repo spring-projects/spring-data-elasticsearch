@@ -232,7 +232,8 @@ public interface Query {
 	boolean getTrackTotalHits();
 
 	/**
-	 * For queries that are used in delete request, these are internally handled by Elasticsearch as scroll/bulk delete queries.
+	 * For queries that are used in delete request, these are internally handled by Elasticsearch as scroll/bulk delete
+	 * queries. Must not return {@literal null} when {@link #hasScrollTime()} returns {@literal true}.
 	 * 
 	 * @return the scrolltime settings
 	 * @since 4.0
@@ -241,7 +242,8 @@ public interface Query {
 	Duration getScrollTime();
 
 	/**
-	 * For queries that are used in delete request, these are internally handled by Elasticsearch as scroll/bulk delete queries.
+	 * For queries that are used in delete request, these are internally handled by Elasticsearch as scroll/bulk delete
+	 * queries.
 	 * 
 	 * @param scrollTime the scrolltime settings
 	 * @since 4.0

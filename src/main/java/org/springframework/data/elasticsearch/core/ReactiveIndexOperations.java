@@ -23,6 +23,11 @@ import java.util.Set;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 
 /**
@@ -127,6 +132,23 @@ public interface ReactiveIndexOperations {
 
 	// region settings
 	/**
+	 * Creates the index settings for the entity this IndexOperations is bound to.
+	 *
+	 * @return a settings document.
+	 * @since 4.1
+	 */
+	Mono<Document> createSettings();
+
+	/**
+	 * Creates the index settings from the annotations on the given class
+	 *
+	 * @param clazz the class to create the index settings from
+	 * @return a settings document.
+	 * @since 4.1
+	 */
+	Mono<Document> createSettings(Class<?> clazz);
+
+	/**
 	 * get the settings for the index
 	 * 
 	 * @return a {@link Mono} with a {@link Document} containing the index settings
@@ -173,13 +195,92 @@ public interface ReactiveIndexOperations {
 	Mono<Map<String, Set<AliasData>>> getAliasesForIndex(String... indexNames);
 	// endregion
 
+	// region templates
+	/**
+	 * Creates an index template using the legacy Elasticsearch interface (@see
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates-v1.html)
+	 *
+	 * @param putTemplateRequest template request parameters
+	 * @return Mono of {@literal true} if the template could be stored
+	 * @since 4.1
+	 */
+	Mono<Boolean> putTemplate(PutTemplateRequest putTemplateRequest);
+
+	/**
+	 * gets an index template using the legacy Elasticsearch
+	 * interface/Users/peter/Entwicklung/Projekte/spring-data-elasticsearch/src/main/java/org/springframework/data/elasticsearch/core/IndexOperations.java.
+	 *
+	 * @param templateName the template name
+	 * @return Mono of TemplateData, {@literal Mono.empty()} if no template with the given name exists.
+	 * @since 4.1
+	 */
+	default Mono<TemplateData> getTemplate(String templateName) {
+		return getTemplate(new GetTemplateRequest(templateName));
+	}
+
+	/**
+	 * gets an index template using the legacy Elasticsearch
+	 * interface/Users/peter/Entwicklung/Projekte/spring-data-elasticsearch/src/main/java/org/springframework/data/elasticsearch/core/IndexOperations.java.
+	 *
+	 * @param getTemplateRequest the request parameters
+	 * @return Mono of TemplateData, {@literal Mono.empty()} if no template with the given name exists.
+	 * @since 4.1
+	 */
+	Mono<TemplateData> getTemplate(GetTemplateRequest getTemplateRequest);
+
+	/**
+	 * Checks if an index template exists using the legacy Elasticsearch interface (@see
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates-v1.html)
+	 *
+	 * @param templateName the template name
+	 * @return Mono of {@literal true} if the template exists
+	 * @since 4.1
+	 */
+	default Mono<Boolean> existsTemplate(String templateName) {
+		return existsTemplate(new ExistsTemplateRequest(templateName));
+	}
+
+	/**
+	 * Checks if an index template exists using the legacy Elasticsearch interface (@see
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates-v1.html)
+	 *
+	 * @param existsTemplateRequest template request parameters
+	 * @return Mono of {@literal true} if the template exists
+	 * @since 4.1
+	 */
+	Mono<Boolean> existsTemplate(ExistsTemplateRequest existsTemplateRequest);
+
+	/**
+	 * Deletes an index template using the legacy Elasticsearch interface (@see
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates-v1.html)
+	 *
+	 * @param templateName the template name
+	 * @return Mono of {@literal true} if the template could be deleted
+	 * @since 4.1
+	 */
+	default Mono<Boolean> deleteTemplate(String templateName) {
+		return deleteTemplate(new DeleteTemplateRequest(templateName));
+	}
+
+	/**
+	 * Deletes an index template using the legacy Elasticsearch interface (@see
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates-v1.html)
+	 *
+	 * @param deleteTemplateRequest template request parameters
+	 * @return Mono of {@literal true} if the template could be deleted
+	 * @since 4.1
+	 */
+	Mono<Boolean> deleteTemplate(DeleteTemplateRequest deleteTemplateRequest);
+
+	// endregion
+
 	// region helper functions
 	/**
 	 * get the current {@link IndexCoordinates}. These may change over time when the entity class has a SpEL constructed
 	 * index name. When this IndexOperations is not bound to a class, the bound IndexCoordinates are returned.
 	 *
 	 * @return IndexCoordinates
-	 * @ince 4.1
+	 * @since 4.1
 	 */
 	IndexCoordinates getIndexCoordinates();
 

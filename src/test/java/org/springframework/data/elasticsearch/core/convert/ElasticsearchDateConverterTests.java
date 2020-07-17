@@ -58,7 +58,7 @@ class ElasticsearchDateConverterTests {
 	@Test // DATAES-792
 	void shouldConvertLegacyDateToString() {
 		GregorianCalendar calendar = GregorianCalendar
-				.from(ZonedDateTime.of(LocalDateTime.of(2020, 04, 19, 19, 44), ZoneId.of("UTC")));
+				.from(ZonedDateTime.of(LocalDateTime.of(2020, 4, 19, 19, 44), ZoneId.of("UTC")));
 		Date legacyDate = calendar.getTime();
 		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.basic_date_time);
 
@@ -70,7 +70,7 @@ class ElasticsearchDateConverterTests {
 	@Test // DATAES-792
 	void shouldParseLegacyDateFromString() {
 		GregorianCalendar calendar = GregorianCalendar
-				.from(ZonedDateTime.of(LocalDateTime.of(2020, 04, 19, 19, 44), ZoneId.of("UTC")));
+				.from(ZonedDateTime.of(LocalDateTime.of(2020, 4, 19, 19, 44), ZoneId.of("UTC")));
 		Date legacyDate = calendar.getTime();
 		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.basic_date_time);
 
