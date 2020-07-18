@@ -30,9 +30,9 @@ import org.springframework.util.StringUtils;
 
 /**
  * This class manages the connection to an Elasticsearch Cluster, starting a local one if necessary. The information
- * about the ClusterConnection is stored botha s a varaible in the instance for direct aaces from JUnit 5 and in a
- * static ThreadLocal<ClusterConnectionInfo> acessible with the {@link ClusterConnection#clusterConnectionInfo()} method
- * to be integrated in the Spring setup
+ * about the ClusterConnection is stored both as a variable in the instance for direct access from JUnit 5 and in a
+ * static ThreadLocal<ClusterConnectionInfo> accessible with the {@link ClusterConnection#clusterConnectionInfo()}
+ * method to be integrated in the Spring setup
  *
  * @author Peter-Josef Meisch
  */
