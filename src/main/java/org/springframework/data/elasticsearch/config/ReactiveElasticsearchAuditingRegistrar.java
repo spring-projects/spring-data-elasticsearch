@@ -22,29 +22,29 @@ import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
-import org.springframework.data.auditing.IsNewAwareAuditingHandler;
+import org.springframework.data.auditing.ReactiveIsNewAwareAuditingHandler;
 import org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport;
 import org.springframework.data.auditing.config.AuditingConfiguration;
 import org.springframework.data.config.ParsingUtils;
-import org.springframework.data.elasticsearch.core.event.AuditingEntityCallback;
+import org.springframework.data.elasticsearch.core.event.ReactiveAuditingEntityCallback;
 import org.springframework.util.Assert;
 
 /**
- * {@link ImportBeanDefinitionRegistrar} to enable {@link EnableElasticsearchAuditing} annotation.
+ * {@link ImportBeanDefinitionRegistrar} to enable {@link EnableReactiveElasticsearchAuditing} annotation.
  *
  * @author Peter-Josef Meisch
- * @since 4.0
+ * @since 4.1
  */
-class ElasticsearchAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
+class ReactiveElasticsearchAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
 	@Override
 	protected Class<? extends Annotation> getAnnotation() {
-		return EnableElasticsearchAuditing.class;
+		return EnableReactiveElasticsearchAuditing.class;
 	}
 
 	@Override
 	protected String getAuditingHandlerBeanName() {
-		return "elasticsearchAuditingHandler";
+		return "reactiveElasticsearchAuditingHandler";
 	}
 
 	@Override
@@ -52,7 +52,7 @@ class ElasticsearchAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupp
 
 		Assert.notNull(configuration, "AuditingConfiguration must not be null!");
 
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(IsNewAwareAuditingHandler.class);
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(ReactiveIsNewAwareAuditingHandler.class);
 
 		BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(PersistentEntitiesFactoryBean.class);
 		definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
@@ -68,9 +68,10 @@ class ElasticsearchAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupp
 		Assert.notNull(auditingHandlerDefinition, "BeanDefinition must not be null!");
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
 
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(AuditingEntityCallback.class);
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(ReactiveAuditingEntityCallback.class);
 		builder.addConstructorArgValue(ParsingUtils.getObjectFactoryBeanDefinition(getAuditingHandlerBeanName(), registry));
 
-		registerInfrastructureBeanWithId(builder.getBeanDefinition(), AuditingEntityCallback.class.getName(), registry);
+		registerInfrastructureBeanWithId(builder.getBeanDefinition(), ReactiveAuditingEntityCallback.class.getName(),
+				registry);
 	}
 }

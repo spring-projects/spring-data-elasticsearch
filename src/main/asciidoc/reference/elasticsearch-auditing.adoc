@@ -3,7 +3,7 @@
 
 === Preparing entities
 
-In order for the auditing code to be able to decide wether an entity instance is new, the entity must implement the `Persistable<ID>` interface which is defined as follows:
+In order for the auditing code to be able to decide whether an entity instance is new, the entity must implement the `Persistable<ID>` interface which is defined as follows:
 
 [source,java]
 ----
@@ -52,13 +52,24 @@ public class Person implements Persistable<Long> {
 
 === Activating auditing
 
-After the entities have been set up and providing the `AuditorAware` the Auditing must be activated by setting the `@EnableElasticsearchAuditing` on a configuration class:
+After the entities have been set up and providing the `AuditorAware` - or `ReactiveAuditorAware` - the Auditing must be activated by setting the `@EnableElasticsearchAuditing` on a configuration class:
 
 [source,java]
 ----
 @Configuration
 @EnableElasticsearchRepositories
 @EnableElasticsearchAuditing
+class MyConfiguration {
+   // configuration code
+}
+----
+
+When using the reactive stack this must be:
+[source,java]
+----
+@Configuration
+@EnableReactiveElasticsearchRepositories
+@EnableReactiveElasticsearchAuditing
 class MyConfiguration {
    // configuration code
 }

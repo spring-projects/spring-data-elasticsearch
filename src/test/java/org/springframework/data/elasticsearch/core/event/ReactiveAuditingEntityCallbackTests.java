@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.event;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDateTime;
@@ -31,7 +32,7 @@ import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.auditing.IsNewAwareAuditingHandler;
+import org.springframework.data.auditing.ReactiveIsNewAwareAuditingHandler;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.mapping.context.PersistentEntities;
@@ -44,14 +45,14 @@ import org.springframework.lang.Nullable;
 @ExtendWith(MockitoExtension.class)
 class ReactiveAuditingEntityCallbackTests {
 
-	IsNewAwareAuditingHandler handler;
+	ReactiveIsNewAwareAuditingHandler handler;
 	ReactiveAuditingEntityCallback callback;
 
 	@BeforeEach
 	void setUp() {
 		SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
 		context.getPersistentEntity(Sample.class);
-		handler = spy(new IsNewAwareAuditingHandler(PersistentEntities.of(context)));
+		handler = spy(new ReactiveIsNewAwareAuditingHandler(PersistentEntities.of(context)));
 		callback = new ReactiveAuditingEntityCallback(() -> handler);
 	}
 
@@ -81,13 +82,10 @@ class ReactiveAuditingEntityCallbackTests {
 		sample1.setId("1");
 		Sample sample2 = new Sample();
 		sample2.setId("2");
-		doReturn(sample2).when(handler).markAudited(any());
+		doReturn(Mono.just(sample2)).when(handler).markAudited(any());
 
 		callback.onBeforeConvert(sample1, IndexCoordinates.of("index")) //
-				.as(StepVerifier::create) //
-				.consumeNextWith(it -> { //
-					assertThat(it).isSameAs(sample2); //
-				}).verifyComplete();
+				.as(StepVerifier::create).expectNext(sample2).verifyComplete();
 	}
 
 	static class Sample {
