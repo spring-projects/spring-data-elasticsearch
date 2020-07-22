@@ -1,6 +1,15 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.2.RELEASE (2020-07-22)
+---------------------------------------------
+* DATAES-883 - Fix log level on resource load error.
+* DATAES-878 - Wrong value for TermVector(woth_positions_offsets).
+* DATAES-865 - Fix MappingElasticsearchConverter writing an Object property containing a Map.
+* DATAES-863 - Improve server error response handling.
+* DATAES-862 - Release 4.0.2 (Neumann SR2).
+
+
 Changes in version 3.2.9.RELEASE (2020-07-22)
 ---------------------------------------------
 * DATAES-861 - Release 3.2.9 (Moore SR9).
@@ -1201,6 +1210,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
