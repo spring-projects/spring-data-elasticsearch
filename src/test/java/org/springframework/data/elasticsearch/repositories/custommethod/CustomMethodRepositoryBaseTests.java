@@ -1544,6 +1544,28 @@ public abstract class CustomMethodRepositoryBaseTests {
 		return entities;
 	}
 
+	@Test // DATAES-891
+	void shouldStreamEntitiesWithQueryAnnotatedMethod() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		Stream<SampleEntity> stream = streamingRepository.streamEntitiesByType("abc");
+
+		long count = stream.peek(sampleEntity -> assertThat(sampleEntity).isInstanceOf(SampleEntity.class)).count();
+		assertThat(count).isEqualTo(20);
+	}
+
+	@Test // DATAES-891
+	void shouldStreamSearchHitsWithQueryAnnotatedMethod() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		Stream<SearchHit<SampleEntity>> stream = streamingRepository.streamSearchHitsByType("abc");
+
+		long count = stream.peek(sampleEntity -> assertThat(sampleEntity).isInstanceOf(SearchHit.class)).count();
+		assertThat(count).isEqualTo(20);
+	}
+
 	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor
@@ -1687,5 +1709,12 @@ public abstract class CustomMethodRepositoryBaseTests {
 		Stream<SampleEntity> findByType(String type);
 
 		Stream<SampleEntity> findByType(String type, Pageable pageable);
+
+		@Query("{\"bool\": {\"must\": [{\"term\": {\"type\": \"?0\"}}]}}")
+		Stream<SampleEntity> streamEntitiesByType(String type);
+
+		@Query("{\"bool\": {\"must\": [{\"term\": {\"type\": \"?0\"}}]}}")
+		Stream<SearchHit<SampleEntity>> streamSearchHitsByType(String type);
+
 	}
 }
