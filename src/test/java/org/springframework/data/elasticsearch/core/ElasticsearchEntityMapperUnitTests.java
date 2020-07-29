@@ -531,6 +531,32 @@ public class ElasticsearchEntityMapperUnitTests {
 		assertThat(target.address).isEqualTo(bigBunsCafe);
 	}
 
+	@Test // DATAES-892
+	public void readGenericListWithMaps() {
+		Map<String, Object> simpleMap = new HashMap<>();
+		simpleMap.put("int", 1);
+
+		List<Map<String, Object>> listWithSimpleMap = new ArrayList<>();
+		listWithSimpleMap.add(simpleMap);
+
+		Map<String, List<Map<String, Object>>> mapWithSimpleList = new HashMap<>();
+		mapWithSimpleList.put("someKey", listWithSimpleMap);
+
+		Map<String, Object> document = new LinkedHashMap<>();
+		document.put("schemaLessObject", mapWithSimpleList);
+
+		SchemaLessObjectWrapper wrapper = entityMapper.read(SchemaLessObjectWrapper.class, document);
+		assertThat(wrapper.getSchemaLessObject()).isEqualTo(mapWithSimpleList);
+	}
+
+	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
+	static class SchemaLessObjectWrapper {
+
+		private Map<String, Object> schemaLessObject;
+	}
+
 	private String pointTemplate(String name, Point point) {
 		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
 	}
