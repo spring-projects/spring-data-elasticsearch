@@ -43,8 +43,6 @@ import org.springframework.util.ClassUtils;
  */
 public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery {
 
-	private static final int DEFAULT_STREAM_BATCH_SIZE = 500;
-
 	private final PartTree tree;
 	private final ElasticsearchConverter elasticsearchConverter;
 	private final MappingContext<?, ElasticsearchPersistentProperty> mappingContext;

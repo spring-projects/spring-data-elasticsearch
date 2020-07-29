@@ -19,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -26,6 +27,7 @@ import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
+import org.springframework.data.util.StreamUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
@@ -88,6 +90,13 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 			stringQuery.setPageable(accessor.getPageable());
 			SearchHits<?> searchHits = elasticsearchOperations.search(stringQuery, clazz, index);
 			result = SearchHitSupport.page(searchHits, stringQuery.getPageable());
+		} else if (queryMethod.isStreamQuery()) {
+			if (accessor.getPageable().isUnpaged()) {
+				stringQuery.setPageable(PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
+			} else {
+				stringQuery.setPageable(accessor.getPageable());
+			}
+			result = StreamUtils.createStreamFromIterator(elasticsearchOperations.searchForStream(stringQuery, clazz, index));
 		} else if (queryMethod.isCollectionQuery()) {
 			if (accessor.getPageable().isPaged()) {
 				stringQuery.setPageable(accessor.getPageable());
