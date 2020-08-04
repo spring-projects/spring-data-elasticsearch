@@ -22,10 +22,11 @@ import io.netty.handler.ssl.IdentityCipherSuiteFilter;
 import io.netty.handler.ssl.JdkSslContext;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
-import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxSink;
+import reactor.core.publisher.FluxIdentityProcessor;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Processors;
+import reactor.core.publisher.Sinks;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.ProxyProvider;
 
@@ -106,6 +107,7 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.suggest.Suggest;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientLogger;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
@@ -465,12 +467,10 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 			searchRequest.scroll(scrollTimeout);
 		}
 
-		EmitterProcessor<ActionRequest> outbound = EmitterProcessor.create(false);
-		FluxSink<ActionRequest> request = outbound.sink();
+		Sinks.StandaloneFluxSink<ActionRequest> request = Sinks.unicast();
+		FluxIdentityProcessor<SearchResponse> inbound = Processors.unicast();
 
-		EmitterProcessor<SearchResponse> inbound = EmitterProcessor.create(false);
-
-		Flux<SearchResponse> exchange = outbound.startWith(searchRequest).flatMap(it -> {
+		Flux<SearchResponse> exchange = request.asFlux().flatMap(it -> {
 
 			if (it instanceof SearchRequest) {
 				return sendRequest((SearchRequest) it, requestCreator.search(), SearchResponse.class, headers);
@@ -495,7 +495,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 						if (isEmpty(searchResponse.getHits())) {
 
 							inbound.onComplete();
-							outbound.onComplete();
+							request.complete();
 
 						} else {
 
@@ -509,10 +509,13 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 					}).map(SearchResponse::getHits) //
 							.flatMap(Flux::fromIterable);
 
-					return searchHits.doOnSubscribe(ignore -> exchange.subscribe(inbound));
+					return searchHits.doOnSubscribe(ignore -> {
+						exchange.subscribe(inbound);
+						request.next(searchRequest);
+					});
 
 				}, state -> cleanupScroll(headers, state), //
-				state -> cleanupScroll(headers, state), //
+				(state, ex) -> cleanupScroll(headers, state), //
 				state -> cleanupScroll(headers, state)); //
 	}
 
