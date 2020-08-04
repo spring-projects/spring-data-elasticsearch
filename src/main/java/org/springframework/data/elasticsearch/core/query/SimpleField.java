@@ -18,7 +18,8 @@ package org.springframework.data.elasticsearch.core.query;
 import org.springframework.util.Assert;
 
 /**
- * The most trivial implementation of a Field
+ * The most trivial implementation of a Field. The {@link #name} is updateable, so it may be changed during query
+ * preparation by the {@link org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter}.
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -29,25 +30,27 @@ public class SimpleField implements Field {
 	private String name;
 
 	public SimpleField(String name) {
-		Assert.notNull(name, "name must not be null");
+
+		Assert.hasText(name, "name must not be null");
 
 		this.name = name;
 	}
 
 	@Override
 	public void setName(String name) {
-		Assert.notNull(name, "name must not be null");
+
+		Assert.hasText(name, "name must not be null");
 
 		this.name = name;
 	}
 
 	@Override
 	public String getName() {
-		return this.name;
+		return name;
 	}
 
 	@Override
 	public String toString() {
-		return this.name;
+		return getName();
 	}
 }

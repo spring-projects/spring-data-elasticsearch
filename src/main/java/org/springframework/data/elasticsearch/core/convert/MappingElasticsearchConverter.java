@@ -48,6 +48,7 @@ import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
+import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
@@ -761,29 +762,39 @@ public class MappingElasticsearchConverter
 		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(domainClass);
 
 		if (persistentEntity != null) {
-			criteriaQuery.getCriteria().getCriteriaChain().forEach(criteria -> {
-				String name = criteria.getField().getName();
-				ElasticsearchPersistentProperty property = persistentEntity.getPersistentProperty(name);
+			for (Criteria chainedCriteria : criteriaQuery.getCriteria().getCriteriaChain()) {
+				updateCriteria(chainedCriteria, persistentEntity);
+			}
+		}
+	}
 
-				if (property != null && property.getName().equals(name)) {
-					criteria.getField().setName(property.getFieldName());
+	private void updateCriteria(Criteria criteria, ElasticsearchPersistentEntity<?> persistentEntity) {
+		String name = criteria.getField().getName();
+		ElasticsearchPersistentProperty property = persistentEntity.getPersistentProperty(name);
 
-					if (property.hasPropertyConverter()) {
-						ElasticsearchPersistentPropertyConverter propertyConverter = property.getPropertyConverter();
-						criteria.getQueryCriteriaEntries().forEach(criteriaEntry -> {
-							Object value = criteriaEntry.getValue();
-							if (value.getClass().isArray()) {
-								Object[] objects = (Object[]) value;
-								for (int i = 0; i < objects.length; i++) {
-									objects[i] = propertyConverter.write(objects[i]);
-								}
-							} else {
-								criteriaEntry.setValue(propertyConverter.write(value));
-							}
-						});
+		if (property != null && property.getName().equals(name)) {
+			criteria.getField().setName(property.getFieldName());
+
+			if (property.hasPropertyConverter()) {
+				ElasticsearchPersistentPropertyConverter propertyConverter = property.getPropertyConverter();
+				criteria.getQueryCriteriaEntries().forEach(criteriaEntry -> {
+					Object value = criteriaEntry.getValue();
+					if (value.getClass().isArray()) {
+						Object[] objects = (Object[]) value;
+						for (int i = 0; i < objects.length; i++) {
+							objects[i] = propertyConverter.write(objects[i]);
+						}
+					} else {
+						criteriaEntry.setValue(propertyConverter.write(value));
 					}
-				}
-			});
+				});
+			}
+		}
+
+		for (Criteria subCriteria : criteria.getSubCriteria()) {
+			for (Criteria chainedCriteria : subCriteria.getCriteriaChain()) {
+				updateCriteria(chainedCriteria, persistentEntity);
+			}
 		}
 	}
 	// endregion

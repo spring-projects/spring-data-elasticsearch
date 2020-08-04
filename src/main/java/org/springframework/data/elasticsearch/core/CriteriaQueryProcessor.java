@@ -21,11 +21,8 @@ import static org.springframework.data.elasticsearch.core.query.Criteria.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 
-import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.QueryParserUtil;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -46,63 +43,81 @@ import org.springframework.util.Assert;
  */
 class CriteriaQueryProcessor {
 
-	QueryBuilder createQueryFromCriteria(Criteria criteria) {
+	@Nullable
+	QueryBuilder createQuery(Criteria criteria) {
 
 		Assert.notNull(criteria, "criteria must not be null");
 
-		List<QueryBuilder> shouldQueryBuilderList = new LinkedList<>();
-		List<QueryBuilder> mustNotQueryBuilderList = new LinkedList<>();
-		List<QueryBuilder> mustQueryBuilderList = new LinkedList<>();
-
-		ListIterator<Criteria> chainIterator = criteria.getCriteriaChain().listIterator();
+		List<QueryBuilder> shouldQueryBuilders = new ArrayList<>();
+		List<QueryBuilder> mustNotQueryBuilders = new ArrayList<>();
+		List<QueryBuilder> mustQueryBuilders = new ArrayList<>();
 
 		QueryBuilder firstQuery = null;
 		boolean negateFirstQuery = false;
 
-		while (chainIterator.hasNext()) {
-			Criteria chainedCriteria = chainIterator.next();
-			QueryBuilder queryFragmentForCriteria = createQueryFragmentForCriteria(chainedCriteria);
-			if (queryFragmentForCriteria != null) {
+		for (Criteria chainedCriteria : criteria.getCriteriaChain()) {
+			QueryBuilder queryFragment = queryForEntries(chainedCriteria);
+
+			if (queryFragment != null) {
+
 				if (firstQuery == null) {
-					firstQuery = queryFragmentForCriteria;
+					firstQuery = queryFragment;
 					negateFirstQuery = chainedCriteria.isNegating();
 					continue;
 				}
+
 				if (chainedCriteria.isOr()) {
-					shouldQueryBuilderList.add(queryFragmentForCriteria);
+					shouldQueryBuilders.add(queryFragment);
 				} else if (chainedCriteria.isNegating()) {
-					mustNotQueryBuilderList.add(queryFragmentForCriteria);
+					mustNotQueryBuilders.add(queryFragment);
 				} else {
-					mustQueryBuilderList.add(queryFragmentForCriteria);
+					mustQueryBuilders.add(queryFragment);
+				}
+			}
+		}
+
+		for (Criteria subCriteria : criteria.getSubCriteria()) {
+
+			QueryBuilder subQuery = createQuery(subCriteria);
+
+			if (subQuery != null) {
+				if (criteria.isOr()) {
+					shouldQueryBuilders.add(subQuery);
+				} else if (criteria.isNegating()) {
+					mustNotQueryBuilders.add(subQuery);
+				} else {
+					mustQueryBuilders.add(subQuery);
 				}
 			}
 		}
 
 		if (firstQuery != null) {
-			if (!shouldQueryBuilderList.isEmpty() && mustNotQueryBuilderList.isEmpty() && mustQueryBuilderList.isEmpty()) {
-				shouldQueryBuilderList.add(0, firstQuery);
+
+			if (!shouldQueryBuilders.isEmpty() && mustNotQueryBuilders.isEmpty() && mustQueryBuilders.isEmpty()) {
+				shouldQueryBuilders.add(0, firstQuery);
 			} else {
+
 				if (negateFirstQuery) {
-					mustNotQueryBuilderList.add(0, firstQuery);
+					mustNotQueryBuilders.add(0, firstQuery);
 				} else {
-					mustQueryBuilderList.add(0, firstQuery);
+					mustQueryBuilders.add(0, firstQuery);
 				}
 			}
 		}
 
 		BoolQueryBuilder query = null;
 
-		if (!shouldQueryBuilderList.isEmpty() || !mustNotQueryBuilderList.isEmpty() || !mustQueryBuilderList.isEmpty()) {
+		if (!shouldQueryBuilders.isEmpty() || !mustNotQueryBuilders.isEmpty() || !mustQueryBuilders.isEmpty()) {
 
 			query = boolQuery();
 
-			for (QueryBuilder qb : shouldQueryBuilderList) {
+			for (QueryBuilder qb : shouldQueryBuilders) {
 				query.should(qb);
 			}
-			for (QueryBuilder qb : mustNotQueryBuilderList) {
+			for (QueryBuilder qb : mustNotQueryBuilders) {
 				query.mustNot(qb);
 			}
-			for (QueryBuilder qb : mustQueryBuilderList) {
+			for (QueryBuilder qb : mustQueryBuilders) {
 				query.must(qb);
 			}
 		}
@@ -111,46 +126,41 @@ class CriteriaQueryProcessor {
 	}
 
 	@Nullable
-	private QueryBuilder createQueryFragmentForCriteria(Criteria chainedCriteria) {
-		if (chainedCriteria.getQueryCriteriaEntries().isEmpty())
+	private QueryBuilder queryForEntries(Criteria criteria) {
+
+		if (criteria.getField() == null || criteria.getQueryCriteriaEntries().isEmpty())
 			return null;
 
-		Iterator<Criteria.CriteriaEntry> it = chainedCriteria.getQueryCriteriaEntries().iterator();
-		boolean singeEntryCriteria = (chainedCriteria.getQueryCriteriaEntries().size() == 1);
+		String fieldName = criteria.getField().getName();
 
-		String fieldName = chainedCriteria.getField().getName();
 		Assert.notNull(fieldName, "Unknown field");
-		QueryBuilder query = null;
 
-		if (singeEntryCriteria) {
-			Criteria.CriteriaEntry entry = it.next();
-			query = processCriteriaEntry(entry, fieldName);
+		Iterator<Criteria.CriteriaEntry> it = criteria.getQueryCriteriaEntries().iterator();
+		QueryBuilder query;
+
+		if (criteria.getQueryCriteriaEntries().size() == 1) {
+			query = queryFor(it.next(), fieldName);
 		} else {
 			query = boolQuery();
 			while (it.hasNext()) {
 				Criteria.CriteriaEntry entry = it.next();
-				((BoolQueryBuilder) query).must(processCriteriaEntry(entry, fieldName));
+				((BoolQueryBuilder) query).must(queryFor(entry, fieldName));
 			}
 		}
 
-		addBoost(query, chainedCriteria.getBoost());
+		addBoost(query, criteria.getBoost());
 		return query;
 	}
 
 	@Nullable
-	private QueryBuilder processCriteriaEntry(Criteria.CriteriaEntry entry, String fieldName) {
+	private QueryBuilder queryFor(Criteria.CriteriaEntry entry, String fieldName) {
 		OperationKey key = entry.getKey();
-		Object value = entry.getValue();
 
-		if (value == null) {
-
-			if (key == OperationKey.EXISTS) {
-				return existsQuery(fieldName);
-			} else {
-				return null;
-			}
+		if (key == OperationKey.EXISTS) {
+			return existsQuery(fieldName);
 		}
 
+		Object value = entry.getValue();
 		String searchText = QueryParserUtil.escape(value.toString());
 
 		QueryBuilder query = null;
@@ -190,11 +200,23 @@ class CriteriaQueryProcessor {
 			case FUZZY:
 				query = fuzzyQuery(fieldName, searchText);
 				break;
+			case MATCHES:
+				query = matchQuery(fieldName, value).operator(org.elasticsearch.index.query.Operator.OR);
+				break;
+			case MATCHES_ALL:
+				query = matchQuery(fieldName, value).operator(org.elasticsearch.index.query.Operator.AND);
+				break;
 			case IN:
-				query = boolQuery().must(termsQuery(fieldName, toStringList((Iterable<Object>) value)));
+				if (value instanceof Iterable) {
+					Iterable<?> iterable = (Iterable<?>) value;
+					query = boolQuery().must(termsQuery(fieldName, toStringList(iterable)));
+				}
 				break;
 			case NOT_IN:
-				query = boolQuery().mustNot(termsQuery(fieldName, toStringList((Iterable<Object>) value)));
+				if (value instanceof Iterable) {
+					Iterable<?> iterable = (Iterable<?>) value;
+					query = boolQuery().mustNot(termsQuery(fieldName, toStringList(iterable)));
+				}
 				break;
 		}
 		return query;
@@ -203,15 +225,17 @@ class CriteriaQueryProcessor {
 	private static List<String> toStringList(Iterable<?> iterable) {
 		List<String> list = new ArrayList<>();
 		for (Object item : iterable) {
-			list.add(StringUtils.toString(item));
+			list.add(item != null ? item.toString() : null);
 		}
 		return list;
 	}
 
-	private void addBoost(QueryBuilder query, float boost) {
-		if (Float.isNaN(boost)) {
+	private void addBoost(@Nullable QueryBuilder query, float boost) {
+
+		if (query == null || Float.isNaN(boost)) {
 			return;
 		}
+
 		query.boost(boost);
 	}
 }

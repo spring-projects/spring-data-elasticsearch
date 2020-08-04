@@ -1,7 +1,8 @@
 [[preface]]
 = Preface
 
-The Spring Data Elasticsearch project applies core Spring concepts to the development of solutions using the Elasticsearch Search Engine. It provides:
+The Spring Data Elasticsearch project applies core Spring concepts to the development of solutions using the Elasticsearch Search Engine.
+It provides:
 
 * _Templates_ as a high-level abstraction for storing, searching, sorting documents and building aggregations.
 * _Repositories_ which for example enable the user to express queries by defining interfaces having customized method names (for basic information about repositories see <<repositories>>).
@@ -29,12 +30,13 @@ Requires an installation of https://www.elastic.co/products/elasticsearch[Elasti
 === Versions
 
 The following table shows the Elasticsearch versions that are used by Spring Data release trains and version of Spring Data Elasticsearch included in that, as well as the Spring Boot versions referring to that particular Spring Data release train:
+
 [cols="^,^,^,^",options="header"]
 |===
 | Spring Data Release Train |Spring Data Elasticsearch |Elasticsearch | Spring Boot
 | 2020.0.0footnote:cdv[Currently in development] |4.1.xfootnote:cdv[]|7.8.1 |2.3.xfootnote:cdv[]
 | Neumann | 4.0.x | 7.6.2 |2.3.x
-| Moore | 3.2.x |6.8.12 | 2.2.x
+| Moore | 3.2.x |6.8.10 | 2.2.x
 | Lovelace | 3.1.x | 6.2.2 |2.1.x
 | Kayfootnote:oom[Out of maintenance] | 3.0.xfootnote:oom[] | 5.5.0 | 2.0.xfootnote:oom[]
 | Ingallsfootnote:oom[] | 2.1.xfootnote:oom[] | 2.4.0 | 1.5.xfootnote:oom[]

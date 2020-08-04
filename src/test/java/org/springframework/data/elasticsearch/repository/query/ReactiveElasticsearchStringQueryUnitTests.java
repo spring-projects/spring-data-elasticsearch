@@ -78,9 +78,9 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 	public void bindsSimplePropertyCorrectly() throws Exception {
 
 		ReactiveElasticsearchStringQuery elasticsearchStringQuery = createQueryForMethod("findByName", String.class);
-		StubParameterAccessor accesor = new StubParameterAccessor("Luke");
+		StubParameterAccessor accessor = new StubParameterAccessor("Luke");
 
-		org.springframework.data.elasticsearch.core.query.Query query = elasticsearchStringQuery.createQuery(accesor);
+		org.springframework.data.elasticsearch.core.query.Query query = elasticsearchStringQuery.createQuery(accessor);
 		StringQuery reference = new StringQuery("{ 'bool' : { 'must' : { 'term' : { 'name' : 'Luke' } } } }");
 
 		assertThat(query).isInstanceOf(StringQuery.class);
@@ -93,9 +93,9 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 
 		ReactiveElasticsearchStringQuery elasticsearchStringQuery = createQueryForMethod("findByNameWithExpression",
 				String.class);
-		StubParameterAccessor accesor = new StubParameterAccessor("Luke");
+		StubParameterAccessor accessor = new StubParameterAccessor("Luke");
 
-		org.springframework.data.elasticsearch.core.query.Query query = elasticsearchStringQuery.createQuery(accesor);
+		org.springframework.data.elasticsearch.core.query.Query query = elasticsearchStringQuery.createQuery(accessor);
 		StringQuery reference = new StringQuery("{ 'bool' : { 'must' : { 'term' : { 'name' : 'Luke' } } } }");
 
 		assertThat(query).isInstanceOf(StringQuery.class);

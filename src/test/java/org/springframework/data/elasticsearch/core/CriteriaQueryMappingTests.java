@@ -56,12 +56,15 @@ public class CriteriaQueryMappingTests {
 
 	}
 
-	@Test
+	@Test // DATAES-716
 	void shouldMapNamesAndConvertValuesInCriteriaQuery() throws JSONException {
 
 		// use POJO properties and types in the query building
-		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("birthDate")
-				.between(LocalDate.of(1989, 11, 9), LocalDate.of(1990, 11, 9)).or("birthDate").is(LocalDate.of(2019, 12, 28)));
+		CriteriaQuery criteriaQuery = new CriteriaQuery( //
+				new Criteria("birthDate") //
+						.between(LocalDate.of(1989, 11, 9), LocalDate.of(1990, 11, 9)) //
+						.or("birthDate").is(LocalDate.of(2019, 12, 28)) //
+		);
 
 		// mapped field name and converted parameter
 		String expected = '{' + //
@@ -90,7 +93,60 @@ public class CriteriaQueryMappingTests {
 				'}'; //
 
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, Person.class);
-		String queryString = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria()).toString();
+		String queryString = new CriteriaQueryProcessor().createQuery(criteriaQuery.getCriteria()).toString();
+
+		assertEquals(expected, queryString, false);
+	}
+
+	@Test // DATAES-706
+	void shouldMapNamesAndValuesInSubCriteriaQuery() throws JSONException {
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery( //
+				new Criteria("firstName").matches("John") //
+						.subCriteria(new Criteria("birthDate") //
+								.between(LocalDate.of(1989, 11, 9), LocalDate.of(1990, 11, 9)) //
+								.or("birthDate").is(LocalDate.of(2019, 12, 28))));
+
+		String expected = "{\n" + //
+				"  \"bool\": {\n" + //
+				"    \"must\": [\n" + //
+				"      {\n" + //
+				"        \"match\": {\n" + //
+				"          \"first-name\": {\n" + //
+				"            \"query\": \"John\"\n" + //
+				"          }\n" + //
+				"        }\n" + //
+				"      },\n" + //
+				"      {\n" + //
+				"        \"bool\": {\n" + //
+				"          \"should\": [\n" + //
+				"            {\n" + //
+				"              \"range\": {\n" + //
+				"                \"birth-date\": {\n" + //
+				"                  \"from\": \"09.11.1989\",\n" + //
+				"                  \"to\": \"09.11.1990\",\n" + //
+				"                  \"include_lower\": true,\n" + //
+				"                  \"include_upper\": true\n" + //
+				"                }\n" + //
+				"              }\n" + //
+				"            },\n" + //
+				"            {\n" + //
+				"              \"query_string\": {\n" + //
+				"                \"query\": \"28.12.2019\",\n" + //
+				"                \"fields\": [\n" + //
+				"                  \"birth-date^1.0\"\n" + //
+				"                ]\n" + //
+				"              }\n" + //
+				"            }\n" + //
+				"          ]\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    ]\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		mappingElasticsearchConverter.updateQuery(criteriaQuery, Person.class);
+		String queryString = new CriteriaQueryProcessor().createQuery(criteriaQuery.getCriteria()).toString();
 
 		assertEquals(expected, queryString, false);
 	}
