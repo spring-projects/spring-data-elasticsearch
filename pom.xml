@@ -121,7 +121,7 @@
 
 		<dependency>
 			<groupId>io.projectreactor.netty</groupId>
-			<artifactId>reactor-netty</artifactId>
+			<artifactId>reactor-netty-http</artifactId>
 			<optional>true</optional>
 		</dependency>
 
