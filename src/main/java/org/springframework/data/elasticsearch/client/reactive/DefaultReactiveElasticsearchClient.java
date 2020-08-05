@@ -142,6 +142,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  * @author Roman Puchkovskiy
  * @author Russell Parry
  * @author Thomas Geese
+ * @author Brian Clozel
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
@@ -468,7 +469,8 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		Sinks.Many<ActionRequest> request = Sinks.many().unicast().onBackpressureBuffer();
 
-		FluxProcessor<SearchResponse, SearchResponse> inbound = FluxProcessor.fromSink(Sinks.many().unicast().onBackpressureBuffer());
+		FluxProcessor<SearchResponse, SearchResponse> inbound = FluxProcessor
+				.fromSink(Sinks.many().unicast().onBackpressureBuffer());
 
 		Flux<SearchResponse> exchange = request.asFlux().flatMap(it -> {
 
