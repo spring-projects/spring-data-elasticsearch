@@ -39,8 +39,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.elasticsearch.BulkFailureException;
-import org.springframework.data.elasticsearch.core.join.JoinField;
-import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -48,6 +46,7 @@ import org.springframework.data.elasticsearch.core.document.SearchDocumentRespon
 import org.springframework.data.elasticsearch.core.event.AfterConvertCallback;
 import org.springframework.data.elasticsearch.core.event.AfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.BeforeConvertCallback;
+import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -76,6 +75,7 @@ import org.springframework.util.Assert;
  * @author Sascha Woo
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
+ * @author Subhobrata Dey
  */
 public abstract class AbstractElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -542,7 +542,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		if (joinProperty != null) {
 			Object joinField = persistentEntity.getPropertyAccessor(entity).getProperty(joinProperty);
 			if (joinField != null && JoinField.class.isAssignableFrom(joinField.getClass())
-				&& ((JoinField<?>) joinField).getParent() != null) {
+					&& ((JoinField<?>) joinField).getParent() != null) {
 				return elasticsearchConverter.convertId(((JoinField<?>) joinField).getParent());
 			}
 		}

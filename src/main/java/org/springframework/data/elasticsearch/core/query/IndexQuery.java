@@ -24,6 +24,7 @@ import org.springframework.lang.Nullable;
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
+ * @author Subhobrata Dey
  */
 public class IndexQuery {
 

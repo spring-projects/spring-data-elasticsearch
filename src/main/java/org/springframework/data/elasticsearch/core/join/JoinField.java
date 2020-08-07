@@ -15,11 +15,11 @@
  */
 package org.springframework.data.elasticsearch.core.join;
 
-import org.springframework.lang.Nullable;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.springframework.lang.Nullable;
 
 /**
  * @author Subhobrata Dey
@@ -27,41 +27,41 @@ import java.util.Map;
  */
 public class JoinField<ID> {
 
-    private final String name;
+	private final String name;
 
-    @Nullable private ID parent;
+	@Nullable private ID parent;
 
-    public JoinField() {
-        this("default", null);
-    }
+	public JoinField() {
+		this("default", null);
+	}
 
-    public JoinField(String name) {
-        this(name, null);
-    }
+	public JoinField(String name) {
+		this(name, null);
+	}
 
-    public JoinField(String name, @Nullable ID parent) {
-        this.name = name;
-        this.parent = parent;
-    }
+	public JoinField(String name, @Nullable ID parent) {
+		this.name = name;
+		this.parent = parent;
+	}
 
-    public void setParent(@Nullable ID parent) {
-        this.parent = parent;
-    }
+	public void setParent(@Nullable ID parent) {
+		this.parent = parent;
+	}
 
-    @Nullable
-    public ID getParent() {
-        return parent;
-    }
+	@Nullable
+	public ID getParent() {
+		return parent;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public Map<String, Object> getAsMap() {
-        Map<String, Object> joinMap = new HashMap<>();
-        joinMap.put("name", getName());
-        joinMap.put("parent", getParent());
+	public Map<String, Object> getAsMap() {
+		Map<String, Object> joinMap = new HashMap<>();
+		joinMap.put("name", getName());
+		joinMap.put("parent", getParent());
 
-        return Collections.unmodifiableMap(joinMap);
-    }
+		return Collections.unmodifiableMap(joinMap);
+	}
 }

@@ -51,6 +51,7 @@ import org.springframework.util.Assert;
  * @author Ivan Greene
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
+ * @author Subhobrata Dey
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T> {
@@ -237,10 +238,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			ElasticsearchPersistentProperty joinProperty = this.joinFieldProperty;
 
 			if (joinProperty != null) {
-				throw new MappingException(String.format(
-						"Attempt to add Join property %s but already have property %s registered "
-								+ "as Join property. Check your entity configuration!",
-						property.getField(), joinProperty.getField()));
+				throw new MappingException(
+						String.format(
+								"Attempt to add Join property %s but already have property %s registered "
+										+ "as Join property. Check your entity configuration!",
+								property.getField(), joinProperty.getField()));
 			}
 
 			this.joinFieldProperty = property;

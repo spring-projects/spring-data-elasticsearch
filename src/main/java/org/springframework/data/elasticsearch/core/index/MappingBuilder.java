@@ -32,18 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.ElasticsearchException;
-import org.springframework.data.elasticsearch.annotations.CompletionContext;
-import org.springframework.data.elasticsearch.annotations.CompletionField;
-import org.springframework.data.elasticsearch.annotations.DynamicMapping;
-import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.GeoPointField;
-import org.springframework.data.elasticsearch.annotations.InnerField;
-import org.springframework.data.elasticsearch.annotations.JoinTypeRelation;
-import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
-import org.springframework.data.elasticsearch.annotations.Mapping;
-import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.completion.Completion;
@@ -347,13 +336,13 @@ public class MappingBuilder {
 		builder.endObject();
 	}
 
-	private void addJoinFieldMapping(XContentBuilder builder,
-									 ElasticsearchPersistentProperty property) throws IOException {
+	private void addJoinFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property)
+			throws IOException {
 		JoinTypeRelation[] joinTypeRelations = property.getRequiredAnnotation(JoinTypeRelations.class).relations();
 
 		if (joinTypeRelations.length == 0) {
 			logger.warn("Property {}s type is JoinField but its annotation JoinTypeRelation is " + //
-							"not properly maintained", //
+					"not properly maintained", //
 					property.getFieldName());
 			return;
 		}
@@ -363,7 +352,7 @@ public class MappingBuilder {
 
 		builder.startObject(JOIN_TYPE_RELATIONS);
 
-		for (JoinTypeRelation joinTypeRelation: joinTypeRelations) {
+		for (JoinTypeRelation joinTypeRelation : joinTypeRelations) {
 			String parent = joinTypeRelation.parent();
 			String[] children = joinTypeRelation.children();
 

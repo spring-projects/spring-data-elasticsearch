@@ -122,8 +122,8 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	boolean hasSeqNoPrimaryTermProperty();
 
 	/**
-	 * Returns whether the {@link ElasticsearchPersistentEntity} has a {@link JoinField} property. If this call
-	 * returns {@literal true}, {@link #getJoinFieldProperty()} will return a non-{@literal null} value.
+	 * Returns whether the {@link ElasticsearchPersistentEntity} has a {@link JoinField} property. If this call returns
+	 * {@literal true}, {@link #getJoinFieldProperty()} will return a non-{@literal null} value.
 	 *
 	 * @return false when {@link ElasticsearchPersistentEntity} does not define a JoinField property.
 	 * @since 4.1
@@ -142,8 +142,8 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	ElasticsearchPersistentProperty getSeqNoPrimaryTermProperty();
 
 	/**
-	 * Returns the {@link JoinField} property of the {@link ElasticsearchPersistentEntity}. Can be {@literal null}
-	 * in case no such property is available on the entity.
+	 * Returns the {@link JoinField} property of the {@link ElasticsearchPersistentEntity}. Can be {@literal null} in case
+	 * no such property is available on the entity.
 	 *
 	 * @return the {@link JoinField} {@link ElasticsearchPersistentProperty} of the {@link PersistentEntity} or
 	 *         {@literal null} if not defined.

@@ -50,7 +50,6 @@ import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.index.VersionType;
-import org.elasticsearch.index.query.SimpleQueryStringBuilder;
 import org.elasticsearch.join.query.ParentIdQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
@@ -71,8 +70,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.ElasticsearchException;
-import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.JoinTypeRelation;
+import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
+import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.annotations.Score;
+import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
@@ -81,7 +87,6 @@ import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
-import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.lang.Nullable;
 
@@ -108,6 +113,7 @@ import org.springframework.lang.Nullable;
  * @author Farid Azaza
  * @author Gyula Attila Csorogi
  * @author Roman Puchkovskiy
+ * @author Subhobrata Dey
  */
 public abstract class ElasticsearchTemplateTests {
 
@@ -138,9 +144,9 @@ public abstract class ElasticsearchTemplateTests {
 		indexOpsSearchHitsEntity.create();
 		indexOpsSearchHitsEntity.putMapping(SearchHitsEntity.class);
 
-		IndexOperations indexOpsJoinEntity = operations.indexOps(ElasticsearchRestTemplateTests.SampleJoinEntity.class);
+		IndexOperations indexOpsJoinEntity = operations.indexOps(SampleJoinEntity.class);
 		indexOpsJoinEntity.create();
-		indexOpsJoinEntity.putMapping(ElasticsearchRestTemplateTests.SampleJoinEntity.class);
+		indexOpsJoinEntity.putMapping(SampleJoinEntity.class);
 	}
 
 	@AfterEach
@@ -3350,14 +3356,14 @@ public abstract class ElasticsearchTemplateTests {
 		myAJoinField2.setParent(qId1);
 		sampleAnswerEntity2.setMyJoinField(myAJoinField2);
 
-		operations.save(Arrays.asList(sampleQuestionEntity1, sampleQuestionEntity2,
-				sampleAnswerEntity1, sampleAnswerEntity2), IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY));
-		indexOperations.refresh();
-		Thread.sleep(5000);
+		operations.save(
+				Arrays.asList(sampleQuestionEntity1, sampleQuestionEntity2, sampleAnswerEntity1, sampleAnswerEntity2),
+				IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY));
+		operations.indexOps(IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY)).refresh();
 
-		SearchHits<SampleJoinEntity> hits = operations.search(new NativeSearchQueryBuilder().withQuery(
-				new ParentIdQueryBuilder("answer", qId1))
-				.build(), SampleJoinEntity.class);
+		SearchHits<SampleJoinEntity> hits = operations.search(
+				new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId1)).build(),
+				SampleJoinEntity.class);
 
 		List<String> hitIds = hits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
 			@Override
@@ -3376,8 +3382,7 @@ public abstract class ElasticsearchTemplateTests {
 		document.put("myJoinField", new JoinField<>("answer", qId2).getAsMap());
 		UpdateQuery updateQuery = UpdateQuery.builder(aId2) //
 				.withDocument(document) //
-				.withRouting(qId2)
-				.build();
+				.withRouting(qId2).build();
 
 		List<UpdateQuery> queries = new ArrayList<>();
 		queries.add(updateQuery);
@@ -3387,9 +3392,9 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.refresh();
 		Thread.sleep(5000);
 
-		SearchHits<SampleJoinEntity> updatedHits = operations.search(new NativeSearchQueryBuilder().withQuery(
-				new ParentIdQueryBuilder("answer", qId2))
-				.build(), SampleJoinEntity.class);
+		SearchHits<SampleJoinEntity> updatedHits = operations.search(
+				new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId2)).build(),
+				SampleJoinEntity.class);
 
 		List<String> hitIds = updatedHits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
 			@Override
@@ -3400,9 +3405,9 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(hitIds.size()).isEqualTo(1);
 		assertThat(hitIds.get(0)).isEqualTo(aId2);
 
-		updatedHits = operations.search(new NativeSearchQueryBuilder().withQuery(
-				new ParentIdQueryBuilder("answer", qId1))
-				.build(), SampleJoinEntity.class);
+		updatedHits = operations.search(
+				new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId1)).build(),
+				SampleJoinEntity.class);
 
 		hitIds = updatedHits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
 			@Override
@@ -3415,17 +3420,15 @@ public abstract class ElasticsearchTemplateTests {
 	}
 
 	void shouldDeleteEntityWithJoinFields(String qId2, String aId2) throws Exception {
-		Query query = new NativeSearchQueryBuilder()
-				.withQuery(new ParentIdQueryBuilder("answer", qId2))
-				.withRoute(qId2)
+		Query query = new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId2)).withRoute(qId2)
 				.build();
 		operations.delete(query, SampleJoinEntity.class, IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY));
 		indexOperations.refresh();
 		Thread.sleep(5000);
 
-		SearchHits<SampleJoinEntity> deletedHits = operations.search(new NativeSearchQueryBuilder().withQuery(
-				new ParentIdQueryBuilder("answer", qId2))
-				.build(), SampleJoinEntity.class);
+		SearchHits<SampleJoinEntity> deletedHits = operations.search(
+				new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId2)).build(),
+				SampleJoinEntity.class);
 
 		List<String> hitIds = deletedHits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
 			@Override
@@ -3625,9 +3628,7 @@ public abstract class ElasticsearchTemplateTests {
 	static class SampleJoinEntity {
 		@Id @Field(type = Keyword) private String uuid;
 		@JoinTypeRelations(relations = {
-				@JoinTypeRelation(parent = "question", children = {"answer"})
-		})
-		private JoinField<String> myJoinField;
+				@JoinTypeRelation(parent = "question", children = { "answer" }) }) private JoinField<String> myJoinField;
 		@Field(type = Text) private String text;
 	}
 }

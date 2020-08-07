@@ -32,5 +32,5 @@ import java.lang.annotation.Target;
 @Inherited
 public @interface JoinTypeRelations {
 
-    JoinTypeRelation[] relations();
+	JoinTypeRelation[] relations();
 }

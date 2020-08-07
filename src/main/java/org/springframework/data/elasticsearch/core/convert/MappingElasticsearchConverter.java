@@ -77,6 +77,7 @@ import org.springframework.util.ObjectUtils;
  * @author Mark Paluch
  * @author Roman Puchkovskiy
  * @author Konrad Kurdej
+ * @author Subhobrata Dey
  * @since 3.2
  */
 public class MappingElasticsearchConverter

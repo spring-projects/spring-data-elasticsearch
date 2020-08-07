@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.UUID;
 
 import org.elasticsearch.client.Client;
@@ -33,6 +32,7 @@ import org.springframework.data.elasticsearch.client.NodeClientFactoryBean;
  * @author Ilkang Na
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
+ * @author Subhobrata Dey
  */
 public class Utils {
 
