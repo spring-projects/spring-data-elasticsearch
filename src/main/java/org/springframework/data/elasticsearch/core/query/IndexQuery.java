@@ -34,6 +34,7 @@ public class IndexQuery {
 	@Deprecated @Nullable private String parentId;
 	@Nullable private Long seqNo;
 	@Nullable private Long primaryTerm;
+	@Nullable private String routing;
 
 	@Nullable
 	public String getId() {
@@ -106,5 +107,14 @@ public class IndexQuery {
 
 	public void setPrimaryTerm(Long primaryTerm) {
 		this.primaryTerm = primaryTerm;
+	}
+
+	@Nullable
+	public String getRouting() {
+		return routing;
+	}
+
+	public void setRouting(@Nullable String routing) {
+		this.routing = routing;
 	}
 }

@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
@@ -67,6 +68,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Deprecated private @Nullable ElasticsearchPersistentProperty parentIdProperty;
 	private @Nullable ElasticsearchPersistentProperty scoreProperty;
 	private @Nullable ElasticsearchPersistentProperty seqNoPrimaryTermProperty;
+	private @Nullable ElasticsearchPersistentProperty joinFieldProperty;
 	private @Nullable String settingPath;
 	private @Nullable VersionType versionType;
 	private boolean createIndexAndMapping;
@@ -230,6 +232,19 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 				warnAboutBothSeqNoPrimaryTermAndVersionProperties();
 			}
 		}
+
+		if (property.getActualType() == JoinField.class) {
+			ElasticsearchPersistentProperty joinProperty = this.joinFieldProperty;
+
+			if (joinProperty != null) {
+				throw new MappingException(String.format(
+						"Attempt to add Join property %s but already have property %s registered "
+								+ "as Join property. Check your entity configuration!",
+						property.getField(), joinProperty.getField()));
+			}
+
+			this.joinFieldProperty = property;
+		}
 	}
 
 	private void warnAboutBothSeqNoPrimaryTermAndVersionProperties() {
@@ -274,9 +289,19 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
+	public boolean hasJoinFieldProperty() {
+		return joinFieldProperty != null;
+	}
+
+	@Override
 	@Nullable
 	public ElasticsearchPersistentProperty getSeqNoPrimaryTermProperty() {
 		return seqNoPrimaryTermProperty;
+	}
+
+	@Override
+	public ElasticsearchPersistentProperty getJoinFieldProperty() {
+		return joinFieldProperty;
 	}
 
 	// region SpEL handling

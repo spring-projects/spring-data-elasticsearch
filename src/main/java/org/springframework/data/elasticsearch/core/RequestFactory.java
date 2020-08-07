@@ -743,6 +743,10 @@ class RequestFactory {
 			deleteByQueryRequest.setScroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
 		}
 
+		if (query.getRoute() != null) {
+			deleteByQueryRequest.setRouting(query.getRoute());
+		}
+
 		return deleteByQueryRequest;
 	}
 
@@ -796,6 +800,10 @@ class RequestFactory {
 		if (query.hasScrollTime()) {
 			// noinspection ConstantConditions
 			source.setScroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
+		}
+
+		if (query.getRoute() != null) {
+			source.setRouting(query.getRoute());
 		}
 
 		return requestBuilder;
@@ -888,6 +896,10 @@ class RequestFactory {
 			indexRequest.setIfPrimaryTerm(query.getPrimaryTerm());
 		}
 
+		if (query.getRouting() != null) {
+			indexRequest.routing(query.getRouting());
+		}
+
 		return indexRequest;
 	}
 
@@ -925,6 +937,9 @@ class RequestFactory {
 		}
 		if (query.getPrimaryTerm() != null) {
 			indexRequestBuilder.setIfPrimaryTerm(query.getPrimaryTerm());
+		}
+		if (query.getRouting() != null) {
+			indexRequestBuilder.setRouting(query.getRouting());
 		}
 
 		return indexRequestBuilder;

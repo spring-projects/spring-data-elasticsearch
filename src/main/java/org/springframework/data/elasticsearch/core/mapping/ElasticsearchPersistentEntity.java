@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 import org.elasticsearch.index.VersionType;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.lang.Nullable;
@@ -33,6 +34,7 @@ import org.springframework.lang.Nullable;
  * @author Ivan Greene
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
+ * @author Subhobrata Dey
  */
 public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, ElasticsearchPersistentProperty> {
 
@@ -120,6 +122,15 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	boolean hasSeqNoPrimaryTermProperty();
 
 	/**
+	 * Returns whether the {@link ElasticsearchPersistentEntity} has a {@link JoinField} property. If this call
+	 * returns {@literal true}, {@link #getJoinFieldProperty()} will return a non-{@literal null} value.
+	 *
+	 * @return false when {@link ElasticsearchPersistentEntity} does not define a JoinField property.
+	 * @since 4.1
+	 */
+	boolean hasJoinFieldProperty();
+
+	/**
 	 * Returns the {@link SeqNoPrimaryTerm} property of the {@link ElasticsearchPersistentEntity}. Can be {@literal null}
 	 * in case no such property is available on the entity.
 	 *
@@ -129,6 +140,17 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	 */
 	@Nullable
 	ElasticsearchPersistentProperty getSeqNoPrimaryTermProperty();
+
+	/**
+	 * Returns the {@link JoinField} property of the {@link ElasticsearchPersistentEntity}. Can be {@literal null}
+	 * in case no such property is available on the entity.
+	 *
+	 * @return the {@link JoinField} {@link ElasticsearchPersistentProperty} of the {@link PersistentEntity} or
+	 *         {@literal null} if not defined.
+	 * @since 4.1
+	 */
+	@Nullable
+	ElasticsearchPersistentProperty getJoinFieldProperty();
 
 	/**
 	 * Returns the {@link SeqNoPrimaryTerm} property of the {@link ElasticsearchPersistentEntity} or throws an

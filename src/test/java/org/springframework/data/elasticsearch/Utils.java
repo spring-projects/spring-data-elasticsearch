@@ -15,11 +15,13 @@
  */
 package org.springframework.data.elasticsearch;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.join.ParentJoinPlugin;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeValidationException;
 import org.elasticsearch.transport.Netty4Plugin;
@@ -53,7 +55,7 @@ public class Utils {
 						.put("cluster.routing.allocation.disk.watermark.high", "1gb")//
 						.put("cluster.routing.allocation.disk.watermark.flood_stage", "1gb")//
 						.build(), //
-				Collections.singletonList(Netty4Plugin.class));
+				Arrays.asList(Netty4Plugin.class, ParentJoinPlugin.class));
 	}
 
 	public static Client getNodeClient() throws NodeValidationException {
