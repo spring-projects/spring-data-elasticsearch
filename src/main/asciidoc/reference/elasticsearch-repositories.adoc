@@ -3,7 +3,57 @@
 
 This chapter includes details of the Elasticsearch repository implementation.
 
+.The sample `Book` entity
+====
+[source,java]
+----
+@Document(indexName="books")
+class Book {
+    @Id
+    private String id;
+
+    @Field(type = FieldType.text)
+    private String name;
+
+    @Field(type = FieldType.text)
+    private String summary;
+
+    @Field(type = FieldType.Integer)
+    private Integer price;
+
+	// getter/setter ...
+}
+----
+====
+
 include::elasticsearch-repository-queries.adoc[leveloffset=+1]
+
+include::reactive-elasticsearch-repositories.adoc[leveloffset=+1]
+
+[[elasticsearch.repositories.annotations]]
+== Annotations for repository methods
+
+=== @Highlight
+
+The `@Highlight` annotation on a repository method defines for which fields of the returned entity highlighting should be included. To search for some text in a `Book` 's name or summary and have the found data highlighted, the following repository method can be used:
+
+====
+[source,java]
+----
+interface BookRepository extends Repository<Book, String> {
+
+    @Highlight(fields = {
+        @HighlightField(name = "name"),
+        @HighlightField(name = "summary")
+    })
+    List<SearchHit<Book>> findByNameOrSummary(String text, String summary);
+}
+----
+====
+
+It is possible to define multiple fields to be highlighted like above, and both the `@Highlight` and the `@HighlightField` annotation can further be customized with a `@HighlightParameters` annotation. Check the Javadocs for the possible configuration options.
+
+In the search results the highlight data can be retrieved from the `SearchHit` class.
 
 [[elasticsearch.annotation]]
 == Annotation based configuration
@@ -40,7 +90,8 @@ class ProductService {
 }
 ----
 
-<1> The `EnableElasticsearchRepositories` annotation activates the Repository support. If no base package is configured, it will use the one of the configuration class it is put on.
+<1> The `EnableElasticsearchRepositories` annotation activates the Repository support.
+If no base package is configured, it will use the one of the configuration class it is put on.
 <2> Provide a Bean named `elasticsearchTemplate` of type `ElasticsearchOperations` by using one of the configurations shown in the <<elasticsearch.operations>> chapter.
 <3> Let Spring inject the Repository bean into your class.
 ====
@@ -145,5 +196,3 @@ Using the `Transport Client` or `Rest Client` element registers an instance of `
 </beans>
 ----
 ====
-
-include::reactive-elasticsearch-repositories.adoc[leveloffset=+1]
