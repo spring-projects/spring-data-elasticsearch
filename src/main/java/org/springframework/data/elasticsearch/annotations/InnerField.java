@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  * @author Aleksei Arsenev
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target(ElementType.ANNOTATION_TYPE)
 public @interface InnerField {
 
 	String suffix();

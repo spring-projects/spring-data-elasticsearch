@@ -28,6 +28,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.MappingException;
@@ -72,6 +74,16 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 
 		assertThat(persistentProperty).isNotNull();
 		assertThat(persistentProperty.getFieldName()).isEqualTo("by-value");
+	}
+
+	@Test // DATAES-896
+	void shouldUseNameFromMultiFieldMainField() {
+		SimpleElasticsearchPersistentEntity<?> persistentEntity = context
+				.getRequiredPersistentEntity(MultiFieldProperty.class);
+		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getPersistentProperty("mainfieldProperty");
+
+		assertThat(persistentProperty).isNotNull();
+		assertThat(persistentProperty.getFieldName()).isEqualTo("mainfield");
 	}
 
 	@Test // DATAES-716, DATAES-792
@@ -197,6 +209,11 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 
 	static class FieldValueProperty {
 		@Nullable @Field(value = "by-value") String fieldProperty;
+	}
+
+	static class MultiFieldProperty {
+		@Nullable @MultiField(mainField = @Field("mainfield"),
+				otherFields = { @InnerField(suffix = "suff", type = FieldType.Keyword) }) String mainfieldProperty;
 	}
 
 	static class DatesProperty {
