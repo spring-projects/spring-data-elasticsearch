@@ -137,8 +137,8 @@ public class MappingBuilder {
 		}
 	}
 
-	private void mapEntity(XContentBuilder builder, @Nullable ElasticsearchPersistentEntity entity, boolean isRootObject,
-			String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType,
+	private void mapEntity(XContentBuilder builder, @Nullable ElasticsearchPersistentEntity<?> entity,
+			boolean isRootObject, String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType,
 			@Nullable Field parentFieldAnnotation, @Nullable DynamicMapping dynamicMapping) throws IOException {
 
 		boolean writeNestedProperties = !isRootObject && (isAnyPropertyAnnotatedWithField(entity) || nestedOrObjectField);
@@ -150,7 +150,7 @@ public class MappingBuilder {
 
 			if (nestedOrObjectField && FieldType.Nested == fieldType && parentFieldAnnotation != null
 					&& parentFieldAnnotation.includeInParent()) {
-				builder.field("include_in_parent", parentFieldAnnotation.includeInParent());
+				builder.field("include_in_parent", true);
 			}
 		}
 
@@ -366,7 +366,7 @@ public class MappingBuilder {
 		MappingParameters mappingParameters = MappingParameters.from(annotation);
 
 		if (!nestedOrObjectField && mappingParameters.isStore()) {
-			builder.field(FIELD_PARAM_STORE, mappingParameters.isStore());
+			builder.field(FIELD_PARAM_STORE, true);
 		}
 		mappingParameters.writeTypeAndParametersTo(builder);
 	}

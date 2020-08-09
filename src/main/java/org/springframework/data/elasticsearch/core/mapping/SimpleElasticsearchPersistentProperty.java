@@ -23,6 +23,7 @@ import java.util.List;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
@@ -81,6 +82,10 @@ public class SimpleElasticsearchPersistentProperty extends
 
 		if (isParent && !getType().equals(String.class)) {
 			throw new MappingException(String.format("Parent property %s must be of type String!", property.getName()));
+		}
+
+		if (isAnnotationPresent(Field.class) && isAnnotationPresent(MultiField.class)) {
+			throw new MappingException("@Field annotation must not be used on a @MultiField property.");
 		}
 
 		initDateConverter();
@@ -168,13 +173,15 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Nullable
 	private String getAnnotatedFieldName() {
 
-		if (isAnnotationPresent(Field.class)) {
+		String name = null;
 
-			String name = findAnnotation(Field.class).name();
-			return StringUtils.hasText(name) ? name : null;
+		if (isAnnotationPresent(Field.class)) {
+			name = findAnnotation(Field.class).name();
+		} else if (isAnnotationPresent(MultiField.class)) {
+			name = findAnnotation(MultiField.class).mainField().name();
 		}
 
-		return null;
+		return StringUtils.hasText(name) ? name : null;
 	}
 
 	/*

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.lang.Nullable;
@@ -31,9 +32,10 @@ public class MappingParametersTest extends MappingContextBaseTests {
 
 	@Test // DATAES-621
 	public void shouldCreateParametersForInnerFieldAnnotation() {
-		Annotation annotation = entity.getRequiredPersistentProperty("innerField").findAnnotation(InnerField.class);
 
-		MappingParameters mappingParameters = MappingParameters.from(annotation);
+		MultiField multiField = entity.getRequiredPersistentProperty("mainField").findAnnotation(MultiField.class);
+		InnerField innerField = multiField.otherFields()[0];
+		MappingParameters mappingParameters = MappingParameters.from(innerField);
 
 		assertThat(mappingParameters).isNotNull();
 	}
@@ -61,7 +63,8 @@ public class MappingParametersTest extends MappingContextBaseTests {
 
 	static class AnnotatedClass {
 		@Nullable @Field private String field;
-		@Nullable @InnerField(suffix = "test", type = FieldType.Text) private String innerField;
+		@Nullable @MultiField(mainField = @Field,
+				otherFields = { @InnerField(suffix = "test", type = FieldType.Text) }) private String mainField;
 		@Score private float score;
 		@Nullable @Field(type = FieldType.Text, docValues = false) private String docValuesText;
 		@Nullable @Field(type = FieldType.Nested, docValues = false) private String docValuesNested;
