@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.assertj.core.data.Percentage;
@@ -255,6 +256,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-420
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void shouldUseBothAnalyzer() {
 
 		// given
@@ -277,6 +279,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-492
+	@SuppressWarnings("rawtypes")
 	public void shouldUseKeywordNormalizer() {
 
 		// given
@@ -297,6 +300,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-503
+	@SuppressWarnings("rawtypes")
 	public void shouldUseCopyTo() {
 
 		// given
@@ -400,12 +404,29 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
-	@Test // DATAES-568
+	@Test // DATAES-568, DATAES-896
 	public void shouldUseFieldNameOnMultiField() throws JSONException {
 
 		// given
-		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"multifield-property\":{\"type\":\"text\",\"analyzer\":\"whitespace\",\"fields\":{\"prefix\":{\"type\":\"text\",\"analyzer\":\"stop\",\"search_analyzer\":\"standard\"}}}}}";
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"id-property\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": true\n" + //
+				"    },\n" + //
+				"    \"main-field\": {\n" + //
+				"      \"type\": \"text\",\n" + //
+				"      \"analyzer\": \"whitespace\",\n" + //
+				"      \"fields\": {\n" + //
+				"        \"suff-ix\": {\n" + //
+				"          \"type\": \"text\",\n" + //
+				"          \"analyzer\": \"stop\",\n" + //
+				"          \"search_analyzer\": \"standard\"\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.MultiFieldEntity.class);
@@ -651,9 +672,10 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 			@Nullable @Id @Field("id-property") private String id;
 
-			@Nullable @Field("multifield-property") //
-			@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"), otherFields = {
-					@InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop", searchAnalyzer = "standard") }) //
+			@Nullable //
+			@MultiField(mainField = @Field(name = "main-field", type = FieldType.Text, analyzer = "whitespace"),
+					otherFields = {
+							@InnerField(suffix = "suff-ix", type = FieldType.Text, analyzer = "stop", searchAnalyzer = "standard") }) //
 			private String description;
 		}
 	}
@@ -684,6 +706,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	 * @author Stuart Stevenson
 	 * @author Mohsin Husen
 	 */
+	@Data
 	@Document(indexName = "test-index-simple-recursive-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class SimpleRecursiveEntity {
 
@@ -783,7 +806,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	 */
 	static class SampleInheritedEntityBuilder {
 
-		private SampleInheritedEntity result;
+		private final SampleInheritedEntity result;
 
 		public SampleInheritedEntityBuilder(String id) {
 			result = new SampleInheritedEntity();
@@ -806,7 +829,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		public IndexQuery buildIndex() {
 			IndexQuery indexQuery = new IndexQuery();
-			indexQuery.setId(result.getId());
+			indexQuery.setId(Objects.requireNonNull(result.getId()));
 			indexQuery.setObject(result);
 			return indexQuery;
 		}
@@ -1030,7 +1053,7 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 	@Document(indexName = "valueDoc")
 	static class ValueDoc {
-		@Field(type = Text) private ValueObject valueObject;
+		@Nullable @Field(type = Text) private ValueObject valueObject;
 	}
 
 	@Getter
