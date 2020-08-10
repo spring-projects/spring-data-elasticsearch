@@ -15,10 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.join;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.lang.Nullable;
 
 /**
@@ -55,13 +51,5 @@ public class JoinField<ID> {
 
 	public String getName() {
 		return name;
-	}
-
-	public Map<String, Object> getAsMap() {
-		Map<String, Object> joinMap = new HashMap<>();
-		joinMap.put("name", getName());
-		joinMap.put("parent", getParent());
-
-		return Collections.unmodifiableMap(joinMap);
 	}
 }
