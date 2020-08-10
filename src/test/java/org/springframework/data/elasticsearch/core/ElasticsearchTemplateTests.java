@@ -3379,7 +3379,7 @@ public abstract class ElasticsearchTemplateTests {
 	void shouldUpdateEntityWithJoinFields(String qId1, String qId2, String aId1, String aId2) throws Exception {
 		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
 				.create();
-		document.put("myJoinField", new JoinField<>("answer", qId2).getAsMap());
+		document.put("myJoinField", toDocument(new JoinField<>("answer", qId2)));
 		UpdateQuery updateQuery = UpdateQuery.builder(aId2) //
 				.withDocument(document) //
 				.withRouting(qId2).build();
@@ -3389,8 +3389,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.bulkUpdate(queries, IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY));
-		indexOperations.refresh();
-		Thread.sleep(5000);
+		operations.indexOps(IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY)).refresh();
 
 		SearchHits<SampleJoinEntity> updatedHits = operations.search(
 				new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId2)).build(),
@@ -3423,8 +3422,7 @@ public abstract class ElasticsearchTemplateTests {
 		Query query = new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId2)).withRoute(qId2)
 				.build();
 		operations.delete(query, SampleJoinEntity.class, IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY));
-		indexOperations.refresh();
-		Thread.sleep(5000);
+		operations.indexOps(IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY)).refresh();
 
 		SearchHits<SampleJoinEntity> deletedHits = operations.search(
 				new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId2)).build(),
@@ -3437,6 +3435,13 @@ public abstract class ElasticsearchTemplateTests {
 			}
 		}).collect(Collectors.toList());
 		assertThat(hitIds.size()).isEqualTo(0);
+	}
+
+	private org.springframework.data.elasticsearch.core.document.Document toDocument(JoinField joinField) {
+		org.springframework.data.elasticsearch.core.document.Document document = create();
+		document.put("name", joinField.getName());
+		document.put("parent", joinField.getParent());
+		return document;
 	}
 
 	protected RequestFactory getRequestFactory() {
