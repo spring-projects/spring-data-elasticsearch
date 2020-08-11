@@ -271,7 +271,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		Assert.notNull(id, "Cannot delete entity with id 'null'.");
 
-		doDelete(id, getIndexCoordinates());
+		doDelete(id, null, getIndexCoordinates());
 	}
 
 	@Override
@@ -279,7 +279,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		Assert.notNull(entity, "Cannot delete 'null' entity.");
 
-		doDelete(extractIdFromBean(entity), getIndexCoordinates());
+		doDelete(extractIdFromBean(entity), operations.getEntityRouting(entity), getIndexCoordinates());
 	}
 
 	@Override
@@ -308,10 +308,10 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		});
 	}
 
-	private void doDelete(@Nullable ID id, IndexCoordinates indexCoordinates) {
+	private void doDelete(@Nullable ID id, @Nullable String routing, IndexCoordinates indexCoordinates) {
 
 		if (id != null) {
-			executeAndRefresh(operations -> operations.delete(stringIdRepresentation(id), indexCoordinates));
+			executeAndRefresh(operations -> operations.delete(stringIdRepresentation(id), routing, indexCoordinates));
 		}
 	}
 

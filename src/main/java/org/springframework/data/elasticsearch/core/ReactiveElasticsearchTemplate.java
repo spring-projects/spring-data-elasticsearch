@@ -472,7 +472,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	private Mono<String> doDeleteById(String id, IndexCoordinates index) {
 
 		return Mono.defer(() -> {
-			DeleteRequest request = requestFactory.deleteRequest(id, index);
+			DeleteRequest request = requestFactory.deleteRequest(id, null, index);
 			return doDelete(prepareDeleteRequest(request));
 		});
 	}

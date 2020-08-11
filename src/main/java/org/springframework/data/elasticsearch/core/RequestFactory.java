@@ -751,14 +751,29 @@ class RequestFactory {
 		return deleteByQueryRequest;
 	}
 
-	public DeleteRequest deleteRequest(String id, IndexCoordinates index) {
+	public DeleteRequest deleteRequest(String id, @Nullable String routing, IndexCoordinates index) {
 		String indexName = index.getIndexName();
-		return new DeleteRequest(indexName, id);
+		DeleteRequest deleteRequest = new DeleteRequest(indexName, id);
+
+		if (routing != null) {
+			deleteRequest.routing(routing);
+		}
+
+		return deleteRequest;
 	}
 
-	public DeleteRequestBuilder deleteRequestBuilder(Client client, String id, IndexCoordinates index) {
+	public DeleteRequestBuilder deleteRequestBuilder(Client client, String id, @Nullable String routing,
+			IndexCoordinates index) {
 		String indexName = index.getIndexName();
-		return client.prepareDelete(indexName, IndexCoordinates.TYPE, id);
+		DeleteRequestBuilder deleteRequestBuilder = client.prepareDelete();
+		deleteRequestBuilder.setIndex(indexName);
+		deleteRequestBuilder.setId(id);
+
+		if (routing != null) {
+			deleteRequestBuilder.setRouting(routing);
+		}
+
+		return deleteRequestBuilder;
 	}
 
 	@Deprecated

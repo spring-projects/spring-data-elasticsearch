@@ -205,6 +205,7 @@ public interface DocumentOperations {
 
 	/**
 	 * Bulk update all objects. Will do update.
+	 * 
 	 * @param clazz the entity class
 	 * @param queries the queries to execute in bulk
 	 * @since 4.1
@@ -222,11 +223,24 @@ public interface DocumentOperations {
 	/**
 	 * Delete the one object with provided id.
 	 *
-	 * @param id the document ot delete
+	 * @param id the document to delete
 	 * @param index the index from which to delete
 	 * @return documentId of the document deleted
 	 */
-	String delete(String id, IndexCoordinates index);
+	default String delete(String id, IndexCoordinates index) {
+		return delete(id, null, index);
+	}
+
+	/**
+	 * Delete the one object with provided id.
+	 *
+	 * @param id the document to delete
+	 * @param routing the optional routing for the document to be deleted
+	 * @param index the index from which to delete
+	 * @return documentId of the document deleted
+	 * @since 4.1
+	 */
+	String delete(String id, @Nullable String routing, IndexCoordinates index);
 
 	/**
 	 * Delete the one object with provided id.
