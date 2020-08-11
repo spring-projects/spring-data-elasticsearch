@@ -535,15 +535,20 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Nullable
-	private String getEntityRouting(Object entity) {
-		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
-		ElasticsearchPersistentProperty joinProperty = persistentEntity.getJoinFieldProperty();
+	public String getEntityRouting(Object entity) {
+		ElasticsearchPersistentEntity<?> persistentEntity = elasticsearchConverter.getMappingContext()
+				.getPersistentEntity(entity.getClass());
 
-		if (joinProperty != null) {
-			Object joinField = persistentEntity.getPropertyAccessor(entity).getProperty(joinProperty);
-			if (joinField != null && JoinField.class.isAssignableFrom(joinField.getClass())
-					&& ((JoinField<?>) joinField).getParent() != null) {
-				return elasticsearchConverter.convertId(((JoinField<?>) joinField).getParent());
+		if (persistentEntity != null) {
+
+			ElasticsearchPersistentProperty joinProperty = persistentEntity.getJoinFieldProperty();
+
+			if (joinProperty != null) {
+				Object joinField = persistentEntity.getPropertyAccessor(entity).getProperty(joinProperty);
+				if (joinField != null && JoinField.class.isAssignableFrom(joinField.getClass())
+						&& ((JoinField<?>) joinField).getParent() != null) {
+					return elasticsearchConverter.convertId(((JoinField<?>) joinField).getParent());
+				}
 			}
 		}
 

@@ -59,6 +59,16 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 
 	IndexCoordinates getIndexCoordinatesFor(Class<?> clazz);
 
+	/**
+	 * gets the routing for an entity which might be defined by a join-type relation
+	 * 
+	 * @param entity the entity
+	 * @return the routing, may be null if not set.
+	 * @since 4.1
+	 */
+	@Nullable
+	String getEntityRouting(Object entity);
+
 	// region IndexOperations
 	/**
 	 * Create an index for given indexName .
