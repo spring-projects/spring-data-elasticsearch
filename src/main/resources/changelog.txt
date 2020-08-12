@@ -1,6 +1,14 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.3.RELEASE (2020-08-12)
+---------------------------------------------
+* DATAES-897 - Add documentation for Highlight annotation.
+* DATAES-896 - Use mainField property of @MultiField annotation instead of additional @Field annotation.
+* DATAES-891 - Returning a Stream from a Query annotated repository method crashes.
+* DATAES-890 - Release 4.0.3 (Neumann SR3).
+
+
 Changes in version 4.1.0-M2 (2020-08-12)
 ----------------------------------------
 * DATAES-901 - Operations deleting an entity should use a routing deducted from the entity.
@@ -1240,6 +1248,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
