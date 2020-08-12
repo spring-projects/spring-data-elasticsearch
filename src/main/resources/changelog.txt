@@ -1,6 +1,36 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.1.0-M2 (2020-08-12)
+----------------------------------------
+* DATAES-901 - Operations deleting an entity should use a routing deducted from the entity.
+* DATAES-899 - Add documentation for join-type.
+* DATAES-897 - Add documentation for Highlight annotation.
+* DATAES-896 - Use mainField property of @MultiField annotation instead of additional @Field annotation.
+* DATAES-894 - Adapt to changes in Reactor.
+* DATAES-893 - Adopt to changed module layout of Reactor Netty.
+* DATAES-891 - Returning a Stream from a Query annotated repository method crashes.
+* DATAES-886 - Complete reactive auditing.
+* DATAES-883 - Fix log level on resource load error.
+* DATAES-878 - Wrong value for TermVector(woth_positions_offsets).
+* DATAES-877 - Update test logging dependency.
+* DATAES-876 - Add seqno and primary term to entity on initial save.
+* DATAES-875 - MappingElasticsearchConverter.updateQuery not called at all places.
+* DATAES-874 - Deprecate parent-id related methods and fields.
+* DATAES-872 - Release 4.1 M2 (2020.0.0).
+* DATAES-869 - Update to Elasticsearch 7.8.
+* DATAES-864 - Rework alias management.
+* DATAES-842 - Documentation fixes.
+* DATAES-612 - Add support for index templates.
+* DATAES-433 - Replace parent-child mappings to join field.
+* DATAES-321 - Support time base rolling indices.
+* DATAES-244 - Support alias renaming.
+* DATAES-233 - Support for rolling index strategy.
+* DATAES-207 - Allow fetching indices by alias.
+* DATAES-192 - Define alias for document.
+* DATAES-150 - mapping are not created when entity is saved in new dynamic name index (spel).
+
+
 Changes in version 4.0.2.RELEASE (2020-07-22)
 ---------------------------------------------
 * DATAES-883 - Fix log level on resource load error.
@@ -1210,6 +1240,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
