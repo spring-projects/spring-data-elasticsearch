@@ -4,7 +4,7 @@
 [[new-features.4-1-0]]
 == New in Spring Data Elasticsearch 4.1
 
-* Upgrade to Elasticsearch 7.8.0
+* Upgrade to Elasticsearch 7.8.1
 * Improved API for alias management
 * Introduction of `ReactiveIndexOperations` for index management
 * Index templates support
