@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import java.util.Map;
 
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -296,9 +297,19 @@ class EntityOperations {
 		 * Returns SeqNoPropertyTerm for this entity.
 		 *
 		 * @return SeqNoPrimaryTerm, may be {@literal null}
+		 * @since 4.0
 		 */
 		@Nullable
 		SeqNoPrimaryTerm getSeqNoPrimaryTerm();
+
+		/**
+		 * returns the routing for the entity if it is available
+		 * 
+		 * @return routing if available
+		 * @since 4.1
+		 */
+		@Nullable
+		String getRouting();
 	}
 
 	/**
@@ -421,6 +432,11 @@ class EntityOperations {
 		public ElasticsearchPersistentEntity<?> getPersistentEntity() {
 			return null;
 		}
+
+		@Override
+		public String getRouting() {
+			return null;
+		}
 	}
 
 	/**
@@ -492,56 +508,32 @@ class EntityOperations {
 			return new MappedEntity<>(entity, identifierAccessor, propertyAccessor);
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#getId()
-		 */
 		@Override
 		public Object getId() {
 			return idAccessor.getIdentifier();
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#isVersionedEntity()
-		 */
 		@Override
 		public boolean isVersionedEntity() {
 			return entity.hasVersionProperty();
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#getVersion()
-		 */
 		@Override
 		@Nullable
 		public Object getVersion() {
-			return propertyAccessor.getProperty(entity.getRequiredVersionProperty());
+			return propertyAccessor.getProperty(entity.getVersionProperty());
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#getBean()
-		 */
 		@Override
 		public T getBean() {
 			return propertyAccessor.getBean();
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#isNew()
-		 */
 		@Override
 		public boolean isNew() {
 			return entity.isNew(propertyAccessor.getBean());
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#getPersistentEntity()
-		 */
 		@Override
 		public ElasticsearchPersistentEntity<?> getPersistentEntity() {
 			return entity;
@@ -557,15 +549,17 @@ class EntityOperations {
 		private final ElasticsearchPersistentEntity<?> entity;
 		private final ConvertingPropertyAccessor<T> propertyAccessor;
 		private final IdentifierAccessor identifierAccessor;
+		private final ConversionService conversionService;
 
 		private AdaptibleMappedEntity(ElasticsearchPersistentEntity<?> entity, IdentifierAccessor identifierAccessor,
-				ConvertingPropertyAccessor<T> propertyAccessor) {
+				ConvertingPropertyAccessor<T> propertyAccessor, ConversionService conversionService) {
 
 			super(entity, identifierAccessor, propertyAccessor);
 
 			this.entity = entity;
 			this.propertyAccessor = propertyAccessor;
 			this.identifierAccessor = identifierAccessor;
+			this.conversionService = conversionService;
 		}
 
 		static <T> AdaptibleEntity<T> of(T bean,
@@ -577,22 +571,14 @@ class EntityOperations {
 			PersistentPropertyAccessor<T> propertyAccessor = entity.getPropertyAccessor(bean);
 
 			return new AdaptibleMappedEntity<>(entity, identifierAccessor,
-					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService));
+					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService), conversionService);
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#hasParent()
-		 */
 		@Override
 		public boolean hasParent() {
 			return getRequiredPersistentEntity().getParentIdProperty() != null;
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#getParentId()
-		 */
 		@Deprecated
 		@Override
 		public Object getParentId() {
@@ -601,10 +587,6 @@ class EntityOperations {
 			return propertyAccessor.getProperty(parentProperty);
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#populateIdIfNecessary(java.lang.Object)
-		 */
 		@Nullable
 		@Override
 		public T populateIdIfNecessary(@Nullable Object id) {
@@ -629,17 +611,12 @@ class EntityOperations {
 			return propertyAccessor.getBean();
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.MappedEntity#getVersion()
-		 */
 		@Override
 		@Nullable
 		public Number getVersion() {
 
-			ElasticsearchPersistentProperty versionProperty = entity.getRequiredVersionProperty();
-
-			return propertyAccessor.getProperty(versionProperty, Number.class);
+			ElasticsearchPersistentProperty versionProperty = entity.getVersionProperty();
+			return versionProperty !=  null ? propertyAccessor.getProperty(versionProperty, Number.class) : null;
 		}
 
 		@Override
@@ -655,10 +632,6 @@ class EntityOperations {
 			return propertyAccessor.getProperty(seqNoPrimaryTermProperty, SeqNoPrimaryTerm.class);
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#initializeVersionProperty()
-		 */
 		@Override
 		public T initializeVersionProperty() {
 
@@ -673,10 +646,6 @@ class EntityOperations {
 			return propertyAccessor.getBean();
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#incrementVersion()
-		 */
 		@Override
 		public T incrementVersion() {
 
@@ -687,6 +656,22 @@ class EntityOperations {
 			propertyAccessor.setProperty(versionProperty, nextVersion);
 
 			return propertyAccessor.getBean();
+		}
+
+		@Override
+		public String getRouting() {
+
+			ElasticsearchPersistentProperty joinFieldProperty = entity.getJoinFieldProperty();
+
+			if (joinFieldProperty != null) {
+				JoinField<?> joinField = propertyAccessor.getProperty(joinFieldProperty, JoinField.class);
+
+				if (joinField != null && joinField.getParent() != null) {
+					return conversionService.convert(joinField.getParent(), String.class);
+				}
+			}
+
+			return null;
 		}
 	}
 
