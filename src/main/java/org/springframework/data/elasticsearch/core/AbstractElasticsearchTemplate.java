@@ -46,7 +46,6 @@ import org.springframework.data.elasticsearch.core.document.SearchDocumentRespon
 import org.springframework.data.elasticsearch.core.event.AfterConvertCallback;
 import org.springframework.data.elasticsearch.core.event.AfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.BeforeConvertCallback;
-import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -79,10 +78,10 @@ import org.springframework.util.Assert;
  */
 public abstract class AbstractElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
-	protected @Nullable ElasticsearchConverter elasticsearchConverter;
-	protected @Nullable RequestFactory requestFactory;
-
-	private @Nullable EntityCallbacks entityCallbacks;
+	@Nullable protected ElasticsearchConverter elasticsearchConverter;
+	@Nullable protected RequestFactory requestFactory;
+	@Nullable private EntityOperations entityOperations;
+	@Nullable private EntityCallbacks entityCallbacks;
 
 	// region Initialization
 	protected void initialize(ElasticsearchConverter elasticsearchConverter) {
@@ -90,6 +89,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		Assert.notNull(elasticsearchConverter, "elasticsearchConverter must not be null.");
 
 		this.elasticsearchConverter = elasticsearchConverter;
+		this.entityOperations = new EntityOperations(this.elasticsearchConverter.getMappingContext());
 		requestFactory = new RequestFactory(elasticsearchConverter);
 
 		VersionInfo.logVersions(getClusterVersion());
@@ -524,11 +524,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	@Nullable
 	private String getEntityId(Object entity) {
-		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
-		ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
 
-		if (idProperty != null) {
-			return stringIdRepresentation(persistentEntity.getPropertyAccessor(entity).getProperty(idProperty));
+		Object id = entityOperations.forEntity(entity, elasticsearchConverter.getConversionService()).getId();
+
+		if (id != null) {
+			return stringIdRepresentation(id);
 		}
 
 		return null;
@@ -536,36 +536,16 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	@Nullable
 	public String getEntityRouting(Object entity) {
-		ElasticsearchPersistentEntity<?> persistentEntity = elasticsearchConverter.getMappingContext()
-				.getPersistentEntity(entity.getClass());
-
-		if (persistentEntity != null) {
-
-			ElasticsearchPersistentProperty joinProperty = persistentEntity.getJoinFieldProperty();
-
-			if (joinProperty != null) {
-				Object joinField = persistentEntity.getPropertyAccessor(entity).getProperty(joinProperty);
-				if (joinField != null && JoinField.class.isAssignableFrom(joinField.getClass())
-						&& ((JoinField<?>) joinField).getParent() != null) {
-					return elasticsearchConverter.convertId(((JoinField<?>) joinField).getParent());
-				}
-			}
-		}
-
-		return null;
+		return entityOperations.forEntity(entity, elasticsearchConverter.getConversionService()).getRouting();
 	}
 
 	@Nullable
 	private Long getEntityVersion(Object entity) {
-		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
-		ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
 
-		if (versionProperty != null) {
-			Object version = persistentEntity.getPropertyAccessor(entity).getProperty(versionProperty);
+		Number version = entityOperations.forEntity(entity, elasticsearchConverter.getConversionService()).getVersion();
 
-			if (version != null && Long.class.isAssignableFrom(version.getClass())) {
-				return ((Long) version);
-			}
+		if (version != null && Long.class.isAssignableFrom(version.getClass())) {
+			return ((Long) version);
 		}
 
 		return null;
@@ -573,18 +553,10 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	@Nullable
 	private SeqNoPrimaryTerm getEntitySeqNoPrimaryTerm(Object entity) {
-		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
-		ElasticsearchPersistentProperty property = persistentEntity.getSeqNoPrimaryTermProperty();
 
-		if (property != null) {
-			Object seqNoPrimaryTerm = persistentEntity.getPropertyAccessor(entity).getProperty(property);
-
-			if (seqNoPrimaryTerm != null && SeqNoPrimaryTerm.class.isAssignableFrom(seqNoPrimaryTerm.getClass())) {
-				return (SeqNoPrimaryTerm) seqNoPrimaryTerm;
-			}
-		}
-
-		return null;
+		EntityOperations.AdaptibleEntity<Object> adaptibleEntity = entityOperations.forEntity(entity,
+				elasticsearchConverter.getConversionService());
+		return adaptibleEntity.hasSeqNoPrimaryTerm() ? adaptibleEntity.getSeqNoPrimaryTerm() : null;
 	}
 
 	private <T> IndexQuery getIndexQuery(T entity) {

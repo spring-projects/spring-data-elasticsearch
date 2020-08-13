@@ -55,7 +55,6 @@ import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity;
-import org.springframework.data.elasticsearch.core.EntityOperations.Entity;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -399,6 +398,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			}
 		}
 
+		query.setRouting(entity.getRouting());
+
 		return query;
 	}
 
@@ -414,11 +415,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(converter, entityType, index);
 
-		return doGet(id, getPersistentEntityFor(entityType), index)
-				.flatMap(it -> callback.doWith(DocumentAdapters.from(it)));
+		return doGet(id, index).flatMap(it -> callback.doWith(DocumentAdapters.from(it)));
 	}
 
-	private Mono<GetResult> doGet(String id, ElasticsearchPersistentEntity<?> entity, IndexCoordinates index) {
+	private Mono<GetResult> doGet(String id, IndexCoordinates index) {
 		return Mono.defer(() -> doGet(requestFactory.getRequest(id, index)));
 	}
 
@@ -441,9 +441,17 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	@Override
 	public Mono<String> delete(Object entity, IndexCoordinates index) {
 
-		Entity<?> elasticsearchEntity = operations.forEntity(entity);
+		AdaptibleEntity<?> elasticsearchEntity = operations.forEntity(entity, converter.getConversionService());
 
-		return Mono.defer(() -> doDeleteById(converter.convertId(elasticsearchEntity.getId()), index));
+		if (elasticsearchEntity.getId() == null) {
+			return Mono.error(new IllegalArgumentException("entity must have an id"));
+		}
+
+		return Mono.defer(() -> {
+			String id = converter.convertId(elasticsearchEntity.getId());
+			String routing = elasticsearchEntity.getRouting();
+			return doDeleteById(id, routing, index);
+		});
 	}
 
 	@Override
@@ -466,13 +474,13 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		return doDeleteById(id, index);
+		return doDeleteById(id, null, index);
 	}
 
-	private Mono<String> doDeleteById(String id, IndexCoordinates index) {
+	private Mono<String> doDeleteById(String id, @Nullable String routing, IndexCoordinates index) {
 
 		return Mono.defer(() -> {
-			DeleteRequest request = requestFactory.deleteRequest(id, null, index);
+			DeleteRequest request = requestFactory.deleteRequest(id, routing, index);
 			return doDelete(prepareDeleteRequest(request));
 		});
 	}
