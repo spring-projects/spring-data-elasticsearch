@@ -1513,7 +1513,7 @@ class RequestFactory {
 			elasticsearchQuery = searchQuery.getQuery();
 		} else if (query instanceof CriteriaQuery) {
 			CriteriaQuery criteriaQuery = (CriteriaQuery) query;
-			elasticsearchQuery = new CriteriaQueryProcessor().createQueryFromCriteria(criteriaQuery.getCriteria());
+			elasticsearchQuery = new CriteriaQueryProcessor().createQuery(criteriaQuery.getCriteria());
 		} else if (query instanceof StringQuery) {
 			StringQuery stringQuery = (StringQuery) query;
 			elasticsearchQuery = wrapperQuery(stringQuery.getSource());
@@ -1533,7 +1533,7 @@ class RequestFactory {
 			elasticsearchFilter = searchQuery.getFilter();
 		} else if (query instanceof CriteriaQuery) {
 			CriteriaQuery criteriaQuery = (CriteriaQuery) query;
-			elasticsearchFilter = new CriteriaFilterProcessor().createFilterFromCriteria(criteriaQuery.getCriteria());
+			elasticsearchFilter = new CriteriaFilterProcessor().createFilter(criteriaQuery.getCriteria());
 		} else if (query instanceof StringQuery) {
 			elasticsearchFilter = null;
 		} else {

@@ -45,7 +45,8 @@ public class TransportClientConfig extends ElasticsearchConfigurationSupport {
   }
 }
 ----
-<1> Setting up the <<elasticsearch.clients.transport>>. Deprecated as of version 4.0.
+<1> Setting up the <<elasticsearch.clients.transport>>.
+Deprecated as of version 4.0.
 <2> Creating the `ElasticsearchTemplate` bean, offering both names, _elasticsearchOperations_ and _elasticsearchTemplate_.
 ====
 
@@ -75,7 +76,9 @@ public class RestClientConfig extends AbstractElasticsearchConfiguration {
 [[elasticsearch.operations.usage]]
 == Usage examples
 
-As both `ElasticsearchTemplate` and `ElasticsearchRestTemplate` implement the `ElasticsearchOperations` interface, the code to use them is not different. The example shows how to use an injected `ElasticsearchOperations` instance in a Spring REST controller. The decision, if this is using the `TransportClient` or the `RestClient` is made by providing the corresponding Bean with one of the configurations shown above.
+As both `ElasticsearchTemplate` and `ElasticsearchRestTemplate` implement the `ElasticsearchOperations` interface, the code to use them is not different.
+The example shows how to use an injected `ElasticsearchOperations` instance in a Spring REST controller.
+The decision, if this is using the `TransportClient` or the `RestClient` is made by providing the corresponding Bean with one of the configurations shown above.
 
 .ElasticsearchOperations usage
 ====
@@ -123,9 +126,12 @@ include::reactive-elasticsearch-operations.adoc[leveloffset=+1]
 [[elasticsearch.operations.searchresulttypes]]
 == Search Result Types
 
-When a document is retrieved with the methods of the  `DocumentOperations` interface, just the found entity will be returned. When searching with the methods of the `SearchOperations` interface, additional information is available for each entity, for example the _score_ or the _sortValues_ of the found entity.
+When a document is retrieved with the methods of the  `DocumentOperations` interface, just the found entity will be returned.
+When searching with the methods of the `SearchOperations` interface, additional information is available for each entity, for example the _score_ or the _sortValues_ of the found entity.
 
-In order to return this information, each entity is wrapped in a `SearchHit` object that contains this entity-specific additional information. These `SearchHit` objects themselves are returned within a `SearchHits` object which additionally contains informations about the whole search like the _maxScore_ or requested aggregations. The following classes and interfaces are now available:
+In order to return this information, each entity is wrapped in a `SearchHit` object that contains this entity-specific additional information.
+These `SearchHit` objects themselves are returned within a `SearchHits` object which additionally contains informations about the whole search like the _maxScore_ or requested aggregations.
+The following classes and interfaces are now available:
 
 .SearchHit<T>
 Contains the following information:
@@ -154,4 +160,109 @@ Returned by the low level scroll API functions in `ElasticsearchRestTemplate`, i
 
 .SearchHitsIterator<T>
 An Iterator returned by the streaming functions of the `SearchOperations` interface.
+
+== Queries
+
+Almost all of the methods defined in the `SearchOperations` and `ReactiveSearchOperations` interface take a `Query` parameter that defines the query to execute for searching. `Query` is an interface and Spring Data Elasticsearch provides three implementations: `CriteriaQuery`, `StringQuery` and `NativeSearchQuery`.
+
+=== CriteriaQuery
+
+`CriteriaQuery` based queries allow the creation of queries to search for data without knowing the syntax or basics of Elasticsearch queries. They allow the user to build queries by simply chaining and combining `Criteria` objects that specifiy the criteria the searched documents must fulfill.
+
+NOTE: when talking about AND or OR when combining criteria keep in mind, that in Elasticsearch AND are converted to a **must** condition and OR to a **should**
+
+`Criteria` and their usage are best explained by example
+(let's assume we have a `Book` entity with a `price` property):
+
+.Get books with a given price
+====
+[source,java]
+----
+Criteria criteria = new Criteria("price").is(42.0);
+Query query = new CriteriaQuery(criteria);
+----
+====
+
+Conditions for the same field can be chained, they will be combined with a logical AND:
+
+.Get books with a given price
+====
+[source,java]
+----
+Criteria criteria = new Criteria("price").greaterThan(42.0).lessThan(34.0L);
+Query query = new CriteriaQuery(criteria);
+----
+====
+
+When chaining `Criteria`, by default a AND logic is used:
+
+.Get all persons with first name _James_  and last name _Miller_:
+====
+[source,java]
+----
+Criteria criteria = new Criteria("lastname").is("Miller") <1>
+  .and("firstname").is("James")                           <2>
+Query query = new CriteriaQuery(criteria);
+----
+<1> the first `Criteria`
+<2> the and() creates a new `Criteria` and chaines it to the first one.
+====
+
+If you want to create nested queries, you need to use subqueries for this. Let's assume we want to find all persons with a last name of _Miller_ and a first name of either _Jack_ or _John_:
+
+.Nested subqueries
+====
+[source,java]
+----
+Criteria miller = new Criteria("lastName").is("Miller")  <.>
+  .subCriteria(                                          <.>
+    new Criteria().or("firstName").is("John")            <.>
+      .or("firstName").is("Jack")                        <.>
+  );
+Query query = new CriteriaQuery(criteria);
+----
+<.> create a first `Criteria` for the last name
+<.> this is combined with AND to a subCriteria
+<.> This sub Criteria is an OR combination for the first name _John_
+<.> and the first name Jack
+====
+
+Please refer to the API documentation of the `Criteria` class for a complete overview of the different available operations.
+
+=== StringQuery
+
+This class takes an Elasticsearch query as JSON String.
+The following code shows a query that searches for persons having the first name "Jack":
+
+====
+[source,java]
+----
+
+Query query = new SearchQuery("{ \"match\": { \"firstname\": { \"query\": \"Jack\" } } } ");
+SearchHits<Person> searchHits = operations.search(query, Person.class);
+
+----
+====
+
+Using `StringQuery` may be appropriate if you already have an Elasticsearch query to use.
+
+=== NativeSearchQuery
+
+`NativeSearchQuery` is the class to use when you have a complex query, or a query that cannot be expressed by using the `Criteria` API, for example when building queries and using aggregates.
+It allows to use all the different `QueryBuilder` implementations from the Elasticsearch library therefore named "native".
+
+The following code shows how to search for persons with a given firstname and for the found documents have a terms aggregation that counts the number of occurences of the lastnames for these persons:
+
+====
+[source,java]
+----
+Query query = new NativeSearchQueryBuilder()
+    .addAggregation(terms("lastnames").field("lastname").size(10)) //
+    .withQuery(QueryBuilders.matchQuery("firstname", firstName))
+    .build();
+
+SearchHits<Person> searchHits = operations.search(query, Person.class);
+----
+====
+
 

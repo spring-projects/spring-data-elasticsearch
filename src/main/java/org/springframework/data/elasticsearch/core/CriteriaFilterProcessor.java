@@ -17,9 +17,11 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.springframework.data.elasticsearch.core.query.Criteria.*;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -47,66 +49,56 @@ import org.springframework.util.Assert;
  */
 class CriteriaFilterProcessor {
 
-	QueryBuilder createFilterFromCriteria(Criteria criteria) {
-		List<QueryBuilder> fbList = new LinkedList<>();
-		QueryBuilder filter = null;
+	@Nullable
+	QueryBuilder createFilter(Criteria criteria) {
+
+		List<QueryBuilder> filterBuilders = new ArrayList<>();
 
 		for (Criteria chainedCriteria : criteria.getCriteriaChain()) {
-			QueryBuilder fb = null;
+
 			if (chainedCriteria.isOr()) {
-				fb = QueryBuilders.boolQuery();
-				for (QueryBuilder f : createFilterFragmentForCriteria(chainedCriteria)) {
-					((BoolQueryBuilder) fb).should(f);
-				}
-				fbList.add(fb);
+				BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+				queriesForEntries(chainedCriteria).forEach(boolQuery::should);
+				filterBuilders.add(boolQuery);
 			} else if (chainedCriteria.isNegating()) {
 				List<QueryBuilder> negationFilters = buildNegationFilter(criteria.getField().getName(),
 						criteria.getFilterCriteriaEntries().iterator());
 
-				if (!negationFilters.isEmpty()) {
-					fbList.addAll(negationFilters);
-				}
+				filterBuilders.addAll(negationFilters);
 			} else {
-				fbList.addAll(createFilterFragmentForCriteria(chainedCriteria));
+				filterBuilders.addAll(queriesForEntries(chainedCriteria));
 			}
 		}
 
-		if (!fbList.isEmpty()) {
-			if (fbList.size() == 1) {
-				filter = fbList.get(0);
+		QueryBuilder filter = null;
+
+		if (!filterBuilders.isEmpty()) {
+
+			if (filterBuilders.size() == 1) {
+				filter = filterBuilders.get(0);
 			} else {
-				filter = QueryBuilders.boolQuery();
-				for (QueryBuilder f : fbList) {
-					((BoolQueryBuilder) filter).must(f);
-				}
+				BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+				filterBuilders.forEach(boolQuery::must);
+				filter = boolQuery;
 			}
 		}
+
 		return filter;
 	}
 
-	private List<QueryBuilder> createFilterFragmentForCriteria(Criteria chainedCriteria) {
-		Iterator<Criteria.CriteriaEntry> it = chainedCriteria.getFilterCriteriaEntries().iterator();
-		List<QueryBuilder> filterList = new LinkedList<>();
+	private List<QueryBuilder> queriesForEntries(Criteria criteria) {
 
-		String fieldName = chainedCriteria.getField().getName();
+		Assert.notNull(criteria.getField(), "criteria must have a field");
+		String fieldName = criteria.getField().getName();
 		Assert.notNull(fieldName, "Unknown field");
-		QueryBuilder filter = null;
 
-		while (it.hasNext()) {
-			Criteria.CriteriaEntry entry = it.next();
-			filter = processCriteriaEntry(entry.getKey(), entry.getValue(), fieldName);
-			filterList.add(filter);
-		}
-
-		return filterList;
+		return criteria.getFilterCriteriaEntries().stream()
+				.map(entry -> queryFor(entry.getKey(), entry.getValue(), fieldName)).collect(Collectors.toList());
 	}
 
 	@Nullable
-	private QueryBuilder processCriteriaEntry(OperationKey key, Object value, String fieldName) {
+	private QueryBuilder queryFor(OperationKey key, Object value, String fieldName) {
 
-		if (value == null) {
-			return null;
-		}
 		QueryBuilder filter = null;
 
 		switch (key) {
@@ -169,8 +161,7 @@ class CriteriaFilterProcessor {
 					// 2x text
 					twoParameterBBox((GeoBoundingBoxQueryBuilder) filter, valArray);
 				} else {
-					// error
-					Assert.isTrue(false,
+					throw new IllegalArgumentException(
 							"Geo distance filter takes a 1-elements array(GeoBox) or 2-elements array(GeoPoints or Strings(format lat,lon or geohash)).");
 				}
 				break;
@@ -208,8 +199,7 @@ class CriteriaFilterProcessor {
 
 		GeoBox geoBBox;
 		if (value instanceof Box) {
-			Box sdbox = (Box) value;
-			geoBBox = GeoBox.fromBox(sdbox);
+			geoBBox = GeoBox.fromBox((Box) value);
 		} else {
 			geoBBox = (GeoBox) value;
 		}
@@ -218,7 +208,7 @@ class CriteriaFilterProcessor {
 				geoBBox.getBottomRight().getLon());
 	}
 
-	private static boolean isType(Object[] array, Class clazz) {
+	private static boolean isType(Object[] array, Class<?> clazz) {
 		for (Object o : array) {
 			if (!clazz.isInstance(o)) {
 				return false;
@@ -247,7 +237,7 @@ class CriteriaFilterProcessor {
 		while (it.hasNext()) {
 			Criteria.CriteriaEntry criteriaEntry = it.next();
 			QueryBuilder notFilter = QueryBuilders.boolQuery()
-					.mustNot(processCriteriaEntry(criteriaEntry.getKey(), criteriaEntry.getValue(), fieldName));
+					.mustNot(queryFor(criteriaEntry.getKey(), criteriaEntry.getValue(), fieldName));
 			notFilterList.add(notFilter);
 		}
 

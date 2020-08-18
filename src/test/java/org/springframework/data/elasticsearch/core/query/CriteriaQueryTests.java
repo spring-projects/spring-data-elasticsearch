@@ -83,99 +83,72 @@ public class CriteriaQueryTests {
 		indexOperations.delete();
 	}
 
-	@Test
-	public void shouldPerformAndOperation() {
+	@Test // ,DATAES-706
+	public void shouldPerformAndOperationOnCriteriaEntries() {
 
 		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("some test message");
-		sampleEntity.setVersion(System.currentTimeMillis());
-
-		IndexQuery indexQuery = new IndexQuery();
-		indexQuery.setId(documentId);
-		indexQuery.setObject(sampleEntity);
-		operations.index(indexQuery, index);
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(nextIdAsString());
+		sampleEntity1.setMessage("some test message");
+		operations.save(sampleEntity1);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(nextIdAsString());
+		sampleEntity2.setMessage("some other message");
+		operations.save(sampleEntity2);
 		indexOperations.refresh();
+
+		// when
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").contains("test").and("message").contains("some"));
-
-		// when
-		SearchHit<SampleEntity> sampleEntity1 = operations.searchOne(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> searchHit = operations.searchOne(criteriaQuery, SampleEntity.class, index);
 
 		// then
-		assertThat(sampleEntity1).isNotNull();
+		assertThat(searchHit).isNotNull();
+		assertThat(searchHit.getId()).isEqualTo(sampleEntity1.id);
 	}
 
-	// @Ignore("DATAES-30")
-	@Test
-	public void shouldPerformOrOperation() {
+	@Test // ,DATAES-706
+	public void shouldPerformOrOperationOnCriteriaEntries() {
 
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<>();
-
-		// first document
-		String documentId = nextIdAsString();
 		SampleEntity sampleEntity1 = new SampleEntity();
-		sampleEntity1.setId(documentId);
-		sampleEntity1.setMessage("some message");
-		sampleEntity1.setVersion(System.currentTimeMillis());
-
-		IndexQuery indexQuery1 = new IndexQuery();
-		indexQuery1.setId(documentId);
-		indexQuery1.setObject(sampleEntity1);
-		indexQueries.add(indexQuery1);
-
-		// second document
-		String documentId2 = nextIdAsString();
+		sampleEntity1.setId(nextIdAsString());
+		sampleEntity1.setMessage("some test message");
+		operations.save(sampleEntity1);
 		SampleEntity sampleEntity2 = new SampleEntity();
-		sampleEntity2.setId(documentId2);
-		sampleEntity2.setMessage("test message");
-		sampleEntity2.setVersion(System.currentTimeMillis());
-
-		IndexQuery indexQuery2 = new IndexQuery();
-		indexQuery2.setId(documentId2);
-		indexQuery2.setObject(sampleEntity2);
-
-		indexQueries.add(indexQuery2);
-		operations.bulkIndex(indexQueries, index);
+		sampleEntity2.setId(nextIdAsString());
+		sampleEntity2.setMessage("some other message");
+		operations.save(sampleEntity2);
 		indexOperations.refresh();
-		CriteriaQuery criteriaQuery = new CriteriaQuery(
-				new Criteria("message").contains("some").or("message").contains("test"));
 
 		// when
+		CriteriaQuery criteriaQuery = new CriteriaQuery(
+				new Criteria("message").contains("test").or("message").contains("other"));
 		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(searchHits).isNotNull();
-		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
+		assertThat(searchHits.getSearchHits().stream().map(SearchHit::getId)).containsExactlyInAnyOrder(sampleEntity1.id,
+				sampleEntity2.id);
 	}
 
-	@Test
+	@Test // ,DATAES-706
 	public void shouldPerformAndOperationWithinCriteria() {
 
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<>();
-
-		// first document
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("some message");
-		sampleEntity.setVersion(System.currentTimeMillis());
-
-		IndexQuery indexQuery = new IndexQuery();
-		indexQuery.setId(documentId);
-		indexQuery.setObject(sampleEntity);
-		indexQueries.add(indexQuery);
-
-		operations.bulkIndex(indexQueries, index);
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(nextIdAsString());
+		sampleEntity1.setMessage("some test message");
+		operations.save(sampleEntity1);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(nextIdAsString());
+		sampleEntity2.setMessage("some other message");
+		operations.save(sampleEntity2);
 		indexOperations.refresh();
-		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria().and(new Criteria("message").contains("some")));
 
 		// when
-
+		CriteriaQuery criteriaQuery = new CriteriaQuery(
+				new Criteria("message").contains("test").and(new Criteria("message").contains("some")));
 		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
@@ -183,34 +156,29 @@ public class CriteriaQueryTests {
 		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
 
-	@Test
+	@Test // ,DATAES-706
 	public void shouldPerformOrOperationWithinCriteria() {
 
 		// given
-		List<IndexQuery> indexQueries = new ArrayList<>();
-
-		// first document
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("some message");
-		sampleEntity.setVersion(System.currentTimeMillis());
-
-		IndexQuery indexQuery = new IndexQuery();
-		indexQuery.setId(documentId);
-		indexQuery.setObject(sampleEntity);
-		indexQueries.add(indexQuery);
-
-		operations.bulkIndex(indexQueries, index);
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(nextIdAsString());
+		sampleEntity1.setMessage("some test message");
+		operations.save(sampleEntity1);
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(nextIdAsString());
+		sampleEntity2.setMessage("some other message");
+		operations.save(sampleEntity2);
 		indexOperations.refresh();
-		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria().or(new Criteria("message").contains("some")));
 
 		// when
+		CriteriaQuery criteriaQuery = new CriteriaQuery(
+				new Criteria("message").contains("test").or(new Criteria("message").contains("other")));
 		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
 		// then
 		assertThat(searchHits).isNotNull();
-		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
+		assertThat(searchHits.getSearchHits().stream().map(SearchHit::getId)).containsExactlyInAnyOrder(sampleEntity1.id,
+				sampleEntity2.id);
 	}
 
 	@Test
