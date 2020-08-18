@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.elasticsearch.action.DocWriteResponse;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -204,9 +206,9 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				.map(it -> {
 					T savedEntity = it.getT1();
 					IndexResponse indexResponse = it.getT2();
-					AdaptibleEntity<T> adaptableEntity = operations.forEntity(savedEntity, converter.getConversionService());
-					// noinspection ReactiveStreamsNullableInLambdaInTransform
-					return adaptableEntity.populateIdIfNecessary(indexResponse.getId());
+					return updateIndexedObject(savedEntity,
+							IndexedObjectInformation.of(indexResponse.getId(), indexResponse.getSeqNo(),
+									indexResponse.getPrimaryTerm(), indexResponse.getVersion()));
 				}).flatMap(saved -> maybeCallAfterSave(saved, index));
 	}
 
@@ -241,13 +243,40 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 								T savedEntity = entities.entityAt(indexAndResponse.getT1());
 								BulkItemResponse bulkItemResponse = indexAndResponse.getT2();
 
-								AdaptibleEntity<T> adaptibleEntity = operations.forEntity(savedEntity,
-										converter.getConversionService());
-								adaptibleEntity.populateIdIfNecessary(bulkItemResponse.getResponse().getId());
+								DocWriteResponse response = bulkItemResponse.getResponse();
+								updateIndexedObject(savedEntity,
+										IndexedObjectInformation.of(response.getId(), response.getSeqNo(),
+												response.getPrimaryTerm(), response.getVersion()));
 
 								return maybeCallAfterSave(savedEntity, index);
 							});
 				});
+	}
+
+	private <T> T updateIndexedObject(T entity, IndexedObjectInformation indexedObjectInformation) {
+		AdaptibleEntity<T> adaptibleEntity = operations.forEntity(entity, converter.getConversionService());
+		adaptibleEntity.populateIdIfNecessary(indexedObjectInformation.getId());
+
+		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
+		PersistentPropertyAccessor<Object> propertyAccessor = persistentEntity.getPropertyAccessor(entity);
+
+		if (indexedObjectInformation.getSeqNo() != null && indexedObjectInformation.getPrimaryTerm() != null
+				&& persistentEntity.hasSeqNoPrimaryTermProperty()) {
+			ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
+			propertyAccessor.setProperty(seqNoPrimaryTermProperty,
+					new SeqNoPrimaryTerm(indexedObjectInformation.getSeqNo(), indexedObjectInformation.getPrimaryTerm()));
+		}
+
+		if (indexedObjectInformation.getVersion() != null && persistentEntity.hasVersionProperty()) {
+			ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
+			propertyAccessor.setProperty(versionProperty, indexedObjectInformation.getVersion());
+		}
+
+		return entity;
+	}
+
+	private ElasticsearchPersistentEntity<?> getRequiredPersistentEntity(Class<?> clazz) {
+		return converter.getMappingContext().getRequiredPersistentEntity(clazz);
 	}
 
 	@Override

@@ -390,7 +390,9 @@ public class ReactiveElasticsearchTemplateTests {
 		template.search(query, SampleEntity.class) //
 				.map(SearchHit::getContent) //
 				.as(StepVerifier::create) //
-				.expectNext(shouldMatch) //
+				.assertNext(next -> {
+					assertThat(next.getMessage()).isEqualTo("test message");
+				}) //
 				.verifyComplete();
 	}
 
@@ -963,6 +965,36 @@ public class ReactiveElasticsearchTemplateTests {
 		template.save(forEdit).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 	}
 
+	@Test // DATAES-908
+	void shouldFillVersionOnSaveOne() {
+		VersionedEntity saved = template.save(new VersionedEntity()).block();
+
+		assertThat(saved.getVersion()).isNotNull();
+	}
+
+	@Test // DATAES-908
+	void shouldFillVersionOnSaveAll() {
+		VersionedEntity saved = template.saveAll(singletonList(new VersionedEntity()), VersionedEntity.class)
+				.blockLast();
+
+		assertThat(saved.getVersion()).isNotNull();
+	}
+
+	@Test // DATAES-908
+	void shouldFillSeqNoPrimaryTermOnSaveOne() {
+		OptimisticEntity saved = template.save(new OptimisticEntity()).block();
+
+		assertThatSeqNoPrimaryTermIsFilled(saved);
+	}
+
+	@Test // DATAES-908
+	void shouldFillSeqNoPrimaryTermOnSaveAll() {
+		OptimisticEntity saved = template.saveAll(singletonList(new OptimisticEntity()), OptimisticEntity.class)
+				.blockLast();
+
+		assertThatSeqNoPrimaryTermIsFilled(saved);
+	}
+
 	@Data
 	@Document(indexName = "marvel")
 	static class Person {
@@ -1049,6 +1081,13 @@ public class ReactiveElasticsearchTemplateTests {
 		@Id private String id;
 		private String message;
 		private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		@Version private Long version;
+	}
+
+	@Data
+	@Document(indexName = "test-index-reactive-versioned-entity-template")
+	static class VersionedEntity {
+		@Id private String id;
 		@Version private Long version;
 	}
 }
