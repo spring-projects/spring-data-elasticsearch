@@ -162,9 +162,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		// We should call this because we are not going through a mapper.
 		Object queryObject = query.getObject();
 		if (queryObject != null) {
-			updateIndexedObject(queryObject,
-					IndexedObjectInformation.of(documentId, response.getSeqNo(), response.getPrimaryTerm(),
-							response.getVersion()));
+			updateIndexedObject(queryObject, IndexedObjectInformation.of(documentId, response.getSeqNo(),
+					response.getPrimaryTerm(), response.getVersion()));
 		}
 
 		maybeCallbackAfterSaveWithQuery(query, index);

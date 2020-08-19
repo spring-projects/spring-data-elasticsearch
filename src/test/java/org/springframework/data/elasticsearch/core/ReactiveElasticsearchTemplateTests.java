@@ -974,8 +974,7 @@ public class ReactiveElasticsearchTemplateTests {
 
 	@Test // DATAES-908
 	void shouldFillVersionOnSaveAll() {
-		VersionedEntity saved = template.saveAll(singletonList(new VersionedEntity()), VersionedEntity.class)
-				.blockLast();
+		VersionedEntity saved = template.saveAll(singletonList(new VersionedEntity()), VersionedEntity.class).blockLast();
 
 		assertThat(saved.getVersion()).isNotNull();
 	}

@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.elasticsearch.action.DocWriteResponse;
-import org.springframework.data.mapping.PersistentPropertyAccessor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -27,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -75,6 +74,7 @@ import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.support.VersionInfo;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.http.HttpStatus;
@@ -206,9 +206,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				.map(it -> {
 					T savedEntity = it.getT1();
 					IndexResponse indexResponse = it.getT2();
-					return updateIndexedObject(savedEntity,
-							IndexedObjectInformation.of(indexResponse.getId(), indexResponse.getSeqNo(),
-									indexResponse.getPrimaryTerm(), indexResponse.getVersion()));
+					return updateIndexedObject(savedEntity, IndexedObjectInformation.of(indexResponse.getId(),
+							indexResponse.getSeqNo(), indexResponse.getPrimaryTerm(), indexResponse.getVersion()));
 				}).flatMap(saved -> maybeCallAfterSave(saved, index));
 	}
 
@@ -244,9 +243,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 								BulkItemResponse bulkItemResponse = indexAndResponse.getT2();
 
 								DocWriteResponse response = bulkItemResponse.getResponse();
-								updateIndexedObject(savedEntity,
-										IndexedObjectInformation.of(response.getId(), response.getSeqNo(),
-												response.getPrimaryTerm(), response.getVersion()));
+								updateIndexedObject(savedEntity, IndexedObjectInformation.of(response.getId(), response.getSeqNo(),
+										response.getPrimaryTerm(), response.getVersion()));
 
 								return maybeCallAfterSave(savedEntity, index);
 							});

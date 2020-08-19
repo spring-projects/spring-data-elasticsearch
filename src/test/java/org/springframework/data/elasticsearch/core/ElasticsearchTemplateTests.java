@@ -3469,10 +3469,10 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Test // DATAES-908
 	void shouldFillVersionOnSaveArray() {
-		VersionedEntity[] array = {new VersionedEntity(), new VersionedEntity()};
+		VersionedEntity[] array = { new VersionedEntity(), new VersionedEntity() };
 		Iterator<VersionedEntity> results = operations.save(array).iterator();
 		VersionedEntity saved1 = results.next();
-		VersionedEntity saved2= results.next();
+		VersionedEntity saved2 = results.next();
 
 		assertThat(saved1.getVersion()).isNotNull();
 		assertThat(saved2.getVersion()).isNotNull();
@@ -3490,7 +3490,7 @@ public abstract class ElasticsearchTemplateTests {
 	@Test // DATAES-908
 	void shouldFillVersionOnBulkIndex() {
 		VersionedEntity entity1 = new VersionedEntity();
-		VersionedEntity entity2= new VersionedEntity();
+		VersionedEntity entity2 = new VersionedEntity();
 		IndexQuery query1 = new IndexQueryBuilder().withObject(entity1).build();
 		IndexQuery query2 = new IndexQueryBuilder().withObject(entity2).build();
 		operations.bulkIndex(Arrays.asList(query1, query2), VersionedEntity.class);
