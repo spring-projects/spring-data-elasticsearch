@@ -63,16 +63,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.Criteria;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersion;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.util.StringUtils;
@@ -961,6 +952,29 @@ public class ReactiveElasticsearchTemplateTests {
 
 		forEdit.setMessage("It'll be ok");
 		template.save(forEdit).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+	}
+
+	@Test // DATAES-909
+	void shouldDoUpdate() {
+		SampleEntity entity = randomEntity("test message");
+		entity.rate = 1;
+		index(entity);
+
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.create();
+		document.put("message", "updated");
+		UpdateQuery updateQuery = UpdateQuery.builder(entity.getId()) //
+				.withDocument(document) //
+				.build();
+
+		UpdateResponse updateResponse = template.update(updateQuery, IndexCoordinates.of(DEFAULT_INDEX)).block();
+		assertThat(updateResponse).isNotNull();
+		assertThat(updateResponse.getResult()).isEqualTo(UpdateResponse.Result.UPDATED);
+
+		template.get(entity.getId(), SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+				.as(StepVerifier::create) //
+				.expectNextMatches(foundEntity -> foundEntity.getMessage().equals("updated")) //
+				.verifyComplete();
 	}
 
 	@Data

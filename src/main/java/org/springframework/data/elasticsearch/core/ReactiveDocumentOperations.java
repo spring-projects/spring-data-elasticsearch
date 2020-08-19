@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -34,6 +35,7 @@ import org.springframework.util.Assert;
  *
  * @author Peter-Josef Meisch
  * @author Aleksei Arsenev
+ * @author Roman Puchkovskiy
  * @since 4.0
  */
 public interface ReactiveDocumentOperations {
@@ -324,4 +326,14 @@ public interface ReactiveDocumentOperations {
 	 * @return a {@link Mono} emitting the number of the removed documents.
 	 */
 	Mono<Long> delete(Query query, Class<?> entityType, IndexCoordinates index);
+
+	/**
+	 * Partial update of the document.
+	 *
+	 * @param updateQuery query defining the update
+	 * @param index the index where to update the records
+	 * @return a {@link Mono} emitting the update response
+	 * @since 4.1
+	 */
+	Mono<UpdateResponse> update(UpdateQuery updateQuery, IndexCoordinates index);
 }
