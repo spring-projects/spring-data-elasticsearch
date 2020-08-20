@@ -977,8 +977,8 @@ public class ReactiveElasticsearchTemplateTests {
 				.as(StepVerifier::create) //
 				.expectNextMatches(foundEntity -> foundEntity.getMessage().equals("updated")) //
 				.verifyComplete();
-  }
-  
+	}
+
 	@Test // DATAES-908
 	void shouldFillVersionOnSaveOne() {
 		VersionedEntity saved = template.save(new VersionedEntity()).block();

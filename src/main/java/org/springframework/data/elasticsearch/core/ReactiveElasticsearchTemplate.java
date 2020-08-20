@@ -528,6 +528,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	@Override
 	public Mono<UpdateResponse> update(UpdateQuery updateQuery, IndexCoordinates index) {
+
 		Assert.notNull(updateQuery, "UpdateQuery must not be null");
 		Assert.notNull(index, "Index must not be null");
 

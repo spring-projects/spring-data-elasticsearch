@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -27,6 +26,7 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.util.Assert;
 
 /**
@@ -103,8 +103,8 @@ public interface ReactiveDocumentOperations {
 	}
 
 	/**
-	 * Index entities in the given {@literal index}. If the {@literal index} is
-	 * {@literal null} or empty the index name provided via entity metadata is used.
+	 * Index entities in the given {@literal index}. If the {@literal index} is {@literal null} or empty the index name
+	 * provided via entity metadata is used.
 	 *
 	 * @param entities must not be {@literal null}.
 	 * @param index the target index, must not be {@literal null}
@@ -129,8 +129,8 @@ public interface ReactiveDocumentOperations {
 	<T> Flux<T> saveAll(Mono<? extends Collection<? extends T>> entities, Class<T> clazz);
 
 	/**
-	 * Index entities in the given {@literal index}. If the {@literal index} is
-	 * {@literal null} or empty the index name provided via entity metadata is used.
+	 * Index entities in the given {@literal index}. If the {@literal index} is {@literal null} or empty the index name
+	 * provided via entity metadata is used.
 	 *
 	 * @param entities must not be {@literal null}.
 	 * @param index the target index, must not be {@literal null}
