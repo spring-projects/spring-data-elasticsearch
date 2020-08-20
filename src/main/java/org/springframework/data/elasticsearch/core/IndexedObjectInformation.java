@@ -21,32 +21,44 @@ import org.springframework.lang.Nullable;
  * Value class capturing information about a newly indexed document in Elasticsearch.
  *
  * @author Peter-Josef Meisch
+ * @author Roman Puchkovskiy
  * @since 4.1
  */
 public class IndexedObjectInformation {
 	private final String id;
 	@Nullable private final Long seqNo;
 	@Nullable private final Long primaryTerm;
+	@Nullable private final Long version;
 
-	private IndexedObjectInformation(String id, @Nullable Long seqNo, @Nullable Long primaryTerm) {
+	private IndexedObjectInformation(String id, @Nullable Long seqNo, @Nullable Long primaryTerm,
+			@Nullable Long version) {
 		this.id = id;
 		this.seqNo = seqNo;
 		this.primaryTerm = primaryTerm;
+		this.version = version;
 	}
 
-	public static IndexedObjectInformation of(String id, @Nullable Long seqNo, @Nullable Long primaryTerm) {
-		return new IndexedObjectInformation(id, seqNo, primaryTerm);
+	public static IndexedObjectInformation of(String id, @Nullable Long seqNo, @Nullable Long primaryTerm,
+			@Nullable Long version) {
+		return new IndexedObjectInformation(id, seqNo, primaryTerm, version);
 	}
 
 	public String getId() {
 		return id;
 	}
 
-	public long getSeqNo() {
+	@Nullable
+	public Long getSeqNo() {
 		return seqNo;
 	}
 
-	public long getPrimaryTerm() {
+	@Nullable
+	public Long getPrimaryTerm() {
 		return primaryTerm;
+	}
+
+	@Nullable
+	public Long getVersion() {
+		return version;
 	}
 }

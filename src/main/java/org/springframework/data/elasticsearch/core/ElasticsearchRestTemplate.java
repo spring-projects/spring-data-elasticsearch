@@ -148,8 +148,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		// We should call this because we are not going through a mapper.
 		Object queryObject = query.getObject();
 		if (queryObject != null) {
-			updateIndexedObject(queryObject,
-					IndexedObjectInformation.of(indexResponse.getId(), indexResponse.getSeqNo(), indexResponse.getPrimaryTerm()));
+			updateIndexedObject(queryObject, IndexedObjectInformation.of(indexResponse.getId(), indexResponse.getSeqNo(),
+					indexResponse.getPrimaryTerm(), indexResponse.getVersion()));
 		}
 
 		maybeCallbackAfterSaveWithQuery(query, index);
@@ -243,6 +243,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		BulkRequest bulkRequest = requestFactory.bulkRequest(queries, bulkOptions, index);
 		List<IndexedObjectInformation> indexedObjectInformations = checkForBulkOperationFailure(
 				execute(client -> client.bulk(bulkRequest, RequestOptions.DEFAULT)));
+		updateIndexedObjectsWithQueries(queries, indexedObjectInformations);
 		maybeCallbackAfterSaveWithQueries(queries, index);
 		return indexedObjectInformations;
 	}

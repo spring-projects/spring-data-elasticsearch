@@ -96,13 +96,10 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 		return query.addSort(sort);
 	}
 
-	private Criteria from(Part part, Criteria instance, Iterator<?> parameters) {
+	private Criteria from(Part part, Criteria criteria, Iterator<?> parameters) {
+
 		Part.Type type = part.getType();
 
-		Criteria criteria = instance;
-		if (criteria == null) {
-			criteria = new Criteria();
-		}
 		switch (type) {
 			case TRUE:
 				return criteria.is(true);

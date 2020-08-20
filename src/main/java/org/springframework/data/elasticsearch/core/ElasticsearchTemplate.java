@@ -162,8 +162,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		// We should call this because we are not going through a mapper.
 		Object queryObject = query.getObject();
 		if (queryObject != null) {
-			updateIndexedObject(queryObject,
-					IndexedObjectInformation.of(documentId, response.getSeqNo(), response.getPrimaryTerm()));
+			updateIndexedObject(queryObject, IndexedObjectInformation.of(documentId, response.getSeqNo(),
+					response.getPrimaryTerm(), response.getVersion()));
 		}
 
 		maybeCallbackAfterSaveWithQuery(query, index);
@@ -209,6 +209,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(bulkOptions, "BulkOptions must not be null");
 
 		List<IndexedObjectInformation> indexedObjectInformations = doBulkOperation(queries, bulkOptions, index);
+
+		updateIndexedObjectsWithQueries(queries, indexedObjectInformations);
 
 		maybeCallbackAfterSaveWithQueries(queries, index);
 

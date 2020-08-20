@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -3448,6 +3449,68 @@ public abstract class ElasticsearchTemplateTests {
 		return ((AbstractElasticsearchTemplate) operations).getRequestFactory();
 	}
 
+	@Test // DATAES-908
+	void shouldFillVersionOnSaveOne() {
+		VersionedEntity saved = operations.save(new VersionedEntity());
+
+		assertThat(saved.getVersion()).isNotNull();
+	}
+
+	@Test // DATAES-908
+	void shouldFillVersionOnSaveIterable() {
+		List<VersionedEntity> iterable = Arrays.asList(new VersionedEntity(), new VersionedEntity());
+		Iterator<VersionedEntity> results = operations.save(iterable).iterator();
+		VersionedEntity saved1 = results.next();
+		VersionedEntity saved2 = results.next();
+
+		assertThat(saved1.getVersion()).isNotNull();
+		assertThat(saved2.getVersion()).isNotNull();
+	}
+
+	@Test // DATAES-908
+	void shouldFillVersionOnSaveArray() {
+		VersionedEntity[] array = { new VersionedEntity(), new VersionedEntity() };
+		Iterator<VersionedEntity> results = operations.save(array).iterator();
+		VersionedEntity saved1 = results.next();
+		VersionedEntity saved2 = results.next();
+
+		assertThat(saved1.getVersion()).isNotNull();
+		assertThat(saved2.getVersion()).isNotNull();
+	}
+
+	@Test // DATAES-908
+	void shouldFillVersionOnIndexOne() {
+		VersionedEntity entity = new VersionedEntity();
+		IndexQuery query = new IndexQueryBuilder().withObject(entity).build();
+		operations.index(query, operations.getIndexCoordinatesFor(VersionedEntity.class));
+
+		assertThat(entity.getVersion()).isNotNull();
+	}
+
+	@Test // DATAES-908
+	void shouldFillVersionOnBulkIndex() {
+		VersionedEntity entity1 = new VersionedEntity();
+		VersionedEntity entity2 = new VersionedEntity();
+		IndexQuery query1 = new IndexQueryBuilder().withObject(entity1).build();
+		IndexQuery query2 = new IndexQueryBuilder().withObject(entity2).build();
+		operations.bulkIndex(Arrays.asList(query1, query2), VersionedEntity.class);
+
+		assertThat(entity1.getVersion()).isNotNull();
+		assertThat(entity2.getVersion()).isNotNull();
+	}
+
+	@Test // DATAES-908
+	void shouldFillSeqNoPrimaryKeyOnBulkIndex() {
+		OptimisticEntity entity1 = new OptimisticEntity();
+		OptimisticEntity entity2 = new OptimisticEntity();
+		IndexQuery query1 = new IndexQueryBuilder().withObject(entity1).build();
+		IndexQuery query2 = new IndexQueryBuilder().withObject(entity2).build();
+		operations.bulkIndex(Arrays.asList(query1, query2), OptimisticEntity.class);
+
+		assertThatSeqNoPrimaryTermIsFilled(entity1);
+		assertThatSeqNoPrimaryTermIsFilled(entity2);
+	}
+
 	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor
@@ -3622,6 +3685,13 @@ public abstract class ElasticsearchTemplateTests {
 		@Id private String id;
 		private String message;
 		private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		@Version private Long version;
+	}
+
+	@Data
+	@Document(indexName = "test-index-versioned-entity-template")
+	static class VersionedEntity {
+		@Id private String id;
 		@Version private Long version;
 	}
 

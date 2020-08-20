@@ -493,9 +493,10 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		return Stream.of(bulkResponse.getItems()).map(bulkItemResponse -> {
 			DocWriteResponse response = bulkItemResponse.getResponse();
 			if (response != null) {
-				return IndexedObjectInformation.of(response.getId(), response.getSeqNo(), response.getPrimaryTerm());
+				return IndexedObjectInformation.of(response.getId(), response.getSeqNo(), response.getPrimaryTerm(),
+						response.getVersion());
 			} else {
-				return IndexedObjectInformation.of(bulkItemResponse.getId(), null, null);
+				return IndexedObjectInformation.of(bulkItemResponse.getId(), null, null, null);
 			}
 
 		}).collect(Collectors.toList());
@@ -511,10 +512,16 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			propertyAccessor.setProperty(idProperty, indexedObjectInformation.getId());
 		}
 
-		if (persistentEntity.hasSeqNoPrimaryTermProperty()) {
+		if (indexedObjectInformation.getSeqNo() != null && indexedObjectInformation.getPrimaryTerm() != null
+				&& persistentEntity.hasSeqNoPrimaryTermProperty()) {
 			ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
 			propertyAccessor.setProperty(seqNoPrimaryTermProperty,
 					new SeqNoPrimaryTerm(indexedObjectInformation.getSeqNo(), indexedObjectInformation.getPrimaryTerm()));
+		}
+
+		if (indexedObjectInformation.getVersion() != null && persistentEntity.hasVersionProperty()) {
+			ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
+			propertyAccessor.setProperty(versionProperty, indexedObjectInformation.getVersion());
 		}
 	}
 
@@ -661,6 +668,20 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	// endregion
+
+	protected void updateIndexedObjectsWithQueries(List<?> queries,
+			List<IndexedObjectInformation> indexedObjectInformations) {
+		for (int i = 0; i < queries.size(); i++) {
+			Object query = queries.get(i);
+			if (query instanceof IndexQuery) {
+				IndexQuery indexQuery = (IndexQuery) query;
+				Object queryObject = indexQuery.getObject();
+				if (queryObject != null) {
+					updateIndexedObject(queryObject, indexedObjectInformations.get(i));
+				}
+			}
+		}
+	}
 
 	// region Document callbacks
 	protected interface DocumentCallback<T> {
