@@ -38,6 +38,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
@@ -73,6 +74,7 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
@@ -522,6 +524,18 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		Assert.notNull(query, "Query must not be null!");
 
 		return doDeleteBy(query, entityType, index).map(BulkByScrollResponse::getDeleted).publishNext();
+	}
+
+	@Override
+	public Mono<UpdateResponse> update(UpdateQuery updateQuery, IndexCoordinates index) {
+		Assert.notNull(updateQuery, "UpdateQuery must not be null");
+		Assert.notNull(index, "Index must not be null");
+
+		return Mono.defer(() -> {
+			UpdateRequest request = requestFactory.updateRequest(updateQuery, index);
+			return Mono.from(execute(client -> client.update(request)))
+					.map(response -> new UpdateResponse(UpdateResponse.Result.valueOf(response.getResult().name())));
+		});
 	}
 
 	@Override
