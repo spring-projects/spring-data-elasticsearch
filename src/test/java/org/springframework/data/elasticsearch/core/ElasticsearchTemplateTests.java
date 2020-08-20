@@ -44,7 +44,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.util.Lists;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.IndicesOptions;
@@ -61,6 +63,7 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -3509,6 +3512,97 @@ public abstract class ElasticsearchTemplateTests {
 
 		assertThatSeqNoPrimaryTermIsFilled(entity1);
 		assertThatSeqNoPrimaryTermIsFilled(entity2);
+	}
+
+	@Test // DATAES-907
+	@DisplayName("should track_total_hits with default value")
+	void shouldTrackTotalHitsWithDefaultValue() {
+
+		NativeSearchQuery queryAll = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		operations.delete(queryAll, SampleEntity.class);
+
+		List<SampleEntity> entities = IntStream.rangeClosed(1, 15_000)
+				.mapToObj(i -> SampleEntity.builder().id("" + i).build()).collect(Collectors.toList());
+
+		operations.save(entities);
+		indexOperations.refresh();
+
+		queryAll.setTrackTotalHits(null);
+		SearchHits<SampleEntity> searchHits = operations.search(queryAll, SampleEntity.class);
+
+		SoftAssertions softly = new SoftAssertions();
+		softly.assertThat(searchHits.getTotalHits()).isEqualTo((long) RequestFactory.INDEX_MAX_RESULT_WINDOW);
+		softly.assertThat(searchHits.getTotalHitsRelation()).isEqualTo(TotalHitsRelation.GREATER_THAN_OR_EQUAL_TO);
+		softly.assertAll();
+	}
+
+	@Test // DATAES-907
+	@DisplayName("should track total hits")
+	void shouldTrackTotalHits() {
+
+		NativeSearchQuery queryAll = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		operations.delete(queryAll, SampleEntity.class);
+
+		List<SampleEntity> entities = IntStream.rangeClosed(1, 15_000)
+				.mapToObj(i -> SampleEntity.builder().id("" + i).build()).collect(Collectors.toList());
+
+		operations.save(entities);
+		indexOperations.refresh();
+
+		queryAll.setTrackTotalHits(true);
+		queryAll.setTrackTotalHitsUpTo(12_345);
+		SearchHits<SampleEntity> searchHits = operations.search(queryAll, SampleEntity.class);
+
+		SoftAssertions softly = new SoftAssertions();
+		softly.assertThat(searchHits.getTotalHits()).isEqualTo(15_000L);
+		softly.assertThat(searchHits.getTotalHitsRelation()).isEqualTo(TotalHitsRelation.EQUAL_TO);
+		softly.assertAll();
+	}
+
+	@Test // DATAES-907
+	@DisplayName("should track total hits to specific value")
+	void shouldTrackTotalHitsToSpecificValue() {
+
+		NativeSearchQuery queryAll = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		operations.delete(queryAll, SampleEntity.class);
+
+		List<SampleEntity> entities = IntStream.rangeClosed(1, 15_000)
+				.mapToObj(i -> SampleEntity.builder().id("" + i).build()).collect(Collectors.toList());
+
+		operations.save(entities);
+		indexOperations.refresh();
+
+		queryAll.setTrackTotalHits(null);
+		queryAll.setTrackTotalHitsUpTo(12_345);
+		SearchHits<SampleEntity> searchHits = operations.search(queryAll, SampleEntity.class);
+
+		SoftAssertions softly = new SoftAssertions();
+		softly.assertThat(searchHits.getTotalHits()).isEqualTo(12_345L);
+		softly.assertThat(searchHits.getTotalHitsRelation()).isEqualTo(TotalHitsRelation.GREATER_THAN_OR_EQUAL_TO);
+		softly.assertAll();
+	}
+
+	@Test
+	@DisplayName("should track total hits is off")
+	void shouldTrackTotalHitsIsOff() {
+
+		NativeSearchQuery queryAll = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		operations.delete(queryAll, SampleEntity.class);
+
+		List<SampleEntity> entities = IntStream.rangeClosed(1, 15_000)
+				.mapToObj(i -> SampleEntity.builder().id("" + i).build()).collect(Collectors.toList());
+
+		operations.save(entities);
+		indexOperations.refresh();
+
+		queryAll.setTrackTotalHits(false);
+		queryAll.setTrackTotalHitsUpTo(12_345);
+		SearchHits<SampleEntity> searchHits = operations.search(queryAll, SampleEntity.class);
+
+		SoftAssertions softly = new SoftAssertions();
+		softly.assertThat(searchHits.getTotalHits()).isEqualTo(10_000L);
+		softly.assertThat(searchHits.getTotalHitsRelation()).isEqualTo(TotalHitsRelation.OFF);
+		softly.assertAll();
 	}
 
 	@Data

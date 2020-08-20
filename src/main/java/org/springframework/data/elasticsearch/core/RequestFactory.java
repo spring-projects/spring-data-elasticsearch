@@ -1152,8 +1152,10 @@ class RequestFactory {
 
 		}
 
-		if (query.getTrackTotalHits()) {
+		if (query.getTrackTotalHits() != null) {
 			sourceBuilder.trackTotalHits(query.getTrackTotalHits());
+		} else if (query.getTrackTotalHitsUpTo() != null) {
+			sourceBuilder.trackTotalHitsUpTo(query.getTrackTotalHitsUpTo());
 		}
 
 		if (StringUtils.hasLength(query.getRoute())) {
@@ -1225,8 +1227,10 @@ class RequestFactory {
 			prepareNativeSearch(searchRequestBuilder, (NativeSearchQuery) query);
 		}
 
-		if (query.getTrackTotalHits()) {
+		if (query.getTrackTotalHits() != null) {
 			searchRequestBuilder.setTrackTotalHits(query.getTrackTotalHits());
+		} else if (query.getTrackTotalHitsUpTo() != null) {
+			searchRequestBuilder.setTrackTotalHitsUpTo(query.getTrackTotalHitsUpTo());
 		}
 
 		if (StringUtils.hasLength(query.getRoute())) {

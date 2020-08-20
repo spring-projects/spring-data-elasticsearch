@@ -32,6 +32,7 @@ import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.unit.TimeValue;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
@@ -59,6 +60,7 @@ import org.springframework.test.context.ContextConfiguration;
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
+@DisplayName("ElasticsearchRestTemplate")
 public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 
 	@Test
