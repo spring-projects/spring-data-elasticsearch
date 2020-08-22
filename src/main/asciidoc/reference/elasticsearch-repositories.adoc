@@ -26,6 +26,13 @@ class Book {
 ----
 ====
 
+[[elasticsearch.repositories.autocreation]]
+== Automatic creation of indices with the corresponding mapping
+
+The `@Document` annotation has an argument `createIndex`. If this argument is set to true - which is the default value  - Spring Data Elasticsearch will during bootstrapping the repository support on application startup check if the index defined by the `@Document` annotation exists.
+
+If it does not exist, the index will be created and the mappings derived from the entity's annotations (see <<elasticsearch.mapping>>) will be written to the newly created index.
+
 include::elasticsearch-repository-queries.adoc[leveloffset=+1]
 
 include::reactive-elasticsearch-repositories.adoc[leveloffset=+1]
