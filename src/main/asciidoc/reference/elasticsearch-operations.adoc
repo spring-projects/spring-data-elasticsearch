@@ -17,6 +17,18 @@ The default implementations of the interfaces offer:
 * A rich query and criteria api.
 * Resource management and Exception translation.
 
+[NOTE]
+====
+.Index management and automatic creation of indices and mappings.
+
+The `IndexOperations` interface and the provided implementation which can be obtained from an `ElasticsearchOperations` instance - for example with a call to `operations.indexOps(clazz)`- give the user the ability to create indices, put mappings or store template and alias information in the Elasticsearch cluster.
+
+**None of these operations are done automatically** by the implementations of `IndexOperations` or `ElasticsearchOperations`. It is the user's responsibility to call the methods.
+
+There is support for automatic creation of indices and writing the mappings when using Spring Data Elasticsearch repositories, see <<elasticsearch.repositories.autocreation>>
+
+====
+
 [[elasticsearch.operations.template]]
 == ElasticsearchTemplate
 

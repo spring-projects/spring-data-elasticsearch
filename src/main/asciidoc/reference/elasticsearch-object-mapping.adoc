@@ -34,7 +34,7 @@ The following annotations are available:
 ** `replicas`: the number of replicas for the index.
 ** `refreshIntervall`: Refresh interval for the index. Used for index creation. Default value is _"1s"_.
 ** `indexStoreType`:  Index storage type for the index. Used for index creation. Default value is _"fs"_.
-** `createIndex`: Configuration whether to create an index on repository bootstrapping. Default value is _true_.
+** `createIndex`: flag whether to create an index on repository bootstrapping. Default value is _true_. See <<elasticsearch.repositories.autocreation>>
 ** `versionType`: Configuration of version management. Default value is _EXTERNAL_.
 
 * `@Id`: Applied at the field level to mark the field used for identity purpose.
