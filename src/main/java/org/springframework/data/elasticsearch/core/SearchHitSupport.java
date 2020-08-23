@@ -48,7 +48,8 @@ public final class SearchHitSupport {
 	 * @return a corresponding object where the SearchHits are replaced by their content if possible, otherwise the
 	 *         original object
 	 */
-	public static Object unwrapSearchHits(Object result) {
+	@Nullable
+	public static Object unwrapSearchHits(@Nullable Object result) {
 
 		if (result == null) {
 			return result;
