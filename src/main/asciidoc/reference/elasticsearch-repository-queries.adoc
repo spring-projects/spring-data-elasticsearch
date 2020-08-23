@@ -48,7 +48,9 @@ A list of supported keywords for Elasticsearch is shown below.
 |===
 | Keyword
 | Sample
-| Elasticsearch Query String| `And`
+| Elasticsearch Query String
+
+| `And`
 | `findByNameAndPrice`
 | `{ "query" : {
 "bool" : {
@@ -201,7 +203,7 @@ A list of supported keywords for Elasticsearch is shown below.
   }
 }}`
 
-| `In`
+| `In` (when annotated as FieldType.Keyword)
 | `findByNameIn(Collection<String>names)`
 | `{ "query" : {
 "bool" : {
@@ -215,7 +217,12 @@ A list of supported keywords for Elasticsearch is shown below.
   }
 }}`
 
-| `NotIn`
+
+| `In`
+| `findByNameIn(Collection<String>names)`
+| `{ "query": {"bool": {"must": [{"query_string":{"query": "\"?\" \"?\"", "fields": ["name"]}}]}}}`
+
+| `NotIn`  (when annotated as FieldType.Keyword)
 | `findByNameNotIn(Collection<String>names)`
 | `{ "query" : {
 "bool" : {
@@ -228,6 +235,10 @@ A list of supported keywords for Elasticsearch is shown below.
     ]
   }
 }}`
+
+| `NotIn`
+| `findByNameNotIn(Collection<String>names)`
+| `{"query": {"bool": {"must": [{"query_string": {"query": "NOT(\"?\" \"?\")", "fields": ["name"]}}]}}}`
 
 | `Near`
 | `findByStoreNear`

@@ -360,7 +360,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 	}
 
 	@Test // DATAES-647
-	public void shouldHandleManyValuesQueryingIn() {
+	public void shouldHandleManyKeywordValuesQueryingIn() {
 
 		// given
 		String documentId1 = nextIdAsString();
@@ -378,7 +378,8 @@ public abstract class CustomMethodRepositoryBaseTests {
 		List<String> keywords = new ArrayList<>();
 		keywords.add("foo");
 
-		for (int i = 0; i < 1025; i++) {
+		// limit for normal query clauses is 1024, for keywords we change to terms queries
+		for (int i = 0; i < 1200; i++) {
 			keywords.add(nextIdAsString());
 		}
 
@@ -391,7 +392,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 	}
 
 	@Test // DATAES-647
-	public void shouldHandleManyValuesQueryingNotIn() {
+	public void shouldHandleManyKeywordValuesQueryingNotIn() {
 
 		// given
 		String documentId1 = nextIdAsString();
@@ -409,7 +410,8 @@ public abstract class CustomMethodRepositoryBaseTests {
 		List<String> keywords = new ArrayList<>();
 		keywords.add("foo");
 
-		for (int i = 0; i < 1025; i++) {
+		// limit for normal query clauses is 1024, for keywords we change to terms queries
+		for (int i = 0; i < 1200; i++) {
 			keywords.add(nextIdAsString());
 		}
 
@@ -419,6 +421,46 @@ public abstract class CustomMethodRepositoryBaseTests {
 		// then
 		assertThat(list).hasSize(1);
 		assertThat(list.get(0).getId()).isEqualTo(documentId2);
+	}
+
+	@Test // DATAES-912
+	void shouldHandleTextFieldQueryingIn() {
+		String documentId1 = nextIdAsString();
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(documentId1);
+		sampleEntity1.setMessage("foo");
+		repository.save(sampleEntity1);
+
+		String documentId2 = nextIdAsString();
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setMessage("bar");
+		repository.save(sampleEntity2);
+
+		List<SampleEntity> list = repository.findByMessageIn(Arrays.asList("Foo", "Bar"));
+
+		assertThat(list).hasSize(2);
+		assertThat(list.stream().map(SampleEntity::getId)).containsExactlyInAnyOrder(documentId1, documentId2);
+	}
+
+	@Test // DATAES-912
+	void shouldHandleTextFieldQueryingNotIn() {
+		String documentId1 = nextIdAsString();
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(documentId1);
+		sampleEntity1.setMessage("foo");
+		repository.save(sampleEntity1);
+
+		String documentId2 = nextIdAsString();
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId2);
+		sampleEntity2.setMessage("bar");
+		repository.save(sampleEntity2);
+
+		List<SampleEntity> list = repository.findByMessageNotIn(Arrays.asList("Boo", "Bar"));
+
+		assertThat(list).hasSize(1);
+		assertThat(list.get(0).getId()).isEqualTo(documentId1);
 	}
 
 	@Test
@@ -1621,6 +1663,10 @@ public abstract class CustomMethodRepositoryBaseTests {
 		List<SampleEntity> findByKeywordIn(List<String> keywords);
 
 		List<SampleEntity> findByKeywordNotIn(List<String> keywords);
+
+		List<SampleEntity> findByMessageIn(List<String> keywords);
+
+		List<SampleEntity> findByMessageNotIn(List<String> keywords);
 
 		Page<SampleEntity> findByIdNotIn(List<String> ids, Pageable pageable);
 

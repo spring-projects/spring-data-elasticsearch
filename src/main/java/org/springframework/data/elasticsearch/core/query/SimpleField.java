@@ -15,10 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * The most trivial implementation of a Field. The {@link #name} is updateable, so it may be changed during query
+ * The most trivial implementation of a Field. The {@link #name} is updatable, so it may be changed during query
  * preparation by the {@link org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter}.
  *
  * @author Rizwan Idrees
@@ -28,6 +30,7 @@ import org.springframework.util.Assert;
 public class SimpleField implements Field {
 
 	private String name;
+	@Nullable private FieldType fieldType;
 
 	public SimpleField(String name) {
 
@@ -47,6 +50,17 @@ public class SimpleField implements Field {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public void setFieldType(FieldType fieldType) {
+		this.fieldType = fieldType;
+	}
+
+	@Nullable
+	@Override
+	public FieldType getFieldType() {
+		return fieldType;
 	}
 
 	@Override

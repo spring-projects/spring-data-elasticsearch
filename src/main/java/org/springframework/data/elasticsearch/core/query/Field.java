@@ -15,6 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.lang.Nullable;
+
 /**
  * Defines a Field that can be used within a Criteria.
  *
@@ -27,4 +30,15 @@ public interface Field {
 	void setName(String name);
 
 	String getName();
+
+	/**
+	 * @param fieldType sets the field's type
+	 */
+	void setFieldType(FieldType fieldType);
+
+	/**
+	 * @return The annotated FieldType of the field
+	 */
+	@Nullable
+	FieldType getFieldType();
 }
