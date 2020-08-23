@@ -15,10 +15,14 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import java.util.Collections;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.SearchHitsImpl;
+import org.springframework.data.elasticsearch.core.TotalHitsRelation;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -28,6 +32,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.StreamUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -74,6 +79,7 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		Object result = null;
 
 		if (tree.isLimiting()) {
+			// noinspection ConstantConditions
 			query.setMaxResults(tree.getMaxResults());
 		}
 
@@ -100,12 +106,19 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 
 			if (accessor.getPageable().isUnpaged()) {
 				int itemCount = (int) elasticsearchOperations.count(query, clazz, index);
-				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
+
+				if (itemCount == 0) {
+					result = new SearchHitsImpl<>(0, TotalHitsRelation.EQUAL_TO, Float.NaN, null, Collections.emptyList(), null);
+				} else {
+					query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
+				}
 			} else {
 				query.setPageable(accessor.getPageable());
 			}
 
-			result = elasticsearchOperations.search(query, clazz, index);
+			if (result == null) {
+				result = elasticsearchOperations.search(query, clazz, index);
+			}
 
 		} else if (tree.isCountProjection()) {
 			result = elasticsearchOperations.count(query, clazz, index);
@@ -116,6 +129,7 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		return queryMethod.isNotSearchHitMethod() ? SearchHitSupport.unwrapSearchHits(result) : result;
 	}
 
+	@Nullable
 	private Object countOrGetDocumentsForDelete(CriteriaQuery query, ParametersParameterAccessor accessor) {
 
 		Object result = null;
