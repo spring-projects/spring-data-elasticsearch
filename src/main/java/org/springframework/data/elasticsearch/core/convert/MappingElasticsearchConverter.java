@@ -50,6 +50,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.Field;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
@@ -94,7 +95,7 @@ public class MappingElasticsearchConverter
 
 	private final ElasticsearchTypeMapper typeMapper;
 
-	private ConcurrentHashMap<String, Integer> propertyWarnings = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Integer> propertyWarnings = new ConcurrentHashMap<>();
 
 	public MappingElasticsearchConverter(
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
@@ -579,13 +580,13 @@ public class MappingElasticsearchConverter
 		}
 
 		if (property.isEntity() || !isSimpleType(value)) {
-			return writeEntity(value, property, typeHint);
+			return writeEntity(value, property);
 		}
 
 		return value;
 	}
 
-	private Object writeEntity(Object value, ElasticsearchPersistentProperty property, TypeInformation<?> typeHint) {
+	private Object writeEntity(Object value, ElasticsearchPersistentProperty property) {
 
 		Document target = Document.create();
 		writeEntity(mappingContext.getRequiredPersistentEntity(value.getClass()), value, target,
@@ -769,11 +770,17 @@ public class MappingElasticsearchConverter
 	}
 
 	private void updateCriteria(Criteria criteria, ElasticsearchPersistentEntity<?> persistentEntity) {
-		String name = criteria.getField().getName();
+		Field field = criteria.getField();
+
+		if (field == null) {
+			return;
+		}
+
+		String name = field.getName();
 		ElasticsearchPersistentProperty property = persistentEntity.getPersistentProperty(name);
 
 		if (property != null && property.getName().equals(name)) {
-			criteria.getField().setName(property.getFieldName());
+			field.setName(property.getFieldName());
 
 			if (property.hasPropertyConverter()) {
 				ElasticsearchPersistentPropertyConverter propertyConverter = property.getPropertyConverter();
@@ -788,6 +795,12 @@ public class MappingElasticsearchConverter
 						criteriaEntry.setValue(propertyConverter.write(value));
 					}
 				});
+			}
+
+			org.springframework.data.elasticsearch.annotations.Field fieldAnnotation = property.findAnnotation(org.springframework.data.elasticsearch.annotations.Field.class);
+
+			if (fieldAnnotation != null) {
+				field.setFieldType(fieldAnnotation.type());
 			}
 		}
 

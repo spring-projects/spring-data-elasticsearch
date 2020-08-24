@@ -197,14 +197,22 @@ class ElasticsearchPartQueryTests {
 
 		String query = getQueryBuilder(methodName, parameterClasses, parameters);
 
-		String expected = "{\"query\": {" + //
-				"  \"bool\" : {" + //
-				"    \"must\" : [" + //
-				"      {\"bool\" : {\"must\" : [{\"terms\" : {\"name\" : [\"" + names.get(0) + "\", \"" + names.get(1)
-				+ "\"]}}]}}" + //
-				"    ]" + //
-				"  }" + //
-				"}}"; //
+		String expected = "{\n" + //
+				"  \"query\": {\n" + //
+				"    \"bool\": {\n" + //
+				"      \"must\": [\n" + //
+				"        {\n" + //
+				"          \"query_string\": {\n" + //
+				"            \"query\": \"\\\"Title\\\" \\\"Title2\\\"\",\n" + //
+				"            \"fields\": [\n" + //
+				"              \"name^1.0\"\n" + //
+				"            ]\n" + //
+				"          }\n" + //
+				"        }\n" + //
+				"      ]\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
 
 		assertEquals(expected, query, false);
 	}
@@ -220,14 +228,22 @@ class ElasticsearchPartQueryTests {
 
 		String query = getQueryBuilder(methodName, parameterClasses, parameters);
 
-		String expected = "{\"query\": {" + //
-				"  \"bool\" : {" + //
-				"    \"must\" : [" + //
-				"      {\"bool\" : {\"must_not\" : [{\"terms\" : {\"name\" : [\"" + names.get(0) + "\", \"" + names.get(1)
-				+ "\"]}}]}}" + //
-				"    ]" + //
-				"  }" + //
-				"}}"; //
+		String expected = "{\n" + //
+				"  \"query\": {\n" + //
+				"    \"bool\": {\n" + //
+				"      \"must\": [\n" + //
+				"        {\n" + //
+				"          \"query_string\": {\n" + //
+				"            \"query\": \"NOT(\\\"Title\\\" \\\"Title2\\\")\",\n" + //
+				"            \"fields\": [\n" + //
+				"              \"name^1.0\"\n" + //
+				"            ]\n" + //
+				"          }\n" + //
+				"        }\n" + //
+				"      ]\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
 
 		assertEquals(expected, query, false);
 	}

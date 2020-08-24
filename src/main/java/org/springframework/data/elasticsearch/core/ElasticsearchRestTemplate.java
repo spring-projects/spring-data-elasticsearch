@@ -92,8 +92,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
 
-	private RestHighLevelClient client;
-	private ElasticsearchExceptionTranslator exceptionTranslator;
+	private final RestHighLevelClient client;
+	private final ElasticsearchExceptionTranslator exceptionTranslator;
 
 	// region Initialization
 	public ElasticsearchRestTemplate(RestHighLevelClient client) {
@@ -241,11 +241,11 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 			IndexCoordinates index) {
 		maybeCallbackBeforeConvertWithQueries(queries, index);
 		BulkRequest bulkRequest = requestFactory.bulkRequest(queries, bulkOptions, index);
-		List<IndexedObjectInformation> indexedObjectInformations = checkForBulkOperationFailure(
+		List<IndexedObjectInformation> indexedObjectInformationList = checkForBulkOperationFailure(
 				execute(client -> client.bulk(bulkRequest, RequestOptions.DEFAULT)));
-		updateIndexedObjectsWithQueries(queries, indexedObjectInformations);
+		updateIndexedObjectsWithQueries(queries, indexedObjectInformationList);
 		maybeCallbackAfterSaveWithQueries(queries, index);
-		return indexedObjectInformations;
+		return indexedObjectInformationList;
 	}
 	// endregion
 
