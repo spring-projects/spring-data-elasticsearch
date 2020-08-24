@@ -48,6 +48,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.Field;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
@@ -753,11 +754,12 @@ public class MappingElasticsearchConverter
 
 		if (persistentEntity != null) {
 			criteriaQuery.getCriteria().getCriteriaChain().forEach(criteria -> {
-				String name = criteria.getField().getName();
+				Field field = criteria.getField();
+				String name = field.getName();
 				ElasticsearchPersistentProperty property = persistentEntity.getPersistentProperty(name);
 
 				if (property != null && property.getName().equals(name)) {
-					criteria.getField().setName(property.getFieldName());
+					field.setName(property.getFieldName());
 
 					if (property.hasPropertyConverter()) {
 						ElasticsearchPersistentPropertyConverter propertyConverter = property.getPropertyConverter();
@@ -773,6 +775,13 @@ public class MappingElasticsearchConverter
 							}
 						});
 					}
+
+					org.springframework.data.elasticsearch.annotations.Field fieldAnnotation = property.findAnnotation(org.springframework.data.elasticsearch.annotations.Field.class);
+
+					if (fieldAnnotation != null) {
+						field.setFieldType(fieldAnnotation.type());
+					}
+
 				}
 			});
 		}

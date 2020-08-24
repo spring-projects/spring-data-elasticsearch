@@ -15,10 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * The most trivial implementation of a Field
+ * The most trivial implementation of a Field. The {@link #name} is updatable, so it may be changed during query
+ * preparation by the {@link org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter}.
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -27,27 +30,41 @@ import org.springframework.util.Assert;
 public class SimpleField implements Field {
 
 	private String name;
+	@Nullable private FieldType fieldType;
 
 	public SimpleField(String name) {
-		Assert.notNull(name, "name must not be null");
+
+		Assert.hasText(name, "name must not be null");
 
 		this.name = name;
 	}
 
 	@Override
 	public void setName(String name) {
-		Assert.notNull(name, "name must not be null");
+
+		Assert.hasText(name, "name must not be null");
 
 		this.name = name;
 	}
 
 	@Override
 	public String getName() {
-		return this.name;
+		return name;
+	}
+
+	@Override
+	public void setFieldType(FieldType fieldType) {
+		this.fieldType = fieldType;
+	}
+
+	@Nullable
+	@Override
+	public FieldType getFieldType() {
+		return fieldType;
 	}
 
 	@Override
 	public String toString() {
-		return this.name;
+		return getName();
 	}
 }

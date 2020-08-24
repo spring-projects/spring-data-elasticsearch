@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,32 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core.query;
+package org.springframework.data.elasticsearch.utils;
 
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.lang.Nullable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Defines a Field that can be used within a Criteria.
- *
- * @author Rizwan Idrees
- * @author Mohsin Husen
+ * Class to provide sequential IDs. Uses an integer, 2^31 -1 values should be enough for the test runs.
+ * 
  * @author Peter-Josef Meisch
  */
-public interface Field {
+public final class IdGenerator {
 
-	void setName(String name);
+	private static final AtomicInteger NEXT = new AtomicInteger();
 
-	String getName();
+	private IdGenerator() {}
 
-	/**
-	 * @param fieldType sets the field's type
-	 */
-	void setFieldType(FieldType fieldType);
+	public static int nextIdAsInt() {
+		return NEXT.incrementAndGet();
+	}
 
-	/**
-	 * @return The annotated FieldType of the field
-	 */
-	@Nullable
-	FieldType getFieldType();
+	public static double nextIdAsDouble() {
+		return NEXT.incrementAndGet();
+	}
+	public static String nextIdAsString() {
+		return "" + nextIdAsInt();
+	}
 }
