@@ -26,13 +26,12 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
+import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -46,14 +45,9 @@ import org.springframework.test.context.ContextConfiguration;
 public class ReactiveElasticsearchRepositoriesRegistrarTests {
 
 	@Configuration
+	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class })
 	@EnableReactiveElasticsearchRepositories(considerNestedRepositories = true)
-	static class Config {
-
-		@Bean
-		public ReactiveElasticsearchTemplate reactiveElasticsearchTemplate() {
-			return new ReactiveElasticsearchTemplate(TestUtils.reactiveClient());
-		}
-	}
+	static class Config {}
 
 	@Autowired ReactiveSampleEntityRepository repository;
 	@Autowired ApplicationContext context;
@@ -72,8 +66,7 @@ public class ReactiveElasticsearchRepositoriesRegistrarTests {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	@Document(indexName = "test-index-sample-reactive-repositories-registrar",
-			replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-reactive-repositories-registrar", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 
 		@Id private String id;

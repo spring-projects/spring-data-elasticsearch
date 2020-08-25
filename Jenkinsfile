@@ -24,12 +24,16 @@ pipeline {
 					image 'adoptopenjdk/openjdk8:latest'
 					label 'data'
 					args '-v $HOME:/tmp/jenkins-home'
+					args '-u root -v /var/run/docker.sock:/var/run/docker.sock'
 				}
 			}
 			options { timeout(time: 30, unit: 'MINUTES') }
 			steps {
+			    sh 'mkdir -p /tmp/jenkins-home'
+            	sh 'chown -R 1001:1001 .'
 				sh 'rm -rf ?'
 				sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Dsort -U -B'
+            	sh 'chown -R 1001:1001 .'
 			}
 		}
 
@@ -47,12 +51,16 @@ pipeline {
 							image 'adoptopenjdk/openjdk11:latest'
 							label 'data'
 							args '-v $HOME:/tmp/jenkins-home'
+        					args '-u root -v /var/run/docker.sock:/var/run/docker.sock'
 						}
 					}
 					options { timeout(time: 30, unit: 'MINUTES') }
 					steps {
+                        sh 'mkdir -p /tmp/jenkins-home'
+                        sh 'chown -R 1001:1001 .'
 						sh 'rm -rf ?'
 						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pjava11 clean dependency:list test -Dsort -U -B'
+                        sh 'chown -R 1001:1001 .'
 					}
 				}
 
@@ -62,12 +70,16 @@ pipeline {
 							image 'adoptopenjdk/openjdk12:latest'
 							label 'data'
 							args '-v $HOME:/tmp/jenkins-home'
+        					args '-u root -v /var/run/docker.sock:/var/run/docker.sock'
 						}
 					}
 					options { timeout(time: 30, unit: 'MINUTES') }
 					steps {
+                        sh 'mkdir -p /tmp/jenkins-home'
+                        sh 'chown -R 1001:1001 .'
 						sh 'rm -rf ?'
 						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pjava11 clean dependency:list test -Dsort -U -B'
+                        sh 'chown -R 1001:1001 .'
 					}
 				}
 			}

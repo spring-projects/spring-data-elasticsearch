@@ -15,7 +15,14 @@
  */
 package org.springframework.data.elasticsearch.junit.jupiter;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
@@ -32,8 +39,14 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 public class ElasticsearchTemplateConfiguration extends ElasticsearchConfigurationSupport {
 
 	@Bean
-	public Client elasticsearchClient(ClusterConnectionInfo clusterConnectionInfo) {
-		return clusterConnectionInfo.getClient();
+	public Client elasticsearchClient(ClusterConnectionInfo clusterConnectionInfo) throws UnknownHostException {
+
+		Settings settings = Settings.builder().put("cluster.name", clusterConnectionInfo.getClusterName()).build();
+		TransportClient client = new PreBuiltTransportClient(settings);
+		client.addTransportAddress(new TransportAddress(InetAddress.getByName(clusterConnectionInfo.getHost()),
+				clusterConnectionInfo.getTransportPort()));
+
+		return client;
 	}
 
 	@Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })

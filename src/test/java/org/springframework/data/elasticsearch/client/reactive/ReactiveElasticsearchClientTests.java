@@ -18,9 +18,9 @@ package org.springframework.data.elasticsearch.client.reactive;
 import static org.assertj.core.api.Assertions.*;
 
 import lombok.SneakyThrows;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,11 +39,6 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -58,13 +53,17 @@ import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.elasticsearch.TestUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersion;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
+import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.http.HttpHeaders;
-import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -76,21 +75,27 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Thomas Geese
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
+@ContextConfiguration(classes = { ReactiveElasticsearchClientTests.Config.class })
 public class ReactiveElasticsearchClientTests {
+
+	@Configuration
+	static class Config extends ReactiveElasticsearchRestTemplateConfiguration {
+		@Override
+		@Bean
+		public ReactiveElasticsearchClient reactiveElasticsearchClient() {
+			return super.reactiveElasticsearchClient();
+		}
+	}
 
 	static final String INDEX_I = "idx-1-reactive-client-tests";
 	static final String INDEX_II = "idx-2-reactive-client-tests";
-
-	static final String TYPE_I = "doc-type-1";
-	static final String TYPE_II = "doc-type-2";
 
 	// must be <String, Object> and not <String, String>, otherwise UpdateRequest.doc() will use the overload with
 	// (Object...)
 	static final Map<String, Object> DOC_SOURCE;
 
-	RestHighLevelClient syncClient;
-	ReactiveElasticsearchClient client;
+	@Autowired ReactiveElasticsearchClient client;
+	@Autowired ReactiveElasticsearchOperations operations;
 
 	static {
 
@@ -103,19 +108,14 @@ public class ReactiveElasticsearchClientTests {
 
 	@BeforeEach
 	public void setUp() {
-
-		syncClient = TestUtils.restHighLevelClient();
-		client = TestUtils.reactiveClient();
-
-		TestUtils.deleteIndex(INDEX_I, INDEX_II);
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).delete().block();
+		operations.indexOps(IndexCoordinates.of(INDEX_II)).delete().block();
 	}
 
 	@AfterEach
-	public void after() throws IOException {
-
-		TestUtils.deleteIndex(INDEX_I, INDEX_II);
-
-		syncClient.close();
+	public void after() {
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).delete().block();
+		operations.indexOps(IndexCoordinates.of(INDEX_II)).delete().block();
 	}
 
 	@Test // DATAES-488
@@ -157,7 +157,7 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void getShouldFetchDocumentById() {
 
-		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		String id = addSourceDocument().to(INDEX_I);
 
 		client.get(new GetRequest(INDEX_I, id)) //
 				.as(StepVerifier::create) //
@@ -172,7 +172,7 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void getShouldCompleteForNonExistingDocuments() {
 
-		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		addSourceDocument().to(INDEX_I);
 
 		String id = "this-one-does-not-exist";
 		client.get(new GetRequest(INDEX_I, id)) //
@@ -183,8 +183,8 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void multiGetShouldReturnAllDocumentsFromSameCollection() {
 
-		String id1 = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
-		String id2 = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		String id1 = addSourceDocument().to(INDEX_I);
+		String id2 = addSourceDocument().to(INDEX_I);
 
 		MultiGetRequest request = new MultiGetRequest() //
 				.add(INDEX_I, id1) //
@@ -200,8 +200,8 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void multiGetShouldReturnAllExistingDocumentsFromSameCollection() {
 
-		String id1 = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
-		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		String id1 = addSourceDocument().to(INDEX_I);
+		addSourceDocument().to(INDEX_I);
 
 		MultiGetRequest request = new MultiGetRequest() //
 				.add(INDEX_I, id1) //
@@ -216,8 +216,8 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void multiGetShouldSkipNonExistingDocuments() {
 
-		String id1 = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
-		String id2 = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		String id1 = addSourceDocument().to(INDEX_I);
+		String id2 = addSourceDocument().to(INDEX_I);
 
 		MultiGetRequest request = new MultiGetRequest() //
 				.add(INDEX_I, id1) //
@@ -234,8 +234,8 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void multiGetShouldCompleteIfNothingFound() {
 
-		String id1 = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
-		String id2 = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		String id1 = addSourceDocument().to(INDEX_I);
+		String id2 = addSourceDocument().to(INDEX_I);
 
 		client.multiGet(new MultiGetRequest() //
 				.add(INDEX_II, id1).add(INDEX_II, id2)) //
@@ -246,8 +246,8 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void multiGetShouldReturnAllExistingDocumentsFromDifferentCollection() {
 
-		String id1 = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
-		String id2 = addSourceDocument().ofType(TYPE_II).to(INDEX_II);
+		String id1 = addSourceDocument().to(INDEX_I);
+		String id2 = addSourceDocument().to(INDEX_II);
 
 		MultiGetRequest request = new MultiGetRequest() //
 				.add(INDEX_I, id1) //
@@ -263,7 +263,7 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void existsReturnsTrueForExistingDocuments() {
 
-		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		String id = addSourceDocument().to(INDEX_I);
 
 		client.exists(new GetRequest(INDEX_I, id)) //
 				.as(StepVerifier::create) //
@@ -274,7 +274,7 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void existsReturnsFalseForNonExistingDocuments() {
 
-		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		String id = addSourceDocument().to(INDEX_I);
 
 		client.exists(new GetRequest(INDEX_II, id)) //
 				.as(StepVerifier::create) //
@@ -285,7 +285,7 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void indexShouldAddDocument() {
 
-		IndexRequest request = indexRequest(DOC_SOURCE, INDEX_I, TYPE_I);
+		IndexRequest request = indexRequest();
 
 		client.index(request) //
 				.as(StepVerifier::create) //
@@ -300,9 +300,9 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void indexShouldErrorForExistingDocuments() {
 
-		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		String id = addSourceDocument().to(INDEX_I);
 
-		IndexRequest request = indexRequest(DOC_SOURCE, INDEX_I, TYPE_I)//
+		IndexRequest request = indexRequest()//
 				.id(id);
 
 		client.index(request) //
@@ -331,7 +331,7 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void updateShouldUpdateExistingDocument() {
 
-		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		String id = addSourceDocument().to(INDEX_I);
 
 		UpdateRequest request = new UpdateRequest(INDEX_I, id) //
 				.doc(Collections.singletonMap("dutiful", "farseer"));
@@ -362,7 +362,7 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void deleteShouldRemoveExistingDocument() {
 
-		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		String id = addSourceDocument().to(INDEX_I);
 
 		DeleteRequest request = new DeleteRequest(INDEX_I, id);
 
@@ -375,7 +375,7 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void deleteShouldReturnNotFoundForNonExistingDocument() {
 
-		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		addSourceDocument().to(INDEX_I);
 
 		DeleteRequest request = new DeleteRequest(INDEX_I, "this-one-does-not-exist");
 
@@ -388,8 +388,8 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-488
 	public void searchShouldFindExistingDocuments() {
 
-		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
-		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		addSourceDocument().to(INDEX_I);
+		addSourceDocument().to(INDEX_I);
 
 		SearchRequest request = new SearchRequest(INDEX_I) //
 				.source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery()));
@@ -401,9 +401,9 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-488
-	public void searchShouldCompleteIfNothingFound() throws IOException {
+	public void searchShouldCompleteIfNothingFound() {
 
-		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
 		SearchRequest request = new SearchRequest(INDEX_I) //
 				.source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery()));
@@ -414,10 +414,9 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-488
-	@ElasticsearchVersion(asOf = "6.5.0")
 	public void deleteByShouldRemoveExistingDocument() {
 
-		String id = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		String id = addSourceDocument().to(INDEX_I);
 
 		DeleteByQueryRequest request = new DeleteByQueryRequest(INDEX_I) //
 				.setQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("_id", id)));
@@ -430,10 +429,9 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-488
-	@ElasticsearchVersion(asOf = "6.5.0")
 	public void deleteByEmitResultWhenNothingRemoved() {
 
-		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		addSourceDocument().to(INDEX_I);
 
 		DeleteByQueryRequest request = new DeleteByQueryRequest(INDEX_I) //
 				.setQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("_id", "it-was-not-me")));
@@ -448,7 +446,7 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-510
 	public void scrollShouldReadWhileEndNotReached() {
 
-		IntStream.range(0, 100).forEach(it -> add(Collections.singletonMap(it + "-foo", "bar")).ofType(TYPE_I).to(INDEX_I));
+		IntStream.range(0, 100).forEach(it -> add(Collections.singletonMap(it + "-foo", "bar")).to(INDEX_I));
 
 		SearchRequest request = new SearchRequest(INDEX_I) //
 				.source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery()));
@@ -464,7 +462,7 @@ public class ReactiveElasticsearchClientTests {
 	@Test // DATAES-510
 	public void scrollShouldReadWhileTakeNotReached() {
 
-		IntStream.range(0, 100).forEach(it -> add(Collections.singletonMap(it + "-foo", "bar")).ofType(TYPE_I).to(INDEX_I));
+		IntStream.range(0, 100).forEach(it -> add(Collections.singletonMap(it + "-foo", "bar")).to(INDEX_I));
 
 		SearchRequest request = new SearchRequest(INDEX_I) //
 				.source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery()));
@@ -479,9 +477,9 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-569
-	public void indexExistsShouldReturnTrueIfSo() throws IOException {
+	public void indexExistsShouldReturnTrueIfSo() {
 
-		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
 		client.indices().existsIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
@@ -490,9 +488,9 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-569
-	public void indexExistsShouldReturnFalseIfNot() throws IOException {
+	public void indexExistsShouldReturnFalseIfNot() {
 
-		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
 		client.indices().existsIndex(request -> request.indices(INDEX_II)) //
 				.as(StepVerifier::create) //
@@ -501,20 +499,23 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-569, DATAES-678
-	public void createIndex() throws IOException {
+	public void createIndex() {
 
 		client.indices().createIndex(request -> request.index(INDEX_I)) //
 				.as(StepVerifier::create) //
 				.expectNext(true) //
 				.verifyComplete();
 
-		assertThat(syncClient.indices().exists(new GetIndexRequest(INDEX_I), RequestOptions.DEFAULT)).isTrue();
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).exists() //
+				.as(StepVerifier::create) //
+				.expectNext(true) //
+				.verifyComplete();
 	}
 
 	@Test // DATAES-569
-	public void createExistingIndexErrors() throws IOException {
+	public void createExistingIndexErrors() {
 
-		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
 		client.indices().createIndex(request -> request.index(INDEX_I)) //
 				.as(StepVerifier::create) //
@@ -522,16 +523,20 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-569, DATAES-678
-	public void deleteExistingIndex() throws IOException {
+	public void deleteExistingIndex() {
 
-		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
 		client.indices().deleteIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
 				.expectNext(true) //
 				.verifyComplete();
 
-		assertThat(syncClient.indices().exists(new GetIndexRequest(INDEX_I), RequestOptions.DEFAULT)).isFalse();
+		operations.indexOps(IndexCoordinates.of(INDEX_I)) //
+				.exists() //
+				.as(StepVerifier::create) //
+				.expectNext(false) //
+				.verifyComplete();
 	}
 
 	@Test // DATAES-569, DATAES-767
@@ -543,9 +548,9 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-569
-	public void openExistingIndex() throws IOException {
+	public void openExistingIndex() {
 
-		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
 		client.indices().openIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
@@ -561,9 +566,9 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-569
-	public void closeExistingIndex() throws IOException {
+	public void closeExistingIndex() {
 
-		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
 		client.indices().openIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
@@ -579,9 +584,9 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-569
-	public void refreshIndex() throws IOException {
+	public void refreshIndex() {
 
-		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
 		client.indices().refreshIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
@@ -597,14 +602,14 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-569
-	public void updateMapping() throws IOException {
+	public void updateMapping() {
 
-		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
 		Map<String, Object> jsonMap = Collections.singletonMap("properties",
 				Collections.singletonMap("message", Collections.singletonMap("type", "text")));
 
-		client.indices().updateMapping(request -> request.indices(INDEX_I).type(TYPE_I).source(jsonMap)) //
+		client.indices().updateMapping(request -> request.indices(INDEX_I).source(jsonMap)) //
 				.as(StepVerifier::create) //
 				.expectNext(true) //
 				.verifyComplete();
@@ -616,15 +621,15 @@ public class ReactiveElasticsearchClientTests {
 		Map<String, Object> jsonMap = Collections.singletonMap("properties",
 				Collections.singletonMap("message", Collections.singletonMap("type", "text")));
 
-		client.indices().updateMapping(request -> request.indices(INDEX_I).type(TYPE_I).source(jsonMap)) //
+		client.indices().updateMapping(request -> request.indices(INDEX_I).source(jsonMap)) //
 				.as(StepVerifier::create) //
 				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-569
-	public void flushIndex() throws IOException {
+	public void flushIndex() {
 
-		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
 		client.indices().flushIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
@@ -641,8 +646,8 @@ public class ReactiveElasticsearchClientTests {
 
 	@Test // DATAES-684
 	public void bulkShouldUpdateExistingDocument() {
-		String idFirstDoc = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
-		String idSecondDoc = addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		String idFirstDoc = addSourceDocument().to(INDEX_I);
+		String idSecondDoc = addSourceDocument().to(INDEX_I);
 
 		UpdateRequest requestFirstDoc = new UpdateRequest(INDEX_I, idFirstDoc) //
 				.doc(Collections.singletonMap("dutiful", "farseer"));
@@ -666,13 +671,15 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-567
-	public void aggregateReturnsAggregationResults() throws IOException {
-		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+	public void aggregateReturnsAggregationResults() {
+		ReactiveIndexOperations indexOps = operations.indexOps(IndexCoordinates.of(INDEX_I));
+		indexOps.create().block();
+
 		Map<String, Object> jsonMap = Collections.singletonMap("properties",
 				Collections.singletonMap("firstname", Collections.singletonMap("type", "keyword")));
-		syncClient.indices().putMapping(new PutMappingRequest(INDEX_I).source(jsonMap), RequestOptions.DEFAULT);
+		indexOps.putMapping(Mono.just(Document.from(jsonMap))).block();
 
-		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		addSourceDocument().to(INDEX_I);
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder().query(QueryBuilders.matchAllQuery());
 		searchSourceBuilder.aggregation(AggregationBuilders.terms("terms").field("firstname"));
@@ -685,13 +692,14 @@ public class ReactiveElasticsearchClientTests {
 	}
 
 	@Test // DATAES-866
-	public void suggestReturnsSuggestionResults() throws IOException {
-		syncClient.indices().create(new CreateIndexRequest(INDEX_I), RequestOptions.DEFAULT);
+	public void suggestReturnsSuggestionResults() {
+		ReactiveIndexOperations indexOps = operations.indexOps(IndexCoordinates.of(INDEX_I));
+		indexOps.create().block();
 		Map<String, Object> jsonMap = Collections.singletonMap("properties",
 				Collections.singletonMap("firstname", Collections.singletonMap("type", "completion")));
-		syncClient.indices().putMapping(new PutMappingRequest(INDEX_I).source(jsonMap), RequestOptions.DEFAULT);
+		indexOps.putMapping(Mono.just(Document.from(jsonMap))).block();
 
-		addSourceDocument().ofType(TYPE_I).to(INDEX_I);
+		addSourceDocument().to(INDEX_I);
 
 		SuggestBuilder suggestBuilder = new SuggestBuilder().addSuggestion("firstname",
 				new CompletionSuggestionBuilder("firstname").prefix("ch"));
@@ -708,55 +716,43 @@ public class ReactiveElasticsearchClientTests {
 				.verifyComplete();
 	}
 
-	private AddToIndexOfType addSourceDocument() {
+	private AddToIndex addSourceDocument() {
 		return add(DOC_SOURCE);
 	}
 
-	private AddToIndexOfType add(Map<String, ?> source) {
+	private AddToIndex add(Map<String, ?> source) {
 		return new AddDocument(source);
 	}
 
-	private IndexRequest indexRequest(Map source, String index, String type) {
+	private IndexRequest indexRequest() {
 
-		return new IndexRequest(index) //
+		return new IndexRequest(ReactiveElasticsearchClientTests.INDEX_I) //
 				.id(UUID.randomUUID().toString()) //
-				.source(source) //
+				.source(ReactiveElasticsearchClientTests.DOC_SOURCE) //
 				.setRefreshPolicy(RefreshPolicy.IMMEDIATE) //
 				.create(true);
 	}
 
 	@SneakyThrows
-	private String doIndex(Map<?, ?> source, String index, String type) {
-		return syncClient.index(indexRequest(source, index, type), RequestOptions.DEFAULT).getId();
-	}
-
-	interface AddToIndexOfType extends AddToIndex {
-		AddToIndex ofType(String type);
+	private String doIndex(Map<String, ?> source, String index) {
+		return operations.save(source, IndexCoordinates.of(index)).block().get("id").toString();
 	}
 
 	interface AddToIndex {
 		String to(String index);
 	}
 
-	class AddDocument implements AddToIndexOfType {
+	class AddDocument implements AddToIndex {
 
 		Map<String, ?> source;
-		@Nullable String type;
 
 		AddDocument(Map<String, ?> source) {
 			this.source = source;
 		}
 
 		@Override
-		public AddToIndex ofType(String type) {
-
-			this.type = type;
-			return this;
-		}
-
-		@Override
 		public String to(String index) {
-			return doIndex(new LinkedHashMap<>(source), index, type);
+			return doIndex(new LinkedHashMap<>(source), index);
 		}
 	}
 

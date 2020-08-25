@@ -15,42 +15,44 @@
  */
 package org.springframework.data.elasticsearch.junit.jupiter;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeValidationException;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.elasticsearch.Utils;
+import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
+import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 /**
- * This class manages the connection to an Elasticsearch Cluster, starting a local one if necessary. The information
- * about the ClusterConnection is stored both as a variable in the instance for direct access from JUnit 5 and in a
- * static ThreadLocal<ClusterConnectionInfo> accessible with the {@link ClusterConnection#clusterConnectionInfo()}
- * method to be integrated in the Spring setup
+ * This class manages the connection to an Elasticsearch Cluster, starting a containerized one if necessary. The
+ * information about the ClusterConnection is stored both as a variable in the instance for direct access from JUnit 5
+ * and in a static ThreadLocal<ClusterConnectionInfo> accessible with the
+ * {@link ClusterConnection#clusterConnectionInfo()} method to be integrated in the Spring setup
  *
  * @author Peter-Josef Meisch
  */
-class ClusterConnection implements ExtensionContext.Store.CloseableResource {
+public class ClusterConnection implements ExtensionContext.Store.CloseableResource {
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(ClusterConnection.class);
+
+	private static final int ELASTICSEARCH_DEFAULT_PORT = 9200;
+	private static final int ELASTICSEARCH_DEFAULT_TRANSPORT_PORT = 9300;
+	private static final String ELASTICSEARCH_DEFAULT_IMAGE = "docker.elastic.co/elasticsearch/elasticsearch";
 
 	private static final ThreadLocal<ClusterConnectionInfo> clusterConnectionInfoThreadLocal = new ThreadLocal<>();
 
-	private Node node;
-	private final ClusterConnectionInfo clusterConnectionInfo;
+	@Nullable private final ClusterConnectionInfo clusterConnectionInfo;
 
 	/**
-	 * creates the ClusterConnection, starting a local node if necessary.
+	 * creates the ClusterConnection, starting a container if necessary.
 	 *
 	 * @param clusterUrl if null or empty a local cluster is tarted
 	 */
 	public ClusterConnection(@Nullable String clusterUrl) {
-		clusterConnectionInfo = StringUtils.isEmpty(clusterUrl) ? startLocalNode() : parseUrl(clusterUrl);
+		clusterConnectionInfo = StringUtils.isEmpty(clusterUrl) ? startElasticsearchContainer() : parseUrl(clusterUrl);
 
 		if (clusterConnectionInfo != null) {
 			LOGGER.debug(clusterConnectionInfo.toString());
@@ -68,6 +70,7 @@ class ClusterConnection implements ExtensionContext.Store.CloseableResource {
 		return clusterConnectionInfoThreadLocal.get();
 	}
 
+	@Nullable
 	public ClusterConnectionInfo getClusterConnectionInfo() {
 		return clusterConnectionInfo;
 	}
@@ -94,18 +97,27 @@ class ClusterConnection implements ExtensionContext.Store.CloseableResource {
 
 	}
 
-	private @Nullable ClusterConnectionInfo startLocalNode() {
-		LOGGER.debug("starting local node");
+	@Nullable
+	private ClusterConnectionInfo startElasticsearchContainer() {
+
+		LOGGER.debug("Starting Elasticsearch Container");
 
 		try {
-			node = Utils.getNode();
-			node.start();
+			String elasticsearchVersion = VersionInfo.versionProperties()
+					.getProperty(VersionInfo.VERSION_ELASTICSEARCH_CLIENT);
+
+			String dockerImageName = ELASTICSEARCH_DEFAULT_IMAGE + ':' + elasticsearchVersion;
+			LOGGER.debug("Docker image: {}", dockerImageName);
+			ElasticsearchContainer elasticsearchContainer = new ElasticsearchContainer(dockerImageName);
+			elasticsearchContainer.start();
 			return ClusterConnectionInfo.builder() //
-					.withHostAndPort("localhost", 9200) //
-					.withClient(node.client()) //
+					.withHostAndPort(elasticsearchContainer.getHost(),
+							elasticsearchContainer.getMappedPort(ELASTICSEARCH_DEFAULT_PORT)) //
+					.withTransportPort(elasticsearchContainer.getMappedPort(ELASTICSEARCH_DEFAULT_TRANSPORT_PORT)) //
+					.withElasticsearchContainer(elasticsearchContainer) //
 					.build();
-		} catch (NodeValidationException e) {
-			LOGGER.error("could not start local node", e);
+		} catch (Exception e) {
+			LOGGER.error("Could not start Elasticsearch container", e);
 		}
 
 		return null;
@@ -114,12 +126,11 @@ class ClusterConnection implements ExtensionContext.Store.CloseableResource {
 	@Override
 	public void close() {
 
-		if (node != null) {
-			LOGGER.debug("closing node");
-			try {
-				node.close();
-			} catch (IOException ignored) {}
+		if (clusterConnectionInfo != null && clusterConnectionInfo.getElasticsearchContainer() != null) {
+			LOGGER.debug("Stopping container");
+			clusterConnectionInfo.getElasticsearchContainer().stop();
 		}
+
 		LOGGER.debug("closed");
 	}
 }

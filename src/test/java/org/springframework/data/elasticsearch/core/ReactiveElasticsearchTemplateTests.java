@@ -28,6 +28,7 @@ import lombok.NoArgsConstructor;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.lang.Boolean;
 import java.lang.Long;
 import java.lang.Object;
 import java.net.ConnectException;
@@ -49,6 +50,9 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
@@ -56,7 +60,6 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.TestUtils;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -64,7 +67,7 @@ import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
-import org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersion;
+import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.util.StringUtils;
 
@@ -83,25 +86,26 @@ import org.springframework.util.StringUtils;
 @SpringIntegrationTest
 public class ReactiveElasticsearchTemplateTests {
 
+	@Configuration
+	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class })
+	static class Config {}
+
 	static final String DEFAULT_INDEX = "reactive-template-test-index";
 	static final String ALTERNATE_INDEX = "reactive-template-tests-alternate-index";
 
-	private ElasticsearchRestTemplate restTemplate;
-	private ReactiveElasticsearchTemplate template;
-	private IndexOperations indexOperations;
+	@Autowired private ReactiveElasticsearchTemplate template;
+	private ReactiveIndexOperations indexOperations;
 
 	@BeforeEach
 	public void setUp() {
-		restTemplate = new ElasticsearchRestTemplate(TestUtils.restHighLevelClient());
-		indexOperations = restTemplate.indexOps(SampleEntity.class);
+		indexOperations = template.indexOps(SampleEntity.class);
 
 		deleteIndices();
 
-		indexOperations.create();
-		indexOperations.putMapping(SampleEntity.class);
-		indexOperations.refresh();
-
-		template = new ReactiveElasticsearchTemplate(TestUtils.reactiveClient(), restTemplate.getElasticsearchConverter());
+		indexOperations.create() //
+				.then(indexOperations.putMapping(SampleEntity.class)) //
+				.then(indexOperations.refresh()) //
+				.block(); //
 	}
 
 	@AfterEach
@@ -110,9 +114,13 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	private void deleteIndices() {
-		TestUtils.deleteIndex(DEFAULT_INDEX, ALTERNATE_INDEX, "rx-template-test-index-this", "rx-template-test-index-that",
-				"test-index-reactive-optimistic-entity-template",
-				"test-index-reactive-optimistic-and-versioned-entity-template");
+		template.indexOps(IndexCoordinates.of(DEFAULT_INDEX)).delete().block();
+		template.indexOps(IndexCoordinates.of(ALTERNATE_INDEX)).delete().block();
+		template.indexOps(IndexCoordinates.of("rx-template-test-index-this")).delete().block();
+		template.indexOps(IndexCoordinates.of("rx-template-test-index-that")).delete().block();
+		template.indexOps(IndexCoordinates.of("test-index-reactive-optimistic-entity-template")).delete().block();
+		template.indexOps(IndexCoordinates.of("test-index-reactive-optimistic-and-versioned-entity-template")).delete()
+				.block();
 	}
 
 	@Test // DATAES-504
@@ -147,10 +155,12 @@ public class ReactiveElasticsearchTemplateTests {
 
 		indexOperations.refresh();
 
-		SearchHits<SampleEntity> result = restTemplate.search(
-				new CriteriaQuery(Criteria.where("message").is(sampleEntity.getMessage())), SampleEntity.class,
-				IndexCoordinates.of(DEFAULT_INDEX));
-		assertThat(result).hasSize(1);
+		template
+				.search(new CriteriaQuery(Criteria.where("message").is(sampleEntity.getMessage())), SampleEntity.class,
+						IndexCoordinates.of(DEFAULT_INDEX)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
 	}
 
 	@Test // DATAES-504
@@ -159,15 +169,15 @@ public class ReactiveElasticsearchTemplateTests {
 		SampleEntity sampleEntity = SampleEntity.builder().message("wohoo").build();
 
 		template.save(sampleEntity) //
-				.as(StepVerifier::create) //
-				.consumeNextWith(it -> {
-
-					assertThat(it.getId()).isNotNull();
-
-					indexOperations.refresh();
-					assertThat(TestUtils.documentWithId(it.getId()).existsIn(DEFAULT_INDEX)).isTrue();
-				}) //
+				.map(SampleEntity::getId) //
+				.flatMap(id -> indexOperations.refresh().thenReturn(id)) //
+				.flatMap(id -> documentWithIdExistsInIndex(id, DEFAULT_INDEX)).as(StepVerifier::create) //
+				.expectNext(true) //
 				.verifyComplete();
+	}
+
+	private Mono<Boolean> documentWithIdExistsInIndex(String id, String index) {
+		return template.exists(id, IndexCoordinates.of(index));
 	}
 
 	@Test // DATAES-504
@@ -181,11 +191,11 @@ public class ReactiveElasticsearchTemplateTests {
 				.expectNextCount(1)//
 				.verifyComplete();
 
-		restTemplate.refresh(IndexCoordinates.of(DEFAULT_INDEX));
-		restTemplate.refresh(alternateIndex);
+		template.indexOps(IndexCoordinates.of(DEFAULT_INDEX)).refresh().block();
+		template.indexOps(alternateIndex).refresh().block();
 
-		assertThat(TestUtils.documentWithId(sampleEntity.getId()).existsIn(DEFAULT_INDEX)).isFalse();
-		assertThat(TestUtils.documentWithId(sampleEntity.getId()).existsIn(ALTERNATE_INDEX)).isTrue();
+		assertThat(documentWithIdExistsInIndex(sampleEntity.getId(), DEFAULT_INDEX).block()).isFalse();
+		assertThat(documentWithIdExistsInIndex(sampleEntity.getId(), ALTERNATE_INDEX).block()).isTrue();
 	}
 
 	@Test // DATAES-504
@@ -266,16 +276,14 @@ public class ReactiveElasticsearchTemplateTests {
 
 		SampleEntity sampleEntity = randomEntity("some message");
 
-		IndexQuery indexQuery = getIndexQuery(sampleEntity);
-
 		IndexCoordinates defaultIndex = IndexCoordinates.of(DEFAULT_INDEX);
 		IndexCoordinates alternateIndex = IndexCoordinates.of(ALTERNATE_INDEX);
 
-		restTemplate.index(indexQuery, alternateIndex);
-		indexOperations.refresh();
-
-		restTemplate.indexOps(defaultIndex).refresh();
-		restTemplate.indexOps(alternateIndex).refresh();
+		template.save(sampleEntity, alternateIndex) //
+				.then(indexOperations.refresh()) //
+				.then(template.indexOps(defaultIndex).refresh()) //
+				.then(template.indexOps(alternateIndex).refresh()) //
+				.block();
 
 		template.get(sampleEntity.getId(), SampleEntity.class, defaultIndex) //
 				.as(StepVerifier::create) //
@@ -612,7 +620,6 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-519
-	@ElasticsearchVersion(asOf = "6.5.0")
 	public void deleteByQueryShouldReturnZeroWhenIndexDoesNotExist() {
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
@@ -624,7 +631,6 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-547
-	@ElasticsearchVersion(asOf = "6.5.0")
 	public void shouldDeleteAcrossIndex() {
 
 		String indexPrefix = "rx-template-test-index";
@@ -637,8 +643,7 @@ public class ReactiveElasticsearchTemplateTests {
 				.as(StepVerifier::create)//
 				.verifyComplete();
 
-		restTemplate.refresh(thisIndex);
-		restTemplate.refresh(thatIndex);
+		template.indexOps(thisIndex).refresh().then(template.indexOps(thatIndex).refresh()).block();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
 				.withQuery(termQuery("message", "test")) //
@@ -649,11 +654,10 @@ public class ReactiveElasticsearchTemplateTests {
 				.expectNext(2L) //
 				.verifyComplete();
 
-		TestUtils.deleteIndex(thisIndex.getIndexName(), thatIndex.getIndexName());
+		template.indexOps(thisIndex).delete().then(template.indexOps(thatIndex).delete()).block();
 	}
 
 	@Test // DATAES-547
-	@ElasticsearchVersion(asOf = "6.5.0")
 	public void shouldDeleteAcrossIndexWhenNoMatchingDataPresent() {
 
 		String indexPrefix = "rx-template-test-index";
@@ -666,8 +670,7 @@ public class ReactiveElasticsearchTemplateTests {
 				.as(StepVerifier::create)//
 				.verifyComplete();
 
-		restTemplate.refresh(thisIndex);
-		restTemplate.refresh(thatIndex);
+		template.indexOps(thisIndex).refresh().then(template.indexOps(thatIndex).refresh()).block();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
 				.withQuery(termQuery("message", "negative")) //
@@ -678,11 +681,10 @@ public class ReactiveElasticsearchTemplateTests {
 				.expectNext(0L) //
 				.verifyComplete();
 
-		TestUtils.deleteIndex(thisIndex.getIndexName(), thatIndex.getIndexName());
+		template.indexOps(thisIndex).delete().then(template.indexOps(thatIndex).delete()).block();
 	}
 
 	@Test // DATAES-504
-	@ElasticsearchVersion(asOf = "6.5.0")
 	public void deleteByQueryShouldReturnNumberOfDeletedDocuments() {
 
 		index(randomEntity("test message"), randomEntity("test test"), randomEntity("some message"));
@@ -696,7 +698,6 @@ public class ReactiveElasticsearchTemplateTests {
 	}
 
 	@Test // DATAES-504
-	@ElasticsearchVersion(asOf = "6.5.0")
 	public void deleteByQueryShouldReturnZeroIfNothingDeleted() {
 
 		index(randomEntity("test message"));
@@ -896,7 +897,8 @@ public class ReactiveElasticsearchTemplateTests {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
 		OptimisticEntity saved = template.save(original).block();
-		restTemplate.refresh(OptimisticEntity.class);
+
+		template.indexOps(OptimisticEntity.class).refresh().block();
 
 		template
 				.search(searchQueryForOne(saved.getId()), OptimisticEntity.class,
@@ -1050,12 +1052,10 @@ public class ReactiveElasticsearchTemplateTests {
 		IndexCoordinates indexCoordinates = IndexCoordinates.of(DEFAULT_INDEX);
 
 		if (entities.length == 1) {
-			restTemplate.index(getIndexQuery(entities[0]), indexCoordinates);
+			template.save(entities[0], indexCoordinates).then(indexOperations.refresh()).block();
 		} else {
-			restTemplate.bulkIndex(getIndexQueries(entities), indexCoordinates);
+			template.saveAll(Mono.just(Arrays.asList(entities)), indexCoordinates).then(indexOperations.refresh()).block();
 		}
-
-		indexOperations.refresh();
 	}
 
 	@Data

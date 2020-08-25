@@ -173,7 +173,12 @@ class RequestFactory {
 	}
 
 	public GetAliasesRequest getAliasesRequest(@Nullable String[] aliasNames, @Nullable String[] indexNames) {
-		return new GetAliasesRequest(aliasNames).indices(indexNames);
+		GetAliasesRequest getAliasesRequest = new GetAliasesRequest(aliasNames);
+
+		if (indexNames != null) {
+			getAliasesRequest.indices(indexNames);
+		}
+		return getAliasesRequest;
 	}
 
 	public IndicesAliasesRequest indicesAddAliasesRequest(AliasQuery query, IndexCoordinates index) {

@@ -44,7 +44,9 @@ import org.springframework.util.StringUtils;
  * @author Mohsin Husen
  * @author Ilkang Na
  * @author Peter-Josef Meisch
+ * @deprecated since 4.1, we're not supporting embedded Node clients anymore, use the REST client
  */
+@Deprecated
 public class NodeClientFactoryBean implements FactoryBean<Client>, InitializingBean, DisposableBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(NodeClientFactoryBean.class);

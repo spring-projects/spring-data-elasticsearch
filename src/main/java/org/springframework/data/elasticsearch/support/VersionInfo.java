@@ -36,7 +36,10 @@ public final class VersionInfo {
 
 	private static final Logger LOG = LoggerFactory.getLogger(VersionInfo.class);
 	private static final AtomicBoolean initialized = new AtomicBoolean(false);
-	private static String VERSION_PROPERTIES = "versions.properties";
+
+	private static final String VERSION_PROPERTIES = "versions.properties";
+	public static final String VERSION_SPRING_DATA_ELASTICSEARCH = "version.spring-data-elasticsearch";
+	public static final String VERSION_ELASTICSEARCH_CLIENT = "version.elasticsearch-client";
 
 	/**
 	 * logs the relevant version info the first time it is called. Does nothing after the first call
@@ -51,8 +54,8 @@ public final class VersionInfo {
 					Properties properties = new Properties();
 					properties.load(resource);
 
-					String versionSpringDataElasticsearch = properties.getProperty("version.spring-data-elasticsearch");
-					Version versionESBuilt = Version.fromString(properties.getProperty("version.elasticsearch-client"));
+					String versionSpringDataElasticsearch = properties.getProperty(VERSION_SPRING_DATA_ELASTICSEARCH);
+					Version versionESBuilt = Version.fromString(properties.getProperty(VERSION_ELASTICSEARCH_CLIENT));
 					Version versionESUsed = Version.CURRENT;
 					Version versionESCluster = clusterVersion != null ? Version.fromString(clusterVersion) : null;
 
@@ -80,6 +83,22 @@ public final class VersionInfo {
 				LOG.warn("Could not log version info: {} - {}", e.getClass().getSimpleName(), e.getMessage());
 			}
 
+		}
+	}
+
+	public static Properties versionProperties() throws Exception {
+		try {
+			InputStream resource = VersionInfo.class.getClassLoader().getResourceAsStream(VERSION_PROPERTIES);
+			if (resource != null) {
+				Properties properties = new Properties();
+				properties.load(resource);
+				return properties;
+			} else {
+				throw new IllegalStateException("Resource not found");
+			}
+		} catch (Exception e) {
+			LOG.error("Could not load {}", VERSION_PROPERTIES, e);
+			throw e;
 		}
 	}
 
