@@ -30,7 +30,7 @@ Since the container is binding to your source, you can make edits from your IDE 
 
 If you need to package things up, do this:
 
-1. `docker run -it --mount type=bind,source="$(pwd)",target=/spring-data-elasticsearch-github adoptopenjdk/openjdk8:latest /bin/bash`
+1. `docker run -it -v /var/run/docker.sock:/var/run/docker.sock --mount type=bind,source="$(pwd)",target=/spring-data-elasticsearch-github adoptopenjdk/openjdk8:latest /bin/bash`
 +
 This will launch the Docker image and mount your source code at `spring-data-elasticsearch-github`.
 +

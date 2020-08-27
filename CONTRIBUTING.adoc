@@ -1,3 +1,7 @@
 = Spring Data contribution guidelines
 
 You find the contribution guidelines for Spring Data projects https://github.com/spring-projects/spring-data-build/blob/master/CONTRIBUTING.adoc[here].
+
+== Running the test locally
+
+In order to run the tests locally with `./mvnw test` you need to have docker running because Spring Data Elasticsearch uses https://www.testcontainers.org/[Testcontainers] to start a local running Elasticsearch instance.
