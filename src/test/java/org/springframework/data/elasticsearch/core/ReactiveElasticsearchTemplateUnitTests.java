@@ -35,9 +35,11 @@ import java.util.Collections;
 
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.main.MainResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
+import org.elasticsearch.cluster.ClusterName;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,6 +77,9 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 	@BeforeEach
 	public void setUp() {
+
+		when(client.info()).thenReturn(Mono.just(new MainResponse("mockNodename", org.elasticsearch.Version.CURRENT,
+				new ClusterName("mockCluster"), "mockUuid", null)));
 
 		template = new ReactiveElasticsearchTemplate(client);
 	}
