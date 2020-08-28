@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.Version;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -39,7 +40,9 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.main.MainResponse;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.cluster.ClusterName;
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.index.get.GetResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,6 +69,7 @@ import org.springframework.util.CollectionUtils;
 
 /**
  * @author Roman Puchkovskiy
+ * @author Peter-Josef Meisch
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -90,6 +94,9 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 	@BeforeEach
 	public void setUp() {
+		when(client.info()).thenReturn(
+				Mono.just(new MainResponse("mockNodename", Version.CURRENT, new ClusterName("mockCluster"), "mockUuid", null)));
+
 		template = new ReactiveElasticsearchTemplate(client);
 
 		when(client.index(any(IndexRequest.class))).thenReturn(Mono.just(indexResponse));
