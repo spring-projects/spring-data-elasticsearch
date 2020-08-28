@@ -34,6 +34,7 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.engine.DocumentMissingException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -56,6 +57,7 @@ import org.springframework.test.context.ContextConfiguration;
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
+@DisplayName("ElasticsearchTransportTemplate")
 public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTests {
 
 	@Autowired private Client client;

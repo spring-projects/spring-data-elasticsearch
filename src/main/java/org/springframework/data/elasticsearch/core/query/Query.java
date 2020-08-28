@@ -219,7 +219,7 @@ public interface Query {
 	 * @param trackTotalHits the value to set.
 	 * @since 4.0
 	 */
-	void setTrackTotalHits(boolean trackTotalHits);
+	void setTrackTotalHits(@Nullable Boolean trackTotalHits);
 
 	/**
 	 * Sets the flag whether to set the Track_total_hits parameter on queries {@see <a href=
@@ -229,7 +229,25 @@ public interface Query {
 	 * @return the set value.
 	 * @since 4.0
 	 */
-	boolean getTrackTotalHits();
+	@Nullable
+	Boolean getTrackTotalHits();
+
+	/**
+	 * Sets the maximum value up to which total hits are tracked. Only relevant if #getTrackTotalHits is {@literal null}
+	 * 
+	 * @param trackTotalHitsUpTo max limit for trackTotalHits
+	 * @since 4.1
+	 */
+	void setTrackTotalHitsUpTo(@Nullable Integer trackTotalHitsUpTo);
+
+	/**
+	 * Gets the maximum value up to which total hits are tracked. Only relevant if #getTrackTotalHits is {@literal null}
+	 *
+	 * @return max limit for trackTotalHits
+	 * @since 4.1
+	 */
+	@Nullable
+	Integer getTrackTotalHitsUpTo();
 
 	/**
 	 * For queries that are used in delete request, these are internally handled by Elasticsearch as scroll/bulk delete

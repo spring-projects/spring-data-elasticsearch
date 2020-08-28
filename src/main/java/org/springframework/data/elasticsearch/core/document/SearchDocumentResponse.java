@@ -36,9 +36,9 @@ import org.springframework.util.Assert;
  */
 public class SearchDocumentResponse {
 
-	private long totalHits;
-	private String totalHitsRelation;
-	private float maxScore;
+	private final long totalHits;
+	private final String totalHitsRelation;
+	private final float maxScore;
 	private final String scrollId;
 	private final List<SearchDocument> searchDocuments;
 	private final Aggregations aggregations;
@@ -108,8 +108,17 @@ public class SearchDocumentResponse {
 	public static SearchDocumentResponse from(SearchHits searchHits, @Nullable String scrollId,
 			@Nullable Aggregations aggregations) {
 		TotalHits responseTotalHits = searchHits.getTotalHits();
-		long totalHits = responseTotalHits.value;
-		String totalHitsRelation = responseTotalHits.relation.name();
+
+		long totalHits;
+		String totalHitsRelation;
+
+		if (responseTotalHits != null) {
+			totalHits = responseTotalHits.value;
+			totalHitsRelation = responseTotalHits.relation.name();
+		} else {
+			totalHits = searchHits.getHits().length;
+			totalHitsRelation = "OFF";
+		}
 
 		float maxScore = searchHits.getMaxScore();
 

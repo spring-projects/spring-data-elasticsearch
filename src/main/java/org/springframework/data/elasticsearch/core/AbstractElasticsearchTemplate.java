@@ -238,7 +238,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	@Override
 	public void delete(Query query, Class<?> clazz) {
-		delete(query, getIndexCoordinatesFor(clazz));
+		delete(query, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override

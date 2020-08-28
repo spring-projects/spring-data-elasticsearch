@@ -56,7 +56,8 @@ abstract class AbstractQuery implements Query {
 	@Nullable protected String preference;
 	@Nullable protected Integer maxResults;
 	@Nullable protected HighlightQuery highlightQuery;
-	private boolean trackTotalHits = false;
+	@Nullable private Boolean trackTotalHits;
+	@Nullable private Integer trackTotalHitsUpTo;
 	@Nullable private Duration scrollTime;
 
 	@Override
@@ -220,13 +221,25 @@ abstract class AbstractQuery implements Query {
 	}
 
 	@Override
-	public void setTrackTotalHits(boolean trackTotalHits) {
+	public void setTrackTotalHits(@Nullable Boolean trackTotalHits) {
 		this.trackTotalHits = trackTotalHits;
 	}
 
 	@Override
-	public boolean getTrackTotalHits() {
+	@Nullable
+	public Boolean getTrackTotalHits() {
 		return trackTotalHits;
+	}
+
+	@Override
+	public void setTrackTotalHitsUpTo(@Nullable Integer trackTotalHitsUpTo) {
+		this.trackTotalHitsUpTo = trackTotalHitsUpTo;
+	}
+
+	@Override
+	@Nullable
+	public Integer getTrackTotalHitsUpTo() {
+		return trackTotalHitsUpTo;
 	}
 
 	@Nullable
