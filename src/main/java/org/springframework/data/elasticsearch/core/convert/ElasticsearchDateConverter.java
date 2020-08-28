@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.convert;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
@@ -122,6 +123,6 @@ final public class ElasticsearchDateConverter {
 	 * @return the new created object
 	 */
 	public Date parse(String input) {
-		return new Date(Instant.from(dateFormatter.parse(input)).toEpochMilli());
+		return new Date(Instant.from(dateFormatter.withZone(ZoneId.systemDefault()).parse(input)).toEpochMilli());
 	}
 }
