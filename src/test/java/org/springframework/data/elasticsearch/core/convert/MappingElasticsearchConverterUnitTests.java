@@ -39,6 +39,7 @@ import java.util.Map;
 
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
@@ -616,7 +617,7 @@ public class MappingElasticsearchConverterUnitTests {
 		assertEquals(expected, json, false);
 	}
 
-	@Test
+	@Test // DATAES-716
 	void shouldReadLocalDate() {
 		Document document = Document.create();
 		document.put("id", "4711");
@@ -804,6 +805,25 @@ public class MappingElasticsearchConverterUnitTests {
 				"  \"content\": {\n" + //
 				"    \"foo\": \"bar\"\n" + //
 				"  }\n" + //
+				"}\n"; //
+
+		Document document = Document.create();
+
+		mappingElasticsearchConverter.write(entity, document);
+
+		assertEquals(expected, document.toJson(), false);
+	}
+
+	@Test // DATAES-920
+	@DisplayName("should write null value if configured")
+	void shouldWriteNullValueIfConfigured() throws JSONException {
+
+		EntityWithNullField entity = new EntityWithNullField();
+		entity.setId("42");
+
+		String expected = "{\n" + //
+				"  \"id\": \"42\",\n" + //
+				"  \"saved\": null\n" + //
 				"}\n"; //
 
 		Document document = Document.create();
@@ -1045,5 +1065,12 @@ public class MappingElasticsearchConverterUnitTests {
 	static class EntityWithObject {
 		@Id private String id;
 		private Object content;
+	}
+
+	@Data
+	static class EntityWithNullField {
+		@Id private String id;
+		@Field(type = FieldType.Text) private String notSaved;
+		@Field(type = FieldType.Text, storeNullValue = true) private String saved;
 	}
 }

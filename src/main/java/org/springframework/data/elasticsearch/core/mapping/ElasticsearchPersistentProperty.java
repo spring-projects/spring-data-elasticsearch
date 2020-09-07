@@ -96,6 +96,12 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 */
 	boolean isReadable();
 
+	/**
+	 * @return {@literal true} if null values should be stored in Elasticsearch
+	 * @since 4.1
+	 */
+	boolean storeNullValue();
+
 	enum PropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
 
 		INSTANCE;

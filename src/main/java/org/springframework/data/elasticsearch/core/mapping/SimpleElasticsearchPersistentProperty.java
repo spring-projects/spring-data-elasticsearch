@@ -64,6 +64,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	private final boolean isSeqNoPrimaryTerm;
 	private final @Nullable String annotatedFieldName;
 	@Nullable private ElasticsearchPersistentPropertyConverter propertyConverter;
+	private boolean storeNullValue;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
 			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
@@ -85,6 +86,8 @@ public class SimpleElasticsearchPersistentProperty extends
 		this.isParent = isAnnotationPresent(Parent.class);
 		this.isSeqNoPrimaryTerm = SeqNoPrimaryTerm.class.isAssignableFrom(getRawType());
 
+		boolean isField = isAnnotationPresent(Field.class);
+
 		if (isVersionProperty() && !getType().equals(Long.class)) {
 			throw new MappingException(String.format("Version property %s must be of type Long!", property.getName()));
 		}
@@ -98,11 +101,13 @@ public class SimpleElasticsearchPersistentProperty extends
 			throw new MappingException(String.format("Parent property %s must be of type String!", property.getName()));
 		}
 
-		if (isAnnotationPresent(Field.class) && isAnnotationPresent(MultiField.class)) {
+		if (isField && isAnnotationPresent(MultiField.class)) {
 			throw new MappingException("@Field annotation must not be used on a @MultiField property.");
 		}
 
 		initDateConverter();
+
+		storeNullValue = isField && getRequiredAnnotation(Field.class).storeNullValue();
 	}
 
 	@Override
@@ -124,6 +129,11 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Override
 	public boolean isReadable() {
 		return !isTransient() && !isSeqNoPrimaryTermProperty();
+	}
+
+	@Override
+	public boolean storeNullValue() {
+		return storeNullValue;
 	}
 
 	/**
