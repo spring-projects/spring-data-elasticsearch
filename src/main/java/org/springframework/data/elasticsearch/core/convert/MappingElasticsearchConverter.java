@@ -497,6 +497,11 @@ public class MappingElasticsearchConverter
 			Object value = accessor.getProperty(property);
 
 			if (value == null) {
+
+				if (property.storeNullValue()) {
+					sink.set(property, null);
+				}
+
 				continue;
 			}
 
@@ -797,7 +802,8 @@ public class MappingElasticsearchConverter
 				});
 			}
 
-			org.springframework.data.elasticsearch.annotations.Field fieldAnnotation = property.findAnnotation(org.springframework.data.elasticsearch.annotations.Field.class);
+			org.springframework.data.elasticsearch.annotations.Field fieldAnnotation = property
+					.findAnnotation(org.springframework.data.elasticsearch.annotations.Field.class);
 
 			if (fieldAnnotation != null) {
 				field.setFieldType(fieldAnnotation.type());
@@ -864,14 +870,17 @@ public class MappingElasticsearchConverter
 			return result;
 		}
 
-		public void set(ElasticsearchPersistentProperty property, Object value) {
+		public void set(ElasticsearchPersistentProperty property, @Nullable Object value) {
 
-			if (property.isIdProperty()) {
-				((Document) target).setId(value.toString());
-			}
+			if (value != null) {
 
-			if (property.isVersionProperty()) {
-				((Document) target).setVersion((Long) value);
+				if (property.isIdProperty()) {
+					((Document) target).setId(value.toString());
+				}
+
+				if (property.isVersionProperty()) {
+					((Document) target).setVersion((Long) value);
+				}
 			}
 
 			target.put(property.getFieldName(), value);

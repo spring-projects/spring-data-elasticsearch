@@ -154,4 +154,11 @@ public @interface Field {
 	 * @since 4.0
 	 */
 	int maxShingleSize() default -1;
+
+	/**
+	 * if true, the field will be stored in Elasticsearch even if it has a null value
+	 * 
+	 * @since 4.1
+	 */
+	boolean storeNullValue() default false;
 }
