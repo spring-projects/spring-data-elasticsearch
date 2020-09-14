@@ -123,4 +123,11 @@ public @interface InnerField {
 	 * @since 4.0
 	 */
 	int maxShingleSize() default -1;
+
+	/**
+	 * to be used in combination with {@link FieldType#Rank_Feature}
+	 * 
+	 * @since 4.1
+	 */
+	boolean positiveScoreImpact() default true;
 }

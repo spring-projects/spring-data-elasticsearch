@@ -161,4 +161,11 @@ public @interface Field {
 	 * @since 4.1
 	 */
 	boolean storeNullValue() default false;
+
+	/**
+	 * to be used in combination with {@link FieldType#Rank_Feature}
+	 * 
+	 * @since 4.1
+	 */
+	boolean positiveScoreImpact() default true;
 }

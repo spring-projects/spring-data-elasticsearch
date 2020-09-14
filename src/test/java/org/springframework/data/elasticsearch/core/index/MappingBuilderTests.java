@@ -50,6 +50,7 @@ import org.elasticsearch.search.suggest.completion.context.ContextMapping;
 import org.json.JSONException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -596,6 +597,30 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertThat(propertyMapping).doesNotContain("seqNoPrimaryTerm");
 	}
 
+	@Test // DATAES-854
+	@DisplayName("should write rank_feature properties")
+	void shouldWriteRankFeatureProperties() throws JSONException {
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"pageRank\": {\n" + //
+				"      \"type\": \"rank_feature\"\n" + //
+				"    },\n" + //
+				"    \"urlLength\": {\n" + //
+				"      \"type\": \"rank_feature\",\n" + //
+				"      \"positive_score_impact\": false\n" + //
+				"    },\n" + //
+				"    \"topics\": {\n" + //
+				"      \"type\": \"rank_features\"\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(RankFeatureEntity.class);
+
+		System.out.println(mapping);
+		assertEquals(expected, mapping, false);
+	}
+
 	/**
 	 * @author Xiao Yu
 	 */
@@ -1071,5 +1096,16 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	static class EntityWithSeqNoPrimaryTerm {
 
 		@Field(type = Object) private SeqNoPrimaryTerm seqNoPrimaryTerm;
+	}
+
+	@Data
+	static class RankFeatureEntity {
+		@Id private String id;
+
+		@Field(type = FieldType.Rank_Feature) private Integer pageRank;
+
+		@Field(type = FieldType.Rank_Feature, positiveScoreImpact = false) private Integer urlLength;
+
+		@Field(type = FieldType.Rank_Features) private Map<String, Integer> topics;
 	}
 }

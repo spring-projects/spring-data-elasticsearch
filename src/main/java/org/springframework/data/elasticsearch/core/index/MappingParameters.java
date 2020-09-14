@@ -67,6 +67,7 @@ public final class MappingParameters {
 	static final String FIELD_PARAM_TERM_VECTOR = "term_vector";
 	static final String FIELD_PARAM_TYPE = "type";
 	static final String FIELD_PARAM_MAX_SHINGLE_SIZE = "max_shingle_size";
+	static final String FIELD_PARAM_POSITIVE_SCORE_IMPACT = "positive_score_impact";
 
 	private boolean index = true;
 	private boolean store = false;
@@ -92,6 +93,7 @@ public final class MappingParameters {
 	private TermVector termVector = TermVector.none;
 	private double scalingFactor = 1.0;
 	@Nullable private Integer maxShingleSize;
+	private boolean positiveScoreImpact = true;
 
 	/**
 	 * extracts the mapping parameters from the relevant annotations.
@@ -145,6 +147,7 @@ public final class MappingParameters {
 				|| maxShingleSize == null //
 				|| (maxShingleSize >= 2 && maxShingleSize <= 4), //
 				"maxShingleSize must be in inclusive range from 2 to 4 for field type search_as_you_type");
+		positiveScoreImpact = field.positiveScoreImpact();
 	}
 
 	private MappingParameters(InnerField field) {
@@ -179,6 +182,7 @@ public final class MappingParameters {
 				|| maxShingleSize == null //
 				|| (maxShingleSize >= 2 && maxShingleSize <= 4), //
 				"maxShingleSize must be in inclusive range from 2 to 4 for field type search_as_you_type");
+		positiveScoreImpact = field.positiveScoreImpact();
 	}
 
 	public boolean isStore() {
@@ -286,6 +290,10 @@ public final class MappingParameters {
 
 		if (maxShingleSize != null) {
 			builder.field(FIELD_PARAM_MAX_SHINGLE_SIZE, maxShingleSize);
+		}
+
+		if (!positiveScoreImpact) {
+			builder.field(FIELD_PARAM_POSITIVE_SCORE_IMPACT, positiveScoreImpact);
 		}
 	}
 }
