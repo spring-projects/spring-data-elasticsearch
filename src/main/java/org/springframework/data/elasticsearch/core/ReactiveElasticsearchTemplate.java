@@ -523,7 +523,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Assert.notNull(query, "Query must not be null!");
 
-		return doDeleteBy(query, entityType, index).map(BulkByScrollResponse::getDeleted).publishNext();
+		return doDeleteBy(query, entityType, index).map(BulkByScrollResponse::getDeleted).next();
 	}
 
 	@Override

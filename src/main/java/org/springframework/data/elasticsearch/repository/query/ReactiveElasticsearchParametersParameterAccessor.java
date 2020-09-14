@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +30,7 @@ import org.springframework.data.repository.util.ReactiveWrappers;
  */
 class ReactiveElasticsearchParametersParameterAccessor extends ElasticsearchParametersParameterAccessor {
 
-	private final List<MonoProcessor<?>> subscriptions;
+	private final List<Mono<?>> subscriptions;
 
 	/**
 	 * Creates a new {@link ElasticsearchParametersParameterAccessor}.
@@ -53,9 +52,9 @@ class ReactiveElasticsearchParametersParameterAccessor extends ElasticsearchPara
 			}
 
 			if (ReactiveWrappers.isSingleValueType(value.getClass())) {
-				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Mono.class).toProcessor());
+				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Mono.class));
 			} else {
-				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Flux.class).collectList().toProcessor());
+				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Flux.class).collectList());
 			}
 		}
 	}

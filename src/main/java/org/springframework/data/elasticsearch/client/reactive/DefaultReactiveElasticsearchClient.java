@@ -371,7 +371,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 */
 	@Override
 	public Mono<IndexResponse> index(HttpHeaders headers, IndexRequest indexRequest) {
-		return sendRequest(indexRequest, requestCreator.index(), IndexResponse.class, headers).publishNext();
+		return sendRequest(indexRequest, requestCreator.index(), IndexResponse.class, headers).next();
 	}
 
 	/*
@@ -389,7 +389,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 */
 	@Override
 	public Mono<UpdateResponse> update(HttpHeaders headers, UpdateRequest updateRequest) {
-		return sendRequest(updateRequest, requestCreator.update(), UpdateResponse.class, headers).publishNext();
+		return sendRequest(updateRequest, requestCreator.update(), UpdateResponse.class, headers).next();
 	}
 
 	/*
@@ -400,7 +400,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	public Mono<DeleteResponse> delete(HttpHeaders headers, DeleteRequest deleteRequest) {
 
 		return sendRequest(deleteRequest, requestCreator.delete(), DeleteResponse.class, headers) //
-				.publishNext();
+				.next();
 	}
 
 	/*
@@ -556,7 +556,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	public Mono<BulkByScrollResponse> deleteBy(HttpHeaders headers, DeleteByQueryRequest deleteRequest) {
 
 		return sendRequest(deleteRequest, requestCreator.deleteByQuery(), BulkByScrollResponse.class, headers) //
-				.publishNext();
+				.next();
 	}
 
 	/*
@@ -566,7 +566,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	@Override
 	public Mono<BulkResponse> bulk(HttpHeaders headers, BulkRequest bulkRequest) {
 		return sendRequest(bulkRequest, requestCreator.bulk(), BulkResponse.class, headers) //
-				.publishNext();
+				.next();
 	}
 
 	/*
@@ -753,7 +753,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	@Override
 	public Mono<GetAliasesResponse> getAliases(HttpHeaders headers, GetAliasesRequest getAliasesRequest) {
-		return sendRequest(getAliasesRequest, requestCreator.getAlias(), GetAliasesResponse.class, headers).publishNext();
+		return sendRequest(getAliasesRequest, requestCreator.getAlias(), GetAliasesResponse.class, headers).next();
 	}
 
 	@Override
