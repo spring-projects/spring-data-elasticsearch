@@ -16,18 +16,10 @@
 package org.springframework.data.elasticsearch.core.convert;
 
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -278,8 +270,8 @@ public class MappingElasticsearchConverter
 
 		Class<R> rawType = targetType.getType();
 
-		if (property.hasPropertyConverter() && String.class.isAssignableFrom(source.getClass())) {
-			source = property.getPropertyConverter().read((String) source);
+		if (property.hasPropertyConverter()) {
+			source = propertyConverterRead(property, source);
 		} else if (TemporalAccessor.class.isAssignableFrom(property.getType())
 				&& !conversions.hasCustomReadTarget(source.getClass(), rawType)) {
 
@@ -305,6 +297,32 @@ public class MappingElasticsearchConverter
 		}
 
 		return (R) readSimpleValue(source, targetType);
+	}
+
+	private Object propertyConverterRead(ElasticsearchPersistentProperty property, Object source) {
+		ElasticsearchPersistentPropertyConverter propertyConverter = Objects
+				.requireNonNull(property.getPropertyConverter());
+
+		if (source instanceof String[]) {
+			// convert to a List
+			source = Arrays.asList((String[]) source);
+		}
+
+		if (source instanceof List) {
+			source = ((List<?>) source).stream().map(it -> convertOnRead(propertyConverter, it)).collect(Collectors.toList());
+		} else if (source instanceof Set) {
+			source = ((Set<?>) source).stream().map(it -> convertOnRead(propertyConverter, it)).collect(Collectors.toSet());
+		} else {
+			source = convertOnRead(propertyConverter, source);
+		}
+		return source;
+	}
+
+	private Object convertOnRead(ElasticsearchPersistentPropertyConverter propertyConverter, Object source) {
+		if (String.class.isAssignableFrom(source.getClass())) {
+			source = propertyConverter.read((String) source);
+		}
+		return source;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -498,9 +516,8 @@ public class MappingElasticsearchConverter
 			}
 
 			if (property.hasPropertyConverter()) {
-				ElasticsearchPersistentPropertyConverter propertyConverter = property.getPropertyConverter();
-				value = propertyConverter.write(value);
-			} else if (TemporalAccessor.class.isAssignableFrom(property.getType())
+				value = propertyConverterWrite(property, value);
+			} else if (TemporalAccessor.class.isAssignableFrom(property.getActualType())
 					&& !conversions.hasCustomWriteTarget(value.getClass())) {
 
 				// log at most 5 times
@@ -525,6 +542,20 @@ public class MappingElasticsearchConverter
 				}
 			}
 		}
+	}
+
+	private Object propertyConverterWrite(ElasticsearchPersistentProperty property, Object value) {
+		ElasticsearchPersistentPropertyConverter propertyConverter = Objects
+				.requireNonNull(property.getPropertyConverter());
+
+		if (value instanceof List) {
+			value = ((List<?>) value).stream().map(propertyConverter::write).collect(Collectors.toList());
+		} else if (value instanceof Set) {
+			value = ((Set<?>) value).stream().map(propertyConverter::write).collect(Collectors.toSet());
+		} else {
+			value = propertyConverter.write(value);
+		}
+		return value;
 	}
 
 	protected void writeProperty(ElasticsearchPersistentProperty property, Object value, MapValueAccessor sink) {

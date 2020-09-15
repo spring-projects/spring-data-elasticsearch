@@ -17,13 +17,17 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import static org.assertj.core.api.Assertions.*;
 
+import lombok.Data;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -86,7 +90,7 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(persistentProperty.getFieldName()).isEqualTo("mainfield");
 	}
 
-	@Test // DATAES-716, DATAES-792
+	@Test // DATAES-716, DATAES-792, DATAES-924
 	void shouldSetPropertyConverters() {
 		SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(DatesProperty.class);
 
@@ -102,6 +106,9 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(persistentProperty.hasPropertyConverter()).isTrue();
 		assertThat(persistentProperty.getPropertyConverter()).isNotNull();
 
+		persistentProperty = persistentEntity.getRequiredPersistentProperty("localDateList");
+		assertThat(persistentProperty.hasPropertyConverter()).isTrue();
+		assertThat(persistentProperty.getPropertyConverter()).isNotNull();
 	}
 
 	@Test // DATAES-716
@@ -199,6 +206,14 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 				.withMessageContaining("date");
 	}
 
+	@Test // DATAES-924
+	@DisplayName("should require pattern for custom date format")
+	void shouldRequirePatternForCustomDateFormat() {
+		assertThatExceptionOfType(MappingException.class) //
+				.isThrownBy(() -> context.getRequiredPersistentEntity(DateFieldWithCustomFormatAndNoPattern.class)) //
+				.withMessageContaining("pattern");
+	}
+
 	static class InvalidScoreProperty {
 		@Nullable @Score String scoreProperty;
 	}
@@ -220,17 +235,27 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		@Nullable @Field(type = FieldType.Date, format = DateFormat.custom, pattern = "dd.MM.uuuu") LocalDate localDate;
 		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date_time) LocalDateTime localDateTime;
 		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date_time) Date legacyDate;
+		@Nullable @Field(type = FieldType.Date, format = DateFormat.custom,
+				pattern = "dd.MM.uuuu") List<LocalDate> localDateList;
 	}
 
+	@Data
 	static class SeqNoPrimaryTermProperty {
 		SeqNoPrimaryTerm seqNoPrimaryTerm;
 		String string;
 	}
 
+	@Data
 	static class DateFieldWithNoFormat {
 		@Field(type = FieldType.Date) LocalDateTime datetime;
 	}
 
+	@Data
+	static class DateFieldWithCustomFormatAndNoPattern {
+		@Field(type = FieldType.Date, format = DateFormat.custom, pattern = "") LocalDateTime datetime;
+	}
+
+	@Data
 	static class DateNanosFieldWithNoFormat {
 		@Field(type = FieldType.Date_Nanos) LocalDateTime datetime;
 	}

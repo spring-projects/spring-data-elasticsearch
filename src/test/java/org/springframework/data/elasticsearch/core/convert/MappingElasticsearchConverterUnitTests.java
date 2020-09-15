@@ -26,6 +26,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ import java.util.Map;
 
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
@@ -616,7 +618,26 @@ public class MappingElasticsearchConverterUnitTests {
 		assertEquals(expected, json, false);
 	}
 
-	@Test
+	@Test // DATAES-924
+	@DisplayName("should write list of LocalDate")
+	void shouldWriteListOfLocalDate() throws JSONException {
+
+		LocalDatesEntity entity = new LocalDatesEntity();
+		entity.setId("4711");
+		entity.setDates(Arrays.asList(LocalDate.of(2020, 9, 15), LocalDate.of(2019, 5, 1)));
+		String expected = "{\n" + //
+				"  \"id\": \"4711\",\n" + //
+				"  \"dates\": [\"15.09.2020\", \"01.05.2019\"]\n" + //
+				"}\n"; //
+
+		Document document = Document.create();
+		mappingElasticsearchConverter.write(entity, document);
+		String json = document.toJson();
+
+		assertEquals(expected, json, false);
+	}
+
+	@Test // DATAES-716
 	void shouldReadLocalDate() {
 		Document document = Document.create();
 		document.put("id", "4711");
@@ -630,6 +651,20 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(person.getId()).isEqualTo("4711");
 		assertThat(person.getBirthDate()).isEqualTo(LocalDate.of(2000, 8, 22));
 		assertThat(person.getGender()).isEqualTo(Gender.MAN);
+	}
+
+	@Test // DATAES-924
+	@DisplayName("should read list of LocalDate")
+	void shouldReadListOfLocalDate() {
+
+		Document document = Document.create();
+		document.put("id", "4711");
+		document.put("dates", new String[] { "15.09.2020", "01.05.2019" });
+
+		LocalDatesEntity entity = mappingElasticsearchConverter.read(LocalDatesEntity.class, document);
+
+		assertThat(entity.getId()).isEqualTo("4711");
+		assertThat(entity.getDates()).hasSize(2).containsExactly(LocalDate.of(2020, 9, 15), LocalDate.of(2019, 5, 1));
 	}
 
 	@Test // DATAES-763
@@ -848,6 +883,15 @@ public class MappingElasticsearchConverterUnitTests {
 		List<Inventory> inventoryList;
 		Map<String, Address> shippingAddresses;
 		Map<String, Inventory> inventoryMap;
+	}
+
+	@Data
+	@Getter
+	@Setter
+	static class LocalDatesEntity {
+		@Id private String id;
+		@Field(name = "dates", type = FieldType.Date, format = DateFormat.custom,
+				pattern = "dd.MM.uuuu") private List<LocalDate> dates;
 	}
 
 	enum Gender {

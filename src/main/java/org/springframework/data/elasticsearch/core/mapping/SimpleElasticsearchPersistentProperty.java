@@ -119,8 +119,9 @@ public class SimpleElasticsearchPersistentProperty extends
 	 */
 	private void initDateConverter() {
 		Field field = findAnnotation(Field.class);
-		boolean isTemporalAccessor = TemporalAccessor.class.isAssignableFrom(getType());
-		boolean isDate = Date.class.isAssignableFrom(getType());
+		Class<?> actualType = getActualType();
+		boolean isTemporalAccessor = TemporalAccessor.class.isAssignableFrom(actualType);
+		boolean isDate = Date.class.isAssignableFrom(actualType);
 
 		if (field != null && (field.type() == FieldType.Date || field.type() == FieldType.Date_Nanos)
 				&& (isTemporalAccessor || isDate)) {
@@ -132,44 +133,50 @@ public class SimpleElasticsearchPersistentProperty extends
 								getOwner().getType().getSimpleName() + "." + getName(), field.type().name()));
 			}
 
-			ElasticsearchDateConverter converter = null;
+			ElasticsearchDateConverter converter;
 
 			if (dateFormat == DateFormat.custom) {
 				String pattern = field.pattern();
 
-				if (StringUtils.hasLength(pattern)) {
-					converter = ElasticsearchDateConverter.of(pattern);
+				if (!StringUtils.hasLength(pattern)) {
+					throw new MappingException(
+							String.format("Property %s is annotated with FieldType.%s and a custom format but has no pattern defined",
+									getOwner().getType().getSimpleName() + "." + getName(), field.type().name()));
 				}
-			} else if (dateFormat != DateFormat.none) {
+
+				converter = ElasticsearchDateConverter.of(pattern);
+			} else {
 				converter = ElasticsearchDateConverter.of(dateFormat);
 			}
 
-			if (converter != null) {
-				ElasticsearchDateConverter dateConverter = converter;
-				propertyConverter = new ElasticsearchPersistentPropertyConverter() {
-					@Override
-					public String write(Object property) {
-						if (isTemporalAccessor) {
-							return dateConverter.format((TemporalAccessor) property);
-						} else { // must be Date
-							return dateConverter.format((Date) property);
-						}
-					}
+			propertyConverter = new ElasticsearchPersistentPropertyConverter() {
+				final ElasticsearchDateConverter dateConverter = converter;
 
-					@SuppressWarnings("unchecked")
-					@Override
-					public Object read(String s) {
-						if (isTemporalAccessor) {
-							return dateConverter.parse(s, (Class<? extends TemporalAccessor>) getType());
-						} else { // must be date
-							return dateConverter.parse(s);
-						}
+				@Override
+				public String write(Object property) {
+					if (isTemporalAccessor && TemporalAccessor.class.isAssignableFrom(property.getClass())) {
+						return dateConverter.format((TemporalAccessor) property);
+					} else if (isDate && Date.class.isAssignableFrom(property.getClass())) {
+						return dateConverter.format((Date) property);
+					} else {
+						return property.toString();
 					}
-				};
-			}
+				}
+
+				@SuppressWarnings("unchecked")
+				@Override
+				public Object read(String s) {
+					if (isTemporalAccessor) {
+						return dateConverter.parse(s, (Class<? extends TemporalAccessor>) actualType);
+					} else { // must be date
+						return dateConverter.parse(s);
+					}
+				}
+			};
 		}
 	}
 
+	@SuppressWarnings("ConstantConditions")
 	@Nullable
 	private String getAnnotatedFieldName() {
 
