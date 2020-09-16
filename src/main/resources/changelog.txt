@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.4.RELEASE (2020-09-16)
+---------------------------------------------
+* DATAES-924 - Conversion of properties of collections of Temporal values fails.
+* DATAES-912 - Derived Query with "In" Keyword does not work on Text field.
+* DATAES-905 - Release 4.0.4 (Neumann SR4).
+
+
 Changes in version 3.2.10.RELEASE (2020-09-16)
 ----------------------------------------------
 * DATAES-903 - Update to Elasticsearch 6.8.12.
@@ -1260,6 +1267,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
