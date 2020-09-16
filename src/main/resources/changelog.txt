@@ -1,6 +1,29 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.1.0-RC1 (2020-09-16)
+-----------------------------------------
+* DATAES-924 - Conversion of properties of collections of Temporal values fails.
+* DATAES-923 - Upgrade to Elasticsearch 7.9.1.
+* DATAES-922 - Move off Sink.emitXXX methods.
+* DATAES-920 - Add parameter to @Field annotation to store null values.
+* DATAES-919 - Fix error messages in test output.
+* DATAES-914 - Use Testcontainers.
+* DATAES-913 - Minor optimization on collection-returning derived queries.
+* DATAES-912 - Derived Query with "In" Keyword does not work on Text field.
+* DATAES-911 - Add documentation for automatic index creation.
+* DATAES-910 - Upgrade to Elasticsearch 7.9.0.
+* DATAES-909 - Add singular update() methods to ReactiveDocumentOperations.
+* DATAES-908 - Fill version on an indexed entity.
+* DATAES-907 - Track Total Hits not working when set to false.
+* DATAES-904 - Release 4.1 RC1 (2020.0.0).
+* DATAES-902 - Update to Elasticsearch 7.8.1.
+* DATAES-898 - Add join-type relevant parts to reactive calls.
+* DATAES-895 - Criteria.OperationKey.NEAR is not used anywhere.
+* DATAES-854 - Add support for rank_feature datatype.
+* DATAES-706 - CriteriaQueryProcessor must handle nested Criteria definitions.
+
+
 Changes in version 4.0.4.RELEASE (2020-09-16)
 ---------------------------------------------
 * DATAES-924 - Conversion of properties of collections of Temporal values fails.
@@ -1248,6 +1271,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
