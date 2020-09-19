@@ -195,6 +195,7 @@ public final class MappingParameters {
 	 * @param builder must not be {@literal null}.
 	 */
 	public void writeTypeAndParametersTo(XContentBuilder builder) throws IOException {
+
 		Assert.notNull(builder, "builder must ot be null");
 
 		if (fielddata) {

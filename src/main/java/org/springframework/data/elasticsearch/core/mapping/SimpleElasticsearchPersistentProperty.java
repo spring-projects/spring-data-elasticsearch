@@ -26,10 +26,15 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Score;
+import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
@@ -215,66 +220,58 @@ public class SimpleElasticsearchPersistentProperty extends
 		return StringUtils.hasText(name) ? name : null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty#getFieldName()
-	 */
 	@Override
 	public String getFieldName() {
 		return annotatedFieldName == null ? getProperty().getName() : annotatedFieldName;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty#isIdProperty()
-	 */
 	@Override
 	public boolean isIdProperty() {
 		return isId;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.model.AbstractPersistentProperty#createAssociation()
-	 */
 	@Override
 	protected Association<ElasticsearchPersistentProperty> createAssociation() {
 		throw new UnsupportedOperationException();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty#isScoreProperty()
-	 */
 	@Override
 	public boolean isScoreProperty() {
 		return isScore;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.model.AbstractPersistentProperty#isImmutable()
-	 */
 	@Override
 	public boolean isImmutable() {
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty#isParentProperty()
-	 */
 	@Override
 	public boolean isParentProperty() {
 		return isParent;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty#isSeqNoPrimaryTermProperty()
-	 */
 	@Override
 	public boolean isSeqNoPrimaryTermProperty() {
 		return isSeqNoPrimaryTerm;
+	}
+
+	@Override
+	public boolean isGeoPointProperty() {
+		return getActualType() == GeoPoint.class || isAnnotationPresent(GeoPointField.class);
+	}
+
+	@Override
+	public boolean isGeoShapeProperty() {
+		return isAnnotationPresent(GeoShapeField.class);
+	}
+
+	@Override
+	public boolean isJoinFieldProperty() {
+		return getActualType() == JoinField.class;
+	}
+
+	@Override
+	public boolean isCompletionProperty() {
+		return getActualType() == Completion.class;
 	}
 }

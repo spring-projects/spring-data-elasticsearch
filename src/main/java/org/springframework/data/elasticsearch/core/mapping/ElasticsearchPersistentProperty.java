@@ -102,6 +102,30 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 */
 	boolean storeNullValue();
 
+	/**
+	 * @return {@literal true} if this is a GeoPoint property
+	 * @since 4.1
+	 */
+	boolean isGeoPointProperty();
+
+	/**
+	 * @return {@literal true} if this is a GeoShape property
+	 * @since 4.1
+	 */
+	boolean isGeoShapeProperty();
+
+	/**
+	 * @return {@literal true} if this is a JoinField property
+	 * @since 4.1
+	 */
+	boolean isJoinFieldProperty();
+
+	/**
+	 * @return {@literal true} if this is a Completion property
+	 * @since 4.1
+	 */
+	boolean isCompletionProperty();
+
 	enum PropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
 
 		INSTANCE;
