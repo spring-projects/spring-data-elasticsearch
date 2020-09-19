@@ -35,10 +35,7 @@ import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
-import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.geo.GeoPoint;
-import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.MappingException;
@@ -203,17 +200,21 @@ public class MappingBuilder {
 			}
 		}
 
-		if (isGeoPointProperty(property)) {
+		if (property.isGeoPointProperty()) {
 			applyGeoPointFieldMapping(builder, property);
 			return;
 		}
 
-		if (isJoinFieldProperty(property)) {
+		if (property.isGeoShapeProperty()) {
+			applyGeoShapeMapping(builder, property);
+		}
+
+		if (property.isJoinFieldProperty()) {
 			addJoinFieldMapping(builder, property);
 		}
 
 		Field fieldAnnotation = property.findAnnotation(Field.class);
-		boolean isCompletionProperty = isCompletionProperty(property);
+		boolean isCompletionProperty = property.isCompletionProperty();
 		boolean isNestedOrObjectProperty = isNestedOrObjectProperty(property);
 
 		if (!isCompletionProperty && property.isEntity() && hasRelevantAnnotation(property)) {
@@ -228,8 +229,8 @@ public class MappingBuilder {
 						? elasticsearchConverter.getMappingContext().getPersistentEntity(iterator.next())
 						: null;
 
-				mapEntity(builder, persistentEntity, false, property.getFieldName(), isNestedOrObjectProperty,
-						fieldAnnotation.type(), fieldAnnotation, property.findAnnotation(DynamicMapping.class));
+				mapEntity(builder, persistentEntity, false, property.getFieldName(), true, fieldAnnotation.type(),
+						fieldAnnotation, property.findAnnotation(DynamicMapping.class));
 				return;
 			}
 		}
@@ -259,8 +260,15 @@ public class MappingBuilder {
 
 	private void applyGeoPointFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property)
 			throws IOException {
-
 		builder.startObject(property.getFieldName()).field(FIELD_PARAM_TYPE, TYPE_VALUE_GEO_POINT).endObject();
+	}
+
+	private void applyGeoShapeMapping(XContentBuilder builder, ElasticsearchPersistentProperty property)
+			throws IOException {
+
+		builder.startObject(property.getFieldName());
+		GeoShapeMappingParameters.from(property.findAnnotation(GeoShapeField.class)).writeTypeAndParametersTo(builder);
+		builder.endObject();
 	}
 
 	private void applyCompletionFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property,
@@ -447,17 +455,5 @@ public class MappingBuilder {
 		Field fieldAnnotation = property.findAnnotation(Field.class);
 		return fieldAnnotation != null
 				&& (FieldType.Nested == fieldAnnotation.type() || FieldType.Object == fieldAnnotation.type());
-	}
-
-	private boolean isGeoPointProperty(ElasticsearchPersistentProperty property) {
-		return property.getActualType() == GeoPoint.class || property.isAnnotationPresent(GeoPointField.class);
-	}
-
-	private boolean isJoinFieldProperty(ElasticsearchPersistentProperty property) {
-		return property.getActualType() == JoinField.class;
-	}
-
-	private boolean isCompletionProperty(ElasticsearchPersistentProperty property) {
-		return property.getActualType() == Completion.class;
 	}
 }

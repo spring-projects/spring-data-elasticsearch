@@ -210,13 +210,37 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertThat(entry.getMessage()).isEqualTo(message);
 	}
 
-	@Test // DATAES-568
-	public void shouldBuildMappingsForGeoPoint() throws JSONException {
+	@Test // DATAES-568, DATAES-929
+	@DisplayName("should build mappings for geo types")
+	void shouldBuildMappingsForGeoTypes() throws JSONException {
 
 		// given
-		String expected = "{\"properties\": {" + "\"pointA\":{\"type\":\"geo_point\"},"
-				+ "\"pointB\":{\"type\":\"geo_point\"}," + "\"pointC\":{\"type\":\"geo_point\"},"
-				+ "\"pointD\":{\"type\":\"geo_point\"}" + "}}";
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"pointA\": {\n" + //
+				"      \"type\": \"geo_point\"\n" + //
+				"    },\n" + //
+				"    \"pointB\": {\n" + //
+				"      \"type\": \"geo_point\"\n" + //
+				"    },\n" + //
+				"    \"pointC\": {\n" + //
+				"      \"type\": \"geo_point\"\n" + //
+				"    },\n" + //
+				"    \"pointD\": {\n" + //
+				"      \"type\": \"geo_point\"\n" + //
+				"    },\n" + //
+				"    \"shape1\": {\n" + //
+				"      \"type\": \"geo_shape\"\n" + //
+				"    },\n" + //
+				"    \"shape2\": {\n" + //
+				"      \"type\": \"geo_shape\",\n" + //
+				"      \"orientation\": \"clockwise\",\n" + //
+				"      \"ignore_malformed\": true,\n" + //
+				"      \"ignore_z_value\": false,\n" + //
+				"      \"coerce\": true\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n}"; //
 
 		// when
 		String mapping;
@@ -961,9 +985,6 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		}
 	}
 
-	/**
-	 * @author Artur Konczak
-	 */
 	@Setter
 	@Getter
 	@NoArgsConstructor
@@ -981,12 +1002,14 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		// geo point - Custom implementation + Spring Data
 		@GeoPointField private Point pointA;
-
 		private GeoPoint pointB;
-
 		@GeoPointField private String pointC;
-
 		@GeoPointField private double[] pointD;
+
+		// geo shape, until e have the classes for this, us a strng
+		@GeoShapeField private String shape1;
+		@GeoShapeField(coerce = true, ignoreMalformed = true, ignoreZValue = false,
+				orientation = GeoShapeField.Orientation.clockwise) private String shape2;
 	}
 
 	/**
