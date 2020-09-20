@@ -798,7 +798,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByLocationWithin(new Point(45.7806d, 3.0875d),
+		Page<SampleEntity> page = repository.findByLocationWithin(new Point(3.0875d, 45.7806d),
 				new Distance(2, Metrics.KILOMETERS), PageRequest.of(0, 10));
 
 		// then
@@ -838,7 +838,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat(pageAll.getTotalElements()).isEqualTo(2L);
 
 		// when
-		Page<SampleEntity> page = repository.findByLocationNear(new Box(new Point(46d, 3d), new Point(45d, 4d)),
+		Page<SampleEntity> page = repository.findByLocationNear(new Box(new Point(3d, 46d), new Point(4d, 45d)),
 				PageRequest.of(0, 10));
 
 		// then
@@ -861,7 +861,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity);
 
 		// when
-		Page<SampleEntity> page = repository.findByLocationNear(new Point(45.7806d, 3.0875d),
+		Page<SampleEntity> page = repository.findByLocationNear(new Point(3.0875d, 45.7806d),
 				new Distance(2, Metrics.KILOMETERS), PageRequest.of(0, 10));
 
 		// then
@@ -1334,7 +1334,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity2);
 
 		// when
-		long count = repository.countByLocationWithin(new Point(45.7806d, 3.0875d), new Distance(2, Metrics.KILOMETERS));
+		long count = repository.countByLocationWithin(new Point(3.0875d, 45.7806d), new Distance(2, Metrics.KILOMETERS));
 
 		// then
 		assertThat(count).isEqualTo(1L);
@@ -1365,7 +1365,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity2);
 
 		// when
-		long count = repository.countByLocationNear(new Box(new Point(46d, 3d), new Point(45d, 4d)));
+		long count = repository.countByLocationNear(new Box(new Point(3d, 46d), new Point(4d, 45d)));
 
 		// then
 		assertThat(count).isEqualTo(1L);
@@ -1396,7 +1396,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		repository.save(sampleEntity2);
 
 		// when
-		long count = repository.countByLocationNear(new Point(45.7806d, 3.0875d), new Distance(2, Metrics.KILOMETERS));
+		long count = repository.countByLocationNear(new Point(3.0875d, 45.7806d), new Distance(2, Metrics.KILOMETERS));
 
 		// then
 		assertThat(count).isEqualTo(1L);

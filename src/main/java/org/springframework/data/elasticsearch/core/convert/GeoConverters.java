@@ -54,8 +54,8 @@ class GeoConverters {
 		public Map<String, Object> convert(Point source) {
 
 			Map<String, Object> target = new LinkedHashMap<>();
-			target.put("lat", source.getX());
-			target.put("lon", source.getY());
+			target.put("lat", source.getY());
+			target.put("lon", source.getX());
 			return target;
 		}
 	}
@@ -87,8 +87,8 @@ class GeoConverters {
 
 		@Override
 		public Point convert(Map<String, Object> source) {
-			Double x = NumberUtils.convertNumberToTargetClass((Number) source.get("lat"), Double.class);
-			Double y = NumberUtils.convertNumberToTargetClass((Number) source.get("lon"), Double.class);
+			Double x = NumberUtils.convertNumberToTargetClass((Number) source.get("lon"), Double.class);
+			Double y = NumberUtils.convertNumberToTargetClass((Number) source.get("lat"), Double.class);
 
 			return new Point(x, y);
 		}
@@ -104,10 +104,10 @@ class GeoConverters {
 
 		@Override
 		public GeoPoint convert(Map<String, Object> source) {
-			Double x = NumberUtils.convertNumberToTargetClass((Number) source.get("lat"), Double.class);
-			Double y = NumberUtils.convertNumberToTargetClass((Number) source.get("lon"), Double.class);
+			Double lat = NumberUtils.convertNumberToTargetClass((Number) source.get("lat"), Double.class);
+			Double lon = NumberUtils.convertNumberToTargetClass((Number) source.get("lon"), Double.class);
 
-			return new GeoPoint(x, y);
+			return new GeoPoint(lat, lon);
 		}
 	}
 }

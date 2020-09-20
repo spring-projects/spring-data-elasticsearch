@@ -302,7 +302,7 @@ public class ElasticsearchTemplateGeoTests {
 		// given
 		loadClassBaseEntities();
 		CriteriaQuery geoLocationCriteriaQuery3 = new CriteriaQuery(
-				new Criteria("location").boundedBy(new Point(53.5171d, 0), new Point(49.5171d, 0.2062d)));
+				new Criteria("location").boundedBy(new Point(0, 53.5171d), new Point(0.2062d, 49.5171d)));
 
 		// when
 		SearchHits<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.search(geoLocationCriteriaQuery3,
