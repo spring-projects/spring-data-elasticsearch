@@ -143,13 +143,13 @@ public class MappingElasticsearchConverterUnitTests {
 		observatoryRoad = new Address();
 		observatoryRoad.city = "Los Angeles";
 		observatoryRoad.street = "2800 East Observatory Road";
-		observatoryRoad.location = new Point(34.118347D, -118.3026284D);
+		observatoryRoad.location = new Point(-118.3026284D, 34.118347D);
 
 		bigBunsCafe = new Place();
 		bigBunsCafe.name = "Big Buns Cafe";
 		bigBunsCafe.city = "Los Angeles";
 		bigBunsCafe.street = "15 South Fremont Avenue";
-		bigBunsCafe.location = new Point(34.0945637D, -118.1545845D);
+		bigBunsCafe.location = new Point(-118.1545845D, 34.0945637D);
 
 		sarahAsMap = Document.create();
 		sarahAsMap.put("id", "sarah");
@@ -272,22 +272,44 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	@Test // DATAES-530
-	public void shouldMapGeoPointElasticsearchNames() {
+	public void shouldMapGeoPointElasticsearchNames() throws JSONException {
 		// given
-		Point point = new Point(10, 20);
-		String pointAsString = point.getX() + "," + point.getY();
-		double[] pointAsArray = { point.getX(), point.getY() };
+		double lon = 5;
+		double lat = 48;
+		Point point = new Point(lon, lat);
+		// ES has Strings in "lat,lon", but has arrays as [lon,lat]!!
+		String pointAsString = lat + "," + lon;
+		double[] pointAsArray = { lon, lat };
+
+		String expected = "{\n" + //
+				"  \"pointA\": {\n" + //
+				"    \"lon\": 5.0,\n" + //
+				"    \"lat\": 48.0\n" + //
+				"  },\n" + //
+				"  \"pointB\": {\n" + //
+				"    \"lon\": 5.0,\n" + //
+				"    \"lat\": 48.0\n" + //
+				"  },\n" + //
+				"  \"pointC\": \"48.0,5.0\",\n" + //
+				"  \"pointD\": [\n" + //
+				"    5.0,\n" + //
+				"    48.0\n" + //
+				"  ]\n" + //
+				"}\n"; //
+
 		GeoEntity geoEntity = GeoEntity.builder().pointA(point).pointB(GeoPoint.fromPoint(point)).pointC(pointAsString)
 				.pointD(pointAsArray).build();
 		// when
 		String jsonResult = mappingElasticsearchConverter.mapObject(geoEntity).toJson();
 
 		// then
-		assertThat(jsonResult).contains(pointTemplate("pointA", point));
-		assertThat(jsonResult).contains(pointTemplate("pointB", point));
-		assertThat(jsonResult).contains(String.format(Locale.ENGLISH, "\"%s\":\"%s\"", "pointC", pointAsString));
-		assertThat(jsonResult)
-				.contains(String.format(Locale.ENGLISH, "\"%s\":[%.1f,%.1f]", "pointD", pointAsArray[0], pointAsArray[1]));
+
+		assertEquals(expected, jsonResult, false);
+		// assertThat(jsonResult).contains(pointTemplate("pointA", point));
+		// assertThat(jsonResult).contains(pointTemplate("pointB", point));
+		// assertThat(jsonResult).contains(String.format(Locale.ENGLISH, "\"%s\":\"%s\"", "pointC", pointAsString));
+		// assertThat(jsonResult)
+		// .contains(String.format(Locale.ENGLISH, "\"%s\":[%.1f,%.1f]", "pointD", pointAsArray[0], pointAsArray[1]));
 	}
 
 	@Test // DATAES-530
@@ -868,7 +890,7 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	private String pointTemplate(String name, Point point) {
-		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getX(), point.getY());
+		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getY(), point.getX());
 	}
 
 	private Map<String, Object> writeToMap(Object source) {

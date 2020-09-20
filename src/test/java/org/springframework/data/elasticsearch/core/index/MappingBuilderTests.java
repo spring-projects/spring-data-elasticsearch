@@ -641,7 +641,6 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		String mapping = getMappingBuilder().buildPropertyMapping(RankFeatureEntity.class);
 
-		System.out.println(mapping);
 		assertEquals(expected, mapping, false);
 	}
 
