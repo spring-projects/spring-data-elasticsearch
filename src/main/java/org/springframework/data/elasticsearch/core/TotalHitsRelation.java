@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 /**
  * Enum to represent the relation that Elasticsearch returns for the totalHits value {@see <a href=
- * "https://www.elastic.co/guide/en/elasticsearch/reference/7.5/search-request-body.html#request-body-search-track-total-hits">Ekasticsearch
+ * "https://www.elastic.co/guide/en/elasticsearch/reference/7.5/search-request-body.html#request-body-search-track-total-hits">Elasticsearch
  * docs</a>}
  * 
  * @author Peter-Josef Meisch
