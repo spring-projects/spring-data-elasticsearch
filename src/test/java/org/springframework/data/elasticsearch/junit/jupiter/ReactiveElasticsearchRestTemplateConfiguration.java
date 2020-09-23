@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.junit.jupiter;
 
+import java.time.Duration;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
@@ -45,7 +47,9 @@ public class ReactiveElasticsearchRestTemplateConfiguration extends AbstractReac
 					.usingSsl();
 		}
 
-		return ReactiveRestClients.create(configurationBuilder.build());
-
+		return ReactiveRestClients.create(configurationBuilder //
+				.withConnectTimeout(Duration.ofSeconds(20)) //
+				.withSocketTimeout(Duration.ofSeconds(20)) //
+				.build());
 	}
 }

@@ -35,14 +35,13 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.junit.jupiter.SpringDataElasticsearchExtension;
+import org.springframework.data.elasticsearch.junit.jupiter.IntegrationTest;
 import org.springframework.lang.Nullable;
 
 /**
@@ -51,7 +50,7 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  */
-@ExtendWith(SpringDataElasticsearchExtension.class)
+@IntegrationTest
 public class CdiRepositoryTests {
 
 	@Nullable private static CdiTestContainer cdiContainer;

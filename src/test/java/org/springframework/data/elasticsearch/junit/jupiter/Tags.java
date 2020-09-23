@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the original author or authors.
+ * Copyright 2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,9 @@
  */
 package org.springframework.data.elasticsearch.junit.jupiter;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.extension.ExtendWith;
-
 /**
- * Wraps the {@link SpringDataElasticsearchExtension}.
- *
  * @author Peter-Josef Meisch
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-@ExtendWith(SpringDataElasticsearchExtension.class)
-@Tag(Tags.INTEGRATION_TEST)
-public @interface IntegrationTest {
+public interface Tags {
+	String INTEGRATION_TEST = "integration-test";
 }

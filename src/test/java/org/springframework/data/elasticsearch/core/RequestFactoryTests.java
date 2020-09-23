@@ -434,7 +434,7 @@ class RequestFactoryTests {
 		PutIndexTemplateRequest putIndexTemplateRequest = requestFactory.putIndexTemplateRequest(putTemplateRequest);
 
 		String json = requestToString(putIndexTemplateRequest);
-		System.out.println(json);
+
 		assertEquals(expected, json, false);
 	}
 
