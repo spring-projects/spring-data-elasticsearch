@@ -830,13 +830,21 @@ public class MappingElasticsearchConverter
 		@Nullable
 		public Object get(ElasticsearchPersistentProperty property) {
 
+			String fieldName = property.getFieldName();
+
 			if (target instanceof Document) {
 				// nested objects may have properties like 'id' which are recognized as isIdProperty() but they are not
 				// Documents
 				Document document = (Document) target;
 
 				if (property.isIdProperty() && document.hasId()) {
-					return document.getId();
+					Object id = null;
+
+					// take the id property from the document source if available
+					if (!fieldName.contains(".")) {
+						id = target.get(fieldName);
+					}
+					return id != null ? id : document.getId();
 				}
 
 				if (property.isVersionProperty() && document.hasVersion()) {
@@ -848,8 +856,6 @@ public class MappingElasticsearchConverter
 			if (target instanceof SearchDocument && property.isScoreProperty()) {
 				return ((SearchDocument) target).getScore();
 			}
-
-			String fieldName = property.getFieldName();
 
 			if (!fieldName.contains(".")) {
 				return target.get(fieldName);
