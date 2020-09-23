@@ -33,6 +33,7 @@ import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
+import org.springframework.data.elasticsearch.core.geo.GeoJson;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
@@ -148,7 +149,13 @@ public class SimpleElasticsearchPersistentProperty extends
 	 */
 	private void initDateConverter() {
 		Field field = findAnnotation(Field.class);
-		Class<?> actualType = getActualType();
+
+		Class<?> actualType = getActualTypeOrNull();
+
+		if (actualType == null) {
+			return;
+		}
+
 		boolean isTemporalAccessor = TemporalAccessor.class.isAssignableFrom(actualType);
 		boolean isDate = Date.class.isAssignableFrom(actualType);
 
@@ -262,7 +269,7 @@ public class SimpleElasticsearchPersistentProperty extends
 
 	@Override
 	public boolean isGeoShapeProperty() {
-		return isAnnotationPresent(GeoShapeField.class);
+		return GeoJson.class.isAssignableFrom(getActualType()) || isAnnotationPresent(GeoShapeField.class);
 	}
 
 	@Override

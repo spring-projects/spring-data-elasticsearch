@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.config.namespace;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.client.RestClientFactoryBean;
 import org.springframework.data.elasticsearch.client.TransportClientFactoryBean;
+import org.springframework.data.elasticsearch.junit.jupiter.Tags;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -38,6 +40,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration("namespace.xml")
+@Tag(Tags.INTEGRATION_TEST)
 public class ElasticsearchNamespaceHandlerTests {
 
 	@Autowired private ApplicationContext context;

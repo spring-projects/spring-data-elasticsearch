@@ -49,6 +49,12 @@ public class ElasticsearchRestTemplateConfiguration extends AbstractElasticsearc
 		ClientConfiguration.TerminalClientConfigurationBuilder configurationBuilder = ClientConfiguration.builder()
 				.connectedTo(elasticsearchHostPort);
 
+		String proxy = System.getenv("DATAES_ELASTICSEARCH_PROXY");
+
+		if (proxy != null) {
+			configurationBuilder = configurationBuilder.withProxy(proxy);
+		}
+
 		if (clusterConnectionInfo.isUseSsl()) {
 			configurationBuilder = ((ClientConfiguration.MaybeSecureClientConfigurationBuilder) configurationBuilder)
 					.usingSsl();

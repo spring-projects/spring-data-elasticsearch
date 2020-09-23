@@ -44,8 +44,8 @@ The following annotations are available:
 ** `name`: The name of the field as it will be represented in the Elasticsearch document, if not set, the Java field name is used.
 ** `type`: the field type, can be one of _Text, Keyword, Long, Integer, Short, Byte, Double, Float, Half_Float, Scaled_Float, Date, Date_Nanos, Boolean, Binary, Integer_Range, Float_Range, Long_Range, Double_Range, Date_Range, Ip_Range, Object, Nested, Ip, TokenCount, Percolator, Flattened, Search_As_You_Type_. See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html[Elasticsearch Mapping Types]
 ** `format` and `pattern` definitions for the _Date_ type. `format` must be defined for date types.
-** `store`: Flag wether the original field value should be store in Elasticsearch, default value is _false_.
-** `analyzer`, `searchAnalyzer`, `normalizer` for specifying custom custom analyzers and normalizer.
+** `store`: Flag whether the original field value should be store in Elasticsearch, default value is _false_.
+** `analyzer`, `searchAnalyzer`, `normalizer` for specifying custom analyzers and normalizer.
 * `@GeoPoint`: marks a field as _geo_point_ datatype. Can be omitted if the field is an instance of the `GeoPoint` class.
 
 NOTE: Properties that derive from `TemporalAccessor` must either have a `@Field` annotation of type `FieldType.Date` or a custom converter must be registered for this type. +
@@ -135,6 +135,44 @@ public class Address {
 }
 ----
 ====
+
+==== GeoJson Types
+
+Spring Data Elasticsearch supports the GeoJson types by providing an interface `GeoJson` and implementations for the different geometries. They are mapped to Elasticsearch
+documents according to the GeoJson specification. The corresponding properties of the entity are specified as `geo_shape` when the index mappings is written.
+
+.GeoJson types
+====
+[source,java]
+----
+public class Address {
+
+  String city, street;
+  GeoJsonPoint location;
+}
+----
+[source,json]
+----
+{
+  "city": "Los Angeles",
+  "street": "2800 East Observatory Road",
+  "location": {
+    "type": "Point",
+    "coordinates": [-118.3026284, 34.118347]
+  }
+}
+----
+====
+
+The following GeoJson types are implemented:
+
+* `GeoJsonPoint`
+* `GeoJsonMultiPoint`
+* `GeoJsonLineString`
+* `GeoJsonMultiLineString`
+* `GeoJsonPolygon`
+* `GeoJsonMultiPolygon`
+* `GeoJsonGeometryCollection`
 
 ==== Collections
 
