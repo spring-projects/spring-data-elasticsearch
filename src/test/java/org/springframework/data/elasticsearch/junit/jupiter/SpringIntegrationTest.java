@@ -20,6 +20,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -32,5 +33,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @Target(ElementType.TYPE)
 @ExtendWith(SpringDataElasticsearchExtension.class)
 @ExtendWith(SpringExtension.class)
+@Tag(Tags.INTEGRATION_TEST)
 public @interface SpringIntegrationTest {
 }
