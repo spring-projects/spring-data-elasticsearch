@@ -23,12 +23,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -249,7 +251,7 @@ class QueryKeywordsTests {
 		products.forEach(product -> assertThat(product.name).isEqualTo("Sugar"));
 	}
 
-	@Test
+	@Test // DATAES-239
 	void shouldSearchForNullValues() {
 		final List<Product> products = repository.findByName(null);
 
@@ -257,12 +259,30 @@ class QueryKeywordsTests {
 		assertThat(products.get(0).getId()).isEqualTo("6");
 	}
 
-	@Test
+	@Test // DATAES-239
 	void shouldDeleteWithNullValues() {
 		repository.deleteByName(null);
 
 		long count = repository.count();
 		assertThat(count).isEqualTo(5);
+	}
+
+	@Test // DATAES-937
+	@DisplayName("should return empty list on findById with empty input list")
+	void shouldReturnEmptyListOnFindByIdWithEmptyInputList() {
+
+		Iterable<Product> products = repository.findAllById(new ArrayList<>());
+
+		assertThat(products).isEmpty();
+	}
+
+	@Test // DATAES-937
+	@DisplayName("should return empty list on derived method with empty input list")
+	void shouldReturnEmptyListOnDerivedMethodWithEmptyInputList() {
+
+		Iterable<Product> products = repository.findAllByNameIn(new ArrayList<>());
+
+		assertThat(products).isEmpty();
 	}
 
 	/**
@@ -344,6 +364,8 @@ class QueryKeywordsTests {
 		List<Product> findTop2ByName(String name);
 
 		void deleteByName(@Nullable String name);
+
+		List<Product> findAllByNameIn(List<String> names);
 	}
 
 }
