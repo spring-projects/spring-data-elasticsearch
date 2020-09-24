@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.mapping.Association;
@@ -77,13 +78,15 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Nullable
 	private String getAnnotatedFieldName() {
 
-		if (isAnnotationPresent(Field.class)) {
+		String name = null;
 
-			String name = findAnnotation(Field.class).name();
-			return StringUtils.hasText(name) ? name : null;
+		if (isAnnotationPresent(MultiField.class)) {
+			name = findAnnotation(MultiField.class).mainField().name();
+		} else if (isAnnotationPresent(Field.class)) {
+			name = findAnnotation(Field.class).name();
 		}
 
-		return null;
+		return StringUtils.hasText(name) ? name : null;
 	}
 
 	/*

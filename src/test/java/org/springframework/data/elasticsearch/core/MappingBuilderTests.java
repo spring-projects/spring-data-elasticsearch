@@ -394,13 +394,31 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
-	@Test // DATAES-568
+	@Test // DATAES-568, DATAES-896
 	public void shouldUseFieldNameOnMultiField() throws IOException, JSONException {
 
 		// given
-		String expected = "{\"fieldname-type\":{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"multifield-property\":{\"store\":false,\"type\":\"text\",\"analyzer\":\"whitespace\",\"fields\":{\"prefix\":{\"store\":false,\"type\":\"text\",\"analyzer\":\"stop\",\"search_analyzer\":\"standard\"}}}"
-				+ "}}}";
+		String expected = "{\n" + //
+				"  \"fieldname-type\": {\n" + //
+				"    \"properties\": {\n" + //
+				"      \"id-property\": {\n" + //
+				"        \"type\": \"keyword\",\n" + //
+				"        \"index\": true\n" + //
+				"      },\n" + //
+				"      \"main-field\": {\n" + //
+				"        \"type\": \"text\",\n" + //
+				"        \"analyzer\": \"whitespace\",\n" + //
+				"        \"fields\": {\n" + //
+				"          \"suff-ix\": {\n" + //
+				"            \"type\": \"text\",\n" + //
+				"            \"analyzer\": \"stop\",\n" + //
+				"            \"search_analyzer\": \"standard\"\n" + //
+				"          }\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.MultiFieldEntity.class);
@@ -470,9 +488,9 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 			@Id @Field("id-property") private String id;
 
 			@Field("multifield-property") //
-			@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"), otherFields = {
-					@InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop", searchAnalyzer = "standard") }) //
-			private String description;
+			@MultiField(mainField = @Field(name = "main-field", type = FieldType.Text, analyzer = "whitespace"),
+					otherFields = { @InnerField(suffix = "suff-ix", type = FieldType.Text, analyzer = "stop",
+							searchAnalyzer = "standard") }) private String description;
 		}
 	}
 

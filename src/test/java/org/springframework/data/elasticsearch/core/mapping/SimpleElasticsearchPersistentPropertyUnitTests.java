@@ -19,8 +19,12 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.lang.Nullable;
 
 /**
  * Unit tests for {@link SimpleElasticsearchPersistentProperty}.
@@ -62,6 +66,16 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(persistentProperty.getFieldName()).isEqualTo("by-value");
 	}
 
+	@Test // DATAES-896
+	public void shouldUseNameFromMultiFieldMainField() {
+		SimpleElasticsearchPersistentEntity<?> persistentEntity = context
+				.getRequiredPersistentEntity(MultiFieldProperty.class);
+		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getPersistentProperty("mainfieldProperty");
+
+		assertThat(persistentProperty).isNotNull();
+		assertThat(persistentProperty.getFieldName()).isEqualTo("mainfield");
+	}
+
 	static class InvalidScoreProperty {
 		@Score String scoreProperty;
 	}
@@ -72,5 +86,10 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 
 	static class FieldValueProperty {
 		@Field(value = "by-value") String fieldProperty;
+	}
+
+	static class MultiFieldProperty {
+		@Nullable @MultiField(mainField = @Field("mainfield"),
+				otherFields = { @InnerField(suffix = "suff", type = FieldType.Keyword) }) String mainfieldProperty;
 	}
 }
