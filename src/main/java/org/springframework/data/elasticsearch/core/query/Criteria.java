@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -438,7 +437,7 @@ public class Criteria {
 	/**
 	 * Add a {@link OperationKey#IN} entry to the {@link #queryCriteriaEntries}. This will create a terms query, so don't
 	 * use it with text fields as these are analyzed and changed by Elasticsearch (converted to lowercase with the default
-	 * analyzer). If used for Strings, these should be marked a sfield type Keyword.
+	 * analyzer). If used for Strings, these should be marked as field type Keyword.
 	 *
 	 * @param values the argument to the operation
 	 * @return this object
@@ -743,11 +742,6 @@ public class Criteria {
 	}
 
 	private List<Object> toCollection(Object... values) {
-		if (values.length == 0 || (values.length > 1 && values[1] instanceof Collection)) {
-			throw new InvalidDataAccessApiUsageException(
-					"At least one element " + (values.length > 0 ? ("of argument of type " + values[1].getClass().getName()) : "")
-							+ " has to be present.");
-		}
 		return Arrays.asList(values);
 	}
 
