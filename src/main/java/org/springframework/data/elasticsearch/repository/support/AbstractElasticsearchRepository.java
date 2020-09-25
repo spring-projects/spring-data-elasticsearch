@@ -155,7 +155,13 @@ public abstract class AbstractElasticsearchRepository<T, ID> implements Elastics
 
 		Assert.notNull(ids, "ids can't be null.");
 
-		SearchQuery query = new NativeSearchQueryBuilder().withIds(stringIdsRepresentation(ids)).build();
+		List<String> stringIds = stringIdsRepresentation(ids);
+
+		if (stringIds.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		SearchQuery query = new NativeSearchQueryBuilder().withIds(stringIds).build();
 
 		return elasticsearchOperations.multiGet(query, getEntityClass());
 	}

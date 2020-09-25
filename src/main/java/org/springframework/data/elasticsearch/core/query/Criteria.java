@@ -15,10 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -26,6 +29,8 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Criteria is the central class when constructing queries. It follows more or less a fluent API style, which allows to
@@ -39,13 +44,9 @@ public class Criteria {
 
 	@Override
 	public String toString() {
-		return "Criteria{" +
-				"field=" + field.getName() +
-				", boost=" + boost +
-				", negating=" + negating +
-				", queryCriteria=" + ObjectUtils.nullSafeToString(queryCriteria) +
-				", filterCriteria=" + ObjectUtils.nullSafeToString(filterCriteria) +
-				'}';
+		return "Criteria{" + "field=" + field.getName() + ", boost=" + boost + ", negating=" + negating + ", queryCriteria="
+				+ ObjectUtils.nullSafeToString(queryCriteria) + ", filterCriteria="
+				+ ObjectUtils.nullSafeToString(filterCriteria) + '}';
 	}
 
 	public static final String WILDCARD = "*";
@@ -64,8 +65,7 @@ public class Criteria {
 
 	private Set<CriteriaEntry> filterCriteria = new LinkedHashSet<>();
 
-	public Criteria() {
-	}
+	public Criteria() {}
 
 	/**
 	 * Creates a new Criteria with provided field name
@@ -305,7 +305,7 @@ public class Criteria {
 			throw new InvalidDataAccessApiUsageException("Range [* TO *] is not allowed");
 		}
 
-		queryCriteria.add(new CriteriaEntry(OperationKey.BETWEEN, new Object[]{lowerBound, upperBound}));
+		queryCriteria.add(new CriteriaEntry(OperationKey.BETWEEN, new Object[] { lowerBound, upperBound }));
 		return this;
 	}
 
@@ -376,11 +376,6 @@ public class Criteria {
 	}
 
 	private List<Object> toCollection(Object... values) {
-		if (values.length == 0 || (values.length > 1 && values[1] instanceof Collection)) {
-			throw new InvalidDataAccessApiUsageException("At least one element "
-					+ (values.length > 0 ? ("of argument of type " + values[1].getClass().getName()) : "")
-					+ " has to be present.");
-		}
 		return Arrays.asList(values);
 	}
 
@@ -398,15 +393,14 @@ public class Criteria {
 	 * Creates new CriteriaEntry for {@code location WITHIN distance}
 	 *
 	 * @param location {@link org.springframework.data.elasticsearch.core.geo.GeoPoint} center coordinates
-	 * @param distance {@link String} radius as a string (e.g. : '100km').
-	 * Distance unit :
-	 * either mi/miles or km can be set
+	 * @param distance {@link String} radius as a string (e.g. : '100km'). Distance unit : either mi/miles or km can be
+	 *          set
 	 * @return Criteria the chaind criteria with the new 'within' criteria included.
 	 */
 	public Criteria within(GeoPoint location, String distance) {
 		Assert.notNull(location, "Location value for near criteria must not be null");
 		Assert.notNull(location, "Distance value for near criteria must not be null");
-		filterCriteria.add(new CriteriaEntry(OperationKey.WITHIN, new Object[]{location, distance}));
+		filterCriteria.add(new CriteriaEntry(OperationKey.WITHIN, new Object[] { location, distance }));
 		return this;
 	}
 
@@ -414,56 +408,54 @@ public class Criteria {
 	 * Creates new CriteriaEntry for {@code location WITHIN distance}
 	 *
 	 * @param location {@link org.springframework.data.geo.Point} center coordinates
-	 * @param distance {@link org.springframework.data.geo.Distance} radius
-	 * .
+	 * @param distance {@link org.springframework.data.geo.Distance} radius .
 	 * @return Criteria the chaind criteria with the new 'within' criteria included.
 	 */
 	public Criteria within(Point location, Distance distance) {
 		Assert.notNull(location, "Location value for near criteria must not be null");
 		Assert.notNull(location, "Distance value for near criteria must not be null");
-		filterCriteria.add(new CriteriaEntry(OperationKey.WITHIN, new Object[]{location, distance}));
+		filterCriteria.add(new CriteriaEntry(OperationKey.WITHIN, new Object[] { location, distance }));
 		return this;
 	}
 
 	/**
 	 * Creates new CriteriaEntry for {@code geoLocation WITHIN distance}
 	 *
-	 * @param geoLocation {@link String} center point
-	 * supported formats:
-	 * lat on = > "41.2,45.1",
-	 * geohash = > "asd9as0d"
-	 * @param distance {@link String} radius as a string (e.g. : '100km').
-	 * Distance unit :
-	 * either mi/miles or km can be set
+	 * @param geoLocation {@link String} center point supported formats: lat on = > "41.2,45.1", geohash = > "asd9as0d"
+	 * @param distance {@link String} radius as a string (e.g. : '100km'). Distance unit : either mi/miles or km can be
+	 *          set
 	 * @return
 	 */
 	public Criteria within(String geoLocation, String distance) {
 		Assert.isTrue(!StringUtils.isEmpty(geoLocation), "geoLocation value must not be null");
-		filterCriteria.add(new CriteriaEntry(OperationKey.WITHIN, new Object[]{geoLocation, distance}));
+		filterCriteria.add(new CriteriaEntry(OperationKey.WITHIN, new Object[] { geoLocation, distance }));
 		return this;
 	}
 
 	/**
 	 * Creates new CriteriaEntry for {@code location GeoBox bounding box}
 	 *
-	 * @param boundingBox {@link org.springframework.data.elasticsearch.core.geo.GeoBox} bounding box(left top corner + right bottom corner)
+	 * @param boundingBox {@link org.springframework.data.elasticsearch.core.geo.GeoBox} bounding box(left top corner +
+	 *          right bottom corner)
 	 * @return Criteria the chaind criteria with the new 'boundingBox' criteria included.
 	 */
 	public Criteria boundedBy(GeoBox boundingBox) {
 		Assert.notNull(boundingBox, "boundingBox value for boundedBy criteria must not be null");
-		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{boundingBox}));
+		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[] { boundingBox }));
 		return this;
 	}
 
 	/**
 	 * Creates new CriteriaEntry for {@code location Box bounding box}
 	 *
-	 * @param boundingBox {@link org.springframework.data.elasticsearch.core.geo.GeoBox} bounding box(left top corner + right bottom corner)
+	 * @param boundingBox {@link org.springframework.data.elasticsearch.core.geo.GeoBox} bounding box(left top corner +
+	 *          right bottom corner)
 	 * @return Criteria the chaind criteria with the new 'boundingBox' criteria included.
 	 */
 	public Criteria boundedBy(Box boundingBox) {
 		Assert.notNull(boundingBox, "boundingBox value for boundedBy criteria must not be null");
-		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{boundingBox.getFirst(), boundingBox.getSecond()}));
+		filterCriteria
+				.add(new CriteriaEntry(OperationKey.BBOX, new Object[] { boundingBox.getFirst(), boundingBox.getSecond() }));
 		return this;
 	}
 
@@ -477,7 +469,7 @@ public class Criteria {
 	public Criteria boundedBy(String topLeftGeohash, String bottomRightGeohash) {
 		Assert.isTrue(!StringUtils.isEmpty(topLeftGeohash), "topLeftGeohash must not be empty");
 		Assert.isTrue(!StringUtils.isEmpty(bottomRightGeohash), "bottomRightGeohash must not be empty");
-		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{topLeftGeohash, bottomRightGeohash}));
+		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[] { topLeftGeohash, bottomRightGeohash }));
 		return this;
 	}
 
@@ -491,14 +483,15 @@ public class Criteria {
 	public Criteria boundedBy(GeoPoint topLeftPoint, GeoPoint bottomRightPoint) {
 		Assert.notNull(topLeftPoint, "topLeftPoint must not be null");
 		Assert.notNull(bottomRightPoint, "bottomRightPoint must not be null");
-		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{topLeftPoint, bottomRightPoint}));
+		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[] { topLeftPoint, bottomRightPoint }));
 		return this;
 	}
 
 	public Criteria boundedBy(Point topLeftPoint, Point bottomRightPoint) {
 		Assert.notNull(topLeftPoint, "topLeftPoint must not be null");
 		Assert.notNull(bottomRightPoint, "bottomRightPoint must not be null");
-		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX, new Object[]{GeoPoint.fromPoint(topLeftPoint), GeoPoint.fromPoint(bottomRightPoint)}));
+		filterCriteria.add(new CriteriaEntry(OperationKey.BBOX,
+				new Object[] { GeoPoint.fromPoint(topLeftPoint), GeoPoint.fromPoint(bottomRightPoint) }));
 		return this;
 	}
 
@@ -611,10 +604,7 @@ public class Criteria {
 
 		@Override
 		public String toString() {
-			return "CriteriaEntry{" +
-					"key=" + key +
-					", value=" + value +
-					'}';
+			return "CriteriaEntry{" + "key=" + key + ", value=" + value + '}';
 		}
 	}
 }

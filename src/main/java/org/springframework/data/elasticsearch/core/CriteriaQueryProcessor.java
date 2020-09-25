@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.elasticsearch.index.query.Operator.AND;
+import static org.elasticsearch.index.query.Operator.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.core.query.Criteria.*;
 
@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
-import org.elasticsearch.index.query.*;
+import org.apache.lucene.queryparser.flexible.standard.QueryParserUtil;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.util.Assert;
 
@@ -38,7 +40,6 @@ import org.springframework.util.Assert;
  * @author Artur Konczak
  */
 class CriteriaQueryProcessor {
-
 
 	QueryBuilder createQueryFromCriteria(Criteria criteria) {
 		if (criteria == null)
@@ -104,7 +105,6 @@ class CriteriaQueryProcessor {
 		return query;
 	}
 
-
 	private QueryBuilder createQueryFragmentForCriteria(Criteria chainedCriteria) {
 		if (chainedCriteria.getQueryCriteriaEntries().isEmpty())
 			return null;
@@ -131,8 +131,8 @@ class CriteriaQueryProcessor {
 		return query;
 	}
 
-
-	private QueryBuilder processCriteriaEntry(Criteria.CriteriaEntry entry,/* OperationKey key, Object value,*/ String fieldName) {
+	private QueryBuilder processCriteriaEntry(Criteria.CriteriaEntry entry,
+			/* OperationKey key, Object value,*/ String fieldName) {
 		Object value = entry.getValue();
 		if (value == null) {
 			return null;
@@ -180,17 +180,15 @@ class CriteriaQueryProcessor {
 				query = fuzzyQuery(fieldName, searchText);
 				break;
 			case IN:
-				query = boolQuery();
-				collection = (Iterable<Object>) value;
-				for (Object item : collection) {
-					((BoolQueryBuilder) query).should(queryStringQuery(item.toString()).field(fieldName));
+				if (value instanceof Iterable) {
+					Iterable<?> iterable = (Iterable<?>) value;
+					query = queryStringQuery(orQueryString(iterable)).field(fieldName);
 				}
 				break;
 			case NOT_IN:
-				query = boolQuery();
-				collection = (Iterable<Object>) value;
-				for (Object item : collection) {
-					((BoolQueryBuilder) query).mustNot(queryStringQuery(item.toString()).field(fieldName));
+				if (value instanceof Iterable) {
+					Iterable<?> iterable = (Iterable<?>) value;
+					query = queryStringQuery("NOT(" + orQueryString(iterable) + ')').field(fieldName);
 				}
 				break;
 		}
@@ -202,5 +200,24 @@ class CriteriaQueryProcessor {
 			return;
 		}
 		query.boost(boost);
+	}
+
+	private static String orQueryString(Iterable<?> iterable) {
+		StringBuilder sb = new StringBuilder();
+
+		for (Object item : iterable) {
+
+			if (item != null) {
+
+				if (sb.length() > 0) {
+					sb.append(' ');
+				}
+				sb.append('"');
+				sb.append(QueryParserUtil.escape(item.toString()));
+				sb.append('"');
+			}
+		}
+
+		return sb.toString();
 	}
 }
