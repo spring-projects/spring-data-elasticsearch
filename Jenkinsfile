@@ -32,7 +32,7 @@ pipeline {
 			    sh 'mkdir -p /tmp/jenkins-home'
             	sh 'chown -R 1001:1001 .'
 				sh 'rm -rf ?'
-				sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Dsort -U -B'
+				sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list verify -Dsort -U -B'
             	sh 'chown -R 1001:1001 .'
 			}
 		}
@@ -59,7 +59,7 @@ pipeline {
                         sh 'mkdir -p /tmp/jenkins-home'
                         sh 'chown -R 1001:1001 .'
 						sh 'rm -rf ?'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pjava11 clean dependency:list test -Dsort -U -B'
+						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pjava11 clean dependency:list verify -Dsort -U -B'
                         sh 'chown -R 1001:1001 .'
 					}
 				}
@@ -78,7 +78,7 @@ pipeline {
                         sh 'mkdir -p /tmp/jenkins-home'
                         sh 'chown -R 1001:1001 .'
 						sh 'rm -rf ?'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pjava11 clean dependency:list test -Dsort -U -B'
+						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pjava11 clean dependency:list verify -Dsort -U -B'
                         sh 'chown -R 1001:1001 .'
 					}
 				}
