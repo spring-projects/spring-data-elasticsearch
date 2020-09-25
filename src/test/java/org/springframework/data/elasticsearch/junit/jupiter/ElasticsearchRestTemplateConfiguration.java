@@ -55,8 +55,8 @@ public class ElasticsearchRestTemplateConfiguration extends AbstractElasticsearc
 		}
 
 		return RestClients.create(configurationBuilder //
-				.withConnectTimeout(Duration.ofSeconds(20)) //
-				.withSocketTimeout(Duration.ofSeconds(20)) //
+				.withConnectTimeout(Duration.ofSeconds(5)) //
+				.withSocketTimeout(Duration.ofSeconds(3)) //
 				.build()) //
 				.rest();
 	}
