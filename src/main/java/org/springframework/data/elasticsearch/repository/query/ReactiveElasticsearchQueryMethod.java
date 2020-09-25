@@ -36,6 +36,7 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 
@@ -48,6 +49,7 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 
 	private static final ClassTypeInformation<Page> PAGE_TYPE = ClassTypeInformation.from(Page.class);
 	private static final ClassTypeInformation<Slice> SLICE_TYPE = ClassTypeInformation.from(Slice.class);
+	private final Lazy<Boolean> isCollectionQuery;
 
 	public ReactiveElasticsearchQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
@@ -80,6 +82,9 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 						+ "Use sorting capabilities on Pageble instead! Offending method: %s", method.toString()));
 			}
 		}
+
+		this.isCollectionQuery = Lazy.of(() -> (!(isPageQuery() || isSliceQuery())
+				&& ReactiveWrappers.isMultiValueType(metadata.getReturnType(method).getType()) || super.isCollectionQuery()));
 	}
 
 	@Override
@@ -101,6 +106,15 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 			}
 		}
 		return false;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryMethod#isCollectionQuery()
+	 */
+	@Override
+	public boolean isCollectionQuery() {
+		return isCollectionQuery.get();
 	}
 
 	/*
