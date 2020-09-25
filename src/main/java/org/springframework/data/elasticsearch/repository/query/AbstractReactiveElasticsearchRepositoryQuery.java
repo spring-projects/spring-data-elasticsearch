@@ -70,7 +70,10 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 		ReactiveElasticsearchParametersParameterAccessor parameterAccessor = new ReactiveElasticsearchParametersParameterAccessor(
 				queryMethod, parameters);
 
-		if (getQueryMethod().isCollectionQuery()) {
+		QueryMethod queryMethod = getQueryMethod();
+
+		if (queryMethod.isCollectionQuery() || queryMethod instanceof ReactiveElasticsearchQueryMethod
+				&& ((ReactiveElasticsearchQueryMethod) queryMethod).isFluxQuery()) {
 			return Flux.defer(() -> (Publisher<Object>) execute(parameterAccessor));
 		}
 
@@ -121,7 +124,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 		} else if (isExistsQuery()) {
 			return (query, type, targetType, indexCoordinates) -> operations.count(query, type, indexCoordinates)
 					.map(count -> count > 0);
-		} else if (queryMethod.isCollectionQuery()) {
+		} else if (queryMethod.isCollectionQuery() || queryMethod.isFluxQuery()) {
 			return (query, type, targetType, indexCoordinates) -> operations.search(query.setPageable(accessor.getPageable()),
 					type, targetType, indexCoordinates);
 		} else {

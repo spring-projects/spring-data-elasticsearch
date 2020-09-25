@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
@@ -52,7 +53,6 @@ import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
- * @currentRead Fool's Fate - Robin Hobb
  */
 public class ReactiveElasticsearchQueryMethodUnitTests {
 
@@ -115,6 +115,24 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 		assertThat(method.getEntityInformation().getJavaType()).isAssignableFrom(Person.class);
 	}
 
+	@Test
+	@DisplayName("should detect Flux return type")
+	void shouldDetectFluxReturnType() throws Exception {
+
+		ReactiveElasticsearchQueryMethod method = queryMethod(PersonRepository.class, "findByName", String.class);
+
+		assertThat(method.isFluxQuery()).isTrue();
+	}
+
+	@Test
+	@DisplayName("should detect non-Flux return type")
+	void shouldDetectNonFluxReturnType() throws Exception {
+
+		ReactiveElasticsearchQueryMethod method = queryMethod(PersonRepository.class, "findMonoByName", String.class);
+
+		assertThat(method.isFluxQuery()).isFalse();
+	}
+
 	private ReactiveElasticsearchQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters)
 			throws Exception {
 
@@ -125,6 +143,8 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 	}
 
 	interface PersonRepository extends Repository<Person, String> {
+
+		Mono<Person> findMonoByName(String name);
 
 		Mono<Person> findMonoByName(String name, Pageable pageRequest);
 

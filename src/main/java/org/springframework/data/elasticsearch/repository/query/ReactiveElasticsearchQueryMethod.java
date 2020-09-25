@@ -125,4 +125,11 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 				|| Flux.class.isAssignableFrom((Class<?>) methodGenericReturnType.getRawType());
 	}
 
+	/**
+	 * @return {@literal true} if the return type of the method is a {@link Flux}.
+	 * @since 4.1
+	 */
+	public boolean isFluxQuery() {
+		return Flux.class.isAssignableFrom(methodReturnType());
+	}
 }
