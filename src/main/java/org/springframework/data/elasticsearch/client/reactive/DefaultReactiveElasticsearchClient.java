@@ -107,7 +107,6 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.suggest.Suggest;
 import org.reactivestreams.Publisher;
-
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientLogger;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
@@ -119,7 +118,6 @@ import org.springframework.data.elasticsearch.client.util.ScrollState;
 import org.springframework.data.util.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.lang.Nullable;
@@ -574,7 +572,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.ReactiveElasticsearchClientCallback)
 	 */
 	@Override
-	public Mono<ClientResponse> execute(ReactiveElasticsearchClientCallback callback) {
+	public <T> Mono<T> execute(ReactiveElasticsearchClientCallback<T> callback) {
 
 		return this.hostProvider.getActive(Verification.LAZY) //
 				.flatMap(callback::doWithClient) //
@@ -617,11 +615,11 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		String logId = ClientLogger.newLogId();
 
-		return execute(webClient -> sendRequest(webClient, logId, request, headers))
-				.flatMapMany(response -> readResponseBody(logId, request, response, responseType));
+		return Flux.from(execute(webClient -> sendRequest(webClient, logId, request, headers)
+				.exchangeToMono(clientResponse -> Mono.from(readResponseBody(logId, request, clientResponse, responseType)))));
 	}
 
-	private Mono<ClientResponse> sendRequest(WebClient webClient, String logId, Request request, HttpHeaders headers) {
+	private RequestBodySpec sendRequest(WebClient webClient, String logId, Request request, HttpHeaders headers) {
 
 		RequestBodySpec requestBodySpec = webClient.method(HttpMethod.valueOf(request.getMethod().toUpperCase())) //
 				.uri(builder -> {
@@ -669,9 +667,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 			ClientLogger.logRequest(logId, request.getMethod().toUpperCase(), request.getEndpoint(), request.getParameters());
 		}
 
-		return requestBodySpec //
-				.exchange() //
-				.onErrorReturn(ConnectException.class, ClientResponse.create(HttpStatus.SERVICE_UNAVAILABLE).build());
+		return requestBodySpec;
 	}
 
 	// region indices operations
