@@ -13,7 +13,9 @@ import org.springframework.data.geo.Point;
 
 /**
  * @author Artur Konaczak
+ * @deprecated since 4.1, not used anymore
  */
+@Deprecated
 public class CustomGeoModule extends SimpleModule {
 
 	private static final long serialVersionUID = 1L;

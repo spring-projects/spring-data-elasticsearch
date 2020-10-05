@@ -126,6 +126,20 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 */
 	boolean isCompletionProperty();
 
+	/**
+	 * calls {@link #getActualType()} but returns null when an exception is thrown
+	 * 
+	 * @since 4.1
+	 */
+	@Nullable
+	default Class<?> getActualTypeOrNull() {
+		try {
+			return getActualType();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
 	enum PropertyToFieldNameConverter implements Converter<ElasticsearchPersistentProperty, String> {
 
 		INSTANCE;

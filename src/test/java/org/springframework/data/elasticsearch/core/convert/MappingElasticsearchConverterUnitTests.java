@@ -41,6 +41,7 @@ import java.util.Map;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
@@ -56,6 +57,14 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.geo.GeoJsonEntity;
+import org.springframework.data.elasticsearch.core.geo.GeoJsonGeometryCollection;
+import org.springframework.data.elasticsearch.core.geo.GeoJsonLineString;
+import org.springframework.data.elasticsearch.core.geo.GeoJsonMultiLineString;
+import org.springframework.data.elasticsearch.core.geo.GeoJsonMultiPoint;
+import org.springframework.data.elasticsearch.core.geo.GeoJsonMultiPolygon;
+import org.springframework.data.elasticsearch.core.geo.GeoJsonPoint;
+import org.springframework.data.elasticsearch.core.geo.GeoJsonPolygon;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
@@ -889,6 +898,300 @@ public class MappingElasticsearchConverterUnitTests {
 		assertEquals(expected, document.toJson(), false);
 	}
 
+	@Nested
+	class GeoJsonUnitTests {
+		private GeoJsonEntity entity;
+
+		@BeforeEach
+		void setup() {
+			GeoJsonMultiLineString multiLineString = GeoJsonMultiLineString.of(Arrays.asList( //
+					GeoJsonLineString.of(new Point(12, 34), new Point(56, 78)), //
+					GeoJsonLineString.of(new Point(90, 12), new Point(34, 56)) //
+			));
+			GeoJsonPolygon geoJsonPolygon = GeoJsonPolygon //
+					.of(new Point(12, 34), new Point(56, 78), new Point(90, 12), new Point(12, 34)) //
+					.withInnerRing(new Point(21, 43), new Point(65, 87), new Point(9, 21), new Point(21, 43));
+			GeoJsonMultiPolygon geoJsonMultiPolygon = GeoJsonMultiPolygon.of(
+					Arrays.asList(GeoJsonPolygon.of(new Point(12, 34), new Point(56, 78), new Point(90, 12), new Point(12, 34)),
+							GeoJsonPolygon.of(new Point(21, 43), new Point(65, 87), new Point(9, 21), new Point(21, 43))));
+			GeoJsonPoint geoJsonPoint = GeoJsonPoint.of(12, 34);
+			GeoJsonGeometryCollection geoJsonGeometryCollection = GeoJsonGeometryCollection
+					.of(Arrays.asList(GeoJsonPoint.of(12, 34), GeoJsonPolygon
+							.of(GeoJsonLineString.of(new Point(12, 34), new Point(56, 78), new Point(90, 12), new Point(12, 34)))));
+
+			entity = GeoJsonEntity.builder() //
+					.id("42") //
+					.point1(GeoJsonPoint.of(12, 34)) //
+					.point2(GeoJsonPoint.of(56, 78)) //
+					.multiPoint1(GeoJsonMultiPoint.of(new Point(12, 34), new Point(56, 78), new Point(90, 12))) //
+					.multiPoint2(GeoJsonMultiPoint.of(new Point(90, 12), new Point(56, 78), new Point(12, 34))) //
+					.lineString1(GeoJsonLineString.of(new Point(12, 34), new Point(56, 78), new Point(90, 12))) //
+					.lineString2(GeoJsonLineString.of(new Point(90, 12), new Point(56, 78), new Point(12, 34))) //
+					.multiLineString1(multiLineString) //
+					.multiLineString2(multiLineString) //
+					.polygon1(geoJsonPolygon) //
+					.polygon2(geoJsonPolygon) //
+					.multiPolygon1(geoJsonMultiPolygon) //
+					.multiPolygon2(geoJsonMultiPolygon) //
+					.geometryCollection1(geoJsonGeometryCollection) //
+					.geometryCollection2(geoJsonGeometryCollection) //
+					.build();
+		}
+
+		@Test // DATAES-930
+		@DisplayName("should write GeoJson properties")
+		void shouldWriteGeoJsonProperties() throws JSONException {
+
+			String json = "{\n" + //
+					"  \"id\": \"42\",\n" + //
+					"  \"point1\": {\n" + //
+					"    \"type\": \"Point\",\n" + //
+					"    \"coordinates\": [12.0, 34.0]\n" + //
+					"  },\n" + //
+					"  \"point2\": {\n" + //
+					"    \"type\": \"Point\",\n" + //
+					"    \"coordinates\": [56.0, 78.0]\n" + //
+					"  },\n" + //
+					"  \"multiPoint1\": {\n" + //
+					"    \"type\": \"MultiPoint\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [12.0, 34.0],\n" + //
+					"      [56.0, 78.0],\n" + //
+					"      [90.0, 12.0]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"multiPoint2\": {\n" + //
+					"    \"type\": \"MultiPoint\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [90.0, 12.0],\n" + //
+					"      [56.0, 78.0],\n" + //
+					"      [12.0, 34.0]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"lineString1\": {\n" + //
+					"    \"type\": \"LineString\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [12.0, 34.0],\n" + //
+					"      [56.0, 78.0],\n" + //
+					"      [90.0, 12.0]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"lineString2\": {\n" + //
+					"    \"type\": \"LineString\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [90.0, 12.0],\n" + //
+					"      [56.0, 78.0],\n" + //
+					"      [12.0, 34.0]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"multiLineString1\":{\n" + //
+					"    \"type\": \"MultiLineString\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [[12.0, 34.0], [56.0, 78.0]],\n" + //
+					"      [[90.0, 12.0], [34.0, 56.0]]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"multiLineString2\":{\n" + //
+					"    \"type\": \"MultiLineString\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [[12.0, 34.0], [56.0, 78.0]],\n" + //
+					"      [[90.0, 12.0], [34.0, 56.0]]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"polygon1\":{\n" + //
+					"    \"type\": \"Polygon\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [[12.0, 34.0],[56.0, 78.0],[90.0, 12.0],[12.0, 34.0]],\n" + //
+					"      [[21.0, 43.0],[65.0, 87.0],[9.0, 21.0],[21.0, 43.0]]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"polygon2\":{\n" + //
+					"    \"type\": \"Polygon\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [[12.0, 34.0],[56.0, 78.0],[90.0, 12.0],[12.0, 34.0]],\n" + //
+					"      [[21.0, 43.0],[65.0, 87.0],[9.0, 21.0],[21.0, 43.0]]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"multiPolygon1\":{\n" + //
+					"    \"type\": \"MultiPolygon\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [[[12.0, 34.0],[56.0, 78.0],[90.0, 12.0],[12.0, 34.0]]],\n" + //
+					"      [[[21.0, 43.0],[65.0, 87.0],[9.0, 21.0],[21.0, 43.0]]]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"multiPolygon2\":{\n" + //
+					"    \"type\": \"MultiPolygon\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [[[12.0, 34.0],[56.0, 78.0],[90.0, 12.0],[12.0, 34.0]]],\n" + //
+					"      [[[21.0, 43.0],[65.0, 87.0],[9.0, 21.0],[21.0, 43.0]]]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"geometryCollection1\": {\n" + //
+					"    \"type\": \"GeometryCollection\",\n" + //
+					"    \"geometries\": [\n" + //
+					"      {\n" + //
+					"        \"type\": \"Point\",\n" + //
+					"        \"coordinates\": [12.0, 34.0]\n" + //
+					"      },\n" + //
+					"      {\n" + //
+					"        \"type\": \"Polygon\",\n" + //
+					"        \"coordinates\": [\n" + //
+					"          [[12.0, 34.0], [56.0, 78.0], [90.0, 12.0], [12.0, 34.0]]\n" + //
+					"        ]\n" + //
+					"      }\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"geometryCollection2\": {\n" + //
+					"    \"type\": \"GeometryCollection\",\n" + //
+					"    \"geometries\": [\n" + //
+					"      {\n" + //
+					"        \"type\": \"Point\",\n" + //
+					"        \"coordinates\": [12.0, 34.0]\n" + //
+					"      },\n" + //
+					"      {\n" + //
+					"        \"type\": \"Polygon\",\n" + //
+					"        \"coordinates\": [\n" + //
+					"          [[12.0, 34.0], [56.0, 78.0], [90.0, 12.0], [12.0, 34.0]]\n" + //
+					"        ]\n" + //
+					"      }\n" + //
+					"    ]\n" + //
+					"  }\n" + //
+					"}\n"; //
+
+			Document document = Document.create();
+
+			mappingElasticsearchConverter.write(entity, document);
+
+			assertEquals(json, document.toJson(), false);
+		}
+
+		@Test // DATAES-930
+		@DisplayName("should read GeoJson properties")
+		void shouldReadGeoJsonProperties() {
+
+			// make sure we can read int values as well
+			String json = "{\n" + //
+					"  \"id\": \"42\",\n" + //
+					"  \"point1\": {\n" + //
+					"    \"type\": \"Point\",\n" + //
+					"    \"coordinates\": [12, 34]\n" + //
+					"  },\n" + //
+					"  \"point2\": {\n" + //
+					"    \"type\": \"Point\",\n" + //
+					"    \"coordinates\": [56, 78]\n" + //
+					"  },\n" + //
+					"  \"multiPoint1\": {\n" + //
+					"    \"type\": \"MultiPoint\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [12.0, 34],\n" + //
+					"      [56, 78.0],\n" + //
+					"      [90, 12.0]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"multiPoint2\": {\n" + //
+					"    \"type\": \"MultiPoint\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [90, 12.0],\n" + //
+					"      [56, 78.0],\n" + //
+					"      [12.0, 34]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"lineString1\": {\n" + //
+					"    \"type\": \"LineString\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [12.0, 34],\n" + //
+					"      [56, 78.0],\n" + //
+					"      [90, 12.0]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"lineString2\": {\n" + //
+					"    \"type\": \"LineString\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [90, 12.0],\n" + //
+					"      [56, 78.0],\n" + //
+					"      [12.0, 34]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"multiLineString1\":{\n" + //
+					"    \"type\": \"MultiLineString\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [[12, 34.0], [56, 78.0]],\n" + //
+					"      [[90.0, 12], [34.0, 56]]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"multiLineString2\":{\n" + //
+					"    \"type\": \"MultiLineString\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [[12.0, 34], [56.0, 78]],\n" + //
+					"      [[90, 12.0], [34, 56.0]]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"polygon1\":{\n" + //
+					"    \"type\": \"Polygon\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [[12, 34.0],[56.0, 78],[90, 12.0],[12.0, 34]],\n" + //
+					"      [[21.0, 43],[65, 87.0],[9.0, 21],[21, 43.0]]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"polygon2\":{\n" + //
+					"    \"type\": \"Polygon\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [[12, 34.0],[56.0, 78],[90, 12.0],[12.0, 34]],\n" + //
+					"      [[21.0, 43],[65, 87.0],[9.0, 21],[21, 43.0]]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"multiPolygon1\":{\n" + //
+					"    \"type\": \"MultiPolygon\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [[[12, 34.0],[56.0, 78],[90, 12.0],[12.0, 34]]],\n" + //
+					"      [[[21.0, 43],[65, 87.0],[9.0, 21],[21, 43.0]]]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"multiPolygon2\":{\n" + //
+					"    \"type\": \"MultiPolygon\",\n" + //
+					"    \"coordinates\": [\n" + //
+					"      [[[12, 34.0],[56.0, 78],[90, 12.0],[12.0, 34]]],\n" + //
+					"      [[[21.0, 43],[65, 87.0],[9.0, 21],[21, 43.0]]]\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"geometryCollection1\": {\n" + //
+					"    \"type\": \"GeometryCollection\",\n" + //
+					"    \"geometries\": [\n" + //
+					"      {\n" + //
+					"        \"type\": \"Point\",\n" + //
+					"        \"coordinates\": [12, 34.0]\n" + //
+					"      },\n" + //
+					"      {\n" + //
+					"        \"type\": \"Polygon\",\n" + //
+					"        \"coordinates\": [\n" + //
+					"          [[12.0, 34], [56, 78.0], [90.0, 12], [12, 34.0]]\n" + //
+					"        ]\n" + //
+					"      }\n" + //
+					"    ]\n" + //
+					"  },\n" + //
+					"  \"geometryCollection2\": {\n" + //
+					"    \"type\": \"GeometryCollection\",\n" + //
+					"    \"geometries\": [\n" + //
+					"      {\n" + //
+					"        \"type\": \"Point\",\n" + //
+					"        \"coordinates\": [12, 34.0]\n" + //
+					"      },\n" + //
+					"      {\n" + //
+					"        \"type\": \"Polygon\",\n" + //
+					"        \"coordinates\": [\n" + //
+					"          [[12.0, 34], [56, 78.0], [90.0, 12], [12, 34.0]]\n" + //
+					"        ]\n" + //
+					"      }\n" + //
+					"    ]\n" + //
+					"  }\n" + //
+					"}\n"; //
+
+			GeoJsonEntity mapped = mappingElasticsearchConverter.read(GeoJsonEntity.class, Document.parse(json));
+
+			assertThat(entity).isEqualTo(mapped);
+		}
+	}
+
 	private String pointTemplate(String name, Point point) {
 		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getY(), point.getX());
 	}
@@ -1138,4 +1441,5 @@ public class MappingElasticsearchConverterUnitTests {
 		@Field(type = FieldType.Text) private String notSaved;
 		@Field(type = FieldType.Text, storeNullValue = true) private String saved;
 	}
+
 }

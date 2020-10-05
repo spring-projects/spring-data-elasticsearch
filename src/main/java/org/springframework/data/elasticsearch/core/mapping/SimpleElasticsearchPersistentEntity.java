@@ -234,7 +234,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			}
 		}
 
-		if (property.getActualType() == JoinField.class) {
+		Class<?> actualType = property.getActualTypeOrNull();
+		if (actualType == JoinField.class) {
 			ElasticsearchPersistentProperty joinProperty = this.joinFieldProperty;
 
 			if (joinProperty != null) {
