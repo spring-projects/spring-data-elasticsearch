@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.search.internal.SearchContext.*;
 import static org.mockito.Mockito.*;
 
-import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.function.Function;
 
@@ -28,14 +28,14 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.reactive.function.client.ClientResponse;
-import reactor.test.StepVerifier;
+import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
 
 /**
  * @author Peter-Josef Meisch
@@ -58,7 +58,7 @@ class DefaultReactiveElasticsearchClientTest {
 			}
 		}) {
 			@Override
-			public Mono<ClientResponse> execute(ReactiveElasticsearchClientCallback callback) {
+			public Mono<ResponseSpec> execute(ReactiveElasticsearchClientCallback callback) {
 				return Mono.empty();
 			}
 		};

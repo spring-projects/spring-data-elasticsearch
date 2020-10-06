@@ -616,7 +616,7 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Mono} emitting the {@link ClientResponse} once subscribed.
 	 */
 	@SuppressWarnings("JavaDoc")
-	Mono<ClientResponse> execute(ReactiveElasticsearchClientCallback callback);
+	<T> Mono<T> execute(ReactiveElasticsearchClientCallback<T> callback);
 
 	/**
 	 * Get the current client {@link Status}. <br />
@@ -633,8 +633,8 @@ public interface ReactiveElasticsearchClient {
 	 * @author Christoph Strobl
 	 * @since 3.2
 	 */
-	interface ReactiveElasticsearchClientCallback {
-		Mono<ClientResponse> doWithClient(WebClient client);
+	interface ReactiveElasticsearchClientCallback<T> {
+		Mono<T> doWithClient(WebClient client);
 	}
 
 	/**
