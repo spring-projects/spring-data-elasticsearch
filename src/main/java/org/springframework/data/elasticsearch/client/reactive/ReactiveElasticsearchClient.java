@@ -613,6 +613,7 @@ public interface ReactiveElasticsearchClient {
 	 * unavailable.
 	 *
 	 * @param callback the {@link ReactiveElasticsearchClientCallback callback} wielding the actual command to run.
+	 * @param <T> the type emitted by the returned Mono.
 	 * @return the {@link Mono} emitting the {@link ClientResponse} once subscribed.
 	 */
 	@SuppressWarnings("JavaDoc")
@@ -630,6 +631,7 @@ public interface ReactiveElasticsearchClient {
 	/**
 	 * Low level callback interface operating upon {@link WebClient} to send commands towards elasticsearch.
 	 *
+	 * @param <T> the type emitted by the returned Mono.
 	 * @author Christoph Strobl
 	 * @since 3.2
 	 */

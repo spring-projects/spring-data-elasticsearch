@@ -567,10 +567,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.next();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.ReactiveElasticsearchClientCallback)
-	 */
 	@Override
 	public <T> Mono<T> execute(ReactiveElasticsearchClientCallback<T> callback) {
 
