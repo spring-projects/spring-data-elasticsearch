@@ -7,16 +7,22 @@
 		</encoder>
 	</appender>
 
+	<logger name="org.apache.http" level="info"/>
+	<logger name="org.apache.http.wire" level="info"/>
+
 	<logger name="org.springframework.data.elasticsearch.support.VersionInfo" level="info"/>
 	<logger name="org.springframework.data.elasticsearch.junit" level="debug"/>
 	<logger name="org.springframework.data.elasticsearch.junit.junit4.ElasticsearchVersionRule" level="info"/>
 	<logger name="org.springframework.data.elasticsearch.client.WIRE" level="info"/>
 
+	<logger name="org.springframework.web" level="info"/>
+
+	<logger name="com.github.dockerjava" level="WARN"/>
+	<logger name="org.testcontainers" level="INFO"/>
+
 	<root level="error">
 		<appender-ref ref="console"/>
 	</root>
 
-	<logger name="org.testcontainers" level="INFO"/>
-	<logger name="com.github.dockerjava" level="WARN"/>
 
 </configuration>
