@@ -305,7 +305,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
-	@Test
+	@Test // DATAES-621, DATAES-943
 	public void shouldSetFieldMappingProperties() throws JSONException {
 		String expected = "{\n" + //
 				"        \"properties\": {\n" + //
@@ -364,8 +364,14 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				"            \"normsFalse\": {\n" + //
 				"                \"norms\": false\n" + //
 				"            },\n" + //
-				"            \"nullValueSet\": {\n" + //
+				"            \"nullValueString\": {\n" + //
 				"                \"null_value\": \"NULLNULL\"\n" + //
+				"            },\n" + //
+				"            \"nullValueInteger\": {\n" + //
+				"                \"null_value\": 42\n" + //
+				"            },\n" + //
+				"            \"nullValueDouble\": {\n" + //
+				"                \"null_value\": 42.0\n" + //
 				"            },\n" + //
 				"            \"positionIncrementGap\": {\n" + //
 				"                \"position_increment_gap\": 42\n" + //
@@ -379,6 +385,20 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				"            \"scaledFloat\": {\n" + //
 				"                \"type\": \"scaled_float\",\n" + //
 				"                \"scaling_factor\": 100.0\n" + //
+				"            },\n" + //
+				"            \"enabledObject\": {\n" + //
+				"                \"type\": \"object\"\n" + //
+				"            },\n" + //
+				"            \"disabledObject\": {\n" + //
+				"                \"type\": \"object\",\n" + //
+				"                \"enabled\": false\n" + //
+				"            },\n" + //
+				"            \"eagerGlobalOrdinalsTrue\": {\n" + //
+				"                \"type\": \"text\",\n" + //
+				"                \"eager_global_ordinals\": true\n" + //
+				"            },\n" + //
+				"            \"eagerGlobalOrdinalsFalse\": {\n" + //
+				"                \"type\": \"text\"\n" + //
 				"            }\n" + //
 				"        }\n" + //
 				"}\n"; //
@@ -857,7 +877,9 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable @Field private String normsTrue;
 		@Nullable @Field(norms = false) private String normsFalse;
 		@Nullable @Field private String nullValueNotSet;
-		@Nullable @Field(nullValue = "NULLNULL") private String nullValueSet;
+		@Nullable @Field(nullValue = "NULLNULL") private String nullValueString;
+		@Nullable @Field(nullValue = "42", nullValueType = NullValueType.Integer) private String nullValueInteger;
+		@Nullable @Field(nullValue = "42.0", nullValueType = NullValueType.Double) private String nullValueDouble;
 		@Nullable @Field(positionIncrementGap = 42) private String positionIncrementGap;
 		@Nullable @Field private String similarityDefault;
 		@Nullable @Field(similarity = Similarity.Boolean) private String similarityBoolean;
@@ -865,6 +887,10 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable @Field(termVector = TermVector.with_offsets) private String termVectorWithOffsets;
 		@Nullable @Field(type = FieldType.Scaled_Float, scalingFactor = 100.0) Double scaledFloat;
 		@Nullable @Field(type = Auto) String autoField;
+		@Nullable @Field(type = Object, enabled = true) private String enabledObject;
+		@Nullable @Field(type = Object, enabled = false) private String disabledObject;
+		@Nullable @Field(type = Text, eagerGlobalOrdinals = true) private String eagerGlobalOrdinalsTrue;
+		@Nullable @Field(type = Text, eagerGlobalOrdinals = false) private String eagerGlobalOrdinalsFalse;
 	}
 
 	@Document(indexName = "test-index-configure-dynamic-mapping")
