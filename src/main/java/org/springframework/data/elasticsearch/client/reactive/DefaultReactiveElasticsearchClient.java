@@ -611,8 +611,11 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		String logId = ClientLogger.newLogId();
 
-		return Flux.from(execute(webClient -> sendRequest(webClient, logId, request, headers)
-				.exchangeToMono(clientResponse -> Mono.from(readResponseBody(logId, request, clientResponse, responseType)))));
+		return Flux
+				.from(execute(webClient -> sendRequest(webClient, logId, request, headers).exchangeToMono(clientResponse -> {
+					Publisher<? extends Resp> publisher = readResponseBody(logId, request, clientResponse, responseType);
+					return Mono.from(publisher);
+				})));
 	}
 
 	private RequestBodySpec sendRequest(WebClient webClient, String logId, Request request, HttpHeaders headers) {
