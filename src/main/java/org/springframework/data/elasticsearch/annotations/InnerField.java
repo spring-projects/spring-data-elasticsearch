@@ -130,4 +130,14 @@ public @interface InnerField {
 	 * @since 4.1
 	 */
 	boolean positiveScoreImpact() default true;
+
+	/**
+	 * @since 4.1
+	 */
+	boolean eagerGlobalOrdinals() default false;
+
+	/**
+	 * @since 4.1
+	 */
+	NullValueType nullValueType() default NullValueType.String;
 }

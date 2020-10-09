@@ -26,6 +26,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.IndexOptions;
 import org.springframework.data.elasticsearch.annotations.IndexPrefixes;
 import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.NullValueType;
 import org.springframework.data.elasticsearch.annotations.Similarity;
 import org.springframework.data.elasticsearch.annotations.TermVector;
 import org.springframework.util.Assert;
@@ -44,8 +45,10 @@ public final class MappingParameters {
 
 	static final String FIELD_PARAM_COERCE = "coerce";
 	static final String FIELD_PARAM_COPY_TO = "copy_to";
-	static final String FIELD_PARAM_DOC_VALUES = "doc_values";
 	static final String FIELD_PARAM_DATA = "fielddata";
+	static final String FIELD_PARAM_DOC_VALUES = "doc_values";
+	static final String FIELD_PARAM_EAGER_GLOBAL_ORDINALS = "eager_global_ordinals";
+	static final String FIELD_PARAM_ENABLED = "enabled";
 	static final String FIELD_PARAM_FORMAT = "format";
 	static final String FIELD_PARAM_IGNORE_ABOVE = "ignore_above";
 	static final String FIELD_PARAM_IGNORE_MALFORMED = "ignore_malformed";
@@ -56,44 +59,47 @@ public final class MappingParameters {
 	static final String FIELD_PARAM_INDEX_PREFIXES_MIN_CHARS = "min_chars";
 	static final String FIELD_PARAM_INDEX_PREFIXES_MAX_CHARS = "max_chars";
 	static final String FIELD_PARAM_INDEX_ANALYZER = "analyzer";
+	static final String FIELD_PARAM_MAX_SHINGLE_SIZE = "max_shingle_size";
 	static final String FIELD_PARAM_NORMALIZER = "normalizer";
 	static final String FIELD_PARAM_NORMS = "norms";
 	static final String FIELD_PARAM_NULL_VALUE = "null_value";
-	static final String FIELD_PARAMETER_NAME_POSITION_INCREMENT_GAP = "position_increment_gap";
+	static final String FIELD_PARAM_POSITION_INCREMENT_GAP = "position_increment_gap";
+	static final String FIELD_PARAM_POSITIVE_SCORE_IMPACT = "positive_score_impact";
 	static final String FIELD_PARAM_SCALING_FACTOR = "scaling_factor";
 	static final String FIELD_PARAM_SEARCH_ANALYZER = "search_analyzer";
 	static final String FIELD_PARAM_STORE = "store";
 	static final String FIELD_PARAM_SIMILARITY = "similarity";
 	static final String FIELD_PARAM_TERM_VECTOR = "term_vector";
 	static final String FIELD_PARAM_TYPE = "type";
-	static final String FIELD_PARAM_MAX_SHINGLE_SIZE = "max_shingle_size";
-	static final String FIELD_PARAM_POSITIVE_SCORE_IMPACT = "positive_score_impact";
 
-	private boolean index = true;
-	private boolean store = false;
-	private boolean fielddata = false;
-	private FieldType type = null;
-	private DateFormat dateFormat = null;
-	private String datePattern = null;
-	private String analyzer = null;
-	private String searchAnalyzer = null;
-	private String normalizer = null;
-	private String[] copyTo = null;
-	private Integer ignoreAbove = null;
-	private boolean coerce = true;
-	private boolean docValues = true;
-	private boolean ignoreMalformed = false;
-	private IndexOptions indexOptions = null;
-	boolean indexPhrases = false;
-	private IndexPrefixes indexPrefixes = null;
-	private boolean norms = true;
-	private String nullValue = null;
-	private Integer positionIncrementGap = null;
-	private Similarity similarity = Similarity.Default;
-	private TermVector termVector = TermVector.none;
-	private double scalingFactor = 1.0;
-	@Nullable private Integer maxShingleSize;
-	private boolean positiveScoreImpact = true;
+	private final String analyzer;
+	private final boolean coerce;
+	@Nullable private final String[] copyTo;
+	private final String datePattern;
+	private final boolean docValues;
+	private final boolean eagerGlobalOrdinals;
+	private final boolean enabled;
+	private final boolean fielddata;
+	private final DateFormat format;
+	@Nullable private final Integer ignoreAbove;
+	private final boolean ignoreMalformed;
+	private final boolean index;
+	private final IndexOptions indexOptions;
+	private final boolean indexPhrases;
+	@Nullable private final IndexPrefixes indexPrefixes;
+	private final String normalizer;
+	private final boolean norms;
+	@Nullable private final Integer maxShingleSize;
+	private final String nullValue;
+	private final NullValueType nullValueType;
+	private final Integer positionIncrementGap;
+	private final boolean positiveScoreImpact;
+	private final String searchAnalyzer;
+	private final double scalingFactor;
+	private final Similarity similarity;
+	private final boolean store;
+	private final TermVector termVector;
+	private final FieldType type;
 
 	/**
 	 * extracts the mapping parameters from the relevant annotations.
@@ -119,7 +125,7 @@ public final class MappingParameters {
 		store = field.store();
 		fielddata = field.fielddata();
 		type = field.type();
-		dateFormat = field.format();
+		format = field.format();
 		datePattern = field.pattern();
 		analyzer = field.analyzer();
 		searchAnalyzer = field.searchAnalyzer();
@@ -133,11 +139,10 @@ public final class MappingParameters {
 		ignoreMalformed = field.ignoreMalformed();
 		indexOptions = field.indexOptions();
 		indexPhrases = field.indexPhrases();
-		if (field.indexPrefixes().length > 0) {
-			indexPrefixes = field.indexPrefixes()[0];
-		}
+		indexPrefixes = field.indexPrefixes().length > 0 ? field.indexPrefixes()[0] : null;
 		norms = field.norms();
 		nullValue = field.nullValue();
+		nullValueType = field.nullValueType();
 		positionIncrementGap = field.positionIncrementGap();
 		similarity = field.similarity();
 		termVector = field.termVector();
@@ -148,6 +153,9 @@ public final class MappingParameters {
 				|| (maxShingleSize >= 2 && maxShingleSize <= 4), //
 				"maxShingleSize must be in inclusive range from 2 to 4 for field type search_as_you_type");
 		positiveScoreImpact = field.positiveScoreImpact();
+		Assert.isTrue(field.enabled() || type == FieldType.Object, "enabled false is only allowed for field type object");
+		enabled = field.enabled();
+		eagerGlobalOrdinals = field.eagerGlobalOrdinals();
 	}
 
 	private MappingParameters(InnerField field) {
@@ -155,11 +163,12 @@ public final class MappingParameters {
 		store = field.store();
 		fielddata = field.fielddata();
 		type = field.type();
-		dateFormat = field.format();
+		format = field.format();
 		datePattern = field.pattern();
 		analyzer = field.analyzer();
 		searchAnalyzer = field.searchAnalyzer();
 		normalizer = field.normalizer();
+		copyTo = null;
 		ignoreAbove = field.ignoreAbove() >= 0 ? field.ignoreAbove() : null;
 		coerce = field.coerce();
 		docValues = field.docValues();
@@ -168,11 +177,10 @@ public final class MappingParameters {
 		ignoreMalformed = field.ignoreMalformed();
 		indexOptions = field.indexOptions();
 		indexPhrases = field.indexPhrases();
-		if (field.indexPrefixes().length > 0) {
-			indexPrefixes = field.indexPrefixes()[0];
-		}
+		indexPrefixes = field.indexPrefixes().length > 0 ? field.indexPrefixes()[0] : null;
 		norms = field.norms();
 		nullValue = field.nullValue();
+		nullValueType = field.nullValueType();
 		positionIncrementGap = field.positionIncrementGap();
 		similarity = field.similarity();
 		termVector = field.termVector();
@@ -183,6 +191,8 @@ public final class MappingParameters {
 				|| (maxShingleSize >= 2 && maxShingleSize <= 4), //
 				"maxShingleSize must be in inclusive range from 2 to 4 for field type search_as_you_type");
 		positiveScoreImpact = field.positiveScoreImpact();
+		enabled = true;
+		eagerGlobalOrdinals = field.eagerGlobalOrdinals();
 	}
 
 	public boolean isStore() {
@@ -204,8 +214,8 @@ public final class MappingParameters {
 
 		if (type != FieldType.Auto) {
 			builder.field(FIELD_PARAM_TYPE, type.name().toLowerCase());
-			if (type == FieldType.Date && dateFormat != DateFormat.none) {
-				builder.field(FIELD_PARAM_FORMAT, dateFormat == DateFormat.custom ? datePattern : dateFormat.toString());
+			if (type == FieldType.Date && format != DateFormat.none) {
+				builder.field(FIELD_PARAM_FORMAT, format == DateFormat.custom ? datePattern : format.toString());
 			}
 		}
 
@@ -270,11 +280,27 @@ public final class MappingParameters {
 		}
 
 		if (!StringUtils.isEmpty(nullValue)) {
-			builder.field(FIELD_PARAM_NULL_VALUE, nullValue);
+			Object value;
+			switch (nullValueType) {
+				case Integer:
+					value = Integer.valueOf(nullValue);
+					break;
+				case Long:
+					value = Long.valueOf(nullValue);
+					break;
+				case Double:
+					value = Double.valueOf(nullValue);
+					break;
+				case String:
+				default:
+					value = nullValue;
+					break;
+			}
+			builder.field(FIELD_PARAM_NULL_VALUE, value);
 		}
 
 		if (positionIncrementGap != null && positionIncrementGap >= 0) {
-			builder.field(FIELD_PARAMETER_NAME_POSITION_INCREMENT_GAP, positionIncrementGap);
+			builder.field(FIELD_PARAM_POSITION_INCREMENT_GAP, positionIncrementGap);
 		}
 
 		if (similarity != Similarity.Default) {
@@ -295,6 +321,14 @@ public final class MappingParameters {
 
 		if (!positiveScoreImpact) {
 			builder.field(FIELD_PARAM_POSITIVE_SCORE_IMPACT, positiveScoreImpact);
+		}
+
+		if (!enabled) {
+			builder.field(FIELD_PARAM_ENABLED, enabled);
+		}
+
+		if (eagerGlobalOrdinals) {
+			builder.field(FIELD_PARAM_EAGER_GLOBAL_ORDINALS, eagerGlobalOrdinals);
 		}
 	}
 }

@@ -168,4 +168,21 @@ public @interface Field {
 	 * @since 4.1
 	 */
 	boolean positiveScoreImpact() default true;
+
+	/**
+	 * to be used in combination with {@link FieldType#Object}
+	 *
+	 * @since 4.1
+	 */
+	boolean enabled() default true;
+
+	/**
+	 * @since 4.1
+	 */
+	boolean eagerGlobalOrdinals() default false;
+
+	/**
+	 * @since 4.1
+	 */
+	NullValueType nullValueType() default NullValueType.String;
 }
