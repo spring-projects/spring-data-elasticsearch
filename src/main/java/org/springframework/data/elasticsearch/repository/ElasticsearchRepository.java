@@ -19,6 +19,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -55,22 +56,31 @@ public interface ElasticsearchRepository<T, ID> extends PagingAndSortingReposito
 	<S extends T> S indexWithoutRefresh(S entity);
 
 	/**
-	 * @deprecated since 4.0, use standard repository method naming or @{@link Query} annotated methods, or
-	 *             {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations}.
+	 * @deprecated since 4.0, use {@link #searchQuery(Query)}, standard repository method naming or @{@link Query}
+	 *             annotated methods, or {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations}.
 	 */
+	@Deprecated
 	Iterable<T> search(QueryBuilder query);
 
 	/**
-	 * @deprecated since 4.0, use standard repository method naming or @{@link Query} annotated methods, or
-	 *             {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations}.
+	 * @deprecated since 4.0, use {@link #searchQuery(Query)}, standard repository method naming or @{@link Query}
+	 *             annotated methods, or {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations}.
 	 */
+	@Deprecated
 	Page<T> search(QueryBuilder query, Pageable pageable);
 
 	/**
-	 * @deprecated since 4.0, use standard repository method naming or @{@link Query} annotated methods, or
-	 *             {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations}.
+	 * @deprecated since 4.0, use {@link #searchQuery(Query)}, standard repository method naming or @{@link Query}
+	 *             annotated methods, or {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations}.
 	 */
 	Page<T> search(Query searchQuery);
+
+	/**
+	 * execute the given query and return the result in a SearchPage.
+	 * 
+	 * @since 4.1
+	 */
+	SearchPage<T> searchQuery(Query query);
 
 	/**
 	 * Search for similar entities using a morelikethis query

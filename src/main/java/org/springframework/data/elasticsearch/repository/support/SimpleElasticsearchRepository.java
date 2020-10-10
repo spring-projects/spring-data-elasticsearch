@@ -37,6 +37,7 @@ import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -250,6 +251,12 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		SearchHits<T> searchHits = execute(operations -> operations.search(query, entityClass, getIndexCoordinates()));
 		AggregatedPage<SearchHit<T>> page = SearchHitSupport.page(searchHits, query.getPageable());
 		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
+	}
+
+	@Override
+	public SearchPage<T> searchQuery(Query query) {
+		SearchHits<T> searchHits = execute(operations -> operations.search(query, entityClass, getIndexCoordinates()));
+		return SearchHitSupport.searchPageFor(searchHits, query.getPageable());
 	}
 
 	@SuppressWarnings("unchecked")
