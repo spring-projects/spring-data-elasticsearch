@@ -428,6 +428,31 @@ public interface ReactiveElasticsearchClient {
 	Flux<SearchHit> search(HttpHeaders headers, SearchRequest searchRequest);
 
 	/**
+	 * Execute the given {@link SearchRequest} against the {@literal search} API returning the whole response in one Mono.
+	 *
+	 * @param searchRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html">Search API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the whole {@link SearchResponse}.
+	 * @since 4.1
+	 */
+	default Mono<SearchResponse> searchForResponse(SearchRequest searchRequest) {
+		return searchForResponse(HttpHeaders.EMPTY, searchRequest);
+	}
+
+	/**
+	 * Execute the given {@link SearchRequest} against the {@literal search} API returning the whole response in one Mono.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param searchRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html">Search API on
+	 *      elastic.co</a>
+	 * @return the {@link Mono} emitting the whole {@link SearchResponse}.
+	 * @since 4.1
+	 */
+	Mono<SearchResponse> searchForResponse(HttpHeaders headers, SearchRequest searchRequest);
+
+	/**
 	 * Execute the given {@link SearchRequest} against the {@literal search} API.
 	 *
 	 * @param consumer never {@literal null}.

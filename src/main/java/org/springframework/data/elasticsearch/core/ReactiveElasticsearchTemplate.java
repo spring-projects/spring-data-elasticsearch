@@ -62,6 +62,7 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
+import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterConvertCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCallback;
@@ -296,7 +297,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		MultiGetRequest request = requestFactory.multiGetRequest(query, clazz, index);
 		return Flux.from(execute(client -> client.multiGet(request))) //
-				.concatMap(result -> callback.doWith(DocumentAdapters.from(result)));
+				.concatMap(result -> callback.toEntity(DocumentAdapters.from(result)));
 	}
 
 	@Override
@@ -444,7 +445,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(converter, entityType, index);
 
-		return doGet(id, index).flatMap(it -> callback.doWith(DocumentAdapters.from(it)));
+		return doGet(id, index).flatMap(it -> callback.toEntity(DocumentAdapters.from(it)));
 	}
 
 	private Mono<GetResult> doGet(String id, IndexCoordinates index) {
@@ -656,12 +657,32 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	@Override
 	public <T> Flux<SearchHit<T>> search(Query query, Class<?> entityType, Class<T> resultType, IndexCoordinates index) {
 		SearchDocumentCallback<T> callback = new ReadSearchDocumentCallback<>(resultType, index);
-		return doFind(query, entityType, index).concatMap(callback::doWith);
+		return doFind(query, entityType, index).concatMap(callback::toSearchHit);
 	}
 
 	@Override
 	public <T> Flux<SearchHit<T>> search(Query query, Class<?> entityType, Class<T> returnType) {
 		return search(query, entityType, returnType, getIndexCoordinatesFor(entityType));
+	}
+
+	@Override
+	public <T> Mono<SearchPage<T>> searchForPage(Query query, Class<?> entityType, Class<T> resultType) {
+		return searchForPage(query, entityType, resultType, getIndexCoordinatesFor(entityType));
+	}
+
+	@Override
+	public <T> Mono<SearchPage<T>> searchForPage(Query query, Class<?> entityType, Class<T> resultType,
+			IndexCoordinates index) {
+
+		SearchDocumentCallback<T> callback = new ReadSearchDocumentCallback<>(resultType, index);
+
+		return doFindForResponse(query, entityType, index) //
+				.flatMap(searchDocumentResponse -> Flux.fromIterable(searchDocumentResponse.getSearchDocuments()) //
+						.flatMap(callback::toEntity) //
+						.collectList() //
+						.map(entities -> SearchHitMapping.mappingFor(resultType, converter) //
+								.mapHits(searchDocumentResponse, entities))) //
+				.map(searchHits -> SearchHitSupport.searchPageFor(searchHits, query.getPageable()));
 	}
 
 	private Flux<SearchDocument> doFind(Query query, Class<?> clazz, IndexCoordinates index) {
@@ -675,6 +696,15 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			} else {
 				return doScroll(request);
 			}
+		});
+	}
+
+	private Mono<SearchDocumentResponse> doFindForResponse(Query query, Class<?> clazz, IndexCoordinates index) {
+
+		return Mono.defer(() -> {
+			SearchRequest request = requestFactory.searchRequest(query, clazz, index);
+			request = prepareSearchRequest(request);
+			return doFindForResponse(request);
 		});
 	}
 
@@ -746,6 +776,21 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		return Flux.from(execute(client -> client.search(request))).map(DocumentAdapters::from) //
 				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Mono}. <br />
+	 *
+	 * @param request the already prepared {@link SearchRequest} ready to be executed.
+	 * @return a {@link Mono} emitting the result of the operation converted to s {@link SearchDocumentResponse}.
+	 */
+	protected Mono<SearchDocumentResponse> doFindForResponse(SearchRequest request) {
+
+		if (QUERY_LOGGER.isDebugEnabled()) {
+			QUERY_LOGGER.debug("Executing doFindForResponse: {}", request);
+		}
+
+		return Mono.from(execute(client1 -> client1.searchForResponse(request))).map(SearchDocumentResponse::from);
 	}
 
 	/**
@@ -935,7 +980,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	protected interface DocumentCallback<T> {
 
 		@NonNull
-		Mono<T> doWith(@Nullable Document document);
+		Mono<T> toEntity(@Nullable Document document);
 	}
 
 	protected class ReadDocumentCallback<T> implements DocumentCallback<T> {
@@ -953,7 +998,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		}
 
 		@NonNull
-		public Mono<T> doWith(@Nullable Document document) {
+		public Mono<T> toEntity(@Nullable Document document) {
 			if (document == null) {
 				return Mono.empty();
 			}
@@ -966,7 +1011,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	protected interface SearchDocumentCallback<T> {
 
 		@NonNull
-		Mono<SearchHit<T>> doWith(@NonNull SearchDocument response);
+		Mono<T> toEntity(@NonNull SearchDocument response);
+
+		@NonNull
+		Mono<SearchHit<T>> toSearchHit(@NonNull SearchDocument response);
 	}
 
 	protected class ReadSearchDocumentCallback<T> implements SearchDocumentCallback<T> {
@@ -981,9 +1029,13 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		}
 
 		@Override
-		public Mono<SearchHit<T>> doWith(SearchDocument response) {
-			return delegate.doWith(response)
-					.map(entity -> SearchHitMapping.mappingFor(type, converter).mapHit(response, entity));
+		public Mono<T> toEntity(SearchDocument response) {
+			return delegate.toEntity(response);
+		}
+
+		@Override
+		public Mono<SearchHit<T>> toSearchHit(SearchDocument response) {
+			return toEntity(response).map(entity -> SearchHitMapping.mappingFor(type, converter).mapHit(response, entity));
 		}
 	}
 

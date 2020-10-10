@@ -52,6 +52,7 @@ import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -75,8 +76,8 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Thomas Geese
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { ReactiveElasticsearchClientTests.Config.class })
-public class ReactiveElasticsearchClientTests {
+@ContextConfiguration(classes = { ReactiveElasticsearchClientIntegrationTests.Config.class })
+public class ReactiveElasticsearchClientIntegrationTests {
 
 	@Configuration
 	static class Config extends ReactiveElasticsearchRestTemplateConfiguration {
@@ -716,6 +717,21 @@ public class ReactiveElasticsearchClientTests {
 				.verifyComplete();
 	}
 
+	@Test // DATAES-796
+	@DisplayName("should return the whole SearchResponse")
+	void shouldReturnTheWholeSearchResponse() {
+		addSourceDocument().to(INDEX_I);
+		addSourceDocument().to(INDEX_I);
+
+		SearchRequest request = new SearchRequest(INDEX_I) //
+				.source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery()));
+
+		client.searchForResponse(request) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(searchResponse -> assertThat(searchResponse.getHits().getTotalHits().value).isEqualTo(2))
+				.verifyComplete();
+	}
+
 	private AddToIndex addSourceDocument() {
 		return add(DOC_SOURCE);
 	}
@@ -726,9 +742,9 @@ public class ReactiveElasticsearchClientTests {
 
 	private IndexRequest indexRequest() {
 
-		return new IndexRequest(ReactiveElasticsearchClientTests.INDEX_I) //
+		return new IndexRequest(ReactiveElasticsearchClientIntegrationTests.INDEX_I) //
 				.id(UUID.randomUUID().toString()) //
-				.source(ReactiveElasticsearchClientTests.DOC_SOURCE) //
+				.source(ReactiveElasticsearchClientIntegrationTests.DOC_SOURCE) //
 				.setRefreshPolicy(RefreshPolicy.IMMEDIATE) //
 				.create(true);
 	}
