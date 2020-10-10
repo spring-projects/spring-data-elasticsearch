@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -51,6 +52,9 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.SearchPage;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
@@ -71,8 +75,8 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Murali Chevuri
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { SimpleElasticsearchRepositoryTests.Config.class })
-public class SimpleElasticsearchRepositoryTests {
+@ContextConfiguration(classes = { SimpleElasticsearchRepositoryIntegrationTests.Config.class })
+public class SimpleElasticsearchRepositoryIntegrationTests {
 
 	@Configuration
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
@@ -712,6 +716,24 @@ public class SimpleElasticsearchRepositoryTests {
 		assertThat(results).hasSize(3);
 		assertThat(results.stream().map(SampleEntity::getId).collect(Collectors.toList()))
 				.containsExactlyInAnyOrder("id-one", "id-two", "id-three");
+	}
+
+	@Test // DATAES-934
+	@DisplayName("should use query and return SearchPage")
+	void shouldUseQueryAndReturnSearchPage() {
+
+		List<SampleEntity> entities = createSampleEntitiesWithMessage("test", 20);
+		repository.saveAll(entities);
+
+		Criteria criteria = new Criteria("message").is("test");
+		CriteriaQuery query = new CriteriaQuery(new Criteria("message").is("test"));
+		query.setPageable(PageRequest.of(0, 8));
+
+		SearchPage<SampleEntity> searchPage = repository.searchQuery(query);
+
+		assertThat(searchPage.getTotalElements()).isEqualTo(20l);
+		assertThat(searchPage.stream().count()).isEqualTo(8l);
+		assertThat(searchPage.nextPageable().getOffset()).isEqualTo(8l);
 	}
 
 	private static List<SampleEntity> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
