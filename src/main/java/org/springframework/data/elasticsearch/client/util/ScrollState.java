@@ -58,7 +58,7 @@ public class ScrollState {
 		}
 	}
 
-	public void updateScrollId(String scrollId) {
+	public void updateScrollId(@Nullable String scrollId) {
 
 		if (StringUtils.hasText(scrollId)) {
 
