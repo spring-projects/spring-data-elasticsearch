@@ -1,6 +1,26 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.1.0-RC2 (2020-10-14)
+-----------------------------------------
+* DATAES-949 - dependency cleanup.
+* DATAES-947 - Adopt to API changes in Project Reactor.
+* DATAES-945 - Compilation error on JDK11+.
+* DATAES-944 - Simplify logging setup in test environment.
+* DATAES-943 - Add missing mapping parameters.
+* DATAES-940 - Update to Elasticsearch 7.9.2.
+* DATAES-937 - Repository queries with IN filters fail with empty input list.
+* DATAES-936 - Take id property from the source when deserializing an entity.
+* DATAES-935 - Setup integration tests separate from unit tests.
+* DATAES-934 - Add a Query taking method to ElasticsearchRepository.
+* DATAES-933 - Fix typo in javaDoc.
+* DATAES-932 - GeoPoint - Point conversion is wrong.
+* DATAES-930 - Add support for geo_shape type entity properties.
+* DATAES-929 - Support geo_shape field type field type.
+* DATAES-927 - Release 4.1 RC2 (2020.0.0).
+* DATAES-921 - Investigate WebClient.retrieve() instead of using WebClient.exchange().
+
+
 Changes in version 4.1.0-RC1 (2020-09-16)
 -----------------------------------------
 * DATAES-924 - Conversion of properties of collections of Temporal values fails.
@@ -1290,6 +1310,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
