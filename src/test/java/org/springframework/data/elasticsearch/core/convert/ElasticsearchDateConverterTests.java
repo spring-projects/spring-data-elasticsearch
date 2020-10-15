@@ -2,6 +2,7 @@ package org.springframework.data.elasticsearch.core.convert;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -9,6 +10,7 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -75,5 +77,37 @@ class ElasticsearchDateConverterTests {
 		Date parsed = converter.parse("20200419T194400.000Z");
 
 		assertThat(parsed).isEqualTo(legacyDate);
+	}
+
+	@Test // DATAES-953
+	@DisplayName("should write and read Date with custom format")
+	void shouldWriteAndReadDateWithCustomFormat() {
+
+		// only seconds as the format string does not store millis
+		long currentTimeSeconds = System.currentTimeMillis() / 1_000;
+		Date date = new Date(currentTimeSeconds * 1_000);
+
+		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of("uuuu-MM-dd HH:mm:ss");
+
+		String formatted = converter.format(date);
+		Date parsed = converter.parse(formatted);
+
+		assertThat(parsed).isEqualTo(date);
+	}
+
+	@Test // DATAES-953
+	@DisplayName("should write and read Instant with custom format")
+	void shouldWriteAndReadInstantWithCustomFormat() {
+
+		// only seconds as the format string does not store millis
+		long currentTimeSeconds = System.currentTimeMillis() / 1_000;
+		Instant instant = Instant.ofEpochSecond(currentTimeSeconds);
+
+		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of("uuuu-MM-dd HH:mm:ss");
+
+		String formatted = converter.format(instant);
+		Instant parsed = converter.parse(formatted, Instant.class);
+
+		assertThat(parsed).isEqualTo(instant);
 	}
 }
