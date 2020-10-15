@@ -18,11 +18,13 @@ package org.springframework.data.elasticsearch.core.convert;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.elasticsearch.common.time.DateFormatter;
+import org.elasticsearch.common.time.DateFormatters;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.util.Assert;
 
@@ -103,10 +105,10 @@ final public class ElasticsearchDateConverter {
 	 * @return the new created object
 	 */
 	public <T extends TemporalAccessor> T parse(String input, Class<T> type) {
-		TemporalAccessor accessor = dateFormatter.parse(input);
+		ZonedDateTime zonedDateTime = DateFormatters.from(dateFormatter.parse(input));
 		try {
 			Method method = type.getMethod("from", TemporalAccessor.class);
-			Object o = method.invoke(null, accessor);
+			Object o = method.invoke(null, zonedDateTime);
 			return type.cast(o);
 		} catch (NoSuchMethodException e) {
 			throw new ConversionException("no 'from' factory method found in class " + type.getName());
@@ -122,6 +124,7 @@ final public class ElasticsearchDateConverter {
 	 * @return the new created object
 	 */
 	public Date parse(String input) {
-		return new Date(Instant.from(dateFormatter.parse(input)).toEpochMilli());
+		ZonedDateTime zonedDateTime = DateFormatters.from(dateFormatter.parse(input));
+		return new Date(Instant.from(zonedDateTime).toEpochMilli());
 	}
 }
