@@ -76,13 +76,6 @@ public interface ElasticsearchRepository<T, ID> extends PagingAndSortingReposito
 	Page<T> search(Query searchQuery);
 
 	/**
-	 * execute the given query and return the result in a SearchPage.
-	 * 
-	 * @since 4.1
-	 */
-	SearchPage<T> searchQuery(Query query);
-
-	/**
 	 * Search for similar entities using a morelikethis query
 	 * 
 	 * @param entity the entity for which similar documents should be searched, must not be {@literal null}
