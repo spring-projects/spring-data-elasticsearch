@@ -718,24 +718,6 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 				.containsExactlyInAnyOrder("id-one", "id-two", "id-three");
 	}
 
-	@Test // DATAES-934
-	@DisplayName("should use query and return SearchPage")
-	void shouldUseQueryAndReturnSearchPage() {
-
-		List<SampleEntity> entities = createSampleEntitiesWithMessage("test", 20);
-		repository.saveAll(entities);
-
-		Criteria criteria = new Criteria("message").is("test");
-		CriteriaQuery query = new CriteriaQuery(new Criteria("message").is("test"));
-		query.setPageable(PageRequest.of(0, 8));
-
-		SearchPage<SampleEntity> searchPage = repository.searchQuery(query);
-
-		assertThat(searchPage.getTotalElements()).isEqualTo(20l);
-		assertThat(searchPage.stream().count()).isEqualTo(8l);
-		assertThat(searchPage.nextPageable().getOffset()).isEqualTo(8l);
-	}
-
 	private static List<SampleEntity> createSampleEntitiesWithMessage(String message, int numberOfEntities) {
 
 		List<SampleEntity> sampleEntities = new ArrayList<>();

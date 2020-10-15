@@ -253,12 +253,6 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
 	}
 
-	@Override
-	public SearchPage<T> searchQuery(Query query) {
-		SearchHits<T> searchHits = execute(operations -> operations.search(query, entityClass, getIndexCoordinates()));
-		return SearchHitSupport.searchPageFor(searchHits, query.getPageable());
-	}
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public Page<T> searchSimilar(T entity, @Nullable String[] fields, Pageable pageable) {
