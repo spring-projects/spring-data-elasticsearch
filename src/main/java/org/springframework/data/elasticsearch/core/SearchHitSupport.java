@@ -158,5 +158,13 @@ public final class SearchHitSupport {
 		public SearchHits<T> getSearchHits() {
 			return searchHits;
 		}
+
+		/*
+		 * return the same instance as in getSearchHits().getSearchHits()
+		 */
+		@Override
+		public List<SearchHit<T>> getContent() {
+			return searchHits.getSearchHits();
+		}
 	}
 }

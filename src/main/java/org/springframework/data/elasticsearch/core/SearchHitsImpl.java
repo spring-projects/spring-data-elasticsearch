@@ -19,11 +19,12 @@ import java.util.Collections;
 import java.util.List;
 
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * Basic implementation of {@link SearchScrollHits} 
+ * Basic implementation of {@link SearchScrollHits}
  *
  * @param <T> the result data class.
  * @author Peter-Josef Meisch
@@ -35,9 +36,10 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	private final long totalHits;
 	private final TotalHitsRelation totalHitsRelation;
 	private final float maxScore;
-	private final String scrollId;
+	@Nullable private final String scrollId;
 	private final List<? extends SearchHit<T>> searchHits;
-	private final Aggregations aggregations;
+	private final Lazy<List<SearchHit<T>>> unmodifiableSearchHits;
+	@Nullable private final Aggregations aggregations;
 
 	/**
 	 * @param totalHits the number of total hits for the search
@@ -58,6 +60,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 		this.scrollId = scrollId;
 		this.searchHits = searchHits;
 		this.aggregations = aggregations;
+		this.unmodifiableSearchHits = Lazy.of(() -> Collections.unmodifiableList(searchHits));
 	}
 
 	// region getter
@@ -84,7 +87,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 
 	@Override
 	public List<SearchHit<T>> getSearchHits() {
-		return Collections.unmodifiableList(searchHits);
+		return unmodifiableSearchHits.get();
 	}
 	// endregion
 

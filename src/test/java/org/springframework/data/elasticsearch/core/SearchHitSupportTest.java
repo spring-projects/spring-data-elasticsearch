@@ -19,17 +19,23 @@ import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.util.CloseableIterator;
 
 /**
  * @author Roman Puchkovskiy
+ * @author Peter-Josef Meisch
  */
 class SearchHitSupportTest {
+
 	@Test // DATAES-772
 	void unwrapsSearchHitsIteratorToCloseableIteratorOfEntities() {
 		TestStringSearchHitsIterator searchHitsIterator = new TestStringSearchHitsIterator();
@@ -38,6 +44,7 @@ class SearchHitSupportTest {
 		CloseableIterator<String> unwrappedIterator = (CloseableIterator<String>) SearchHitSupport
 				.unwrapSearchHits(searchHitsIterator);
 
+		// noinspection ConstantConditions
 		assertThat(unwrappedIterator.next()).isEqualTo("one");
 		assertThat(unwrappedIterator.next()).isEqualTo("two");
 		assertThat(unwrappedIterator.hasNext()).isFalse();
@@ -45,6 +52,27 @@ class SearchHitSupportTest {
 		unwrappedIterator.close();
 
 		assertThat(searchHitsIterator.closed).isTrue();
+	}
+
+	@Test // DATAES-952
+	@DisplayName("should return the same list instance in SearchHits and getContent")
+	void shouldReturnTheSameListInstanceInSearchHitsAndGetContent() {
+
+		List<SearchHit<String>> hits = new ArrayList<>();
+		hits.add(new SearchHit<>(null, null, 0, null, null, "one"));
+		hits.add(new SearchHit<>(null, null, 0, null, null, "two"));
+		hits.add(new SearchHit<>(null, null, 0, null, null, "three"));
+		hits.add(new SearchHit<>(null, null, 0, null, null, "four"));
+		hits.add(new SearchHit<>(null, null, 0, null, null, "five"));
+
+		SearchHits<String> originalSearchHits = new SearchHitsImpl<>(hits.size(), TotalHitsRelation.EQUAL_TO, 0, "scroll",
+				hits, null);
+
+		SearchPage<String> searchPage = SearchHitSupport.searchPageFor(originalSearchHits, PageRequest.of(0, 3));
+		SearchHits<String> searchHits = searchPage.getSearchHits();
+
+		assertThat(searchHits).isEqualTo(originalSearchHits);
+		assertThat(searchHits.getSearchHits()).isSameAs(searchPage.getContent());
 	}
 
 	private static class TestStringSearchHitsIterator implements SearchHitsIterator<String> {
@@ -87,4 +115,5 @@ class SearchHitSupportTest {
 			return new SearchHit<>("index", "id", 1.0f, new Object[0], emptyMap(), nextString);
 		}
 	}
+
 }
