@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -85,6 +86,7 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 	@Mock private DocWriteResponse docWriteResponse;
 	@Mock private GetResult getResult;
 	@Mock private org.elasticsearch.search.SearchHit searchHit;
+	@Mock private org.elasticsearch.action.search.SearchResponse searchResponse;
 
 	private final IndexCoordinates index = IndexCoordinates.of("index");
 
@@ -121,6 +123,12 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		doReturn(Mono.just(getResult)).when(client).get(any(GetRequest.class));
 
 		when(client.search(any(SearchRequest.class))).thenReturn(Flux.just(searchHit, searchHit));
+		when(client.searchForResponse(any(SearchRequest.class))).thenReturn(Mono.just(searchResponse));
+
+		when(searchResponse.getHits()).thenReturn(
+				new org.elasticsearch.search.SearchHits(new org.elasticsearch.search.SearchHit[] { searchHit, searchHit },
+						new TotalHits(2, TotalHits.Relation.EQUAL_TO), 1.0f));
+
 		doReturn(new BytesArray(new byte[8])).when(searchHit).getSourceRef();
 		doReturn(new HashMap<String, Object>() {
 			{
@@ -372,6 +380,20 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
 		assertThat(results.get(0).getContent().firstname).isEqualTo("after-convert");
 		assertThat(results.get(1).getContent().firstname).isEqualTo("after-convert");
+	}
+
+	@Test // DATAES-796
+	void searchForPageShouldInvokeAfterConvertCallbacks() {
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		SearchPage<Person> searchPage = template.searchForPage(pagedQueryForTwo(), Person.class)
+				.timeout(Duration.ofSeconds(1)).block();
+
+		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
+		SearchHits<Person> searchHits = searchPage.getSearchHits();
+		assertThat(searchHits.getSearchHit(0).getContent().firstname).isEqualTo("after-convert");
+		assertThat(searchHits.getSearchHit(1).getContent().firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772

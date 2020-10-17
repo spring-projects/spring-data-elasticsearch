@@ -32,6 +32,7 @@ import java.lang.Boolean;
 import java.lang.Long;
 import java.lang.Object;
 import java.net.ConnectException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -49,6 +50,7 @@ import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -84,7 +86,7 @@ import org.springframework.util.StringUtils;
  * @author Roman Puchkovskiy
  */
 @SpringIntegrationTest
-public class ReactiveElasticsearchTemplateTests {
+public class ReactiveElasticsearchTemplateIntegrationTests {
 
 	@Configuration
 	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class })
@@ -96,6 +98,7 @@ public class ReactiveElasticsearchTemplateTests {
 	@Autowired private ReactiveElasticsearchTemplate template;
 	private ReactiveIndexOperations indexOperations;
 
+	// region Setup
 	@BeforeEach
 	public void setUp() {
 		indexOperations = template.indexOps(SampleEntity.class);
@@ -122,7 +125,9 @@ public class ReactiveElasticsearchTemplateTests {
 		template.indexOps(IndexCoordinates.of("test-index-reactive-optimistic-and-versioned-entity-template")).delete()
 				.block();
 	}
+	// endregion
 
+	// region Tests
 	@Test // DATAES-504
 	public void executeShouldProvideResource() {
 
@@ -1010,25 +1015,31 @@ public class ReactiveElasticsearchTemplateTests {
 		assertThatSeqNoPrimaryTermIsFilled(saved);
 	}
 
-	@Data
-	@Document(indexName = "marvel")
-	static class Person {
-
-		private @Id String id;
-		private String name;
-		private int age;
-
-		public Person() {}
-
-		public Person(String name, int age) {
-
-			this.name = name;
-			this.age = age;
+	@Test // DATAES-796
+	@DisplayName("should return Mono of SearchPage")
+	void shouldReturnMonoOfSearchPage() {
+		List<SampleEntity> entities = new ArrayList<>();
+		for (int i = 1; i <= 10; i++) {
+			entities.add(randomEntity("message " + i));
 		}
+
+		Query query = Query.findAll().setPageable(PageRequest.of(0, 5));
+
+		template.saveAll(Mono.just(entities), SampleEntity.class).then(indexOperations.refresh()).block();
+
+		Mono<SearchPage<SampleEntity>> searchPageMono = template.searchForPage(query, SampleEntity.class);
+
+		searchPageMono.as(StepVerifier::create) //
+				.consumeNextWith(searchPage -> {
+					assertThat(searchPage.hasNext()).isTrue();
+					SearchHits<SampleEntity> searchHits = searchPage.getSearchHits();
+					assertThat(searchHits.getTotalHits()).isEqualTo(10);
+					assertThat(searchHits.getSearchHits().size()).isEqualTo(5);
+				}).verifyComplete();
 	}
+	// endregion
 
-	// --> JUST some helpers
-
+	// region Helper functions
 	private SampleEntity randomEntity(String message) {
 
 		return SampleEntity.builder() //
@@ -1057,11 +1068,31 @@ public class ReactiveElasticsearchTemplateTests {
 			template.saveAll(Mono.just(Arrays.asList(entities)), indexCoordinates).then(indexOperations.refresh()).block();
 		}
 	}
+	// endregion
+
+	// region Entities
+	@Data
+	@Document(indexName = "marvel")
+	static class Person {
+
+		private @Id String id;
+		private String name;
+		private int age;
+
+		public Person() {}
+
+		public Person(String name, int age) {
+
+			this.name = name;
+			this.age = age;
+		}
+	}
 
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
 	static class Message {
+
 		String message;
 	}
 
@@ -1103,4 +1134,5 @@ public class ReactiveElasticsearchTemplateTests {
 		@Id private String id;
 		@Version private Long version;
 	}
+	// endregion
 }

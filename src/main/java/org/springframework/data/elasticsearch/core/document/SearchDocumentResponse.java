@@ -15,13 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core.document;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.lang.Nullable;
@@ -122,10 +121,12 @@ public class SearchDocumentResponse {
 
 		float maxScore = searchHits.getMaxScore();
 
-		List<SearchDocument> searchDocuments = StreamSupport.stream(searchHits.spliterator(), false) //
-				.filter(Objects::nonNull) //
-				.map(DocumentAdapters::from) //
-				.collect(Collectors.toList());
+		List<SearchDocument> searchDocuments = new ArrayList<>();
+		for (SearchHit searchHit : searchHits) {
+			if (searchHit != null) {
+				searchDocuments.add(DocumentAdapters.from(searchHit));
+			}
+		}
 
 		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, scrollId, searchDocuments, aggregations);
 	}
