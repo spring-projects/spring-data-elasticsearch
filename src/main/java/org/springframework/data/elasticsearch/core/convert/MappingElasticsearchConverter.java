@@ -82,7 +82,8 @@ public class MappingElasticsearchConverter
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	private final GenericConversionService conversionService;
 
-	private CustomConversions conversions = new ElasticsearchCustomConversions(Collections.emptyList());
+	// don't access directly, use getConversions(). to prevent null access
+	@Nullable private CustomConversions conversions = null;
 	private final EntityInstantiators instantiators = new EntityInstantiators();
 
 	private final ElasticsearchTypeMapper typeMapper;
@@ -133,6 +134,14 @@ public class MappingElasticsearchConverter
 		this.conversions = conversions;
 	}
 
+	private CustomConversions getConversions() {
+
+		if (conversions == null) {
+			conversions = new ElasticsearchCustomConversions(Collections.emptyList());
+		}
+		return conversions;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
@@ -140,7 +149,7 @@ public class MappingElasticsearchConverter
 	@Override
 	public void afterPropertiesSet() {
 		DateFormatterRegistrar.addDateConverters(conversionService);
-		conversions.registerConvertersIn(conversionService);
+		getConversions().registerConvertersIn(conversionService);
 	}
 
 	// region read
@@ -151,7 +160,7 @@ public class MappingElasticsearchConverter
 		TypeInformation<R> typeHint = ClassTypeInformation.from((Class<R>) ClassUtils.getUserClass(type));
 		typeHint = (TypeInformation<R>) typeMapper.readType(source, typeHint);
 
-		if (conversions.hasCustomReadTarget(Map.class, typeHint.getType())) {
+		if (getConversions().hasCustomReadTarget(Map.class, typeHint.getType())) {
 			R converted = conversionService.convert(source, typeHint.getType());
 			if (converted == null) {
 				// EntityReader.read is defined as non nullable , so we cannot return null
@@ -177,7 +186,7 @@ public class MappingElasticsearchConverter
 
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(targetEntity);
 
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings({"unchecked", "ConstantConditions"})
 		R instance = (R) instantiator.createInstance(targetEntity,
 				new PersistentEntityParameterValueProvider<>(targetEntity, propertyValueProvider, null));
 
@@ -223,6 +232,7 @@ public class MappingElasticsearchConverter
 		if (source instanceof SearchDocument) {
 			SearchDocument searchDocument = (SearchDocument) source;
 			if (targetEntity.hasScoreProperty()) {
+				//noinspection ConstantConditions
 				targetEntity.getPropertyAccessor(result) //
 						.setProperty(targetEntity.getScoreProperty(), searchDocument.getScore());
 			}
@@ -276,7 +286,7 @@ public class MappingElasticsearchConverter
 		if (property.hasPropertyConverter()) {
 			source = propertyConverterRead(property, source);
 		} else if (TemporalAccessor.class.isAssignableFrom(property.getType())
-				&& !conversions.hasCustomReadTarget(source.getClass(), rawType)) {
+				&& !getConversions().hasCustomReadTarget(source.getClass(), rawType)) {
 
 			// log at most 5 times
 			String propertyName = property.getOwner().getType().getSimpleName() + '.' + property.getName();
@@ -291,7 +301,7 @@ public class MappingElasticsearchConverter
 			}
 		}
 
-		if (conversions.hasCustomReadTarget(source.getClass(), rawType)) {
+		if (getConversions().hasCustomReadTarget(source.getClass(), rawType)) {
 			return rawType.cast(conversionService.convert(source, rawType));
 		} else if (source instanceof List) {
 			return readCollectionValue((List<?>) source, property, targetType);
@@ -356,8 +366,6 @@ public class MappingElasticsearchConverter
 				} else if (value instanceof Map) {
 					target
 							.add(readMapValue((Map<String, Object>) value, property, property.getTypeInformation().getActualType()));
-				} else {
-					target.add(readEntity(computeGenericValueTypeForRead(property, value), (Map<String, Object>) value));
 				}
 			}
 		}
@@ -423,7 +431,7 @@ public class MappingElasticsearchConverter
 			return value;
 		}
 
-		if (conversions.hasCustomReadTarget(value.getClass(), target)) {
+		if (getConversions().hasCustomReadTarget(value.getClass(), target)) {
 			return conversionService.convert(value, target);
 		}
 
@@ -477,7 +485,7 @@ public class MappingElasticsearchConverter
 			typeMapper.writeType(source.getClass(), sink);
 		}
 
-		Optional<Class<?>> customTarget = conversions.getCustomWriteTarget(entityType, Map.class);
+		Optional<Class<?>> customTarget = getConversions().getCustomWriteTarget(entityType, Map.class);
 
 		if (customTarget.isPresent()) {
 			sink.putAll(conversionService.convert(source, Map.class));
@@ -526,7 +534,7 @@ public class MappingElasticsearchConverter
 			if (property.hasPropertyConverter()) {
 				value = propertyConverterWrite(property, value);
 			} else if (TemporalAccessor.class.isAssignableFrom(property.getActualType())
-					&& !conversions.hasCustomWriteTarget(value.getClass())) {
+					&& !getConversions().hasCustomWriteTarget(value.getClass())) {
 
 				// log at most 5 times
 				String propertyName = entity.getType().getSimpleName() + '.' + property.getName();
@@ -568,7 +576,7 @@ public class MappingElasticsearchConverter
 
 	protected void writeProperty(ElasticsearchPersistentProperty property, Object value, MapValueAccessor sink) {
 
-		Optional<Class<?>> customWriteTarget = conversions.getCustomWriteTarget(value.getClass());
+		Optional<Class<?>> customWriteTarget = getConversions().getCustomWriteTarget(value.getClass());
 
 		if (customWriteTarget.isPresent()) {
 			Class<?> writeTarget = customWriteTarget.get();
@@ -595,7 +603,7 @@ public class MappingElasticsearchConverter
 
 	@Nullable
 	protected Object getWriteSimpleValue(Object value) {
-		Optional<Class<?>> customTarget = conversions.getCustomWriteTarget(value.getClass());
+		Optional<Class<?>> customTarget = getConversions().getCustomWriteTarget(value.getClass());
 
 		if (customTarget.isPresent()) {
 			return conversionService.convert(value, customTarget.get());
@@ -759,8 +767,8 @@ public class MappingElasticsearchConverter
 			}
 		}
 
-		return !conversions.isSimpleType(type.getType()) && !type.isCollectionLike()
-				&& !conversions.hasCustomWriteTarget(type.getType());
+		return !getConversions().isSimpleType(type.getType()) && !type.isCollectionLike()
+				&& !getConversions().hasCustomWriteTarget(type.getType());
 	}
 
 	/**
@@ -789,7 +797,7 @@ public class MappingElasticsearchConverter
 	}
 
 	private boolean isSimpleType(Class<?> type) {
-		return conversions.isSimpleType(type);
+		return getConversions().isSimpleType(type);
 	}
 	// endregion
 
@@ -819,7 +827,7 @@ public class MappingElasticsearchConverter
 			field.setName(property.getFieldName());
 
 			if (property.hasPropertyConverter()) {
-				ElasticsearchPersistentPropertyConverter propertyConverter = property.getPropertyConverter();
+				ElasticsearchPersistentPropertyConverter propertyConverter = Objects.requireNonNull(property.getPropertyConverter());
 				criteria.getQueryCriteriaEntries().forEach(criteriaEntry -> {
 					Object value = criteriaEntry.getValue();
 					if (value.getClass().isArray()) {
