@@ -57,8 +57,8 @@ import org.springframework.test.context.ContextConfiguration;
  * @author James Bodkin
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { CriteriaQueryTests.Config.class })
-public class CriteriaQueryTests {
+@ContextConfiguration(classes = { CriteriaQueryIntegrationTests.Config.class })
+public class CriteriaQueryIntegrationTests {
 
 	@Configuration
 	@Import({ ElasticsearchRestTemplateConfiguration.class })

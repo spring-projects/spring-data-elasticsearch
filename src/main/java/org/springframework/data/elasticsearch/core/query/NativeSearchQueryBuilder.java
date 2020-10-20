@@ -49,9 +49,9 @@ public class NativeSearchQueryBuilder {
 
 	@Nullable private QueryBuilder queryBuilder;
 	@Nullable private QueryBuilder filterBuilder;
-	private List<ScriptField> scriptFields = new ArrayList<>();
-	private List<SortBuilder> sortBuilders = new ArrayList<>();
-	private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<>();
+	private final List<ScriptField> scriptFields = new ArrayList<>();
+	private final List<SortBuilder<?>> sortBuilders = new ArrayList<>();
+	private final List<AbstractAggregationBuilder<?>> aggregationBuilders = new ArrayList<>();
 	@Nullable private HighlightBuilder highlightBuilder;
 	@Nullable private HighlightBuilder.Field[] highlightFields;
 	private Pageable pageable = Pageable.unpaged();
@@ -77,7 +77,7 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withSort(SortBuilder sortBuilder) {
+	public NativeSearchQueryBuilder withSort(SortBuilder<?> sortBuilder) {
 		this.sortBuilders.add(sortBuilder);
 		return this;
 	}
@@ -92,7 +92,7 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder addAggregation(AbstractAggregationBuilder aggregationBuilder) {
+	public NativeSearchQueryBuilder addAggregation(AbstractAggregationBuilder<?> aggregationBuilder) {
 		this.aggregationBuilders.add(aggregationBuilder);
 		return this;
 	}
@@ -134,7 +134,7 @@ public class NativeSearchQueryBuilder {
 
 	/**
 	 * @param trackScores whether to track scores.
-	 * @return
+	 * @return this object
 	 * @since 3.1
 	 */
 	public NativeSearchQueryBuilder withTrackScores(boolean trackScores) {
@@ -168,6 +168,7 @@ public class NativeSearchQueryBuilder {
 	}
 
 	public NativeSearchQuery build() {
+
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders,
 				highlightBuilder, highlightFields);
 

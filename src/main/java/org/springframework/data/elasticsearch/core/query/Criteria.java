@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
+import org.springframework.data.elasticsearch.core.geo.GeoJson;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
@@ -38,7 +39,7 @@ import org.springframework.util.StringUtils;
  * easily chain together multiple criteria. <br/>
  * <br/>
  * A Criteria references a field and has {@link CriteriaEntry} sets for query and filter context. When building the
- * query, the entries from the criteriaentries are combined in a bool must query (if more than one.<br/>
+ * query, the entries from the criteria entries are combined in a bool must query (if more than one.<br/>
  * <br/>
  * A Criteria also has a {@link CriteriaChain} which is used to build a collection of Criteria with the fluent API. The
  * value of {@link #isAnd()} and {@link #isOr()} describes whether the queries built from the criteria chain should be
@@ -54,7 +55,7 @@ public class Criteria {
 
 	public static final String CRITERIA_VALUE_SEPARATOR = " ";
 	/** @deprecated since 4.1, use {@link #CRITERIA_VALUE_SEPARATOR} */
-	public static final String CRITERIA_VALUE_SEPERATOR = CRITERIA_VALUE_SEPARATOR;
+	@SuppressWarnings("SpellCheckingInspection") public static final String CRITERIA_VALUE_SEPERATOR = CRITERIA_VALUE_SEPARATOR;
 
 	private @Nullable Field field;
 	private float boost = Float.NaN;
@@ -730,6 +731,59 @@ public class Criteria {
 		return this;
 	}
 
+	/**
+	 * Adds a new filter CriteriaEntry for GEO_INTERSECTS.
+	 * 
+	 * @param geoShape the GeoJson shape
+	 * @return this object
+	 */
+	public Criteria intersects(GeoJson<?> geoShape) {
+
+		Assert.notNull(geoShape, "geoShape must not be null");
+
+		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.GEO_INTERSECTS, geoShape));
+		return this;
+	}
+
+	/**
+	 * Adds a new filter CriteriaEntry for GEO_IS_DISJOINT.
+	 *
+	 * @param geoShape the GeoJson shape
+	 * @return this object
+	 */
+	public Criteria isDisjoint(GeoJson<?> geoShape) {
+
+		Assert.notNull(geoShape, "geoShape must not be null");
+
+		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.GEO_IS_DISJOINT, geoShape));
+		return this;
+	}
+
+	/**
+	 * Adds a new filter CriteriaEntry for GEO_WITHIN.
+	 *
+	 * @param geoShape the GeoJson shape
+	 * @return this object
+	 */
+	public Criteria within(GeoJson<?> geoShape) {
+		Assert.notNull(geoShape, "geoShape must not be null");
+
+		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.GEO_WITHIN, geoShape));
+		return this;
+	}
+
+	/**
+	 * Adds a new filter CriteriaEntry for GEO_CONTAINS.
+	 *
+	 * @param geoShape the GeoJson shape
+	 * @return this object
+	 */
+	public Criteria contains(GeoJson<?> geoShape) {
+		Assert.notNull(geoShape, "geoShape must not be null");
+
+		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.GEO_CONTAINS, geoShape));
+		return this;
+	}
 	// endregion
 
 	// region helper functions
@@ -868,7 +922,23 @@ public class Criteria {
 		/**
 		 * @since 4.0
 		 */
-		EXISTS //
+		EXISTS, //
+		/**
+		 * @since 4.1
+		 */
+		GEO_INTERSECTS, //
+		/**
+		 * @since 4.1
+		 */
+		GEO_IS_DISJOINT, //
+		/**
+		 * @since 4.1
+		 */
+		GEO_WITHIN, //
+		/**
+		 * @since 4.1
+		 */
+		GEO_CONTAINS
 	}
 
 	/**

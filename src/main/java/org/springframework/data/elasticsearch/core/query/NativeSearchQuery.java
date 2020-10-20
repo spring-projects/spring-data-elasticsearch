@@ -27,7 +27,10 @@ import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.lang.Nullable;
 
 /**
- * NativeSearchQuery
+ * A query created from Elasticsearch QueryBuilder instances. Note: the filter constructor parameter is used to create a
+ * post_filter
+ * {@see https://www.elastic.co/guide/en/elasticsearch/reference/7.9/filter-search-results.html#post-filter}, if a
+ * filter is needed that filters before aggregations are build, it must be included in the query constructor parameter.
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -38,36 +41,37 @@ import org.springframework.lang.Nullable;
  */
 public class NativeSearchQuery extends AbstractQuery {
 
-	private QueryBuilder query;
+	@Nullable private final QueryBuilder query;
 	@Nullable private QueryBuilder filter;
-	@Nullable private List<SortBuilder> sorts;
+	@Nullable private List<SortBuilder<?>> sorts;
 	private final List<ScriptField> scriptFields = new ArrayList<>();
 	@Nullable private CollapseBuilder collapseBuilder;
-	@Nullable private List<AbstractAggregationBuilder> aggregations;
+	@Nullable private List<AbstractAggregationBuilder<?>> aggregations;
 	@Nullable private HighlightBuilder highlightBuilder;
 	@Nullable private HighlightBuilder.Field[] highlightFields;
 	@Nullable private List<IndexBoost> indicesBoost;
 
-	public NativeSearchQuery(QueryBuilder query) {
+	public NativeSearchQuery(@Nullable QueryBuilder query) {
 
 		this.query = query;
 	}
 
-	public NativeSearchQuery(QueryBuilder query, QueryBuilder filter) {
+	public NativeSearchQuery(@Nullable QueryBuilder query, @Nullable QueryBuilder filter) {
 
 		this.query = query;
 		this.filter = filter;
 	}
 
-	public NativeSearchQuery(QueryBuilder query, QueryBuilder filter, List<SortBuilder> sorts) {
+	public NativeSearchQuery(@Nullable QueryBuilder query, @Nullable QueryBuilder filter,
+			@Nullable List<SortBuilder<?>> sorts) {
 
 		this.query = query;
 		this.filter = filter;
 		this.sorts = sorts;
 	}
 
-	public NativeSearchQuery(QueryBuilder query, QueryBuilder filter, List<SortBuilder> sorts,
-			HighlightBuilder.Field[] highlightFields) {
+	public NativeSearchQuery(@Nullable QueryBuilder query, @Nullable QueryBuilder filter,
+			@Nullable List<SortBuilder<?>> sorts, @Nullable HighlightBuilder.Field[] highlightFields) {
 
 		this.query = query;
 		this.filter = filter;
@@ -75,16 +79,18 @@ public class NativeSearchQuery extends AbstractQuery {
 		this.highlightFields = highlightFields;
 	}
 
-	public NativeSearchQuery(QueryBuilder query, QueryBuilder filter, List<SortBuilder> sorts,
-			HighlightBuilder highlighBuilder, HighlightBuilder.Field[] highlightFields) {
+	public NativeSearchQuery(@Nullable QueryBuilder query, @Nullable QueryBuilder filter,
+			@Nullable List<SortBuilder<?>> sorts, @Nullable HighlightBuilder highlightBuilder,
+			@Nullable HighlightBuilder.Field[] highlightFields) {
 
 		this.query = query;
 		this.filter = filter;
 		this.sorts = sorts;
-		this.highlightBuilder = highlighBuilder;
+		this.highlightBuilder = highlightBuilder;
 		this.highlightFields = highlightFields;
 	}
 
+	@Nullable
 	public QueryBuilder getQuery() {
 		return query;
 	}
@@ -95,7 +101,7 @@ public class NativeSearchQuery extends AbstractQuery {
 	}
 
 	@Nullable
-	public List<SortBuilder> getElasticsearchSorts() {
+	public List<SortBuilder<?>> getElasticsearchSorts() {
 		return sorts;
 	}
 
@@ -131,11 +137,11 @@ public class NativeSearchQuery extends AbstractQuery {
 	}
 
 	@Nullable
-	public List<AbstractAggregationBuilder> getAggregations() {
+	public List<AbstractAggregationBuilder<?>> getAggregations() {
 		return aggregations;
 	}
 
-	public void addAggregation(AbstractAggregationBuilder aggregationBuilder) {
+	public void addAggregation(AbstractAggregationBuilder<?> aggregationBuilder) {
 
 		if (aggregations == null) {
 			aggregations = new ArrayList<>();
@@ -144,7 +150,7 @@ public class NativeSearchQuery extends AbstractQuery {
 		aggregations.add(aggregationBuilder);
 	}
 
-	public void setAggregations(List<AbstractAggregationBuilder> aggregations) {
+	public void setAggregations(List<AbstractAggregationBuilder<?>> aggregations) {
 		this.aggregations = aggregations;
 	}
 

@@ -1300,7 +1300,7 @@ class RequestFactory {
 
 		if (query instanceof NativeSearchQuery) {
 			NativeSearchQuery nativeSearchQuery = (NativeSearchQuery) query;
-			List<SortBuilder> sorts = nativeSearchQuery.getElasticsearchSorts();
+			List<SortBuilder<?>> sorts = nativeSearchQuery.getElasticsearchSorts();
 			if (sorts != null) {
 				sorts.forEach(sourceBuilder::sort);
 			}
@@ -1316,7 +1316,7 @@ class RequestFactory {
 
 		if (query instanceof NativeSearchQuery) {
 			NativeSearchQuery nativeSearchQuery = (NativeSearchQuery) query;
-			List<SortBuilder> sorts = nativeSearchQuery.getElasticsearchSorts();
+			List<SortBuilder<?>> sorts = nativeSearchQuery.getElasticsearchSorts();
 			if (sorts != null) {
 				sorts.forEach(searchRequestBuilder::addSort);
 			}
@@ -1514,6 +1514,7 @@ class RequestFactory {
 	// endregion
 
 	// region helper functions
+	@Nullable
 	private QueryBuilder getQuery(Query query) {
 		QueryBuilder elasticsearchQuery;
 
