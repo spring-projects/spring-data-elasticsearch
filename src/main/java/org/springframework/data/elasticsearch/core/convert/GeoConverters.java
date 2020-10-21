@@ -46,7 +46,7 @@ import org.springframework.util.NumberUtils;
  * @author Peter-Josef Meisch
  * @since 3.2
  */
-class GeoConverters {
+public class GeoConverters {
 
 	static Collection<Converter<?, ?>> getConvertersToRegister() {
 
@@ -67,7 +67,7 @@ class GeoConverters {
 	 * {@link Converter} to write a {@link Point} to {@link Map} using {@code lat/long} properties.
 	 */
 	@WritingConverter
-	enum PointToMapConverter implements Converter<Point, Map<String, Object>> {
+	public enum PointToMapConverter implements Converter<Point, Map<String, Object>> {
 
 		INSTANCE;
 
@@ -85,7 +85,7 @@ class GeoConverters {
 	 * {@link Converter} to read a {@link Point} from {@link Map} using {@code lat/long} properties.
 	 */
 	@ReadingConverter
-	enum MapToPointConverter implements Converter<Map<String, Object>, Point> {
+	public enum MapToPointConverter implements Converter<Map<String, Object>, Point> {
 
 		INSTANCE;
 
@@ -104,7 +104,7 @@ class GeoConverters {
 	 * {@link Converter} to write a {@link GeoPoint} to {@link Map} using {@code lat/long} properties.
 	 */
 	@WritingConverter
-	enum GeoPointToMapConverter implements Converter<GeoPoint, Map<String, Object>> {
+	public enum GeoPointToMapConverter implements Converter<GeoPoint, Map<String, Object>> {
 
 		INSTANCE;
 
@@ -119,7 +119,7 @@ class GeoConverters {
 	}
 
 	@ReadingConverter
-	enum MapToGeoPointConverter implements Converter<Map<String, Object>, GeoPoint> {
+	public enum MapToGeoPointConverter implements Converter<Map<String, Object>, GeoPoint> {
 
 		INSTANCE;
 
@@ -135,7 +135,7 @@ class GeoConverters {
 
 	// region GeoJson
 	@WritingConverter
-	enum GeoJsonToMapConverter implements Converter<GeoJson<? extends Iterable<?>>, Map<String, Object>> {
+	public enum GeoJsonToMapConverter implements Converter<GeoJson<? extends Iterable<?>>, Map<String, Object>> {
 
 		INSTANCE;
 
@@ -162,7 +162,7 @@ class GeoConverters {
 	}
 
 	@ReadingConverter
-	enum MapToGeoJsonConverter implements Converter<Map<String, Object>, GeoJson<? extends Iterable<?>>> {
+	public enum MapToGeoJsonConverter implements Converter<Map<String, Object>, GeoJson<? extends Iterable<?>>> {
 
 		INSTANCE;
 
@@ -195,7 +195,7 @@ class GeoConverters {
 
 	// region GeoJsonPoint
 	@WritingConverter
-	enum GeoJsonPointToMapConverter implements Converter<GeoJsonPoint, Map<String, Object>> {
+	public enum GeoJsonPointToMapConverter implements Converter<GeoJsonPoint, Map<String, Object>> {
 
 		INSTANCE;
 
@@ -209,7 +209,7 @@ class GeoConverters {
 	}
 
 	@ReadingConverter
-	enum MapToGeoJsonPointConverter implements Converter<Map<String, Object>, GeoJsonPoint> {
+	public enum MapToGeoJsonPointConverter implements Converter<Map<String, Object>, GeoJsonPoint> {
 
 		INSTANCE;
 
@@ -233,7 +233,7 @@ class GeoConverters {
 
 	// region GeoJsonMultiPoint
 	@WritingConverter
-	enum GeoJsonMultiPointToMapConverter implements Converter<GeoJsonMultiPoint, Map<String, Object>> {
+	public enum GeoJsonMultiPointToMapConverter implements Converter<GeoJsonMultiPoint, Map<String, Object>> {
 
 		INSTANCE;
 
@@ -247,7 +247,7 @@ class GeoConverters {
 	}
 
 	@ReadingConverter
-	enum MapToGeoJsonMultiPointConverter implements Converter<Map<String, Object>, GeoJsonMultiPoint> {
+	public enum MapToGeoJsonMultiPointConverter implements Converter<Map<String, Object>, GeoJsonMultiPoint> {
 
 		INSTANCE;
 
@@ -268,7 +268,7 @@ class GeoConverters {
 
 	// region GeoJsonLineString
 	@WritingConverter
-	enum GeoJsonLineStringToMapConverter implements Converter<GeoJsonLineString, Map<String, Object>> {
+	public enum GeoJsonLineStringToMapConverter implements Converter<GeoJsonLineString, Map<String, Object>> {
 
 		INSTANCE;
 
@@ -282,7 +282,7 @@ class GeoConverters {
 	}
 
 	@ReadingConverter
-	enum MapToGeoJsonLineStringConverter implements Converter<Map<String, Object>, GeoJsonLineString> {
+	public enum MapToGeoJsonLineStringConverter implements Converter<Map<String, Object>, GeoJsonLineString> {
 
 		INSTANCE;
 
@@ -303,7 +303,7 @@ class GeoConverters {
 
 	// region GeoJsonMultiLineString
 	@WritingConverter
-	enum GeoJsonMultiLineStringToMapConverter implements Converter<GeoJsonMultiLineString, Map<String, Object>> {
+	public enum GeoJsonMultiLineStringToMapConverter implements Converter<GeoJsonMultiLineString, Map<String, Object>> {
 
 		INSTANCE;
 
@@ -314,7 +314,7 @@ class GeoConverters {
 	}
 
 	@ReadingConverter
-	enum MapToGeoJsonMultiLineStringConverter implements Converter<Map<String, Object>, GeoJsonMultiLineString> {
+	public enum MapToGeoJsonMultiLineStringConverter implements Converter<Map<String, Object>, GeoJsonMultiLineString> {
 
 		INSTANCE;
 
@@ -331,7 +331,7 @@ class GeoConverters {
 
 	// region GeoJsonPolygon
 	@WritingConverter
-	enum GeoJsonPolygonToMapConverter implements Converter<GeoJsonPolygon, Map<String, Object>> {
+	public enum GeoJsonPolygonToMapConverter implements Converter<GeoJsonPolygon, Map<String, Object>> {
 
 		INSTANCE;
 
@@ -342,7 +342,7 @@ class GeoConverters {
 	}
 
 	@ReadingConverter
-	enum MapToGeoJsonPolygonConverter implements Converter<Map<String, Object>, GeoJsonPolygon> {
+	public enum MapToGeoJsonPolygonConverter implements Converter<Map<String, Object>, GeoJsonPolygon> {
 
 		INSTANCE;
 
@@ -364,7 +364,7 @@ class GeoConverters {
 
 	// region GeoJsonMultiPolygon
 	@WritingConverter
-	enum GeoJsonMultiPolygonToMapConverter implements Converter<GeoJsonMultiPolygon, Map<String, Object>> {
+	public enum GeoJsonMultiPolygonToMapConverter implements Converter<GeoJsonMultiPolygon, Map<String, Object>> {
 
 		INSTANCE;
 
@@ -386,7 +386,7 @@ class GeoConverters {
 	}
 
 	@ReadingConverter
-	enum MapToGeoJsonMultiPolygonConverter implements Converter<Map<String, Object>, GeoJsonMultiPolygon> {
+	public enum MapToGeoJsonMultiPolygonConverter implements Converter<Map<String, Object>, GeoJsonMultiPolygon> {
 
 		INSTANCE;
 
@@ -413,7 +413,8 @@ class GeoConverters {
 
 	// region GeoJsonGeometryCollection
 	@WritingConverter
-	enum GeoJsonGeometryCollectionToMapConverter implements Converter<GeoJsonGeometryCollection, Map<String, Object>> {
+	public enum GeoJsonGeometryCollectionToMapConverter
+			implements Converter<GeoJsonGeometryCollection, Map<String, Object>> {
 
 		INSTANCE;
 
@@ -431,7 +432,8 @@ class GeoConverters {
 	}
 
 	@ReadingConverter
-	enum MapToGeoJsonGeometryCollectionConverter implements Converter<Map<String, Object>, GeoJsonGeometryCollection> {
+	public enum MapToGeoJsonGeometryCollectionConverter
+			implements Converter<Map<String, Object>, GeoJsonGeometryCollection> {
 
 		INSTANCE;
 

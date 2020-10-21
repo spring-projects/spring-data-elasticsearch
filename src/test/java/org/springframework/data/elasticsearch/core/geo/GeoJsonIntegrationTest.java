@@ -17,6 +17,9 @@ package org.springframework.data.elasticsearch.core.geo;
 
 import static org.assertj.core.api.Assertions.*;
 
+import lombok.Builder;
+import lombok.Data;
+
 import java.util.Arrays;
 
 import org.junit.jupiter.api.AfterEach;
@@ -24,8 +27,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.geo.Point;
@@ -43,19 +52,73 @@ class GeoJsonIntegrationTest {
 
 	private IndexOperations indexOps;
 
+	// region data
+
+	private final GeoJsonPolygon geoShape10To20 = GeoJsonPolygon.of( //
+			new Point(10, 10), //
+			new Point(20, 10), //
+			new Point(20, 20), //
+			new Point(10, 20), //
+			new Point(10, 10));
+	private final Area area10To20 = Area.builder().id("area10To20").area(geoShape10To20) /**/.build();
+
+	private final GeoJsonPolygon geoShape5To35 = GeoJsonPolygon.of( //
+			new Point(5, 5), //
+			new Point(35, 5), //
+			new Point(35, 35), //
+			new Point(5, 35), //
+			new Point(5, 5));
+	private final Area area5To35 = Area.builder().id("area5To35").area(geoShape5To35).build();
+
+	private final GeoJsonPolygon geoShape15To25 = GeoJsonPolygon.of( //
+			new Point(15, 15), //
+			new Point(25, 15), //
+			new Point(25, 25), //
+			new Point(15, 25), //
+			new Point(15, 15));
+	private final Area area15To25 = Area.builder().id("area15To25").area(geoShape15To25).build();
+
+	private final GeoJsonPolygon geoShape30To40 = GeoJsonPolygon.of( //
+			new Point(30, 30), //
+			new Point(40, 30), //
+			new Point(40, 40), //
+			new Point(30, 40), //
+			new Point(30, 30));
+	private final Area area30To40 = Area.builder().id("area30To40").area(geoShape30To40).build();
+
+	private final GeoJsonPolygon geoShape32To37 = GeoJsonPolygon.of( //
+			new Point(32, 32), //
+			new Point(37, 32), //
+			new Point(37, 37), //
+			new Point(32, 37), //
+			new Point(32, 32));
+	private final Area area32To37 = Area.builder().id("area32To37").area(geoShape30To40).build();
+	// endregion
+
+	// region setup
 	@BeforeEach
 	void setUp() {
 		indexOps = operations.indexOps(GeoJsonEntity.class);
 		indexOps.delete();
 		indexOps.create();
 		indexOps.putMapping();
+
+		IndexOperations indexOpsArea = operations.indexOps(Area.class);
+		indexOpsArea.delete();
+		indexOpsArea.create();
+		indexOpsArea.putMapping();
+
+		operations.save(Arrays.asList(area10To20, area30To40));
+		indexOpsArea.refresh();
 	}
 
 	@AfterEach
 	void tearDown() {
 		indexOps.delete();
 	}
+	// endregion
 
+	// region tests
 	@Test // DATAES-930
 	@DisplayName("should write and read an entity with GeoJson properties")
 	void shouldWriteAndReadAnEntityWithGeoJsonProperties() {
@@ -99,4 +162,60 @@ class GeoJsonIntegrationTest {
 
 		assertThat(result).isEqualTo(entity);
 	}
+
+	@Test // DATAES-931
+	@DisplayName("should find intersecting objects with Criteria query")
+	void shouldFindIntersectingObjectsWithCriteriaQuery() {
+
+		CriteriaQuery query = new CriteriaQuery(new Criteria("area").intersects(geoShape15To25));
+
+		SearchHits<Area> searchHits = operations.search(query, Area.class);
+		assertThat(searchHits.getTotalHits()).isEqualTo(1L);
+		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo("area10To20");
+	}
+
+	@Test // DATAES-931
+	@DisplayName("should find disjoint objects with Criteria query")
+	void shouldFindDisjointObjectsWithCriteriaQuery() {
+
+		CriteriaQuery query = new CriteriaQuery(new Criteria("area").isDisjoint(geoShape15To25));
+
+		SearchHits<Area> searchHits = operations.search(query, Area.class);
+		assertThat(searchHits.getTotalHits()).isEqualTo(1L);
+		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo("area30To40");
+	}
+
+	@Test // DATAES-931
+	@DisplayName("should find within objects with Criteria query")
+	void shouldFindWithinObjectsWithCriteriaQuery() {
+
+		CriteriaQuery query = new CriteriaQuery(new Criteria("area").within(geoShape5To35));
+
+		SearchHits<Area> searchHits = operations.search(query, Area.class);
+		assertThat(searchHits.getTotalHits()).isEqualTo(1L);
+		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo("area10To20");
+	}
+
+	@Test // DATAES-931
+	@DisplayName("should find contains objects with Criteria query")
+	void shouldFindContainsObjectsWithCriteriaQuery() {
+
+		CriteriaQuery query = new CriteriaQuery(new Criteria("area").contains(geoShape32To37));
+
+		SearchHits<Area> searchHits = operations.search(query, Area.class);
+		assertThat(searchHits.getTotalHits()).isEqualTo(1L);
+		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo("area30To40");
+	}
+	// endregion
+
+	// region test classes
+	@Data
+	@Builder
+	@Document(indexName = "areas")
+	static class Area {
+		@Id private String id;
+		@Field(name = "the_area") private GeoJsonPolygon area;
+	}
+	// endregion
+
 }

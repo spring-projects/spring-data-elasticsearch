@@ -15,9 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core.geo;
 
+import org.springframework.data.elasticsearch.core.convert.ConversionException;
+import org.springframework.data.elasticsearch.core.convert.GeoConverters;
+import org.springframework.data.elasticsearch.core.document.Document;
+
 /**
- * Interface definition for structures defined in <a href="https://geojson.org/>GeoJSON</a> format.
- * copied from Spring Data Mongodb
+ * Interface definition for structures defined in <a href="https://geojson.org/>GeoJSON</a> format. copied from Spring
+ * Data Mongodb
  *
  * @author Christoph Strobl
  * @since 1.7
@@ -28,7 +32,8 @@ public interface GeoJson<T extends Iterable<?>> {
 	 * String value representing the type of the {@link GeoJson} object.
 	 *
 	 * @return will never be {@literal null}.
-	 * @see <a href="https://geojson.org/geojson-spec.html#geojson-objects">https://geojson.org/geojson-spec.html#geojson-objects</a>
+	 * @see <a href=
+	 *      "https://geojson.org/geojson-spec.html#geojson-objects">https://geojson.org/geojson-spec.html#geojson-objects</a>
 	 */
 	String getType();
 
@@ -37,7 +42,24 @@ public interface GeoJson<T extends Iterable<?>> {
 	 * determined by {@link #getType()} of geometry.
 	 *
 	 * @return will never be {@literal null}.
-	 * @see <a href="https://geojson.org/geojson-spec.html#geometry-objects">https://geojson.org/geojson-spec.html#geometry-objects</a>
+	 * @see <a href=
+	 *      "https://geojson.org/geojson-spec.html#geometry-objects">https://geojson.org/geojson-spec.html#geometry-objects</a>
 	 */
 	T getCoordinates();
+
+	/**
+	 * @param json the JSON string to parse
+	 * @return the parsed {@link GeoJson} object
+	 * @throws ConversionException on parse erros
+	 */
+	static GeoJson<?> of(String json) {
+		return GeoConverters.MapToGeoJsonConverter.INSTANCE.convert(Document.parse(json));
+	}
+
+	/**
+	 * @return a JSON representation of this object
+	 */
+	default String toJson() {
+		return Document.from(GeoConverters.GeoJsonToMapConverter.INSTANCE.convert(this)).toJson();
+	}
 }

@@ -18,17 +18,24 @@ package org.springframework.data.elasticsearch.core;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import java.time.LocalDate;
+import java.util.Base64;
 import java.util.Collections;
+import java.util.Objects;
 
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.core.convert.GeoConverters;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.geo.GeoJson;
+import org.springframework.data.elasticsearch.core.geo.GeoJsonPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
@@ -38,13 +45,14 @@ import org.springframework.lang.Nullable;
  * Tests for the mapping of {@link CriteriaQuery} by a
  * {@link org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter}. In the same package as
  * {@link CriteriaQueryProcessor} as this is needed to get the String representation to assert.
- * 
+ *
  * @author Peter-Josef Meisch
  */
-public class CriteriaQueryMappingTests {
+public class CriteriaQueryMappingUnitTests {
 
 	MappingElasticsearchConverter mappingElasticsearchConverter;
 
+	// region setup
 	@BeforeEach
 	void setUp() {
 		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
@@ -55,8 +63,11 @@ public class CriteriaQueryMappingTests {
 		mappingElasticsearchConverter.afterPropertiesSet();
 
 	}
+	// endregion
 
-	@Test // DATAES-716
+	// region tests
+	@Test
+	// DATAES-716
 	void shouldMapNamesAndConvertValuesInCriteriaQuery() throws JSONException {
 
 		// use POJO properties and types in the query building
@@ -98,7 +109,8 @@ public class CriteriaQueryMappingTests {
 		assertEquals(expected, queryString, false);
 	}
 
-	@Test // DATAES-706
+	@Test
+	// DATAES-706
 	void shouldMapNamesAndValuesInSubCriteriaQuery() throws JSONException {
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery( //
@@ -151,6 +163,36 @@ public class CriteriaQueryMappingTests {
 		assertEquals(expected, queryString, false);
 	}
 
+	@Test // DATAES-931
+	@DisplayName("should map names in GeoJson query")
+	void shouldMapNamesInGeoJsonQuery() throws JSONException {
+
+		GeoJsonPoint geoJsonPoint = GeoJsonPoint.of(1.2, 3.4);
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("geoShapeField").intersects(geoJsonPoint));
+		String base64Query = getBase64EncodedGeoShapeQuery(geoJsonPoint, "geo-shape-field", "intersects");
+
+		String expected = "{\n" + //
+				"  \"wrapper\": {\n" + //
+				"    \"query\": \"" + base64Query + "\"\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		mappingElasticsearchConverter.updateQuery(criteriaQuery, GeoShapeEntity.class);
+		String queryString = new CriteriaFilterProcessor().createFilter(criteriaQuery.getCriteria()).toString();
+
+		assertEquals(expected, queryString, false);
+	}
+
+	private String getBase64EncodedGeoShapeQuery(GeoJson<?> geoJson, String elasticFieldName, String relation) {
+		return Base64.getEncoder()
+				.encodeToString(("{\"geo_shape\": {\""
+						+ elasticFieldName + "\": {\"shape\": " + Document
+								.from(Objects.requireNonNull(GeoConverters.GeoJsonToMapConverter.INSTANCE.convert(geoJson))).toJson()
+						+ ", \"relation\": \"" + relation + "\"}}}").getBytes());
+	}
+	// endregion
+
+	// region test entities
 	static class Person {
 		@Nullable @Id String id;
 		@Nullable @Field(name = "first-name") String firstName;
@@ -158,4 +200,9 @@ public class CriteriaQueryMappingTests {
 		@Nullable @Field(name = "birth-date", type = FieldType.Date, format = DateFormat.custom,
 				pattern = "dd.MM.uuuu") LocalDate birthDate;
 	}
+
+	static class GeoShapeEntity {
+		@Nullable @Field(name = "geo-shape-field") GeoJson<?> geoShapeField;
+	}
+	// endregion
 }

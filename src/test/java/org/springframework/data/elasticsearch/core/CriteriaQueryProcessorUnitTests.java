@@ -24,7 +24,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 /**
  * @author Peter-Josef Meisch
  */
-class CriteriaQueryProcessorTests {
+class CriteriaQueryProcessorUnitTests {
 
 	private final CriteriaQueryProcessor queryProcessor = new CriteriaQueryProcessor();
 

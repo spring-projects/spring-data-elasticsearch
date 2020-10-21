@@ -24,7 +24,7 @@ import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
-import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -83,7 +83,7 @@ public interface Document extends Map<String, Object> {
 		try {
 			return new MapDocument(MapDocument.OBJECT_MAPPER.readerFor(Map.class).readValue(json));
 		} catch (IOException e) {
-			throw new ElasticsearchException("Cannot parse JSON", e);
+			throw new ConversionException("Cannot parse JSON", e);
 		}
 	}
 

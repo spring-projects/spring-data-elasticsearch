@@ -30,6 +30,7 @@ import org.elasticsearch.index.query.GeoDistanceQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
+import org.springframework.data.elasticsearch.core.geo.GeoJson;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.geo.Box;
@@ -102,73 +103,103 @@ class CriteriaFilterProcessor {
 		QueryBuilder filter = null;
 
 		switch (key) {
-			case WITHIN: {
-				GeoDistanceQueryBuilder geoDistanceQueryBuilder = QueryBuilders.geoDistanceQuery(fieldName);
-
+			case WITHIN:
 				Assert.isTrue(value instanceof Object[], "Value of a geo distance filter should be an array of two values.");
-				Object[] valArray = (Object[]) value;
-				Assert.noNullElements(valArray, "Geo distance filter takes 2 not null elements array as parameter.");
-				Assert.isTrue(valArray.length == 2, "Geo distance filter takes a 2-elements array as parameter.");
-				Assert.isTrue(valArray[0] instanceof GeoPoint || valArray[0] instanceof String || valArray[0] instanceof Point,
-						"First element of a geo distance filter must be a GeoPoint, a Point or a text");
-				Assert.isTrue(valArray[1] instanceof String || valArray[1] instanceof Distance,
-						"Second element of a geo distance filter must be a text or a Distance");
-
-				StringBuilder dist = new StringBuilder();
-
-				if (valArray[1] instanceof Distance) {
-					extractDistanceString((Distance) valArray[1], dist);
-				} else {
-					dist.append((String) valArray[1]);
-				}
-
-				if (valArray[0] instanceof GeoPoint) {
-					GeoPoint loc = (GeoPoint) valArray[0];
-					geoDistanceQueryBuilder.point(loc.getLat(), loc.getLon()).distance(dist.toString())
-							.geoDistance(GeoDistance.PLANE);
-				} else if (valArray[0] instanceof Point) {
-					GeoPoint loc = GeoPoint.fromPoint((Point) valArray[0]);
-					geoDistanceQueryBuilder.point(loc.getLat(), loc.getLon()).distance(dist.toString())
-							.geoDistance(GeoDistance.PLANE);
-				} else {
-					String loc = (String) valArray[0];
-					if (loc.contains(",")) {
-						String[] c = loc.split(",");
-						geoDistanceQueryBuilder.point(Double.parseDouble(c[0]), Double.parseDouble(c[1])).distance(dist.toString())
-								.geoDistance(GeoDistance.PLANE);
-					} else {
-						geoDistanceQueryBuilder.geohash(loc).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
-					}
-				}
-				filter = geoDistanceQueryBuilder;
-
+				filter = withinQuery(fieldName, (Object[]) value);
 				break;
-			}
-
-			case BBOX: {
-				filter = QueryBuilders.geoBoundingBoxQuery(fieldName);
-
+			case BBOX:
 				Assert.isTrue(value instanceof Object[],
 						"Value of a boundedBy filter should be an array of one or two values.");
-				Object[] valArray = (Object[]) value;
-				Assert.noNullElements(valArray, "Geo boundedBy filter takes a not null element array as parameter.");
-
-				if (valArray.length == 1) {
-					// GeoEnvelop
-					oneParameterBBox((GeoBoundingBoxQueryBuilder) filter, valArray[0]);
-				} else if (valArray.length == 2) {
-					// 2x GeoPoint
-					// 2x text
-					twoParameterBBox((GeoBoundingBoxQueryBuilder) filter, valArray);
-				} else {
-					throw new IllegalArgumentException(
-							"Geo distance filter takes a 1-elements array(GeoBox) or 2-elements array(GeoPoints or Strings(format lat,lon or geohash)).");
-				}
+				filter = boundingBoxQuery(fieldName, (Object[]) value);
 				break;
+			case GEO_INTERSECTS:
+				Assert.isTrue(value instanceof GeoJson<?>, "value of a GEO_INTERSECTS filter must be a GeoJson object");
+				filter = geoJsonQuery(fieldName, (GeoJson<?>) value, "intersects");
+				break;
+			case GEO_IS_DISJOINT:
+				Assert.isTrue(value instanceof GeoJson<?>, "value of a GEO_IS_DISJOINT filter must be a GeoJson object");
+				filter = geoJsonQuery(fieldName, (GeoJson<?>) value, "disjoint");
+				break;
+			case GEO_WITHIN:
+				Assert.isTrue(value instanceof GeoJson<?>, "value of a GEO_WITHIN filter must be a GeoJson object");
+				filter = geoJsonQuery(fieldName, (GeoJson<?>) value, "within");
+				break;
+			case GEO_CONTAINS:
+				Assert.isTrue(value instanceof GeoJson<?>, "value of a GEO_CONTAINS filter must be a GeoJson object");
+				filter = geoJsonQuery(fieldName, (GeoJson<?>) value, "contains");
+				break;
+		}
+
+		return filter;
+	}
+
+	private QueryBuilder withinQuery(String fieldName, Object[] valArray) {
+
+		GeoDistanceQueryBuilder filter = QueryBuilders.geoDistanceQuery(fieldName);
+
+		Assert.noNullElements(valArray, "Geo distance filter takes 2 not null elements array as parameter.");
+		Assert.isTrue(valArray.length == 2, "Geo distance filter takes a 2-elements array as parameter.");
+		Assert.isTrue(valArray[0] instanceof GeoPoint || valArray[0] instanceof String || valArray[0] instanceof Point,
+				"First element of a geo distance filter must be a GeoPoint, a Point or a text");
+		Assert.isTrue(valArray[1] instanceof String || valArray[1] instanceof Distance,
+				"Second element of a geo distance filter must be a text or a Distance");
+
+		StringBuilder dist = new StringBuilder();
+
+		if (valArray[1] instanceof Distance) {
+			extractDistanceString((Distance) valArray[1], dist);
+		} else {
+			dist.append((String) valArray[1]);
+		}
+
+		if (valArray[0] instanceof GeoPoint) {
+			GeoPoint loc = (GeoPoint) valArray[0];
+			filter.point(loc.getLat(), loc.getLon()).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
+		} else if (valArray[0] instanceof Point) {
+			GeoPoint loc = GeoPoint.fromPoint((Point) valArray[0]);
+			filter.point(loc.getLat(), loc.getLon()).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
+		} else {
+			String loc = (String) valArray[0];
+			if (loc.contains(",")) {
+				String[] c = loc.split(",");
+				filter.point(Double.parseDouble(c[0]), Double.parseDouble(c[1])).distance(dist.toString())
+						.geoDistance(GeoDistance.PLANE);
+			} else {
+				filter.geohash(loc).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 			}
 		}
 
 		return filter;
+	}
+
+	private QueryBuilder boundingBoxQuery(String fieldName, Object[] valArray) {
+
+		Assert.noNullElements(valArray, "Geo boundedBy filter takes a not null element array as parameter.");
+
+		GeoBoundingBoxQueryBuilder filter = QueryBuilders.geoBoundingBoxQuery(fieldName);
+
+		if (valArray.length == 1) {
+			// GeoEnvelop
+			oneParameterBBox(filter, valArray[0]);
+		} else if (valArray.length == 2) {
+			// 2x GeoPoint
+			// 2x text
+			twoParameterBBox(filter, valArray);
+		} else {
+			throw new IllegalArgumentException(
+					"Geo distance filter takes a 1-elements array(GeoBox) or 2-elements array(GeoPoints or Strings(format lat,lon or geohash)).");
+		}
+
+		return filter;
+	}
+
+	private QueryBuilder geoJsonQuery(String fieldName, GeoJson<?> geoJson, String relation) {
+		return QueryBuilders.wrapperQuery(buildJsonQuery(fieldName, geoJson, relation));
+	}
+
+	private String buildJsonQuery(String fieldName, GeoJson<?> geoJson, String relation) {
+		return "{\"geo_shape\": {\"" + fieldName + "\": {\"shape\": " + geoJson.toJson() + ", \"relation\": \"" + relation
+				+ "\"}}}";
 	}
 
 	/**
