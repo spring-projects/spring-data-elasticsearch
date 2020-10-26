@@ -5,7 +5,7 @@
 == New in Spring Data Elasticsearch 4.1
 
 * Uses Spring 5.3.
-* Upgrade to Elasticsearch 7.9.2.
+* Upgrade to Elasticsearch 7.9.3.
 * Improved API for alias management.
 * Introduction of `ReactiveIndexOperations` for index management.
 * Index templates support.
