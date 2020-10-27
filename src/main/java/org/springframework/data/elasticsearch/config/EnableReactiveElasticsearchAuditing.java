@@ -65,6 +65,8 @@ public @interface EnableReactiveElasticsearchAuditing {
 	 * used for setting creation and modification dates.
 	 *
 	 * @return
+	 * @deprecated since 4.1
 	 */
+	@Deprecated
 	String dateTimeProviderRef() default "";
 }
