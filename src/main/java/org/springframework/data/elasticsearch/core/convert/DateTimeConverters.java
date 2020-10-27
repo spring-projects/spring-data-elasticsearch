@@ -34,6 +34,10 @@ public final class DateTimeConverters {
 
 	private static DateTimeFormatter formatter = ISODateTimeFormat.dateTime().withZone(DateTimeZone.UTC);
 
+	/**
+	 * @deprecated since 4.1
+	 */
+	@Deprecated
 	public enum JodaDateTimeConverter implements Converter<ReadableInstant, String> {
 		INSTANCE;
 
@@ -47,6 +51,10 @@ public final class DateTimeConverters {
 
 	}
 
+	/**
+	 * @deprecated since 4.1
+	 */
+	@Deprecated
 	public enum JodaLocalDateTimeConverter implements Converter<LocalDateTime, String> {
 		INSTANCE;
 
@@ -60,6 +68,10 @@ public final class DateTimeConverters {
 
 	}
 
+	/**
+	 * @deprecated since 4.1
+	 */
+	@Deprecated
 	public enum JavaDateConverter implements Converter<Date, String> {
 		INSTANCE;
 
