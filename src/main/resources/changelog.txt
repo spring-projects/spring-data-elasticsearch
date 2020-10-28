@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.1.21.RELEASE (2020-10-28)
+----------------------------------------------
+* DATAES-958 - Release 3.1.21 (Lovelace SR21).
+
+
 Changes in version 4.1.0-RC2 (2020-10-14)
 -----------------------------------------
 * DATAES-949 - dependency cleanup.
@@ -1291,6 +1296,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
