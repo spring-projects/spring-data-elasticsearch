@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.11.RELEASE (2020-10-28)
+----------------------------------------------
+* DATAES-961 - Upgrade to Elasticsearch 6.8.13.
+* DATAES-937 - Repository queries with IN filters fail with empty input list.
+* DATAES-925 - Release 3.2.11 (Moore SR11).
+
+
 Changes in version 3.1.21.RELEASE (2020-10-28)
 ----------------------------------------------
 * DATAES-958 - Release 3.1.21 (Lovelace SR21).
@@ -1296,6 +1303,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
