@@ -1,6 +1,14 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.5.RELEASE (2020-10-28)
+---------------------------------------------
+* DATAES-953 - DateTimeException occurred "yyyy-MM-dd HH: mm: ss" string is converted to Date.
+* DATAES-937 - Repository queries with IN filters fail with empty input list.
+* DATAES-936 - Take id property from the source when deserializing an entity.
+* DATAES-926 - Release 4.0.5 (Neumann SR5).
+
+
 Changes in version 3.2.11.RELEASE (2020-10-28)
 ----------------------------------------------
 * DATAES-961 - Upgrade to Elasticsearch 6.8.13.
@@ -1303,6 +1311,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
