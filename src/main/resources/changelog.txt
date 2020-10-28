@@ -1,6 +1,19 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.1.0 (2020-10-28)
+-------------------------------------
+* DATAES-962 - Deprecate Joda support.
+* DATAES-960 - Upgrade to Elasticsearch 7.9.3.
+* DATAES-956 - Prevent double converter registration.
+* DATAES-953 - DateTimeException occurred "yyyy-MM-dd HH: mm: ss" string is converted to Date.
+* DATAES-952 - Optimize SearchPage implementation.
+* DATAES-951 - Revert DATAES-934.
+* DATAES-950 - Release 4.1 GA (2020.0.0).
+* DATAES-931 - Add query support for geo shape queries.
+* DATAES-796 - Provide new method to return SearchHits in ReactiveElasticsearchClient.
+
+
 Changes in version 4.0.5.RELEASE (2020-10-28)
 ---------------------------------------------
 * DATAES-953 - DateTimeException occurred "yyyy-MM-dd HH: mm: ss" string is converted to Date.
@@ -1330,6 +1343,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
