@@ -49,14 +49,14 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 
 	public ElasticsearchPartQuery(ElasticsearchQueryMethod method, ElasticsearchOperations elasticsearchOperations) {
 		super(method, elasticsearchOperations);
-		this.tree = new PartTree(method.getName(), method.getEntityInformation().getJavaType());
+		this.tree = new PartTree(queryMethod.getName(), queryMethod.getResultProcessor().getReturnedType().getDomainType());
 		this.elasticsearchConverter = elasticsearchOperations.getElasticsearchConverter();
 		this.mappingContext = elasticsearchConverter.getMappingContext();
 	}
 
 	@Override
 	public Object execute(Object[] parameters) {
-		Class<?> clazz = queryMethod.getEntityInformation().getJavaType();
+		Class<?> clazz = queryMethod.getResultProcessor().getReturnedType().getDomainType();
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
 
 		CriteriaQuery query = createQuery(accessor);
