@@ -47,7 +47,7 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 
 	public ElasticsearchPartQuery(ElasticsearchQueryMethod method, ElasticsearchOperations elasticsearchOperations) {
 		super(method, elasticsearchOperations);
-		this.tree = new PartTree(method.getName(), method.getEntityInformation().getJavaType());
+		this.tree = new PartTree(method.getName(), method.getResultProcessor().getReturnedType().getDomainType());
 		this.mappingContext = elasticsearchOperations.getElasticsearchConverter().getMappingContext();
 	}
 
@@ -58,15 +58,17 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		CriteriaQuery query = createQuery(accessor);
 		Assert.notNull(query, "unsupported query");
 
+		Class<?> clazz = queryMethod.getResultProcessor().getReturnedType().getDomainType();
+
 		if (tree.isDelete()) {
 			Object result = countOrGetDocumentsForDelete(query, accessor);
-			elasticsearchOperations.delete(query, queryMethod.getEntityInformation().getJavaType());
+			elasticsearchOperations.delete(query, clazz);
 			return result;
 		} else if (queryMethod.isPageQuery()) {
 			query.setPageable(accessor.getPageable());
-			return elasticsearchOperations.queryForPage(query, queryMethod.getEntityInformation().getJavaType());
+			return elasticsearchOperations.queryForPage(query, clazz);
 		} else if (queryMethod.isStreamQuery()) {
-			Class<?> entityType = queryMethod.getEntityInformation().getJavaType();
+			Class<?> entityType = clazz;
 			if (accessor.getPageable().isUnpaged()) {
 				query.setPageable(PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
 			} else {
@@ -78,18 +80,18 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 
 			if (accessor.getPageable().isUnpaged()) {
 
-				int itemCount = (int) elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
+				int itemCount = (int) elasticsearchOperations.count(query, clazz);
 				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 			} else {
 				query.setPageable(accessor.getPageable());
 			}
 
-			return elasticsearchOperations.queryForList(query, queryMethod.getEntityInformation().getJavaType());
+			return elasticsearchOperations.queryForList(query, clazz);
 		} else if (tree.isCountProjection()) {
-			return elasticsearchOperations.count(query, queryMethod.getEntityInformation().getJavaType());
+			return elasticsearchOperations.count(query, clazz);
 		}
 
-		return elasticsearchOperations.queryForObject(query, queryMethod.getEntityInformation().getJavaType());
+		return elasticsearchOperations.queryForObject(query, clazz);
 	}
 
 	private Object countOrGetDocumentsForDelete(CriteriaQuery query, ParametersParameterAccessor accessor) {

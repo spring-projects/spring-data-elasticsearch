@@ -64,17 +64,18 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	public Object execute(Object[] parameters) {
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
 		StringQuery stringQuery = createQuery(accessor);
+		Class<?> clazz = queryMethod.getResultProcessor().getReturnedType().getDomainType();
 		if (queryMethod.isPageQuery()) {
 			stringQuery.setPageable(accessor.getPageable());
-			return elasticsearchOperations.queryForPage(stringQuery, queryMethod.getEntityInformation().getJavaType());
+			return elasticsearchOperations.queryForPage(stringQuery, clazz);
 		} else if (queryMethod.isCollectionQuery()) {
 			if (accessor.getPageable().isPaged()) {
 				stringQuery.setPageable(accessor.getPageable());
 			}
-			return elasticsearchOperations.queryForList(stringQuery, queryMethod.getEntityInformation().getJavaType());
+			return elasticsearchOperations.queryForList(stringQuery, clazz);
 		}
 
-		return elasticsearchOperations.queryForObject(stringQuery, queryMethod.getEntityInformation().getJavaType());
+		return elasticsearchOperations.queryForObject(stringQuery, clazz);
 	}
 
 	protected StringQuery createQuery(ParametersParameterAccessor parameterAccessor) {
