@@ -71,7 +71,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 
 	@Override
 	public Object execute(Object[] parameters) {
-		Class<?> clazz = queryMethod.getEntityInformation().getJavaType();
+		Class<?> clazz = queryMethod.getResultProcessor().getReturnedType().getDomainType();
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
 
 		StringQuery stringQuery = createQuery(accessor);
