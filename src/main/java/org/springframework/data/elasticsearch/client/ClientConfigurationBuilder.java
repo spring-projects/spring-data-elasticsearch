@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
+import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithRequiredEndpoint;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.MaybeSecureClientConfigurationBuilder;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder;
@@ -61,6 +62,7 @@ class ClientConfigurationBuilder
 	private @Nullable String proxy;
 	private Function<WebClient, WebClient> webClientConfigurer = Function.identity();
 	private Supplier<HttpHeaders> headersSupplier = () -> HttpHeaders.EMPTY;
+	private HttpClientConfigCallback httpClientConfigurer = httpClientBuilder -> httpClientBuilder;
 
 	/*
 	 * (non-Javadoc)
@@ -208,6 +210,15 @@ class ClientConfigurationBuilder
 	}
 
 	@Override
+	public TerminalClientConfigurationBuilder withHttpClientConfigurer(HttpClientConfigCallback httpClientConfigurer) {
+
+		Assert.notNull(httpClientConfigurer, "httpClientConfigurer must not be null");
+
+		this.httpClientConfigurer = httpClientConfigurer;
+		return this;
+	}
+
+	@Override
 	public TerminalClientConfigurationBuilder withHeaders(Supplier<HttpHeaders> headers) {
 
 		Assert.notNull(headers, "headersSupplier must not be null");
@@ -231,7 +242,7 @@ class ClientConfigurationBuilder
 		}
 
 		return new DefaultClientConfiguration(hosts, headers, useSsl, sslContext, soTimeout, connectTimeout, pathPrefix,
-				hostnameVerifier, proxy, webClientConfigurer, headersSupplier);
+				hostnameVerifier, proxy, webClientConfigurer, httpClientConfigurer, headersSupplier);
 	}
 
 	private static InetSocketAddress parse(String hostAndPort) {

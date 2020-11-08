@@ -25,6 +25,8 @@ import java.util.function.Function;
 import javax.net.ssl.SSLContext;
 
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.elasticsearch.client.RestClientBuilder;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -163,6 +165,20 @@ public class ClientConfigurationUnitTests {
 				.build();
 
 		assertThat(clientConfiguration.getWebClientConfigurer()).isEqualTo(webClientConfigurer);
+	}
+
+	@Test // DATAES-588
+	@DisplayName("should use configured httpClientConfigurer")
+	void shouldUseConfiguredHttpClientConfigurer() {
+
+		RestClientBuilder.HttpClientConfigCallback callback = httpClientBuilder -> httpClientBuilder;
+
+		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
+				.connectedTo("foo", "bar") //
+				.withHttpClientConfigurer(callback) //
+				.build();
+
+		assertThat(clientConfiguration.getHttpClientConfigurer()).isEqualTo(callback);
 	}
 
 	private static String buildBasicAuth(String username, String password) {
