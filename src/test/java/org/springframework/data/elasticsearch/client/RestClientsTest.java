@@ -2,6 +2,7 @@ package org.springframework.data.elasticsearch.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static org.assertj.core.api.Assertions.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -10,6 +11,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -62,10 +64,10 @@ public class RestClientsTest {
 		});
 	}
 
-	@ParameterizedTest // DATAES-801
+	@ParameterizedTest // DATAES-801, DATAES-588
 	@MethodSource("clientUnderTestFactorySource")
-	@DisplayName("should set all required headers")
-	void shouldSetAllRequiredHeaders(ClientUnderTestFactory clientUnderTestFactory) {
+	@DisplayName("should configure client and set all required headers")
+	void shouldConfigureClientAndSetAllRequiredHeaders(ClientUnderTestFactory clientUnderTestFactory) {
 		wireMockServer(server -> {
 
 			WireMock.configureFor(server.port());
@@ -78,6 +80,12 @@ public class RestClientsTest {
 			defaultHeaders.add("def2", "def2-1");
 
 			AtomicInteger supplierCount = new AtomicInteger(1);
+			AtomicInteger clientConfigurerCount = new AtomicInteger(0);
+
+			RestClientBuilder.HttpClientConfigCallback configCallback = httpClientBuilder -> {
+				clientConfigurerCount.incrementAndGet();
+				return httpClientBuilder;
+			};
 
 			ClientConfigurationBuilder configurationBuilder = new ClientConfigurationBuilder();
 			ClientConfiguration clientConfiguration = configurationBuilder //
@@ -89,7 +97,8 @@ public class RestClientsTest {
 						httpHeaders.add("supplied", "val0");
 						httpHeaders.add("supplied", "val" + supplierCount.getAndIncrement());
 						return httpHeaders;
-					}).build();
+					}) //
+					.withHttpClientConfigurer(configCallback).build();
 
 			ClientUnderTest clientUnderTest = clientUnderTestFactory.create(clientConfiguration);
 
@@ -97,13 +106,19 @@ public class RestClientsTest {
 			for (int i = 1; i <= 3; i++) {
 				clientUnderTest.ping();
 
-				verify(headRequestedFor(urlEqualTo("/")).withHeader("Authorization", new AnythingPattern()) //
+				verify(headRequestedFor(urlEqualTo("/")) //
+						.withHeader("Authorization", new AnythingPattern()) //
 						.withHeader("def1", new EqualToPattern("def1-1")) //
 						.withHeader("def1", new EqualToPattern("def1-2")) //
 						.withHeader("def2", new EqualToPattern("def2-1")) //
 						.withHeader("supplied", new EqualToPattern("val0")) //
 						.withHeader("supplied", new EqualToPattern("val" + i)) //
 				);
+			}
+
+			// clientConfigurer is only used in non-reactive setup
+			if (!(clientUnderTestFactory instanceof ReactiveElasticsearchClientUnderTestFactory)) {
+				assertThat(clientConfigurerCount).hasValue(1);
 			}
 		});
 	}
@@ -148,9 +163,9 @@ public class RestClientsTest {
 	 */
 	interface ClientUnderTest {
 		/**
-		 * Pings the configured server.
+		 * Pings the configured server. Must use a HEAD request to "/".
 		 *
-		 * @return
+		 * @return true if successful
 		 */
 		boolean ping() throws Exception;
 	}
@@ -182,13 +197,7 @@ public class RestClientsTest {
 		@Override
 		ClientUnderTest create(ClientConfiguration clientConfiguration) {
 			RestHighLevelClient client = RestClients.create(clientConfiguration).rest();
-			return new ClientUnderTest() {
-
-				@Override
-				public boolean ping() throws Exception {
-					return client.ping(RequestOptions.DEFAULT);
-				}
-			};
+			return () -> client.ping(RequestOptions.DEFAULT);
 		}
 
 	}
@@ -206,12 +215,7 @@ public class RestClientsTest {
 		@Override
 		ClientUnderTest create(ClientConfiguration clientConfiguration) {
 			ReactiveElasticsearchClient client = ReactiveRestClients.create(clientConfiguration);
-			return new ClientUnderTest() {
-				@Override
-				public boolean ping() throws Exception {
-					return client.ping().block();
-				}
-			};
+			return () -> client.ping().block();
 		}
 	}
 
@@ -221,6 +225,9 @@ public class RestClientsTest {
 	 * @return stream of factories
 	 */
 	static Stream<ClientUnderTestFactory> clientUnderTestFactorySource() {
-		return Stream.of(new RestClientUnderTestFactory(), new ReactiveElasticsearchClientUnderTestFactory());
+		return Stream.of( //
+				new RestClientUnderTestFactory(), //
+				new ReactiveElasticsearchClientUnderTestFactory() //
+		);
 	}
 }

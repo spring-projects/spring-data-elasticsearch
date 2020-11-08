@@ -27,6 +27,7 @@ import java.util.function.Supplier;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
+import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -52,12 +53,14 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	private final @Nullable HostnameVerifier hostnameVerifier;
 	private final @Nullable String proxy;
 	private final Function<WebClient, WebClient> webClientConfigurer;
+	private final HttpClientConfigCallback httpClientConfigurer;
 	private final Supplier<HttpHeaders> headersSupplier;
 
 	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
 			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout, @Nullable String pathPrefix,
 			@Nullable HostnameVerifier hostnameVerifier, @Nullable String proxy,
-			Function<WebClient, WebClient> webClientConfigurer, Supplier<HttpHeaders> headersSupplier) {
+			Function<WebClient, WebClient> webClientConfigurer, HttpClientConfigCallback httpClientConfigurer,
+			Supplier<HttpHeaders> headersSupplier) {
 
 		this.hosts = Collections.unmodifiableList(new ArrayList<>(hosts));
 		this.headers = new HttpHeaders(headers);
@@ -69,6 +72,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		this.hostnameVerifier = hostnameVerifier;
 		this.proxy = proxy;
 		this.webClientConfigurer = webClientConfigurer;
+		this.httpClientConfigurer = httpClientConfigurer;
 		this.headersSupplier = headersSupplier;
 	}
 
@@ -121,6 +125,11 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	@Override
 	public Function<WebClient, WebClient> getWebClientConfigurer() {
 		return webClientConfigurer;
+	}
+
+	@Override
+	public HttpClientConfigCallback getHttpClientConfigurer() {
+		return httpClientConfigurer;
 	}
 
 	@Override

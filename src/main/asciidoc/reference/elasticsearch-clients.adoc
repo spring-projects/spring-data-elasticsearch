@@ -150,36 +150,46 @@ Client behaviour can be changed via the `ClientConfiguration` that allows to set
 [source,java]
 ----
 HttpHeaders httpHeaders = new HttpHeaders();
-httpHeaders.add("some-header", "on every request")                      <1>
+httpHeaders.add("some-header", "on every request")                      <.>
 
 ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-  .connectedTo("localhost:9200", "localhost:9291")                      <2>
-  .useSsl()                                                             <3>
-  .withProxy("localhost:8888")                                          <4>
-  .withPathPrefix("ela")                                                <5>
-  .withConnectTimeout(Duration.ofSeconds(5))                            <6>
-  .withSocketTimeout(Duration.ofSeconds(3))                             <7>
-  .withDefaultHeaders(defaultHeaders)                                   <8>
-  .withBasicAuth(username, password)                                    <9>
-  .withHeaders(() -> {                                                  <10>
+  .connectedTo("localhost:9200", "localhost:9291")                      <.>
+  .useSsl()                                                             <.>
+  .withProxy("localhost:8888")                                          <.>
+  .withPathPrefix("ela")                                                <.>
+  .withConnectTimeout(Duration.ofSeconds(5))                            <.>
+  .withSocketTimeout(Duration.ofSeconds(3))                             <.>
+  .withDefaultHeaders(defaultHeaders)                                   <.>
+  .withBasicAuth(username, password)                                    <.>
+  .withHeaders(() -> {                                                  <.>
     HttpHeaders headers = new HttpHeaders();
     headers.add("currentTime", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     return headers;
+  })
+  .withWebClientConfigurer(webClient -> {                               <.>
+    //...
+    return webClient;
+  })
+  .withHttpClientConfigurer(clientBuilder -> {                          <.>
+      //...
+      return clientBuilder;
   })
   . // ... other options
   .build();
 
 ----
-<1> Define default headers, if they need to be customized
-<2> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
-<3> Optionally enable SSL.
-<4> Optionally set a proxy.
-<5> Optionally set a path prefix, mostly used when different clusters a behind some reverse proxy.
-<6> Set the connection timeout. Default is 10 sec.
-<7> Set the socket timeout. Default is 5 sec.
-<8> Optionally set headers.
-<9> Add basic authentication.
-<10> A `Supplier<Header>` function can be specified which is called every time before a request is sent to Elasticsearch - here, as an example, the current time is written in a header.
+<.> Define default headers, if they need to be customized
+<.> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
+<.> Optionally enable SSL.
+<.> Optionally set a proxy.
+<.> Optionally set a path prefix, mostly used when different clusters a behind some reverse proxy.
+<.> Set the connection timeout. Default is 10 sec.
+<.> Set the socket timeout. Default is 5 sec.
+<.> Optionally set headers.
+<.> Add basic authentication.
+<.> A `Supplier<Header>` function can be specified which is called every time before a request is sent to Elasticsearch - here, as an example, the current time is written in a header.
+<.> for reactive setup a function configuring the `WebClient`
+<.> for non-reactive setup a function configuring the REST client
 ====
 
 IMPORTANT: Adding a Header supplier as shown in above example allows to inject headers that may change over the time, like authentication JWT tokens. If this is used in the reactive setup, the supplier function *must not* block!

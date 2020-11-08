@@ -119,6 +119,8 @@ public final class RestClients {
 
 			clientConfiguration.getProxy().map(HttpHost::create).ifPresent(clientBuilder::setProxy);
 
+			clientBuilder = clientConfiguration.getHttpClientConfigurer().customizeHttpClient(clientBuilder);
+
 			return clientBuilder;
 		});
 

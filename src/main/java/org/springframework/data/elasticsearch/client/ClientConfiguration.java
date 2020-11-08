@@ -26,6 +26,7 @@ import java.util.function.Supplier;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
+import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -170,6 +171,12 @@ public interface ClientConfiguration {
 	 * @return the function for configuring a WebClient.
 	 */
 	Function<WebClient, WebClient> getWebClientConfigurer();
+
+	/**
+	 * @return the client configuration callback.
+	 * @since 4.2
+	 */
+	HttpClientConfigCallback getHttpClientConfigurer();
 
 	/**
 	 * @return the supplier for custom headers.
@@ -342,12 +349,21 @@ public interface ClientConfiguration {
 		TerminalClientConfigurationBuilder withWebClientConfigurer(Function<WebClient, WebClient> webClientConfigurer);
 
 		/**
+		 * Register a {HttpClientConfigCallback} to configure the non-reactive REST client.
+		 * 
+		 * @param httpClientConfigurer configuration callback, must not be null.
+		 * @return the {@link TerminalClientConfigurationBuilder}.
+		 * @since 4.2
+		 */
+		TerminalClientConfigurationBuilder withHttpClientConfigurer(HttpClientConfigCallback httpClientConfigurer);
+
+		/**
 		 * set a supplier for custom headers. This is invoked for every HTTP request to Elasticsearch to retrieve headers
 		 * that should be sent with the request. A common use case is passing in authentication headers that may change.
 		 * <br/>
 		 * Note: When used in a reactive environment, the calling of {@link Supplier#get()} function must not do any
 		 * blocking operations. It may return {@literal null}.
-		 * 
+		 *
 		 * @param headers supplier function for headers, must not be {@literal null}
 		 * @return the {@link TerminalClientConfigurationBuilder}.
 		 * @since 4.0
