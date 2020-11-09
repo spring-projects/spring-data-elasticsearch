@@ -2,7 +2,14 @@ package org.springframework.data.elasticsearch.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static io.specto.hoverfly.junit.dsl.HoverflyDsl.*;
+import static io.specto.hoverfly.junit.verification.HoverflyVerifications.*;
 import static org.assertj.core.api.Assertions.*;
+
+import io.specto.hoverfly.junit.core.Hoverfly;
+import io.specto.hoverfly.junit5.HoverflyExtension;
+import io.specto.hoverfly.junit5.api.HoverflyCapture;
+import io.specto.hoverfly.junit5.api.HoverflyConfig;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -13,8 +20,8 @@ import java.util.stream.Stream;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
@@ -27,40 +34,42 @@ import com.github.tomakehurst.wiremock.matching.AnythingPattern;
 import com.github.tomakehurst.wiremock.matching.EqualToPattern;
 
 /**
+ * We need hoverfly for testing the reactive code to use a proxy. Wiremock cannot intercept the proxy calls as WebClient
+ * uses HTTP CONNECT on proxy requests which wiremock does not support.
+ *
  * @author Peter-Josef Meisch
  */
-@Disabled("SocketException: Socket closed happens on the CLI build while running the test individually succeeds")
+@HoverflyCapture(path = "target/hoverfly", config = @HoverflyConfig(proxyLocalHost = true, plainHttpTunneling = true))
+@ExtendWith(HoverflyExtension.class)
 public class RestClientsTest {
 
 	@ParameterizedTest // DATAES-700
 	@MethodSource("clientUnderTestFactorySource")
 	@DisplayName("should use configured proxy")
-	void shouldUseConfiguredProxy(ClientUnderTestFactory clientUnderTestFactory) throws IOException {
-
-		if (clientUnderTestFactory instanceof ReactiveElasticsearchClientUnderTestFactory) {
-			// although the reactive code is using the proxy for every call - tested with an intercepting
-			// proxy - somehow in this test wiremock fails to register this. So we skip it here
-			//
-			return;
-		}
+	void shouldUseConfiguredProxy(ClientUnderTestFactory clientUnderTestFactory, Hoverfly hoverfly) throws IOException {
 
 		wireMockServer(server -> {
 
+			// wiremock is the dummy server, hoverfly the proxy
 			WireMock.configureFor(server.port());
-
 			stubFor(head(urlEqualTo("/")).willReturn(aResponse() //
 					.withHeader("Content-Type", "application/json; charset=UTF-8")));
 
+			String serviceHost = "localhost:" + server.port();
+			String proxyHost = "localhost:" + hoverfly.getHoverflyConfig().getProxyPort();
+
 			ClientConfigurationBuilder configurationBuilder = new ClientConfigurationBuilder();
 			ClientConfiguration clientConfiguration = configurationBuilder //
-					.connectedTo("localhost:4711")//
-					.withProxy("localhost:" + server.port()) //
+					.connectedTo(serviceHost)//
+					.withProxy(proxyHost) //
 					.build();
 			ClientUnderTest clientUnderTest = clientUnderTestFactory.create(clientConfiguration);
 
-			clientUnderTest.ping();
+			boolean result = clientUnderTest.ping();
 
+			assertThat(result).isTrue();
 			verify(headRequestedFor(urlEqualTo("/")));
+			hoverfly.verify(service(serviceHost).head("/"), atLeast(1));
 		});
 	}
 
