@@ -59,7 +59,7 @@ class SingleNodeHostProvider implements HostProvider {
 
 		return createWebClient(endpoint) //
 				.head().uri("/").headers(httpHeaders -> httpHeaders.addAll(headersSupplier.get())) //
-				.exchangeToMono(Mono::just) //
+				.exchange() //
 				.flatMap(it -> {
 					if (it.statusCode().isError()) {
 						state = ElasticsearchHost.offline(endpoint);
@@ -72,7 +72,8 @@ class SingleNodeHostProvider implements HostProvider {
 					clientProvider.getErrorListener().accept(throwable);
 					return Mono.just(state);
 				}) //
-				.map(it -> new ClusterInformation(Collections.singleton(it)));
+				.map(it ->
+						new ClusterInformation(Collections.singleton(it)));
 	}
 
 	/*
