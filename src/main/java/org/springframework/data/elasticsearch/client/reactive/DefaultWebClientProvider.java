@@ -45,7 +45,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 	private final @Nullable ClientHttpConnector connector;
 	private final Consumer<Throwable> errorListener;
 	private final HttpHeaders headers;
-	private final String pathPrefix;
+	private final @Nullable String pathPrefix;
 	private final Function<WebClient, WebClient> webClientConfigurer;
 
 	/**
@@ -61,11 +61,11 @@ class DefaultWebClientProvider implements WebClientProvider {
 	/**
 	 * Create new {@link DefaultWebClientProvider} with empty {@link HttpHeaders} and no-op {@literal error listener}.
 	 *
-	 * @param pathPrefix can be {@literal null}
 	 * @param scheme must not be {@literal null}.
 	 * @param connector can be {@literal null}.
 	 * @param errorListener must not be {@literal null}.
 	 * @param headers must not be {@literal null}.
+	 * @param pathPrefix can be {@literal null}
 	 * @param webClientConfigurer must not be {@literal null}.
 	 */
 	private DefaultWebClientProvider(String scheme, @Nullable ClientHttpConnector connector,
@@ -145,7 +145,6 @@ class DefaultWebClientProvider implements WebClientProvider {
 
 	}
 
-
 	protected WebClient createWebClientForSocketAddress(InetSocketAddress socketAddress) {
 
 		Builder builder = WebClient.builder().defaultHeaders(it -> it.addAll(getDefaultHeaders()));
@@ -156,7 +155,11 @@ class DefaultWebClientProvider implements WebClientProvider {
 
 		String baseUrl = String.format("%s://%s:%d%s", this.scheme, socketAddress.getHostString(), socketAddress.getPort(),
 				pathPrefix == null ? "" : '/' + pathPrefix);
-		WebClient webClient = builder.baseUrl(baseUrl).filter((request, next) -> next.exchange(request).doOnError(errorListener)).build();
+		WebClient webClient = builder //
+				.baseUrl(baseUrl) //
+				.filter((request, next) -> next.exchange(request) //
+						.doOnError(errorListener)) //
+				.build(); //
 		return webClientConfigurer.apply(webClient);
 	}
 }
