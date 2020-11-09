@@ -41,7 +41,8 @@ class SingleNodeHostProvider implements HostProvider {
 	private final InetSocketAddress endpoint;
 	private volatile ElasticsearchHost state;
 
-	SingleNodeHostProvider(WebClientProvider clientProvider, Supplier<HttpHeaders> headersSupplier, InetSocketAddress endpoint) {
+	SingleNodeHostProvider(WebClientProvider clientProvider, Supplier<HttpHeaders> headersSupplier,
+			InetSocketAddress endpoint) {
 
 		this.clientProvider = clientProvider;
 		this.headersSupplier = headersSupplier;
@@ -57,7 +58,7 @@ class SingleNodeHostProvider implements HostProvider {
 	public Mono<ClusterInformation> clusterInfo() {
 
 		return createWebClient(endpoint) //
-				.head().uri("/")
+				.head().uri("/") //
 				.headers(httpHeaders -> httpHeaders.addAll(headersSupplier.get())) //
 				.exchange() //
 				.flatMap(it -> {
@@ -68,7 +69,6 @@ class SingleNodeHostProvider implements HostProvider {
 					}
 					return it.releaseBody().thenReturn(state);
 				}).onErrorResume(throwable -> {
-
 					state = ElasticsearchHost.offline(endpoint);
 					clientProvider.getErrorListener().accept(throwable);
 					return Mono.just(state);
