@@ -17,6 +17,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import io.specto.hoverfly.junit5.api.HoverflyCapture;
+import io.specto.hoverfly.junit5.api.HoverflyConfig;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -235,7 +237,7 @@ public class RestClientsTest {
 	 */
 	static Stream<ClientUnderTestFactory> clientUnderTestFactorySource() {
 		return Stream.of( //
-				new RestClientUnderTestFactory(), //
+				 new RestClientUnderTestFactory(), //
 				new ReactiveElasticsearchClientUnderTestFactory() //
 		);
 	}
