@@ -32,9 +32,10 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
-class SingleNodeHostProvider implements HostProvider {
+class SingleNodeHostProvider implements HostProvider<SingleNodeHostProvider> {
 
 	private final WebClientProvider clientProvider;
 	private final Supplier<HttpHeaders> headersSupplier;
@@ -60,20 +61,18 @@ class SingleNodeHostProvider implements HostProvider {
 		return createWebClient(endpoint) //
 				.head().uri("/") //
 				.headers(httpHeaders -> httpHeaders.addAll(headersSupplier.get())) //
-				.exchange() //
-				.flatMap(it -> {
+				.exchangeToMono(it -> {
 					if (it.statusCode().isError()) {
 						state = ElasticsearchHost.offline(endpoint);
 					} else {
 						state = ElasticsearchHost.online(endpoint);
 					}
-					return it.releaseBody().thenReturn(state);
+					return Mono.just(state);
 				}).onErrorResume(throwable -> {
 					state = ElasticsearchHost.offline(endpoint);
 					clientProvider.getErrorListener().accept(throwable);
 					return Mono.just(state);
-				}) //
-				.map(it -> new ClusterInformation(Collections.singleton(it)));
+				}).map(elasticsearchHost -> new ClusterInformation(Collections.singleton(elasticsearchHost)));
 	}
 
 	/*

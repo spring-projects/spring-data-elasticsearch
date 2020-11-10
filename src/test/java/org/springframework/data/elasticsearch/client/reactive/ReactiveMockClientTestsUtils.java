@@ -75,24 +75,23 @@ public class ReactiveMockClientTestsUtils {
 		return provider(hosts);
 	}
 
-	public static <T extends HostProvider> MockDelegatingElasticsearchHostProvider<T> provider(String... hosts) {
+	public static <T extends HostProvider<T>> MockDelegatingElasticsearchHostProvider<T> provider(String... hosts) {
 
 		ErrorCollector errorCollector = new ErrorCollector();
 		MockWebClientProvider clientProvider = new MockWebClientProvider(errorCollector);
-		HostProvider delegate = null;
+		T delegate;
 
 		if (hosts.length == 1) {
-
-			delegate = new SingleNodeHostProvider(clientProvider, HttpHeaders::new, getInetSocketAddress(hosts[0])) {};
+			// noinspection unchecked
+			delegate = (T) new SingleNodeHostProvider(clientProvider, HttpHeaders::new, getInetSocketAddress(hosts[0])) {};
 		} else {
-
-			delegate = new MultiNodeHostProvider(clientProvider,HttpHeaders::new, Arrays.stream(hosts)
+			// noinspection unchecked
+			delegate = (T) new MultiNodeHostProvider(clientProvider, HttpHeaders::new, Arrays.stream(hosts)
 					.map(ReactiveMockClientTestsUtils::getInetSocketAddress).toArray(InetSocketAddress[]::new)) {};
 		}
 
-		return new MockDelegatingElasticsearchHostProvider(HttpHeaders.EMPTY, clientProvider, errorCollector, delegate,
+		return new MockDelegatingElasticsearchHostProvider<>(HttpHeaders.EMPTY, clientProvider, errorCollector, delegate,
 				null);
-
 	}
 
 	private static InetSocketAddress getInetSocketAddress(String hostAndPort) {
@@ -113,16 +112,18 @@ public class ReactiveMockClientTestsUtils {
 		}
 	}
 
-	public static class MockDelegatingElasticsearchHostProvider<T extends HostProvider> implements HostProvider {
+	public static class MockDelegatingElasticsearchHostProvider<T extends HostProvider<T>> implements HostProvider<T> {
 
+		private final HttpHeaders httpHeaders;
 		private final T delegate;
 		private final MockWebClientProvider clientProvider;
 		private final ErrorCollector errorCollector;
-		private @Nullable String activeDefaultHost;
+		private @Nullable final String activeDefaultHost;
 
 		public MockDelegatingElasticsearchHostProvider(HttpHeaders httpHeaders, MockWebClientProvider clientProvider,
-				ErrorCollector errorCollector, T delegate, String activeDefaultHost) {
+				ErrorCollector errorCollector, T delegate, @Nullable String activeDefaultHost) {
 
+			this.httpHeaders = httpHeaders;
 			this.errorCollector = errorCollector;
 			this.clientProvider = clientProvider;
 			this.delegate = delegate;
@@ -187,25 +188,23 @@ public class ReactiveMockClientTestsUtils {
 		}
 
 		public MockDelegatingElasticsearchHostProvider<T> withActiveDefaultHost(String host) {
-			return new MockDelegatingElasticsearchHostProvider(HttpHeaders.EMPTY, clientProvider, errorCollector, delegate,
-					host);
+			return new MockDelegatingElasticsearchHostProvider<>(httpHeaders, clientProvider, errorCollector, delegate, host);
 		}
 	}
 
 	public static class MockWebClientProvider implements WebClientProvider {
 
-		private final Object lock = new Object();
 		private final Consumer<Throwable> errorListener;
 
-		private Map<InetSocketAddress, WebClient> clientMap;
-		private Map<InetSocketAddress, RequestHeadersUriSpec> headersUriSpecMap;
-		private Map<InetSocketAddress, RequestBodyUriSpec> bodyUriSpecMap;
-		private Map<InetSocketAddress, ClientResponse> responseMap;
+		private final Map<InetSocketAddress, WebClient> clientMap;
+		private final Map<InetSocketAddress, RequestHeadersUriSpec> headersUriSpecMap;
+		private final Map<InetSocketAddress, RequestBodyUriSpec> bodyUriSpecMap;
+		private final Map<InetSocketAddress, ClientResponse> responseMap;
 
 		public MockWebClientProvider(Consumer<Throwable> errorListener) {
 
 			this.errorListener = errorListener;
-			this.clientMap = new LinkedHashMap<>();
+			this.clientMap = new ConcurrentHashMap<>();
 			this.headersUriSpecMap = new LinkedHashMap<>();
 			this.bodyUriSpecMap = new LinkedHashMap<>();
 			this.responseMap = new LinkedHashMap<>();
@@ -218,40 +217,49 @@ public class ReactiveMockClientTestsUtils {
 		@Override
 		public WebClient get(InetSocketAddress endpoint) {
 
-			synchronized (lock) {
+			return clientMap.computeIfAbsent(endpoint, key -> {
 
-				return clientMap.computeIfAbsent(endpoint, key -> {
+				WebClient webClient = mock(WebClient.class);
 
-					WebClient webClient = mock(WebClient.class);
+				RequestHeadersUriSpec headersUriSpec = mock(RequestHeadersUriSpec.class);
+				Mockito.when(headersUriSpec.uri(any(String.class))).thenReturn(headersUriSpec);
+				Mockito.when(headersUriSpec.uri(any(), any(Map.class))).thenReturn(headersUriSpec);
+				Mockito.when(headersUriSpec.headers(any(Consumer.class))).thenReturn(headersUriSpec);
+				Mockito.when(headersUriSpec.attribute(anyString(), anyString())).thenReturn(headersUriSpec);
+				Mockito.when(headersUriSpec.uri(any(Function.class))).thenReturn(headersUriSpec);
+				headersUriSpecMap.putIfAbsent(key, headersUriSpec);
 
-					RequestHeadersUriSpec headersUriSpec = mock(RequestHeadersUriSpec.class);
-					Mockito.when(webClient.get()).thenReturn(headersUriSpec);
-					Mockito.when(webClient.head()).thenReturn(headersUriSpec);
+				ClientResponse response = mock(ClientResponse.class);
+				Mockito.when(response.statusCode()).thenReturn(HttpStatus.ACCEPTED);
+				Mockito.when(response.releaseBody()).thenReturn(Mono.empty());
+				Mockito.when(headersUriSpec.exchangeToMono(any())).thenAnswer(invocation -> {
+					final Function<ClientResponse, ? extends Mono<?>> responseHandler = invocation.getArgument(0);
 
-					Mockito.when(headersUriSpec.uri(any(String.class))).thenReturn(headersUriSpec);
-					Mockito.when(headersUriSpec.uri(any(), any(Map.class))).thenReturn(headersUriSpec);
-					Mockito.when(headersUriSpec.headers(any(Consumer.class))).thenReturn(headersUriSpec);
-					Mockito.when(headersUriSpec.attribute(anyString(), anyString())).thenReturn(headersUriSpec);
-					Mockito.when(headersUriSpec.uri(any(Function.class))).thenReturn(headersUriSpec);
-
-					RequestBodyUriSpec bodySpy = spy(WebClient.create().method(HttpMethod.POST));
-
-					Mockito.when(webClient.method(any())).thenReturn(bodySpy);
-					Mockito.when(bodySpy.body(any())).thenReturn(headersUriSpec);
-
-					ClientResponse response = mock(ClientResponse.class);
-					Mockito.when(headersUriSpec.exchange()).thenReturn(Mono.just(response));
-					Mockito.when(bodySpy.exchange()).thenReturn(Mono.just(response));
-					Mockito.when(response.statusCode()).thenReturn(HttpStatus.ACCEPTED);
-					Mockito.when(response.releaseBody()).thenReturn(Mono.empty());
-
-					headersUriSpecMap.putIfAbsent(key, headersUriSpec);
-					bodyUriSpecMap.putIfAbsent(key, bodySpy);
-					responseMap.putIfAbsent(key, response);
-
-					return webClient;
+					if (responseHandler != null) {
+						return responseHandler.apply(response);
+					}
+					return Mono.empty();
 				});
-			}
+				responseMap.putIfAbsent(key, response);
+
+				RequestBodyUriSpec bodySpy = spy(WebClient.create().method(HttpMethod.POST));
+				Mockito.when(bodySpy.body(any())).thenReturn(headersUriSpec);
+				Mockito.when(bodySpy.exchangeToMono(any())).thenAnswer(invocation -> {
+					final Function<ClientResponse, ? extends Mono<?>> responseHandler = invocation.getArgument(0);
+
+					if (responseHandler != null) {
+						return responseHandler.apply(response);
+					}
+					return Mono.empty();
+				});
+				bodyUriSpecMap.putIfAbsent(key, bodySpy);
+
+				Mockito.when(webClient.get()).thenReturn(headersUriSpec);
+				Mockito.when(webClient.head()).thenReturn(headersUriSpec);
+				Mockito.when(webClient.method(any())).thenReturn(bodySpy);
+
+				return webClient;
+			});
 		}
 
 		@Override
@@ -299,18 +307,20 @@ public class ReactiveMockClientTestsUtils {
 			WebClient client();
 		}
 
+		@SuppressWarnings("UnusedReturnValue")
 		public interface Send extends Receive, Client {
 
-			Receive get(Consumer<RequestHeadersUriSpec> headerSpec);
+			Receive get(Consumer<RequestHeadersUriSpec<?>> headerSpec);
 
 			Receive exchange(Consumer<RequestBodyUriSpec> bodySpec);
 
 			default URI captureUri() {
 
-				Set<URI> capturingSet = new LinkedHashSet();
+				Set<URI> capturingSet = new LinkedHashSet<>();
 
 				exchange(requestBodyUriSpec -> {
 
+					// noinspection unchecked
 					ArgumentCaptor<Function<UriBuilder, URI>> fkt = ArgumentCaptor.forClass(Function.class);
 					verify(requestBodyUriSpec).uri(fkt.capture());
 
@@ -354,9 +364,8 @@ public class ReactiveMockClientTestsUtils {
 			default Receive receiveGetByIdNotFound() {
 
 				return receiveJsonFromFile("get-by-id-no-hit") //
-						.receive(response -> {
-							Mockito.when(response.statusCode()).thenReturn(HttpStatus.ACCEPTED, HttpStatus.NOT_FOUND);
-						});
+						.receive(
+								response -> Mockito.when(response.statusCode()).thenReturn(HttpStatus.ACCEPTED, HttpStatus.NOT_FOUND));
 			}
 
 			default Receive receiveGetById() {
@@ -380,9 +389,8 @@ public class ReactiveMockClientTestsUtils {
 			default Receive updateFail() {
 
 				return receiveJsonFromFile("update-error-not-found") //
-						.receive(response -> {
-							Mockito.when(response.statusCode()).thenReturn(HttpStatus.ACCEPTED, HttpStatus.NOT_FOUND);
-						});
+						.receive(
+								response -> Mockito.when(response.statusCode()).thenReturn(HttpStatus.ACCEPTED, HttpStatus.NOT_FOUND));
 			}
 
 			default Receive receiveBulkOk() {
@@ -445,14 +453,14 @@ public class ReactiveMockClientTestsUtils {
 			}
 		}
 
-		class CallbackImpl implements Send, Receive {
+		static class CallbackImpl implements Send, Receive {
 
 			WebClient client;
-			RequestHeadersUriSpec headersUriSpec;
+			RequestHeadersUriSpec<?> headersUriSpec;
 			RequestBodyUriSpec bodyUriSpec;
 			ClientResponse responseDelegate;
 
-			public CallbackImpl(WebClient client, RequestHeadersUriSpec headersUriSpec, RequestBodyUriSpec bodyUriSpec,
+			public CallbackImpl(WebClient client, RequestHeadersUriSpec<?> headersUriSpec, RequestBodyUriSpec bodyUriSpec,
 					ClientResponse responseDelegate) {
 
 				this.client = client;
@@ -462,7 +470,7 @@ public class ReactiveMockClientTestsUtils {
 			}
 
 			@Override
-			public Receive get(Consumer<RequestHeadersUriSpec> uriSpec) {
+			public Receive get(Consumer<RequestHeadersUriSpec<?>> uriSpec) {
 
 				uriSpec.accept(headersUriSpec);
 				return this;

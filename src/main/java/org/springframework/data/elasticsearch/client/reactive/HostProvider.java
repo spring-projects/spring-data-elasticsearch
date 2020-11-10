@@ -34,19 +34,20 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
-public interface HostProvider {
+public interface HostProvider<T extends HostProvider<T>> {
 
 	/**
 	 * Create a new {@link HostProvider} best suited for the given {@link WebClientProvider} and number of hosts.
 	 *
 	 * @param clientProvider must not be {@literal null} .
-	 * @param headersSupplier  to supply custom headers, must not be {@literal null}
+	 * @param headersSupplier to supply custom headers, must not be {@literal null}
 	 * @param endpoints must not be {@literal null} nor empty.
 	 * @return new instance of {@link HostProvider}.
 	 */
-	static HostProvider provider(WebClientProvider clientProvider, Supplier<HttpHeaders> headersSupplier,
+	static HostProvider<?> provider(WebClientProvider clientProvider, Supplier<HttpHeaders> headersSupplier,
 			InetSocketAddress... endpoints) {
 
 		Assert.notNull(clientProvider, "WebClientProvider must not be null");
@@ -55,7 +56,7 @@ public interface HostProvider {
 		if (endpoints.length == 1) {
 			return new SingleNodeHostProvider(clientProvider, headersSupplier, endpoints[0]);
 		} else {
-			return new MultiNodeHostProvider(clientProvider,headersSupplier, endpoints);
+			return new MultiNodeHostProvider(clientProvider, headersSupplier, endpoints);
 		}
 	}
 

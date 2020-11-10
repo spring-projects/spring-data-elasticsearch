@@ -42,15 +42,17 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
-class MultiNodeHostProvider implements HostProvider {
+class MultiNodeHostProvider implements HostProvider<MultiNodeHostProvider> {
 
 	private final WebClientProvider clientProvider;
 	private final Supplier<HttpHeaders> headersSupplier;
 	private final Map<InetSocketAddress, ElasticsearchHost> hosts;
 
-	MultiNodeHostProvider(WebClientProvider clientProvider, Supplier<HttpHeaders> headersSupplier, InetSocketAddress... endpoints) {
+	MultiNodeHostProvider(WebClientProvider clientProvider, Supplier<HttpHeaders> headersSupplier,
+			InetSocketAddress... endpoints) {
 
 		this.clientProvider = clientProvider;
 		this.headersSupplier = headersSupplier;
@@ -136,16 +138,19 @@ class MultiNodeHostProvider implements HostProvider {
 				.map(ElasticsearchHost::getEndpoint) //
 				.flatMap(host -> {
 
-					Mono<ClientResponse> exchange = createWebClient(host) //
+					Mono<ClientResponse> clientResponseMono = createWebClient(host) //
 							.head().uri("/") //
 							.headers(httpHeaders -> httpHeaders.addAll(headersSupplier.get())) //
-							.exchange().doOnError(throwable -> {
+							.exchangeToMono(Mono::just) //
+							.doOnError(throwable -> {
 								hosts.put(host, new ElasticsearchHost(host, State.OFFLINE));
 								clientProvider.getErrorListener().accept(throwable);
 							});
 
-					return Mono.just(host).zipWith(exchange
-							.flatMap(it -> it.releaseBody().thenReturn(it.statusCode().isError() ? State.OFFLINE : State.ONLINE)));
+					return Mono.just(host) //
+							.zipWith( //
+									clientResponseMono.flatMap(it -> it.releaseBody() //
+											.thenReturn(it.statusCode().isError() ? State.OFFLINE : State.ONLINE)));
 				}) //
 				.onErrorContinue((throwable, o) -> clientProvider.getErrorListener().accept(throwable));
 	}

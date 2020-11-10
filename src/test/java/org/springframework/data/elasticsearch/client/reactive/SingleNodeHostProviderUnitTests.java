@@ -30,6 +30,7 @@ import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClient
 
 /**
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  */
 public class SingleNodeHostProviderUnitTests {
 
