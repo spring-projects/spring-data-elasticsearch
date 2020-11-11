@@ -145,7 +145,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  */
 public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearchClient, Indices {
 
-	private final HostProvider hostProvider;
+	private final HostProvider<?> hostProvider;
 	private final RequestCreator requestCreator;
 	private Supplier<HttpHeaders> headersSupplier = () -> HttpHeaders.EMPTY;
 
@@ -155,7 +155,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 *
 	 * @param hostProvider must not be {@literal null}.
 	 */
-	public DefaultReactiveElasticsearchClient(HostProvider hostProvider) {
+	public DefaultReactiveElasticsearchClient(HostProvider<?> hostProvider) {
 		this(hostProvider, new DefaultRequestCreator());
 	}
 
@@ -166,7 +166,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 * @param hostProvider must not be {@literal null}.
 	 * @param requestCreator must not be {@literal null}.
 	 */
-	public DefaultReactiveElasticsearchClient(HostProvider hostProvider, RequestCreator requestCreator) {
+	public DefaultReactiveElasticsearchClient(HostProvider<?> hostProvider, RequestCreator requestCreator) {
 
 		Assert.notNull(hostProvider, "HostProvider must not be null");
 		Assert.notNull(requestCreator, "RequestCreator must not be null");
@@ -224,7 +224,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		WebClientProvider provider = getWebClientProvider(clientConfiguration);
 
-		HostProvider hostProvider = HostProvider.provider(provider, clientConfiguration.getHeadersSupplier(),
+		HostProvider<?> hostProvider = HostProvider.provider(provider, clientConfiguration.getHeadersSupplier(),
 				clientConfiguration.getEndpoints().toArray(new InetSocketAddress[0]));
 
 		DefaultReactiveElasticsearchClient client = new DefaultReactiveElasticsearchClient(hostProvider, requestCreator);

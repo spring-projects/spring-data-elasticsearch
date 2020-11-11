@@ -62,7 +62,7 @@ public class ReactiveElasticsearchClientUnitTests {
 
 	static final String HOST = ":9200";
 
-	MockDelegatingElasticsearchHostProvider<HostProvider> hostProvider;
+	MockDelegatingElasticsearchHostProvider<? extends HostProvider<?>> hostProvider;
 	ReactiveElasticsearchClient client;
 
 	@BeforeEach
