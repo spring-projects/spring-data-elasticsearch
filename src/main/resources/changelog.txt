@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.1.1 (2020-11-11)
+-------------------------------------
+* DATAES-969 - Use ResultProcessor in ElasticsearchPartQuery to build PartTree.
+* DATAES-968 - Enable Maven caching for Jenkins jobs.
+* DATAES-965 - Release 4.1.1 (2020.0.1).
+
+
 Changes in version 4.1.0 (2020-10-28)
 -------------------------------------
 * DATAES-962 - Deprecate Joda support.
@@ -1343,6 +1350,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
