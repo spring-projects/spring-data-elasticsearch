@@ -137,10 +137,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	// endregion
 
 	// region DocumentOperations
-	@Override
-	public String index(IndexQuery query, IndexCoordinates index) {
-
-		maybeCallbackBeforeConvertWithQuery(query, index);
+	public String doIndex(IndexQuery query, IndexCoordinates index) {
 
 		IndexRequest request = requestFactory.indexRequest(query, index);
 		IndexResponse indexResponse = execute(client -> client.index(request, RequestOptions.DEFAULT));
@@ -151,8 +148,6 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 			updateIndexedObject(queryObject, IndexedObjectInformation.of(indexResponse.getId(), indexResponse.getSeqNo(),
 					indexResponse.getPrimaryTerm(), indexResponse.getVersion()));
 		}
-
-		maybeCallbackAfterSaveWithQuery(query, index);
 
 		return indexResponse.getId();
 	}
@@ -185,16 +180,6 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		GetRequest request = requestFactory.getRequest(id, index);
 		request.fetchSourceContext(FetchSourceContext.DO_NOT_FETCH_SOURCE);
 		return execute(client -> client.get(request, RequestOptions.DEFAULT).isExists());
-	}
-
-	@Override
-	public List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions,
-			IndexCoordinates index) {
-
-		Assert.notNull(queries, "List of IndexQuery must not be null");
-		Assert.notNull(bulkOptions, "BulkOptions must not be null");
-
-		return doBulkOperation(queries, bulkOptions, index);
 	}
 
 	@Override
@@ -237,14 +222,12 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		return new UpdateResponse(result);
 	}
 
-	private List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
+	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
 			IndexCoordinates index) {
-		maybeCallbackBeforeConvertWithQueries(queries, index);
 		BulkRequest bulkRequest = requestFactory.bulkRequest(queries, bulkOptions, index);
 		List<IndexedObjectInformation> indexedObjectInformationList = checkForBulkOperationFailure(
 				execute(client -> client.bulk(bulkRequest, RequestOptions.DEFAULT)));
 		updateIndexedObjectsWithQueries(queries, indexedObjectInformationList);
-		maybeCallbackAfterSaveWithQueries(queries, index);
 		return indexedObjectInformationList;
 	}
 	// endregion
