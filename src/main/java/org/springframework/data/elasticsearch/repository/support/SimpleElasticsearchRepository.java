@@ -66,6 +66,7 @@ import org.springframework.util.Assert;
  * @author Murali Chevuri
  * @author Peter-Josef Meisch
  * @author Aleksei Arsenev
+ * @author Jens Schauder
  */
 public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchRepository<T, ID> {
 
@@ -298,6 +299,31 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		IdsQueryBuilder idsQueryBuilder = idsQuery();
 		for (T entity : entities) {
 			ID id = extractIdFromBean(entity);
+			if (id != null) {
+				idsQueryBuilder.addIds(stringIdRepresentation(id));
+			}
+		}
+
+		if (idsQueryBuilder.ids().isEmpty()) {
+			return;
+		}
+
+		Query query = new NativeSearchQueryBuilder().withQuery(idsQueryBuilder).build();
+
+		executeAndRefresh((OperationsCallback<Void>) operations -> {
+			operations.delete(query, entityClass, indexCoordinates);
+			return null;
+		});
+	}
+
+	@Override
+	public void deleteAllById(Iterable<? extends ID> ids) {
+
+		Assert.notNull(ids, "Cannot delete 'null' list.");
+
+		IndexCoordinates indexCoordinates = getIndexCoordinates();
+		IdsQueryBuilder idsQueryBuilder = idsQuery();
+		for (ID id : ids) {
 			if (id != null) {
 				idsQueryBuilder.addIds(stringIdRepresentation(id));
 			}

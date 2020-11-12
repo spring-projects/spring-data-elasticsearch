@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import static java.util.Arrays.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.core.query.Query.*;
@@ -64,6 +65,7 @@ import org.springframework.test.context.ContextConfiguration;
 /**
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Jens Schauder
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { SimpleReactiveElasticsearchRepositoryTests.Config.class })
@@ -107,7 +109,7 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 	public void saveShouldComputeMultipleEntities() {
 
 		repository
-				.saveAll(Arrays.asList(SampleEntity.builder().build(), SampleEntity.builder().build(),
+				.saveAll(asList(SampleEntity.builder().build(), SampleEntity.builder().build(),
 						SampleEntity.builder().build())) //
 				.map(SampleEntity::getId) //
 				.flatMap(this::documentWithIdExistsInIndex) //
@@ -167,7 +169,7 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 
 	@Test // DATAES-519
 	public void findAllByIdByIdShouldCompleteIfIndexDoesNotExist() {
-		repository.findAllById(Arrays.asList("id-two", "id-two")).as(StepVerifier::create).verifyComplete();
+		repository.findAllById(asList("id-two", "id-two")).as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAES-519
@@ -178,7 +180,7 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 				SampleEntity.builder().id("id-three").build()) //
 						.block();
 
-		repository.findAllById(Arrays.asList("id-one", "id-two")) //
+		repository.findAllById(asList("id-one", "id-two")) //
 				.as(StepVerifier::create)//
 				.expectNextMatches(entity -> entity.getId().equals("id-one") || entity.getId().equals("id-two")) //
 				.expectNextMatches(entity -> entity.getId().equals("id-one") || entity.getId().equals("id-two")) //
@@ -193,7 +195,7 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 				SampleEntity.builder().id("id-three").build()) //
 						.block();
 
-		repository.findAllById(Arrays.asList("can't", "touch", "this")) //
+		repository.findAllById(asList("can't", "touch", "this")) //
 				.as(StepVerifier::create)//
 				.verifyComplete();
 	}
@@ -380,6 +382,18 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 		assertThat(documentWithIdExistsInIndex(toBeDeleted.getId()).block()).isFalse();
 	}
 
+	@Test // DATAES-976
+	public void deleteAllByIdShouldDeleteEntry() {
+
+		SampleEntity toBeDeleted = SampleEntity.builder().id("id-two").build();
+		bulkIndex(SampleEntity.builder().id("id-one").build(), toBeDeleted) //
+				.block();
+
+		repository.deleteAllById(asList(toBeDeleted.getId())).as(StepVerifier::create).verifyComplete();
+
+		assertThat(documentWithIdExistsInIndex(toBeDeleted.getId()).block()).isFalse();
+	}
+
 	@Test // DATAES-519
 	public void deleteShouldDeleteEntry() {
 
@@ -402,7 +416,7 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 		bulkIndex(toBeDeleted, hangInThere, toBeDeleted2) //
 				.block();
 
-		repository.deleteAll(Arrays.asList(toBeDeleted, toBeDeleted2)).as(StepVerifier::create).verifyComplete();
+		repository.deleteAll(asList(toBeDeleted, toBeDeleted2)).as(StepVerifier::create).verifyComplete();
 
 		assertThat(documentWithIdExistsInIndex(toBeDeleted.getId()).block()).isFalse();
 		assertThat(documentWithIdExistsInIndex(toBeDeleted2.getId()).block()).isFalse();
@@ -547,7 +561,7 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 	}
 
 	Mono<Void> bulkIndex(SampleEntity... entities) {
-		return operations.saveAll(Arrays.asList(entities), IndexCoordinates.of(INDEX)).then();
+		return operations.saveAll(asList(entities), IndexCoordinates.of(INDEX)).then();
 	}
 
 	interface ReactiveSampleEntityRepository extends ReactiveCrudRepository<SampleEntity, String> {

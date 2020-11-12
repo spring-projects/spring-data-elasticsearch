@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.support.simple;
 
+import static java.util.Arrays.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
@@ -73,6 +74,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Michael Wirth
  * @author Peter-Josef Meisch
  * @author Murali Chevuri
+ * @author Jens Schauder
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { SimpleElasticsearchRepositoryIntegrationTests.Config.class })
@@ -118,7 +120,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity2.setVersion(System.currentTimeMillis());
 
 		// when
-		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2));
+		repository.saveAll(asList(sampleEntity1, sampleEntity2));
 
 		// then
 		Optional<SampleEntity> entity1FromElasticSearch = repository.findById(documentId1);
@@ -283,7 +285,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		repository.save(sampleEntity2);
 
 		// when
-		Iterable<SampleEntity> sampleEntities = repository.findAllById(Arrays.asList(documentId, documentId2));
+		Iterable<SampleEntity> sampleEntities = repository.findAllById(asList(documentId, documentId2));
 
 		// then
 		assertThat(sampleEntities).isNotNull().hasSize(2);
@@ -305,7 +307,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity2.setMessage("hello world.");
 		sampleEntity2.setVersion(System.currentTimeMillis());
 
-		Iterable<SampleEntity> sampleEntities = Arrays.asList(sampleEntity1, sampleEntity2);
+		Iterable<SampleEntity> sampleEntities = asList(sampleEntity1, sampleEntity2);
 
 		// when
 		repository.saveAll(sampleEntities);
@@ -406,6 +408,40 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		assertThat(result).isEqualTo(1L);
 	}
 
+	@Test //DATAES-976
+	public void shouldDeleteAllById() {
+
+		// given
+		String id1 = nextIdAsString();
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(id1);
+		sampleEntity1.setMessage("hello world 1");
+		sampleEntity1.setAvailable(true);
+		sampleEntity1.setVersion(System.currentTimeMillis());
+
+		String id2 = nextIdAsString();
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(id2);
+		sampleEntity2.setMessage("hello world 2");
+		sampleEntity2.setAvailable(true);
+		sampleEntity2.setVersion(System.currentTimeMillis());
+
+		String id3 = nextIdAsString();
+		SampleEntity sampleEntity3 = new SampleEntity();
+		sampleEntity3.setId(id3);
+		sampleEntity3.setMessage("hello world 3");
+		sampleEntity3.setAvailable(false);
+		sampleEntity3.setVersion(System.currentTimeMillis());
+
+		repository.saveAll(asList(sampleEntity1, sampleEntity2, sampleEntity3));
+
+		// when
+		repository.deleteAllById(asList(id1, id3));
+
+		// then
+		assertThat(repository.findAll()).extracting(SampleEntity::getId).containsExactly(id2);
+	}
+
 	@Test
 	public void shouldDeleteByMessageAndReturnList() {
 
@@ -430,7 +466,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity3.setMessage("hello world 3");
 		sampleEntity3.setAvailable(false);
 		sampleEntity3.setVersion(System.currentTimeMillis());
-		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+		repository.saveAll(asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		// when
 		List<SampleEntity> result = repository.deleteByAvailable(true);
@@ -463,7 +499,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity3.setId(documentId);
 		sampleEntity3.setMessage("hello world 3");
 		sampleEntity3.setVersion(System.currentTimeMillis());
-		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+		repository.saveAll(asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		// when
 		List<SampleEntity> result = repository.deleteByMessage("hello world 3");
@@ -496,7 +532,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity3.setId(documentId);
 		sampleEntity3.setType("image");
 		sampleEntity3.setVersion(System.currentTimeMillis());
-		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+		repository.saveAll(asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		// when
 		repository.deleteByType("article");
@@ -569,7 +605,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity2.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntity2);
 
-		Iterable<SampleEntity> sampleEntities = Arrays.asList(sampleEntity2, sampleEntity2);
+		Iterable<SampleEntity> sampleEntities = asList(sampleEntity2, sampleEntity2);
 
 		// when
 		repository.deleteAll(sampleEntities);
@@ -710,7 +746,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		repository.save(sampleEntity3);
 
 		Iterable<SampleEntity> allById = repository
-				.findAllById(Arrays.asList("id-one", "does-not-exist", "id-two", "where-am-i", "id-three"));
+				.findAllById(asList("id-one", "does-not-exist", "id-two", "where-am-i", "id-three"));
 		List<SampleEntity> results = StreamUtils.createStreamFromIterator(allById.iterator()).collect(Collectors.toList());
 
 		assertThat(results).hasSize(3);
