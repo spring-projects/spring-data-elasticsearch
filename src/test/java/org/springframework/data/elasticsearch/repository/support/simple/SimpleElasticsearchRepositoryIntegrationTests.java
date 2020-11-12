@@ -406,6 +406,40 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		assertThat(result).isEqualTo(1L);
 	}
 
+	@Test //DATAES-976
+	public void shouldDeleteAllById() {
+
+		// given
+		String id1 = nextIdAsString();
+		SampleEntity sampleEntity1 = new SampleEntity();
+		sampleEntity1.setId(id1);
+		sampleEntity1.setMessage("hello world 1");
+		sampleEntity1.setAvailable(true);
+		sampleEntity1.setVersion(System.currentTimeMillis());
+
+		String id2 = nextIdAsString();
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(id2);
+		sampleEntity2.setMessage("hello world 2");
+		sampleEntity2.setAvailable(true);
+		sampleEntity2.setVersion(System.currentTimeMillis());
+
+		String id3 = nextIdAsString();
+		SampleEntity sampleEntity3 = new SampleEntity();
+		sampleEntity3.setId(id3);
+		sampleEntity3.setMessage("hello world 3");
+		sampleEntity3.setAvailable(false);
+		sampleEntity3.setVersion(System.currentTimeMillis());
+
+		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
+
+		// when
+		repository.deleteAllById(Arrays.asList(id1, id3));
+
+		// then
+		assertThat(repository.findAll()).extracting(SampleEntity::getId).containsExactly(id2);
+	}
+
 	@Test
 	public void shouldDeleteByMessageAndReturnList() {
 
