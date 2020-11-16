@@ -15,13 +15,11 @@
  */
 package org.springframework.data.elasticsearch.core.event;
 
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
-import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
  */
-@SpringIntegrationTest
-@ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class, ElasticsearchOperationsCallbackTest.Config.class })
-class ElasticsearchRestOperationsCallbackTest extends ElasticsearchOperationsCallbackTest {}
+@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class, ElasticsearchOperationsCallbackIntegrationTest.Config.class })
+class ElasticsearchTransportOperationsCallbackIntegrationTest extends ElasticsearchOperationsCallbackIntegrationTest {}

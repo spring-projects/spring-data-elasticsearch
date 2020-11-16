@@ -147,13 +147,14 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		Assert.notNull(entity, "entity must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		IndexQuery query = getIndexQuery(entity);
-		index(query, index);
+		T entityAfterBeforeConvert = maybeCallbackBeforeConvert(entity, index);
 
-		// suppressing because it's either entity itself or something of a correct type returned by an entity callback
-		@SuppressWarnings("unchecked")
-		T castResult = (T) query.getObject();
-		return castResult;
+		IndexQuery query = getIndexQuery(entityAfterBeforeConvert);
+		doIndex(query, index);
+
+		T entityAfterAfterSave = maybeCallbackAfterSave(entityAfterBeforeConvert, index);
+
+		return entityAfterAfterSave;
 	}
 
 	@Override
@@ -191,6 +192,20 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	public <T> Iterable<T> save(T... entities) {
 		return save(Arrays.asList(entities));
 	}
+
+	@Override
+	public String index(IndexQuery query, IndexCoordinates index) {
+
+		maybeCallbackBeforeConvertWithQuery(query, index);
+
+		String documentId = doIndex(query, index);
+
+		maybeCallbackAfterSaveWithQuery(query, index);
+
+		return documentId;
+	}
+
+	public abstract String doIndex(IndexQuery query, IndexCoordinates indexCoordinates);
 
 	@Override
 	@Nullable
@@ -262,10 +277,37 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
+	public final List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions,
+			IndexCoordinates index) {
+
+		Assert.notNull(queries, "List of IndexQuery must not be null");
+		Assert.notNull(bulkOptions, "BulkOptions must not be null");
+
+		return bulkOperation(queries, bulkOptions, index);
+	}
+
+	@Override
 	public void bulkUpdate(List<UpdateQuery> queries, Class<?> clazz) {
 		bulkUpdate(queries, getIndexCoordinatesFor(clazz));
 	}
 
+	public List<IndexedObjectInformation> bulkOperation(List<?> queries, BulkOptions bulkOptions,
+			IndexCoordinates index) {
+
+		Assert.notNull(queries, "List of IndexQuery must not be null");
+		Assert.notNull(bulkOptions, "BulkOptions must not be null");
+
+		maybeCallbackBeforeConvertWithQueries(queries, index);
+
+		List<IndexedObjectInformation> indexedObjectInformations = doBulkOperation(queries, bulkOptions, index);
+
+		maybeCallbackAfterSaveWithQueries(queries, index);
+
+		return indexedObjectInformations;
+	}
+
+	public abstract List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
+			IndexCoordinates index);
 	// endregion
 
 	// region SearchOperations
@@ -620,6 +662,20 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			if (queryObject != null) {
 				queryObject = maybeCallbackBeforeConvert(queryObject, index);
 				indexQuery.setObject(queryObject);
+				// the callback might have set som values relevant for the IndexQuery
+				IndexQuery newQuery = getIndexQuery(queryObject);
+
+				if (indexQuery.getRouting() == null && newQuery.getRouting() != null) {
+					indexQuery.setRouting(newQuery.getRouting());
+				}
+
+				if (indexQuery.getSeqNo() == null && newQuery.getSeqNo() != null) {
+					indexQuery.setSeqNo(newQuery.getSeqNo());
+				}
+
+				if (indexQuery.getPrimaryTerm() == null && newQuery.getPrimaryTerm() != null) {
+					indexQuery.setPrimaryTerm(newQuery.getPrimaryTerm());
+				}
 			}
 		}
 	}

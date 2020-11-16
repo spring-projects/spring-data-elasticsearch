@@ -144,10 +144,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	// endregion
 
 	// region DocumentOperations
-	@Override
-	public String index(IndexQuery query, IndexCoordinates index) {
-
-		maybeCallbackBeforeConvertWithQuery(query, index);
+	public String doIndex(IndexQuery query, IndexCoordinates index) {
 
 		IndexRequestBuilder indexRequestBuilder = requestFactory.indexRequestBuilder(client, query, index);
 		ActionFuture<IndexResponse> future = indexRequestBuilder.execute();
@@ -165,8 +162,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 			updateIndexedObject(queryObject, IndexedObjectInformation.of(documentId, response.getSeqNo(),
 					response.getPrimaryTerm(), response.getVersion()));
 		}
-
-		maybeCallbackAfterSaveWithQuery(query, index);
 
 		return documentId;
 	}
@@ -199,22 +194,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, index);
 		getRequestBuilder.setFetchSource(false);
 		return getRequestBuilder.execute().actionGet().isExists();
-	}
-
-	@Override
-	public List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions,
-			IndexCoordinates index) {
-
-		Assert.notNull(queries, "List of IndexQuery must not be null");
-		Assert.notNull(bulkOptions, "BulkOptions must not be null");
-
-		List<IndexedObjectInformation> indexedObjectInformations = doBulkOperation(queries, bulkOptions, index);
-
-		updateIndexedObjectsWithQueries(queries, indexedObjectInformations);
-
-		maybeCallbackAfterSaveWithQueries(queries, index);
-
-		return indexedObjectInformations;
 	}
 
 	@Override
@@ -261,11 +240,13 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		return new UpdateResponse(result);
 	}
 
-	private List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
+	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
 			IndexCoordinates index) {
-		maybeCallbackBeforeConvertWithQueries(queries, index);
 		BulkRequestBuilder bulkRequest = requestFactory.bulkRequestBuilder(client, queries, bulkOptions, index);
-		return checkForBulkOperationFailure(bulkRequest.execute().actionGet());
+		final List<IndexedObjectInformation> indexedObjectInformations = checkForBulkOperationFailure(
+				bulkRequest.execute().actionGet());
+		updateIndexedObjectsWithQueries(queries, indexedObjectInformations);
+		return indexedObjectInformations;
 	}
 	// endregion
 
