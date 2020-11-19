@@ -192,20 +192,6 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(seqNoProperty.isReadable()).isFalse();
 	}
 
-	@Test // DATAES-828
-	void shouldRequireFormatForDateField() {
-		assertThatExceptionOfType(MappingException.class) //
-				.isThrownBy(() -> context.getRequiredPersistentEntity(DateFieldWithNoFormat.class)) //
-				.withMessageContaining("date");
-	}
-
-	@Test // DATAES-828
-	void shouldRequireFormatForDateNanosField() {
-		assertThatExceptionOfType(MappingException.class) //
-				.isThrownBy(() -> context.getRequiredPersistentEntity(DateNanosFieldWithNoFormat.class)) //
-				.withMessageContaining("date");
-	}
-
 	@Test // DATAES-924
 	@DisplayName("should require pattern for custom date format")
 	void shouldRequirePatternForCustomDateFormat() {
