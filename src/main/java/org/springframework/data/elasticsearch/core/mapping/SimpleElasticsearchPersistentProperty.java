@@ -163,10 +163,13 @@ public class SimpleElasticsearchPersistentProperty extends
 				&& (isTemporalAccessor || isDate)) {
 			DateFormat dateFormat = field.format();
 
+			String property = getOwner().getType().getSimpleName() + "." + getName();
+
 			if (dateFormat == DateFormat.none) {
-				throw new MappingException(
-						String.format("Property %s is annotated with FieldType.%s but has no DateFormat defined",
-								getOwner().getType().getSimpleName() + "." + getName(), field.type().name()));
+				LOGGER.warn(
+						String.format("No DateFormat defined for property %s. Make sure you have a Converter registered for %s",
+								property, actualType.getSimpleName()));
+				return;
 			}
 
 			ElasticsearchDateConverter converter;
@@ -177,7 +180,7 @@ public class SimpleElasticsearchPersistentProperty extends
 				if (!StringUtils.hasLength(pattern)) {
 					throw new MappingException(
 							String.format("Property %s is annotated with FieldType.%s and a custom format but has no pattern defined",
-									getOwner().getType().getSimpleName() + "." + getName(), field.type().name()));
+									property, field.type().name()));
 				}
 
 				converter = ElasticsearchDateConverter.of(pattern);
