@@ -20,6 +20,7 @@ import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsea
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.lang.Nullable;
 
 /**
@@ -87,6 +88,17 @@ public interface ReactiveElasticsearchOperations extends ReactiveDocumentOperati
 	 * @since 4.1
 	 */
 	ReactiveIndexOperations indexOps(Class<?> clazz);
+
+	//region routing
+	/**
+	 * Returns a copy of this instance with the same configuration, but that uses a different {@link RoutingResolver} to
+	 * obtain routing information.
+	 *
+	 * @param routingResolver the {@link RoutingResolver} value, must not be {@literal null}.
+	 * @return DocumentOperations instance
+	 */
+	ReactiveElasticsearchOperations withRouting(RoutingResolver routingResolver);
+	//endregion
 
 	/**
 	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on

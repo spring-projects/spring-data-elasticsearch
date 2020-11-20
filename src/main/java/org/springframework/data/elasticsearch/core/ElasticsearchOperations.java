@@ -24,6 +24,7 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
+import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.lang.Nullable;
 
 /**
@@ -416,4 +417,16 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 		return Objects.toString(id, null);
 	}
 	// endregion
+
+	//region routing
+	/**
+	 * Returns a copy of this instance with the same configuration, but that uses a different {@link RoutingResolver} to
+	 * obtain routing information.
+	 *
+	 * @param routingResolver the {@link RoutingResolver} value, must not be {@literal null}.
+	 * @return DocumentOperations instance
+	 * @since 4.2
+	 */
+	ElasticsearchOperations withRouting(RoutingResolver routingResolver);
+	//endregion
 }

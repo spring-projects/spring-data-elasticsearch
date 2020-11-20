@@ -44,17 +44,19 @@ public class SearchHit<T> {
 	private final Map<String, List<String>> highlightFields = new LinkedHashMap<>();
 	private final Map<String, SearchHits<?>> innerHits = new LinkedHashMap<>();
 	@Nullable private final NestedMetaData nestedMetaData;
+	@Nullable private String routing;
 
-	public SearchHit(@Nullable String index, @Nullable String id, float score, @Nullable Object[] sortValues,
-			@Nullable Map<String, List<String>> highlightFields, T content) {
-		this(index, id, score, sortValues, highlightFields, null, null, content);
+	public SearchHit(@Nullable String index, @Nullable String id, @Nullable String routing, float score,
+			@Nullable Object[] sortValues, @Nullable Map<String, List<String>> highlightFields, T content) {
+		this(index, id, routing, score, sortValues, highlightFields, null, null, content);
 	}
 
-	public SearchHit(@Nullable String index, @Nullable String id, float score, @Nullable Object[] sortValues,
-			@Nullable Map<String, List<String>> highlightFields, @Nullable Map<String, SearchHits<?>> innerHits,
-			@Nullable NestedMetaData nestedMetaData, T content) {
+	public SearchHit(@Nullable String index, @Nullable String id, @Nullable String routing, float score,
+			@Nullable Object[] sortValues, @Nullable Map<String, List<String>> highlightFields,
+			@Nullable Map<String, SearchHits<?>> innerHits, @Nullable NestedMetaData nestedMetaData, T content) {
 		this.index = index;
 		this.id = id;
+		this.routing = routing;
 		this.score = score;
 		this.sortValues = (sortValues != null) ? Arrays.asList(sortValues) : new ArrayList<>();
 
@@ -164,5 +166,14 @@ public class SearchHit<T> {
 	public String toString() {
 		return "SearchHit{" + "id='" + id + '\'' + ", score=" + score + ", sortValues=" + sortValues + ", content="
 				+ content + ", highlightFields=" + highlightFields + '}';
+	}
+
+	/**
+	 * @return the routing for this SearchHit, may be {@literal null}.
+	 * @since 4.2
+	 */
+	@Nullable
+	public String getRouting() {
+		return routing;
 	}
 }

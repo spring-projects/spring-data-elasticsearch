@@ -1,0 +1,135 @@
+/*
+ * Copyright 2020 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.springframework.data.elasticsearch.core.routing;
+
+import static org.assertj.core.api.Assertions.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.function.Function;
+
+import org.elasticsearch.cluster.routing.Murmur3HashFunction;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Routing;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.lang.Nullable;
+import org.springframework.test.context.ContextConfiguration;
+
+/**
+ * @author Peter-Josef Meisch
+ */
+@SuppressWarnings("ConstantConditions")
+@SpringIntegrationTest
+@ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
+public class ElasticsearchOperationsRoutingTests {
+
+	private static final String INDEX = "routing-test";
+	private static final String ID_1 = "id1";
+	private static final String ID_2 = "id2";
+	private static final String ID_3 = "id3";
+
+	@Autowired ElasticsearchOperations operations;
+	@Nullable private IndexOperations indexOps;
+
+	@BeforeAll
+	static void beforeAll() {
+		// check that the used id values go to different shards of the index which is configured to have 5 shards.
+		// Elasticsearch uses the following function:
+		Function<String, Integer> calcShard = routing -> Math.floorMod(Murmur3HashFunction.hash(routing), 5);
+
+		Integer shard1 = calcShard.apply(ID_1);
+		Integer shard2 = calcShard.apply(ID_2);
+		Integer shard3 = calcShard.apply(ID_3);
+
+		assertThat(shard1).isNotEqualTo(shard2);
+		assertThat(shard1).isNotEqualTo(shard3);
+		assertThat(shard2).isNotEqualTo(shard3);
+	}
+
+	@BeforeEach
+	void setUp() {
+		indexOps = operations.indexOps(RoutingEntity.class);
+		indexOps.delete();
+		indexOps.create();
+		indexOps.putMapping();
+	}
+
+	@Test // #1218
+	@DisplayName("should store data with different routing and be able to get it")
+	void shouldStoreDataWithDifferentRoutingAndBeAbleToGetIt() {
+
+		RoutingEntity entity = RoutingEntity.builder().id(ID_1).routing(ID_2).build();
+		operations.save(entity);
+		indexOps.refresh();
+
+		RoutingEntity savedEntity = operations.withRouting(RoutingResolver.just(ID_2)).get(entity.id, RoutingEntity.class);
+
+		assertThat(savedEntity).isEqualTo(entity);
+	}
+
+	@Test // #1218
+	@DisplayName("should store data with different routing and be able to delete it")
+	void shouldStoreDataWithDifferentRoutingAndBeAbleToDeleteIt() {
+
+		RoutingEntity entity = RoutingEntity.builder().id(ID_1).routing(ID_2).build();
+		operations.save(entity);
+		indexOps.refresh();
+
+		String deletedId = operations.withRouting(RoutingResolver.just(ID_2)).delete(entity.id, IndexCoordinates.of(INDEX));
+
+		assertThat(deletedId).isEqualTo(entity.getId());
+	}
+
+	@Test // #1218
+	@DisplayName("should store data with different routing and get the routing in the search result")
+	void shouldStoreDataWithDifferentRoutingAndGetTheRoutingInTheSearchResult() {
+
+		RoutingEntity entity = RoutingEntity.builder().id(ID_1).routing(ID_2).build();
+		operations.save(entity);
+		indexOps.refresh();
+
+		SearchHits<RoutingEntity> searchHits = operations.search(Query.findAll(), RoutingEntity.class);
+
+		assertThat(searchHits.getSearchHits()).hasSize(1);
+		assertThat(searchHits.getSearchHit(0).getRouting()).isEqualTo(ID_2);
+	}
+
+	@Data
+	@Builder
+	@AllArgsConstructor
+	@NoArgsConstructor
+	@Document(indexName = INDEX, shards = 5)
+	@Routing("routing")
+	static class RoutingEntity {
+		@Id private String id;
+		private String routing;
+	}
+}

@@ -833,12 +833,17 @@ class RequestFactory {
 	// endregion
 
 	// region get
-	public GetRequest getRequest(String id, IndexCoordinates index) {
-		return new GetRequest(index.getIndexName(), id);
+	public GetRequest getRequest(String id, @Nullable String routing, IndexCoordinates index) {
+		GetRequest getRequest = new GetRequest(index.getIndexName(), id);
+		getRequest.routing(routing);
+		return getRequest;
 	}
 
-	public GetRequestBuilder getRequestBuilder(Client client, String id, IndexCoordinates index) {
-		return client.prepareGet(index.getIndexName(), null, id);
+	public GetRequestBuilder getRequestBuilder(Client client, String id, @Nullable String routing,
+			IndexCoordinates index) {
+		GetRequestBuilder getRequestBuilder = client.prepareGet(index.getIndexName(), null, id);
+		getRequestBuilder.setRouting(routing);
+		return getRequestBuilder;
 	}
 
 	public MultiGetRequest multiGetRequest(Query query, Class<?> clazz, IndexCoordinates index) {

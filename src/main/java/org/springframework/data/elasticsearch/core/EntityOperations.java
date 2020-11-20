@@ -23,6 +23,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
+import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
@@ -72,14 +73,15 @@ class EntityOperations {
 	}
 
 	/**
-	 * Creates a new {@link AdaptibleEntity} for the given bean and {@link ConversionService}.
+	 * Creates a new {@link AdaptibleEntity} for the given bean and {@link ConversionService} and {@link RoutingResolver}.
 	 *
 	 * @param entity must not be {@literal null}.
 	 * @param conversionService must not be {@literal null}.
-	 * @return
+	 * @param routingResolver the {@link RoutingResolver}, must not be {@literal null}
+	 * @return the {@link AdaptibleEntity}
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	<T> AdaptibleEntity<T> forEntity(T entity, ConversionService conversionService) {
+	<T> AdaptibleEntity<T> forEntity(T entity, ConversionService conversionService, RoutingResolver routingResolver) {
 
 		Assert.notNull(entity, "Bean must not be null!");
 		Assert.notNull(conversionService, "ConversionService must not be null!");
@@ -88,7 +90,7 @@ class EntityOperations {
 			return new SimpleMappedEntity((Map<String, Object>) entity);
 		}
 
-		return AdaptibleMappedEntity.of(entity, context, conversionService);
+		return AdaptibleMappedEntity.of(entity, context, conversionService, routingResolver);
 	}
 
 	/**
@@ -304,7 +306,7 @@ class EntityOperations {
 
 		/**
 		 * returns the routing for the entity if it is available
-		 * 
+		 *
 		 * @return routing if available
 		 * @since 4.1
 		 */
@@ -464,7 +466,7 @@ class EntityOperations {
 			super(map);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.UnmappedEntity#getId()
 		 */
@@ -546,32 +548,37 @@ class EntityOperations {
 	 */
 	private static class AdaptibleMappedEntity<T> extends MappedEntity<T> implements AdaptibleEntity<T> {
 
+		private final T bean;
 		private final ElasticsearchPersistentEntity<?> entity;
 		private final ConvertingPropertyAccessor<T> propertyAccessor;
 		private final IdentifierAccessor identifierAccessor;
 		private final ConversionService conversionService;
+		private final RoutingResolver routingResolver;
 
-		private AdaptibleMappedEntity(ElasticsearchPersistentEntity<?> entity, IdentifierAccessor identifierAccessor,
-				ConvertingPropertyAccessor<T> propertyAccessor, ConversionService conversionService) {
+		private AdaptibleMappedEntity(T bean, ElasticsearchPersistentEntity<?> entity,
+				IdentifierAccessor identifierAccessor, ConvertingPropertyAccessor<T> propertyAccessor,
+				ConversionService conversionService, RoutingResolver routingResolver) {
 
 			super(entity, identifierAccessor, propertyAccessor);
 
+			this.bean = bean;
 			this.entity = entity;
 			this.propertyAccessor = propertyAccessor;
 			this.identifierAccessor = identifierAccessor;
 			this.conversionService = conversionService;
+			this.routingResolver = routingResolver;
 		}
 
 		static <T> AdaptibleEntity<T> of(T bean,
 				MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context,
-				ConversionService conversionService) {
+				ConversionService conversionService, RoutingResolver routingResolver) {
 
 			ElasticsearchPersistentEntity<?> entity = context.getRequiredPersistentEntity(bean.getClass());
 			IdentifierAccessor identifierAccessor = entity.getIdentifierAccessor(bean);
 			PersistentPropertyAccessor<T> propertyAccessor = entity.getPropertyAccessor(bean);
 
-			return new AdaptibleMappedEntity<>(entity, identifierAccessor,
-					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService), conversionService);
+			return new AdaptibleMappedEntity<>(bean, entity, identifierAccessor,
+					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService), conversionService, routingResolver);
 		}
 
 		@Override
@@ -616,7 +623,7 @@ class EntityOperations {
 		public Number getVersion() {
 
 			ElasticsearchPersistentProperty versionProperty = entity.getVersionProperty();
-			return versionProperty !=  null ? propertyAccessor.getProperty(versionProperty, Number.class) : null;
+			return versionProperty != null ? propertyAccessor.getProperty(versionProperty, Number.class) : null;
 		}
 
 		@Override
@@ -661,6 +668,12 @@ class EntityOperations {
 		@Override
 		public String getRouting() {
 
+			String routing = routingResolver.getRouting(bean);
+
+			if (routing != null) {
+				return routing;
+			}
+
 			ElasticsearchPersistentProperty joinFieldProperty = entity.getJoinFieldProperty();
 
 			if (joinFieldProperty != null) {
@@ -673,6 +686,7 @@ class EntityOperations {
 
 			return null;
 		}
+
 	}
 
 }

@@ -93,7 +93,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
 
 	private final RestHighLevelClient client;
-	private final ElasticsearchExceptionTranslator exceptionTranslator;
+	private final ElasticsearchExceptionTranslator exceptionTranslator = new ElasticsearchExceptionTranslator();
 
 	// region Initialization
 	public ElasticsearchRestTemplate(RestHighLevelClient client) {
@@ -101,7 +101,6 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(client, "Client must not be null!");
 
 		this.client = client;
-		this.exceptionTranslator = new ElasticsearchExceptionTranslator();
 
 		initialize(createElasticsearchConverter());
 	}
@@ -111,9 +110,13 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(client, "Client must not be null!");
 
 		this.client = client;
-		this.exceptionTranslator = new ElasticsearchExceptionTranslator();
 
 		initialize(elasticsearchConverter);
+	}
+
+	@Override
+	protected AbstractElasticsearchTemplate doCopy() {
+		return new ElasticsearchRestTemplate(client, elasticsearchConverter);
 	}
 
 	// endregion
@@ -155,7 +158,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	@Nullable
 	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
-		GetRequest request = requestFactory.getRequest(id, index);
+		GetRequest request = requestFactory.getRequest(id,routingResolver.getRouting(), index);
 		GetResponse response = execute(client -> client.get(request, RequestOptions.DEFAULT));
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
@@ -177,7 +180,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	protected boolean doExists(String id, IndexCoordinates index) {
-		GetRequest request = requestFactory.getRequest(id, index);
+		GetRequest request = requestFactory.getRequest(id, routingResolver.getRouting(),index);
 		request.fetchSourceContext(FetchSourceContext.DO_NOT_FETCH_SOURCE);
 		return execute(client -> client.get(request, RequestOptions.DEFAULT).isExists());
 	}
@@ -192,7 +195,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public String delete(String id, @Nullable String routing, IndexCoordinates index) {
+	protected String doDelete(String id, @Nullable String routing, IndexCoordinates index) {
 
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(index, "index must not be null");

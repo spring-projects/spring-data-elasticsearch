@@ -171,9 +171,18 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 
 	/**
 	 * returns the default settings for an index.
-	 * 
+	 *
 	 * @return settings as {@link Document}
 	 * @since 4.1
 	 */
 	Document getDefaultSettings();
+
+	/**
+	 * Resolves the routing for a bean.
+	 * 
+	 * @param bean the bean to resolve the routing for
+	 * @return routing value, may be {@literal null}
+	 */
+	@Nullable
+	String resolveRouting(T bean);
 }

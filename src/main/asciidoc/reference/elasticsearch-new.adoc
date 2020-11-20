@@ -5,6 +5,7 @@
 == New in Spring Data Elasticsearch 4.2
 
 * Upgrade to Elasticsearch 7.10.0.
+* Support for custom routing values
 
 [[new-features.4-1-0]]
 == New in Spring Data Elasticsearch 4.1

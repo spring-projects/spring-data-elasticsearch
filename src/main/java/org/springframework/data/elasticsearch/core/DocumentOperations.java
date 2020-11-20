@@ -25,6 +25,7 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
+import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.lang.Nullable;
 
 /**
@@ -227,9 +228,7 @@ public interface DocumentOperations {
 	 * @param index the index from which to delete
 	 * @return documentId of the document deleted
 	 */
-	default String delete(String id, IndexCoordinates index) {
-		return delete(id, null, index);
-	}
+	String delete(String id, IndexCoordinates index);
 
 	/**
 	 * Delete the one object with provided id.
@@ -239,7 +238,10 @@ public interface DocumentOperations {
 	 * @param index the index from which to delete
 	 * @return documentId of the document deleted
 	 * @since 4.1
+	 * @deprecated since 4.2, use {@link ElasticsearchOperations#withRouting(RoutingResolver)} and
+	 *             {@link #delete(String, IndexCoordinates)}
 	 */
+	@Deprecated
 	String delete(String id, @Nullable String routing, IndexCoordinates index);
 
 	/**

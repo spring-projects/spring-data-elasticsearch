@@ -75,6 +75,8 @@ import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
+import org.springframework.data.elasticsearch.core.routing.DefaultRoutingResolver;
+import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
@@ -104,7 +106,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	private final ReactiveElasticsearchClient client;
 	private final ElasticsearchConverter converter;
-	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
+	private final SimpleElasticsearchMappingContext mappingContext;
 	private final ElasticsearchExceptionTranslator exceptionTranslator;
 	private final EntityOperations operations;
 	protected RequestFactory requestFactory;
@@ -114,24 +116,39 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	private @Nullable ReactiveEntityCallbacks entityCallbacks;
 
+	private RoutingResolver routingResolver;
+
 	// region Initialization
 	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client) {
 		this(client, new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext()));
 	}
 
 	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client, ElasticsearchConverter converter) {
+
 		Assert.notNull(client, "client must not be null");
 		Assert.notNull(converter, "converter must not be null");
 
 		this.client = client;
 		this.converter = converter;
-		this.mappingContext = converter.getMappingContext();
+
+		this.mappingContext = (SimpleElasticsearchMappingContext) converter.getMappingContext();
+		this.routingResolver = new DefaultRoutingResolver(this.mappingContext);
 
 		this.exceptionTranslator = new ElasticsearchExceptionTranslator();
 		this.operations = new EntityOperations(this.mappingContext);
 		this.requestFactory = new RequestFactory(converter);
 
 		logVersions();
+	}
+
+	private ReactiveElasticsearchTemplate copy() {
+
+		ReactiveElasticsearchTemplate copy = new ReactiveElasticsearchTemplate(client, converter);
+		copy.setRefreshPolicy(refreshPolicy);
+		copy.setIndicesOptions(indicesOptions);
+		copy.setEntityCallbacks(entityCallbacks);
+		copy.setRoutingResolver(routingResolver);
+		return copy;
 	}
 
 	private void logVersions() {
@@ -254,7 +271,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	private <T> T updateIndexedObject(T entity, IndexedObjectInformation indexedObjectInformation) {
-		AdaptibleEntity<T> adaptibleEntity = operations.forEntity(entity, converter.getConversionService());
+		AdaptibleEntity<T> adaptibleEntity = operations.forEntity(entity, converter.getConversionService(),
+				routingResolver);
 		adaptibleEntity.populateIdIfNecessary(indexedObjectInformation.getId());
 
 		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
@@ -372,7 +390,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	private Mono<Boolean> doExists(String id, IndexCoordinates index) {
-		return Mono.defer(() -> doExists(requestFactory.getRequest(id, index)));
+		return Mono.defer(() -> doExists(requestFactory.getRequest(id, routingResolver.getRouting(), index)));
 	}
 
 	/**
@@ -395,7 +413,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	private IndexQuery getIndexQuery(Object value) {
-		AdaptibleEntity<?> entity = operations.forEntity(value, converter.getConversionService());
+		AdaptibleEntity<?> entity = operations.forEntity(value, converter.getConversionService(), routingResolver);
 
 		Object id = entity.getId();
 		IndexQuery query = new IndexQuery();
@@ -448,7 +466,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	private Mono<GetResult> doGet(String id, IndexCoordinates index) {
-		return Mono.defer(() -> doGet(requestFactory.getRequest(id, index)));
+		return Mono.defer(() -> doGet(requestFactory.getRequest(id, routingResolver.getRouting(), index)));
 	}
 
 	/**
@@ -470,7 +488,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	@Override
 	public Mono<String> delete(Object entity, IndexCoordinates index) {
 
-		AdaptibleEntity<?> elasticsearchEntity = operations.forEntity(entity, converter.getConversionService());
+		AdaptibleEntity<?> elasticsearchEntity = operations.forEntity(entity, converter.getConversionService(),
+				routingResolver);
 
 		if (elasticsearchEntity.getId() == null) {
 			return Mono.error(new IllegalArgumentException("entity must have an id"));
@@ -503,7 +522,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		return doDeleteById(id, null, index);
+		return doDeleteById(id, routingResolver.getRouting(), index);
 	}
 
 	private Mono<String> doDeleteById(String id, @Nullable String routing, IndexCoordinates index) {
@@ -973,6 +992,25 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		}
 
 		return Mono.just(entity);
+	}
+	// endregion
+
+	// region routing
+	private void setRoutingResolver(RoutingResolver routingResolver) {
+
+		Assert.notNull(routingResolver, "routingResolver must not be null");
+
+		this.routingResolver = routingResolver;
+	}
+
+	@Override
+	public ReactiveElasticsearchOperations withRouting(RoutingResolver routingResolver) {
+
+		Assert.notNull(routingResolver, "routingResolver must not be null");
+
+		ReactiveElasticsearchTemplate copy = copy();
+		copy.setRoutingResolver(routingResolver);
+		return copy;
 	}
 	// endregion
 

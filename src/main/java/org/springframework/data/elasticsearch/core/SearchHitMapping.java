@@ -107,6 +107,7 @@ class SearchHitMapping<T> {
 
 		return new SearchHit<T>(searchDocument.getIndex(), //
 				searchDocument.hasId() ? searchDocument.getId() : null, //
+				searchDocument.getRouting(), //
 				searchDocument.getScore(), //
 				searchDocument.getSortValues(), //
 				getHighlightsAndRemapFieldNames(searchDocument), //
@@ -189,6 +190,7 @@ class SearchHitMapping<T> {
 					Object targetObject = converter.read(targetType, searchDocument);
 					convertedSearchHits.add(new SearchHit<Object>(searchDocument.getIndex(), //
 							searchDocument.getId(), //
+							searchDocument.getRouting(), //
 							searchDocument.getScore(), //
 							searchDocument.getSortValues(), //
 							searchDocument.getHighlightFields(), //
