@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.config;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
@@ -31,16 +30,14 @@ import org.springframework.lang.Nullable;
  * @since 3.2
  * @see ElasticsearchConfigurationSupport
  */
-@Configuration
 public abstract class AbstractReactiveElasticsearchConfiguration extends ElasticsearchConfigurationSupport {
 
 	/**
 	 * Return the {@link ReactiveElasticsearchClient} instance used to connect to the cluster. <br />
-	 * Annotate with {@link Bean} in case you want to expose a {@link ReactiveElasticsearchClient} instance to the
-	 * {@link org.springframework.context.ApplicationContext}.
 	 *
 	 * @return never {@literal null}.
 	 */
+	@Bean
 	public abstract ReactiveElasticsearchClient reactiveElasticsearchClient();
 
 	/**
@@ -49,9 +46,10 @@ public abstract class AbstractReactiveElasticsearchConfiguration extends Elastic
 	 * @return never {@literal null}.
 	 */
 	@Bean
-	public ReactiveElasticsearchOperations reactiveElasticsearchTemplate(ElasticsearchConverter elasticsearchConverter) {
+	public ReactiveElasticsearchOperations reactiveElasticsearchTemplate(ElasticsearchConverter elasticsearchConverter,
+			ReactiveElasticsearchClient reactiveElasticsearchClient) {
 
-		ReactiveElasticsearchTemplate template = new ReactiveElasticsearchTemplate(reactiveElasticsearchClient(),
+		ReactiveElasticsearchTemplate template = new ReactiveElasticsearchTemplate(reactiveElasticsearchClient,
 				elasticsearchConverter);
 		template.setIndicesOptions(indicesOptions());
 		template.setRefreshPolicy(refreshPolicy());

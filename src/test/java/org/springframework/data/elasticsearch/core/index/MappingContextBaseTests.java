@@ -34,8 +34,9 @@ abstract class MappingContextBaseTests {
 
 	private SimpleElasticsearchMappingContext setupMappingContext() {
 
-		SimpleElasticsearchMappingContext mappingContext = new ElasticsearchConfigurationSupport()
-				.elasticsearchMappingContext();
+		ElasticsearchConfigurationSupport configurationSupport = new ElasticsearchConfigurationSupport();
+		SimpleElasticsearchMappingContext mappingContext = configurationSupport
+				.elasticsearchMappingContext(configurationSupport.elasticsearchCustomConversions());
 		mappingContext.initialize();
 		return mappingContext;
 	}
