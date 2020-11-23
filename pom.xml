@@ -271,6 +271,7 @@
 			<groupId>io.specto</groupId>
 			<artifactId>hoverfly-java-junit5</artifactId>
 			<version>0.13.1</version>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- Upgrade xbean to 4.5 to prevent incompatibilities due to ASM versions -->
