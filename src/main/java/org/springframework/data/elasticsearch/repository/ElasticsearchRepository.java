@@ -56,21 +56,21 @@ public interface ElasticsearchRepository<T, ID> extends PagingAndSortingReposito
 	<S extends T> S indexWithoutRefresh(S entity);
 
 	/**
-	 * @deprecated since 4.0, use {@link #searchQuery(Query)}, standard repository method naming or @{@link Query}
+	 * @deprecated since 4.0, use standard repository method naming or @{@link Query}
 	 *             annotated methods, or {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations}.
 	 */
 	@Deprecated
 	Iterable<T> search(QueryBuilder query);
 
 	/**
-	 * @deprecated since 4.0, use {@link #searchQuery(Query)}, standard repository method naming or @{@link Query}
+	 * @deprecated since 4.0, use standard repository method naming or @{@link Query}
 	 *             annotated methods, or {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations}.
 	 */
 	@Deprecated
 	Page<T> search(QueryBuilder query, Pageable pageable);
 
 	/**
-	 * @deprecated since 4.0, use {@link #searchQuery(Query)}, standard repository method naming or @{@link Query}
+	 * @deprecated since 4.0, use standard repository method naming or @{@link Query}
 	 *             annotated methods, or {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations}.
 	 */
 	Page<T> search(Query searchQuery);
@@ -86,7 +86,7 @@ public interface ElasticsearchRepository<T, ID> extends PagingAndSortingReposito
 	Page<T> searchSimilar(T entity, @Nullable String[] fields, Pageable pageable);
 
 	/**
-	 * @deprecated since 4.0, use {@link IndexOperations#refresh(Class)} instead. Repository methods should call refresh
+	 * @deprecated since 4.0, use {@link IndexOperations#refresh()} instead. Repository methods should call refresh
 	 *             in their implementation.
 	 */
 	@Deprecated
