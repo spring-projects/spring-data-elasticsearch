@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.support.simple;
 
-import static java.util.Arrays.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
@@ -74,7 +73,6 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Michael Wirth
  * @author Peter-Josef Meisch
  * @author Murali Chevuri
- * @author Jens Schauder
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { SimpleElasticsearchRepositoryIntegrationTests.Config.class })
@@ -120,7 +118,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity2.setVersion(System.currentTimeMillis());
 
 		// when
-		repository.saveAll(asList(sampleEntity1, sampleEntity2));
+		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2));
 
 		// then
 		Optional<SampleEntity> entity1FromElasticSearch = repository.findById(documentId1);
@@ -285,7 +283,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		repository.save(sampleEntity2);
 
 		// when
-		Iterable<SampleEntity> sampleEntities = repository.findAllById(asList(documentId, documentId2));
+		Iterable<SampleEntity> sampleEntities = repository.findAllById(Arrays.asList(documentId, documentId2));
 
 		// then
 		assertThat(sampleEntities).isNotNull().hasSize(2);
@@ -307,7 +305,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity2.setMessage("hello world.");
 		sampleEntity2.setVersion(System.currentTimeMillis());
 
-		Iterable<SampleEntity> sampleEntities = asList(sampleEntity1, sampleEntity2);
+		Iterable<SampleEntity> sampleEntities = Arrays.asList(sampleEntity1, sampleEntity2);
 
 		// when
 		repository.saveAll(sampleEntities);
@@ -433,10 +431,10 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity3.setAvailable(false);
 		sampleEntity3.setVersion(System.currentTimeMillis());
 
-		repository.saveAll(asList(sampleEntity1, sampleEntity2, sampleEntity3));
+		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		// when
-		repository.deleteAllById(asList(id1, id3));
+		repository.deleteAllById(Arrays.asList(id1, id3));
 
 		// then
 		assertThat(repository.findAll()).extracting(SampleEntity::getId).containsExactly(id2);
@@ -466,7 +464,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity3.setMessage("hello world 3");
 		sampleEntity3.setAvailable(false);
 		sampleEntity3.setVersion(System.currentTimeMillis());
-		repository.saveAll(asList(sampleEntity1, sampleEntity2, sampleEntity3));
+		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		// when
 		List<SampleEntity> result = repository.deleteByAvailable(true);
@@ -499,7 +497,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity3.setId(documentId);
 		sampleEntity3.setMessage("hello world 3");
 		sampleEntity3.setVersion(System.currentTimeMillis());
-		repository.saveAll(asList(sampleEntity1, sampleEntity2, sampleEntity3));
+		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		// when
 		List<SampleEntity> result = repository.deleteByMessage("hello world 3");
@@ -532,7 +530,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity3.setId(documentId);
 		sampleEntity3.setType("image");
 		sampleEntity3.setVersion(System.currentTimeMillis());
-		repository.saveAll(asList(sampleEntity1, sampleEntity2, sampleEntity3));
+		repository.saveAll(Arrays.asList(sampleEntity1, sampleEntity2, sampleEntity3));
 
 		// when
 		repository.deleteByType("article");
@@ -605,7 +603,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity2.setVersion(System.currentTimeMillis());
 		repository.save(sampleEntity2);
 
-		Iterable<SampleEntity> sampleEntities = asList(sampleEntity2, sampleEntity2);
+		Iterable<SampleEntity> sampleEntities = Arrays.asList(sampleEntity2, sampleEntity2);
 
 		// when
 		repository.deleteAll(sampleEntities);
@@ -746,7 +744,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 		repository.save(sampleEntity3);
 
 		Iterable<SampleEntity> allById = repository
-				.findAllById(asList("id-one", "does-not-exist", "id-two", "where-am-i", "id-three"));
+				.findAllById(Arrays.asList("id-one", "does-not-exist", "id-two", "where-am-i", "id-three"));
 		List<SampleEntity> results = StreamUtils.createStreamFromIterator(allById.iterator()).collect(Collectors.toList());
 
 		assertThat(results).hasSize(3);
