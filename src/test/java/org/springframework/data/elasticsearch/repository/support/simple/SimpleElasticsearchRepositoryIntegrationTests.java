@@ -76,7 +76,7 @@ import org.springframework.test.context.ContextConfiguration;
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { SimpleElasticsearchRepositoryIntegrationTests.Config.class })
-public class SimpleElasticsearchRepositoryIntegrationTests {
+class SimpleElasticsearchRepositoryIntegrationTests {
 
 	@Configuration
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
@@ -91,7 +91,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	private IndexOperations indexOperations;
 
 	@BeforeEach
-	public void before() {
+	void before() {
 		indexOperations = operations.indexOps(SampleEntity.class);
 		IndexInitializer.init(indexOperations);
 	}
@@ -102,7 +102,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldDoBulkIndexDocument() {
+	void shouldDoBulkIndexDocument() {
 
 		// given
 		String documentId1 = nextIdAsString();
@@ -129,7 +129,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldSaveDocument() {
+	void shouldSaveDocument() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -147,7 +147,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void throwExceptionWhenTryingToInsertWithVersionButWithoutId() {
+	void throwExceptionWhenTryingToInsertWithVersionButWithoutId() {
 
 		// given
 		SampleEntity sampleEntity = new SampleEntity();
@@ -159,7 +159,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldFindDocumentById() {
+	void shouldFindDocumentById() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -178,7 +178,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldReturnCountOfDocuments() {
+	void shouldReturnCountOfDocuments() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -196,7 +196,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldFindAllDocuments() {
+	void shouldFindAllDocuments() {
 
 		// when
 		Iterable<SampleEntity> results = repository.findAll();
@@ -206,7 +206,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldDeleteDocument() {
+	void shouldDeleteDocument() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -225,7 +225,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldSearchDocumentsGivenSearchQuery() {
+	void shouldSearchDocumentsGivenSearchQuery() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -246,7 +246,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldSearchDocumentsGivenElasticsearchQuery() {
+	void shouldSearchDocumentsGivenElasticsearchQuery() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -265,7 +265,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test // DATAES-82
-	public void shouldFindAllByIdQuery() {
+	void shouldFindAllByIdQuery() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -290,7 +290,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldSaveIterableEntities() {
+	void shouldSaveIterableEntities() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -316,7 +316,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldReturnTrueGivenDocumentWithIdExists() {
+	void shouldReturnTrueGivenDocumentWithIdExists() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -334,7 +334,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test // DATAES-363
-	public void shouldReturnFalseGivenDocumentWithIdDoesNotExist() {
+	void shouldReturnFalseGivenDocumentWithIdDoesNotExist() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -347,7 +347,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldReturnResultsForGivenSearchQuery() {
+	void shouldReturnResultsForGivenSearchQuery() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -366,7 +366,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldDeleteAll() {
+	void shouldDeleteAll() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -386,7 +386,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldDeleteById() {
+	void shouldDeleteById() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -407,7 +407,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test //DATAES-976
-	public void shouldDeleteAllById() {
+	void shouldDeleteAllById() {
 
 		// given
 		String id1 = nextIdAsString();
@@ -441,7 +441,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldDeleteByMessageAndReturnList() {
+	void shouldDeleteByMessageAndReturnList() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -477,7 +477,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldDeleteByListForMessage() {
+	void shouldDeleteByListForMessage() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -510,7 +510,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldDeleteByType() {
+	void shouldDeleteByType() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -542,7 +542,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldDeleteEntity() {
+	void shouldDeleteEntity() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -562,7 +562,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldReturnIterableEntities() {
+	void shouldReturnIterableEntities() {
 
 		// given
 		String documentId1 = nextIdAsString();
@@ -587,7 +587,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldDeleteIterableEntities() {
+	void shouldDeleteIterableEntities() {
 
 		// given
 		String documentId1 = nextIdAsString();
@@ -614,7 +614,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldIndexEntity() {
+	void shouldIndexEntity() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -632,7 +632,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldIndexWithoutRefreshEntity() {
+	void shouldIndexWithoutRefreshEntity() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -655,7 +655,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldSortByGivenField() {
+	void shouldSortByGivenField() {
 
 		// given
 		String documentId = nextIdAsString();
@@ -678,7 +678,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void shouldReturnSimilarEntities() {
+	void shouldReturnSimilarEntities() {
 
 		// given
 		String sampleMessage = "So we build a web site or an application and want to add search to it, "
@@ -699,7 +699,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test // DATAES-142
-	public void shouldIndexNotEmptyList() {
+	void shouldIndexNotEmptyList() {
 		// given
 		List<SampleEntity> list = new ArrayList<>();
 		String documentId = nextIdAsString();
@@ -720,7 +720,7 @@ public class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test // DATAES-142
-	public void shouldNotFailOnIndexingEmptyList() {
+	void shouldNotFailOnIndexingEmptyList() {
 		Iterable<SampleEntity> savedEntities = repository.saveAll(Collections.emptyList());
 
 		assertThat(savedEntities).hasSize(0);

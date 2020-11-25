@@ -15,14 +15,15 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import org.elasticsearch.index.query.IdsQueryBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
@@ -33,9 +34,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
-import org.springframework.data.util.Streamable;
 import org.springframework.util.Assert;
 
 /**
@@ -167,7 +166,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		Assert.notNull(idStream, "IdStream must not be null!");
 		return Flux.from(idStream) //
-				.map(ID::toString) //
+				.map(this::convertId) //
 				.collectList() //
 				.map(ids -> new NativeSearchQueryBuilder().withIds(ids).build()) //
 				.flatMapMany(query -> {
@@ -207,6 +206,20 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	}
 
 	@Override
+	public Mono<Void> deleteAllById(Iterable<? extends ID> ids) {
+
+		Assert.notNull(ids, "Ids must not be null!");
+
+		return Flux.fromIterable(ids) //
+				.map(this::convertId) //
+				.collectList() //
+				.map(it -> new NativeSearchQueryBuilder().withQuery(new IdsQueryBuilder().addIds(it.toArray(new String[0])))
+						.build())
+				.flatMap(it -> operations.delete(it, entityInformation.getJavaType(), entityInformation.getIndexCoordinates())) //
+				.then(doRefresh());
+	}
+
+	@Override
 	public Mono<Void> deleteAll(Iterable<? extends T> entities) {
 
 		Assert.notNull(entities, "Entities must not be null!");
@@ -214,35 +227,15 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	}
 
 	@Override
-	public Mono<Void> deleteAllById(Iterable<? extends ID> ids) {
-
-		Assert.notNull(ids, "Ids must not be null!");
-
-		return Mono.just(Streamable.of(ids) //
-				.map(this::convertId).toList() //
-		).map(objects -> new StringQuery(QueryBuilders.idsQuery() //
-				.addIds(objects.toArray(new String[0])) //
-				.toString()) //
-		).flatMap(
-				query -> operations.delete(query, entityInformation.getJavaType(), entityInformation.getIndexCoordinates())) //
-				.then(doRefresh());
-	}
-
-	@Override
 	public Mono<Void> deleteAll(Publisher<? extends T> entityStream) {
 
 		Assert.notNull(entityStream, "EntityStream must not be null!");
 		return Flux.from(entityStream) //
-				.map(entity -> {
-
-					ID id = entityInformation.getId(entity);
-					if (id == null) {
-						throw new IllegalStateException("Entity id must not be null!");
-					}
-					return convertId(id);
-				}).collectList().map(objects -> new StringQuery(QueryBuilders.idsQuery() //
-						.addIds(objects.toArray(new String[0])) //
-						.toString())) //
+				.map(entityInformation::getRequiredId) //
+				.map(this::convertId) //
+				.collectList() //
+				.map(it -> new NativeSearchQueryBuilder().withQuery(new IdsQueryBuilder().addIds(it.toArray(new String[0])))
+						.build())
 				.flatMap(
 						query -> operations.delete(query, entityInformation.getJavaType(), entityInformation.getIndexCoordinates())) //
 				.then(doRefresh());

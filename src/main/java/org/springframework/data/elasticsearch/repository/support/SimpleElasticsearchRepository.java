@@ -27,6 +27,7 @@ import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -37,7 +38,6 @@ import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -50,6 +50,7 @@ import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
 /**
  * Elasticsearch specific repository implementation. Likely to be used as target within
@@ -151,14 +152,12 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		Assert.notNull(ids, "ids can't be null.");
 
 		List<T> result = new ArrayList<>();
-		List<String> stringIds = stringIdsRepresentation(ids);
-
-		if (stringIds.isEmpty()) {
+		Query idQuery = getIdQuery(ids);
+		if (CollectionUtils.isEmpty(idQuery.getIds())) {
 			return result;
 		}
 
-		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(stringIds).build();
-		List<T> multiGetEntities = execute(operations -> operations.multiGet(query, entityClass, getIndexCoordinates()));
+		List<T> multiGetEntities = execute(operations -> operations.multiGet(idQuery, entityClass, getIndexCoordinates()));
 
 		if (multiGetEntities != null) {
 			multiGetEntities.forEach(entity -> {
@@ -291,32 +290,6 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 	}
 
 	@Override
-	public void deleteAll(Iterable<? extends T> entities) {
-
-		Assert.notNull(entities, "Cannot delete 'null' list.");
-
-		IndexCoordinates indexCoordinates = getIndexCoordinates();
-		IdsQueryBuilder idsQueryBuilder = idsQuery();
-		for (T entity : entities) {
-			ID id = extractIdFromBean(entity);
-			if (id != null) {
-				idsQueryBuilder.addIds(stringIdRepresentation(id));
-			}
-		}
-
-		if (idsQueryBuilder.ids().isEmpty()) {
-			return;
-		}
-
-		Query query = new NativeSearchQueryBuilder().withQuery(idsQueryBuilder).build();
-
-		executeAndRefresh((OperationsCallback<Void>) operations -> {
-			operations.delete(query, entityClass, indexCoordinates);
-			return null;
-		});
-	}
-
-	@Override
 	public void deleteAllById(Iterable<? extends ID> ids) {
 
 		Assert.notNull(ids, "Cannot delete 'null' list.");
@@ -324,21 +297,34 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
 		IdsQueryBuilder idsQueryBuilder = idsQuery();
 		for (ID id : ids) {
-			if (id != null) {
-				idsQueryBuilder.addIds(stringIdRepresentation(id));
-			}
+			idsQueryBuilder.addIds(stringIdRepresentation(id));
 		}
 
 		if (idsQueryBuilder.ids().isEmpty()) {
 			return;
 		}
 
-		Query query = new NativeSearchQueryBuilder().withQuery(idsQueryBuilder).build();
-
 		executeAndRefresh((OperationsCallback<Void>) operations -> {
-			operations.delete(query, entityClass, indexCoordinates);
+			operations.delete(new NativeSearchQueryBuilder().withQuery(idsQueryBuilder).build(), entityClass,
+					indexCoordinates);
 			return null;
 		});
+	}
+
+	@Override
+	public void deleteAll(Iterable<? extends T> entities) {
+
+		Assert.notNull(entities, "Cannot delete 'null' list.");
+
+		List<ID> ids = new ArrayList<>();
+		for (T entity : entities) {
+			ID id = extractIdFromBean(entity);
+			if (id != null) {
+				ids.add(id);
+			}
+		}
+
+		deleteAllById(ids);
 	}
 
 	private void doDelete(@Nullable ID id, @Nullable String routing, IndexCoordinates indexCoordinates) {
@@ -369,7 +355,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		return entityInformation.getId(entity);
 	}
 
-	private List<String> stringIdsRepresentation(Iterable<ID> ids) {
+	private List<String> stringIdsRepresentation(Iterable<? extends ID> ids) {
 
 		Assert.notNull(ids, "ids can't be null.");
 
@@ -383,6 +369,12 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 	private IndexCoordinates getIndexCoordinates() {
 		return operations.getIndexCoordinatesFor(entityClass);
+	}
+
+	private Query getIdQuery(Iterable<? extends ID> ids) {
+		List<String> stringIds = stringIdsRepresentation(ids);
+
+		return new NativeSearchQueryBuilder().withIds(stringIds).build();
 	}
 
 	// region operations callback
