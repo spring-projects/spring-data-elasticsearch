@@ -121,14 +121,12 @@ import org.springframework.lang.Nullable;
  */
 public abstract class ElasticsearchTemplateTests {
 
+	protected static final String INDEX_NAME_JOIN_SAMPLE_ENTITY = "test-index-sample-join-template";
 	private static final String INDEX_NAME_SAMPLE_ENTITY = "test-index-sample-core-template";
 	private static final String INDEX_1_NAME = "test-index-1";
 	private static final String INDEX_2_NAME = "test-index-2";
 	private static final String INDEX_3_NAME = "test-index-3";
-
 	protected final IndexCoordinates index = IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY);
-	protected static final String INDEX_NAME_JOIN_SAMPLE_ENTITY = "test-index-sample-join-template";
-
 	@Autowired protected ElasticsearchOperations operations;
 	protected IndexOperations indexOperations;
 
@@ -1464,6 +1462,30 @@ public abstract class ElasticsearchTemplateTests {
 		// then
 		Map<String, Object> mapping = indexOperations.getMapping();
 		assertThat(mapping.get("properties")).isNotNull();
+	}
+
+	@Test // DATAES-987
+	@DisplayName("should read mappings from alias")
+	void shouldReadMappingsFromAlias() {
+
+		String aliasName = INDEX_NAME_SAMPLE_ENTITY + "alias";
+		indexOperations.alias( //
+				new AliasActions( //
+						new AliasAction.Add( //
+								AliasActionParameters.builder() //
+										.withIndices(INDEX_NAME_SAMPLE_ENTITY) //
+										.withAliases(aliasName) //
+										.build()) //
+				) //
+		);
+
+		IndexOperations aliasIndexOps = operations.indexOps(IndexCoordinates.of(aliasName));
+		Map<String, Object> mappingFromAlias = aliasIndexOps.getMapping();
+
+		assertThat(mappingFromAlias).isNotNull();
+		assertThat(
+				((Map<String, Object>) ((Map<String, Object>) mappingFromAlias.get("properties")).get("message")).get("type"))
+						.isEqualTo("text");
 	}
 
 	@Test

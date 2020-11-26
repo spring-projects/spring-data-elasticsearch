@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,11 +35,13 @@ import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.client.indices.GetMappingsRequest;
-import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
@@ -60,6 +63,8 @@ import org.springframework.util.Assert;
  * @since 4.0
  */
 class DefaultIndexOperations extends AbstractDefaultIndexOperations implements IndexOperations {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultIndexOperations.class);
 
 	private final ElasticsearchRestTemplate restTemplate;
 
@@ -117,10 +122,19 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 		GetMappingsRequest mappingsRequest = requestFactory.getMappingsRequest(index);
 
 		return restTemplate.execute(client -> {
-			GetMappingsResponse mapping = client.indices().getMapping(mappingsRequest, RequestOptions.DEFAULT);
-			// we only return data for the first index name that was requested (always have done so)
-			String index1 = mappingsRequest.indices()[0];
-			return mapping.mappings().get(index1).getSourceAsMap();
+			Map<String, MappingMetadata> mappings = client.indices() //
+					.getMapping(mappingsRequest, RequestOptions.DEFAULT) //
+					.mappings(); //
+
+			if (mappings == null || mappings.size() == 0) {
+				return Collections.emptyMap();
+			}
+
+			if (mappings.size() > 1) {
+				LOGGER.warn("more than one mapping returned for " + index.getIndexName());
+			}
+			// we have at least one, take the first from the iterator
+			return mappings.entrySet().iterator().next().getValue().getSourceAsMap();
 		});
 	}
 
