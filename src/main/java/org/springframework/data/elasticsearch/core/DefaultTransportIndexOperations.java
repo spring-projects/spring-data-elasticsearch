@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -40,6 +41,7 @@ import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateReque
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.cluster.metadata.IndexTemplateMetadata;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.settings.Settings;
@@ -126,10 +128,19 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 		GetMappingsRequest mappingsRequest = requestFactory.getMappingsRequest(client, index);
 
-		return client.admin().indices().getMappings( //
+		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetadata>> mappings = client.admin().indices().getMappings( //
 				mappingsRequest).actionGet() //
-				.getMappings().get(mappingsRequest.indices()[0]).get(IndexCoordinates.TYPE) //
-				.getSourceAsMap();
+				.getMappings();
+
+		if (mappings == null || mappings.size() == 0) {
+			return Collections.emptyMap();
+		}
+
+		if (mappings.size() > 1) {
+			LOGGER.warn("more than one mapping returned for " + index.getIndexName());
+		}
+		// we have at least one, take the first from the iterator
+		return mappings.iterator().next().value.get(IndexCoordinates.TYPE).getSourceAsMap();
 	}
 
 	@Override
