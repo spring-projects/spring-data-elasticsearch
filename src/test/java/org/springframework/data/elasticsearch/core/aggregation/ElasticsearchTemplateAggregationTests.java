@@ -118,6 +118,7 @@ public class ElasticsearchTemplateAggregationTests {
 				.withQuery(matchAllQuery()) //
 				.withSearchType(SearchType.DEFAULT) //
 				.addAggregation(terms("subjects").field("subject")) //
+				.withMaxResults(0) //
 				.build();
 		// when
 		SearchHits<ArticleEntity> searchHits = operations.search(searchQuery, ArticleEntity.class,
@@ -127,6 +128,7 @@ public class ElasticsearchTemplateAggregationTests {
 		// then
 		assertThat(aggregations).isNotNull();
 		assertThat(aggregations.asMap().get("subjects")).isNotNull();
+		assertThat(searchHits.hasSearchHits()).isFalse();
 	}
 
 	/**

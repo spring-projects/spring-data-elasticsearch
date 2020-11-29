@@ -66,6 +66,7 @@ public class NativeSearchQueryBuilder {
 	@Nullable private SearchType searchType;
 	@Nullable private IndicesOptions indicesOptions;
 	@Nullable private String preference;
+	@Nullable private Integer maxResults;
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -167,6 +168,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	public NativeSearchQueryBuilder withMaxResults(Integer maxResults) {
+		this.maxResults = maxResults;
+		return this;
+	}
+
 	public NativeSearchQuery build() {
 
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders,
@@ -218,8 +224,13 @@ public class NativeSearchQueryBuilder {
 		if (indicesOptions != null) {
 			nativeSearchQuery.setIndicesOptions(indicesOptions);
 		}
+
 		if (preference != null) {
 			nativeSearchQuery.setPreference(preference);
+		}
+
+		if (maxResults != null) {
+			nativeSearchQuery.setMaxResults(maxResults);
 		}
 
 		return nativeSearchQuery;
