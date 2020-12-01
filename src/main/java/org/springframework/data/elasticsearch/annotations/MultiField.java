@@ -27,9 +27,10 @@ import java.lang.annotation.Target;
  * @author Artur Konczak
  * @author Jonathan Yan
  * @author Xiao Yu
+ * @author Peter-Josef Meisch
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Documented
 public @interface MultiField {
 

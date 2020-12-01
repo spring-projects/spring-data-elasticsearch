@@ -25,6 +25,8 @@ import java.util.Set;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
@@ -105,9 +107,13 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 		Document settings = null;
 
-		if (clazz.isAnnotationPresent(Setting.class)) {
-			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
-			settings = loadSettings(settingPath);
+		if (AnnotatedElementUtils.hasAnnotation(clazz, Setting.class)) {
+			AnnotationAttributes attributes = AnnotatedElementUtils.getMergedAnnotationAttributes(clazz, Setting.class);
+
+			if (attributes != null) {
+				String settingPath = attributes.getString("settingPath");
+				settings = loadSettings(settingPath);
+			}
 		}
 
 		if (settings == null) {
@@ -224,22 +230,28 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	protected Document buildMapping(Class<?> clazz) {
 
 		// load mapping specified in Mapping annotation if present
-		if (clazz.isAnnotationPresent(Mapping.class)) {
-			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
+		if (AnnotatedElementUtils.hasAnnotation(clazz, Mapping.class)) {
+			AnnotationAttributes attributes = AnnotatedElementUtils.getMergedAnnotationAttributes(clazz, Mapping.class);
 
-			if (!StringUtils.isEmpty(mappingPath)) {
-				String mappings = ResourceUtil.readFileFromClasspath(mappingPath);
+			if (attributes != null) {
+				String mappingPath = attributes.getString("mappingPath");
 
-				if (!StringUtils.isEmpty(mappings)) {
-					return Document.parse(mappings);
+				if (StringUtils.hasText(mappingPath)) {
+					String mappings = ResourceUtil.readFileFromClasspath(mappingPath);
+
+					if (StringUtils.hasText(mappings)) {
+						return Document.parse(mappings);
+					}
+				} else {
+					LOGGER.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
 				}
-			} else {
-				LOGGER.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
 			}
 		}
 
 		// build mapping from field annotations
-		try {
+		try
+
+		{
 			String mapping = new MappingBuilder(elasticsearchConverter).buildPropertyMapping(clazz);
 			return Document.parse(mapping);
 		} catch (Exception e) {
