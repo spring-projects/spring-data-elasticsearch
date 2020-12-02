@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
@@ -83,9 +84,9 @@ public class SimpleElasticsearchPersistentProperty extends
 		// deprecated since 4.1
 		@Deprecated
 		boolean isIdWithoutAnnotation = isId && !isAnnotationPresent(Id.class);
-		if (isIdWithoutAnnotation) {
+		if (isIdWithoutAnnotation && owner.isAnnotationPresent(Document.class)) {
 			LOGGER.warn("Using the property name of '{}' to identify the id property is deprecated."
-					+ " Please annotate the id property with '@Id'", getName());
+					+ " Please annotate the id property with '@Id'", owner.getName() + "." + getName());
 		}
 
 		this.isScore = isAnnotationPresent(Score.class);
