@@ -45,6 +45,7 @@ import org.assertj.core.data.Percentage;
 import org.elasticsearch.search.suggest.completion.context.ContextMapping;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -247,6 +248,16 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		List<String> copyToValue = Collections.singletonList("name");
 		assertThat(fieldFirstName.get("copy_to")).isEqualTo(copyToValue);
 		assertThat(fieldLastName.get("copy_to")).isEqualTo(copyToValue);
+	}
+
+	@Test // DATAES-991
+	@DisplayName("should write correct TermVector values")
+	void shouldWriteCorrectTermVectorValues() {
+
+		IndexOperations indexOps = operations.indexOps(TermVectorFieldEntity.class);
+		indexOps.create();
+		indexOps.putMapping();
+
 	}
 
 	/**
@@ -620,5 +631,20 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Rank_Feature, positiveScoreImpact = false) private Integer urlLength;
 
 		@Field(type = FieldType.Rank_Features) private Map<String, Integer> topics;
+	}
+
+	@Data
+	@Document(indexName = "termvectors-test")
+	static class TermVectorFieldEntity {
+		@Id private String id;
+		@Field(type = FieldType.Text, termVector = TermVector.no) private String no;
+		@Field(type = FieldType.Text, termVector = TermVector.yes) private String yes;
+		@Field(type = FieldType.Text, termVector = TermVector.with_positions) private String with_positions;
+		@Field(type = FieldType.Text, termVector = TermVector.with_offsets) private String with_offsets;
+		@Field(type = FieldType.Text, termVector = TermVector.with_positions_offsets) private String with_positions_offsets;
+		@Field(type = FieldType.Text,
+				termVector = TermVector.with_positions_payloads) private String with_positions_payloads;
+		@Field(type = FieldType.Text,
+				termVector = TermVector.with_positions_offsets_payloads) private String with_positions_offsets_payloads;
 	}
 }
