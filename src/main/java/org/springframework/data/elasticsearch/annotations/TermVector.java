@@ -20,5 +20,5 @@ package org.springframework.data.elasticsearch.annotations;
  * @since 4.0
  */
 public enum TermVector {
-	none, no, yes, with_positions, with_offsets, with_positions_offsets, with_positions_payloads, with_positions_offets_payloads
+	none, no, yes, with_positions, with_offsets, with_positions_offsets, with_positions_payloads, with_positions_offsets_payloads
 }
