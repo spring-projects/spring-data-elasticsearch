@@ -604,7 +604,16 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertThat(propertyMapping).doesNotContain("seqNoPrimaryTerm");
 	}
 
-	/**
+    @Test // DATAES-991
+    void shouldWriteCorrectTermVectorValues() {
+
+        IndexOperations indexOps = operations.indexOps(TermVectorFieldEntity.class);
+        indexOps.create();
+        indexOps.putMapping(indexOps.createMapping());
+    }
+
+
+    /**
 	 * @author Xiao Yu
 	 */
 	@Setter
@@ -1093,4 +1102,20 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 
 		@Field(type = Object) private SeqNoPrimaryTerm seqNoPrimaryTerm;
 	}
+
+    @Data
+    @Document(indexName = "termvectors-test")
+    static class TermVectorFieldEntity {
+        @Id private String id;
+        @Field(type = FieldType.Text, termVector = TermVector.no) private String no;
+        @Field(type = FieldType.Text, termVector = TermVector.yes) private String yes;
+        @Field(type = FieldType.Text, termVector = TermVector.with_positions) private String with_positions;
+        @Field(type = FieldType.Text, termVector = TermVector.with_offsets) private String with_offsets;
+        @Field(type = FieldType.Text, termVector = TermVector.with_positions_offsets) private String with_positions_offsets;
+        @Field(type = FieldType.Text,
+            termVector = TermVector.with_positions_payloads) private String with_positions_payloads;
+        @Field(type = FieldType.Text,
+            termVector = TermVector.with_positions_offsets_payloads) private String with_positions_offsets_payloads;
+    }
+
 }
