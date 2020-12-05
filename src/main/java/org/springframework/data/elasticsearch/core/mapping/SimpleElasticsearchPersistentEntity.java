@@ -31,6 +31,9 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
+import org.springframework.data.spel.EvaluationContextProvider;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
@@ -74,7 +77,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private @Nullable VersionType versionType;
 	private boolean createIndexAndMapping;
 	private final Map<String, ElasticsearchPersistentProperty> fieldNamePropertyCache = new ConcurrentHashMap<>();
+
+	private EvaluationContextProvider evaluationContextProvider = EvaluationContextProvider.DEFAULT;;
 	private final ConcurrentHashMap<String, Expression> indexNameExpressions = new ConcurrentHashMap<>();
+	private final Lazy<EvaluationContext> indexNameEvaluationContext = Lazy.of(this::getIndexNameEvaluationContext);
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
 
@@ -302,12 +308,20 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		return seqNoPrimaryTermProperty;
 	}
 
+	@Nullable
 	@Override
 	public ElasticsearchPersistentProperty getJoinFieldProperty() {
 		return joinFieldProperty;
 	}
 
 	// region SpEL handling
+
+	@Override
+	public void setEvaluationContextProvider(EvaluationContextProvider provider) {
+		super.setEvaluationContextProvider(provider);
+		this.evaluationContextProvider = provider;
+	}
+
 	/**
 	 * resolves all the names in the IndexCoordinates object. If a name cannot be resolved, the original name is returned.
 	 *
@@ -316,14 +330,12 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	 */
 	private IndexCoordinates resolve(IndexCoordinates indexCoordinates) {
 
-		EvaluationContext context = getEvaluationContext(null);
-
 		String[] indexNames = indexCoordinates.getIndexNames();
 		String[] resolvedNames = new String[indexNames.length];
 
 		for (int i = 0; i < indexNames.length; i++) {
 			String indexName = indexNames[i];
-			resolvedNames[i] = resolve(context, indexName);
+			resolvedNames[i] = resolve(indexName);
 		}
 
 		return IndexCoordinates.of(resolvedNames);
@@ -332,22 +344,49 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	/**
 	 * tries to resolve the given name. If this is not successful, the original value is returned
 	 *
-	 * @param context SpEL evaluation context
 	 * @param name name to resolve
 	 * @return the resolved name or the input name if it cannot be resolved
 	 */
-	private String resolve(EvaluationContext context, String name) {
+	private String resolve(String name) {
 
 		Assert.notNull(name, "name must not be null");
 
-		Expression expression = indexNameExpressions.computeIfAbsent(name, s -> {
-			Expression expr = PARSER.parseExpression(name, ParserContext.TEMPLATE_EXPRESSION);
-			return expr instanceof LiteralExpression ? null : expr;
-		});
+		Expression expression = getExpressionForIndexName(name);
 
-		String resolvedName = expression != null ? expression.getValue(context, String.class) : null;
+		String resolvedName = expression != null ? expression.getValue(indexNameEvaluationContext.get(), String.class) : null;
 		return resolvedName != null ? resolvedName : name;
 	}
+
+	/**
+	 * returns an {@link Expression} for #name if name contains a {@link ParserContext#TEMPLATE_EXPRESSION} otherwise
+	 * returns {@literal null}.
+	 * 
+	 * @param name the name to get the expression for
+	 * @return Expression may be null
+	 */
+	@Nullable
+	private Expression getExpressionForIndexName(String name) {
+		return indexNameExpressions.computeIfAbsent(name, s -> {
+			Expression expr = PARSER.parseExpression(s, ParserContext.TEMPLATE_EXPRESSION);
+			return expr instanceof LiteralExpression ? null : expr;
+		});
+	}
+
+	/**
+	 * build the {@link EvaluationContext} considering {@link ExpressionDependencies} from the name returned by
+	 * {@link #getIndexName()}.
+	 * 
+	 * @return EvaluationContext
+	 */
+	private EvaluationContext getIndexNameEvaluationContext() {
+
+		Expression expression = getExpressionForIndexName(getIndexName());
+		ExpressionDependencies expressionDependencies = expression != null ? ExpressionDependencies.discover(expression)
+				: ExpressionDependencies.none();
+
+		return evaluationContextProvider.getEvaluationContext(null, expressionDependencies);
+	}
+
 	// endregion
 
 	@Override
@@ -363,5 +402,4 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 				.put("index.refresh_interval", getRefreshInterval()).put("index.store.type", getIndexStoreType()).map();
 		return Document.from(map);
 	}
-
 }
