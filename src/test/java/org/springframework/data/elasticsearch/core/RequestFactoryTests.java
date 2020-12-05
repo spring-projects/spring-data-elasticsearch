@@ -20,10 +20,16 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.mockito.Mockito.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.index.IndexAction;
 import org.elasticsearch.action.index.IndexRequest;
@@ -38,6 +44,7 @@ import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -59,6 +66,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
@@ -438,10 +446,50 @@ class RequestFactoryTests {
 		assertEquals(expected, json, false);
 	}
 
+	@Test // DATAES-247
+	@DisplayName("should set op_type INDEX if not specified")
+	void shouldSetOpTypeIndexIfNotSpecifiedAndIdIsSet() {
+
+		IndexQuery indexQuery = new IndexQueryBuilder().withId("42").withObject(Person.builder().id("42").lastName("Smith"))
+				.build();
+
+		IndexRequest indexRequest = requestFactory.indexRequest(indexQuery, IndexCoordinates.of("optype"));
+
+		assertThat(indexRequest.opType()).isEqualTo(DocWriteRequest.OpType.INDEX);
+	}
+
+	@Test // DATAES-247
+	@DisplayName("should set op_type CREATE if specified")
+	void shouldSetOpTypeCreateIfSpecified() {
+
+		IndexQuery indexQuery = new IndexQueryBuilder().withOpType(IndexQuery.OpType.CREATE).withId("42")
+				.withObject(Person.builder().id("42").lastName("Smith")).build();
+
+		IndexRequest indexRequest = requestFactory.indexRequest(indexQuery, IndexCoordinates.of("optype"));
+
+		assertThat(indexRequest.opType()).isEqualTo(DocWriteRequest.OpType.CREATE);
+	}
+
+	@Test // DATAES-247
+	@DisplayName("should set op_type INDEX if specified")
+	void shouldSetOpTypeIndexIfSpecified() {
+
+		IndexQuery indexQuery = new IndexQueryBuilder().withOpType(IndexQuery.OpType.INDEX).withId("42")
+				.withObject(Person.builder().id("42").lastName("Smith")).build();
+
+		IndexRequest indexRequest = requestFactory.indexRequest(indexQuery, IndexCoordinates.of("optype"));
+
+		assertThat(indexRequest.opType()).isEqualTo(DocWriteRequest.OpType.INDEX);
+	}
+
 	private String requestToString(ToXContent request) throws IOException {
 		return XContentHelper.toXContent(request, XContentType.JSON, true).utf8ToString();
 	}
 
+	@Data
+	@Builder
+	@NoArgsConstructor
+	@AllArgsConstructor
 	static class Person {
 		@Nullable @Id String id;
 		@Nullable @Field(name = "last-name") String lastName;
