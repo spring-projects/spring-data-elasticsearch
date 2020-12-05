@@ -26,7 +26,6 @@ import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
@@ -44,7 +43,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * Base implementation of {@link IndexOperations} common to Transport and Rest based Implementations of IndexOperations.
- * 
+ *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
  * @since 4.0
@@ -107,13 +106,10 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 		Document settings = null;
 
-		if (AnnotatedElementUtils.hasAnnotation(clazz, Setting.class)) {
-			AnnotationAttributes attributes = AnnotatedElementUtils.getMergedAnnotationAttributes(clazz, Setting.class);
+		Setting setting = AnnotatedElementUtils.findMergedAnnotation(clazz, Setting.class);
 
-			if (attributes != null) {
-				String settingPath = attributes.getString("settingPath");
-				settings = loadSettings(settingPath);
-			}
+		if (setting != null) {
+			settings = loadSettings(setting.settingPath());
 		}
 
 		if (settings == null) {
@@ -230,21 +226,18 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	protected Document buildMapping(Class<?> clazz) {
 
 		// load mapping specified in Mapping annotation if present
-		if (AnnotatedElementUtils.hasAnnotation(clazz, Mapping.class)) {
-			AnnotationAttributes attributes = AnnotatedElementUtils.getMergedAnnotationAttributes(clazz, Mapping.class);
+		Mapping mappingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Mapping.class);
+		if (mappingAnnotation != null) {
+			String mappingPath = mappingAnnotation.mappingPath();
 
-			if (attributes != null) {
-				String mappingPath = attributes.getString("mappingPath");
+			if (StringUtils.hasText(mappingPath)) {
+				String mappings = ResourceUtil.readFileFromClasspath(mappingPath);
 
-				if (StringUtils.hasText(mappingPath)) {
-					String mappings = ResourceUtil.readFileFromClasspath(mappingPath);
-
-					if (StringUtils.hasText(mappings)) {
-						return Document.parse(mappings);
-					}
-				} else {
-					LOGGER.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
+				if (StringUtils.hasText(mappings)) {
+					return Document.parse(mappings);
 				}
+			} else {
+				LOGGER.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
 			}
 		}
 

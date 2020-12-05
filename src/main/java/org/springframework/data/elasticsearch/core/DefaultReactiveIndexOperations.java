@@ -159,14 +159,11 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Document> createMapping(Class<?> clazz) {
 
-		if (AnnotatedElementUtils.hasAnnotation(clazz, Mapping.class)) {
-			AnnotationAttributes attributes = AnnotatedElementUtils.getMergedAnnotationAttributes(clazz, Mapping.class);
+        Mapping mappingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Mapping.class);
 
-			if (attributes != null) {
-				String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
-				return loadDocument(mappingPath, "@Mapping");
-			}
-		}
+        if (mappingAnnotation != null) {
+            return loadDocument(mappingAnnotation.mappingPath(), "@Mapping");
+        }
 
 		String mapping = new MappingBuilder(converter).buildPropertyMapping(clazz);
 		return Mono.just(Document.parse(mapping));
@@ -204,14 +201,11 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Document> createSettings(Class<?> clazz) {
 
-		if (AnnotatedElementUtils.hasAnnotation(clazz, Setting.class)) {
-			AnnotationAttributes attributes = AnnotatedElementUtils.getMergedAnnotationAttributes(clazz, Setting.class);
+        Setting setting = AnnotatedElementUtils.findMergedAnnotation(clazz, Setting.class);
 
-			if (attributes != null) {
-				String settingPath = attributes.getString("settingPath");
-				return loadDocument(settingPath, "@Setting");
-			}
-		}
+        if (setting != null) {
+            return loadDocument(setting.settingPath(), "@Setting");
+        }
 
 		return Mono.just(getRequiredPersistentEntity(clazz).getDefaultSettings());
 	}
