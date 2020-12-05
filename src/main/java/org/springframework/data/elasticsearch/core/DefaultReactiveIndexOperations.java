@@ -37,6 +37,8 @@ import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
@@ -157,9 +159,13 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Document> createMapping(Class<?> clazz) {
 
-		if (clazz.isAnnotationPresent(Mapping.class)) {
-			String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
-			return loadDocument(mappingPath, "@Mapping");
+		if (AnnotatedElementUtils.hasAnnotation(clazz, Mapping.class)) {
+			AnnotationAttributes attributes = AnnotatedElementUtils.getMergedAnnotationAttributes(clazz, Mapping.class);
+
+			if (attributes != null) {
+				String mappingPath = clazz.getAnnotation(Mapping.class).mappingPath();
+				return loadDocument(mappingPath, "@Mapping");
+			}
 		}
 
 		String mapping = new MappingBuilder(converter).buildPropertyMapping(clazz);
@@ -198,10 +204,13 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Document> createSettings(Class<?> clazz) {
 
-		if (clazz.isAnnotationPresent(Setting.class)) {
-			String settingPath = clazz.getAnnotation(Setting.class).settingPath();
+		if (AnnotatedElementUtils.hasAnnotation(clazz, Setting.class)) {
+			AnnotationAttributes attributes = AnnotatedElementUtils.getMergedAnnotationAttributes(clazz, Setting.class);
 
-			return loadDocument(settingPath, "@Setting");
+			if (attributes != null) {
+				String settingPath = attributes.getString("settingPath");
+				return loadDocument(settingPath, "@Setting");
+			}
 		}
 
 		return Mono.just(getRequiredPersistentEntity(clazz).getDefaultSettings());

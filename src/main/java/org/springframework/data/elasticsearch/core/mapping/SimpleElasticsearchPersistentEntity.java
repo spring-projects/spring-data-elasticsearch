@@ -23,6 +23,7 @@ import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.index.VersionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -87,9 +88,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		super(typeInformation);
 
 		Class<T> clazz = typeInformation.getType();
-		if (clazz.isAnnotationPresent(org.springframework.data.elasticsearch.annotations.Document.class)) {
-			org.springframework.data.elasticsearch.annotations.Document document = clazz
-					.getAnnotation(org.springframework.data.elasticsearch.annotations.Document.class);
+		org.springframework.data.elasticsearch.annotations.Document document = AnnotatedElementUtils
+				.findMergedAnnotation(clazz, org.springframework.data.elasticsearch.annotations.Document.class);
+
+		if (document != null) {
+
 			Assert.hasText(document.indexName(),
 					" Unknown indexName. Make sure the indexName is defined. e.g @Document(indexName=\"foo\")");
 			this.indexName = document.indexName();
@@ -101,8 +104,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.versionType = document.versionType();
 			this.createIndexAndMapping = document.createIndex();
 		}
-		if (clazz.isAnnotationPresent(Setting.class)) {
-			this.settingPath = typeInformation.getType().getAnnotation(Setting.class).settingPath();
+
+		Setting setting = AnnotatedElementUtils.getMergedAnnotation(clazz, Setting.class);
+
+		if (setting != null) {
+			this.settingPath = setting.settingPath();
 		}
 	}
 

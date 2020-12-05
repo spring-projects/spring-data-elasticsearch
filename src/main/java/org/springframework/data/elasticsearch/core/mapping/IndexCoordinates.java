@@ -52,6 +52,25 @@ public class IndexCoordinates {
 		return Arrays.copyOf(indexNames, indexNames.length);
 	}
 
+	/**
+	 * @since 4.2
+	 */
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		IndexCoordinates that = (IndexCoordinates) o;
+		return Arrays.equals(indexNames, that.indexNames);
+	}
+
+	/**
+	 * @since 4.2
+	 */
+	@Override
+	public int hashCode() {
+		return Arrays.hashCode(indexNames);
+	}
+
 	@Override
 	public String toString() {
 		return "IndexCoordinates{" + "indexNames=" + Arrays.toString(indexNames) + '}';
