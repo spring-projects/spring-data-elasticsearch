@@ -67,6 +67,7 @@ public class NativeSearchQueryBuilder {
 	@Nullable private IndicesOptions indicesOptions;
 	@Nullable private String preference;
 	@Nullable private Integer maxResults;
+	@Nullable private Boolean trackTotalHits;
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -173,6 +174,14 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	/**
+	 * @since 4.2
+	 */
+	public NativeSearchQueryBuilder withTrackTotalHits(Boolean trackTotalHits) {
+		this.trackTotalHits = trackTotalHits;
+		return this;
+	}
+
 	public NativeSearchQuery build() {
 
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders,
@@ -232,6 +241,8 @@ public class NativeSearchQueryBuilder {
 		if (maxResults != null) {
 			nativeSearchQuery.setMaxResults(maxResults);
 		}
+
+		nativeSearchQuery.setTrackTotalHits(trackTotalHits);
 
 		return nativeSearchQuery;
 	}
