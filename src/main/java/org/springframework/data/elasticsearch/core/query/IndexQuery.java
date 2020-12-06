@@ -36,6 +36,7 @@ public class IndexQuery {
 	@Nullable private Long seqNo;
 	@Nullable private Long primaryTerm;
 	@Nullable private String routing;
+	@Nullable private OpType opType;
 
 	@Nullable
 	public String getId() {
@@ -117,5 +118,29 @@ public class IndexQuery {
 
 	public void setRouting(@Nullable String routing) {
 		this.routing = routing;
+	}
+
+	/**
+	 * @since 4.2
+	 */
+	@Nullable
+	public OpType getOpType() {
+		return opType;
+	}
+
+	/**
+	 * @since 4.2
+	 */
+	public void setOpType(OpType opType) {
+		this.opType = opType;
+	}
+
+	/**
+	 * OpType for the index operation.
+	 * 
+	 * @since 4.2
+	 */
+	public enum OpType {
+		INDEX, CREATE
 	}
 }

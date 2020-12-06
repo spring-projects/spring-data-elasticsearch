@@ -36,6 +36,7 @@ public class IndexQueryBuilder {
 	@Nullable private Long seqNo;
 	@Nullable private Long primaryTerm;
 	@Nullable private String routing;
+	@Nullable private IndexQuery.OpType opType;
 
 	public IndexQueryBuilder withId(String id) {
 		this.id = id;
@@ -74,6 +75,14 @@ public class IndexQueryBuilder {
 		return this;
 	}
 
+	/**
+	 * @since 4.2
+	 */
+	public IndexQueryBuilder withOpType(IndexQuery.OpType opType) {
+		this.opType = opType;
+		return this;
+	}
+
 	public IndexQuery build() {
 		IndexQuery indexQuery = new IndexQuery();
 		indexQuery.setId(id);
@@ -84,6 +93,7 @@ public class IndexQueryBuilder {
 		indexQuery.setSeqNo(seqNo);
 		indexQuery.setPrimaryTerm(primaryTerm);
 		indexQuery.setRouting(routing);
+		indexQuery.setOpType(opType);
 		return indexQuery;
 	}
 }

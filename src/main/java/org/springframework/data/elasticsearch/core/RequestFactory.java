@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
@@ -919,6 +920,16 @@ class RequestFactory {
 
 		if (query.getRouting() != null) {
 			indexRequest.routing(query.getRouting());
+		}
+
+		if (query.getOpType() != null) {
+			switch (query.getOpType()) {
+				case INDEX:
+					indexRequest.opType(DocWriteRequest.OpType.INDEX);
+					break;
+				case CREATE:
+					indexRequest.opType(DocWriteRequest.OpType.CREATE);
+			}
 		}
 
 		return indexRequest;
