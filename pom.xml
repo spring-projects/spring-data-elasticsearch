@@ -367,6 +367,26 @@
 				</executions>
 			</plugin>
 			<plugin>
+				<groupId>org.pitest</groupId>
+				<artifactId>pitest-maven</artifactId>
+				<version>1.5.2</version>
+				<dependencies>
+					<dependency>
+						<groupId>org.pitest</groupId>
+						<artifactId>pitest-junit5-plugin</artifactId>
+						<version>0.12</version>
+					</dependency>
+				</dependencies>
+				<configuration>
+					<excludedGroups>integration-test</excludedGroups>
+					<targetClasses>
+						<param>org.springframework.data.elasticsearch.core.geo.*</param>
+					</targetClasses>
+					<excludedMethods>toString</excludedMethods>
+				</configuration>
+			</plugin>
+
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 			</plugin>

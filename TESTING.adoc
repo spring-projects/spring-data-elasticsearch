@@ -1,0 +1,41 @@
+= Testing
+
+== Unit tests
+
+Unit tests in the project are run with
+
+----
+./mvnw test
+----
+
+== Integration tests
+
+Integration tests are executed when
+----
+./mvnw verify
+----
+is run. There must be _docker_ running, as the integration tests use docker to start an Elasticsearch server.
+
+Integration tests are tests that have the Junit5 Tag `@Tag("integration-test")` on the test class. Normally this should not be set explicitly, but the annotation `@SpringIntegrationTest` should be used. This not only marks the test as integration test, but integrates an automatic setup of an Elasticsearch Testcontainer and integrate this with Spring, so
+that the required Beans can be automatically injected. Check _src/test/java/org/springframework/data/elasticsearch/JUnit5SampleRestClientBasedTests.java_ as a reference setup
+
+== Mutation testing
+
+The pom includes a plugin dependency to run mutation tests using [pitest](https://pitest.org/). These tests must be explicitly configured and run, they are not included in the normal build steps. Before pitest can run, a normal `./mvnw test` must be executed. The configuration excludes integration tests, only unit tests are considered.
+
+
+pitest can be run directly from the commandline
+----
+./mvnw org.pitest:pitest-maven:mutationCoverage
+----
+This will output an html report to _target/pit-reports/YYYYMMDDHHMI_.
+
+To speed-up repeated analysis of the same codebase set the withHistory parameter to true.
+----
+./mvnw -DwithHistory org.pitest:pitest-maven:mutationCoverage
+----
+
+The classes to test are defined either in the pom.xml or can be set on the commandline:
+----
+./mvnw -DwithHistory org.pitest:pitest-maven:mutationCoverage -DtargetClasses="org.springframework.data.elasticsearch.support.*"
+----
