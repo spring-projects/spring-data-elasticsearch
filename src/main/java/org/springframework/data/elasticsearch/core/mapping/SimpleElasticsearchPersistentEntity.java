@@ -79,7 +79,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private boolean createIndexAndMapping;
 	private final Map<String, ElasticsearchPersistentProperty> fieldNamePropertyCache = new ConcurrentHashMap<>();
 
-	private EvaluationContextProvider evaluationContextProvider = EvaluationContextProvider.DEFAULT;;
 	private final ConcurrentHashMap<String, Expression> indexNameExpressions = new ConcurrentHashMap<>();
 	private final Lazy<EvaluationContext> indexNameEvaluationContext = Lazy.of(this::getIndexNameEvaluationContext);
 
@@ -321,13 +320,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	// region SpEL handling
-
-	@Override
-	public void setEvaluationContextProvider(EvaluationContextProvider provider) {
-		super.setEvaluationContextProvider(provider);
-		this.evaluationContextProvider = provider;
-	}
-
 	/**
 	 * resolves all the names in the IndexCoordinates object. If a name cannot be resolved, the original name is returned.
 	 *
@@ -390,7 +382,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		ExpressionDependencies expressionDependencies = expression != null ? ExpressionDependencies.discover(expression)
 				: ExpressionDependencies.none();
 
-		return evaluationContextProvider.getEvaluationContext(null, expressionDependencies);
+		return getEvaluationContext(null, expressionDependencies);
 	}
 
 	// endregion
