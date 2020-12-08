@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.config;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.springframework.context.annotation.Bean;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
@@ -114,6 +115,7 @@ public class ElasticsearchConfigurationSupportUnitTests {
 	static class ReactiveRestConfig extends AbstractReactiveElasticsearchConfiguration {
 
 		@Override
+		@Bean
 		public ReactiveElasticsearchClient reactiveElasticsearchClient() {
 			ReactiveElasticsearchClient client = mock(ReactiveElasticsearchClient.class);
 			when(client.info()).thenReturn(Mono

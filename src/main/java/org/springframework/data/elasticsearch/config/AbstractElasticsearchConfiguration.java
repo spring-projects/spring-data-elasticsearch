@@ -31,20 +31,25 @@ public abstract class AbstractElasticsearchConfiguration extends ElasticsearchCo
 
 	/**
 	 * Return the {@link RestHighLevelClient} instance used to connect to the cluster. <br />
-	 * Annotate with {@link Bean} in case you want to expose a {@link RestHighLevelClient} instance to the
-	 * {@link org.springframework.context.ApplicationContext}.
 	 *
 	 * @return never {@literal null}.
 	 */
+	@Bean
 	public abstract RestHighLevelClient elasticsearchClient();
 
-	/**
-	 * Creates {@link ElasticsearchOperations}.
-	 *
-	 * @return never {@literal null}.
-	 */
+    /**
+     * Creates {@link ElasticsearchOperations}. <br/>
+     * NOTE: in version 4.1.2 the second parameter was added, previously this implementation called
+     * {@link #elasticsearchClient()} directly. This is not possible anymore, as the base configuration classes don not
+     * use proxied bean methods anymore.
+     *
+     * @param elasticsearchConverter the {@link ElasticsearchConverter} to use*
+     * @param elasticsearchClient the {@link RestHighLevelClient} to use
+     * @return never {@literal null}.
+     */
 	@Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
-	public ElasticsearchOperations elasticsearchOperations(ElasticsearchConverter elasticsearchConverter) {
-		return new ElasticsearchRestTemplate(elasticsearchClient(), elasticsearchConverter);
+	public ElasticsearchOperations elasticsearchOperations(ElasticsearchConverter elasticsearchConverter,
+			RestHighLevelClient elasticsearchClient) {
+		return new ElasticsearchRestTemplate(elasticsearchClient, elasticsearchConverter);
 	}
 }

@@ -40,15 +40,16 @@ import org.springframework.util.StringUtils;
  * @author Peter-Josef Meisch
  * @since 3.2
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class ElasticsearchConfigurationSupport {
 
 	@Bean
 	public ElasticsearchConverter elasticsearchEntityMapper(
-			SimpleElasticsearchMappingContext elasticsearchMappingContext) {
+			SimpleElasticsearchMappingContext elasticsearchMappingContext, ElasticsearchCustomConversions elasticsearchCustomConversions) {
+
 		MappingElasticsearchConverter elasticsearchConverter = new MappingElasticsearchConverter(
 				elasticsearchMappingContext);
-		elasticsearchConverter.setConversions(elasticsearchCustomConversions());
+		elasticsearchConverter.setConversions(elasticsearchCustomConversions);
 		return elasticsearchConverter;
 	}
 
@@ -60,11 +61,11 @@ public class ElasticsearchConfigurationSupport {
 	 * @return never {@literal null}.
 	 */
 	@Bean
-	public SimpleElasticsearchMappingContext elasticsearchMappingContext() {
+	public SimpleElasticsearchMappingContext elasticsearchMappingContext(ElasticsearchCustomConversions elasticsearchCustomConversions) {
 
 		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
 		mappingContext.setInitialEntitySet(getInitialEntitySet());
-		mappingContext.setSimpleTypeHolder(elasticsearchCustomConversions().getSimpleTypeHolder());
+		mappingContext.setSimpleTypeHolder(elasticsearchCustomConversions.getSimpleTypeHolder());
 
 		return mappingContext;
 	}
