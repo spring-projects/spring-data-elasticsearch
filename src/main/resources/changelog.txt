@@ -1,6 +1,35 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.2.0-M1 (2020-12-09)
+----------------------------------------
+* DATAES-995 - Code Cleanup after DATACMNS-1838.
+* DATAES-994 - Add setup for mutation testing.
+* DATAES-991 - Wrong value for TermVector(with_positions_offets_payloads).
+* DATAES-990 - Index creation fails with Authentication object cannot be null on startup.
+* DATAES-989 - Improve deprecation warning for id properties without annotation.
+* DATAES-988 - Allow specifying max results in NativeSearchQueryBuilder.
+* DATAES-987 - IndexOperations getMapping fail when using index alias.
+* DATAES-986 - Fix Javadoc.
+* DATAES-985 - Add builder method for track_total_hits to NativeSearchQueryBuilder.
+* DATAES-983 - Test dependency hoverfly-java-junit5 leaks into compile scope.
+* DATAES-978 - Accept DateFormat.none for a date property to enable custom Converters.
+* DATAES-976 - Implement CrudRepository.delete(Iterable<ID> ids).
+* DATAES-975 - Upgrade to Elasticsearch 7.10.
+* DATAES-974 - remove usage of deprecated WebClient exchange() method.
+* DATAES-972 - BeforeConvertCallback should be called before index query is built.
+* DATAES-971 - Fix tests for using a proxy with reactive client.
+* DATAES-970 - Take Testcontainers version from the Spring Data Build pom.
+* DATAES-969 - Use ResultProcessor in ElasticsearchPartQuery to build PartTree.
+* DATAES-968 - Enable Maven caching for Jenkins jobs.
+* DATAES-966 - Release 4.2 M1 (2021.0.0).
+* DATAES-882 - HLRC Configuration - add ability to set max connections for the underlying HttpClient.
+* DATAES-588 - Add support for custom callbacks in High Level/Low Level REST Client builder.
+* DATAES-543 - Adjust configuration support classes so they do not require proxying.
+* DATAES-362 - Add support for composable meta annotations.
+* DATAES-247 - Support OpType in IndexQuery.
+
+
 Changes in version 4.0.6.RELEASE (2020-12-09)
 ---------------------------------------------
 * DATAES-991 - Wrong value for TermVector(with_positions_offets_payloads).
@@ -1345,6 +1374,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
