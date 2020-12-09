@@ -1,6 +1,14 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.6.RELEASE (2020-12-09)
+---------------------------------------------
+* DATAES-991 - Wrong value for TermVector(with_positions_offets_payloads).
+* DATAES-969 - Use ResultProcessor in ElasticsearchPartQuery to build PartTree.
+* DATAES-968 - Enable Maven caching for Jenkins jobs.
+* DATAES-964 - Release 4.0.6 (Neumann SR6).
+
+
 Changes in version 3.2.12.RELEASE (2020-12-09)
 ----------------------------------------------
 * DATAES-969 - Use ResultProcessor in ElasticsearchPartQuery to build PartTree.
@@ -1356,6 +1364,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
