@@ -1,6 +1,18 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.1.2 (2020-12-09)
+-------------------------------------
+* DATAES-991 - Wrong value for TermVector(with_positions_offets_payloads).
+* DATAES-990 - Index creation fails with Authentication object cannot be null on startup.
+* DATAES-987 - IndexOperations getMapping fail when using index alias.
+* DATAES-978 - Accept DateFormat.none for a date property to enable custom Converters.
+* DATAES-977 - Fix versions in reference documentation for 4.1.
+* DATAES-973 - Release 4.1.2 (2020.0.2).
+* DATAES-972 - BeforeConvertCallback should be called before index query is built.
+* DATAES-543 - Adjust configuration support classes so they do not require proxying.
+
+
 Changes in version 4.2.0-M1 (2020-12-09)
 ----------------------------------------
 * DATAES-995 - Code Cleanup after DATACMNS-1838.
@@ -1393,6 +1405,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
