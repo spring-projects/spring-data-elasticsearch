@@ -257,7 +257,15 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		IndexOperations indexOps = operations.indexOps(TermVectorFieldEntity.class);
 		indexOps.create();
 		indexOps.putMapping();
+	}
 
+	@Test // DATAES-946
+	@DisplayName("should write wildcard field mapping")
+	void shouldWriteWildcardFieldMapping() {
+
+		IndexOperations indexOps = operations.indexOps(WildcardEntity.class);
+		indexOps.create();
+		indexOps.putMapping();
 	}
 
 	/**
@@ -646,5 +654,12 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 				termVector = TermVector.with_positions_payloads) private String with_positions_payloads;
 		@Field(type = FieldType.Text,
 				termVector = TermVector.with_positions_offsets_payloads) private String with_positions_offsets_payloads;
+	}
+
+	@Data
+	@Document(indexName = "wildcard-test")
+	static class WildcardEntity {
+		@Nullable @Field(type = Wildcard) private String wildcardWithoutParams;
+		@Nullable @Field(type = Wildcard, nullValue = "WILD", ignoreAbove = 42) private String wildcardWithParams;
 	}
 }

@@ -55,5 +55,7 @@ public enum FieldType {
 	/** @since 4.1 */
 	Rank_Feature, //
 	/** @since 4.1 */
-	Rank_Features //
+	Rank_Features, //
+	/** since 4.2 */
+	Wildcard //
 }
