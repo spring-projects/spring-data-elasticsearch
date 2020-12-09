@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.12.RELEASE (2020-12-09)
+----------------------------------------------
+* DATAES-969 - Use ResultProcessor in ElasticsearchPartQuery to build PartTree.
+* DATAES-963 - Release 3.2.12 (Moore SR12).
+
+
 Changes in version 4.1.1 (2020-11-11)
 -------------------------------------
 * DATAES-969 - Use ResultProcessor in ElasticsearchPartQuery to build PartTree.
@@ -1331,6 +1337,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
