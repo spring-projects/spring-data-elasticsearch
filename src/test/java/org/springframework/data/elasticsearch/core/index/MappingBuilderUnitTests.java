@@ -305,7 +305,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
-	@Test // DATAES-621, DATAES-943
+	@Test // DATAES-621, DATAES-943, DATAES-946
 	public void shouldSetFieldMappingProperties() throws JSONException {
 		String expected = "{\n" + //
 				"        \"properties\": {\n" + //
@@ -399,6 +399,14 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				"            },\n" + //
 				"            \"eagerGlobalOrdinalsFalse\": {\n" + //
 				"                \"type\": \"text\"\n" + //
+				"            },\n" + //
+				"            \"wildcardWithoutParams\": {\n" + //
+				"                \"type\": \"wildcard\"\n" + //
+				"            },\n" + //
+				"            \"wildcardWithParams\": {\n" + //
+				"                \"type\": \"wildcard\",\n" + //
+				"                \"null_value\": \"WILD\",\n" + //
+				"                \"ignore_above\": 42\n" + //
 				"            }\n" + //
 				"        }\n" + //
 				"}\n"; //
@@ -891,6 +899,8 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable @Field(type = Object, enabled = false) private String disabledObject;
 		@Nullable @Field(type = Text, eagerGlobalOrdinals = true) private String eagerGlobalOrdinalsTrue;
 		@Nullable @Field(type = Text, eagerGlobalOrdinals = false) private String eagerGlobalOrdinalsFalse;
+		@Nullable @Field(type = Wildcard) private String wildcardWithoutParams;
+		@Nullable @Field(type = Wildcard, nullValue = "WILD", ignoreAbove = 42) private String wildcardWithParams;
 	}
 
 	@Document(indexName = "test-index-configure-dynamic-mapping")
@@ -945,12 +955,10 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 	@Data
 	static class RankFeatureEntity {
+
 		@Id private String id;
-
 		@Field(type = FieldType.Rank_Feature) private Integer pageRank;
-
 		@Field(type = FieldType.Rank_Feature, positiveScoreImpact = false) private Integer urlLength;
-
 		@Field(type = FieldType.Rank_Features) private Map<String, Integer> topics;
 	}
 }
