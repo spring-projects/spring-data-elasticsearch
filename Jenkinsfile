@@ -23,6 +23,11 @@ pipeline {
 				label 'data'
 			}
 			options { timeout(time: 30, unit: 'MINUTES') }
+
+			environment {
+				DOCKER_HUB = credentials('hub.docker.com-springbuildmaster')
+			}
+
 			steps {
 				script {
 					docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
@@ -49,6 +54,11 @@ pipeline {
 						label 'data'
 					}
 					options { timeout(time: 30, unit: 'MINUTES') }
+
+					environment {
+						DOCKER_HUB = credentials('hub.docker.com-springbuildmaster')
+					}
+
 					steps {
 						script {
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
@@ -67,6 +77,11 @@ pipeline {
 						label 'data'
 					}
 					options { timeout(time: 30, unit: 'MINUTES') }
+
+					environment {
+						DOCKER_HUB = credentials('hub.docker.com-springbuildmaster')
+					}
+
 					steps {
 						script {
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
