@@ -9,7 +9,7 @@ image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2
 Since this pipeline is purely Docker-based, it's easy to:
 
 * Debug what went wrong on your local machine.
-* Test out a a tweak to your `test.sh` script before sending it out.
+* Test out a a tweak to your `verify.sh` script before sending it out.
 * Experiment against a new image before submitting your pull request.
 
 All of these use cases are great reasons to essentially run what the CI server does on your local machine.
