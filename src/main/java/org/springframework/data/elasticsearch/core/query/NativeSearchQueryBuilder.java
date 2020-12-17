@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.collapse.CollapseBuilder;
@@ -68,6 +69,7 @@ public class NativeSearchQueryBuilder {
 	@Nullable private String preference;
 	@Nullable private Integer maxResults;
 	@Nullable private Boolean trackTotalHits;
+	@Nullable private TimeValue timeout;
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -181,6 +183,11 @@ public class NativeSearchQueryBuilder {
 		this.trackTotalHits = trackTotalHits;
 		return this;
 	}
+	
+	public NativeSearchQueryBuilder withTimeout(TimeValue timeout) {   
+		this.timeout = timeout;
+		return this;
+	}
 
 	public NativeSearchQuery build() {
 
@@ -243,6 +250,10 @@ public class NativeSearchQueryBuilder {
 		}
 
 		nativeSearchQuery.setTrackTotalHits(trackTotalHits);
+		
+		if (timeout != null) {
+			nativeSearchQuery.setTimeout(timeout);
+		}
 
 		return nativeSearchQuery;
 	}

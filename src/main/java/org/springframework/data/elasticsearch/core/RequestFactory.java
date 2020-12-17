@@ -1172,6 +1172,11 @@ class RequestFactory {
 		if (StringUtils.hasLength(query.getRoute())) {
 			request.routing(query.getRoute());
 		}
+		
+		TimeValue timeout = query.getTimeout();
+		if (timeout !=null) {
+			sourceBuilder.timeout(timeout);
+		}
 
 		request.source(sourceBuilder);
 		return request;
@@ -1246,6 +1251,11 @@ class RequestFactory {
 
 		if (StringUtils.hasLength(query.getRoute())) {
 			searchRequestBuilder.setRouting(query.getRoute());
+		}
+		
+		TimeValue timeout = query.getTimeout();
+		if (timeout !=null) {
+			searchRequestBuilder.setTimeout(timeout);
 		}
 
 		return searchRequestBuilder;
