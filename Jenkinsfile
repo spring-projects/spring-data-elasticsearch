@@ -85,7 +85,7 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								docker.image('adoptopenjdk/openjdk15:latest').inside('-u root -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -v $HOME:/tmp/jenkins-home') {
+								docker.image('adoptopenjdk/openjdk12:latest').inside('-u root -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -v $HOME:/tmp/jenkins-home') {
 									sh "docker login --username ${DOCKER_HUB_USR} --password ${DOCKER_HUB_PSW}"
 									sh 'PROFILE=java11 ci/verify.sh'
 									sh "ci/clean.sh"
