@@ -39,6 +39,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -481,6 +482,29 @@ class RequestFactoryTests {
 
 		assertThat(indexRequest.opType()).isEqualTo(DocWriteRequest.OpType.INDEX);
 	}
+	
+	@Test
+	@DisplayName("should set timeout to request")
+	void shouldSetTimeoutToRequest() {
+		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withTimeout(TimeValue.timeValueSeconds(1)).build();
+
+		SearchRequest searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
+
+		assertThat(searchRequest.source().timeout()).isEqualTo(TimeValue.timeValueSeconds(1));
+	}
+
+	@Test
+	@DisplayName("should set timeout to requestbuilder")
+	void shouldSetTimeoutToRequestBuilder() {
+		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
+		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withTimeout(TimeValue.timeValueSeconds(1)).build();
+
+		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, Person.class,
+				IndexCoordinates.of("persons"));
+
+		assertThat(searchRequestBuilder.request().source().timeout()).isEqualTo(TimeValue.timeValueSeconds(1));
+	}
+
 
 	private String requestToString(ToXContent request) throws IOException {
 		return XContentHelper.toXContent(request, XContentType.JSON, true).utf8ToString();

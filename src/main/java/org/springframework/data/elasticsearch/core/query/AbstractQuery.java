@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.common.unit.TimeValue;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
@@ -59,6 +60,7 @@ abstract class AbstractQuery implements Query {
 	@Nullable private Boolean trackTotalHits;
 	@Nullable private Integer trackTotalHitsUpTo;
 	@Nullable private Duration scrollTime;
+	@Nullable private TimeValue timeout;
 
 	@Override
 	@Nullable
@@ -251,5 +253,15 @@ abstract class AbstractQuery implements Query {
 	@Override
 	public void setScrollTime(@Nullable Duration scrollTime) {
 		this.scrollTime = scrollTime;
+	}
+	
+	@Nullable
+	@Override
+	public TimeValue getTimeout() {
+		return timeout;
+	}
+
+	public void setTimeout(TimeValue timeout) {
+		this.timeout = timeout;
 	}
 }

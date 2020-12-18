@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -275,4 +276,12 @@ public interface Query {
 	default boolean hasScrollTime() {
 		return getScrollTime() != null;
 	}
+	
+	/**
+	 * Get timeout
+	 *
+	 * @return null if not set
+	 */
+	@Nullable
+	TimeValue getTimeout();
 }
