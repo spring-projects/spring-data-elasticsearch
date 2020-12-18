@@ -482,29 +482,30 @@ class RequestFactoryTests {
 
 		assertThat(indexRequest.opType()).isEqualTo(DocWriteRequest.OpType.INDEX);
 	}
-	
-	@Test
+
+	@Test // DATAES-1003
 	@DisplayName("should set timeout to request")
 	void shouldSetTimeoutToRequest() {
-		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withTimeout(TimeValue.timeValueSeconds(1)).build();
+		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withTimeout(TimeValue.timeValueSeconds(1))
+				.build();
 
 		SearchRequest searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
 
 		assertThat(searchRequest.source().timeout()).isEqualTo(TimeValue.timeValueSeconds(1));
 	}
 
-	@Test
+	@Test // DATAES-1003
 	@DisplayName("should set timeout to requestbuilder")
 	void shouldSetTimeoutToRequestBuilder() {
 		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
-		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withTimeout(TimeValue.timeValueSeconds(1)).build();
+		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withTimeout(TimeValue.timeValueSeconds(1))
+				.build();
 
 		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, Person.class,
 				IndexCoordinates.of("persons"));
 
 		assertThat(searchRequestBuilder.request().source().timeout()).isEqualTo(TimeValue.timeValueSeconds(1));
 	}
-
 
 	private String requestToString(ToXContent request) throws IOException {
 		return XContentHelper.toXContent(request, XContentType.JSON, true).utf8ToString();

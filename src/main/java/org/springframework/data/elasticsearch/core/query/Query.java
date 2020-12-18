@@ -198,7 +198,7 @@ public interface Query {
 
 	/**
 	 * Sets the {@link HighlightQuery}.
-	 * 
+	 *
 	 * @param highlightQuery the query to set
 	 * @since 4.0
 	 */
@@ -216,7 +216,7 @@ public interface Query {
 	 * Sets the flag whether to set the Track_total_hits parameter on queries {@see <a href=
 	 * "https://www.elastic.co/guide/en/elasticsearch/reference/7.0/search-request-track-total-hits.html">Elasticseacrh
 	 * documentation</>}
-	 * 
+	 *
 	 * @param trackTotalHits the value to set.
 	 * @since 4.0
 	 */
@@ -235,7 +235,7 @@ public interface Query {
 
 	/**
 	 * Sets the maximum value up to which total hits are tracked. Only relevant if #getTrackTotalHits is {@literal null}
-	 * 
+	 *
 	 * @param trackTotalHitsUpTo max limit for trackTotalHits
 	 * @since 4.1
 	 */
@@ -253,7 +253,7 @@ public interface Query {
 	/**
 	 * For queries that are used in delete request, these are internally handled by Elasticsearch as scroll/bulk delete
 	 * queries. Must not return {@literal null} when {@link #hasScrollTime()} returns {@literal true}.
-	 * 
+	 *
 	 * @return the scrolltime settings
 	 * @since 4.0
 	 */
@@ -263,7 +263,7 @@ public interface Query {
 	/**
 	 * For queries that are used in delete request, these are internally handled by Elasticsearch as scroll/bulk delete
 	 * queries.
-	 * 
+	 *
 	 * @param scrollTime the scrolltime settings
 	 * @since 4.0
 	 */
@@ -276,11 +276,12 @@ public interface Query {
 	default boolean hasScrollTime() {
 		return getScrollTime() != null;
 	}
-	
+
 	/**
-	 * Get timeout
+	 * Get the query timeout.
 	 *
 	 * @return null if not set
+	 * @since 4.2
 	 */
 	@Nullable
 	TimeValue getTimeout();

@@ -254,14 +254,20 @@ abstract class AbstractQuery implements Query {
 	public void setScrollTime(@Nullable Duration scrollTime) {
 		this.scrollTime = scrollTime;
 	}
-	
+
 	@Nullable
 	@Override
 	public TimeValue getTimeout() {
 		return timeout;
 	}
 
-	public void setTimeout(TimeValue timeout) {
+	/**
+	 * set the query timeout
+	 *
+	 * @param timeout
+	 * @since 4.2
+	 */
+	public void setTimeout(@Nullable TimeValue timeout) {
 		this.timeout = timeout;
 	}
 }
