@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.lang.Nullable;
 
 /**
@@ -37,6 +38,9 @@ public class IndexQueryBuilder {
 	@Nullable private Long primaryTerm;
 	@Nullable private String routing;
 	@Nullable private IndexQuery.OpType opType;
+	@Nullable private RefreshPolicy refreshPolicy;
+
+	public IndexQueryBuilder() {}
 
 	public IndexQueryBuilder withId(String id) {
 		this.id = id;
@@ -84,16 +88,6 @@ public class IndexQueryBuilder {
 	}
 
 	public IndexQuery build() {
-		IndexQuery indexQuery = new IndexQuery();
-		indexQuery.setId(id);
-		indexQuery.setObject(object);
-		indexQuery.setParentId(parentId);
-		indexQuery.setSource(source);
-		indexQuery.setVersion(version);
-		indexQuery.setSeqNo(seqNo);
-		indexQuery.setPrimaryTerm(primaryTerm);
-		indexQuery.setRouting(routing);
-		indexQuery.setOpType(opType);
-		return indexQuery;
+		return new IndexQuery(id, object, version, source, parentId, seqNo, primaryTerm, routing, opType);
 	}
 }

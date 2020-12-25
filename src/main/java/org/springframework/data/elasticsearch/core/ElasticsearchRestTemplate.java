@@ -139,7 +139,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	// region DocumentOperations
 	public String doIndex(IndexQuery query, IndexCoordinates index) {
 
-		IndexRequest request = requestFactory.indexRequest(query, index);
+		IndexRequest request = prepareWriteRequest(requestFactory.indexRequest(query, index));
 		IndexResponse indexResponse = execute(client -> client.index(request, RequestOptions.DEFAULT));
 
 		// We should call this because we are not going through a mapper.
@@ -197,7 +197,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		DeleteRequest request = requestFactory.deleteRequest(elasticsearchConverter.convertId(id), routing, index);
+		DeleteRequest request = prepareWriteRequest(
+				requestFactory.deleteRequest(elasticsearchConverter.convertId(id), routing, index));
 		return execute(client -> client.delete(request, RequestOptions.DEFAULT).getId());
 	}
 
@@ -224,7 +225,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
 			IndexCoordinates index) {
-		BulkRequest bulkRequest = requestFactory.bulkRequest(queries, bulkOptions, index);
+		BulkRequest bulkRequest = prepareWriteRequest(requestFactory.bulkRequest(queries, bulkOptions, index));
 		List<IndexedObjectInformation> indexedObjectInformationList = checkForBulkOperationFailure(
 				execute(client -> client.bulk(bulkRequest, RequestOptions.DEFAULT)));
 		updateIndexedObjectsWithQueries(queries, indexedObjectInformationList);

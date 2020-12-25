@@ -27,14 +27,15 @@ import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -346,10 +347,24 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 	}
 
 	@Override
+	@Deprecated
 	public void refresh() {
 		indexOperations.refresh();
 	}
 
+	private void doRefresh() {
+		RefreshPolicy refreshPolicy = null;
+
+		if (operations instanceof AbstractElasticsearchTemplate) {
+			refreshPolicy = ((AbstractElasticsearchTemplate) operations).getRefreshPolicy();
+		}
+
+		if (refreshPolicy == null) {
+			indexOperations.refresh();
+		}
+	}
+
+	// region helper functions
 	@Nullable
 	protected ID extractIdFromBean(T entity) {
 		return entityInformation.getId(entity);
@@ -376,6 +391,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		return new NativeSearchQueryBuilder().withIds(stringIds).build();
 	}
+	// endregion
 
 	// region operations callback
 	@FunctionalInterface
@@ -392,7 +408,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 	@Nullable
 	public <R> R executeAndRefresh(OperationsCallback<R> callback) {
 		R result = callback.doWithOperations(operations);
-		refresh();
+		doRefresh();
 		return result;
 	}
 	// endregion

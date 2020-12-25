@@ -153,12 +153,9 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		SampleEntity sampleEntity = randomEntity("foo bar");
 
-		template.save(sampleEntity)//
-				.as(StepVerifier::create)//
-				.expectNextCount(1)//
-				.verifyComplete();
-
-		indexOperations.refresh();
+		template.save(sampleEntity) //
+				.then(indexOperations.refresh()) //
+				.block();
 
 		template
 				.search(new CriteriaQuery(Criteria.where("message").is(sampleEntity.getMessage())), SampleEntity.class,
@@ -842,11 +839,8 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		entity2.rate = 2;
 
 		template.saveAll(Mono.just(Arrays.asList(entity1, entity2)), IndexCoordinates.of(DEFAULT_INDEX)) //
-				.as(StepVerifier::create) //
-				.expectNext(entity1) //
-				.expectNext(entity2) //
-				.verifyComplete();
-		indexOperations.refresh();
+				.then(indexOperations.refresh()) //
+				.block();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		template.search(searchQuery, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //

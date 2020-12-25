@@ -23,6 +23,7 @@ import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
 import org.springframework.data.elasticsearch.config.AbstractReactiveElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 
 /**
  * Configuration for Spring Data Elasticsearch Integration Tests using
@@ -51,5 +52,10 @@ public class ReactiveElasticsearchRestTemplateConfiguration extends AbstractReac
 				.withConnectTimeout(Duration.ofSeconds(20)) //
 				.withSocketTimeout(Duration.ofSeconds(20)) //
 				.build());
+	}
+
+	@Override
+	protected RefreshPolicy refreshPolicy() {
+		return RefreshPolicy.IMMEDIATE;
 	}
 }

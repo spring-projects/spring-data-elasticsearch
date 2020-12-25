@@ -37,7 +37,6 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.get.GetResult;
@@ -85,6 +84,11 @@ public class ReactiveElasticsearchClientIntegrationTests {
 		@Bean
 		public ReactiveElasticsearchClient reactiveElasticsearchClient() {
 			return super.reactiveElasticsearchClient();
+		}
+
+		@Override
+		protected org.springframework.data.elasticsearch.core.RefreshPolicy refreshPolicy() {
+			return org.springframework.data.elasticsearch.core.RefreshPolicy.IMMEDIATE;
 		}
 	}
 
@@ -745,7 +749,6 @@ public class ReactiveElasticsearchClientIntegrationTests {
 		return new IndexRequest(ReactiveElasticsearchClientIntegrationTests.INDEX_I) //
 				.id(UUID.randomUUID().toString()) //
 				.source(ReactiveElasticsearchClientIntegrationTests.DOC_SOURCE) //
-				.setRefreshPolicy(RefreshPolicy.IMMEDIATE) //
 				.create(true);
 	}
 

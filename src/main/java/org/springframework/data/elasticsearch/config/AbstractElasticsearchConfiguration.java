@@ -45,6 +45,10 @@ public abstract class AbstractElasticsearchConfiguration extends ElasticsearchCo
 	@Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
 	public ElasticsearchOperations elasticsearchOperations(ElasticsearchConverter elasticsearchConverter,
 			RestHighLevelClient elasticsearchClient) {
-		return new ElasticsearchRestTemplate(elasticsearchClient, elasticsearchConverter);
+
+		ElasticsearchRestTemplate template = new ElasticsearchRestTemplate(elasticsearchClient, elasticsearchConverter);
+		template.setRefreshPolicy(refreshPolicy());
+
+		return template;
 	}
 }

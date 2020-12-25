@@ -16,10 +16,10 @@
 package org.springframework.data.elasticsearch.repository.support;
 
 import org.elasticsearch.index.query.IdsQueryBuilder;
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -259,11 +259,10 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 			refreshPolicy = ((ReactiveElasticsearchTemplate) operations).getRefreshPolicy();
 		}
 
-		if (refreshPolicy == null || refreshPolicy == RefreshPolicy.NONE) {
+		if (refreshPolicy == null) {
 			return indexOperations.refresh();
 		}
 
 		return Mono.empty();
 	}
-
 }

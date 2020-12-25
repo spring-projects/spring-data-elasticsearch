@@ -28,10 +28,12 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -44,8 +46,8 @@ import org.springframework.util.StringUtils;
 public class ElasticsearchConfigurationSupport {
 
 	@Bean
-	public ElasticsearchConverter elasticsearchEntityMapper(
-			SimpleElasticsearchMappingContext elasticsearchMappingContext, ElasticsearchCustomConversions elasticsearchCustomConversions) {
+	public ElasticsearchConverter elasticsearchEntityMapper(SimpleElasticsearchMappingContext elasticsearchMappingContext,
+			ElasticsearchCustomConversions elasticsearchCustomConversions) {
 
 		MappingElasticsearchConverter elasticsearchConverter = new MappingElasticsearchConverter(
 				elasticsearchMappingContext);
@@ -61,7 +63,8 @@ public class ElasticsearchConfigurationSupport {
 	 * @return never {@literal null}.
 	 */
 	@Bean
-	public SimpleElasticsearchMappingContext elasticsearchMappingContext(ElasticsearchCustomConversions elasticsearchCustomConversions) {
+	public SimpleElasticsearchMappingContext elasticsearchMappingContext(
+			ElasticsearchCustomConversions elasticsearchCustomConversions) {
 
 		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
 		mappingContext.setInitialEntitySet(getInitialEntitySet());
@@ -146,5 +149,15 @@ public class ElasticsearchConfigurationSupport {
 		}
 
 		return initialEntitySet;
+	}
+
+	/**
+	 * Set up the write {@link RefreshPolicy}. Default is set to null to use the cluster defaults..
+	 *
+	 * @return {@literal null} to use the server defaults.
+	 */
+	@Nullable
+	protected RefreshPolicy refreshPolicy() {
+		return null;
 	}
 }
