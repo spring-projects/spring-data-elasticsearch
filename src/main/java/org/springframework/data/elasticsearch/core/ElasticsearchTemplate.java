@@ -147,6 +147,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	public String doIndex(IndexQuery query, IndexCoordinates index) {
 
 		IndexRequestBuilder indexRequestBuilder = requestFactory.indexRequestBuilder(client, query, index);
+		indexRequestBuilder = prepareWriteRequestBuilder(indexRequestBuilder);
 		ActionFuture<IndexResponse> future = indexRequestBuilder.execute();
 		IndexResponse response;
 		try {
@@ -211,8 +212,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		DeleteRequestBuilder deleteRequestBuilder = requestFactory.deleteRequestBuilder(client,
-				elasticsearchConverter.convertId(id), routing, index);
+		DeleteRequestBuilder deleteRequestBuilder = prepareWriteRequestBuilder(
+				requestFactory.deleteRequestBuilder(client, elasticsearchConverter.convertId(id), routing, index));
 		return deleteRequestBuilder.execute().actionGet().getId();
 	}
 
@@ -242,9 +243,10 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
 			IndexCoordinates index) {
-		BulkRequestBuilder bulkRequest = requestFactory.bulkRequestBuilder(client, queries, bulkOptions, index);
+		BulkRequestBuilder bulkRequestBuilder = requestFactory.bulkRequestBuilder(client, queries, bulkOptions, index);
+		bulkRequestBuilder = prepareWriteRequestBuilder(bulkRequestBuilder);
 		final List<IndexedObjectInformation> indexedObjectInformations = checkForBulkOperationFailure(
-				bulkRequest.execute().actionGet());
+				bulkRequestBuilder.execute().actionGet());
 		updateIndexedObjectsWithQueries(queries, indexedObjectInformations);
 		return indexedObjectInformations;
 	}

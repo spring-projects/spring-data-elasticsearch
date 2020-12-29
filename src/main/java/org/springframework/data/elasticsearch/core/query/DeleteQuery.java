@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.time.Duration;
+
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.lang.Nullable;
 
@@ -24,7 +26,8 @@ import org.springframework.lang.Nullable;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
- * @deprecated since 4.0, use {@link Query} implementations and set {@link Query#setScrollTimeInMillis(Long)} and {@link Query#getMaxResults()}
+ * @deprecated since 4.0, use {@link Query} implementations and set {@link Query#setScrollTime(Duration)} and
+ *             {@link Query#getMaxResults()}
  */
 @Deprecated
 public class DeleteQuery {

@@ -27,6 +27,7 @@ import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 
 /**
@@ -83,5 +84,10 @@ public class ElasticsearchRestTemplateConfiguration extends AbstractElasticsearc
 				}
 			}
 		};
+	}
+
+	@Override
+	protected RefreshPolicy refreshPolicy() {
+		return RefreshPolicy.IMMEDIATE;
 	}
 }

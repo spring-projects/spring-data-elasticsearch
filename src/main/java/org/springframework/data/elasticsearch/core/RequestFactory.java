@@ -958,6 +958,7 @@ class RequestFactory {
 			throw new ElasticsearchException(
 					"object or source is null, failed to index the document [id: " + query.getId() + ']');
 		}
+
 		if (query.getVersion() != null) {
 			indexRequestBuilder.setVersion(query.getVersion());
 			VersionType versionType = retrieveVersionTypeFromPersistentEntity(query.getObject().getClass());
@@ -967,9 +968,11 @@ class RequestFactory {
 		if (query.getSeqNo() != null) {
 			indexRequestBuilder.setIfSeqNo(query.getSeqNo());
 		}
+
 		if (query.getPrimaryTerm() != null) {
 			indexRequestBuilder.setIfPrimaryTerm(query.getPrimaryTerm());
 		}
+
 		if (query.getRouting() != null) {
 			indexRequestBuilder.setRouting(query.getRouting());
 		}

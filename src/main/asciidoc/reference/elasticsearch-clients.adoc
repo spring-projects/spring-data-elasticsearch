@@ -22,28 +22,32 @@ public class TransportClientConfig extends ElasticsearchConfigurationSupport {
 
     @Bean
     public Client elasticsearchClient() throws UnknownHostException {
-        Settings settings = Settings.builder().put("cluster.name", "elasticsearch").build();        <1>
+        Settings settings = Settings.builder().put("cluster.name", "elasticsearch").build();        <.>
         TransportClient client = new PreBuiltTransportClient(settings);
-        client.addTransportAddress(new TransportAddress(InetAddress.getByName("127.0.0.1"), 9300)); <2>
+        client.addTransportAddress(new TransportAddress(InetAddress.getByName("127.0.0.1"), 9300)); <.>
         return client;
     }
 
     @Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
     public ElasticsearchTemplate elasticsearchTemplate() throws UnknownHostException {
-        return new ElasticsearchTemplate(elasticsearchClient());
+
+		ElasticsearchTemplate template = new ElasticsearchTemplate(elasticsearchClient, elasticsearchConverter);
+		template.setRefreshPolicy(refreshPolicy());                                                 <.>
+
+		return template;
     }
 }
 
 // ...
 
 IndexRequest request = new IndexRequest("spring-data", "elasticsearch", randomID())
- .source(someObject)
- .setRefreshPolicy(IMMEDIATE);
+ .source(someObject);
 
 IndexResponse response = client.index(request);
 ----
-<1> The `TransportClient` must be configured with the cluster name.
-<2> The host and port to connect the client to.
+<.> The `TransportClient` must be configured with the cluster name.
+<.> The host and port to connect the client to.
+<.> the RefreshPolicy must be set in the `ElasticsearchTemplate` (override `refreshPolicy()` to not use the default)
 ====
 
 [[elasticsearch.clients.rest]]
@@ -103,39 +107,29 @@ Calls are directly operated on the reactive stack, **not** wrapping async (threa
 ====
 [source,java]
 ----
-static class Config {
+@Configuration
+public class ReactiveRestClientConfig extends AbstractReactiveElasticsearchConfiguration {
 
-  @Bean
-  ReactiveElasticsearchClient client() {
-
-    ClientConfiguration clientConfiguration = ClientConfiguration.builder()   <1>
-      .connectedTo("localhost:9200", "localhost:9291")
-      .withWebClientConfigurer(webClient -> {                                 <2>
-        ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
-            .codecs(configurer -> configurer.defaultCodecs()
-                .maxInMemorySize(-1))
+    @Override
+    @Bean
+    public ReactiveElasticsearchClient reactiveElasticsearchClient() {
+        final ClientConfiguration clientConfiguration = ClientConfiguration.builder() <.>
+            .connectedTo("localhost:9200") //
             .build();
-        return webClient.mutate().exchangeStrategies(exchangeStrategies).build();
-       })
-      .build();
+        return ReactiveRestClients.create(clientConfiguration);
 
-    return ReactiveRestClients.create(clientConfiguration);
-  }
+    }
 }
-
 // ...
 
 Mono<IndexResponse> response = client.index(request ->
 
   request.index("spring-data")
-    .type("elasticsearch")
     .id(randomID())
-    .source(singletonMap("feature", "reactive-client"))
-    .setRefreshPolicy(IMMEDIATE);
+    .source(singletonMap("feature", "reactive-client"));
 );
 ----
-<1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
-<2> when configuring a reactive client, the `withWebClientConfigurer` hook can be used to customize the WebClient.
+<.> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
 ====
 
 NOTE: The ReactiveClient response, especially for search operations, is bound to the `from` (offset) & `size` (limit) options of the request.

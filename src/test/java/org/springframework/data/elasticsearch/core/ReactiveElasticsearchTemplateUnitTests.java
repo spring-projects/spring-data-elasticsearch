@@ -38,7 +38,6 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.main.MainResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.cluster.ClusterName;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
@@ -94,7 +93,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(RefreshPolicy.IMMEDIATE);
+		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(RefreshPolicy.IMMEDIATE.toRequestRefreshPolicy());
 	}
 
 	@Test // DATAES-504
@@ -109,7 +108,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(RefreshPolicy.WAIT_UNTIL);
+		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(RefreshPolicy.WAIT_UNTIL.toRequestRefreshPolicy());
 	}
 
 	@Test // DATAES-504, DATAES-518
@@ -179,7 +178,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(RefreshPolicy.IMMEDIATE);
+		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(RefreshPolicy.IMMEDIATE.toRequestRefreshPolicy());
 	}
 
 	@Test // DATAES-504
@@ -194,7 +193,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(RefreshPolicy.WAIT_UNTIL);
+		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(RefreshPolicy.WAIT_UNTIL.toRequestRefreshPolicy());
 	}
 
 	@Test // DATAES-504

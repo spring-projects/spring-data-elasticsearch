@@ -31,6 +31,8 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.WriteRequest;
+import org.elasticsearch.action.support.WriteRequestBuilder;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
@@ -82,6 +84,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Nullable protected RequestFactory requestFactory;
 	@Nullable private EntityOperations entityOperations;
 	@Nullable private EntityCallbacks entityCallbacks;
+	@Nullable private RefreshPolicy refreshPolicy;
 
 	// region Initialization
 	protected void initialize(ElasticsearchConverter elasticsearchConverter) {
@@ -129,6 +132,15 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		Assert.notNull(entityCallbacks, "entityCallbacks must not be null");
 
 		this.entityCallbacks = entityCallbacks;
+	}
+
+	public void setRefreshPolicy(@Nullable RefreshPolicy refreshPolicy) {
+		this.refreshPolicy = refreshPolicy;
+	}
+
+	@Nullable
+	public RefreshPolicy getRefreshPolicy() {
+		return refreshPolicy;
 	}
 	// endregion
 
@@ -308,6 +320,41 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	public abstract List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
 			IndexCoordinates index);
+
+	/**
+	 * Pre process the write request before it is sent to the server, eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param request must not be {@literal null}.
+	 * @param <R>
+	 * @return the processed {@link WriteRequest}.
+	 */
+	protected <R extends WriteRequest<R>> R prepareWriteRequest(R request) {
+
+		if (refreshPolicy == null) {
+			return request;
+		}
+
+		return request.setRefreshPolicy(refreshPolicy.toRequestRefreshPolicy());
+	}
+
+	/**
+	 * Pre process the write request before it is sent to the server, eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param requestBuilder must not be {@literal null}.
+	 * @param <R>
+	 * @return the processed {@link WriteRequest}.
+	 */
+	protected <R extends WriteRequestBuilder<R>> R prepareWriteRequestBuilder(R requestBuilder) {
+
+		if (refreshPolicy == null) {
+			return requestBuilder;
+		}
+
+		return requestBuilder.setRefreshPolicy(refreshPolicy.toRequestRefreshPolicy());
+	}
+
 	// endregion
 
 	// region SearchOperations
@@ -609,6 +656,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	private <T> IndexQuery getIndexQuery(T entity) {
+
 		String id = getEntityId(entity);
 
 		if (id != null) {
@@ -618,7 +666,9 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		IndexQueryBuilder builder = new IndexQueryBuilder() //
 				.withId(id) //
 				.withObject(entity);
+
 		SeqNoPrimaryTerm seqNoPrimaryTerm = getEntitySeqNoPrimaryTerm(entity);
+
 		if (seqNoPrimaryTerm != null) {
 			builder.withSeqNoPrimaryTerm(seqNoPrimaryTerm);
 		} else {
@@ -627,9 +677,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		}
 
 		String routing = getEntityRouting(entity);
+
 		if (routing != null) {
 			builder.withRouting(routing);
 		}
+
 		return builder.build();
 	}
 

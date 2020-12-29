@@ -16,11 +16,11 @@
 package org.springframework.data.elasticsearch.config;
 
 import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.lang.Nullable;
 
@@ -58,13 +58,13 @@ public abstract class AbstractReactiveElasticsearchConfiguration extends Elastic
 	}
 
 	/**
-	 * Set up the write {@link RefreshPolicy}. Default is set to {@link RefreshPolicy#IMMEDIATE}.
+	 * Set up the write {@link RefreshPolicy}. Default is set to null to use the cluster defaults..
 	 *
 	 * @return {@literal null} to use the server defaults.
 	 */
 	@Nullable
 	protected RefreshPolicy refreshPolicy() {
-		return RefreshPolicy.IMMEDIATE;
+		return null;
 	}
 
 	/**

@@ -37,7 +37,6 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.WriteRequest;
-import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -648,7 +647,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			return request;
 		}
 
-		return request.setRefreshPolicy(refreshPolicy);
+		return request.setRefreshPolicy(refreshPolicy.toRequestRefreshPolicy());
 	}
 
 	// endregion

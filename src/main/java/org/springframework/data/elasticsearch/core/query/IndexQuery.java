@@ -38,6 +38,22 @@ public class IndexQuery {
 	@Nullable private String routing;
 	@Nullable private OpType opType;
 
+	public IndexQuery() {}
+
+	public IndexQuery(@Nullable String id, @Nullable Object object, @Nullable Long version, @Nullable String source,
+			@Nullable String parentId, @Nullable Long seqNo, @Nullable Long primaryTerm, @Nullable String routing,
+			@Nullable OpType opType) {
+		this.id = id;
+		this.object = object;
+		this.version = version;
+		this.source = source;
+		this.parentId = parentId;
+		this.seqNo = seqNo;
+		this.primaryTerm = primaryTerm;
+		this.routing = routing;
+		this.opType = opType;
+	}
+
 	@Nullable
 	public String getId() {
 		return id;

@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 
 /**
@@ -52,6 +53,15 @@ public class ElasticsearchTemplateConfiguration extends ElasticsearchConfigurati
 	@Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
 	public ElasticsearchTemplate elasticsearchTemplate(Client elasticsearchClient,
 			ElasticsearchConverter elasticsearchConverter) {
-		return new ElasticsearchTemplate(elasticsearchClient, elasticsearchConverter);
+
+		ElasticsearchTemplate template = new ElasticsearchTemplate(elasticsearchClient, elasticsearchConverter);
+		template.setRefreshPolicy(refreshPolicy());
+
+		return template;
+	}
+
+	@Override
+	protected RefreshPolicy refreshPolicy() {
+		return RefreshPolicy.IMMEDIATE;
 	}
 }
