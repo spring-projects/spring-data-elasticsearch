@@ -31,16 +31,16 @@ Requires an installation of https://www.elastic.co/products/elasticsearch[Elasti
 
 The following table shows the Elasticsearch versions that are used by Spring Data release trains and version of Spring Data Elasticsearch included in that, as well as the Spring Boot versions referring to that particular Spring Data release train:
 
-[cols="^,^,^,^",options="header"]
+[cols="^,^,^,^,^",options="header"]
 |===
-| Spring Data Release Train |Spring Data Elasticsearch |Elasticsearch | Spring Boot
-| 2021.0 (Pascal)footnote:cdv[Currently in development] |4.2.xfootnote:cdv[]|7.10.0 |2.4.xfootnote:cdv[]
-| 2020.0 (Ockham) |4.1.x|7.9.3 |2.4.x
-| Neumann | 4.0.x | 7.6.2 |2.3.x
-| Moore | 3.2.x |6.8.12 | 2.2.x
-| Lovelace | 3.1.x | 6.2.2 |2.1.x
-| Kayfootnote:oom[Out of maintenance] | 3.0.xfootnote:oom[] | 5.5.0 | 2.0.xfootnote:oom[]
-| Ingallsfootnote:oom[] | 2.1.xfootnote:oom[] | 2.4.0 | 1.5.xfootnote:oom[]
+| Spring Data Release Train | Spring Data Elasticsearch | Elasticsearch | Spring Framework | Spring Boot
+| 2021.0 (Pascal)footnote:cdv[Currently in development] | 4.2.xfootnote:cdv[] | 7.10.0 | 5.3.xfootnote:cdv[] | 2.4.xfootnote:cdv[]
+| 2020.0 (Ockham) | 4.1.x | 7.9.3 | 5.3.2 | 2.4.x
+| Neumann | 4.0.x | 7.6.2 | 5.2.12 |2.3.x
+| Moore | 3.2.x |6.8.12 | 5.2.12| 2.2.x
+| Lovelacefootnote:oom[Out of maintenance] | 3.1.xfootnote:oom[] | 6.2.2 | 5.1.19 |2.1.x
+| Kayfootnote:oom[] | 3.0.xfootnote:oom[] | 5.5.0 | 5.0.13 | 2.0.x
+| Ingallsfootnote:oom[] | 2.1.xfootnote:oom[] | 2.4.0 | 4.3.25 | 1.5.x
 |===
 
 Support for upcoming versions of Elasticsearch is being tracked and general compatibility should be given assuming the usage of the <<elasticsearch.clients.rest,high-level REST client>>.
