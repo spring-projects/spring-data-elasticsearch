@@ -69,8 +69,8 @@
 	</ciManagement>
 
 	<issueManagement>
-		<system>JIRA</system>
-		<url>https://jira.spring.io/browse/DATAES</url>
+		<system>GitHub</system>
+		<url>https://github.com/spring-projects/spring-data-elasticsearch/issues</url>
 	</issueManagement>
 
 	<dependencyManagement>
