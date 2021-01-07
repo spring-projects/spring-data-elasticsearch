@@ -22,8 +22,8 @@
 		<elasticsearch>7.9.3</elasticsearch>
 		<log4j>2.13.3</log4j>
 		<netty>4.1.52.Final</netty>
-		<springdata.commons>2.4.3-SNAPSHOT</springdata.commons>
-		<testcontainers>1.14.3</testcontainers>
+        <springdata.commons>2.4.3-SNAPSHOT</springdata.commons>
+        <testcontainers>1.15.1</testcontainers>
 		<java-module-name>spring.data.elasticsearch</java-module-name>
 	</properties>
 
