@@ -15,20 +15,17 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import org.elasticsearch.index.query.IdsQueryBuilder;
-import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -46,14 +43,12 @@ import org.springframework.util.Assert;
  */
 public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveElasticsearchRepository<T, ID> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleElasticsearchRepository.class);
-
 	private final ElasticsearchEntityInformation<T, ID> entityInformation;
 	private final ReactiveElasticsearchOperations operations;
 	private final ReactiveIndexOperations indexOperations;
 
 	public SimpleReactiveElasticsearchRepository(ElasticsearchEntityInformation<T, ID> entityInformation,
-												 ReactiveElasticsearchOperations operations) {
+			ReactiveElasticsearchOperations operations) {
 
 		Assert.notNull(entityInformation, "EntityInformation must not be null!");
 		Assert.notNull(operations, "ElasticsearchOperations must not be null!");
@@ -66,16 +61,12 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	}
 
 	private void createIndexAndMappingIfNeeded() {
-		try {
 
-			if (shouldCreateIndexAndMapping()) {
-				indexOperations.exists() //
-						.flatMap(exists -> exists ? Mono.empty() : indexOperations.create()) //
-						.flatMap(success -> success ? indexOperations.putMapping() : Mono.empty()) //
-						.block();
-			}
-		} catch (Exception exception) {
-			LOGGER.warn("Cannot create index: {}", exception.getMessage());
+		if (shouldCreateIndexAndMapping()) {
+			indexOperations.exists() //
+					.flatMap(exists -> exists ? Mono.empty() : indexOperations.create()) //
+					.flatMap(success -> success ? indexOperations.putMapping() : Mono.empty()) //
+					.block();
 		}
 	}
 

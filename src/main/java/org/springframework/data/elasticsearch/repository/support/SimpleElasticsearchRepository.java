@@ -90,13 +90,9 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		this.entityClass = this.entityInformation.getJavaType();
 		this.indexOperations = operations.indexOps(this.entityClass);
 
-		try {
-			if (shouldCreateIndexAndMapping() && !indexOperations.exists()) {
-				indexOperations.create();
-				indexOperations.putMapping(entityClass);
-			}
-		} catch (Exception exception) {
-			LOGGER.warn("Cannot create index: {}", exception.getMessage());
+		if (shouldCreateIndexAndMapping() && !indexOperations.exists()) {
+			indexOperations.create();
+			indexOperations.putMapping(entityClass);
 		}
 	}
 
