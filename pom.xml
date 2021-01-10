@@ -19,7 +19,7 @@
 
 	<properties>
 		<commonslang>2.6</commonslang>
-		<elasticsearch>7.10.0</elasticsearch>
+		<elasticsearch>7.10.1</elasticsearch>
 		<log4j>2.13.3</log4j>
 		<netty>4.1.52.Final</netty>
 		<springdata.commons>2.5.0-SNAPSHOT</springdata.commons>
