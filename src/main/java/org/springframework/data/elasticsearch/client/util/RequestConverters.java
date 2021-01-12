@@ -71,6 +71,7 @@ import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.RethrottleRequest;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.client.indices.AnalyzeRequest;
+import org.elasticsearch.client.indices.GetFieldMappingsRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
@@ -115,6 +116,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Farid Faoudi
  * @since 3.2
  */
 @SuppressWarnings("JavadocReference")
@@ -888,6 +890,24 @@ public class RequestConverters {
 		Request request = new Request(HttpDelete.METHOD_NAME, endpoint);
 		RequestConverters.Params params = new RequestConverters.Params(request);
 		params.withMasterTimeout(deleteIndexTemplateRequest.masterNodeTimeout());
+		return request;
+	}
+
+	public static Request getFieldMapping(GetFieldMappingsRequest getFieldMappingsRequest) {
+		String[] indices = getFieldMappingsRequest.indices() == null ? Strings.EMPTY_ARRAY : getFieldMappingsRequest.indices();
+		String[] fields = getFieldMappingsRequest.fields() == null ? Strings.EMPTY_ARRAY : getFieldMappingsRequest.fields();
+
+		final String endpoint = new EndpointBuilder().addCommaSeparatedPathParts(indices)
+				.addPathPartAsIs("_mapping").addPathPartAsIs("field")
+				.addCommaSeparatedPathParts(fields)
+				.build();
+
+		Request request = new Request(HttpMethod.GET.name(), endpoint);
+
+		RequestConverters.Params parameters = new Params(request);
+		parameters.withIndicesOptions(getFieldMappingsRequest.indicesOptions());
+		parameters.withIncludeDefaults(getFieldMappingsRequest.includeDefaults());
+		parameters.withIncludeTypeName(false);
 		return request;
 	}
 

@@ -22,6 +22,8 @@ import io.netty.handler.ssl.IdentityCipherSuiteFilter;
 import io.netty.handler.ssl.JdkSslContext;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.elasticsearch.client.indices.GetFieldMappingsRequest;
+import org.elasticsearch.client.indices.GetFieldMappingsResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
@@ -139,6 +141,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  * @author Russell Parry
  * @author Thomas Geese
  * @author Brian Clozel
+ * @author Farid Faoudi
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
@@ -672,6 +675,11 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	@Override
 	public Mono<GetMappingsResponse> getMapping(HttpHeaders headers, GetMappingsRequest getMappingsRequest) {
 		return sendRequest(getMappingsRequest, requestCreator.getMapping(), GetMappingsResponse.class, headers).next();
+	}
+
+	@Override
+	public Mono<GetFieldMappingsResponse> getFieldMapping(HttpHeaders headers, GetFieldMappingsRequest getFieldMappingsRequest) {
+		return sendRequest(getFieldMappingsRequest, requestCreator.getFieldMapping(), GetFieldMappingsResponse.class, headers).next();
 	}
 
 	@Override

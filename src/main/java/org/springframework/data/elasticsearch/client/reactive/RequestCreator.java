@@ -28,6 +28,7 @@ import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.client.indices.GetFieldMappingsRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
@@ -37,6 +38,7 @@ import org.springframework.data.elasticsearch.client.util.RequestConverters;
 
 /**
  * @author Roman Puchkovskiy
+ * @author Farid Faoudi
  * @since 4.0
  */
 public interface RequestCreator {
@@ -193,5 +195,12 @@ public interface RequestCreator {
 	 */
 	default Function<DeleteIndexTemplateRequest, Request> deleteTemplate() {
 		return RequestConverters::deleteTemplate;
+	}
+
+	/**
+	 * @since 4.2
+	 */
+	default Function<GetFieldMappingsRequest, Request> getFieldMapping() {
+		return RequestConverters::getFieldMapping;
 	}
 }
