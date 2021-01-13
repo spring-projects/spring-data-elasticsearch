@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import org.elasticsearch.client.indices.GetFieldMappingsRequest;
+import org.elasticsearch.client.indices.GetFieldMappingsResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -77,6 +79,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author Peter-Josef Meisch
  * @author Henrique Amaral
  * @author Thomas Geese
+ * @author Farid Faoudi
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
@@ -1161,6 +1164,50 @@ public interface ReactiveElasticsearchClient {
 		 * @since 4.1
 		 */
 		Mono<GetMappingsResponse> getMapping(HttpHeaders headers, GetMappingsRequest getMappingsRequest);
+
+		/**
+		 * Execute the given {@link GetFieldMappingsRequest} against the {@literal indices} API.
+		 *
+		 * @param consumer never {@literal null}.
+		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
+		 * 		   does not exist.
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-field-mapping.html"> Indices
+		 *  		 Flush API on elastic.co</a>
+		 * @since 4.2
+		 */
+		default Mono<GetFieldMappingsResponse> getFieldMapping(Consumer<GetFieldMappingsRequest> consumer) {
+
+			GetFieldMappingsRequest request = new GetFieldMappingsRequest();
+			consumer.accept(request);
+			return getFieldMapping(request);
+		}
+
+		/**
+		 * Execute the given {@link GetFieldMappingsRequest} against the {@literal indices} API.
+		 *
+		 * @param getFieldMappingsRequest must not be {@literal null}.
+		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
+		 *         does not exist.
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-field-mapping.html"> Indices
+		 *  		 Flush API on elastic.co</a>
+		 * @since 4.2
+		 */
+		default Mono<GetFieldMappingsResponse> getFieldMapping(GetFieldMappingsRequest getFieldMappingsRequest) {
+			return getFieldMapping(HttpHeaders.EMPTY, getFieldMappingsRequest);
+		}
+
+		/**
+		 * Execute the given {@link GetFieldMappingsRequest} against the {@literal indices} API.
+		 *
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param getFieldMappingsRequest must not be {@literal null}.
+		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
+		 *         does not exist.
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-field-mapping.html"> Indices
+		 * 		 Flush API on elastic.co</a>
+		 * @since 4.2
+		 */
+		Mono<GetFieldMappingsResponse> getFieldMapping(HttpHeaders headers, GetFieldMappingsRequest getFieldMappingsRequest);
 
 		/**
 		 * Execute the given {@link IndicesAliasesRequest} against the {@literal indices} API.

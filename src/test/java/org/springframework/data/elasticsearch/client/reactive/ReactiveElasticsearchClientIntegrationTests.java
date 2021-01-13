@@ -18,12 +18,14 @@ package org.springframework.data.elasticsearch.client.reactive;
 import static org.assertj.core.api.Assertions.*;
 
 import lombok.SneakyThrows;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -73,6 +75,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Henrique Amaral
  * @author Russell Parry
  * @author Thomas Geese
+ * @author Farid Faoudi
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ReactiveElasticsearchClientIntegrationTests.Config.class })
@@ -719,6 +722,61 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.suggest(request).as(StepVerifier::create).expectNextMatches(suggestions -> suggestions
 						.getSuggestion("firstname").getEntries().get(0).getOptions().get(0).getText().string().equals("chade"))
 				.verifyComplete();
+	}
+
+	@Test // #1640
+	void getFieldMapping() {
+
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+
+		Map<String, Object> properties = new HashMap<>();
+		properties.put("message1", Collections.singletonMap("type", "text"));
+		properties.put("message2", Collections.singletonMap("type", "keyword"));
+
+		Map<String, Object> jsonMap = Collections.singletonMap("properties", properties);
+
+		final PutMappingRequest putMappingRequest = new PutMappingRequest(INDEX_I)
+				.source(jsonMap);
+
+		client.indices().putMapping(putMappingRequest).block();
+
+		client.indices().getFieldMapping(request -> request.indices(INDEX_I).fields("message1", "message2"))
+				.as(StepVerifier::create)
+				.consumeNextWith(it -> {
+					assertThat(it.mappings().get(INDEX_I).keySet().size()).isEqualTo(2);
+					assertThat(it.mappings().get(INDEX_I).get("message1").sourceAsMap()).isEqualTo(Collections.singletonMap("message1", Collections.singletonMap("type", "text")));
+					assertThat(it.mappings().get(INDEX_I).get("message2").sourceAsMap()).isEqualTo(Collections.singletonMap("message2", Collections.singletonMap("type", "keyword")));
+				})
+				.verifyComplete();
+	}
+
+	@Test // #1640
+	void getFieldMappingNonExistingField() {
+
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+
+		Map<String, Object> jsonMap = Collections.singletonMap("properties",
+				Collections.singletonMap("message", Collections.singletonMap("type", "text")));
+
+		final PutMappingRequest putMappingRequest = new PutMappingRequest(INDEX_I)
+				.source(jsonMap);
+
+		client.indices().putMapping(putMappingRequest).block();
+
+		client.indices().getFieldMapping(request -> request.indices(INDEX_I).fields("message1"))
+				.as(StepVerifier::create)
+				.consumeNextWith(it -> {
+					assertThat(it.mappings().get(INDEX_I).keySet().size()).isZero();
+				})
+				.verifyComplete();
+	}
+
+	@Test // #1640
+	void getFieldMappingNonExistingIndex() {
+
+		client.indices().getFieldMapping(request -> request.indices(INDEX_I).fields("message1"))
+				.as(StepVerifier::create)
+				.verifyError(ElasticsearchStatusException.class);
 	}
 
 	@Test // DATAES-796
