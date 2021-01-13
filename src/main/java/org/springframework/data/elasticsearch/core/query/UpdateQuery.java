@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.query;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.elasticsearch.core.ScriptType;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.lang.Nullable;
 
@@ -27,6 +28,7 @@ import org.springframework.lang.Nullable;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
+ * @author Farid Faoudi
  * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html>docs</a>
  */
 public class UpdateQuery {
@@ -47,11 +49,26 @@ public class UpdateQuery {
 	@Nullable private Integer ifPrimaryTerm;
 	@Nullable private Refresh refresh;
 	@Nullable private Integer retryOnConflict;
-	@Nullable String timeout;
-	@Nullable String waitForActiveShards;
+	@Nullable private String timeout;
+	@Nullable private String waitForActiveShards;
+	@Nullable private Query query;
+	@Nullable private Boolean abortOnVersionConflict;
+	@Nullable private Integer batchSize;
+	@Nullable private Integer maxDocs;
+	@Nullable private Integer maxRetries;
+	@Nullable private String pipeline;
+	@Nullable private Float requestsPerSecond;
+	@Nullable private Boolean shouldStoreResult;
+	@Nullable private Integer slices;
+	@Nullable private ScriptType scriptType;
+	@Nullable private String scriptName;
 
 	public static Builder builder(String id) {
 		return new Builder(id);
+	}
+
+	public static Builder builder(Query query) {
+		return new Builder(query);
 	}
 
 	private UpdateQuery(String id, @Nullable String script, @Nullable Map<String, Object> params,
@@ -59,7 +76,10 @@ public class UpdateQuery {
 			@Nullable Boolean scriptedUpsert, @Nullable Boolean docAsUpsert, @Nullable Boolean fetchSource,
 			@Nullable List<String> fetchSourceIncludes, @Nullable List<String> fetchSourceExcludes, @Nullable Integer ifSeqNo,
 			@Nullable Integer ifPrimaryTerm, @Nullable Refresh refresh, @Nullable Integer retryOnConflict,
-			@Nullable String timeout, @Nullable String waitForActiveShards) {
+			@Nullable String timeout, @Nullable String waitForActiveShards, @Nullable Query query,
+			@Nullable Boolean abortOnVersionConflict, @Nullable Integer batchSize, @Nullable Integer maxDocs,
+			@Nullable Integer maxRetries, @Nullable String pipeline, @Nullable Float requestsPerSecond,
+			@Nullable Boolean shouldStoreResult, @Nullable Integer slices, @Nullable ScriptType scriptType, @Nullable String scriptName) {
 
 		this.id = id;
 		this.script = script;
@@ -79,6 +99,17 @@ public class UpdateQuery {
 		this.retryOnConflict = retryOnConflict;
 		this.timeout = timeout;
 		this.waitForActiveShards = waitForActiveShards;
+		this.query = query;
+		this.abortOnVersionConflict = abortOnVersionConflict;
+		this.batchSize = batchSize;
+		this.maxDocs = maxDocs;
+		this.maxRetries = maxRetries;
+		this.pipeline = pipeline;
+		this.requestsPerSecond = requestsPerSecond;
+		this.shouldStoreResult = shouldStoreResult;
+		this.slices = slices;
+		this.scriptType = scriptType;
+		this.scriptName = scriptName;
 	}
 
 	public String getId() {
@@ -170,6 +201,61 @@ public class UpdateQuery {
 		return waitForActiveShards;
 	}
 
+	@Nullable
+	public Query getQuery() {
+		return query;
+	}
+
+	@Nullable
+	public Boolean getAbortOnVersionConflict() {
+		return abortOnVersionConflict;
+	}
+
+	@Nullable
+	public Integer getBatchSize() {
+		return batchSize;
+	}
+
+	@Nullable
+	public Integer getMaxDocs() {
+		return maxDocs;
+	}
+
+	@Nullable
+	public Integer getMaxRetries() {
+		return maxRetries;
+	}
+
+	@Nullable
+	public String getPipeline() {
+		return pipeline;
+	}
+
+	@Nullable
+	public Float getRequestsPerSecond() {
+		return requestsPerSecond;
+	}
+
+	@Nullable
+	public Boolean getShouldStoreResult() {
+		return shouldStoreResult;
+	}
+
+	@Nullable
+	public Integer getSlices() {
+		return slices;
+	}
+
+	@Nullable
+	public ScriptType getScriptType() {
+		return scriptType;
+	}
+
+	@Nullable
+	public String getScriptName() {
+		return scriptName;
+	}
+
 	public static final class Builder {
 		private String id;
 		@Nullable private String script = null;
@@ -189,9 +275,24 @@ public class UpdateQuery {
 		@Nullable String waitForActiveShards;
 		@Nullable private List<String> fetchSourceIncludes;
 		@Nullable private List<String> fetchSourceExcludes;
+		@Nullable private Query query;
+		@Nullable private Boolean abortOnVersionConflict;
+		@Nullable private Integer batchSize;
+		@Nullable private Integer maxDocs;
+		@Nullable private Integer maxRetries;
+		@Nullable private String pipeline;
+		@Nullable private Float requestsPerSecond;
+		@Nullable private Boolean shouldStoreResult;
+		@Nullable private Integer slices;
+		@Nullable private ScriptType scriptType;
+		@Nullable private String scriptName;
 
 		private Builder(String id) {
 			this.id = id;
+		}
+
+		private Builder(Query query) {
+			this.query = query;
 		}
 
 		public Builder withScript(String script) {
@@ -279,14 +380,66 @@ public class UpdateQuery {
 			return this;
 		}
 
+		public Builder withAbortOnVersionConflict(Boolean abortOnVersionConflict) {
+			this.abortOnVersionConflict = abortOnVersionConflict;
+			return this;
+		}
+
+		public Builder withBatchSize(Integer batchSize) {
+			this.batchSize = batchSize;
+			return this;
+		}
+
+		public Builder withMaxDocs(Integer maxDocs) {
+			this.maxDocs = maxDocs;
+			return this;
+		}
+
+		public Builder withMaxRetries(Integer maxRetries) {
+			this.maxRetries = maxRetries;
+			return this;
+		}
+
+		public Builder withPipeline(String pipeline) {
+			this.pipeline = pipeline;
+			return this;
+		}
+
+		public Builder withRequestsPerSecond(Float requestsPerSecond) {
+			this.requestsPerSecond = requestsPerSecond;
+			return this;
+		}
+
+		public Builder withShouldStoreResult(Boolean shouldStoreResult) {
+			this.shouldStoreResult = shouldStoreResult;
+			return this;
+		}
+
+		public Builder withSlices(Integer slices) {
+			this.slices = slices;
+			return this;
+		}
+
+		public Builder withScriptType(ScriptType scriptType) {
+			this.scriptType = scriptType;
+			return this;
+		}
+
+		public Builder withScriptName(String scriptName) {
+			this.scriptName = scriptName;
+			return this;
+		}
+
 		public UpdateQuery build() {
 
-			if (script == null && document == null) {
-				throw new IllegalArgumentException("either script or document must be set");
+			if (script == null && document == null && query == null) {
+				throw new IllegalArgumentException("either script, document or query must be set");
 			}
+
 			return new UpdateQuery(id, script, params, document, upsert, lang, routing, scriptedUpsert, docAsUpsert,
 					fetchSource, fetchSourceIncludes, fetchSourceExcludes, ifSeqNo, ifPrimaryTerm, refresh, retryOnConflict,
-					timeout, waitForActiveShards);
+					timeout, waitForActiveShards, query, abortOnVersionConflict, batchSize, maxDocs, maxRetries, pipeline,
+					requestsPerSecond, shouldStoreResult, slices, scriptType, scriptName);
 		}
 	}
 

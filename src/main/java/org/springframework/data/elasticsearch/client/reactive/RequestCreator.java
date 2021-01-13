@@ -33,6 +33,7 @@ import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.util.RequestConverters;
 
@@ -89,6 +90,10 @@ public interface RequestCreator {
 
 	default Function<DeleteByQueryRequest, Request> deleteByQuery() {
 		return RequestConverters::deleteByQuery;
+	}
+
+	default Function<UpdateByQueryRequest, Request> updateByQuery() {
+		return RequestConverters::updateByQuery;
 	}
 
 	default Function<BulkRequest, Request> bulk() {

@@ -540,12 +540,15 @@ public class RequestConverters {
 	public static Request updateByQuery(UpdateByQueryRequest updateByQueryRequest) {
 		String endpoint = endpoint(updateByQueryRequest.indices(), updateByQueryRequest.getDocTypes(), "_update_by_query");
 		Request request = new Request(HttpMethod.POST.name(), endpoint);
-		Params params = new Params(request).withRouting(updateByQueryRequest.getRouting())
-				.withPipeline(updateByQueryRequest.getPipeline()).withRefresh(updateByQueryRequest.isRefresh())
-				.withTimeout(updateByQueryRequest.getTimeout())
-				.withWaitForActiveShards(updateByQueryRequest.getWaitForActiveShards())
-				.withRequestsPerSecond(updateByQueryRequest.getRequestsPerSecond())
-				.withIndicesOptions(updateByQueryRequest.indicesOptions());
+		Params params = new Params(request)
+				.withRouting(updateByQueryRequest.getRouting()) //
+				.withPipeline(updateByQueryRequest.getPipeline()) //
+				.withRefresh(updateByQueryRequest.isRefresh()) //
+				.withTimeout(updateByQueryRequest.getTimeout()) //
+				.withWaitForActiveShards(updateByQueryRequest.getWaitForActiveShards()) //
+				.withRequestsPerSecond(updateByQueryRequest.getRequestsPerSecond()) //
+				.withIndicesOptions(updateByQueryRequest.indicesOptions()); //
+
 		if (!updateByQueryRequest.isAbortOnVersionConflict()) {
 			params.putParam("conflicts", "proceed");
 		}
@@ -555,8 +558,8 @@ public class RequestConverters {
 		if (updateByQueryRequest.getScrollTime() != AbstractBulkByScrollRequest.DEFAULT_SCROLL_TIMEOUT) {
 			params.putParam("scroll", updateByQueryRequest.getScrollTime());
 		}
-		if (updateByQueryRequest.getSize() > 0) {
-			params.putParam("size", Integer.toString(updateByQueryRequest.getSize()));
+		if (updateByQueryRequest.getMaxDocs() > 0) {
+			params.putParam("max_docs", Integer.toString(updateByQueryRequest.getMaxDocs()));
 		}
 		request.setEntity(createEntity(updateByQueryRequest, REQUEST_BODY_CONTENT_TYPE));
 		return request;

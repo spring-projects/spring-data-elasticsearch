@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -97,6 +99,7 @@ import org.springframework.util.Assert;
  * @author Roman Puchkovskiy
  * @author Russell Parry
  * @author Thomas Geese
+ * @author Farid Faoudi
  * @since 3.2
  */
 public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations, ApplicationContextAware {
@@ -555,6 +558,18 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			UpdateRequest request = requestFactory.updateRequest(updateQuery, index);
 			return Mono.from(execute(client -> client.update(request)))
 					.map(response -> new UpdateResponse(UpdateResponse.Result.valueOf(response.getResult().name())));
+		});
+	}
+
+	@Override
+	public Mono<UpdateByQueryResponse> updateByQuery(UpdateQuery updateQuery, IndexCoordinates index) {
+
+		Assert.notNull(updateQuery, "UpdateQuery must not be null");
+		Assert.notNull(index, "Index must not be null");
+
+		return Mono.defer(() -> {
+			final UpdateByQueryRequest request = requestFactory.updateByQueryRequest(updateQuery, index);
+			return Mono.from(execute(client -> client.updateBy(request)));
 		});
 	}
 
