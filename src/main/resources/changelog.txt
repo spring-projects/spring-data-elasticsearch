@@ -1,6 +1,21 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.2.0-M2 (2021-01-13)
+----------------------------------------
+* DATAES-1003 - add timeout to search query.
+* DATAES-996 - Update CI jobs with Docker Login.
+* DATAES-982 - Improve refresh handling.
+* DATAES-946 - Support 'wildcard' field type.
+* #1640 - Add support for GetFieldMapping request in ReactiveElasticsearchClient.
+* #1638 - Upgrade to Elasticsearch 7.10.1.
+* #1634 - Update Testcontainers dependency.
+* #1632 - Update copyright notice to 2021.
+* #1629 - Update repository after GitHub issues migration.
+* #1576 - Add version of Spring dependency to docs [DATAES-1004].
+* #1056 - Repository initialization should throw an Exception when index cannot be created [DATAES-481].
+
+
 Changes in version 4.1.3 (2021-01-13)
 -------------------------------------
 * DATAES-996 - Update CI jobs with Docker Login.
@@ -1392,6 +1407,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
