@@ -33,6 +33,8 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.mapping.model.FieldNamingStrategy;
+import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -69,6 +71,7 @@ public class ElasticsearchConfigurationSupport {
 		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
 		mappingContext.setInitialEntitySet(getInitialEntitySet());
 		mappingContext.setSimpleTypeHolder(elasticsearchCustomConversions.getSimpleTypeHolder());
+		mappingContext.setFieldNamingStrategy(fieldNamingStrategy());
 
 		return mappingContext;
 	}
@@ -159,5 +162,15 @@ public class ElasticsearchConfigurationSupport {
 	@Nullable
 	protected RefreshPolicy refreshPolicy() {
 		return null;
+	}
+
+	/**
+	 * Configures a {@link FieldNamingStrategy} on the {@link SimpleElasticsearchMappingContext} instance created.
+	 *
+	 * @return the {@link FieldNamingStrategy} to use
+	 * @since 4.2
+	 */
+	protected FieldNamingStrategy fieldNamingStrategy() {
+		return PropertyNameFieldNamingStrategy.INSTANCE;
 	}
 }

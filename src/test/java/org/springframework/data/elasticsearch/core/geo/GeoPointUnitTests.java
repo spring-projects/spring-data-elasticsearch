@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.geo.Point;
 
 /**
- * @author P.J. Meisch (pj.meisch@sothawo.com)
+ * @author Peter-Josef Meisch
  */
 class GeoPointUnitTests {
 
@@ -36,7 +36,7 @@ class GeoPointUnitTests {
 	@DisplayName("should not be equal to a Point")
 	void shouldNotBeEqualToAPoint() {
 
-		//noinspection AssertBetweenInconvertibleTypes
+		// noinspection AssertBetweenInconvertibleTypes
 		assertThat(new GeoPoint(48, 8)).isNotEqualTo(new Point(8, 48));
 	}
 

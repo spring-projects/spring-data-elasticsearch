@@ -71,6 +71,13 @@ This is due to a https://www.elastic.co/guide/en/elasticsearch/reference/current
 
 The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic.
 
+==== Mapped field names
+
+Without further configuration, Spring Data Elasticsearch will use the property name of an object as field name in Elasticsearch. This can be changed for individual field by using the `@Field` annotation on that property.
+
+It is also possible to define a `FieldNamingStrategy` in the configuration of the client (<<elasticsearch.clients>>). If for example a `SnakeCaseFieldNamingStrategy` is configured, the property _sampleProperty_ of the object would be mapped to _sample_property_ in Elasticsearch. A `FieldNamingStrategy` applies to all entities; it can be overwritten by
+setting a specific name with `@Field` on a property.
+
 [[elasticsearch.mapping.meta-model.rules]]
 === Mapping Rules
 

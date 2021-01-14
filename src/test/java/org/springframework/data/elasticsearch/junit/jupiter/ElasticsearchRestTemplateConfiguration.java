@@ -71,7 +71,8 @@ public class ElasticsearchRestTemplateConfiguration extends AbstractElasticsearc
 	@Override
 	public ElasticsearchOperations elasticsearchOperations(ElasticsearchConverter elasticsearchConverter,
 			RestHighLevelClient elasticsearchClient) {
-		return new ElasticsearchRestTemplate(elasticsearchClient, elasticsearchConverter) {
+
+		ElasticsearchRestTemplate template = new ElasticsearchRestTemplate(elasticsearchClient, elasticsearchConverter) {
 			@Override
 			public <T> T execute(ClientCallback<T> callback) {
 				try {
@@ -84,6 +85,9 @@ public class ElasticsearchRestTemplateConfiguration extends AbstractElasticsearc
 				}
 			}
 		};
+		template.setRefreshPolicy(refreshPolicy());
+
+		return template;
 	}
 
 	@Override
