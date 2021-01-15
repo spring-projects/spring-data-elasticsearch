@@ -16,9 +16,12 @@
 package org.springframework.data.elasticsearch.core.mapping;
 
 import org.springframework.data.mapping.context.AbstractMappingContext;
+import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
+import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 
 /**
  * SimpleElasticsearchMappingContext
@@ -31,6 +34,22 @@ import org.springframework.data.util.TypeInformation;
 public class SimpleElasticsearchMappingContext
 		extends AbstractMappingContext<SimpleElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> {
 
+	private static final FieldNamingStrategy DEFAULT_NAMING_STRATEGY = PropertyNameFieldNamingStrategy.INSTANCE;
+
+	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
+
+	/**
+	 * Configures the {@link FieldNamingStrategy} to be used to determine the field name if no manual mapping is applied.
+	 * Defaults to a strategy using the plain property name.
+	 *
+	 * @param fieldNamingStrategy the {@link FieldNamingStrategy} to be used to determine the field name if no manual
+	 *          mapping is applied.
+	 * @since 4.2
+	 */
+	public void setFieldNamingStrategy(@Nullable FieldNamingStrategy fieldNamingStrategy) {
+		this.fieldNamingStrategy = fieldNamingStrategy == null ? DEFAULT_NAMING_STRATEGY : fieldNamingStrategy;
+	}
+
 	@Override
 	protected <T> SimpleElasticsearchPersistentEntity<?> createPersistentEntity(TypeInformation<T> typeInformation) {
 		return new SimpleElasticsearchPersistentEntity<>(typeInformation);
@@ -39,6 +58,6 @@ public class SimpleElasticsearchMappingContext
 	@Override
 	protected ElasticsearchPersistentProperty createPersistentProperty(Property property,
 			SimpleElasticsearchPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
-		return new SimpleElasticsearchPersistentProperty(property, owner, simpleTypeHolder);
+		return new SimpleElasticsearchPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
 }

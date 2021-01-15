@@ -42,7 +42,9 @@ import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
+import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
+import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
@@ -72,13 +74,17 @@ public class SimpleElasticsearchPersistentProperty extends
 	private final @Nullable String annotatedFieldName;
 	@Nullable private ElasticsearchPersistentPropertyConverter propertyConverter;
 	private final boolean storeNullValue;
+	private final FieldNamingStrategy fieldNamingStrategy;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
-			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
+			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder,
+			@Nullable FieldNamingStrategy fieldNamingStrategy) {
 
 		super(property, owner, simpleTypeHolder);
 
 		this.annotatedFieldName = getAnnotatedFieldName();
+		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
+				: fieldNamingStrategy;
 		this.isId = super.isIdProperty() || SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName());
 
 		// deprecated since 4.1
@@ -233,7 +239,19 @@ public class SimpleElasticsearchPersistentProperty extends
 
 	@Override
 	public String getFieldName() {
-		return annotatedFieldName == null ? getProperty().getName() : annotatedFieldName;
+
+		if (annotatedFieldName == null) {
+			String fieldName = fieldNamingStrategy.getFieldName(this);
+
+			if (!StringUtils.hasText(fieldName)) {
+				throw new MappingException(String.format("Invalid (null or empty) field name returned for property %s by %s!",
+						this, fieldNamingStrategy.getClass()));
+			}
+
+			return fieldName;
+		}
+
+		return annotatedFieldName;
 	}
 
 	@Override

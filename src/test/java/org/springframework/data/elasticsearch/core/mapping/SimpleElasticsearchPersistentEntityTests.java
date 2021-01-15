@@ -152,7 +152,7 @@ public class SimpleElasticsearchPersistentEntityTests {
 
 		TypeInformation<?> type = entity.getTypeInformation();
 		Property property = Property.of(type, ReflectionUtils.findField(entity.getType(), field));
-		return new SimpleElasticsearchPersistentProperty(property, entity, SimpleTypeHolder.DEFAULT);
+		return new SimpleElasticsearchPersistentProperty(property, entity, SimpleTypeHolder.DEFAULT, null);
 
 	}
 

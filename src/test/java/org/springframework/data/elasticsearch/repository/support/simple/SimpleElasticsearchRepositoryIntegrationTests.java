@@ -50,8 +50,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
@@ -642,7 +644,11 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		sampleEntity.setMessage("some message");
 
 		// when
+		AbstractElasticsearchTemplate abstractElasticsearchTemplate = (AbstractElasticsearchTemplate) this.operations;
+		RefreshPolicy refreshPolicy = abstractElasticsearchTemplate.getRefreshPolicy();
+		abstractElasticsearchTemplate.setRefreshPolicy(RefreshPolicy.NONE);
 		repository.indexWithoutRefresh(sampleEntity);
+		abstractElasticsearchTemplate.setRefreshPolicy(refreshPolicy);
 
 		// then
 		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
