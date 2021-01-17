@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
@@ -66,6 +65,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class MappingBuilder {
 
+	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
+
 	private static final String FIELD_INDEX = "index";
 	private static final String FIELD_PROPERTIES = "properties";
 	@Deprecated private static final String FIELD_PARENT = "_parent";
@@ -88,7 +89,7 @@ public class MappingBuilder {
 
 	private static final String JOIN_TYPE_RELATIONS = "relations";
 
-	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
+	private static final String MAPPING_ENABLED = "enabled";
 
 	private final ElasticsearchConverter elasticsearchConverter;
 
@@ -100,9 +101,9 @@ public class MappingBuilder {
 	 * builds the Elasticsearch mapping for the given clazz.
 	 *
 	 * @return JSON string
-	 * @throws ElasticsearchException on errors while building the mapping
+	 * @throws MappingException on errors while building the mapping
 	 */
-	public String buildPropertyMapping(Class<?> clazz) throws ElasticsearchException {
+	public String buildPropertyMapping(Class<?> clazz) throws MappingException {
 
 		try {
 			ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext()
@@ -125,14 +126,22 @@ public class MappingBuilder {
 					.close();
 
 			return builder.getOutputStream().toString();
-		} catch (MappingException | IOException e) {
-			throw new ElasticsearchException("could not build mapping", e);
+		} catch (IOException e) {
+			throw new MappingException("could not build mapping", e);
 		}
 	}
 
 	private void mapEntity(XContentBuilder builder, @Nullable ElasticsearchPersistentEntity<?> entity,
 			boolean isRootObject, String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType,
 			@Nullable Field parentFieldAnnotation, @Nullable DynamicMapping dynamicMapping) throws IOException {
+
+		if (entity != null && entity.isAnnotationPresent(Mapping.class)) {
+
+			if (!entity.getRequiredAnnotation(Mapping.class).enabled()) {
+				builder.field(MAPPING_ENABLED, false);
+				return;
+			}
+		}
 
 		boolean writeNestedProperties = !isRootObject && (isAnyPropertyAnnotatedWithField(entity) || nestedOrObjectField);
 		if (writeNestedProperties) {
@@ -189,14 +198,22 @@ public class MappingBuilder {
 
 		if (property.isAnnotationPresent(Mapping.class)) {
 
-			String mappingPath = property.getRequiredAnnotation(Mapping.class).mappingPath();
-			if (!StringUtils.isEmpty(mappingPath)) {
+			Mapping mapping = property.getRequiredAnnotation(Mapping.class);
 
-				ClassPathResource mappings = new ClassPathResource(mappingPath);
-				if (mappings.exists()) {
-					builder.rawField(property.getFieldName(), mappings.getInputStream(), XContentType.JSON);
-					return;
+			if (mapping.enabled()) {
+				String mappingPath = mapping.mappingPath();
+
+				if (StringUtils.hasText(mappingPath)) {
+
+					ClassPathResource mappings = new ClassPathResource(mappingPath);
+					if (mappings.exists()) {
+						builder.rawField(property.getFieldName(), mappings.getInputStream(), XContentType.JSON);
+						return;
+					}
 				}
+			} else {
+				applyDisabledPropertyMapping(builder, property);
+				return;
 			}
 		}
 
@@ -317,9 +334,29 @@ public class MappingBuilder {
 
 	private void applyDefaultIdFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property)
 			throws IOException {
+		builder.startObject(property.getFieldName()) //
+				.field(FIELD_PARAM_TYPE, TYPE_VALUE_KEYWORD) //
+				.field(FIELD_INDEX, true) //
+				.endObject(); //
+	}
 
-		builder.startObject(property.getFieldName()).field(FIELD_PARAM_TYPE, TYPE_VALUE_KEYWORD).field(FIELD_INDEX, true)
-				.endObject();
+	private void applyDisabledPropertyMapping(XContentBuilder builder, ElasticsearchPersistentProperty property)
+			throws IOException {
+
+		try {
+			Field field = property.getRequiredAnnotation(Field.class);
+
+			if (field.type() != FieldType.Object) {
+				throw new IllegalArgumentException("Field type must be 'object");
+			}
+
+			builder.startObject(property.getFieldName()) //
+					.field(FIELD_PARAM_TYPE, field.type().name().toLowerCase()) //
+					.field(MAPPING_ENABLED, false) //
+					.endObject(); //
+		} catch (Exception e) {
+			throw new MappingException("Could not write enabled: false mapping for " + property.getFieldName(), e);
+		}
 	}
 
 	/**
