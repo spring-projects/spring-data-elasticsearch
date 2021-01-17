@@ -18,13 +18,17 @@ package org.springframework.data.elasticsearch.core.convert;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalQuery;
 import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.elasticsearch.common.time.DateFormatter;
-import org.elasticsearch.common.time.DateFormatters;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.util.Assert;
 
@@ -61,9 +65,13 @@ final public class ElasticsearchDateConverter {
 	 * @return converter
 	 */
 	public static ElasticsearchDateConverter of(String pattern) {
-		Assert.notNull(pattern, "pattern must not be null");
 
-		return converters.computeIfAbsent(pattern, p -> new ElasticsearchDateConverter(DateFormatter.forPattern(p)));
+		Assert.notNull(pattern, "pattern must not be null");
+		Assert.hasText(pattern, "pattern must not be empty");
+
+		String[] subPatterns = pattern.split("\\|\\|");
+
+		return converters.computeIfAbsent(subPatterns[0].trim(), p -> new ElasticsearchDateConverter(forPattern(p)));
 	}
 
 	private ElasticsearchDateConverter(DateFormatter dateFormatter) {
@@ -71,14 +79,20 @@ final public class ElasticsearchDateConverter {
 	}
 
 	/**
-	 * Formats the given {@link TemporalAccessor} int a String
-	 * 
+	 * Formats the given {@link TemporalAccessor} into a String.
+	 *
 	 * @param accessor must not be {@literal null}
 	 * @return the formatted object
 	 */
 	public String format(TemporalAccessor accessor) {
 
-		Assert.notNull(accessor, "accessor must not be null");
+		Assert.notNull("accessor", "accessor must not be null");
+
+		if (accessor instanceof Instant) {
+			Instant instant = (Instant) accessor;
+			ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.of("UTC"));
+			return dateFormatter.format(zonedDateTime);
+		}
 
 		return dateFormatter.format(accessor);
 	}
@@ -97,24 +111,15 @@ final public class ElasticsearchDateConverter {
 	}
 
 	/**
-	 * Parses a String into an object
-	 * 
+	 * Parses a String into a TemporalAccessor.
+	 *
 	 * @param input the String to parse, must not be {@literal null}.
 	 * @param type the class to return
 	 * @param <T> the class of type
 	 * @return the new created object
 	 */
 	public <T extends TemporalAccessor> T parse(String input, Class<T> type) {
-		ZonedDateTime zonedDateTime = DateFormatters.from(dateFormatter.parse(input));
-		try {
-			Method method = type.getMethod("from", TemporalAccessor.class);
-			Object o = method.invoke(null, zonedDateTime);
-			return type.cast(o);
-		} catch (NoSuchMethodException e) {
-			throw new ConversionException("no 'from' factory method found in class " + type.getName());
-		} catch (IllegalAccessException | InvocationTargetException e) {
-			throw new ConversionException("could not create object of class " + type.getName(), e);
-		}
+		return dateFormatter.parse(input, type);
 	}
 
 	/**
@@ -124,7 +129,171 @@ final public class ElasticsearchDateConverter {
 	 * @return the new created object
 	 */
 	public Date parse(String input) {
-		ZonedDateTime zonedDateTime = DateFormatters.from(dateFormatter.parse(input));
-		return new Date(Instant.from(zonedDateTime).toEpochMilli());
+		return new Date(dateFormatter.parse(input, Instant.class).toEpochMilli());
+	}
+
+	/**
+	 * Creates a {@link DateFormatter} for a given pattern. The pattern can be the name of a {@link DateFormat} enum value
+	 * or a literal pattern.
+	 * 
+	 * @param pattern the pattern to use
+	 * @return DateFormatter
+	 */
+	private static DateFormatter forPattern(String pattern) {
+
+		String resolvedPattern = pattern;
+
+		if (DateFormat.epoch_millis.getPattern().equals(pattern)) {
+			return new EpochMillisDateFormatter();
+		}
+
+		if (DateFormat.epoch_second.getPattern().equals(pattern)) {
+			return new EpochSecondDateFormatter();
+		}
+
+		// check the enum values
+		for (DateFormat dateFormat : DateFormat.values()) {
+
+			switch (dateFormat) {
+				case weekyear:
+				case weekyear_week:
+				case weekyear_week_day:
+				case custom:
+					continue;
+			}
+
+			if (dateFormat.name().equals(pattern)) {
+				resolvedPattern = dateFormat.getPattern();
+				break;
+			}
+		}
+
+		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(resolvedPattern);
+		return new PatternDateFormatter(dateTimeFormatter);
+	}
+
+	private static <T extends TemporalAccessor> TemporalQuery<T> getTemporalQuery(Class<T> type) {
+		return temporal -> {
+			try {
+				Method method = type.getMethod("from", TemporalAccessor.class);
+				Object o = method.invoke(null, temporal);
+				return type.cast(o);
+			} catch (NoSuchMethodException e) {
+				throw new ConversionException("no 'from' factory method found in class " + type.getName());
+			} catch (IllegalAccessException | InvocationTargetException e) {
+				throw new ConversionException("could not create object of class " + type.getName(), e);
+			}
+		};
+	} // endregion
+
+	/**
+	 * a DateFormatter to convert epoch milliseconds
+	 */
+	static class EpochMillisDateFormatter implements DateFormatter {
+
+		@Override
+		public String format(TemporalAccessor accessor) {
+
+			Assert.notNull(accessor, "accessor must not be null");
+
+			return Long.toString(Instant.from(accessor).toEpochMilli());
+		}
+
+		@Override
+		public <T extends TemporalAccessor> T parse(String input, Class<T> type) {
+
+			Assert.notNull(input, "input must not be null");
+			Assert.notNull(type, "type must not be null");
+
+			Instant instant = Instant.ofEpochMilli(Long.parseLong(input));
+			TemporalQuery<T> query = getTemporalQuery(type);
+			return query.queryFrom(instant);
+		}
+	}
+
+	/**
+	 * a DateFormatter to convert epoch seconds. Elasticsearch's formatter uses double values, so do we
+	 */
+	static class EpochSecondDateFormatter implements DateFormatter {
+
+		@Override
+		public String format(TemporalAccessor accessor) {
+
+			Assert.notNull(accessor, "accessor must not be null");
+
+			long epochMilli = Instant.from(accessor).toEpochMilli();
+			long fraction = epochMilli % 1_000;
+			if (fraction == 0) {
+				return Long.toString(epochMilli / 1_000);
+			} else {
+				Double d = ((double) epochMilli) / 1_000;
+				return String.format(Locale.ROOT, "%.03f", d);
+			}
+		}
+
+		@Override
+		public <T extends TemporalAccessor> T parse(String input, Class<T> type) {
+
+			Assert.notNull(input, "input must not be null");
+			Assert.notNull(type, "type must not be null");
+
+			Double epochMilli = Double.parseDouble(input) * 1_000;
+			Instant instant = Instant.ofEpochMilli(epochMilli.longValue());
+			TemporalQuery<T> query = getTemporalQuery(type);
+			return query.queryFrom(instant);
+		}
+	}
+
+	static class PatternDateFormatter implements DateFormatter {
+
+		private final DateTimeFormatter dateTimeFormatter;
+
+		PatternDateFormatter(DateTimeFormatter dateTimeFormatter) {
+			this.dateTimeFormatter = dateTimeFormatter;
+		}
+
+		@Override
+		public String format(TemporalAccessor accessor) {
+
+			Assert.notNull(accessor, "accessor must not be null");
+
+			try {
+				return dateTimeFormatter.format(accessor);
+			} catch (Exception e) {
+				if (accessor instanceof Instant) {
+					// as alternatives try to format a ZonedDateTime or LocalDateTime
+					return dateTimeFormatter.format(ZonedDateTime.ofInstant((Instant) accessor, ZoneId.of("UTC")));
+				} else {
+					throw e;
+				}
+			}
+		}
+
+		@Override
+		public <T extends TemporalAccessor> T parse(String input, Class<T> type) {
+
+			Assert.notNull(input, "input must not be null");
+			Assert.notNull(type, "type must not be null");
+
+			try {
+				return dateTimeFormatter.parse(input, getTemporalQuery(type));
+			} catch (Exception e) {
+
+				if (type.equals(Instant.class)) {
+					// as alternatives try to parse a ZonedDateTime or LocalDateTime
+					try {
+						ZonedDateTime zonedDateTime = dateTimeFormatter.parse(input, getTemporalQuery(ZonedDateTime.class));
+						// noinspection unchecked
+						return (T) zonedDateTime.toInstant();
+					} catch (Exception exception) {
+						LocalDateTime localDateTime = dateTimeFormatter.parse(input, getTemporalQuery(LocalDateTime.class));
+						// noinspection unchecked
+						return (T) localDateTime.toInstant(ZoneOffset.UTC);
+					}
+				} else {
+					throw e;
+				}
+			}
+		}
 	}
 }

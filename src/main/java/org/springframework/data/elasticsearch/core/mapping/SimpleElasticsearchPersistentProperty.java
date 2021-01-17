@@ -179,7 +179,7 @@ public class SimpleElasticsearchPersistentProperty extends
 				return;
 			}
 
-			ElasticsearchDateConverter converter;
+			ElasticsearchDateConverter converter = null;
 
 			if (dateFormat == DateFormat.custom) {
 				String pattern = field.pattern();
@@ -192,33 +192,47 @@ public class SimpleElasticsearchPersistentProperty extends
 
 				converter = ElasticsearchDateConverter.of(pattern);
 			} else {
-				converter = ElasticsearchDateConverter.of(dateFormat);
+
+				switch (dateFormat) {
+					case weekyear:
+					case weekyear_week:
+					case weekyear_week_day:
+						LOGGER.warn("no Converter available for " + actualType.getName() + " and date format " + dateFormat.name()
+								+ ". Use a custom converter instead");
+						break;
+					default:
+						converter = ElasticsearchDateConverter.of(dateFormat);
+						break;
+				}
 			}
 
-			propertyConverter = new ElasticsearchPersistentPropertyConverter() {
-				final ElasticsearchDateConverter dateConverter = converter;
+			if (converter != null) {
+				ElasticsearchDateConverter finalConverter = converter;
+				propertyConverter = new ElasticsearchPersistentPropertyConverter() {
+					final ElasticsearchDateConverter dateConverter = finalConverter;
 
-				@Override
-				public String write(Object property) {
-					if (isTemporalAccessor && TemporalAccessor.class.isAssignableFrom(property.getClass())) {
-						return dateConverter.format((TemporalAccessor) property);
-					} else if (isDate && Date.class.isAssignableFrom(property.getClass())) {
-						return dateConverter.format((Date) property);
-					} else {
-						return property.toString();
+					@Override
+					public String write(Object property) {
+						if (isTemporalAccessor && TemporalAccessor.class.isAssignableFrom(property.getClass())) {
+							return dateConverter.format((TemporalAccessor) property);
+						} else if (isDate && Date.class.isAssignableFrom(property.getClass())) {
+							return dateConverter.format((Date) property);
+						} else {
+							return property.toString();
+						}
 					}
-				}
 
-				@SuppressWarnings("unchecked")
-				@Override
-				public Object read(String s) {
-					if (isTemporalAccessor) {
-						return dateConverter.parse(s, (Class<? extends TemporalAccessor>) actualType);
-					} else { // must be date
-						return dateConverter.parse(s);
+					@SuppressWarnings("unchecked")
+					@Override
+					public Object read(String s) {
+						if (isTemporalAccessor) {
+							return dateConverter.parse(s, (Class<? extends TemporalAccessor>) actualType);
+						} else { // must be date
+							return dateConverter.parse(s);
+						}
 					}
-				}
-			};
+				};
+			}
 		}
 	}
 
