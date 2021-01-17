@@ -30,6 +30,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.lang.Integer;
+import java.lang.Object;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Collections;
@@ -268,9 +269,26 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		indexOps.putMapping();
 	}
 
-	/**
-	 * @author Xiao Yu
-	 */
+	@Test // #1370
+	@DisplayName("should write mapping for disabled entity")
+	void shouldWriteMappingForDisabledEntity() {
+
+		IndexOperations indexOps = operations.indexOps(DisabledMappingEntity.class);
+		indexOps.create();
+		indexOps.putMapping();
+		indexOps.delete();
+	}
+
+	@Test // #1370
+	@DisplayName("should write mapping for disabled property")
+	void shouldWriteMappingForDisabledProperty() {
+
+		IndexOperations indexOps = operations.indexOps(DisabledMappingProperty.class);
+		indexOps.create();
+		indexOps.putMapping();
+		indexOps.delete();
+	}
+
 	@Setter
 	@Getter
 	@NoArgsConstructor
@@ -284,9 +302,6 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Keyword, ignoreAbove = 10) private String message;
 	}
 
-	/**
-	 * @author Peter-Josef Meisch
-	 */
 	static class FieldNameEntity {
 
 		@Document(indexName = "fieldname-index")
@@ -351,11 +366,6 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Nordine Bittich
-	 */
 	@Setter
 	@Getter
 	@NoArgsConstructor
@@ -373,10 +383,6 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 						searchAnalyzer = "standard") }) private String description;
 	}
 
-	/**
-	 * @author Stuart Stevenson
-	 * @author Mohsin Husen
-	 */
 	@Data
 	@Document(indexName = "test-index-simple-recursive-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class SimpleRecursiveEntity {
@@ -386,9 +392,6 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 				ignoreFields = { "circularObject" }) private SimpleRecursiveEntity circularObject;
 	}
 
-	/**
-	 * @author Sascha Woo
-	 */
 	@Setter
 	@Getter
 	@NoArgsConstructor
@@ -406,9 +409,6 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Keyword) private String name;
 	}
 
-	/**
-	 * @author Sascha Woo
-	 */
 	@Setter
 	@Getter
 	@NoArgsConstructor
@@ -426,10 +426,6 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 				type = FieldType.Keyword, normalizer = "lower_case_normalizer") }) private String description;
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 */
 	static class Author {
 
 		@Nullable private String id;
@@ -454,9 +450,6 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		}
 	}
 
-	/**
-	 * @author Kevin Leturc
-	 */
 	@Document(indexName = "test-index-sample-inherited-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class SampleInheritedEntity extends AbstractInheritedEntity {
 
@@ -472,9 +465,6 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		}
 	}
 
-	/**
-	 * @author Kevin Leturc
-	 */
 	static class SampleInheritedEntityBuilder {
 
 		private final SampleInheritedEntity result;
@@ -506,10 +496,6 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		}
 	}
 
-	/**
-	 * @author Artur Konczak
-	 * @author Mohsin Husen
-	 */
 	@Setter
 	@Getter
 	@NoArgsConstructor
@@ -525,9 +511,6 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Double) private BigDecimal price;
 	}
 
-	/**
-	 * @author Kevin Letur
-	 */
 	static class AbstractInheritedEntity {
 
 		@Nullable @Id private String id;
@@ -580,9 +563,6 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 				orientation = GeoShapeField.Orientation.clockwise) private String shape2;
 	}
 
-	/**
-	 * Created by akonczak on 21/08/2016.
-	 */
 	@Document(indexName = "test-index-user-mapping-builder")
 	static class User {
 		@Nullable @Id private String id;
@@ -590,9 +570,6 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Nested, ignoreFields = { "users" }) private Set<Group> groups = new HashSet<>();
 	}
 
-	/**
-	 * Created by akonczak on 21/08/2016.
-	 */
 	@Document(indexName = "test-index-group-mapping-builder")
 	static class Group {
 
@@ -661,5 +638,21 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	static class WildcardEntity {
 		@Nullable @Field(type = Wildcard) private String wildcardWithoutParams;
 		@Nullable @Field(type = Wildcard, nullValue = "WILD", ignoreAbove = 42) private String wildcardWithParams;
+	}
+
+	@Data
+	@Document(indexName = "disabled-entity-mapping")
+	@Mapping(enabled = false)
+	static class DisabledMappingEntity {
+		@Id private String id;
+		@Field(type = Text) private String text;
+	}
+
+	@Data
+	@Document(indexName = "disabled-property-mapping")
+	static class DisabledMappingProperty {
+		@Id private String id;
+		@Field(type = Text) private String text;
+		@Mapping(enabled = false) @Field(type = Object) private Object object;
 	}
 }

@@ -54,6 +54,7 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.lang.Nullable;
 
 /**
@@ -504,9 +505,49 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
-	/**
-	 * @author Xiao Yu
-	 */
+	@Test // #1370
+	@DisplayName("should not write mapping when enabled is false on entity")
+	void shouldNotWriteMappingWhenEnabledIsFalseOnEntity() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"enabled\": false" + //
+				"}";
+
+		String mapping = getMappingBuilder().buildPropertyMapping(DisabledMappingEntity.class);
+
+		assertEquals(expected, mapping, false);
+	}
+
+	@Test // #1370
+	@DisplayName("should write disabled property mapping")
+	void shouldWriteDisabledPropertyMapping() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"properties\":{\n" + //
+				"    \"text\": {\n" + //
+				"      \"type\": \"text\"\n" + //
+				"    },\n" + //
+				"    \"object\": {\n" + //
+				"      \"type\": \"object\",\n" + //
+				"      \"enabled\": false\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(DisabledMappingProperty.class);
+
+		assertEquals(expected, mapping, false);
+	}
+
+	@Test // #1370
+	@DisplayName("should only allow disabled properties on type object")
+	void shouldOnlyAllowDisabledPropertiesOnTypeObject() {
+
+		assertThatThrownBy(() ->
+				getMappingBuilder().buildPropertyMapping(InvalidDisabledMappingProperty.class)
+		).isInstanceOf(MappingException.class);
+	}
+
 	@Setter
 	@Getter
 	@NoArgsConstructor
@@ -520,9 +561,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Keyword, ignoreAbove = 10) private String message;
 	}
 
-	/**
-	 * @author Peter-Josef Meisch
-	 */
 	static class FieldNameEntity {
 
 		@Document(indexName = "fieldname-index")
@@ -587,11 +625,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Nordine Bittich
-	 */
 	@Setter
 	@Getter
 	@NoArgsConstructor
@@ -609,10 +642,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 						searchAnalyzer = "standard") }) private String description;
 	}
 
-	/**
-	 * @author Stuart Stevenson
-	 * @author Mohsin Husen
-	 */
 	@Data
 	@Document(indexName = "test-index-simple-recursive-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class SimpleRecursiveEntity {
@@ -622,9 +651,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				ignoreFields = { "circularObject" }) private SimpleRecursiveEntity circularObject;
 	}
 
-	/**
-	 * @author Sascha Woo
-	 */
 	@Setter
 	@Getter
 	@NoArgsConstructor
@@ -642,9 +668,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Keyword) private String name;
 	}
 
-	/**
-	 * @author Sascha Woo
-	 */
 	@Setter
 	@Getter
 	@NoArgsConstructor
@@ -662,10 +685,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				type = FieldType.Keyword, normalizer = "lower_case_normalizer") }) private String description;
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 */
 	static class Author {
 
 		@Nullable private String id;
@@ -690,9 +709,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	/**
-	 * @author Kevin Leturc
-	 */
 	@Document(indexName = "test-index-sample-inherited-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class SampleInheritedEntity extends AbstractInheritedEntity {
 
@@ -708,10 +724,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	/**
-	 * @author Artur Konczak
-	 * @author Mohsin Husen
-	 */
 	@Setter
 	@Getter
 	@NoArgsConstructor
@@ -727,9 +739,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Double) private BigDecimal price;
 	}
 
-	/**
-	 * @author Kevin Letur
-	 */
 	static class AbstractInheritedEntity {
 
 		@Nullable @Id private String id;
@@ -755,9 +764,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	/**
-	 * @author Jakub Vavrik
-	 */
 	@Document(indexName = "test-index-recursive-mapping-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class SampleTransientEntity {
 
@@ -836,9 +842,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				orientation = GeoShapeField.Orientation.clockwise) private String shape2;
 	}
 
-	/**
-	 * Created by akonczak on 21/08/2016.
-	 */
 	@Document(indexName = "test-index-user-mapping-builder")
 	static class User {
 		@Nullable @Id private String id;
@@ -846,9 +849,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Nested, ignoreFields = { "users" }) private Set<Group> groups = new HashSet<>();
 	}
 
-	/**
-	 * Created by akonczak on 21/08/2016.
-	 */
 	@Document(indexName = "test-index-group-mapping-builder")
 	static class Group {
 
@@ -960,5 +960,27 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Rank_Feature) private Integer pageRank;
 		@Field(type = FieldType.Rank_Feature, positiveScoreImpact = false) private Integer urlLength;
 		@Field(type = FieldType.Rank_Features) private Map<String, Integer> topics;
+	}
+
+	@Data
+	@Mapping(enabled = false)
+	static class DisabledMappingEntity {
+		@Id private String id;
+		@Field(type = Text) private String text;
+	}
+
+	@Data
+	static class InvalidDisabledMappingProperty {
+		@Id private String id;
+		@Mapping(enabled = false)
+		@Field(type = Text) private String text;
+	}
+
+	@Data
+	static class DisabledMappingProperty {
+		@Id private String id;
+		@Field(type = Text) private String text;
+		@Mapping(enabled = false)
+		@Field(type = Object) private Object object;
 	}
 }
