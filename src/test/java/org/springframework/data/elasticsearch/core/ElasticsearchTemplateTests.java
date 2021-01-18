@@ -91,6 +91,7 @@ import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.lang.Nullable;
 
@@ -119,6 +120,7 @@ import org.springframework.lang.Nullable;
  * @author Roman Puchkovskiy
  * @author Subhobrata Dey
  */
+@SpringIntegrationTest
 public abstract class ElasticsearchTemplateTests {
 
 	protected static final String INDEX_NAME_JOIN_SAMPLE_ENTITY = "test-index-sample-join-template";
@@ -129,6 +131,7 @@ public abstract class ElasticsearchTemplateTests {
 	protected final IndexCoordinates index = IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY);
 	@Autowired protected ElasticsearchOperations operations;
 	protected IndexOperations indexOperations;
+
 
 	@BeforeEach
 	public void before() {
@@ -3351,7 +3354,8 @@ public abstract class ElasticsearchTemplateTests {
 		shouldDeleteEntityWithJoinFields(qId2, aId2);
 	}
 
-	void shouldSaveEntityWithJoinFields(String qId1, String qId2, String aId1, String aId2) throws Exception {
+	// #1218
+	private void shouldSaveEntityWithJoinFields(String qId1, String qId2, String aId1, String aId2) throws Exception {
 		SampleJoinEntity sampleQuestionEntity1 = new SampleJoinEntity();
 		sampleQuestionEntity1.setUuid(qId1);
 		sampleQuestionEntity1.setText("This is a question");
@@ -3391,18 +3395,18 @@ public abstract class ElasticsearchTemplateTests {
 				new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId1)).build(),
 				SampleJoinEntity.class);
 
-		List<String> hitIds = hits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
-			@Override
-			public String apply(SearchHit<SampleJoinEntity> sampleJoinEntitySearchHit) {
-				return sampleJoinEntitySearchHit.getId();
-			}
-		}).collect(Collectors.toList());
+		List<String> hitIds = hits.getSearchHits().stream()
+				.map(sampleJoinEntitySearchHit -> sampleJoinEntitySearchHit.getId()).collect(Collectors.toList());
 
 		assertThat(hitIds.size()).isEqualTo(2);
 		assertThat(hitIds.containsAll(Arrays.asList(aId1, aId2))).isTrue();
+
+		hits.forEach(searchHit -> {
+			assertThat(searchHit.getRouting()).isEqualTo(qId1);
+		});
 	}
 
-	void shouldUpdateEntityWithJoinFields(String qId1, String qId2, String aId1, String aId2) throws Exception {
+	private void shouldUpdateEntityWithJoinFields(String qId1, String qId2, String aId1, String aId2) throws Exception {
 		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
 				.create();
 		document.put("myJoinField", toDocument(new JoinField<>("answer", qId2)));
@@ -3444,7 +3448,7 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(hitIds.get(0)).isEqualTo(aId1);
 	}
 
-	void shouldDeleteEntityWithJoinFields(String qId2, String aId2) throws Exception {
+	private void shouldDeleteEntityWithJoinFields(String qId2, String aId2) throws Exception {
 		Query query = new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId2)).withRoute(qId2)
 				.build();
 		operations.delete(query, SampleJoinEntity.class, IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY));
@@ -3822,4 +3826,5 @@ public abstract class ElasticsearchTemplateTests {
 				@JoinTypeRelation(parent = "question", children = { "answer" }) }) private JoinField<String> myJoinField;
 		@Field(type = Text) private String text;
 	}
+
 }

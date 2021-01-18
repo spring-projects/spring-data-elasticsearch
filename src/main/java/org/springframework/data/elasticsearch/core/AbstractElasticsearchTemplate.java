@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -61,9 +62,12 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.routing.DefaultRoutingResolver;
+import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.callback.EntityCallbacks;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.NonNull;
@@ -85,6 +89,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Nullable private EntityOperations entityOperations;
 	@Nullable private EntityCallbacks entityCallbacks;
 	@Nullable private RefreshPolicy refreshPolicy;
+	@Nullable protected RoutingResolver routingResolver;
 
 	// region Initialization
 	protected void initialize(ElasticsearchConverter elasticsearchConverter) {
@@ -92,11 +97,31 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		Assert.notNull(elasticsearchConverter, "elasticsearchConverter must not be null.");
 
 		this.elasticsearchConverter = elasticsearchConverter;
-		this.entityOperations = new EntityOperations(this.elasticsearchConverter.getMappingContext());
-		requestFactory = new RequestFactory(elasticsearchConverter);
+		MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext = this.elasticsearchConverter.getMappingContext();
+		this.entityOperations = new EntityOperations(mappingContext);
+		this.routingResolver = new DefaultRoutingResolver((SimpleElasticsearchMappingContext) mappingContext);
 
+		requestFactory = new RequestFactory(elasticsearchConverter);
 		VersionInfo.logVersions(getClusterVersion());
 	}
+
+	/**
+	 * @return copy of this instance.
+	 */
+	private AbstractElasticsearchTemplate copy() {
+
+		AbstractElasticsearchTemplate copy = doCopy();
+
+		if (entityCallbacks != null) {
+			copy.setEntityCallbacks(entityCallbacks);
+		}
+
+		copy.setRoutingResolver(routingResolver);
+
+		return copy;
+	}
+
+	protected abstract AbstractElasticsearchTemplate doCopy();
 
 	protected ElasticsearchConverter createElasticsearchConverter() {
 		MappingElasticsearchConverter mappingElasticsearchConverter = new MappingElasticsearchConverter(
@@ -277,6 +302,19 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	public String delete(Object entity, IndexCoordinates index) {
 		return this.delete(getEntityId(entity), index);
 	}
+
+	@Override
+	public String delete(String id, IndexCoordinates index) {
+		return doDelete(id, routingResolver.getRouting(), index);
+	}
+
+	@Override
+	@Deprecated
+	final public String delete(String id, @Nullable String routing, IndexCoordinates index) {
+		return doDelete(id, routing, index);
+	}
+
+	protected abstract String doDelete(String id, @Nullable String routing, IndexCoordinates index);
 
 	@Override
 	public List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, Class<?> clazz) {
@@ -621,7 +659,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Nullable
 	private String getEntityId(Object entity) {
 
-		Object id = entityOperations.forEntity(entity, elasticsearchConverter.getConversionService()).getId();
+		Object id = entityOperations.forEntity(entity, elasticsearchConverter.getConversionService(), routingResolver)
+				.getId();
 
 		if (id != null) {
 			return stringIdRepresentation(id);
@@ -632,13 +671,15 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	@Nullable
 	public String getEntityRouting(Object entity) {
-		return entityOperations.forEntity(entity, elasticsearchConverter.getConversionService()).getRouting();
+		return entityOperations.forEntity(entity, elasticsearchConverter.getConversionService(), routingResolver)
+				.getRouting();
 	}
 
 	@Nullable
 	private Long getEntityVersion(Object entity) {
 
-		Number version = entityOperations.forEntity(entity, elasticsearchConverter.getConversionService()).getVersion();
+		Number version = entityOperations.forEntity(entity, elasticsearchConverter.getConversionService(), routingResolver)
+				.getVersion();
 
 		if (version != null && Long.class.isAssignableFrom(version.getClass())) {
 			return ((Long) version);
@@ -651,7 +692,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	private SeqNoPrimaryTerm getEntitySeqNoPrimaryTerm(Object entity) {
 
 		EntityOperations.AdaptibleEntity<Object> adaptibleEntity = entityOperations.forEntity(entity,
-				elasticsearchConverter.getConversionService());
+				elasticsearchConverter.getConversionService(), routingResolver);
 		return adaptibleEntity.hasSeqNoPrimaryTerm() ? adaptibleEntity.getSeqNoPrimaryTerm() : null;
 	}
 
@@ -867,5 +908,25 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			return SearchHitMapping.mappingFor(type, elasticsearchConverter).mapScrollHits(response, entities);
 		}
 	}
+	// endregion
+
+	// region routing
+	private void setRoutingResolver(RoutingResolver routingResolver) {
+
+		Assert.notNull(routingResolver, "routingResolver must not be null");
+
+		this.routingResolver = routingResolver;
+	}
+
+	@Override
+	public ElasticsearchOperations withRouting(RoutingResolver routingResolver) {
+
+		Assert.notNull(routingResolver, "routingResolver must not be null");
+
+		AbstractElasticsearchTemplate copy = copy();
+		copy.setRoutingResolver(routingResolver);
+		return copy;
+	}
+
 	// endregion
 }

@@ -58,7 +58,6 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Don Wellington
  * @author Peter-Josef Meisch
  */
-@SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
 @DisplayName("ElasticsearchRestTemplate")
 public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {

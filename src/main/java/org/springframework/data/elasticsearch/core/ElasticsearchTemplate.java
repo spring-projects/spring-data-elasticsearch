@@ -112,6 +112,14 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		this.client = client;
 		initialize(elasticsearchConverter);
 	}
+
+	@Override
+	protected AbstractElasticsearchTemplate doCopy() {
+		ElasticsearchTemplate elasticsearchTemplate = new ElasticsearchTemplate(client, elasticsearchConverter);
+		elasticsearchTemplate.setSearchTimeout(searchTimeout);
+		return elasticsearchTemplate;
+	}
+
 	// endregion
 
 	// region IndexOperations
@@ -170,7 +178,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	@Nullable
 	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
-		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, index);
+
+		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, routingResolver.getRouting(), index);
 		GetResponse response = getRequestBuilder.execute().actionGet();
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
@@ -192,7 +201,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	protected boolean doExists(String id, IndexCoordinates index) {
-		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, index);
+
+		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, routingResolver.getRouting(), index);
 		getRequestBuilder.setFetchSource(false);
 		return getRequestBuilder.execute().actionGet().isExists();
 	}
@@ -207,7 +217,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public String delete(String id, @Nullable String routing, IndexCoordinates index) {
+	protected String doDelete(String id, @Nullable String routing, IndexCoordinates index) {
 
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(index, "index must not be null");

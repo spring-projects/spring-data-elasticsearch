@@ -89,4 +89,13 @@ public interface SearchDocument extends Document {
 	default NestedMetaData getNestedMetaData() {
 		return null;
 	}
+
+	/**
+	 * @return the routing value for the document
+	 * @since 4.2
+	 */
+	@Nullable
+	default String getRouting() {
+		return getFieldValue("_routing");
+	}
 }

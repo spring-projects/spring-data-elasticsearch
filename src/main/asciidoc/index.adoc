@@ -33,6 +33,8 @@ include::reference/elasticsearch-auditing.adoc[]
 include::{spring-data-commons-docs}/entity-callbacks.adoc[]
 include::reference/elasticsearch-entity-callbacks.adoc[leveloffset=+1]
 
+include::reference/elasticsearch-join-types.adoc[]
+include::reference/elasticsearch-routing.adoc[]
 include::reference/elasticsearch-misc.adoc[]
 :leveloffset: -1
 

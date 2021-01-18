@@ -24,7 +24,9 @@ import org.elasticsearch.index.VersionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.annotations.Parent;
+import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.join.JoinField;
@@ -32,11 +34,11 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
-import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.EvaluationException;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.LiteralExpression;
@@ -78,6 +80,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private @Nullable VersionType versionType;
 	private boolean createIndexAndMapping;
 	private final Map<String, ElasticsearchPersistentProperty> fieldNamePropertyCache = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Expression> routingExpressions = new ConcurrentHashMap<>();
+	private @Nullable String routing;
 
 	private final ConcurrentHashMap<String, Expression> indexNameExpressions = new ConcurrentHashMap<>();
 	private final Lazy<EvaluationContext> indexNameEvaluationContext = Lazy.of(this::getIndexNameEvaluationContext);
@@ -102,12 +106,21 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.indexStoreType = document.indexStoreType();
 			this.versionType = document.versionType();
 			this.createIndexAndMapping = document.createIndex();
+
+			Setting setting = AnnotatedElementUtils.getMergedAnnotation(clazz, Setting.class);
+
+			if (setting != null) {
+				this.settingPath = setting.settingPath();
+			}
 		}
 
-		Setting setting = AnnotatedElementUtils.getMergedAnnotation(clazz, Setting.class);
+		Routing routingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Routing.class);
 
-		if (setting != null) {
-			this.settingPath = setting.settingPath();
+		if (routingAnnotation != null) {
+
+			Assert.hasText(routingAnnotation.value(), "@Routing annotation must contain a non-empty value");
+
+			this.routing = routingAnnotation.value();
 		}
 	}
 
@@ -187,6 +200,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	public ElasticsearchPersistentProperty getScoreProperty() {
 		return scoreProperty;
 	}
+
+	// endregion
 
 	@Override
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
@@ -351,14 +366,15 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		Expression expression = getExpressionForIndexName(name);
 
-		String resolvedName = expression != null ? expression.getValue(indexNameEvaluationContext.get(), String.class) : null;
+		String resolvedName = expression != null ? expression.getValue(indexNameEvaluationContext.get(), String.class)
+				: null;
 		return resolvedName != null ? resolvedName : name;
 	}
 
 	/**
 	 * returns an {@link Expression} for #name if name contains a {@link ParserContext#TEMPLATE_EXPRESSION} otherwise
 	 * returns {@literal null}.
-	 * 
+	 *
 	 * @param name the name to get the expression for
 	 * @return Expression may be null
 	 */
@@ -373,7 +389,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	/**
 	 * build the {@link EvaluationContext} considering {@link ExpressionDependencies} from the name returned by
 	 * {@link #getIndexName()}.
-	 * 
+	 *
 	 * @return EvaluationContext
 	 */
 	private EvaluationContext getIndexNameEvaluationContext() {
@@ -383,6 +399,36 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 				: ExpressionDependencies.none();
 
 		return getEvaluationContext(null, expressionDependencies);
+	}
+
+	@Override
+	@Nullable
+	public String resolveRouting(T bean) {
+
+		if (routing == null) {
+			return null;
+		}
+
+		ElasticsearchPersistentProperty persistentProperty = getPersistentProperty(routing);
+
+		if (persistentProperty != null) {
+			Object propertyValue = getPropertyAccessor(bean).getProperty(persistentProperty);
+
+			return propertyValue != null ? propertyValue.toString() : null;
+		}
+
+		try {
+			Expression expression = routingExpressions.computeIfAbsent(routing, PARSER::parseExpression);
+			ExpressionDependencies expressionDependencies = ExpressionDependencies.discover(expression);
+
+			EvaluationContext context = getEvaluationContext(null, expressionDependencies);
+			context.setVariable("entity", bean);
+
+			return expression.getValue(context, String.class);
+		} catch (EvaluationException e) {
+			throw new InvalidDataAccessApiUsageException(
+					"Could not resolve expression: " + routing + " for object of class " + bean.getClass().getCanonicalName(), e);
+		}
 	}
 
 	// endregion

@@ -301,7 +301,7 @@ public interface ReactiveDocumentOperations {
 	 * @param entityType must not be {@literal null}.
 	 * @param index the target index, must not be {@literal null}
 	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
-	 * @deprecated since 4.0, use {@link #delete(String, Class)} or {@link #deleteById(String, IndexCoordinates)}
+	 * @deprecated since 4.0, use {@link #delete(String, Class)} or {@link #delete(String, IndexCoordinates)}
 	 */
 	@Deprecated
 	default Mono<String> delete(String id, Class<?> entityType, IndexCoordinates index) {

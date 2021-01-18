@@ -1,7 +1,8 @@
 [[elasticsearch.misc]]
 = Miscellaneous Elasticsearch Operation Support
 
-This chapter covers additional support for Elasticsearch operations that cannot be directly accessed via the repository interface. It is recommended to add those operations as custom implementation as described in <<repositories.custom-implementations>> .
+This chapter covers additional support for Elasticsearch operations that cannot be directly accessed via the repository interface.
+It is recommended to add those operations as custom implementation as described in <<repositories.custom-implementations>> .
 
 [[elasticsearch.misc.filter]]
 == Filter Builder
@@ -27,7 +28,8 @@ Page<SampleEntity> sampleEntities = operations.searchForPage(searchQuery, Sample
 [[elasticsearch.scroll]]
 == Using Scroll For Big Result Set
 
-Elasticsearch has a scroll API for getting big result set in chunks. This is internally used by Spring Data Elasticsearch to provide the implementations of the `<T> SearchHitsIterator<T> SearchOperations.searchForStream(Query query, Class<T> clazz, IndexCoordinates index)` method.
+Elasticsearch has a scroll API for getting big result set in chunks.
+This is internally used by Spring Data Elasticsearch to provide the implementations of the `<T> SearchHitsIterator<T> SearchOperations.searchForStream(Query query, Class<T> clazz, IndexCoordinates index)` method.
 
 [source,java]
 ----
@@ -76,7 +78,8 @@ while (scroll.hasSearchHits()) {
 template.searchScrollClear(scrollId);
 ----
 
-To use the Scroll API with repository methods, the return type must defined as `Stream` in the Elasticsearch Repository. The implementation of the method will then use the scroll methods from the ElasticsearchTemplate.
+To use the Scroll API with repository methods, the return type must defined as `Stream` in the Elasticsearch Repository.
+The implementation of the method will then use the scroll methods from the ElasticsearchTemplate.
 
 [source,java]
 ----
@@ -98,209 +101,3 @@ If the class to be retrieved has a `GeoPoint` property named _location_, the fol
 ----
 Sort.by(new GeoDistanceOrder("location", new GeoPoint(48.137154, 11.5761247)))
 ----
-
-[[elasticsearch.misc.jointype]]
-== Join-Type implementation
-
-Spring Data Elasticsearch supports the https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html[Join data type] for creating the corresponding index mappings and for storing the relevant information.
-
-=== Setting up the data
-
-For an entity to be used in a parent child join relationship, it must have a property of type `JoinField` which must be annotated.
-Let's assume a `Statement` entity where a statement may be a _question_, an _answer_, a _comment_ or a _vote_ (a _Builder_ is also shown in this example, it's not necessary, but later used in the sample code):
-
-====
-[source,java]
-----
-@Document(indexName = "statements")
-public class Statement {
-    @Id
-    private String id;
-
-    @Field(type = FieldType.Text)
-    private String text;
-
-    @JoinTypeRelations(
-        relations =
-            {
-                @JoinTypeRelation(parent = "question", children = {"answer", "comment"}), <1>
-                @JoinTypeRelation(parent = "answer", children = "vote")                   <2>
-            }
-    )
-    private JoinField<String> relation;                                                   <3>
-
-    private Statement() {
-    }
-
-    public static StatementBuilder builder() {
-        return new StatementBuilder();
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String text) {
-        this.text = text;
-    }
-
-    public JoinField<String> getRelation() {
-        return relation;
-    }
-
-    public void setRelation(JoinField<String> relation) {
-        this.relation = relation;
-    }
-
-    public static final class StatementBuilder {
-        private String id;
-        private String text;
-        private JoinField<String> relation;
-
-        private StatementBuilder() {
-        }
-
-        public StatementBuilder withId(String id) {
-            this.id = id;
-            return this;
-        }
-
-        public StatementBuilder withText(String text) {
-            this.text = text;
-            return this;
-        }
-
-        public StatementBuilder withRelation(JoinField<String> relation) {
-            this.relation = relation;
-            return this;
-        }
-
-        public Statement build() {
-            Statement statement = new Statement();
-            statement.setId(id);
-            statement.setText(text);
-            statement.setRelation(relation);
-            return statement;
-        }
-    }
-}
-----
-<1> a question can have answers and comments
-<2> an answer can have votes
-<3> the `JoinField` property is used to combine the name (_question_, _answer_, _comment_ or _vote_) of the relation with the parent id. The generic type must be the same as the `@Id` annotated property.
-====
-
-Spring Data Elasticsearch will build the following mapping for this class:
-
-====
-[source,json]
-----
-{
-  "statements": {
-    "mappings": {
-      "properties": {
-        "_class": {
-          "type": "text",
-          "fields": {
-            "keyword": {
-              "type": "keyword",
-              "ignore_above": 256
-            }
-          }
-        },
-        "relation": {
-          "type": "join",
-          "eager_global_ordinals": true,
-          "relations": {
-            "question": [
-              "answer",
-              "comment"
-            ],
-            "answer": "vote"
-          }
-        },
-        "text": {
-          "type": "text"
-        }
-      }
-    }
-  }
-}
-----
-====
-
-=== Storing data
-
-Given a repository for this class the following code inserts a question, two answers, a comment and a vote:
-
-====
-[source,java]
-----
-void init() {
-    repository.deleteAll();
-
-    Statement savedWeather = repository.save(
-        Statement.builder()
-            .withText("How is the weather?")
-            .withRelation(new JoinField<>("question"))                          <1>
-            .build());
-
-    Statement sunnyAnswer = repository.save(
-        Statement.builder()
-            .withText("sunny")
-            .withRelation(new JoinField<>("answer", savedWeather.getId()))      <2>
-            .build());
-
-    repository.save(
-        Statement.builder()
-            .withText("rainy")
-            .withRelation(new JoinField<>("answer", savedWeather.getId()))      <3>
-            .build());
-
-    repository.save(
-        Statement.builder()
-            .withText("I don't like the rain")
-            .withRelation(new JoinField<>("comment", savedWeather.getId()))     <4>
-            .build());
-
-    repository.save(
-        Statement.builder()
-            .withText("+1 for the sun")
-            .withRelation(new JoinField<>("vote", sunnyAnswer.getId()))         <5>
-            .build());
-}
-----
-<1> create a question statement
-<2> the first answer to the question
-<3> the second answer
-<4> a comment to the question
-<5> a vote for the first answer
-====
-
-=== Retrieving data
-
-Currently native search queries must be used to query the data, so there is no support from standard repository methods. <<repositories.custom-implementations>> can be used instead.
-
-The following code shows as an example how to retrieve all entries that have a _vote_ (which must be _answers_, because only answers can have a vote) using an `ElasticsearchOperations` instance:
-
-====
-[source,java]
-----
-SearchHits<Statement> hasVotes() {
-    NativeSearchQuery query = new NativeSearchQueryBuilder()
-        .withQuery(hasChildQuery("vote", matchAllQuery(), ScoreMode.None))
-        .build();
-
-    return operations.search(query, Statement.class);
-}
-----
-====
-
