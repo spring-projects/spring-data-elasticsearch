@@ -172,19 +172,19 @@ public class GeoConverters {
 			String type = GeoConverters.getGeoJsonType(source);
 
 			switch (type) {
-				case GeoJsonPoint.TYPE:
+				case "point":
 					return MapToGeoJsonPointConverter.INSTANCE.convert(source);
-				case GeoJsonMultiPoint.TYPE:
+				case "multipoint":
 					return MapToGeoJsonMultiPointConverter.INSTANCE.convert(source);
-				case GeoJsonLineString.TYPE:
+				case "linestring":
 					return MapToGeoJsonLineStringConverter.INSTANCE.convert(source);
-				case GeoJsonMultiLineString.TYPE:
+				case "multilinestring":
 					return MapToGeoJsonMultiLineStringConverter.INSTANCE.convert(source);
-				case GeoJsonPolygon.TYPE:
+				case "polygon":
 					return MapToGeoJsonPolygonConverter.INSTANCE.convert(source);
-				case GeoJsonMultiPolygon.TYPE:
+				case "multipolygon":
 					return MapToGeoJsonMultiPolygonConverter.INSTANCE.convert(source);
-				case GeoJsonGeometryCollection.TYPE:
+				case "geometrycollection":
 					return MapToGeoJsonGeometryCollectionConverter.INSTANCE.convert(source);
 				default:
 					throw new IllegalArgumentException("unknown GeoJson type " + type);
@@ -217,7 +217,7 @@ public class GeoConverters {
 		public GeoJsonPoint convert(Map<String, Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
-			Assert.isTrue(type.equals(GeoJsonPoint.TYPE), "does not contain a type 'Point'");
+			Assert.isTrue(type.equalsIgnoreCase(GeoJsonPoint.TYPE), "does not contain a type 'Point'");
 
 			Object coordinates = source.get("coordinates");
 			Assert.notNull(coordinates, "Document to convert does not contain coordinates");
@@ -255,7 +255,7 @@ public class GeoConverters {
 		public GeoJsonMultiPoint convert(Map<String, Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
-			Assert.isTrue(type.equals(GeoJsonMultiPoint.TYPE), "does not contain a type 'MultiPoint'");
+			Assert.isTrue(type.equalsIgnoreCase(GeoJsonMultiPoint.TYPE), "does not contain a type 'MultiPoint'");
 			Object coordinates = source.get("coordinates");
 			Assert.notNull(coordinates, "Document to convert does not contain coordinates");
 			Assert.isTrue(coordinates instanceof List, "coordinates must be a List");
@@ -290,7 +290,7 @@ public class GeoConverters {
 		public GeoJsonLineString convert(Map<String, Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
-			Assert.isTrue(type.equals(GeoJsonLineString.TYPE), "does not contain a type 'LineString'");
+			Assert.isTrue(type.equalsIgnoreCase(GeoJsonLineString.TYPE), "does not contain a type 'LineString'");
 			Object coordinates = source.get("coordinates");
 			Assert.notNull(coordinates, "Document to convert does not contain coordinates");
 			Assert.isTrue(coordinates instanceof List, "coordinates must be a List");
@@ -322,7 +322,7 @@ public class GeoConverters {
 		public GeoJsonMultiLineString convert(Map<String, Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
-			Assert.isTrue(type.equals(GeoJsonMultiLineString.TYPE), "does not contain a type 'MultiLineString'");
+			Assert.isTrue(type.equalsIgnoreCase(GeoJsonMultiLineString.TYPE), "does not contain a type 'MultiLineString'");
 			List<GeoJsonLineString> lines = geoJsonLineStringsFromMap(source);
 			return GeoJsonMultiLineString.of(lines);
 		}
@@ -350,7 +350,7 @@ public class GeoConverters {
 		public GeoJsonPolygon convert(Map<String, Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
-			Assert.isTrue(type.equals(GeoJsonPolygon.TYPE), "does not contain a type 'Polygon'");
+			Assert.isTrue(type.equalsIgnoreCase(GeoJsonPolygon.TYPE), "does not contain a type 'Polygon'");
 			List<GeoJsonLineString> lines = geoJsonLineStringsFromMap(source);
 			Assert.isTrue(lines.size() > 0, "no linestrings defined in polygon");
 			GeoJsonPolygon geoJsonPolygon = GeoJsonPolygon.of(lines.get(0));
@@ -394,7 +394,7 @@ public class GeoConverters {
 		public GeoJsonMultiPolygon convert(Map<String, Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
-			Assert.isTrue(type.equals(GeoJsonMultiPolygon.TYPE), "does not contain a type 'MultiPolygon'");
+			Assert.isTrue(type.equalsIgnoreCase(GeoJsonMultiPolygon.TYPE), "does not contain a type 'MultiPolygon'");
 			Object coordinates = source.get("coordinates");
 			Assert.notNull(coordinates, "Document to convert does not contain coordinates");
 			Assert.isTrue(coordinates instanceof List, "coordinates must be a List");
@@ -441,7 +441,8 @@ public class GeoConverters {
 		public GeoJsonGeometryCollection convert(Map<String, Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
-			Assert.isTrue(type.equals(GeoJsonGeometryCollection.TYPE), "does not contain a type 'GeometryCollection'");
+			Assert.isTrue(type.equalsIgnoreCase(GeoJsonGeometryCollection.TYPE),
+					"does not contain a type 'GeometryCollection'");
 			Object geometries = source.get("geometries");
 			Assert.notNull(geometries, "Document to convert does not contain geometries");
 			Assert.isTrue(geometries instanceof List, "geometries must be a List");
@@ -461,7 +462,7 @@ public class GeoConverters {
 		Assert.notNull(type, "Document to convert does not contain a type");
 		Assert.isTrue(type instanceof String, "type must be a String");
 
-		return type.toString();
+		return type.toString().toLowerCase();
 	}
 
 	private static List<Double> toCoordinates(Point point) {

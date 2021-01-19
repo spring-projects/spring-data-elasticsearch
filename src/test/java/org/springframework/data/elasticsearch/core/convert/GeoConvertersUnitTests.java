@@ -53,6 +53,9 @@ class GeoConvertersUnitTests {
 		@DisplayName("GeoJsonPoint")
 		class GeoJsonPointUnitTests {
 
+			// NOTE: the test converting from a map contains the type names in lowercase, that might be returned from
+			// Elasticsearch
+
 			@Test // DATAES-930
 			@DisplayName("should be converted to a Map")
 			void shouldBeConvertedToAMap() throws JSONException {
@@ -75,7 +78,7 @@ class GeoConvertersUnitTests {
 
 				// make sure we can read int values as well
 				String json = "{\n" + //
-						"  \"type\": \"Point\",\n" + //
+						"  \"type\": \"point\",\n" + //
 						"  \"coordinates\": [12, 34.0]\n" + //
 						"}"; //
 
@@ -117,8 +120,14 @@ class GeoConvertersUnitTests {
 			void shouldBeConvertedFromAMap() {
 
 				// make sure we can read int values as well
-				String json = "{\n" + "  \"type\": \"MultiPoint\",\n" + "  \"coordinates\": [\n" + "    [12.0, 34],\n"
-						+ "    [56, 78.0]\n" + "  ]\n" + "}\n";
+				String json = "{\n" + //
+						"  \"type\": \"multipoint\",\n" //
+						+ "  \"coordinates\": [\n" + //
+						"    [12.0, 34],\n" + //
+						"    [56, 78.0]\n" + //
+						"  ]\n" + //
+						"}\n"; //
+
 				Document document = Document.parse(json);
 
 				GeoJsonMultiPoint expected = GeoJsonMultiPoint.of(new Point(12, 34), new Point(56, 78));
@@ -158,7 +167,7 @@ class GeoConvertersUnitTests {
 
 				// make sure we can read int values as well
 				String json = "{\n" + //
-						"  \"type\": \"LineString\",\n" + //
+						"  \"type\": \"linestring\",\n" + //
 						"  \"coordinates\": [\n" + //
 						"    [12.0, 34],\n" + //
 						"    [56, 78.0]\n" //
@@ -205,7 +214,7 @@ class GeoConvertersUnitTests {
 			void shouldBeConvertedFromAMap() {
 				// make sure we can read int values as well
 				String json = "{\n" + //
-						"  \"type\": \"MultiLineString\",\n" + //
+						"  \"type\": \"multilinestring\",\n" + //
 						"  \"coordinates\": [\n" + //
 						"    [[12, 34.0], [56.0, 78]],\n" + //
 						"    [[90.0, 12], [34, 56.0]]\n" + //
@@ -256,7 +265,7 @@ class GeoConvertersUnitTests {
 			void shouldBeConvertedFromAMap() {
 
 				String json = "{\n" + //
-						"  \"type\": \"Polygon\",\n" + //
+						"  \"type\": \"polygon\",\n" + //
 						"  \"coordinates\": [\n" + //
 						"    [[12, 34.0], [56.0, 78], [90, 12.0], [12, 34.0]],\n" + //
 						"    [[56.0, 78], [90, 12.0], [34.0, 56], [56.0, 78]]\n" + //
@@ -308,7 +317,7 @@ class GeoConvertersUnitTests {
 			void shouldBeConvertedFromAMap() {
 
 				String json = "{\n" + //
-						"  \"type\": \"MultiPolygon\",\n" + //
+						"  \"type\": \"multipolygon\",\n" + //
 						"  \"coordinates\": [\n" + //
 						"    [[[12, 34.0], [56.0, 78], [90, 12.0], [12, 34.0]]],\n" + //
 						"    [[[56, 78.0], [90, 12.0], [34.0, 56], [56, 78.0]]]\n" + //
@@ -369,14 +378,14 @@ class GeoConvertersUnitTests {
 			void shouldBeConvertedFromAMap() {
 
 				String json = "{\n" + //
-						"  \"type\": \"GeometryCollection\",\n" + //
+						"  \"type\": \"geometrycollection\",\n" + //
 						"  \"geometries\": [\n" + //
 						"    {\n" + //
-						"      \"type\": \"Point\",\n" + //
+						"      \"type\": \"point\",\n" + //
 						"      \"coordinates\": [12.0, 34.0]\n" + //
 						"    },\n" + //
 						"    {\n" + //
-						"      \"type\": \"Polygon\",\n" + //
+						"      \"type\": \"polygon\",\n" + //
 						"      \"coordinates\": [\n" + //
 						"        [[12.0, 34.0], [56.0, 78.0], [90.0, 12.0], [12.0, 34.0]]\n" + //
 						"      ]\n" + //
