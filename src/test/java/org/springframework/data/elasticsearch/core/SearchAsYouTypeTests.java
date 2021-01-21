@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -109,9 +109,9 @@ public class SearchAsYouTypeTests {
 				.collect(Collectors.toList());
 
 		// then
-		assertEquals(2, result.size());
-		assertTrue(result.contains(new SearchAsYouTypeEntity("1")));
-		assertTrue(result.contains(new SearchAsYouTypeEntity("2")));
+		assertThat(result).hasSize(2);
+		assertThat(result).contains(new SearchAsYouTypeEntity("1"));
+		assertThat(result).contains(new SearchAsYouTypeEntity("2"));
 	}
 
 	@Test // DATAES-773
@@ -131,9 +131,9 @@ public class SearchAsYouTypeTests {
 				.collect(Collectors.toList());
 
 		// then
-		assertEquals(2, result.size());
-		assertTrue(result.contains(new SearchAsYouTypeEntity("2")));
-		assertTrue(result.contains(new SearchAsYouTypeEntity("3")));
+		assertThat(result).hasSize(2);
+		assertThat(result).contains(new SearchAsYouTypeEntity("2"));
+		assertThat(result).contains(new SearchAsYouTypeEntity("3"));
 	}
 
 	@Test // DATAES-773
@@ -153,8 +153,8 @@ public class SearchAsYouTypeTests {
 				.collect(Collectors.toList());
 
 		// then
-		assertEquals(1, result.size());
-		assertTrue(result.contains(new SearchAsYouTypeEntity("4")));
+		assertThat(result).hasSize(1);
+		assertThat(result).contains(new SearchAsYouTypeEntity("4"));
 	}
 
 	/**
