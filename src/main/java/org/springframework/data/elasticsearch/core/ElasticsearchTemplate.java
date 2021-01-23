@@ -36,6 +36,8 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +46,7 @@ import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -81,6 +84,7 @@ import org.springframework.util.Assert;
  * @author Farid Azaza
  * @author Gyula Attila Csorogi
  * @author Roman Puchkovskiy
+ * @author Farid Faoudi
  * @deprecated as of 4.0
  */
 @Deprecated
@@ -249,6 +253,13 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		org.elasticsearch.action.update.UpdateResponse updateResponse = updateRequestBuilder.execute().actionGet();
 		UpdateResponse.Result result = UpdateResponse.Result.valueOf(updateResponse.getResult().name());
 		return new UpdateResponse(result);
+	}
+
+	@Override
+	public UpdateByQueryResponse updateByQuery(UpdateQuery query, IndexCoordinates index) {
+		final UpdateByQueryRequestBuilder updateByQueryRequestBuilder = requestFactory.updateByQueryRequestBuilder(client, query, index);
+		final BulkByScrollResponse bulkByScrollResponse = updateByQueryRequestBuilder.execute().actionGet();
+		return UpdateByQueryResponse.of(bulkByScrollResponse);
 	}
 
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,

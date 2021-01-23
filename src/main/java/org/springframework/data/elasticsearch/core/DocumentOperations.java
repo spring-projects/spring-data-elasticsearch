@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import java.util.List;
 
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
@@ -33,6 +34,7 @@ import org.springframework.lang.Nullable;
  * <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs.html">Elasticsearch Document APIs</a>.
  *
  * @author Peter-Josef Meisch
+ * @author Farid Faoudi
  * @since 4.0
  */
 public interface DocumentOperations {
@@ -298,6 +300,16 @@ public interface DocumentOperations {
 	 * @return the update response
 	 */
 	UpdateResponse update(UpdateQuery updateQuery, IndexCoordinates index);
+
+	/**
+	 * Update document(s) by query
+	 *
+	 * @param updateQuery query defining the update
+	 * @param index the index where to update the records
+	 * @return the update response
+	 * @since 4.2
+	 */
+	UpdateByQueryResponse updateByQuery(UpdateQuery updateQuery, IndexCoordinates index);
 
 	// region deprecated
 	/**

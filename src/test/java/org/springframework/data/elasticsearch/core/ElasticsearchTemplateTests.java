@@ -33,15 +33,7 @@ import java.lang.Double;
 import java.lang.Integer;
 import java.lang.Long;
 import java.lang.Object;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -119,6 +111,7 @@ import org.springframework.lang.Nullable;
  * @author Gyula Attila Csorogi
  * @author Roman Puchkovskiy
  * @author Subhobrata Dey
+ * @author Farid Faoudi
  */
 @SpringIntegrationTest
 public abstract class ElasticsearchTemplateTests {
@@ -1529,6 +1522,39 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		operations.update(updateQuery, index);
+
+		// then
+		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class, index);
+		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
+	}
+
+	@Test
+	void shouldDoUpdateByQueryForExistingDocument() {
+		// given
+		final String documentId = nextIdAsString();
+		final String messageBeforeUpdate = "some test message";
+		final String messageAfterUpdate = "test message";
+
+		final SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message(messageBeforeUpdate)
+				.version(System.currentTimeMillis()).build();
+
+		final IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		operations.index(indexQuery, index);
+		indexOperations.refresh();
+
+		final NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+
+		final UpdateQuery updateQuery = UpdateQuery.builder(query)
+				.withScriptType(org.springframework.data.elasticsearch.core.ScriptType.INLINE)
+				.withScript("ctx._source['message'] = params['newMessage']")
+				.withLang("painless")
+				.withParams(Collections.singletonMap("newMessage", messageAfterUpdate))
+				.withAbortOnVersionConflict(true)
+				.build();
+
+		// when
+		operations.updateByQuery(updateQuery, index);
 
 		// then
 		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class, index);

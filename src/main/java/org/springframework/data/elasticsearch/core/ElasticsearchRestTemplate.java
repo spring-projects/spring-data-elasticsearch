@@ -37,7 +37,9 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
@@ -46,6 +48,7 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -87,6 +90,7 @@ import org.springframework.util.Assert;
  * @author Mathias Teier
  * @author Gyula Attila Csorogi
  * @author Massimiliano Poggi
+ * @author Farid Faoudi
  */
 public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
@@ -224,6 +228,13 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		UpdateResponse.Result result = UpdateResponse.Result
 				.valueOf(execute(client -> client.update(request, RequestOptions.DEFAULT)).getResult().name());
 		return new UpdateResponse(result);
+	}
+
+	@Override
+	public UpdateByQueryResponse updateByQuery(UpdateQuery query, IndexCoordinates index) {
+		final UpdateByQueryRequest updateByQueryRequest = requestFactory.updateByQueryRequest(query, index);
+		final BulkByScrollResponse bulkByScrollResponse = execute(client -> client.updateByQuery(updateByQueryRequest, RequestOptions.DEFAULT));
+		return UpdateByQueryResponse.of(bulkByScrollResponse);
 	}
 
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,

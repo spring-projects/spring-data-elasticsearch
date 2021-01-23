@@ -16,6 +16,8 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
@@ -24,21 +26,28 @@ import lombok.Data;
 import lombok.val;
 
 import java.lang.Object;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.elasticsearch.action.support.ActiveShardCount;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -57,6 +66,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Sascha Woo
  * @author Don Wellington
  * @author Peter-Josef Meisch
+ * @author Farid Faoudi
  */
 @ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
 @DisplayName("ElasticsearchRestTemplate")
@@ -118,5 +128,56 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 		assertThat(fetchSourceContext).isNotNull();
 		assertThat(fetchSourceContext.includes()).containsExactlyInAnyOrder("incl");
 		assertThat(fetchSourceContext.excludes()).containsExactlyInAnyOrder("excl");
+	}
+
+	@Test // #1446
+	void shouldUseAllOptionsFromUpdateByQuery() throws JSONException {
+		// given
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withIndicesOptions(IndicesOptions.lenientExpandOpen())
+				.build();
+		searchQuery.setScrollTime(Duration.ofMillis(1000));
+
+		final UpdateQuery updateQuery = UpdateQuery.builder(searchQuery)
+				.withAbortOnVersionConflict(true)
+				.withBatchSize(10)
+				.withMaxDocs(12)
+				.withMaxRetries(3)
+				.withPipeline("pipeline")
+				.withRequestsPerSecond(5F)
+				.withShouldStoreResult(false)
+				.withSlices(4)
+				.withScriptType(ScriptType.INLINE)
+				.withScript("script")
+				.withLang("painless")
+				.build();
+
+		final String expectedSearchRequest = '{' + //
+				"  \"size\": 10," + //
+				"  \"query\": {" + //
+				"    \"match_all\": {" + //
+				"      \"boost\": 1.0" + //
+				"    }" +
+				"  }" +
+				'}';
+
+		// when
+		final UpdateByQueryRequest request = getRequestFactory().updateByQueryRequest(updateQuery, IndexCoordinates.of("index"));
+
+		// then
+		assertThat(request).isNotNull();
+		assertThat(request.getSearchRequest().indicesOptions()).usingRecursiveComparison().isEqualTo(IndicesOptions.lenientExpandOpen());
+		assertThat(request.getScrollTime().getMillis()).isEqualTo(1000);
+		assertEquals(request.getSearchRequest().source().toString(), expectedSearchRequest, false);
+		assertThat(request.isAbortOnVersionConflict()).isTrue();
+		assertThat(request.getBatchSize()).isEqualTo(10);
+		assertThat(request.getMaxDocs()).isEqualTo(12);
+		assertThat(request.getPipeline()).isEqualTo("pipeline");
+		assertThat(request.getRequestsPerSecond()).isEqualTo(5F);
+		assertThat(request.getShouldStoreResult()).isFalse();
+		assertThat(request.getSlices()).isEqualTo(4);
+		assertThat(request.getScript().getIdOrCode()).isEqualTo("script");
+		assertThat(request.getScript().getType()).isEqualTo(org.elasticsearch.script.ScriptType.INLINE);
+		assertThat(request.getScript().getLang()).isEqualTo("painless");
 	}
 }

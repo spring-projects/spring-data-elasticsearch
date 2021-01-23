@@ -19,6 +19,10 @@ import static org.assertj.core.api.Assertions.*;
 
 import lombok.SneakyThrows;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -27,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -102,8 +107,10 @@ public class ReactiveElasticsearchClientIntegrationTests {
 	// (Object...)
 	static final Map<String, Object> DOC_SOURCE;
 
-	@Autowired ReactiveElasticsearchClient client;
-	@Autowired ReactiveElasticsearchOperations operations;
+	@Autowired
+	ReactiveElasticsearchClient client;
+	@Autowired
+	ReactiveElasticsearchOperations operations;
 
 	static {
 
@@ -448,6 +455,76 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.map(BulkByScrollResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(0L)//
+				.verifyComplete();
+	}
+
+	@Test // #1446
+	void updateByEmitResultWhenNothingUpdated() {
+		addSourceDocument().to(INDEX_I);
+		addSourceDocument().to(INDEX_I);
+
+		Map<String, String> source = new LinkedHashMap<>();
+		source.put("firstname", "crow");
+		source.put("lastname", "cat");
+
+		final Map<String, String> documentToNotUpdate = Collections.unmodifiableMap(source);
+		add(documentToNotUpdate).to(INDEX_I);
+
+		final String script = "ctx._source['firstname'] = params['newFirstname']";
+		final Map<String, Object> params = Collections.singletonMap("newFirstname", "arrow");
+
+		final UpdateByQueryRequest request = new UpdateByQueryRequest(INDEX_I)
+				.setQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("lastname", "fallstar")))
+				.setAbortOnVersionConflict(true)
+				.setRefresh(true)
+				.setScript(new Script(ScriptType.INLINE, "painless", script, params));
+
+		client.updateBy(request)
+				.map(UpdateByQueryResponse::getUpdated)
+				.as(StepVerifier::create)
+				.expectNext(2L)
+				.verifyComplete();
+
+		final SearchRequest searchUpdatedRequest = new SearchRequest(INDEX_I) //
+				.source(new SearchSourceBuilder()
+						.query(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("firstname", "arrow"))));
+
+		client.search(searchUpdatedRequest)
+				.collectList()
+				.map(List::size)
+				.as(StepVerifier::create)
+				.expectNext(2)
+				.verifyComplete();
+	}
+
+	@Test // #1446
+	void updateByShouldUpdateExistingDocument() {
+		addSourceDocument().to(INDEX_I);
+
+		final String script = "ctx._source['firstname'] = params['newFirstname']";
+		final Map<String, Object> params = Collections.singletonMap("newFirstname", "arrow");
+
+		final UpdateByQueryRequest request = new UpdateByQueryRequest(INDEX_I)
+				.setQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("lastname", "non_existing_lastname")))
+				.setAbortOnVersionConflict(true)
+				.setRefresh(true)
+				.setScript(new Script(ScriptType.INLINE, "painless", script, params));
+
+		client.updateBy(request)
+				.map(UpdateByQueryResponse::getUpdated)
+				.as(StepVerifier::create)
+				.expectNext(0L)
+				.verifyComplete();
+
+		SearchRequest searchUpdatedRequest = new SearchRequest(INDEX_I) //
+				.source(new SearchSourceBuilder()
+						.query(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("firstname", "arrow"))));
+
+		client.search(searchUpdatedRequest)
+				.collectList()
+				.map(List::size)
+				.as(StepVerifier::create)
+				.expectNext(0)
 				.verifyComplete();
 	}
 

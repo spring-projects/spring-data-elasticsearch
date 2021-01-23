@@ -17,6 +17,8 @@ package org.springframework.data.elasticsearch.client.reactive;
 
 import org.elasticsearch.client.indices.GetFieldMappingsRequest;
 import org.elasticsearch.client.indices.GetFieldMappingsResponse;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -595,6 +597,44 @@ public interface ReactiveElasticsearchClient {
 	 * @return a {@link Mono} emitting operation response.
 	 */
 	Mono<BulkByScrollResponse> deleteBy(HttpHeaders headers, DeleteByQueryRequest deleteRequest);
+
+	/**
+	 * Execute a {@link UpdateByQueryRequest} against the {@literal update by query} API.
+	 *
+	 * @param consumer never {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html">Update By
+	 * 	 *      Query API on elastic.co</a>
+	 * @return a {@link Mono} emitting operation response.
+	 */
+	default Mono<UpdateByQueryResponse> updateBy(Consumer<UpdateByQueryRequest> consumer){
+
+		final UpdateByQueryRequest request = new UpdateByQueryRequest();
+		consumer.accept(request);
+		return updateBy(request);
+	}
+
+	/**
+	 * Execute a {@link UpdateByQueryRequest} against the {@literal update by query} API.
+	 *
+	 * @param updateRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html">Update By
+	 * 	 *      Query API on elastic.co</a>
+	 * @return a {@link Mono} emitting operation response.
+	 */
+	default Mono<UpdateByQueryResponse> updateBy(UpdateByQueryRequest updateRequest){
+		return updateBy(HttpHeaders.EMPTY, updateRequest);
+	}
+
+	/**
+	 * Execute a {@link UpdateByQueryRequest} against the {@literal update by query} API.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param updateRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html">Update By
+	 * 	 *      Query API on elastic.co</a>
+	 * @return a {@link Mono} emitting operation response.
+	 */
+	Mono<UpdateByQueryResponse> updateBy(HttpHeaders headers, UpdateByQueryRequest updateRequest);
 
 	/**
 	 * Execute a {@link BulkRequest} against the {@literal bulk} API.

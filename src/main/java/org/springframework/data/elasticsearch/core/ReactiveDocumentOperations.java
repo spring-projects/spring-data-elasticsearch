@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -36,6 +37,7 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @author Aleksei Arsenev
  * @author Roman Puchkovskiy
+ * @author Farid Faoudi
  * @since 4.0
  */
 public interface ReactiveDocumentOperations {
@@ -336,4 +338,13 @@ public interface ReactiveDocumentOperations {
 	 * @since 4.1
 	 */
 	Mono<UpdateResponse> update(UpdateQuery updateQuery, IndexCoordinates index);
+
+	/**
+	 * Update document(s) by query.
+	 * @param updateQuery query defining the update
+	 * @param index the index where to update the records
+	 * @return a {@link Mono} emitting the update response
+	 * @since 4.2
+	 */
+	Mono<UpdateByQueryResponse> updateByQuery(UpdateQuery updateQuery, IndexCoordinates index);
 }

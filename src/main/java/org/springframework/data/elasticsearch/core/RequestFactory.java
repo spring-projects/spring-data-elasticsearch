@@ -18,16 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.util.CollectionUtils.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.alias.Alias;
@@ -82,8 +73,10 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
+import org.elasticsearch.index.reindex.UpdateByQueryAction;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
 import org.elasticsearch.script.Script;
-import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -123,6 +116,7 @@ import org.springframework.util.StringUtils;
  * @author Sascha Woo
  * @author Roman Puchkovskiy
  * @author Subhobrata Dey
+ * @author Farid Faoudi
  * @since 4.0
  */
 class RequestFactory {
@@ -1404,7 +1398,7 @@ class RequestFactory {
 			if (params == null) {
 				params = new HashMap<>();
 			}
-			Script script = new Script(ScriptType.INLINE, query.getLang(), query.getScript(), params);
+			Script script = new Script(getScriptType(query.getScriptType()), query.getLang(), query.getScript(), params);
 			updateRequest.script(script);
 		}
 
@@ -1478,7 +1472,7 @@ class RequestFactory {
 			if (params == null) {
 				params = new HashMap<>();
 			}
-			Script script = new Script(ScriptType.INLINE, query.getLang(), query.getScript(), params);
+			Script script = new Script(getScriptType(query.getScriptType()), query.getLang(), query.getScript(), params);
 			updateRequestBuilder.setScript(script);
 		}
 
@@ -1539,6 +1533,147 @@ class RequestFactory {
 		}
 
 		return updateRequestBuilder;
+	}
+
+	public UpdateByQueryRequest updateByQueryRequest(UpdateQuery query, IndexCoordinates index) {
+		String indexName = index.getIndexName();
+		final UpdateByQueryRequest updateByQueryRequest = new UpdateByQueryRequest(indexName);
+
+		updateByQueryRequest.setScript(getScript(query));
+
+		if (query.getAbortOnVersionConflict() != null) {
+			updateByQueryRequest.setAbortOnVersionConflict(query.getAbortOnVersionConflict());
+		}
+
+		if (query.getBatchSize() != null) {
+			updateByQueryRequest.setBatchSize(query.getBatchSize());
+		}
+
+		if (query.getQuery() != null) {
+			final Query queryQuery = query.getQuery();
+
+			updateByQueryRequest.setQuery(getQuery(queryQuery));
+
+			if (queryQuery.getIndicesOptions() != null) {
+				updateByQueryRequest.setIndicesOptions(queryQuery.getIndicesOptions());
+			}
+
+			if(queryQuery.getScrollTime() != null) {
+				updateByQueryRequest.setScroll(TimeValue.timeValueMillis(queryQuery.getScrollTime().toMillis()));
+			}
+		}
+
+		if (query.getMaxDocs() != null) {
+			updateByQueryRequest.setMaxDocs(query.getMaxDocs());
+		}
+
+		if (query.getMaxRetries() != null) {
+			updateByQueryRequest.setMaxRetries(query.getMaxRetries());
+		}
+
+		if (query.getPipeline() != null) {
+			updateByQueryRequest.setPipeline(query.getPipeline());
+		}
+
+		if (query.getRefresh() != null) {
+			updateByQueryRequest.setRefresh(Boolean.getBoolean(query.getRefresh().name().toLowerCase()));
+		}
+
+		if (query.getRequestsPerSecond() != null) {
+			updateByQueryRequest.setRequestsPerSecond(query.getRequestsPerSecond());
+		}
+
+		if (query.getRouting() != null) {
+			updateByQueryRequest.setRouting(query.getRouting());
+		}
+
+		if (query.getShouldStoreResult() != null) {
+			updateByQueryRequest.setShouldStoreResult(query.getShouldStoreResult());
+		}
+
+		if (query.getSlices() != null) {
+			updateByQueryRequest.setSlices(query.getSlices());
+		}
+
+		if (query.getTimeout() != null) {
+			updateByQueryRequest.setTimeout(query.getTimeout());
+		}
+
+		if (query.getWaitForActiveShards() != null) {
+			updateByQueryRequest.setWaitForActiveShards(ActiveShardCount.parseString(query.getWaitForActiveShards()));
+		}
+
+		return updateByQueryRequest;
+	}
+
+	public UpdateByQueryRequestBuilder updateByQueryRequestBuilder(Client client, UpdateQuery query, IndexCoordinates index) {
+		String indexName = index.getIndexName();
+
+		final UpdateByQueryRequestBuilder updateByQueryRequestBuilder = new UpdateByQueryRequestBuilder(client, UpdateByQueryAction.INSTANCE);
+
+		updateByQueryRequestBuilder.source(indexName);
+
+		updateByQueryRequestBuilder.script(getScript(query));
+
+		if (query.getAbortOnVersionConflict() != null) {
+			updateByQueryRequestBuilder.abortOnVersionConflict(query.getAbortOnVersionConflict());
+		}
+
+		if (query.getBatchSize() != null) {
+			updateByQueryRequestBuilder.source().setSize(query.getBatchSize());
+		}
+
+		if (query.getQuery() != null) {
+			final Query queryQuery = query.getQuery();
+
+			updateByQueryRequestBuilder.filter(getQuery(queryQuery));
+
+			if (queryQuery.getIndicesOptions() != null) {
+				updateByQueryRequestBuilder.source().setIndicesOptions(queryQuery.getIndicesOptions());
+			}
+
+			if(queryQuery.getScrollTime() != null) {
+				updateByQueryRequestBuilder.source().setScroll(TimeValue.timeValueMillis(queryQuery.getScrollTime().toMillis()));
+			}
+		}
+
+		if (query.getMaxDocs() != null) {
+			updateByQueryRequestBuilder.maxDocs(query.getMaxDocs());
+		}
+
+		if (query.getMaxRetries() != null) {
+			updateByQueryRequestBuilder.setMaxRetries(query.getMaxRetries());
+		}
+
+		if (query.getPipeline() != null) {
+			updateByQueryRequestBuilder.setPipeline(query.getPipeline());
+		}
+
+		if (query.getRefresh() != null) {
+			updateByQueryRequestBuilder.refresh(Boolean.getBoolean(query.getRefresh().name().toLowerCase()));
+		}
+
+		if (query.getRequestsPerSecond() != null) {
+			updateByQueryRequestBuilder.setRequestsPerSecond(query.getRequestsPerSecond());
+		}
+
+		if (query.getRouting() != null) {
+			updateByQueryRequestBuilder.source().setRouting(query.getRouting());
+		}
+
+		if (query.getShouldStoreResult() != null) {
+			updateByQueryRequestBuilder.setShouldStoreResult(query.getShouldStoreResult());
+		}
+
+		if (query.getSlices() != null) {
+			updateByQueryRequestBuilder.setSlices(query.getSlices());
+		}
+
+		if (query.getTimeout() != null) {
+			updateByQueryRequestBuilder.source().setTimeout(TimeValue.parseTimeValue(query.getTimeout(), getClass().getSimpleName() + ".timeout"));
+		}
+
+		return updateByQueryRequestBuilder;
 	}
 	// endregion
 
@@ -1660,6 +1795,31 @@ class RequestFactory {
 		ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext()
 				.getRequiredPersistentEntity(entityClass);
 		return entity.hasSeqNoPrimaryTermProperty();
+	}
+
+	private org.elasticsearch.script.ScriptType getScriptType(ScriptType scriptType) {
+		if (scriptType == null || ScriptType.INLINE.equals(scriptType)) {
+			return org.elasticsearch.script.ScriptType.INLINE;
+		} else {
+			return org.elasticsearch.script.ScriptType.STORED;
+		}
+	}
+
+	@Nullable
+	private Script getScript(UpdateQuery query) {
+		if (ScriptType.STORED.equals(query.getScriptType()) && query.getScriptName() != null) {
+			final Map<String, Object> params = Optional.ofNullable(query.getParams())
+					.orElse(new HashMap<>());
+			return new Script(getScriptType(ScriptType.STORED), null, query.getScriptName(), params);
+		}
+
+		if (ScriptType.INLINE.equals(query.getScriptType()) && query.getScript() != null){
+			final Map<String, Object> params = Optional.ofNullable(query.getParams())
+					.orElse(new HashMap<>());
+			return new Script(getScriptType(ScriptType.INLINE), query.getLang(), query.getScript(), params);
+		}
+
+		return null;
 	}
 
 	// endregion
