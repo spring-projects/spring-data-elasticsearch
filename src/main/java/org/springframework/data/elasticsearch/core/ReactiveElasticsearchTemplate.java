@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.elasticsearch.index.reindex.UpdateByQueryRequest;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -43,6 +41,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
@@ -75,6 +74,7 @@ import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.routing.DefaultRoutingResolver;
@@ -82,7 +82,6 @@ import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -556,6 +555,15 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		return Mono.defer(() -> {
 			UpdateRequest request = requestFactory.updateRequest(updateQuery, index);
+
+			if (updateQuery.getRefreshPolicy() == null && refreshPolicy != null) {
+				request.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(refreshPolicy));
+			}
+
+			if (updateQuery.getRouting() == null && routingResolver.getRouting() != null) {
+				request.routing(routingResolver.getRouting());
+			}
+
 			return Mono.from(execute(client -> client.update(request)))
 					.map(response -> new UpdateResponse(UpdateResponse.Result.valueOf(response.getResult().name())));
 		});
@@ -564,11 +572,21 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	@Override
 	public Mono<UpdateByQueryResponse> updateByQuery(UpdateQuery updateQuery, IndexCoordinates index) {
 
-		Assert.notNull(updateQuery, "UpdateQuery must not be null");
+		Assert.notNull(updateQuery, "updateQuery must not be null");
 		Assert.notNull(index, "Index must not be null");
 
 		return Mono.defer(() -> {
+
 			final UpdateByQueryRequest request = requestFactory.updateByQueryRequest(updateQuery, index);
+
+			if (updateQuery.getRefreshPolicy() == null && refreshPolicy != null) {
+				request.setRefresh(refreshPolicy == RefreshPolicy.IMMEDIATE);
+			}
+
+			if (updateQuery.getRouting() == null && routingResolver.getRouting() != null) {
+				request.setRouting(routingResolver.getRouting());
+			}
+
 			return Mono.from(execute(client -> client.updateBy(request)));
 		});
 	}
@@ -681,7 +699,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			return request;
 		}
 
-		return request.setRefreshPolicy(refreshPolicy.toRequestRefreshPolicy());
+		return request.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(refreshPolicy));
 	}
 
 	// endregion

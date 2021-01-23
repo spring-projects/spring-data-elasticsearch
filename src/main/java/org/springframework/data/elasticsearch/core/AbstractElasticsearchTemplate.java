@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -373,7 +372,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			return request;
 		}
 
-		return request.setRefreshPolicy(refreshPolicy.toRequestRefreshPolicy());
+		return request.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(refreshPolicy));
 	}
 
 	/**
@@ -390,7 +389,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			return requestBuilder;
 		}
 
-		return requestBuilder.setRefreshPolicy(refreshPolicy.toRequestRefreshPolicy());
+		return requestBuilder.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(refreshPolicy));
 	}
 
 	// endregion

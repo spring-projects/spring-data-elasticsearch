@@ -15,10 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
-import org.elasticsearch.client.indices.GetFieldMappingsRequest;
-import org.elasticsearch.client.indices.GetFieldMappingsResponse;
-import org.elasticsearch.index.reindex.UpdateByQueryRequest;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -55,6 +51,8 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.GetAliasesResponse;
+import org.elasticsearch.client.indices.GetFieldMappingsRequest;
+import org.elasticsearch.client.indices.GetFieldMappingsResponse;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
@@ -62,11 +60,13 @@ import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.suggest.Suggest;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -601,12 +601,12 @@ public interface ReactiveElasticsearchClient {
 	/**
 	 * Execute a {@link UpdateByQueryRequest} against the {@literal update by query} API.
 	 *
-	 * @param consumer never {@literal null}.
+	 * @param consumer must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html">Update By
-	 * 	 *      Query API on elastic.co</a>
+	 *      * Query API on elastic.co</a>
 	 * @return a {@link Mono} emitting operation response.
 	 */
-	default Mono<UpdateByQueryResponse> updateBy(Consumer<UpdateByQueryRequest> consumer){
+	default Mono<UpdateByQueryResponse> updateBy(Consumer<UpdateByQueryRequest> consumer) {
 
 		final UpdateByQueryRequest request = new UpdateByQueryRequest();
 		consumer.accept(request);
@@ -618,10 +618,10 @@ public interface ReactiveElasticsearchClient {
 	 *
 	 * @param updateRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html">Update By
-	 * 	 *      Query API on elastic.co</a>
+	 *      * Query API on elastic.co</a>
 	 * @return a {@link Mono} emitting operation response.
 	 */
-	default Mono<UpdateByQueryResponse> updateBy(UpdateByQueryRequest updateRequest){
+	default Mono<UpdateByQueryResponse> updateBy(UpdateByQueryRequest updateRequest) {
 		return updateBy(HttpHeaders.EMPTY, updateRequest);
 	}
 
@@ -631,7 +631,7 @@ public interface ReactiveElasticsearchClient {
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param updateRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html">Update By
-	 * 	 *      Query API on elastic.co</a>
+	 *      * Query API on elastic.co</a>
 	 * @return a {@link Mono} emitting operation response.
 	 */
 	Mono<UpdateByQueryResponse> updateBy(HttpHeaders headers, UpdateByQueryRequest updateRequest);
@@ -1210,9 +1210,9 @@ public interface ReactiveElasticsearchClient {
 		 *
 		 * @param consumer never {@literal null}.
 		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
-		 * 		   does not exist.
-		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-field-mapping.html"> Indices
-		 *  		 Flush API on elastic.co</a>
+		 *         does not exist.
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-field-mapping.html">
+		 *      Indices Flush API on elastic.co</a>
 		 * @since 4.2
 		 */
 		default Mono<GetFieldMappingsResponse> getFieldMapping(Consumer<GetFieldMappingsRequest> consumer) {
@@ -1228,8 +1228,8 @@ public interface ReactiveElasticsearchClient {
 		 * @param getFieldMappingsRequest must not be {@literal null}.
 		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
 		 *         does not exist.
-		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-field-mapping.html"> Indices
-		 *  		 Flush API on elastic.co</a>
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-field-mapping.html">
+		 *      Indices Flush API on elastic.co</a>
 		 * @since 4.2
 		 */
 		default Mono<GetFieldMappingsResponse> getFieldMapping(GetFieldMappingsRequest getFieldMappingsRequest) {
@@ -1243,15 +1243,16 @@ public interface ReactiveElasticsearchClient {
 		 * @param getFieldMappingsRequest must not be {@literal null}.
 		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
 		 *         does not exist.
-		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-field-mapping.html"> Indices
-		 * 		 Flush API on elastic.co</a>
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-field-mapping.html">
+		 *      Indices Flush API on elastic.co</a>
 		 * @since 4.2
 		 */
-		Mono<GetFieldMappingsResponse> getFieldMapping(HttpHeaders headers, GetFieldMappingsRequest getFieldMappingsRequest);
+		Mono<GetFieldMappingsResponse> getFieldMapping(HttpHeaders headers,
+				GetFieldMappingsRequest getFieldMappingsRequest);
 
 		/**
 		 * Execute the given {@link IndicesAliasesRequest} against the {@literal indices} API.
-		 * 
+		 *
 		 * @param consumer never {@literal null}.
 		 * @return a {@link Mono} signalling operation completion.
 		 * @since 4.1
@@ -1264,7 +1265,7 @@ public interface ReactiveElasticsearchClient {
 
 		/**
 		 * Execute the given {@link IndicesAliasesRequest} against the {@literal indices} API.
-		 * 
+		 *
 		 * @param indicesAliasesRequest must not be {@literal null}
 		 * @return a {@link Mono} signalling operation completion.
 		 * @since 4.1
@@ -1275,7 +1276,7 @@ public interface ReactiveElasticsearchClient {
 
 		/**
 		 * Execute the given {@link IndicesAliasesRequest} against the {@literal indices} API.
-		 * 
+		 *
 		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 		 * @param indicesAliasesRequest must not be {@literal null}
 		 * @return a {@link Mono} signalling operation completion.

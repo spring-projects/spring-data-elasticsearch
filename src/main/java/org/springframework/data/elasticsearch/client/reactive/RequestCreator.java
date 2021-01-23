@@ -92,6 +92,9 @@ public interface RequestCreator {
 		return RequestConverters::deleteByQuery;
 	}
 
+	/**
+	 * @since 4.2
+	 */
 	default Function<UpdateByQueryRequest, Request> updateByQuery() {
 		return RequestConverters::updateByQuery;
 	}

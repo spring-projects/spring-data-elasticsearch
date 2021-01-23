@@ -18,12 +18,12 @@ package org.springframework.data.elasticsearch.core;
 import java.util.List;
 
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
@@ -208,7 +208,7 @@ public interface DocumentOperations {
 
 	/**
 	 * Bulk update all objects. Will do update.
-	 * 
+	 *
 	 * @param clazz the entity class
 	 * @param queries the queries to execute in bulk
 	 * @since 4.1
@@ -304,8 +304,8 @@ public interface DocumentOperations {
 	/**
 	 * Update document(s) by query
 	 *
-	 * @param updateQuery query defining the update
-	 * @param index the index where to update the records
+	 * @param updateQuery query defining the update, must not be {@literal null}
+	 * @param index the index where to update the records , must not be {@literal null}
 	 * @return the update response
 	 * @since 4.2
 	 */

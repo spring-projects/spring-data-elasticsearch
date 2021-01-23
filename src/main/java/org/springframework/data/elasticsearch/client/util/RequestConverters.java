@@ -413,7 +413,7 @@ public class RequestConverters {
 
 	/**
 	 * Creates a count request.
-	 * 
+	 *
 	 * @param countRequest the search defining the data to be counted
 	 * @return Elasticsearch count request
 	 * @since 4.0
@@ -538,10 +538,9 @@ public class RequestConverters {
 	}
 
 	public static Request updateByQuery(UpdateByQueryRequest updateByQueryRequest) {
-		String endpoint = endpoint(updateByQueryRequest.indices(), updateByQueryRequest.getDocTypes(), "_update_by_query");
+		String endpoint = endpoint(updateByQueryRequest.indices(), "_update_by_query");
 		Request request = new Request(HttpMethod.POST.name(), endpoint);
-		Params params = new Params(request)
-				.withRouting(updateByQueryRequest.getRouting()) //
+		Params params = new Params(request).withRouting(updateByQueryRequest.getRouting()) //
 				.withPipeline(updateByQueryRequest.getPipeline()) //
 				.withRefresh(updateByQueryRequest.isRefresh()) //
 				.withTimeout(updateByQueryRequest.getTimeout()) //
@@ -552,15 +551,19 @@ public class RequestConverters {
 		if (!updateByQueryRequest.isAbortOnVersionConflict()) {
 			params.putParam("conflicts", "proceed");
 		}
+
 		if (updateByQueryRequest.getBatchSize() != AbstractBulkByScrollRequest.DEFAULT_SCROLL_SIZE) {
 			params.putParam("scroll_size", Integer.toString(updateByQueryRequest.getBatchSize()));
 		}
+
 		if (updateByQueryRequest.getScrollTime() != AbstractBulkByScrollRequest.DEFAULT_SCROLL_TIMEOUT) {
 			params.putParam("scroll", updateByQueryRequest.getScrollTime());
 		}
+
 		if (updateByQueryRequest.getMaxDocs() > 0) {
 			params.putParam("max_docs", Integer.toString(updateByQueryRequest.getMaxDocs()));
 		}
+
 		request.setEntity(createEntity(updateByQueryRequest, REQUEST_BODY_CONTENT_TYPE));
 		return request;
 	}
@@ -897,13 +900,12 @@ public class RequestConverters {
 	}
 
 	public static Request getFieldMapping(GetFieldMappingsRequest getFieldMappingsRequest) {
-		String[] indices = getFieldMappingsRequest.indices() == null ? Strings.EMPTY_ARRAY : getFieldMappingsRequest.indices();
+		String[] indices = getFieldMappingsRequest.indices() == null ? Strings.EMPTY_ARRAY
+				: getFieldMappingsRequest.indices();
 		String[] fields = getFieldMappingsRequest.fields() == null ? Strings.EMPTY_ARRAY : getFieldMappingsRequest.fields();
 
-		final String endpoint = new EndpointBuilder().addCommaSeparatedPathParts(indices)
-				.addPathPartAsIs("_mapping").addPathPartAsIs("field")
-				.addCommaSeparatedPathParts(fields)
-				.build();
+		final String endpoint = new EndpointBuilder().addCommaSeparatedPathParts(indices).addPathPartAsIs("_mapping")
+				.addPathPartAsIs("field").addCommaSeparatedPathParts(fields).build();
 
 		Request request = new Request(HttpMethod.GET.name(), endpoint);
 

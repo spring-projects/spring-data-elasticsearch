@@ -15,27 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.elasticsearch.action.support.WriteRequest;
-
 /**
- * Enum mirroring org.elasticsearch.action.support.WriteRequest.RefreshPolicy to keep Elasticsearch classes out of our
- * API.
- * 
+ * Enum defining the refresh policy.
+ *
  * @author Peter-Josef Meisch
  * @since 4.2
  */
 public enum RefreshPolicy {
 	NONE, IMMEDIATE, WAIT_UNTIL;
-
-	WriteRequest.RefreshPolicy toRequestRefreshPolicy() {
-		switch (this) {
-			case IMMEDIATE:
-				return WriteRequest.RefreshPolicy.IMMEDIATE;
-			case WAIT_UNTIL:
-				return WriteRequest.RefreshPolicy.WAIT_UNTIL;
-			case NONE:
-			default:
-				return WriteRequest.RefreshPolicy.NONE;
-		}
-	}
 }

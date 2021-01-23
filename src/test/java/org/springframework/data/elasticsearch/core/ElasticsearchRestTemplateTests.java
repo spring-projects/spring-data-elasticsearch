@@ -40,7 +40,6 @@ import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -50,7 +49,6 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
-import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -105,7 +103,7 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 				.withIfPrimaryTerm(13) //
 				.withScript("script")//
 				.withLang("lang") //
-				.withRefresh(UpdateQuery.Refresh.Wait_For) //
+				.withRefreshPolicy(RefreshPolicy.WAIT_UNTIL) //
 				.withRetryOnConflict(7) //
 				.withTimeout("4711s") //
 				.withWaitForActiveShards("all") //
@@ -132,41 +130,40 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 
 	@Test // #1446
 	void shouldUseAllOptionsFromUpdateByQuery() throws JSONException {
-		// given
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withIndicesOptions(IndicesOptions.lenientExpandOpen())
-				.build();
+
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()) //
+				.withIndicesOptions(IndicesOptions.lenientExpandOpen()) //
+				.build(); //
 		searchQuery.setScrollTime(Duration.ofMillis(1000));
 
-		final UpdateQuery updateQuery = UpdateQuery.builder(searchQuery)
-				.withAbortOnVersionConflict(true)
-				.withBatchSize(10)
-				.withMaxDocs(12)
-				.withMaxRetries(3)
-				.withPipeline("pipeline")
-				.withRequestsPerSecond(5F)
-				.withShouldStoreResult(false)
-				.withSlices(4)
-				.withScriptType(ScriptType.INLINE)
-				.withScript("script")
-				.withLang("painless")
-				.build();
+		UpdateQuery updateQuery = UpdateQuery.builder(searchQuery) //
+				.withAbortOnVersionConflict(true) //
+				.withBatchSize(10) //
+				.withMaxDocs(12) //
+				.withMaxRetries(3) //
+				.withPipeline("pipeline") //
+				.withRequestsPerSecond(5F) //
+				.withShouldStoreResult(false) //
+				.withSlices(4) //
+				.withScriptType(ScriptType.INLINE) //
+				.withScript("script") //
+				.withLang("painless") //
+				.build(); //
 
-		final String expectedSearchRequest = '{' + //
+		String expectedSearchRequest = '{' + //
 				"  \"size\": 10," + //
 				"  \"query\": {" + //
 				"    \"match_all\": {" + //
 				"      \"boost\": 1.0" + //
-				"    }" +
-				"  }" +
-				'}';
+				"    }" + "  }" + '}';
 
 		// when
-		final UpdateByQueryRequest request = getRequestFactory().updateByQueryRequest(updateQuery, IndexCoordinates.of("index"));
+		UpdateByQueryRequest request = getRequestFactory().updateByQueryRequest(updateQuery, IndexCoordinates.of("index"));
 
 		// then
 		assertThat(request).isNotNull();
-		assertThat(request.getSearchRequest().indicesOptions()).usingRecursiveComparison().isEqualTo(IndicesOptions.lenientExpandOpen());
+		assertThat(request.getSearchRequest().indicesOptions()).usingRecursiveComparison()
+				.isEqualTo(IndicesOptions.lenientExpandOpen());
 		assertThat(request.getScrollTime().getMillis()).isEqualTo(1000);
 		assertEquals(request.getSearchRequest().source().toString(), expectedSearchRequest, false);
 		assertThat(request.isAbortOnVersionConflict()).isTrue();

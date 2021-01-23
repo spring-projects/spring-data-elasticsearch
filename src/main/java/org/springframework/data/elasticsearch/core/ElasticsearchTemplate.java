@@ -249,16 +249,37 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public UpdateResponse update(UpdateQuery query, IndexCoordinates index) {
+
 		UpdateRequestBuilder updateRequestBuilder = requestFactory.updateRequestBuilderFor(client, query, index);
-		org.elasticsearch.action.update.UpdateResponse updateResponse = updateRequestBuilder.execute().actionGet();
+
+        if (query.getRefreshPolicy() == null && getRefreshPolicy() != null) {
+            updateRequestBuilder.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(getRefreshPolicy()));
+        }
+
+        if (query.getRouting() == null && routingResolver.getRouting() != null) {
+            updateRequestBuilder.setRouting(routingResolver.getRouting());
+        }
+
+        org.elasticsearch.action.update.UpdateResponse updateResponse = updateRequestBuilder.execute().actionGet();
 		UpdateResponse.Result result = UpdateResponse.Result.valueOf(updateResponse.getResult().name());
 		return new UpdateResponse(result);
 	}
 
 	@Override
 	public UpdateByQueryResponse updateByQuery(UpdateQuery query, IndexCoordinates index) {
-		final UpdateByQueryRequestBuilder updateByQueryRequestBuilder = requestFactory.updateByQueryRequestBuilder(client, query, index);
-		final BulkByScrollResponse bulkByScrollResponse = updateByQueryRequestBuilder.execute().actionGet();
+
+        Assert.notNull(query, "query must not be null");
+        Assert.notNull(index, "index must not be null");
+
+        final UpdateByQueryRequestBuilder updateByQueryRequestBuilder = requestFactory.updateByQueryRequestBuilder(client, query, index);
+
+        if (query.getRefreshPolicy() == null && getRefreshPolicy() != null) {
+            updateByQueryRequestBuilder.refresh(getRefreshPolicy() == RefreshPolicy.IMMEDIATE);
+        }
+
+        // UpdateByQueryRequestBuilder has not parameters to set a routing value
+
+        final BulkByScrollResponse bulkByScrollResponse = updateByQueryRequestBuilder.execute().actionGet();
 		return UpdateByQueryResponse.of(bulkByScrollResponse);
 	}
 

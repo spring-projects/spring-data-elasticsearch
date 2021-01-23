@@ -48,11 +48,11 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.support.SearchHitsUtil;
@@ -162,7 +162,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	@Nullable
 	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
-		GetRequest request = requestFactory.getRequest(id,routingResolver.getRouting(), index);
+		GetRequest request = requestFactory.getRequest(id, routingResolver.getRouting(), index);
 		GetResponse response = execute(client -> client.get(request, RequestOptions.DEFAULT));
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
@@ -184,7 +184,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	protected boolean doExists(String id, IndexCoordinates index) {
-		GetRequest request = requestFactory.getRequest(id, routingResolver.getRouting(),index);
+		GetRequest request = requestFactory.getRequest(id, routingResolver.getRouting(), index);
 		request.fetchSourceContext(FetchSourceContext.DO_NOT_FETCH_SOURCE);
 		return execute(client -> client.get(request, RequestOptions.DEFAULT).isExists());
 	}
@@ -225,15 +225,39 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	public UpdateResponse update(UpdateQuery query, IndexCoordinates index) {
 		UpdateRequest request = requestFactory.updateRequest(query, index);
-		UpdateResponse.Result result = UpdateResponse.Result
+
+        if (query.getRefreshPolicy() == null && getRefreshPolicy() != null) {
+            request.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(getRefreshPolicy()));
+        }
+
+        if (query.getRouting() == null && routingResolver.getRouting() != null) {
+            request.routing(routingResolver.getRouting());
+        }
+
+        UpdateResponse.Result result = UpdateResponse.Result
 				.valueOf(execute(client -> client.update(request, RequestOptions.DEFAULT)).getResult().name());
 		return new UpdateResponse(result);
 	}
 
 	@Override
 	public UpdateByQueryResponse updateByQuery(UpdateQuery query, IndexCoordinates index) {
+
+		Assert.notNull(query, "query must not be null");
+		Assert.notNull(index, "index must not be null");
+
 		final UpdateByQueryRequest updateByQueryRequest = requestFactory.updateByQueryRequest(query, index);
-		final BulkByScrollResponse bulkByScrollResponse = execute(client -> client.updateByQuery(updateByQueryRequest, RequestOptions.DEFAULT));
+
+        if (query.getRefreshPolicy() == null && getRefreshPolicy() != null) {
+            updateByQueryRequest.setRefresh(getRefreshPolicy() == RefreshPolicy.IMMEDIATE);
+        }
+
+
+        if (query.getRouting() == null && routingResolver.getRouting() != null) {
+            updateByQueryRequest.setRouting(routingResolver.getRouting());
+        }
+
+		final BulkByScrollResponse bulkByScrollResponse = execute(
+				client -> client.updateByQuery(updateByQueryRequest, RequestOptions.DEFAULT));
 		return UpdateByQueryResponse.of(bulkByScrollResponse);
 	}
 

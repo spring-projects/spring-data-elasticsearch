@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -26,6 +25,7 @@ import java.util.List;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.util.Assert;
@@ -341,8 +341,9 @@ public interface ReactiveDocumentOperations {
 
 	/**
 	 * Update document(s) by query.
-	 * @param updateQuery query defining the update
-	 * @param index the index where to update the records
+	 *
+	 * @param updateQuery query defining the update, must not be {@literal null}
+	 * @param index the index where to update the records, must not be {@literal null}
 	 * @return a {@link Mono} emitting the update response
 	 * @since 4.2
 	 */

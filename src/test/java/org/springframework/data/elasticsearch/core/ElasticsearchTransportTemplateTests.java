@@ -39,6 +39,7 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -107,18 +108,18 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		doc.put("message", "test");
 		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
 				.from(doc);
-		UpdateQuery updateQuery = UpdateQuery.builder("1") //
-				.withDocument(document) //
-				.withIfSeqNo(42) //
-				.withIfPrimaryTerm(13) //
-				.withScript("script")//
-				.withLang("lang") //
-				.withRefresh(UpdateQuery.Refresh.Wait_For) //
-				.withRetryOnConflict(7) //
-				.withTimeout("4711s") //
-				.withWaitForActiveShards("all").withFetchSourceIncludes(Collections.singletonList("incl")) //
-				.withFetchSourceExcludes(Collections.singletonList("excl")) //
-				.build();
+        UpdateQuery updateQuery = UpdateQuery.builder("1") //
+            .withDocument(document) //
+            .withIfSeqNo(42) //
+            .withIfPrimaryTerm(13) //
+            .withScript("script")//
+            .withLang("lang") //
+            .withRefreshPolicy(RefreshPolicy.WAIT_UNTIL) //
+            .withRetryOnConflict(7) //
+            .withTimeout("4711s") //
+            .withWaitForActiveShards("all").withFetchSourceIncludes(Collections.singletonList("incl")) //
+            .withFetchSourceExcludes(Collections.singletonList("excl")) //
+            .build();
 
 		UpdateRequestBuilder request = getRequestFactory().updateRequestBuilderFor(client, updateQuery,
 				IndexCoordinates.of("index"));
@@ -132,7 +133,7 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		assertThat(request.request().retryOnConflict()).isEqualTo(7);
 		assertThat(request.request().timeout()).isEqualByComparingTo(TimeValue.parseTimeValue("4711s", "test"));
 		assertThat(request.request().waitForActiveShards()).isEqualTo(ActiveShardCount.ALL);
-		val fetchSourceContext = request.request().fetchSource();
+        FetchSourceContext fetchSourceContext = request.request().fetchSource();
 		assertThat(fetchSourceContext).isNotNull();
 		assertThat(fetchSourceContext.includes()).containsExactlyInAnyOrder("incl");
 		assertThat(fetchSourceContext.excludes()).containsExactlyInAnyOrder("excl");
@@ -147,40 +148,42 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 
 	@Test // #1446
 	void shouldUseAllOptionsFromUpdateByQuery() throws JSONException {
-		// given
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withIndicesOptions(IndicesOptions.lenientExpandOpen())
-				.build();
+
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()) //
+				.withIndicesOptions(IndicesOptions.lenientExpandOpen()) //
+				.build(); //
 		searchQuery.setScrollTime(Duration.ofMillis(1000));
 
-		final UpdateQuery updateQuery = UpdateQuery.builder(searchQuery)
-				.withAbortOnVersionConflict(true)
-				.withBatchSize(10)
-				.withMaxDocs(12)
-				.withMaxRetries(3)
-				.withPipeline("pipeline")
-				.withRequestsPerSecond(5F)
-				.withShouldStoreResult(false)
-				.withSlices(4)
-				.withScriptType(ScriptType.STORED)
-				.withScriptName("script_name")
-				.build();
+		UpdateQuery updateQuery = UpdateQuery.builder(searchQuery) //
+				.withAbortOnVersionConflict(true) //
+				.withBatchSize(10) //
+				.withMaxDocs(12) //
+				.withMaxRetries(3) //
+				.withPipeline("pipeline") //
+				.withRequestsPerSecond(5F) //
+				.withShouldStoreResult(false) //
+				.withSlices(4) //
+				.withScriptType(ScriptType.STORED) //
+				.withScriptName("script_name") //
+				.build(); //
 
-		final String expectedSearchRequest = '{' + //
+		String expectedSearchRequest = '{' + //
 				"  \"size\": 10," + //
 				"  \"query\": {" + //
 				"    \"match_all\": {" + //
 				"      \"boost\": 1.0" + //
-				"    }" +
-				"  }" +
-				'}';
+				"    }" + //
+				"  }" + //
+				'}'; //
 
 		// when
-		final UpdateByQueryRequestBuilder request = getRequestFactory().updateByQueryRequestBuilder(client, updateQuery, IndexCoordinates.of("index"));
+		UpdateByQueryRequestBuilder request = getRequestFactory().updateByQueryRequestBuilder(client, updateQuery,
+				IndexCoordinates.of("index"));
 
 		// then
 		assertThat(request).isNotNull();
-		assertThat(request.request().getSearchRequest().indicesOptions()).usingRecursiveComparison().isEqualTo(IndicesOptions.lenientExpandOpen());
+		assertThat(request.request().getSearchRequest().indicesOptions()).usingRecursiveComparison()
+				.isEqualTo(IndicesOptions.lenientExpandOpen());
 		assertThat(request.request().getScrollTime().getMillis()).isEqualTo(1000);
 		assertEquals(request.request().getSearchRequest().source().toString(), expectedSearchRequest, false);
 		assertThat(request.request().isAbortOnVersionConflict()).isTrue();

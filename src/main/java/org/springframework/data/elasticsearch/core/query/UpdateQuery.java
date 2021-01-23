@@ -18,13 +18,14 @@ package org.springframework.data.elasticsearch.core.query;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.ScriptType;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.lang.Nullable;
 
 /**
  * Defines an update request.
- * 
+ *
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
@@ -33,35 +34,35 @@ import org.springframework.lang.Nullable;
  */
 public class UpdateQuery {
 
-	private String id;
-	@Nullable private String script;
-	@Nullable private Map<String, Object> params;
-	@Nullable private Document document;
-	@Nullable private Document upsert;
-	@Nullable private String lang;
-	@Nullable private String routing;
-	@Nullable private Boolean scriptedUpsert;
-	@Nullable private Boolean docAsUpsert;
-	@Nullable private Boolean fetchSource;
-	@Nullable private List<String> fetchSourceIncludes;
-	@Nullable private List<String> fetchSourceExcludes;
-	@Nullable private Integer ifSeqNo;
-	@Nullable private Integer ifPrimaryTerm;
-	@Nullable private Refresh refresh;
-	@Nullable private Integer retryOnConflict;
-	@Nullable private String timeout;
-	@Nullable private String waitForActiveShards;
-	@Nullable private Query query;
-	@Nullable private Boolean abortOnVersionConflict;
-	@Nullable private Integer batchSize;
-	@Nullable private Integer maxDocs;
-	@Nullable private Integer maxRetries;
-	@Nullable private String pipeline;
-	@Nullable private Float requestsPerSecond;
-	@Nullable private Boolean shouldStoreResult;
-	@Nullable private Integer slices;
-	@Nullable private ScriptType scriptType;
-	@Nullable private String scriptName;
+	private final String id;
+	@Nullable private final String script;
+	@Nullable private final Map<String, Object> params;
+	@Nullable private final Document document;
+	@Nullable private final Document upsert;
+	@Nullable private final String lang;
+	@Nullable private final String routing;
+	@Nullable private final Boolean scriptedUpsert;
+	@Nullable private final Boolean docAsUpsert;
+	@Nullable private final Boolean fetchSource;
+	@Nullable private final List<String> fetchSourceIncludes;
+	@Nullable private final List<String> fetchSourceExcludes;
+	@Nullable private final Integer ifSeqNo;
+	@Nullable private final Integer ifPrimaryTerm;
+	@Nullable private final RefreshPolicy refreshPolicy;
+	@Nullable private final Integer retryOnConflict;
+	@Nullable private final String timeout;
+	@Nullable private final String waitForActiveShards;
+	@Nullable private final Query query;
+	@Nullable private final Boolean abortOnVersionConflict;
+	@Nullable private final Integer batchSize;
+	@Nullable private final Integer maxDocs;
+	@Nullable private final Integer maxRetries;
+	@Nullable private final String pipeline;
+	@Nullable private final Float requestsPerSecond;
+	@Nullable private final Boolean shouldStoreResult;
+	@Nullable private final Integer slices;
+	@Nullable private final ScriptType scriptType;
+	@Nullable private final String scriptName;
 
 	public static Builder builder(String id) {
 		return new Builder(id);
@@ -75,11 +76,12 @@ public class UpdateQuery {
 			@Nullable Document document, @Nullable Document upsert, @Nullable String lang, @Nullable String routing,
 			@Nullable Boolean scriptedUpsert, @Nullable Boolean docAsUpsert, @Nullable Boolean fetchSource,
 			@Nullable List<String> fetchSourceIncludes, @Nullable List<String> fetchSourceExcludes, @Nullable Integer ifSeqNo,
-			@Nullable Integer ifPrimaryTerm, @Nullable Refresh refresh, @Nullable Integer retryOnConflict,
+			@Nullable Integer ifPrimaryTerm, @Nullable RefreshPolicy refreshPolicy, @Nullable Integer retryOnConflict,
 			@Nullable String timeout, @Nullable String waitForActiveShards, @Nullable Query query,
 			@Nullable Boolean abortOnVersionConflict, @Nullable Integer batchSize, @Nullable Integer maxDocs,
 			@Nullable Integer maxRetries, @Nullable String pipeline, @Nullable Float requestsPerSecond,
-			@Nullable Boolean shouldStoreResult, @Nullable Integer slices, @Nullable ScriptType scriptType, @Nullable String scriptName) {
+			@Nullable Boolean shouldStoreResult, @Nullable Integer slices, @Nullable ScriptType scriptType,
+			@Nullable String scriptName) {
 
 		this.id = id;
 		this.script = script;
@@ -95,7 +97,7 @@ public class UpdateQuery {
 		this.fetchSourceExcludes = fetchSourceExcludes;
 		this.ifSeqNo = ifSeqNo;
 		this.ifPrimaryTerm = ifPrimaryTerm;
-		this.refresh = refresh;
+		this.refreshPolicy = refreshPolicy;
 		this.retryOnConflict = retryOnConflict;
 		this.timeout = timeout;
 		this.waitForActiveShards = waitForActiveShards;
@@ -182,8 +184,8 @@ public class UpdateQuery {
 	}
 
 	@Nullable
-	public Refresh getRefresh() {
-		return refresh;
+	public RefreshPolicy getRefreshPolicy() {
+		return refreshPolicy;
 	}
 
 	@Nullable
@@ -269,7 +271,7 @@ public class UpdateQuery {
 		@Nullable private Boolean fetchSource;
 		@Nullable private Integer ifSeqNo;
 		@Nullable private Integer ifPrimaryTerm;
-		@Nullable private Refresh refresh;
+		@Nullable private RefreshPolicy refreshPolicy;
 		@Nullable private Integer retryOnConflict;
 		@Nullable private String timeout;
 		@Nullable String waitForActiveShards;
@@ -350,8 +352,8 @@ public class UpdateQuery {
 			return this;
 		}
 
-		public Builder withRefresh(Refresh refresh) {
-			this.refresh = refresh;
+		public Builder withRefreshPolicy(RefreshPolicy refreshPolicy) {
+			this.refreshPolicy = refreshPolicy;
 			return this;
 		}
 
@@ -437,16 +439,9 @@ public class UpdateQuery {
 			}
 
 			return new UpdateQuery(id, script, params, document, upsert, lang, routing, scriptedUpsert, docAsUpsert,
-					fetchSource, fetchSourceIncludes, fetchSourceExcludes, ifSeqNo, ifPrimaryTerm, refresh, retryOnConflict,
+					fetchSource, fetchSourceIncludes, fetchSourceExcludes, ifSeqNo, ifPrimaryTerm, refreshPolicy, retryOnConflict,
 					timeout, waitForActiveShards, query, abortOnVersionConflict, batchSize, maxDocs, maxRetries, pipeline,
 					requestsPerSecond, shouldStoreResult, slices, scriptType, scriptName);
 		}
-	}
-
-	/*
-	 * names will be lowercased on building the query.
-	 */
-	public enum Refresh {
-		True, False, Wait_For
 	}
 }

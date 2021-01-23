@@ -46,6 +46,7 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.support.ActiveShardCount;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -1442,8 +1443,8 @@ class RequestFactory {
 			updateRequest.setIfPrimaryTerm(query.getIfPrimaryTerm());
 		}
 
-		if (query.getRefresh() != null) {
-			updateRequest.setRefreshPolicy(query.getRefresh().name().toLowerCase());
+		if (query.getRefreshPolicy() != null) {
+			updateRequest.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(query.getRefreshPolicy()));
 		}
 
 		if (query.getRetryOnConflict() != null) {
@@ -1516,8 +1517,8 @@ class RequestFactory {
 			updateRequestBuilder.setIfPrimaryTerm(query.getIfPrimaryTerm());
 		}
 
-		if (query.getRefresh() != null) {
-			updateRequestBuilder.setRefreshPolicy(query.getRefresh().name().toLowerCase());
+		if (query.getRefreshPolicy() != null) {
+			updateRequestBuilder.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(query.getRefreshPolicy()));
 		}
 
 		if (query.getRetryOnConflict() != null) {
@@ -1536,9 +1537,9 @@ class RequestFactory {
 	}
 
 	public UpdateByQueryRequest updateByQueryRequest(UpdateQuery query, IndexCoordinates index) {
+
 		String indexName = index.getIndexName();
 		final UpdateByQueryRequest updateByQueryRequest = new UpdateByQueryRequest(indexName);
-
 		updateByQueryRequest.setScript(getScript(query));
 
 		if (query.getAbortOnVersionConflict() != null) {
@@ -1558,7 +1559,7 @@ class RequestFactory {
 				updateByQueryRequest.setIndicesOptions(queryQuery.getIndicesOptions());
 			}
 
-			if(queryQuery.getScrollTime() != null) {
+			if (queryQuery.getScrollTime() != null) {
 				updateByQueryRequest.setScroll(TimeValue.timeValueMillis(queryQuery.getScrollTime().toMillis()));
 			}
 		}
@@ -1575,8 +1576,8 @@ class RequestFactory {
 			updateByQueryRequest.setPipeline(query.getPipeline());
 		}
 
-		if (query.getRefresh() != null) {
-			updateByQueryRequest.setRefresh(Boolean.getBoolean(query.getRefresh().name().toLowerCase()));
+		if (query.getRefreshPolicy() != null) {
+			updateByQueryRequest.setRefresh(query.getRefreshPolicy() == RefreshPolicy.IMMEDIATE);
 		}
 
 		if (query.getRequestsPerSecond() != null) {
@@ -1606,13 +1607,15 @@ class RequestFactory {
 		return updateByQueryRequest;
 	}
 
-	public UpdateByQueryRequestBuilder updateByQueryRequestBuilder(Client client, UpdateQuery query, IndexCoordinates index) {
+	public UpdateByQueryRequestBuilder updateByQueryRequestBuilder(Client client, UpdateQuery query,
+			IndexCoordinates index) {
+
 		String indexName = index.getIndexName();
 
-		final UpdateByQueryRequestBuilder updateByQueryRequestBuilder = new UpdateByQueryRequestBuilder(client, UpdateByQueryAction.INSTANCE);
+		final UpdateByQueryRequestBuilder updateByQueryRequestBuilder = new UpdateByQueryRequestBuilder(client,
+				UpdateByQueryAction.INSTANCE);
 
 		updateByQueryRequestBuilder.source(indexName);
-
 		updateByQueryRequestBuilder.script(getScript(query));
 
 		if (query.getAbortOnVersionConflict() != null) {
@@ -1625,15 +1628,15 @@ class RequestFactory {
 
 		if (query.getQuery() != null) {
 			final Query queryQuery = query.getQuery();
-
 			updateByQueryRequestBuilder.filter(getQuery(queryQuery));
 
 			if (queryQuery.getIndicesOptions() != null) {
 				updateByQueryRequestBuilder.source().setIndicesOptions(queryQuery.getIndicesOptions());
 			}
 
-			if(queryQuery.getScrollTime() != null) {
-				updateByQueryRequestBuilder.source().setScroll(TimeValue.timeValueMillis(queryQuery.getScrollTime().toMillis()));
+			if (queryQuery.getScrollTime() != null) {
+				updateByQueryRequestBuilder.source()
+						.setScroll(TimeValue.timeValueMillis(queryQuery.getScrollTime().toMillis()));
 			}
 		}
 
@@ -1649,8 +1652,8 @@ class RequestFactory {
 			updateByQueryRequestBuilder.setPipeline(query.getPipeline());
 		}
 
-		if (query.getRefresh() != null) {
-			updateByQueryRequestBuilder.refresh(Boolean.getBoolean(query.getRefresh().name().toLowerCase()));
+		if (query.getRefreshPolicy() != null) {
+			updateByQueryRequestBuilder.refresh(query.getRefreshPolicy() == RefreshPolicy.IMMEDIATE);
 		}
 
 		if (query.getRequestsPerSecond() != null) {
@@ -1670,7 +1673,8 @@ class RequestFactory {
 		}
 
 		if (query.getTimeout() != null) {
-			updateByQueryRequestBuilder.source().setTimeout(TimeValue.parseTimeValue(query.getTimeout(), getClass().getSimpleName() + ".timeout"));
+			updateByQueryRequestBuilder.source()
+					.setTimeout(TimeValue.parseTimeValue(query.getTimeout(), getClass().getSimpleName() + ".timeout"));
 		}
 
 		return updateByQueryRequestBuilder;
@@ -1717,6 +1721,17 @@ class RequestFactory {
 		return elasticsearchFilter;
 	}
 
+	public static WriteRequest.RefreshPolicy toElasticsearchRefreshPolicy(RefreshPolicy refreshPolicy) {
+		switch (refreshPolicy) {
+			case IMMEDIATE:
+				return WriteRequest.RefreshPolicy.IMMEDIATE;
+			case WAIT_UNTIL:
+				return WriteRequest.RefreshPolicy.WAIT_UNTIL;
+			case NONE:
+			default:
+				return WriteRequest.RefreshPolicy.NONE;
+		}
+	}
 	// region response stuff
 
 	/**
@@ -1797,7 +1812,8 @@ class RequestFactory {
 		return entity.hasSeqNoPrimaryTermProperty();
 	}
 
-	private org.elasticsearch.script.ScriptType getScriptType(ScriptType scriptType) {
+	private org.elasticsearch.script.ScriptType getScriptType(@Nullable ScriptType scriptType) {
+
 		if (scriptType == null || ScriptType.INLINE.equals(scriptType)) {
 			return org.elasticsearch.script.ScriptType.INLINE;
 		} else {
@@ -1808,14 +1824,12 @@ class RequestFactory {
 	@Nullable
 	private Script getScript(UpdateQuery query) {
 		if (ScriptType.STORED.equals(query.getScriptType()) && query.getScriptName() != null) {
-			final Map<String, Object> params = Optional.ofNullable(query.getParams())
-					.orElse(new HashMap<>());
+			final Map<String, Object> params = Optional.ofNullable(query.getParams()).orElse(new HashMap<>());
 			return new Script(getScriptType(ScriptType.STORED), null, query.getScriptName(), params);
 		}
 
-		if (ScriptType.INLINE.equals(query.getScriptType()) && query.getScript() != null){
-			final Map<String, Object> params = Optional.ofNullable(query.getParams())
-					.orElse(new HashMap<>());
+		if (ScriptType.INLINE.equals(query.getScriptType()) && query.getScript() != null) {
+			final Map<String, Object> params = Optional.ofNullable(query.getParams()).orElse(new HashMap<>());
 			return new Script(getScriptType(ScriptType.INLINE), query.getLang(), query.getScript(), params);
 		}
 

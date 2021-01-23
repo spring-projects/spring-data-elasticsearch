@@ -18,11 +18,6 @@ package org.springframework.data.elasticsearch.client.reactive;
 import static org.assertj.core.api.Assertions.*;
 
 import lombok.SneakyThrows;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
-import org.elasticsearch.index.reindex.UpdateByQueryRequest;
-import org.elasticsearch.script.Script;
-import org.elasticsearch.script.ScriptType;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -38,6 +33,7 @@ import java.util.stream.IntStream;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.Version;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
@@ -50,7 +46,10 @@ import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -68,6 +67,7 @@ import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperatio
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.http.HttpHeaders;
@@ -107,10 +107,8 @@ public class ReactiveElasticsearchClientIntegrationTests {
 	// (Object...)
 	static final Map<String, Object> DOC_SOURCE;
 
-	@Autowired
-	ReactiveElasticsearchClient client;
-	@Autowired
-	ReactiveElasticsearchOperations operations;
+	@Autowired ReactiveElasticsearchClient client;
+	@Autowired ReactiveElasticsearchOperations operations;
 
 	static {
 
@@ -473,59 +471,61 @@ public class ReactiveElasticsearchClientIntegrationTests {
 		final String script = "ctx._source['firstname'] = params['newFirstname']";
 		final Map<String, Object> params = Collections.singletonMap("newFirstname", "arrow");
 
-		final UpdateByQueryRequest request = new UpdateByQueryRequest(INDEX_I)
-				.setQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("lastname", "fallstar")))
-				.setAbortOnVersionConflict(true)
-				.setRefresh(true)
-				.setScript(new Script(ScriptType.INLINE, "painless", script, params));
+		final UpdateByQueryRequest request = new UpdateByQueryRequest(INDEX_I) //
+				.setQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("lastname", "fallstar"))) //
+				.setAbortOnVersionConflict(true) //
+				.setRefresh(true) //
+				.setScript(new Script(ScriptType.INLINE, "painless", script, params)); //
 
-		client.updateBy(request)
-				.map(UpdateByQueryResponse::getUpdated)
-				.as(StepVerifier::create)
-				.expectNext(2L)
-				.verifyComplete();
+		client.updateBy(request) //
+				.map(UpdateByQueryResponse::getUpdated) //
+				.as(StepVerifier::create) //
+				.expectNext(2L) //
+				.verifyComplete(); //
 
 		final SearchRequest searchUpdatedRequest = new SearchRequest(INDEX_I) //
-				.source(new SearchSourceBuilder()
-						.query(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("firstname", "arrow"))));
+				.source(new SearchSourceBuilder() //
+						.query(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("firstname", "arrow"))) //
+				);
 
-		client.search(searchUpdatedRequest)
-				.collectList()
-				.map(List::size)
-				.as(StepVerifier::create)
-				.expectNext(2)
-				.verifyComplete();
+		client.search(searchUpdatedRequest) //
+				.collectList() //
+				.map(List::size) //
+				.as(StepVerifier::create) //
+				.expectNext(2) //
+				.verifyComplete(); //
 	}
 
 	@Test // #1446
 	void updateByShouldUpdateExistingDocument() {
 		addSourceDocument().to(INDEX_I);
 
-		final String script = "ctx._source['firstname'] = params['newFirstname']";
-		final Map<String, Object> params = Collections.singletonMap("newFirstname", "arrow");
+		String script = "ctx._source['firstname'] = params['newFirstname']";
+		Map<String, Object> params = Collections.singletonMap("newFirstname", "arrow");
 
-		final UpdateByQueryRequest request = new UpdateByQueryRequest(INDEX_I)
-				.setQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("lastname", "non_existing_lastname")))
-				.setAbortOnVersionConflict(true)
-				.setRefresh(true)
-				.setScript(new Script(ScriptType.INLINE, "painless", script, params));
+		UpdateByQueryRequest request = new UpdateByQueryRequest(INDEX_I) //
+				.setQuery(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("lastname", "non_existing_lastname"))) //
+				.setAbortOnVersionConflict(true) //
+				.setRefresh(true) //
+				.setScript(new Script(ScriptType.INLINE, "painless", script, params)); //
 
-		client.updateBy(request)
-				.map(UpdateByQueryResponse::getUpdated)
-				.as(StepVerifier::create)
-				.expectNext(0L)
-				.verifyComplete();
+		client.updateBy(request) //
+				.map(UpdateByQueryResponse::getUpdated) //
+				.as(StepVerifier::create) //
+				.expectNext(0L) //
+				.verifyComplete(); //
 
-		SearchRequest searchUpdatedRequest = new SearchRequest(INDEX_I) //
-				.source(new SearchSourceBuilder()
-						.query(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("firstname", "arrow"))));
+		SearchRequest searchUpdatedRequest = new SearchRequest(INDEX_I) // //
+				.source(new SearchSourceBuilder() //
+						.query(QueryBuilders.boolQuery().must(QueryBuilders.termQuery("firstname", "arrow"))) //
+				); //
 
-		client.search(searchUpdatedRequest)
-				.collectList()
-				.map(List::size)
-				.as(StepVerifier::create)
-				.expectNext(0)
-				.verifyComplete();
+		client.search(searchUpdatedRequest) //
+				.collectList() //
+				.map(List::size) //
+				.as(StepVerifier::create) //
+				.expectNext(0) //
+				.verifyComplete(); //
 	}
 
 	@Test // DATAES-510
@@ -812,19 +812,18 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		Map<String, Object> jsonMap = Collections.singletonMap("properties", properties);
 
-		final PutMappingRequest putMappingRequest = new PutMappingRequest(INDEX_I)
-				.source(jsonMap);
+		PutMappingRequest putMappingRequest = new PutMappingRequest(INDEX_I).source(jsonMap);
 
 		client.indices().putMapping(putMappingRequest).block();
 
 		client.indices().getFieldMapping(request -> request.indices(INDEX_I).fields("message1", "message2"))
-				.as(StepVerifier::create)
-				.consumeNextWith(it -> {
+				.as(StepVerifier::create).consumeNextWith(it -> {
 					assertThat(it.mappings().get(INDEX_I).keySet().size()).isEqualTo(2);
-					assertThat(it.mappings().get(INDEX_I).get("message1").sourceAsMap()).isEqualTo(Collections.singletonMap("message1", Collections.singletonMap("type", "text")));
-					assertThat(it.mappings().get(INDEX_I).get("message2").sourceAsMap()).isEqualTo(Collections.singletonMap("message2", Collections.singletonMap("type", "keyword")));
-				})
-				.verifyComplete();
+					assertThat(it.mappings().get(INDEX_I).get("message1").sourceAsMap())
+							.isEqualTo(Collections.singletonMap("message1", Collections.singletonMap("type", "text")));
+					assertThat(it.mappings().get(INDEX_I).get("message2").sourceAsMap())
+							.isEqualTo(Collections.singletonMap("message2", Collections.singletonMap("type", "keyword")));
+				}).verifyComplete();
 	}
 
 	@Test // #1640
@@ -835,24 +834,20 @@ public class ReactiveElasticsearchClientIntegrationTests {
 		Map<String, Object> jsonMap = Collections.singletonMap("properties",
 				Collections.singletonMap("message", Collections.singletonMap("type", "text")));
 
-		final PutMappingRequest putMappingRequest = new PutMappingRequest(INDEX_I)
-				.source(jsonMap);
+		PutMappingRequest putMappingRequest = new PutMappingRequest(INDEX_I).source(jsonMap);
 
 		client.indices().putMapping(putMappingRequest).block();
 
-		client.indices().getFieldMapping(request -> request.indices(INDEX_I).fields("message1"))
-				.as(StepVerifier::create)
+		client.indices().getFieldMapping(request -> request.indices(INDEX_I).fields("message1")).as(StepVerifier::create)
 				.consumeNextWith(it -> {
 					assertThat(it.mappings().get(INDEX_I).keySet().size()).isZero();
-				})
-				.verifyComplete();
+				}).verifyComplete();
 	}
 
 	@Test // #1640
 	void getFieldMappingNonExistingIndex() {
 
-		client.indices().getFieldMapping(request -> request.indices(INDEX_I).fields("message1"))
-				.as(StepVerifier::create)
+		client.indices().getFieldMapping(request -> request.indices(INDEX_I).fields("message1")).as(StepVerifier::create)
 				.verifyError(ElasticsearchStatusException.class);
 	}
 

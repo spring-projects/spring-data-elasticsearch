@@ -15,15 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.springframework.lang.Nullable;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
- * Class mirroring org.elasticsearch.index.reindex.BulkByScrollResponse to keep Elasticsearch classes out of our API.
+ * Response of an update by query operation.
  *
  * @author Farid Faoudi
  * @since 4.2
@@ -44,8 +45,8 @@ public class UpdateByQueryResponse {
 	private final List<Failure> failures;
 
 	private UpdateByQueryResponse(long took, boolean timedOut, long total, long updated, long deleted, int batches,
-								  long versionConflicts, long noops, long bulkRetries, long searchRetries,
-								  @Nullable String reasonCancelled, List<Failure> failures) {
+			long versionConflicts, long noops, long bulkRetries, long searchRetries, @Nullable String reasonCancelled,
+			List<Failure> failures) {
 		this.took = took;
 		this.timedOut = timedOut;
 		this.total = total;
@@ -110,7 +111,8 @@ public class UpdateByQueryResponse {
 	}
 
 	/**
-	 * The number of documents that were ignored because the script used for the update by query returned a noop value for ctx.op.
+	 * The number of documents that were ignored because the script used for the update by query returned a noop value for
+	 * ctx.op.
 	 */
 	public long getNoops() {
 		return noops;
@@ -139,7 +141,8 @@ public class UpdateByQueryResponse {
 	}
 
 	/**
-	 * All of the bulk failures. Version conflicts are only included if the request sets abortOnVersionConflict to true (the default).
+	 * All of the bulk failures. Version conflicts are only included if the request sets abortOnVersionConflict to true
+	 * (the default).
 	 */
 	public List<Failure> getFailures() {
 		return failures;
@@ -155,40 +158,40 @@ public class UpdateByQueryResponse {
 	}
 
 	public static UpdateByQueryResponse of(BulkByScrollResponse bulkByScrollResponse) {
-		final List<Failure> failures = bulkByScrollResponse.getBulkFailures()
-				.stream()
-				.map(Failure::of)
-				.collect(Collectors.toList());
+		final List<Failure> failures = bulkByScrollResponse.getBulkFailures() //
+				.stream() //
+				.map(Failure::of) //
+				.collect(Collectors.toList()); //
 
-		return UpdateByQueryResponse.builder()
-				.withTook(bulkByScrollResponse.getTook().getMillis())
-				.withTimedOut(bulkByScrollResponse.isTimedOut())
-				.withTotal(bulkByScrollResponse.getTotal())
-				.withUpdated(bulkByScrollResponse.getUpdated())
-				.withDeleted(bulkByScrollResponse.getDeleted())
-				.withBatches(bulkByScrollResponse.getBatches())
-				.withVersionConflicts(bulkByScrollResponse.getVersionConflicts())
-				.withNoops(bulkByScrollResponse.getNoops())
-				.withBulkRetries(bulkByScrollResponse.getBulkRetries())
-				.withSearchRetries(bulkByScrollResponse.getSearchRetries())
-				.withReasonCancelled(bulkByScrollResponse.getReasonCancelled())
-				.withFailures(failures)
-				.build();
+		return UpdateByQueryResponse.builder() //
+				.withTook(bulkByScrollResponse.getTook().getMillis()) //
+				.withTimedOut(bulkByScrollResponse.isTimedOut()) //
+				.withTotal(bulkByScrollResponse.getTotal()) //
+				.withUpdated(bulkByScrollResponse.getUpdated()) //
+				.withDeleted(bulkByScrollResponse.getDeleted()) //
+				.withBatches(bulkByScrollResponse.getBatches()) //
+				.withVersionConflicts(bulkByScrollResponse.getVersionConflicts()) //
+				.withNoops(bulkByScrollResponse.getNoops()) //
+				.withBulkRetries(bulkByScrollResponse.getBulkRetries()) //
+				.withSearchRetries(bulkByScrollResponse.getSearchRetries()) //
+				.withReasonCancelled(bulkByScrollResponse.getReasonCancelled()) //
+				.withFailures(failures) //
+				.build(); //
 	}
 
 	public static class Failure {
 
-		private final String index;
-		private final String type;
-		private final String id;
-		private final Exception cause;
-		private final Integer status;
-		private final Long seqNo;
-		private final Long term;
-		private final Boolean aborted;
+		@Nullable private final String index;
+		@Nullable private final String type;
+		@Nullable private final String id;
+		@Nullable private final Exception cause;
+		@Nullable private final Integer status;
+		@Nullable private final Long seqNo;
+		@Nullable private final Long term;
+		@Nullable private final Boolean aborted;
 
-		private Failure(String index, String type, String id, Exception cause, Integer status, Long seqNo, Long term,
-						Boolean aborted) {
+		private Failure(@Nullable String index, @Nullable String type, @Nullable String id, @Nullable Exception cause,
+				@Nullable Integer status, @Nullable Long seqNo, @Nullable Long term, @Nullable Boolean aborted) {
 			this.index = index;
 			this.type = type;
 			this.id = id;
@@ -199,34 +202,42 @@ public class UpdateByQueryResponse {
 			this.aborted = aborted;
 		}
 
+		@Nullable
 		public String getIndex() {
 			return index;
 		}
 
+		@Nullable
 		public String getType() {
 			return type;
 		}
 
+		@Nullable
 		public String getId() {
 			return id;
 		}
 
+		@Nullable
 		public Exception getCause() {
 			return cause;
 		}
 
+		@Nullable
 		public Integer getStatus() {
 			return status;
 		}
 
+		@Nullable
 		public Long getSeqNo() {
 			return seqNo;
 		}
 
+		@Nullable
 		public Long getTerm() {
 			return term;
 		}
 
+		@Nullable
 		public Boolean getAborted() {
 			return aborted;
 		}
@@ -242,37 +253,37 @@ public class UpdateByQueryResponse {
 
 		/**
 		 * Create a new {@link Failure} from {@link BulkItemResponse.Failure}
+		 *
 		 * @param failure {@link BulkItemResponse.Failure} to translate
 		 * @return a new {@link Failure}
 		 */
 		public static Failure of(BulkItemResponse.Failure failure) {
-			return builder()
-					.withIndex(failure.getIndex())
-					.withType(failure.getType())
-					.withId(failure.getId())
-					.withStatus(failure.getStatus().getStatus())
-					.withAborted(failure.isAborted())
-					.withCause(failure.getCause())
-					.withSeqNo(failure.getSeqNo())
-					.withTerm(failure.getTerm())
-					.build();
+			return builder() //
+					.withIndex(failure.getIndex()) //
+					.withType(failure.getType()) //
+					.withId(failure.getId()) //
+					.withStatus(failure.getStatus().getStatus()) //
+					.withAborted(failure.isAborted()) //
+					.withCause(failure.getCause()) //
+					.withSeqNo(failure.getSeqNo()) //
+					.withTerm(failure.getTerm()) //
+					.build(); //
 		}
 
 		/**
 		 * Builder for {@link Failure}
 		 */
 		public static final class FailureBuilder {
-			private String index;
-			private String type;
-			private String id;
-			private Exception cause;
-			private Integer status;
-			private Long seqNo;
-			private Long term;
-			private Boolean aborted;
+			@Nullable private String index;
+			@Nullable private String type;
+			@Nullable private String id;
+			@Nullable private Exception cause;
+			@Nullable private Integer status;
+			@Nullable private Long seqNo;
+			@Nullable private Long term;
+			@Nullable private Boolean aborted;
 
-			private FailureBuilder() {
-			}
+			private FailureBuilder() {}
 
 			public FailureBuilder withIndex(String index) {
 				this.index = index;
@@ -332,10 +343,9 @@ public class UpdateByQueryResponse {
 		private long bulkRetries;
 		private long searchRetries;
 		@Nullable private String reasonCancelled;
-		private List<Failure> failures;
+		private List<Failure> failures = Collections.emptyList();
 
-		private UpdateByQueryResponseBuilder() {
-		}
+		private UpdateByQueryResponseBuilder() {}
 
 		public UpdateByQueryResponseBuilder withTook(long took) {
 			this.took = took;
@@ -398,7 +408,8 @@ public class UpdateByQueryResponse {
 		}
 
 		public UpdateByQueryResponse build() {
-			return new UpdateByQueryResponse(took, timedOut, total, updated, deleted, batches, versionConflicts, noops, bulkRetries, searchRetries, reasonCancelled, failures);
+			return new UpdateByQueryResponse(took, timedOut, total, updated, deleted, batches, versionConflicts, noops,
+					bulkRetries, searchRetries, reasonCancelled, failures);
 		}
 	}
 }

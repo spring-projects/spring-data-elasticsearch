@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 /**
- * Enum mirroring org.elasticsearch.script.ScriptType to keep Elasticsearch classes out of our API.
+ * Define script types for update queries.
  *
  * @author Farid Faoudi
  * @since 4.2
