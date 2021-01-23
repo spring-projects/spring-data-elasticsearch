@@ -148,7 +148,7 @@ httpHeaders.add("some-header", "on every request")                      <.>
 
 ClientConfiguration clientConfiguration = ClientConfiguration.builder()
   .connectedTo("localhost:9200", "localhost:9291")                      <.>
-  .useSsl()                                                             <.>
+  .usingSsl()                                                           <.>
   .withProxy("localhost:8888")                                          <.>
   .withPathPrefix("ela")                                                <.>
   .withConnectTimeout(Duration.ofSeconds(5))                            <.>
