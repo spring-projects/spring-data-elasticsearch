@@ -153,7 +153,7 @@ ClientConfiguration clientConfiguration = ClientConfiguration.builder()
   .connectedTo("localhost:9200", "localhost:9291")                      <2>
   .withConnectTimeout(Duration.ofSeconds(5))                            <3>
   .withSocketTimeout(Duration.ofSeconds(3))                             <4>
-  .useSsl()                                                             <5>
+  .usingSsl()                                                           <5>
   .withDefaultHeaders(defaultHeaders)                                   <6>
   .withBasicAuth(username, password)                                    <7>
   . // ... other options
