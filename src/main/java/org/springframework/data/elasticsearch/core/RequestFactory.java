@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the original author or authors.
+ * Copyright 2019-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,7 @@ import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
@@ -760,13 +761,20 @@ class RequestFactory {
 			searchQuery.addSourceFilter(new FetchSourceFilter(toArray(searchQuery.getFields()), null));
 		}
 
+        FetchSourceContext fetchSourceContext = getFetchSourceContext(searchQuery);
+
 		for (String id : searchQuery.getIds()) {
 			MultiGetRequest.Item item = new MultiGetRequest.Item(index.getIndexName(), id);
 
 			if (searchQuery.getRoute() != null) {
 				item = item.routing(searchQuery.getRoute());
 			}
-			items.add(item);
+
+            if (fetchSourceContext != null) {
+                item.fetchSourceContext(fetchSourceContext);
+            }
+
+            items.add(item);
 		}
 		return items;
 	}
@@ -1046,5 +1054,25 @@ class RequestFactory {
 		String[] valuesAsArray = new String[values.size()];
 		return values.toArray(valuesAsArray);
 	}
+
+    private FetchSourceContext getFetchSourceContext(Query searchQuery) {
+        FetchSourceContext fetchSourceContext = null;
+        SourceFilter sourceFilter = searchQuery.getSourceFilter();
+
+        if (!isEmpty(searchQuery.getFields())) {
+            if (sourceFilter == null) {
+                sourceFilter = new FetchSourceFilter(toArray(searchQuery.getFields()), null);
+            } else {
+                ArrayList<String> arrayList = new ArrayList<>();
+                Collections.addAll(arrayList, sourceFilter.getIncludes());
+                sourceFilter = new FetchSourceFilter(toArray(arrayList), null);
+            }
+
+            fetchSourceContext = new FetchSourceContext(true, sourceFilter.getIncludes(), sourceFilter.getExcludes());
+        } else if (sourceFilter != null) {
+            fetchSourceContext = new FetchSourceContext(true, sourceFilter.getIncludes(), sourceFilter.getExcludes());
+        }
+        return fetchSourceContext;
+    }
 
 }
