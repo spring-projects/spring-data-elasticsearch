@@ -80,6 +80,7 @@ import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
@@ -861,9 +862,7 @@ class RequestFactory {
 		elasticsearchConverter.updateQuery(searchQuery, clazz);
 		List<MultiGetRequest.Item> items = new ArrayList<>();
 
-		if (!isEmpty(searchQuery.getFields())) {
-			searchQuery.addSourceFilter(new FetchSourceFilter(toArray(searchQuery.getFields()), null));
-		}
+		FetchSourceContext fetchSourceContext = getFetchSourceContext(searchQuery);
 
 		if (!isEmpty(searchQuery.getIds())) {
 			String indexName = index.getIndexName();
@@ -873,6 +872,11 @@ class RequestFactory {
 				if (searchQuery.getRoute() != null) {
 					item = item.routing(searchQuery.getRoute());
 				}
+
+				if (fetchSourceContext != null) {
+					item.fetchSourceContext(fetchSourceContext);
+				}
+
 				items.add(item);
 			}
 		}
@@ -1732,38 +1736,29 @@ class RequestFactory {
 				return WriteRequest.RefreshPolicy.NONE;
 		}
 	}
-	// region response stuff
 
-	/**
-	 * extract the index settings information for a given index
-	 *
-	 * @param response the Elasticsearch response
-	 * @param indexName the index name
-	 * @return settings as {@link Document}
-	 */
-	public Document fromSettingsResponse(GetSettingsResponse response, String indexName) {
+	private FetchSourceContext getFetchSourceContext(Query searchQuery) {
+		FetchSourceContext fetchSourceContext = null;
+		SourceFilter sourceFilter = searchQuery.getSourceFilter();
 
-		Document settings = Document.create();
-
-		if (!response.getIndexToDefaultSettings().isEmpty()) {
-			Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);
-			for (String key : defaultSettings.keySet()) {
-				settings.put(key, defaultSettings.get(key));
+		if (!isEmpty(searchQuery.getFields())) {
+			if (sourceFilter == null) {
+				sourceFilter = new FetchSourceFilter(toArray(searchQuery.getFields()), null);
+			} else {
+				ArrayList<String> arrayList = new ArrayList<>();
+				Collections.addAll(arrayList, sourceFilter.getIncludes());
+				sourceFilter = new FetchSourceFilter(toArray(arrayList), null);
 			}
-		}
 
-		if (!response.getIndexToSettings().isEmpty()) {
-			Settings customSettings = response.getIndexToSettings().get(indexName);
-			for (String key : customSettings.keySet()) {
-				settings.put(key, customSettings.get(key));
-			}
+			fetchSourceContext = new FetchSourceContext(true, sourceFilter.getIncludes(), sourceFilter.getExcludes());
+		} else if (sourceFilter != null) {
+			fetchSourceContext = new FetchSourceContext(true, sourceFilter.getIncludes(), sourceFilter.getExcludes());
 		}
-
-		return settings;
+		return fetchSourceContext;
 	}
+
 	// endregion
 
-	// region helper functions
 	@Nullable
 	private ElasticsearchPersistentEntity<?> getPersistentEntity(@Nullable Class<?> clazz) {
 		return clazz != null ? elasticsearchConverter.getMappingContext().getPersistentEntity(clazz) : null;
@@ -1838,4 +1833,35 @@ class RequestFactory {
 
 	// endregion
 
+	// region response stuff
+
+	/**
+	 * extract the index settings information for a given index
+	 *
+	 * @param response the Elasticsearch response
+	 * @param indexName the index name
+	 * @return settings as {@link Document}
+	 */
+	public Document fromSettingsResponse(GetSettingsResponse response, String indexName) {
+
+		Document settings = Document.create();
+
+		if (!response.getIndexToDefaultSettings().isEmpty()) {
+			Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);
+			for (String key : defaultSettings.keySet()) {
+				settings.put(key, defaultSettings.get(key));
+			}
+		}
+
+		if (!response.getIndexToSettings().isEmpty()) {
+			Settings customSettings = response.getIndexToSettings().get(indexName);
+			for (String key : customSettings.keySet()) {
+				settings.put(key, customSettings.get(key));
+			}
+		}
+
+		return settings;
+	}
+
+	// endregion
 }
