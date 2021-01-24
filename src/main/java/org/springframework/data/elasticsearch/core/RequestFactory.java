@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the original author or authors.
+ * Copyright 2019-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,7 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.support.ActiveShardCount;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -85,6 +86,7 @@ import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
@@ -860,9 +862,7 @@ class RequestFactory {
 		elasticsearchConverter.updateQuery(searchQuery, clazz);
 		List<MultiGetRequest.Item> items = new ArrayList<>();
 
-		if (!isEmpty(searchQuery.getFields())) {
-			searchQuery.addSourceFilter(new FetchSourceFilter(toArray(searchQuery.getFields()), null));
-		}
+		FetchSourceContext fetchSourceContext = getFetchSourceContext(searchQuery);
 
 		if (!isEmpty(searchQuery.getIds())) {
 			String indexName = index.getIndexName();
@@ -872,6 +872,11 @@ class RequestFactory {
 				if (searchQuery.getRoute() != null) {
 					item = item.routing(searchQuery.getRoute());
 				}
+
+				if (fetchSourceContext != null) {
+					item.fetchSourceContext(fetchSourceContext);
+				}
+
 				items.add(item);
 			}
 		}
@@ -1553,38 +1558,6 @@ class RequestFactory {
 		return elasticsearchFilter;
 	}
 
-	// region response stuff
-
-	/**
-	 * extract the index settings information for a given index
-	 *
-	 * @param response the Elasticsearch response
-	 * @param indexName the index name
-	 * @return settings as {@link Document}
-	 */
-	public Document fromSettingsResponse(GetSettingsResponse response, String indexName) {
-
-		Document settings = Document.create();
-
-		if (!response.getIndexToDefaultSettings().isEmpty()) {
-			Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);
-			for (String key : defaultSettings.keySet()) {
-				settings.put(key, defaultSettings.get(key));
-			}
-		}
-
-		if (!response.getIndexToSettings().isEmpty()) {
-			Settings customSettings = response.getIndexToSettings().get(indexName);
-			for (String key : customSettings.keySet()) {
-				settings.put(key, customSettings.get(key));
-			}
-		}
-
-		return settings;
-	}
-	// endregion
-
-	// region helper functions
 	@Nullable
 	private ElasticsearchPersistentEntity<?> getPersistentEntity(@Nullable Class<?> clazz) {
 		return clazz != null ? elasticsearchConverter.getMappingContext().getPersistentEntity(clazz) : null;
@@ -1633,6 +1606,57 @@ class RequestFactory {
 		return entity.hasSeqNoPrimaryTermProperty();
 	}
 
+    private FetchSourceContext getFetchSourceContext(Query searchQuery) {
+        FetchSourceContext fetchSourceContext = null;
+        SourceFilter sourceFilter = searchQuery.getSourceFilter();
+
+        if (!isEmpty(searchQuery.getFields())) {
+            if (sourceFilter == null) {
+                sourceFilter = new FetchSourceFilter(toArray(searchQuery.getFields()), null);
+            } else {
+                ArrayList<String> arrayList = new ArrayList<>();
+                Collections.addAll(arrayList, sourceFilter.getIncludes());
+                sourceFilter = new FetchSourceFilter(toArray(arrayList), null);
+            }
+
+            fetchSourceContext = new FetchSourceContext(true, sourceFilter.getIncludes(), sourceFilter.getExcludes());
+        } else if (sourceFilter != null) {
+            fetchSourceContext = new FetchSourceContext(true, sourceFilter.getIncludes(), sourceFilter.getExcludes());
+        }
+        return fetchSourceContext;
+    }
+
 	// endregion
 
+	// region response stuff
+
+	/**
+	 * extract the index settings information for a given index
+	 *
+	 * @param response the Elasticsearch response
+	 * @param indexName the index name
+	 * @return settings as {@link Document}
+	 */
+	public Document fromSettingsResponse(GetSettingsResponse response, String indexName) {
+
+		Document settings = Document.create();
+
+		if (!response.getIndexToDefaultSettings().isEmpty()) {
+			Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);
+			for (String key : defaultSettings.keySet()) {
+				settings.put(key, defaultSettings.get(key));
+			}
+		}
+
+		if (!response.getIndexToSettings().isEmpty()) {
+			Settings customSettings = response.getIndexToSettings().get(indexName);
+			for (String key : customSettings.keySet()) {
+				settings.put(key, customSettings.get(key));
+			}
+		}
+
+		return settings;
+	}
+
+	// endregion
 }
