@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.Builder;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 /**
  * Default {@link WebClientProvider} that uses cached {@link WebClient} instances per {@code hostAndPort}.
@@ -156,7 +157,16 @@ class DefaultWebClientProvider implements WebClientProvider {
 
 		String baseUrl = String.format("%s://%s:%d%s", this.scheme, socketAddress.getHostString(), socketAddress.getPort(),
 				pathPrefix == null ? "" : '/' + pathPrefix);
-		WebClient webClient = builder.baseUrl(baseUrl).filter((request, next) -> next.exchange(request).doOnError(errorListener)).build();
+
+		DefaultUriBuilderFactory uriBuilderFactory = new DefaultUriBuilderFactory(baseUrl);
+		// the template will already be encoded by the RequestConverters methods
+		uriBuilderFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.VALUES_ONLY);
+		builder.uriBuilderFactory(uriBuilderFactory); //
+
+		WebClient webClient = builder //
+				.filter((request, next) -> next.exchange(request) //
+						.doOnError(errorListener)) //
+				.build(); //
 		return webClientConfigurer.apply(webClient);
 	}
 }

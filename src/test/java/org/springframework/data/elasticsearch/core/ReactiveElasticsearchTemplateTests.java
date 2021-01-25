@@ -31,6 +31,8 @@ import reactor.test.StepVerifier;
 import java.lang.Long;
 import java.lang.Object;
 import java.net.ConnectException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -49,7 +51,6 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
@@ -524,7 +525,8 @@ public class ReactiveElasticsearchTemplateTests {
 
 	@Test // DATAES-567, DATAES-767
 	public void aggregateShouldErrorWhenIndexDoesNotExist() {
-		template.aggregate(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
+		template
+				.aggregate(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
 						IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
 				.expectError(ElasticsearchStatusException.class);
@@ -981,6 +983,28 @@ public class ReactiveElasticsearchTemplateTests {
 
 	// --> JUST some helpers
 
+	@Test // #1665
+	void shouldBeAbleToProcessDateMathIndexNames() {
+
+		String indexName = "foo-" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM"));
+		String dateMathIndexName = "<foo-{now/M{yyyy.MM}}>";
+
+		SampleEntity entity = randomEntity("foo");
+
+		template.save(entity, IndexCoordinates.of(dateMathIndexName)) //
+				.as(StepVerifier::create) //
+				.expectNext(entity) //
+				.verifyComplete(); //
+
+		template.get(entity.getId(), SampleEntity.class, IndexCoordinates.of(indexName)) //
+				.as(StepVerifier::create) //
+				.expectNext(entity) //
+				.verifyComplete(); //
+
+	}
+	// endregion
+
+	// region Helper functions
 	private SampleEntity randomEntity(String message) {
 
 		return SampleEntity.builder() //
