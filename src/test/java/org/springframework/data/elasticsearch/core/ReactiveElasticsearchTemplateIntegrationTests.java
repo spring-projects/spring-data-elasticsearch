@@ -32,6 +32,8 @@ import java.lang.Boolean;
 import java.lang.Long;
 import java.lang.Object;
 import java.net.ConnectException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1031,6 +1033,32 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 					assertThat(searchHits.getSearchHits().size()).isEqualTo(5);
 				}).verifyComplete();
 	}
+
+	@Test // #1665
+	@DisplayName("should be able to process date-math-index names")
+	void shouldBeAbleToProcessDateMathIndexNames() {
+
+		String indexName = "foo-" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM"));
+		String dateMathIndexName = "<foo-{now/M{yyyy.MM}}>";
+
+		template.indexOps(IndexCoordinates.of(dateMathIndexName)) //
+				.create() //
+				.as(StepVerifier::create) //
+				.expectNext(true) //
+				.verifyComplete(); //
+
+		template.indexOps(IndexCoordinates.of(indexName)) //
+				.exists() //
+				.as(StepVerifier::create) //
+				.expectNext(true) //
+				.verifyComplete(); //
+
+		template.indexOps(IndexCoordinates.of(dateMathIndexName)) //
+				.delete() //
+				.as(StepVerifier::create) //
+				.expectNext(true) //
+				.verifyComplete(); //
+	}
 	// endregion
 
 	// region Helper functions
@@ -1128,5 +1156,6 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		@Id private String id;
 		@Version private Long version;
 	}
+
 	// endregion
 }
