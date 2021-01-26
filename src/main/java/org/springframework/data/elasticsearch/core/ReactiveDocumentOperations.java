@@ -189,34 +189,6 @@ public interface ReactiveDocumentOperations {
 	 * @param entityType the domain type used for mapping the document.
 	 * @param <T>
 	 * @return {@link Mono#empty()} if not found.
-	 * @deprecated since 4.0 use {@link #get(String, Class)}
-	 */
-	@Deprecated
-	default <T> Mono<T> findById(String id, Class<T> entityType) {
-		return get(id, entityType);
-	}
-
-	/**
-	 * Fetch the entity with given {@literal id}.
-	 *
-	 * @param id must not be {@literal null}.
-	 * @param index the target index, must not be {@literal null}
-	 * @param <T>
-	 * @return the {@link Mono} emitting the entity or signalling completion if none found.
-	 * @deprecated since 4.0, use {@link #get(String, Class, IndexCoordinates)}
-	 */
-	@Deprecated
-	default <T> Mono<T> findById(String id, Class<T> entityType, IndexCoordinates index) {
-		return get(id, entityType, index);
-	}
-
-	/**
-	 * Find the document with the given {@literal id} mapped onto the given {@literal entityType}.
-	 *
-	 * @param id the {@literal _id} of the document to fetch.
-	 * @param entityType the domain type used for mapping the document.
-	 * @param <T>
-	 * @return {@link Mono#empty()} if not found.
 	 * @since 4.0
 	 */
 	<T> Mono<T> get(String id, Class<T> entityType);
@@ -248,17 +220,6 @@ public interface ReactiveDocumentOperations {
 	 * @return a {@link Mono} emitting {@literal true} if a matching document exists, {@literal false} otherwise.
 	 */
 	Mono<Boolean> exists(String id, IndexCoordinates index);
-
-	/**
-	 * Check if an entity with given {@literal id} exists.
-	 *
-	 * @param id the {@literal _id} of the document to look for.
-	 * @param index the target index, must not be {@literal null}
-	 * @return a {@link Mono} emitting {@literal true} if a matching document exists, {@literal false} otherwise.
-	 * @deprecated since 4.0, use {@link #exists(String, Class)} or {@link #exists(String, IndexCoordinates)}
-	 */
-	@Deprecated
-	Mono<Boolean> exists(String id, Class<?> entityType, IndexCoordinates index);
 
 	/**
 	 * Delete the given entity extracting index from entity metadata.
@@ -295,20 +256,6 @@ public interface ReactiveDocumentOperations {
 	 * @since 4.0
 	 */
 	Mono<String> delete(String id, Class<?> entityType);
-
-	/**
-	 * Delete the entity with given {@literal id} extracting index from entity metadata.
-	 *
-	 * @param id must not be {@literal null}.
-	 * @param entityType must not be {@literal null}.
-	 * @param index the target index, must not be {@literal null}
-	 * @return a {@link Mono} emitting the {@literal id} of the removed document.
-	 * @deprecated since 4.0, use {@link #delete(String, Class)} or {@link #delete(String, IndexCoordinates)}
-	 */
-	@Deprecated
-	default Mono<String> delete(String id, Class<?> entityType, IndexCoordinates index) {
-		return delete(id, index);
-	}
 
 	/**
 	 * Delete the documents matching the given {@link Query} extracting index from entity metadata.

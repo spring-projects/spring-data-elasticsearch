@@ -67,7 +67,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -302,7 +301,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Test // DATAES-519
 	public void existsShouldReturnFalseWhenIndexDoesNotExist() {
 
-		template.exists("foo", SampleEntity.class, IndexCoordinates.of("no-such-index")) //
+		template.exists("foo", IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
 				.expectNext(false) //
 				.verifyComplete();
@@ -1130,7 +1129,6 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		@Field(type = Text, store = true, fielddata = true) private String message;
 		private int rate;
 		@Version private Long version;
-		@Score private float score;
 	}
 
 	@Data

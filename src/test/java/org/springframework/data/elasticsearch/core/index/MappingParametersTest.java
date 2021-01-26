@@ -11,7 +11,6 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.lang.Nullable;
 
@@ -43,13 +42,6 @@ public class MappingParametersTest extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-621
-	public void shouldNotCreateParametersForUnknownAnnotation() {
-		Annotation annotation = entity.getRequiredPersistentProperty("score").findAnnotation(Score.class);
-
-		assertThatThrownBy(() -> MappingParameters.from(annotation)).isInstanceOf(IllegalArgumentException.class);
-	}
-
-	@Test // DATAES-621
 	public void shouldNotAllowDocValueFalseOnFieldTypeText() {
 		Annotation annotation = entity.getRequiredPersistentProperty("docValuesText").findAnnotation(Field.class);
 
@@ -77,7 +69,6 @@ public class MappingParametersTest extends MappingContextBaseTests {
 		@Nullable @Field private String field;
 		@Nullable @MultiField(mainField = @Field,
 				otherFields = { @InnerField(suffix = "test", type = FieldType.Text) }) private String mainField;
-		@Score private float score;
 		@Nullable @Field(type = FieldType.Text, docValues = false) private String docValuesText;
 		@Nullable @Field(type = FieldType.Nested, docValues = false) private String docValuesNested;
 		@Nullable @Field(type = Object, enabled = true) private String enabledObject;

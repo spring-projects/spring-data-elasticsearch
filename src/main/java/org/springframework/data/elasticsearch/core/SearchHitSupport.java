@@ -23,8 +23,6 @@ import java.util.stream.Stream;
 
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
-import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
@@ -65,14 +63,6 @@ public final class SearchHitSupport {
 					.collect(Collectors.toList());
 		}
 
-		if (result instanceof AggregatedPage<?>) {
-			AggregatedPage<?> page = (AggregatedPage<?>) result;
-			List<?> list = page.getContent().stream().map(SearchHitSupport::unwrapSearchHits).collect(Collectors.toList());
-			return new AggregatedPageImpl<>(list, page.getPageable(), page.getTotalElements(), page.getAggregations(),
-					page.getScrollId(), page.getMaxScore());
-
-		}
-
 		if (result instanceof Stream<?>) {
 			return ((Stream<?>) result).map(SearchHitSupport::unwrapSearchHits);
 		}
@@ -84,6 +74,12 @@ public final class SearchHitSupport {
 
 		if (result instanceof SearchHitsIterator<?>) {
 			return unwrapSearchHitsIterator((SearchHitsIterator<?>) result);
+		}
+
+		if (result instanceof SearchPage<?>) {
+			SearchPage<?> searchPage = (SearchPage<?>) result;
+			List<?> content = (List<?>) SearchHitSupport.unwrapSearchHits(searchPage.getSearchHits());
+			return new PageImpl<>(content, searchPage.getPageable(), searchPage.getTotalElements());
 		}
 
 		if (ReactiveWrappers.isAvailable(ReactiveWrappers.ReactiveLibrary.PROJECT_REACTOR)) {
@@ -115,25 +111,6 @@ public final class SearchHitSupport {
 				iterator.close();
 			}
 		};
-	}
-
-	/**
-	 * Builds an {@link AggregatedPage} with the {@link SearchHit} objects from a {@link SearchHits} object.
-	 * 
-	 * @param searchHits, must not be {@literal null}.
-	 * @param pageable, must not be {@literal null}.
-	 * @return the created Page
-	 * @deprecated since 4.0, will be removed in a future version.
-	 */
-	@Deprecated
-	public static <T> AggregatedPage<SearchHit<T>> page(SearchHits<T> searchHits, Pageable pageable) {
-		return new AggregatedPageImpl<>( //
-				searchHits.getSearchHits(), //
-				pageable, //
-				searchHits.getTotalHits(), //
-				searchHits.getAggregations(), //
-				null, //
-				searchHits.getMaxScore());
 	}
 
 	public static <T> SearchPage<T> searchPageFor(SearchHits<T> searchHits, @Nullable Pageable pageable) {

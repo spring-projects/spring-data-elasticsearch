@@ -72,7 +72,7 @@ public class FieldDynamicMappingEntityRepositoryTests {
 		// given
 
 		// then
-		Map<String, Object> mapping = operations.getMapping(FieldDynamicMappingEntity.class);
+		Map<String, Object> mapping = operations.indexOps(FieldDynamicMappingEntity.class).getMapping();
 		assertThat(mapping).isNotNull();
 
 		Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");

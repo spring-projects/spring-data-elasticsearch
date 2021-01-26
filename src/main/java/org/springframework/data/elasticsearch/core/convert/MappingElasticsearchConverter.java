@@ -32,7 +32,6 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
@@ -44,6 +43,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Field;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -231,11 +231,6 @@ public class MappingElasticsearchConverter
 
 		if (source instanceof SearchDocument) {
 			SearchDocument searchDocument = (SearchDocument) source;
-			if (targetEntity.hasScoreProperty()) {
-				//noinspection ConstantConditions
-				targetEntity.getPropertyAccessor(result) //
-						.setProperty(targetEntity.getScoreProperty(), searchDocument.getScore());
-			}
 			populateScriptFields(result, searchDocument);
 		}
 
@@ -259,7 +254,7 @@ public class MappingElasticsearchConverter
 
 		for (ElasticsearchPersistentProperty prop : entity) {
 
-			if (entity.isConstructorArgument(prop) || prop.isScoreProperty() || !prop.isReadable()) {
+			if (entity.isConstructorArgument(prop) || !prop.isReadable()) {
 				continue;
 			}
 
@@ -455,9 +450,9 @@ public class MappingElasticsearchConverter
 						try {
 							field.set(result, value);
 						} catch (IllegalArgumentException e) {
-							throw new ElasticsearchException("failed to set scripted field: " + name + " with value: " + value, e);
+							throw new MappingException("failed to set scripted field: " + name + " with value: " + value, e);
 						} catch (IllegalAccessException e) {
-							throw new ElasticsearchException("failed to access scripted field: " + name, e);
+							throw new MappingException("failed to access scripted field: " + name, e);
 						}
 					}
 				}
@@ -889,10 +884,6 @@ public class MappingElasticsearchConverter
 					return document.getVersion();
 				}
 
-			}
-
-			if (target instanceof SearchDocument && property.isScoreProperty()) {
-				return ((SearchDocument) target).getScore();
 			}
 
 			if (!fieldName.contains(".")) {

@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchResponse;
@@ -35,15 +34,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.domain.Page;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.event.AfterConvertCallback;
 import org.springframework.data.elasticsearch.core.event.AfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.BeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
@@ -239,18 +235,6 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 	}
 
 	@Test // DATAES-772
-	void getViaQueryShouldInvokeAfterConvertCallback() {
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		Person result = template.get(new GetQuery("init"), Person.class, index);
-
-		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
-		assertThat(result.firstname).isEqualTo("after-convert");
-	}
-
-	@Test // DATAES-772
 	void multiGetShouldInvokeAfterConvertCallback() {
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
@@ -267,95 +251,8 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 		return new NativeSearchQueryBuilder().withIds(Arrays.asList("init1", "init2")).build();
 	}
 
-	@Test // DATAES-772
-	void queryForObjectShouldInvokeAfterConvertCallback() {
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
-
-		doReturn(nSearchHits(1)).when(searchResponse).getHits();
-
-		@SuppressWarnings("deprecation") // we know what we test
-		Person result = template.queryForObject(queryForOne(), Person.class, index);
-
-		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
-		assertThat(result.firstname).isEqualTo("after-convert");
-	}
-
 	private Query queryForOne() {
 		return new NativeSearchQueryBuilder().withIds(singletonList("init")).build();
-	}
-
-	@Test // DATAES-772
-	void queryForPageShouldInvokeAfterConvertCallback() {
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		AggregatedPage<Person> results = template.queryForPage(queryForTwo(), Person.class, index);
-
-		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
-				eq(index));
-		assertThat(results.getContent().get(0).firstname).isEqualTo("after-convert");
-		assertThat(results.getContent().get(1).firstname).isEqualTo("after-convert");
-	}
-
-	@Test // DATAES-772
-	void queryForPageWithMultipleQueriesAndSameEntityClassShouldInvokeAfterConvertCallback() {
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		List<Page<Person>> results = template.queryForPage(singletonList(queryForTwo()), Person.class, index);
-
-		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
-				eq(index));
-		List<Person> persons = results.get(0).getContent();
-		assertThat(persons.get(0).firstname).isEqualTo("after-convert");
-		assertThat(persons.get(1).firstname).isEqualTo("after-convert");
-	}
-
-	@Test // DATAES-772
-	void queryForPageWithMultipleQueriesAndEntityClassesShouldInvokeAfterConvertCallback() {
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		List<AggregatedPage<?>> results = template.queryForPage(singletonList(queryForTwo()), singletonList(Person.class),
-				index);
-
-		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
-				eq(index));
-		List<Person> persons = results.get(0).getContent().stream().map(Person.class::cast).collect(Collectors.toList());
-		assertThat(persons.get(0).firstname).isEqualTo("after-convert");
-		assertThat(persons.get(1).firstname).isEqualTo("after-convert");
-	}
-
-	@Test // DATAES-772
-	void streamShouldInvokeAfterConvertCallback() {
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
-
-		CloseableIterator<Person> results = template.stream(queryForTwo(), Person.class, index);
-
-		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
-				eq(index));
-		assertThat(results.next().firstname).isEqualTo("after-convert");
-		assertThat(results.next().firstname).isEqualTo("after-convert");
-	}
-
-	@Test // DATAES-772
-	void searchScrollContinueShouldInvokeAfterConvertCallback() {
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
-
-		CloseableIterator<Person> results = template.stream(queryForTwo(), Person.class, index);
-
-		skipItemsFromScrollStart(results);
-		assertThat(results.next().firstname).isEqualTo("after-convert");
-		assertThat(results.next().firstname).isEqualTo("after-convert");
-
-		verify(afterConvertCallback, times(4)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
-				eq(index));
 	}
 
 	private void skipItemsFromScrollStart(CloseableIterator<Person> results) {
@@ -364,61 +261,16 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 	}
 
 	@Test // DATAES-772
-	void queryForListShouldInvokeAfterConvertCallback() {
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		List<Person> results = template.queryForList(queryForTwo(), Person.class, index);
-
-		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
-				eq(index));
-		assertThat(results.get(0).firstname).isEqualTo("after-convert");
-		assertThat(results.get(1).firstname).isEqualTo("after-convert");
-	}
-
-	@Test // DATAES-772
-	void queryForListWithMultipleQueriesAndSameEntityClassShouldInvokeAfterConvertCallback() {
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		List<List<Person>> results = template.queryForList(singletonList(queryForTwo()), Person.class, index);
-
-		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
-				eq(index));
-		List<Person> persons = results.get(0);
-		assertThat(persons.get(0).firstname).isEqualTo("after-convert");
-		assertThat(persons.get(1).firstname).isEqualTo("after-convert");
-	}
-
-	@Test // DATAES-772
-	void queryForListWithMultipleQueriesAndEntityClassesShouldInvokeAfterConvertCallback() {
-
-		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		List<List<?>> results = template.queryForList(singletonList(queryForTwo()), singletonList(Person.class), index);
-
-		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
-				eq(index));
-		List<Person> persons = results.get(0).stream().map(Person.class::cast).collect(Collectors.toList());
-		assertThat(persons.get(0).firstname).isEqualTo("after-convert");
-		assertThat(persons.get(1).firstname).isEqualTo("after-convert");
-	}
-
-	@Test // DATAES-772
 	void moreLikeThisShouldInvokeAfterConvertCallback() {
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
 
-		@SuppressWarnings("deprecation") // we know what we test
-		AggregatedPage<Person> results = template.moreLikeThis(moreLikeThisQuery(), Person.class, index);
+		SearchHits<Person> results = template.search(moreLikeThisQuery(), Person.class, index);
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
 				eq(index));
-		assertThat(results.getContent().get(0).firstname).isEqualTo("after-convert");
-		assertThat(results.getContent().get(1).firstname).isEqualTo("after-convert");
+		assertThat(results.getSearchHit(0).getContent().firstname).isEqualTo("after-convert");
+		assertThat(results.getSearchHit(1).getContent().firstname).isEqualTo("after-convert");
 	}
 
 	private MoreLikeThisQuery moreLikeThisQuery() {

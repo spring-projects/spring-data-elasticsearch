@@ -31,7 +31,6 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Parent;
-import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoJson;
@@ -67,7 +66,6 @@ public class SimpleElasticsearchPersistentProperty extends
 
 	private static final List<String> SUPPORTED_ID_PROPERTY_NAMES = Arrays.asList("id", "document");
 
-	private final boolean isScore;
 	private final boolean isParent;
 	private final boolean isId;
 	private final boolean isSeqNoPrimaryTerm;
@@ -95,7 +93,6 @@ public class SimpleElasticsearchPersistentProperty extends
 					+ " Please annotate the id property with '@Id'", owner.getName() + "." + getName());
 		}
 
-		this.isScore = isAnnotationPresent(Score.class);
 		this.isParent = isAnnotationPresent(Parent.class);
 		this.isSeqNoPrimaryTerm = SeqNoPrimaryTerm.class.isAssignableFrom(getRawType());
 
@@ -103,11 +100,6 @@ public class SimpleElasticsearchPersistentProperty extends
 
 		if (isVersionProperty() && !getType().equals(Long.class)) {
 			throw new MappingException(String.format("Version property %s must be of type Long!", property.getName()));
-		}
-
-		if (isScore && !getType().equals(Float.TYPE) && !getType().equals(Float.class)) {
-			throw new MappingException(
-					String.format("Score property %s must be either of type float or Float!", property.getName()));
 		}
 
 		if (isParent && !getType().equals(String.class)) {
@@ -276,11 +268,6 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Override
 	protected Association<ElasticsearchPersistentProperty> createAssociation() {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public boolean isScoreProperty() {
-		return isScore;
 	}
 
 	@Override

@@ -214,11 +214,12 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	public void shouldUseKeywordNormalizer() {
 
 		// given
-		operations.createIndex(NormalizerEntity.class);
-		operations.putMapping(NormalizerEntity.class);
+		IndexOperations indexOps = operations.indexOps(NormalizerEntity.class);
+		indexOps.create();
+		indexOps.putMapping();
 
 		// when
-		Map mapping = operations.getMapping(NormalizerEntity.class);
+		Map mapping = indexOps.getMapping();
 		Map properties = (Map) mapping.get("properties");
 		Map fieldName = (Map) properties.get("name");
 		Map fieldDescriptionLowerCase = (Map) ((Map) ((Map) properties.get("description")).get("fields")).get("lower_case");

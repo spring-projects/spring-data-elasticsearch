@@ -40,7 +40,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -821,6 +820,5 @@ public class CriteriaQueryIntegrationTests {
 		@Field(type = Text, store = true, fielddata = true) private String message;
 		private int rate;
 		@Version private Long version;
-		@Score private float score;
 	}
 }

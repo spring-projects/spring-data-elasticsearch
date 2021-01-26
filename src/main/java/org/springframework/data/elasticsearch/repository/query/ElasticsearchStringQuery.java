@@ -89,7 +89,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		if (queryMethod.isPageQuery()) {
 			stringQuery.setPageable(accessor.getPageable());
 			SearchHits<?> searchHits = elasticsearchOperations.search(stringQuery, clazz, index);
-			result = SearchHitSupport.page(searchHits, stringQuery.getPageable());
+			result = SearchHitSupport.searchPageFor(searchHits, stringQuery.getPageable());
 		} else if (queryMethod.isStreamQuery()) {
 			if (accessor.getPageable().isUnpaged()) {
 				stringQuery.setPageable(PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));

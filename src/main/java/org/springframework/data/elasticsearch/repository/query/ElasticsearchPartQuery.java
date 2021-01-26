@@ -93,7 +93,7 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 			if (queryMethod.isSearchPageMethod()) {
 				result = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
 			} else {
-				result = SearchHitSupport.page(searchHits, query.getPageable());
+				result = SearchHitSupport.unwrapSearchHits(SearchHitSupport.searchPageFor(searchHits, query.getPageable()));
 			}
 		} else if (queryMethod.isStreamQuery()) {
 			if (accessor.getPageable().isUnpaged()) {
@@ -126,7 +126,9 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 			result = elasticsearchOperations.searchOne(query, clazz, index);
 		}
 
-		return queryMethod.isNotSearchHitMethod() ? SearchHitSupport.unwrapSearchHits(result) : result;
+		return (queryMethod.isNotSearchHitMethod() && queryMethod.isNotSearchPageMethod())
+				? SearchHitSupport.unwrapSearchHits(result)
+				: result;
 	}
 
 	@Nullable

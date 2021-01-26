@@ -239,30 +239,6 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 	}
 
 	@Test // DATAES-772
-	void findByIdShouldInvokeAfterConvertCallbacks() {
-
-		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		Person result = template.findById("init", Person.class).block(Duration.ofSeconds(1));
-
-		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
-		assertThat(result.firstname).isEqualTo("after-convert");
-	}
-
-	@Test // DATAES-772
-	void findByIdWithIndexCoordinatesShouldInvokeAfterConvertCallbacks() {
-
-		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		Person result = template.findById("init", Person.class, index).block(Duration.ofSeconds(1));
-
-		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), eq(index));
-		assertThat(result.firstname).isEqualTo("after-convert");
-	}
-
-	@Test // DATAES-772
 	void getShouldInvokeAfterConvertCallbacks() {
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
@@ -284,20 +260,6 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		assertThat(result.firstname).isEqualTo("after-convert");
 	}
 
-	@Test // DATAES-772
-	void findUsingPageableShouldInvokeAfterConvertCallbacks() {
-
-		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		List<Person> results = template.find(pagedQueryForTwo(), Person.class).timeout(Duration.ofSeconds(1)).toStream()
-				.collect(Collectors.toList());
-
-		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
-		assertThat(results.get(0).firstname).isEqualTo("after-convert");
-		assertThat(results.get(1).firstname).isEqualTo("after-convert");
-	}
-
 	private Query pagedQueryForTwo() {
 		return new NativeSearchQueryBuilder().withIds(Arrays.asList("init1", "init2")).withPageable(PageRequest.of(0, 10))
 				.build();
@@ -305,68 +267,6 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 	private Document lukeDocument() {
 		return Document.create().append("id", "init").append("firstname", "luke");
-	}
-
-	@Test // DATAES-772
-	void findUsingScrollShouldInvokeAfterConvertCallbacks() {
-
-		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		List<Person> results = template.find(scrollingQueryForTwo(), Person.class).timeout(Duration.ofSeconds(1)).toStream()
-				.collect(Collectors.toList());
-
-		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
-		assertThat(results.get(0).firstname).isEqualTo("after-convert");
-		assertThat(results.get(1).firstname).isEqualTo("after-convert");
-	}
-
-	private Query scrollingQueryForTwo() {
-		return new NativeSearchQueryBuilder().withIds(Arrays.asList("init1", "init2")).build();
-	}
-
-	@Test // DATAES-772
-	void findWithIndexCoordinatesShouldInvokeAfterConvertCallbacks() {
-
-		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		List<Person> results = template.find(pagedQueryForTwo(), Person.class, index).timeout(Duration.ofSeconds(1))
-				.toStream().collect(Collectors.toList());
-
-		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
-				eq(index));
-		assertThat(results.get(0).firstname).isEqualTo("after-convert");
-		assertThat(results.get(1).firstname).isEqualTo("after-convert");
-	}
-
-	@Test // DATAES-772
-	void findWithReturnTypeShouldInvokeAfterConvertCallbacks() {
-
-		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		List<Person> results = template.find(pagedQueryForTwo(), Person.class, Person.class).timeout(Duration.ofSeconds(1))
-				.toStream().collect(Collectors.toList());
-
-		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()), any());
-		assertThat(results.get(0).firstname).isEqualTo("after-convert");
-		assertThat(results.get(1).firstname).isEqualTo("after-convert");
-	}
-
-	@Test // DATAES-772
-	void findWithReturnTypeAndIndexCoordinatesShouldInvokeAfterConvertCallbacks() {
-
-		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
-
-		@SuppressWarnings("deprecation") // we know what we test
-		List<Person> results = template.find(pagedQueryForTwo(), Person.class, Person.class, index)
-				.timeout(Duration.ofSeconds(1)).toStream().collect(Collectors.toList());
-
-		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
-				eq(index));
-		assertThat(results.get(0).firstname).isEqualTo("after-convert");
-		assertThat(results.get(1).firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772

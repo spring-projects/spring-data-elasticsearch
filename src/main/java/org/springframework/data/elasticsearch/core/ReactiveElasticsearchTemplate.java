@@ -379,18 +379,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return doExists(id, index);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#exists(String, Class, IndexCoordinates)
-	 */
-	@Override
-	public Mono<Boolean> exists(String id, Class<?> entityType, IndexCoordinates index) {
-
-		Assert.notNull(id, "Id must not be null!");
-
-		return doExists(id, index);
-	}
-
 	private Mono<Boolean> doExists(String id, IndexCoordinates index) {
 		return Mono.defer(() -> doExists(requestFactory.getRequest(id, routingResolver.getRouting(), index)));
 	}

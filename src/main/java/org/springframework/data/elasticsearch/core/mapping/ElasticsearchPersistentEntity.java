@@ -78,30 +78,6 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	boolean isCreateIndexAndMapping();
 
 	/**
-	 * Returns whether the {@link ElasticsearchPersistentEntity} has a score property. If this call returns
-	 * {@literal true}, {@link #getScoreProperty()} will return a non-{@literal null} value.
-	 *
-	 * @return false when {@link ElasticsearchPersistentEntity} does not define a score property.
-	 * @since 3.1
-	 * @deprecated since 4.0
-	 */
-	@Deprecated
-	boolean hasScoreProperty();
-
-	/**
-	 * Returns the score property of the {@link ElasticsearchPersistentEntity}. Can be {@literal null} in case no score
-	 * property is available on the entity.
-	 *
-	 * @return the score {@link ElasticsearchPersistentProperty} of the {@link PersistentEntity} or {@literal null} if not
-	 *         defined.
-	 * @since 3.1
-	 * @deprecated since 4.0
-	 */
-	@Nullable
-	@Deprecated
-	ElasticsearchPersistentProperty getScoreProperty();
-
-	/**
 	 * returns the {@link ElasticsearchPersistentProperty} with the given fieldName (may be set by the {@link Field}
 	 * annotation.
 	 *

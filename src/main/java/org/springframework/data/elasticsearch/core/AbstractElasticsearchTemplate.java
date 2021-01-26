@@ -53,7 +53,6 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
@@ -250,20 +249,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	@Nullable
-	public <T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index) {
-		return get(query.getId(), clazz, index);
-	}
-
-	@Override
 	public <T> List<T> multiGet(Query query, Class<T> clazz) {
 		return multiGet(query, clazz, getIndexCoordinatesFor(clazz));
-	}
-
-	@Override
-	@Nullable
-	public <T> T queryForObject(GetQuery query, Class<T> clazz) {
-		return get(query.getId(), clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
@@ -398,11 +385,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Override
 	public long count(Query query, Class<?> clazz) {
 		return count(query, clazz, getIndexCoordinatesFor(clazz));
-	}
-
-	@Override
-	public <T> CloseableIterator<T> stream(Query query, Class<T> clazz, IndexCoordinates index) {
-		return (CloseableIterator<T>) SearchHitSupport.unwrapSearchHits(searchForStream(query, clazz, index));
 	}
 
 	@Override
