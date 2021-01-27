@@ -805,6 +805,11 @@ public class MappingElasticsearchConverter
 			for (Criteria chainedCriteria : criteriaQuery.getCriteria().getCriteriaChain()) {
 				updateCriteria(chainedCriteria, persistentEntity);
 			}
+			for (Criteria subCriteria : criteriaQuery.getCriteria().getSubCriteria()) {
+				for (Criteria chainedCriteria : subCriteria.getCriteriaChain()) {
+					updateCriteria(chainedCriteria, persistentEntity);
+				}
+			}
 		}
 	}
 
@@ -841,12 +846,6 @@ public class MappingElasticsearchConverter
 
 			if (fieldAnnotation != null) {
 				field.setFieldType(fieldAnnotation.type());
-			}
-		}
-
-		for (Criteria subCriteria : criteria.getSubCriteria()) {
-			for (Criteria chainedCriteria : subCriteria.getCriteriaChain()) {
-				updateCriteria(chainedCriteria, persistentEntity);
 			}
 		}
 	}
