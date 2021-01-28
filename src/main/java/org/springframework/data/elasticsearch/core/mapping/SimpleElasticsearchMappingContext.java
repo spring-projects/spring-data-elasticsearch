@@ -32,6 +32,11 @@ public class SimpleElasticsearchMappingContext
 		extends AbstractMappingContext<SimpleElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> {
 
 	@Override
+	protected boolean shouldCreatePersistentEntityFor(TypeInformation<?> type) {
+		return !ElasticsearchSimpleTypes.HOLDER.isSimpleType(type.getType());
+	}
+
+	@Override
 	protected <T> SimpleElasticsearchPersistentEntity<?> createPersistentEntity(TypeInformation<T> typeInformation) {
 		return new SimpleElasticsearchPersistentEntity<>(typeInformation);
 	}
