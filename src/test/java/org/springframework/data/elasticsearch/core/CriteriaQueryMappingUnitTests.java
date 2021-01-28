@@ -20,7 +20,6 @@ import static org.skyscreamer.jsonassert.JSONAssert.*;
 import java.time.LocalDate;
 import java.util.*;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -109,7 +108,7 @@ public class CriteriaQueryMappingUnitTests {
 	}
 
 	@Test
-	// DATAES-1668
+	// #1668
 	void shouldMapNamesAndConvertValuesInCriteriaQueryForSubCriteria() throws JSONException {
 
 		// use POJO properties and types in the query building
@@ -184,17 +183,14 @@ public class CriteriaQueryMappingUnitTests {
 	}
 
 	@Test
-		// DATAES-1668
+	// #1668
 	void shouldMapNamesAndConvertValuesInCriteriaQueryForSubCriteriaWithDate() throws JSONException {
-		Calendar calendar = Calendar.getInstance();
-		//calendar.set(1982, Calendar.FEBRUARY, 28, 13, 2, 1 );
-		calendar.setTimeInMillis(383745721653L);
 		// use POJO properties and types in the query building
 		CriteriaQuery criteriaQuery = new CriteriaQuery( //
 				Criteria.or()
 						.subCriteria( Criteria.where("birthDate") //
 								.between(LocalDate.of(1989, 11, 9), LocalDate.of(1990, 11, 9)) ) //
-						.subCriteria( Criteria.where( "createdDate").is(calendar.getTime()) ) //
+						.subCriteria( Criteria.where( "createdDate").is(383745721653L) ) //
 		);
 
 		// mapped field name and converted parameter
