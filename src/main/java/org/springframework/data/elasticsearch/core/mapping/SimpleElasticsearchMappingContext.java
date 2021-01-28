@@ -38,6 +38,11 @@ public class SimpleElasticsearchMappingContext
 	private @Nullable ApplicationContext context;
 
 	@Override
+	protected boolean shouldCreatePersistentEntityFor(TypeInformation<?> type) {
+		return !ElasticsearchSimpleTypes.HOLDER.isSimpleType(type.getType());
+	}
+
+	@Override
 	protected <T> SimpleElasticsearchPersistentEntity<?> createPersistentEntity(TypeInformation<T> typeInformation) {
 		SimpleElasticsearchPersistentEntity<T> persistentEntity = new SimpleElasticsearchPersistentEntity<>(
 				typeInformation);
