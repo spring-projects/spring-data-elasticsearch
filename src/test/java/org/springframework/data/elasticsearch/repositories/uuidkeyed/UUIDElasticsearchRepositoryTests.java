@@ -202,45 +202,6 @@ public class UUIDElasticsearchRepositoryTests {
 		assertThat(entityFromElasticSearch).isNotPresent();
 	}
 
-	@Test
-	public void shouldSearchDocumentsGivenSearchQuery() {
-
-		// given
-		UUID documentId = UUID.randomUUID();
-		SampleEntityUUIDKeyed sampleEntityUUIDKeyed = new SampleEntityUUIDKeyed();
-		sampleEntityUUIDKeyed.setId(documentId);
-		sampleEntityUUIDKeyed.setMessage("some test message");
-		sampleEntityUUIDKeyed.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntityUUIDKeyed);
-
-		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(termQuery("message", "test")).build();
-		// when
-		Page<SampleEntityUUIDKeyed> page = repository.search(query);
-
-		// then
-		assertThat(page).isNotNull();
-		assertThat(page.getNumberOfElements()).isGreaterThanOrEqualTo(1);
-	}
-
-	@Test
-	public void shouldSearchDocumentsGivenElasticsearchQuery() {
-
-		// given
-		UUID documentId = UUID.randomUUID();
-		SampleEntityUUIDKeyed sampleEntityUUIDKeyed = new SampleEntityUUIDKeyed();
-		sampleEntityUUIDKeyed.setId(documentId);
-		sampleEntityUUIDKeyed.setMessage("hello world.");
-		sampleEntityUUIDKeyed.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntityUUIDKeyed);
-
-		// when
-		Page<SampleEntityUUIDKeyed> page = repository.search(termQuery("message", "world"), PageRequest.of(0, 50));
-
-		// then
-		assertThat(page).isNotNull();
-		assertThat(page.getNumberOfElements()).isGreaterThanOrEqualTo(1);
-	}
-
 	@Test // DATAES-82
 	public void shouldFindAllByIdQuery() {
 
@@ -291,9 +252,8 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.saveAll(sampleEntities);
 
 		// then
-		Page<SampleEntityUUIDKeyed> entities = repository.search(termQuery("id", documentId.toString()),
-				PageRequest.of(0, 50));
-		assertThat(entities).isNotNull();
+		Iterable<SampleEntityUUIDKeyed> entities = repository.findAll();
+		assertThat(entities).hasSize(2);
 	}
 
 	@Test
@@ -335,8 +295,8 @@ public class UUIDElasticsearchRepositoryTests {
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(0L);
+		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.findAll();
+		assertThat(sampleEntities).isEmpty();
 	}
 
 	@Test
@@ -356,8 +316,8 @@ public class UUIDElasticsearchRepositoryTests {
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId.toString()))
 				.build();
-		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements()).isGreaterThanOrEqualTo(0);
+		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.findAll();
+		assertThat(sampleEntities).isEmpty();
 		assertThat(result).isEqualTo(1L);
 	}
 
@@ -393,8 +353,8 @@ public class UUIDElasticsearchRepositoryTests {
 		// then
 		assertThat(result).hasSize(2);
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(1);
+		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.findAll();
+		assertThat(sampleEntities).hasSize(1);
 	}
 
 	@Test
@@ -425,9 +385,8 @@ public class UUIDElasticsearchRepositoryTests {
 
 		// then
 		assertThat(result).hasSize(1);
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(2);
+		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.findAll();
+		assertThat(sampleEntities).hasSize(2);
 	}
 
 	@Test
@@ -457,9 +416,8 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.deleteByType("article");
 
 		// then
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(2);
+		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.findAll();
+		assertThat(sampleEntities).hasSize(2);
 	}
 
 	@Test
@@ -477,10 +435,8 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.delete(sampleEntityUUIDKeyed);
 
 		// then
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId.toString()))
-				.build();
-		Page<SampleEntityUUIDKeyed> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(0);
+		Optional<SampleEntityUUIDKeyed> sampleEntities = repository.findById(documentId);
+		assertThat(sampleEntities).isEmpty();
 	}
 
 	@Test
@@ -502,7 +458,7 @@ public class UUIDElasticsearchRepositoryTests {
 		repository.save(sampleEntityUUIDKeyed2);
 
 		// when
-		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.search(termQuery("id", documentId1.toString()));
+		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.searchById(documentId1);
 
 		// then
 		assertThat(sampleEntities).isNotNull();
@@ -618,6 +574,8 @@ public class UUIDElasticsearchRepositoryTests {
 	 * @author Christoph Strobl
 	 */
 	interface SampleUUIDKeyedElasticsearchRepository extends ElasticsearchRepository<SampleEntityUUIDKeyed, UUID> {
+
+		List<SampleEntityUUIDKeyed> searchById(UUID uuid);
 
 		long deleteSampleEntityUUIDKeyedById(UUID id);
 

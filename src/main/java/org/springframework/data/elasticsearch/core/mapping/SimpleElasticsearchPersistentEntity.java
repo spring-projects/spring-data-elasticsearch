@@ -73,7 +73,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private @Nullable String indexStoreType;
 	@Deprecated private @Nullable String parentType;
 	@Deprecated private @Nullable ElasticsearchPersistentProperty parentIdProperty;
-	private @Nullable ElasticsearchPersistentProperty scoreProperty;
 	private @Nullable ElasticsearchPersistentProperty seqNoPrimaryTermProperty;
 	private @Nullable ElasticsearchPersistentProperty joinFieldProperty;
 	private @Nullable String settingPath;
@@ -190,17 +189,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		return createIndexAndMapping;
 	}
 
-	@Override
-	public boolean hasScoreProperty() {
-		return scoreProperty != null;
-	}
-
-	@Nullable
-	@Override
-	public ElasticsearchPersistentProperty getScoreProperty() {
-		return scoreProperty;
-	}
-
 	// endregion
 
 	@Override
@@ -220,20 +208,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			Parent parentAnnotation = property.findAnnotation(Parent.class);
 			this.parentIdProperty = property;
 			this.parentType = parentAnnotation.type();
-		}
-
-		if (property.isScoreProperty()) {
-
-			ElasticsearchPersistentProperty scoreProperty = this.scoreProperty;
-
-			if (scoreProperty != null) {
-				throw new MappingException(String.format(
-						"Attempt to add score property %s but already have property %s registered "
-								+ "as score property. Check your mapping configuration!",
-						property.getField(), scoreProperty.getField()));
-			}
-
-			this.scoreProperty = property;
 		}
 
 		if (property.isSeqNoPrimaryTermProperty()) {

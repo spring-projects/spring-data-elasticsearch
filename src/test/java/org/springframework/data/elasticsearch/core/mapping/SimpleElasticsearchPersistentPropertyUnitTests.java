@@ -34,7 +34,6 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
@@ -55,14 +54,6 @@ import org.springframework.util.ReflectionUtils;
 public class SimpleElasticsearchPersistentPropertyUnitTests {
 
 	private final SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
-
-	@Test // DATAES-462
-	public void rejectsScorePropertyOfTypeOtherthanFloat() {
-
-		assertThatExceptionOfType(MappingException.class) //
-				.isThrownBy(() -> context.getRequiredPersistentEntity(InvalidScoreProperty.class)) //
-				.withMessageContaining("scoreProperty");
-	}
 
 	@Test // DATAES-562
 	public void fieldAnnotationWithNameSetsFieldname() {
@@ -250,10 +241,6 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 				fieldNamingStrategy);
 
 		assertThat(property.getFieldName()).isEqualTo("CUStomFIEldnAME");
-	}
-
-	static class InvalidScoreProperty {
-		@Nullable @Score String scoreProperty;
 	}
 
 	static class FieldNameProperty {

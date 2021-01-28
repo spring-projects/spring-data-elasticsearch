@@ -34,7 +34,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -90,9 +89,6 @@ public class EnableNestedElasticsearchRepositoriesTests {
 		private String highlightedMessage;
 		private GeoPoint location;
 		@Version private Long version;
-
-		@Score private float score;
-
 	}
 
 	interface SampleRepository extends Repository<SampleEntity, Long> {}

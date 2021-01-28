@@ -46,11 +46,10 @@ import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.support.SearchHitsUtil;
@@ -183,7 +182,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	@Nullable
 	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
 
-		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, routingResolver.getRouting(), index);
+		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, routingResolver.getRouting(),
+				index);
 		GetResponse response = getRequestBuilder.execute().actionGet();
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
@@ -206,7 +206,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	protected boolean doExists(String id, IndexCoordinates index) {
 
-		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, routingResolver.getRouting(), index);
+		GetRequestBuilder getRequestBuilder = requestFactory.getRequestBuilder(client, id, routingResolver.getRouting(),
+				index);
 		getRequestBuilder.setFetchSource(false);
 		return getRequestBuilder.execute().actionGet().isExists();
 	}
@@ -232,12 +233,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	@Deprecated
-	public void delete(DeleteQuery deleteQuery, IndexCoordinates index) {
-		requestFactory.deleteByQueryRequestBuilder(client, deleteQuery, index).get();
-	}
-
-	@Override
 	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
 		requestFactory.deleteByQueryRequestBuilder(client, query, clazz, index).get();
 	}
@@ -252,15 +247,15 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		UpdateRequestBuilder updateRequestBuilder = requestFactory.updateRequestBuilderFor(client, query, index);
 
-        if (query.getRefreshPolicy() == null && getRefreshPolicy() != null) {
-            updateRequestBuilder.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(getRefreshPolicy()));
-        }
+		if (query.getRefreshPolicy() == null && getRefreshPolicy() != null) {
+			updateRequestBuilder.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(getRefreshPolicy()));
+		}
 
-        if (query.getRouting() == null && routingResolver.getRouting() != null) {
-            updateRequestBuilder.setRouting(routingResolver.getRouting());
-        }
+		if (query.getRouting() == null && routingResolver.getRouting() != null) {
+			updateRequestBuilder.setRouting(routingResolver.getRouting());
+		}
 
-        org.elasticsearch.action.update.UpdateResponse updateResponse = updateRequestBuilder.execute().actionGet();
+		org.elasticsearch.action.update.UpdateResponse updateResponse = updateRequestBuilder.execute().actionGet();
 		UpdateResponse.Result result = UpdateResponse.Result.valueOf(updateResponse.getResult().name());
 		return new UpdateResponse(result);
 	}
@@ -268,18 +263,19 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	public UpdateByQueryResponse updateByQuery(UpdateQuery query, IndexCoordinates index) {
 
-        Assert.notNull(query, "query must not be null");
-        Assert.notNull(index, "index must not be null");
+		Assert.notNull(query, "query must not be null");
+		Assert.notNull(index, "index must not be null");
 
-        final UpdateByQueryRequestBuilder updateByQueryRequestBuilder = requestFactory.updateByQueryRequestBuilder(client, query, index);
+		final UpdateByQueryRequestBuilder updateByQueryRequestBuilder = requestFactory.updateByQueryRequestBuilder(client,
+				query, index);
 
-        if (query.getRefreshPolicy() == null && getRefreshPolicy() != null) {
-            updateByQueryRequestBuilder.refresh(getRefreshPolicy() == RefreshPolicy.IMMEDIATE);
-        }
+		if (query.getRefreshPolicy() == null && getRefreshPolicy() != null) {
+			updateByQueryRequestBuilder.refresh(getRefreshPolicy() == RefreshPolicy.IMMEDIATE);
+		}
 
-        // UpdateByQueryRequestBuilder has not parameters to set a routing value
+		// UpdateByQueryRequestBuilder has not parameters to set a routing value
 
-        final BulkByScrollResponse bulkByScrollResponse = updateByQueryRequestBuilder.execute().actionGet();
+		final BulkByScrollResponse bulkByScrollResponse = updateByQueryRequestBuilder.execute().actionGet();
 		return UpdateByQueryResponse.of(bulkByScrollResponse);
 	}
 

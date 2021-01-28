@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core.mapping;
 
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.lang.Nullable;
 
@@ -38,20 +37,6 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 * @return
 	 */
 	String getFieldName();
-
-	/**
-	 * Returns whether the current property is a <em>potential</em> score property of the owning
-	 * {@link ElasticsearchPersistentEntity}. This method is mainly used by {@link ElasticsearchPersistentEntity}
-	 * implementation to discover score property candidates on {@link ElasticsearchPersistentEntity} creation you should
-	 * rather call {@link ElasticsearchPersistentEntity#getScoreProperty()} to determine whether the current property is
-	 * the score property of that {@link ElasticsearchPersistentEntity} under consideration.
-	 *
-	 * @return
-	 * @since 3.1
-	 * @deprecated since 4.0, use {@link SearchHit#getScore()} instead
-	 */
-	@Deprecated
-	boolean isScoreProperty();
 
 	/**
 	 * Returns whether the current property is a <em>potential</em> parent property of the owning

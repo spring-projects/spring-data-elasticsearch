@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.lang.Nullable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -344,7 +344,7 @@ class MapDocument implements Document {
 		try {
 			return OBJECT_MAPPER.writeValueAsString(this);
 		} catch (JsonProcessingException e) {
-			throw new ElasticsearchException("Cannot render document to JSON", e);
+			throw new MappingException("Cannot render document to JSON", e);
 		}
 	}
 

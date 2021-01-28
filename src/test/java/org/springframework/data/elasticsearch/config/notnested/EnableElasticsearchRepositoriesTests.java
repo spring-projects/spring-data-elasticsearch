@@ -38,7 +38,6 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
@@ -136,7 +135,6 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 		private String highlightedMessage;
 		private GeoPoint location;
 		@Version private Long version;
-		@Score private float score;
 	}
 
 	@Data

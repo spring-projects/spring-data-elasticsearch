@@ -90,8 +90,8 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortMode;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
@@ -709,26 +709,6 @@ class RequestFactory {
 	// endregion
 
 	// region delete
-	@Deprecated
-	public DeleteByQueryRequest deleteByQueryRequest(DeleteQuery deleteQuery, IndexCoordinates index) {
-
-		String[] indexNames = index.getIndexNames();
-		DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(indexNames) //
-				.setQuery(deleteQuery.getQuery()) //
-				.setAbortOnVersionConflict(false) //
-				.setRefresh(true);
-
-		if (deleteQuery.getPageSize() != null) {
-			deleteByQueryRequest.setBatchSize(deleteQuery.getPageSize());
-		}
-
-		if (deleteQuery.getScrollTimeInMillis() != null) {
-			deleteByQueryRequest.setScroll(TimeValue.timeValueMillis(deleteQuery.getScrollTimeInMillis()));
-		}
-
-		return deleteByQueryRequest;
-	}
-
 	public DeleteByQueryRequest deleteByQueryRequest(Query query, Class<?> clazz, IndexCoordinates index) {
 		SearchRequest searchRequest = searchRequest(query, clazz, index);
 		DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(index.getIndexNames()) //
@@ -776,27 +756,6 @@ class RequestFactory {
 		}
 
 		return deleteRequestBuilder;
-	}
-
-	@Deprecated
-	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, DeleteQuery deleteQuery,
-			IndexCoordinates index) {
-
-		String[] indexNames = index.getIndexNames();
-
-		DeleteByQueryRequestBuilder requestBuilder = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE) //
-				.source(indexNames) //
-				.filter(deleteQuery.getQuery()) //
-				.abortOnVersionConflict(false) //
-				.refresh(true);
-
-		SearchRequestBuilder source = requestBuilder.source();
-
-		if (deleteQuery.getScrollTimeInMillis() != null) {
-			source.setScroll(TimeValue.timeValueMillis(deleteQuery.getScrollTimeInMillis()));
-		}
-
-		return requestBuilder;
 	}
 
 	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, Query query, Class<?> clazz,
@@ -904,7 +863,7 @@ class RequestFactory {
 			indexRequest = new IndexRequest(indexName).id(query.getId()).source(query.getSource(),
 					Requests.INDEX_CONTENT_TYPE);
 		} else {
-			throw new ElasticsearchException(
+			throw new InvalidDataAccessApiUsageException(
 					"object or source is null, failed to index the document [id: " + query.getId() + ']');
 		}
 
@@ -959,7 +918,7 @@ class RequestFactory {
 			indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource(),
 					Requests.INDEX_CONTENT_TYPE);
 		} else {
-			throw new ElasticsearchException(
+			throw new InvalidDataAccessApiUsageException(
 					"object or source is null, failed to index the document [id: " + query.getId() + ']');
 		}
 

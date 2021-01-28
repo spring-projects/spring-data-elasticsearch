@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.Property;
@@ -69,17 +68,6 @@ public class SimpleElasticsearchPersistentEntityTests {
 		assertThatThrownBy(() -> {
 			entity.addPersistentProperty(persistentProperty2);
 		}).isInstanceOf(MappingException.class);
-	}
-
-	@Test // DATAES-462
-	public void rejectsMultipleScoreProperties() {
-
-		SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
-
-		assertThatExceptionOfType(MappingException.class) //
-				.isThrownBy(() -> context.getRequiredPersistentEntity(TwoScoreProperties.class)) //
-				.withMessageContaining("first") //
-				.withMessageContaining("second");
 	}
 
 	@Test
@@ -192,13 +180,6 @@ public class SimpleElasticsearchPersistentEntityTests {
 		public void setVersion2(Long version2) {
 			this.version2 = version2;
 		}
-	}
-
-	// DATAES-462
-	static class TwoScoreProperties {
-
-		@Score float first;
-		@Score float second;
 	}
 
 	private static class FieldNameEntity {

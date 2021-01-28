@@ -58,6 +58,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -65,7 +66,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -73,7 +73,6 @@ import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.JoinTypeRelation;
 import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
 import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.Score;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
@@ -1784,21 +1783,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		assertThatThrownBy(() -> operations.index(indexQuery, IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY)))
-				.isInstanceOf(ElasticsearchException.class);
-	}
-
-	@Test
-	public void shouldReturnIds() {
-		// given
-		List<IndexQuery> entities = createSampleEntitiesWithMessage("Test message", 30);
-		// when
-		operations.bulkIndex(entities, index);
-		indexOperations.refresh();
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("message", "message"))
-				.withPageable(PageRequest.of(0, 100)).build();
-		// then
-		List<String> ids = operations.queryForIds(searchQuery, SampleEntity.class, index);
-		assertThat(ids).hasSize(30);
+				.isInstanceOf(InvalidDataAccessApiUsageException.class);
 	}
 
 	@Test // DATAES-848
@@ -3269,7 +3254,7 @@ public abstract class ElasticsearchTemplateTests {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
 		OptimisticEntity saved = operations.save(original);
-		operations.refresh(OptimisticEntity.class);
+		operations.indexOps(OptimisticEntity.class).refresh();
 
 		List<OptimisticEntity> retrievedList = operations.multiGet(queryForOne(saved.getId()), OptimisticEntity.class,
 				operations.getIndexCoordinatesFor(OptimisticEntity.class));
@@ -3287,7 +3272,7 @@ public abstract class ElasticsearchTemplateTests {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
 		OptimisticEntity saved = operations.save(original);
-		operations.refresh(OptimisticEntity.class);
+		operations.indexOps(OptimisticEntity.class).refresh();
 
 		SearchHits<OptimisticEntity> retrievedHits = operations.search(queryForOne(saved.getId()), OptimisticEntity.class);
 		OptimisticEntity retrieved = retrievedHits.getSearchHit(0).getContent();
@@ -3300,7 +3285,7 @@ public abstract class ElasticsearchTemplateTests {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
 		OptimisticEntity saved = operations.save(original);
-		operations.refresh(OptimisticEntity.class);
+		operations.indexOps(OptimisticEntity.class).refresh();
 
 		List<Query> queries = singletonList(queryForOne(saved.getId()));
 		List<SearchHits<OptimisticEntity>> retrievedHits = operations.multiSearch(queries, OptimisticEntity.class,
@@ -3315,7 +3300,7 @@ public abstract class ElasticsearchTemplateTests {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
 		OptimisticEntity saved = operations.save(original);
-		operations.refresh(OptimisticEntity.class);
+		operations.indexOps(OptimisticEntity.class).refresh();
 
 		SearchHitsIterator<OptimisticEntity> retrievedHits = operations.searchForStream(queryForOne(saved.getId()),
 				OptimisticEntity.class);
@@ -3673,7 +3658,6 @@ public abstract class ElasticsearchTemplateTests {
 		private boolean available;
 		private GeoPoint location;
 		@Version private Long version;
-		@Score private float score;
 	}
 
 	/**

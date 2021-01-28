@@ -19,8 +19,6 @@ import java.util.List;
 
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
@@ -310,41 +308,4 @@ public interface DocumentOperations {
 	 * @since 4.2
 	 */
 	UpdateByQueryResponse updateByQuery(UpdateQuery updateQuery, IndexCoordinates index);
-
-	// region deprecated
-	/**
-	 * Delete all records matching the query.
-	 *
-	 * @param query query defining the objects
-	 * @param index the index where to delete the records
-	 * @deprecated since 4.0, use {@link #delete(Query, Class, IndexCoordinates)}
-	 */
-	@Deprecated
-	void delete(DeleteQuery query, IndexCoordinates index);
-
-	/**
-	 * Retrieves an object from an index.
-	 *
-	 * @param query the query defining the id of the object to get
-	 * @param clazz the type of the object to be returned
-	 * @param index the index from which the object is read.
-	 * @return the found object
-	 * @deprecated since 4.0, use {@link #get(String, Class, IndexCoordinates)}
-	 */
-	@Deprecated
-	@Nullable
-	<T> T get(GetQuery query, Class<T> clazz, IndexCoordinates index);
-
-	/**
-	 * Retrieves an object from an index.
-	 *
-	 * @param query the query defining the id of the object to get
-	 * @param clazz the type of the object to be returned
-	 * @return the found object
-	 * @deprecated since 4.0, use {@link #get(String, Class, IndexCoordinates)}
-	 */
-	@Deprecated
-	@Nullable
-	<T> T queryForObject(GetQuery query, Class<T> clazz);
-	// endregion
 }

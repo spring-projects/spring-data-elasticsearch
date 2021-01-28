@@ -182,7 +182,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * retusn the declared return type for this method.
+	 * returns the declared return type for this method.
 	 * 
 	 * @return the return type
 	 * @since 4.0
@@ -197,8 +197,8 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * checks whether the return type of the underlying method is a
-	 * {@link org.springframework.data.elasticsearch.core.SearchHits} or a collection of
+	 * checks whether the return type of the underlying method nether a
+	 * {@link org.springframework.data.elasticsearch.core.SearchHits} nor a collection of
 	 * {@link org.springframework.data.elasticsearch.core.SearchHit}.
 	 *
 	 * @return true if the method has not a {@link org.springframework.data.elasticsearch.core.SearchHit}t related return
@@ -207,5 +207,14 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	 */
 	public boolean isNotSearchHitMethod() {
 		return !isSearchHitMethod();
+	}
+
+	/**
+	 * checks if the return type is not {@link SearchPage}.
+	 *
+	 * @since 4.2
+	 */
+	public boolean isNotSearchPageMethod() {
+		return !isSearchPageMethod();
 	}
 }

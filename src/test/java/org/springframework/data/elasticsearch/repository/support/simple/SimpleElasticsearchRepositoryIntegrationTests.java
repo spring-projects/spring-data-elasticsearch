@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -50,13 +49,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
-import org.springframework.data.elasticsearch.core.RefreshPolicy;
-import org.springframework.data.elasticsearch.core.SearchPage;
-import org.springframework.data.elasticsearch.core.query.Criteria;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
@@ -226,46 +220,6 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		assertThat(entityFromElasticSearch).isNotPresent();
 	}
 
-	@Test
-	void shouldSearchDocumentsGivenSearchQuery() {
-
-		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("some test message");
-		sampleEntity.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity);
-
-		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(termQuery("message", "test")).build();
-
-		// when
-		Page<SampleEntity> page = repository.search(query);
-
-		// then
-		assertThat(page).isNotNull();
-		assertThat(page.getNumberOfElements()).isGreaterThanOrEqualTo(1);
-	}
-
-	@Test
-	void shouldSearchDocumentsGivenElasticsearchQuery() {
-
-		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("hello world.");
-		sampleEntity.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity);
-
-		// when
-		Page<SampleEntity> page = repository.search(termQuery("message", "world"), PageRequest.of(0, 50));
-
-		// then
-		assertThat(page).isNotNull();
-		assertThat(page.getNumberOfElements()).isGreaterThanOrEqualTo(1);
-	}
-
 	@Test // DATAES-82
 	void shouldFindAllByIdQuery() {
 
@@ -313,8 +267,8 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		repository.saveAll(sampleEntities);
 
 		// then
-		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
-		assertThat(entities).isNotNull();
+		Iterable<SampleEntity> entities = repository.findAll();
+		assertThat(entities).hasSize(2);
 	}
 
 	@Test
@@ -349,25 +303,6 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
-	void shouldReturnResultsForGivenSearchQuery() {
-
-		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("hello world.");
-		sampleEntity.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity);
-
-		// when
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
-		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
-
-		// then
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(1L);
-	}
-
-	@Test
 	void shouldDeleteAll() {
 
 		// given
@@ -383,8 +318,8 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 
 		// then
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(0L);
+		Iterable<SampleEntity> sampleEntities = repository.findAll();
+		assertThat(sampleEntities).isEmpty();
 	}
 
 	@Test
@@ -402,13 +337,12 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		long result = repository.deleteSampleEntityById(documentId);
 
 		// then
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
-		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(0L);
+		Iterable<SampleEntity> sampleEntities = repository.searchById(documentId);
+		assertThat(sampleEntities).isEmpty();
 		assertThat(result).isEqualTo(1L);
 	}
 
-	@Test //DATAES-976
+	@Test // DATAES-976
 	void shouldDeleteAllById() {
 
 		// given
@@ -474,8 +408,8 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		// then
 		assertThat(result).hasSize(2);
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(1L);
+		Iterable<SampleEntity> sampleEntities = repository.findAll();
+		assertThat(sampleEntities).hasSize(1);
 	}
 
 	@Test
@@ -507,8 +441,8 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		// then
 		assertThat(result).hasSize(1);
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(2L);
+		Iterable<SampleEntity> sampleEntities = repository.findAll();
+		assertThat(sampleEntities).hasSize(2);
 	}
 
 	@Test
@@ -538,9 +472,8 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		repository.deleteByType("article");
 
 		// then
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(2L);
+		Iterable<SampleEntity> sampleEntities = repository.findAll();
+		assertThat(sampleEntities).hasSize(2);
 	}
 
 	@Test
@@ -558,9 +491,8 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		repository.delete(sampleEntity);
 
 		// then
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId)).build();
-		Page<SampleEntity> sampleEntities = repository.search(searchQuery);
-		assertThat(sampleEntities.getTotalElements()).isEqualTo(0L);
+		Iterable<SampleEntity> sampleEntities = repository.searchById(documentId);
+		assertThat(sampleEntities).isEmpty();
 	}
 
 	@Test
@@ -582,7 +514,7 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		repository.save(sampleEntity2);
 
 		// when
-		Iterable<SampleEntity> sampleEntities = repository.search(termQuery("id", documentId1));
+		Iterable<SampleEntity> sampleEntities = repository.searchById(documentId1);
 
 		// then
 		assertThat(sampleEntities).isNotNull();
@@ -629,35 +561,8 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		repository.save(sampleEntity);
 
 		// then
-		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
-		assertThat(entities.getTotalElements()).isEqualTo(1L);
-	}
-
-	@Test
-	void shouldIndexWithoutRefreshEntity() {
-
-		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setVersion(System.currentTimeMillis());
-		sampleEntity.setMessage("some message");
-
-		// when
-		AbstractElasticsearchTemplate abstractElasticsearchTemplate = (AbstractElasticsearchTemplate) this.operations;
-		RefreshPolicy refreshPolicy = abstractElasticsearchTemplate.getRefreshPolicy();
-		abstractElasticsearchTemplate.setRefreshPolicy(RefreshPolicy.NONE);
-		repository.indexWithoutRefresh(sampleEntity);
-		abstractElasticsearchTemplate.setRefreshPolicy(refreshPolicy);
-
-		// then
-		Page<SampleEntity> entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
-		assertThat(entities.getTotalElements()).isEqualTo(0L);
-
-		repository.refresh();
-
-		entities = repository.search(termQuery("id", documentId), PageRequest.of(0, 50));
-		assertThat(entities.getTotalElements()).isEqualTo(1L);
+		Iterable<SampleEntity> entities = repository.findAll();
+		assertThat(entities).hasSize(1);
 	}
 
 	@Test
@@ -812,6 +717,7 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 
 		void deleteByType(String type);
 
+		Iterable<SampleEntity> searchById(String id);
 	}
 
 }

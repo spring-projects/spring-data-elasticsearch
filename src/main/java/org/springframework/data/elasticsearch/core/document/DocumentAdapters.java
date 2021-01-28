@@ -39,7 +39,7 @@ import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.springframework.data.elasticsearch.ElasticsearchException;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -422,7 +422,7 @@ public class DocumentAdapters {
 				generator.flush();
 				return new String(stream.toByteArray(), StandardCharsets.UTF_8);
 			} catch (IOException e) {
-				throw new ElasticsearchException("Cannot render JSON", e);
+				throw new MappingException("Cannot render JSON", e);
 			}
 		}
 

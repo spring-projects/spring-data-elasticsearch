@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.utils;
 
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 
 /**
@@ -26,18 +25,6 @@ import org.springframework.data.elasticsearch.core.IndexOperations;
 public class IndexInitializer {
 
 	private IndexInitializer() {}
-
-	/**
-	 * Initialize a fresh index with mappings for {@link Class}. Drops the index if it exists before creation.
-	 *
-	 * @param operations
-	 * @param clazz
-	 * @deprecated since 4.0, use {@link IndexInitializer#init(IndexOperations)}
-	 */
-	@Deprecated
-	public static void init(ElasticsearchOperations operations, Class<?> clazz) {
-		init(operations.indexOps(clazz));
-	}
 
 	/**
 	 * Initialize a fresh index with mappings for {@link Class}. Drops the index if it exists before creation.

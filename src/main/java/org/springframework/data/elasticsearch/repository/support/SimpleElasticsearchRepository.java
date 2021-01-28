@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.index.query.IdsQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -39,7 +38,7 @@ import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
@@ -124,7 +123,8 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 	public Page<T> findAll(Pageable pageable) {
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withPageable(pageable).build();
 		SearchHits<T> searchHits = execute(operations -> operations.search(query, entityClass, getIndexCoordinates()));
-		AggregatedPage<SearchHit<T>> page = SearchHitSupport.page(searchHits, query.getPageable());
+		// noinspection ConstantConditions
+		SearchPage<T> page = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
 		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
 	}
 
@@ -192,14 +192,6 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 	}
 
 	@Override
-	@Deprecated
-	public <S extends T> S indexWithoutRefresh(S entity) {
-		Assert.notNull(entity, "Cannot save 'null' entity.");
-		// noinspection ConstantConditions
-		return execute(operations -> operations.save(entity));
-	}
-
-	@Override
 	public <S extends T> Iterable<S> saveAll(Iterable<S> entities) {
 
 		Assert.notNull(entities, "Cannot insert 'null' as a List.");
@@ -218,40 +210,6 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Iterable<T> search(QueryBuilder query) {
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(query).build();
-		long count = execute(operations -> operations.count(searchQuery, entityClass, getIndexCoordinates()));
-
-		if (count == 0) {
-			return new PageImpl<>(Collections.emptyList());
-		}
-		searchQuery.setPageable(PageRequest.of(0, (int) count));
-		SearchHits<T> searchHits = execute(
-				operations -> operations.search(searchQuery, entityClass, getIndexCoordinates()));
-		AggregatedPage<SearchHit<T>> page = SearchHitSupport.page(searchHits, searchQuery.getPageable());
-		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public Page<T> search(QueryBuilder query, Pageable pageable) {
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(query).withPageable(pageable).build();
-		SearchHits<T> searchHits = execute(
-				operations -> operations.search(searchQuery, entityClass, getIndexCoordinates()));
-		AggregatedPage<SearchHit<T>> page = SearchHitSupport.page(searchHits, searchQuery.getPageable());
-		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public Page<T> search(Query query) {
-		SearchHits<T> searchHits = execute(operations -> operations.search(query, entityClass, getIndexCoordinates()));
-		AggregatedPage<SearchHit<T>> page = SearchHitSupport.page(searchHits, query.getPageable());
-		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
 	public Page<T> searchSimilar(T entity, @Nullable String[] fields, Pageable pageable) {
 
 		Assert.notNull(entity, "Cannot search similar records for 'null'.");
@@ -266,8 +224,8 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		}
 
 		SearchHits<T> searchHits = execute(operations -> operations.search(query, entityClass, getIndexCoordinates()));
-		AggregatedPage<SearchHit<T>> page = SearchHitSupport.page(searchHits, pageable);
-		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
+		SearchPage<T> searchPage = SearchHitSupport.searchPageFor(searchHits, pageable);
+		return (Page<T>) SearchHitSupport.unwrapSearchHits(searchPage);
 	}
 
 	@Override
@@ -340,12 +298,6 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 			operations.delete(query, entityClass, indexCoordinates);
 			return null;
 		});
-	}
-
-	@Override
-	@Deprecated
-	public void refresh() {
-		indexOperations.refresh();
 	}
 
 	private void doRefresh() {
