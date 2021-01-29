@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.elasticsearch.common.geo.GeoPoint;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +41,6 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
-import org.springframework.data.elasticsearch.core.geo.GeoJsonPoint;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -72,7 +72,7 @@ public class EntityCustomConversionIntegrationTests {
 	void setUp() {
 		IndexOperations indexOps = operations.indexOps(Entity.class);
 		indexOps.create();
-		indexOps.putMapping();
+		indexOps.putMapping(indexOps.createMapping());
 	}
 
 	@AfterEach
@@ -86,7 +86,7 @@ public class EntityCustomConversionIntegrationTests {
 
 		Entity entity = Entity.builder() //
 				.value("hello") //
-				.location(GeoJsonPoint.of(8.0, 42.7)) //
+				.location(new GeoPoint(42.7, 8.0)) //
 				.build();
 
 		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
@@ -104,10 +104,11 @@ public class EntityCustomConversionIntegrationTests {
 
 		Entity entity = Entity.builder() //
 				.value("hello") //
-				.location(GeoJsonPoint.of(8.0, 42.7)) //
+				.location(new GeoPoint(42.7, 8.0)) //
 				.build();
 
 		Entity savedEntity = operations.save(entity);
+        operations.indexOps(Entity.class).refresh();
 
 		SearchHits<Entity> searchHits = operations.search(Query.findAll(), Entity.class);
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
@@ -122,7 +123,7 @@ public class EntityCustomConversionIntegrationTests {
 	@Document(indexName = "entity-with-custom-conversions")
 	static class Entity {
 		private String value;
-		private GeoJsonPoint location;
+		private GeoPoint location;
 	}
 
 	@WritingConverter
@@ -131,8 +132,8 @@ public class EntityCustomConversionIntegrationTests {
 		public Map<String, Object> convert(Entity source) {
 			LinkedHashMap<String, Object> target = new LinkedHashMap<>();
 			target.put("the_value", source.getValue());
-			target.put("the_lat", "" + source.getLocation().getY());
-			target.put("the_lon", "" + source.getLocation().getX());
+			target.put("the_lat", String.valueOf(source.getLocation().getLat()));
+			target.put("the_lon", String.valueOf(source.getLocation().getLon()));
 			return target;
 		}
 	}
@@ -144,10 +145,10 @@ public class EntityCustomConversionIntegrationTests {
 		public Entity convert(Map<String, Object> source) {
 			Entity entity = new Entity();
 			entity.setValue((String) source.get("the_value"));
-			entity.setLocation(GeoJsonPoint.of( //
-					Double.parseDouble((String) (source.get("the_lon"))), //
-					Double.parseDouble((String) (source.get("the_lat"))) //
-			));
+			entity.setLocation(new GeoPoint( //
+                Double.parseDouble((String) (source.get("the_lat"))), //
+                Double.parseDouble((String) (source.get("the_lon"))) //
+            ));
 			return entity;
 		}
 	}
