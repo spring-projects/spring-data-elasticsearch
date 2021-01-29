@@ -108,6 +108,7 @@ public class EntityCustomConversionIntegrationTests {
 				.build();
 
 		Entity savedEntity = operations.save(entity);
+        operations.indexOps(Entity.class).refresh();
 
 		SearchHits<Entity> searchHits = operations.search(Query.findAll(), Entity.class);
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
