@@ -72,6 +72,7 @@ import org.springframework.util.ObjectUtils;
  * @author Roman Puchkovskiy
  * @author Konrad Kurdej
  * @author Subhobrata Dey
+ * @author Marc Vanbrabant
  * @since 3.2
  */
 public class MappingElasticsearchConverter
@@ -805,6 +806,11 @@ public class MappingElasticsearchConverter
 			for (Criteria chainedCriteria : criteriaQuery.getCriteria().getCriteriaChain()) {
 				updateCriteria(chainedCriteria, persistentEntity);
 			}
+			for (Criteria subCriteria : criteriaQuery.getCriteria().getSubCriteria()) {
+				for (Criteria chainedCriteria : subCriteria.getCriteriaChain()) {
+					updateCriteria(chainedCriteria, persistentEntity);
+				}
+			}
 		}
 	}
 
@@ -841,12 +847,6 @@ public class MappingElasticsearchConverter
 
 			if (fieldAnnotation != null) {
 				field.setFieldType(fieldAnnotation.type());
-			}
-		}
-
-		for (Criteria subCriteria : criteria.getSubCriteria()) {
-			for (Criteria chainedCriteria : subCriteria.getCriteriaChain()) {
-				updateCriteria(chainedCriteria, persistentEntity);
 			}
 		}
 	}
