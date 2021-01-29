@@ -18,7 +18,10 @@ package org.springframework.data.elasticsearch.core;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Objects;
 
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
@@ -113,67 +116,66 @@ public class CriteriaQueryMappingUnitTests {
 
 		// use POJO properties and types in the query building
 		CriteriaQuery criteriaQuery = new CriteriaQuery( //
-				Criteria.or()
-						.subCriteria( Criteria.where("birthDate") //
-						.between(LocalDate.of(1989, 11, 9), LocalDate.of(1990, 11, 9)) ) //
-						.subCriteria( Criteria.where( "birthDate").is(LocalDate.of(2019, 12, 28)) ) //
+				Criteria.or().subCriteria(Criteria.where("birthDate") //
+						.between(LocalDate.of(1989, 11, 9), LocalDate.of(1990, 11, 9))) //
+						.subCriteria(Criteria.where("birthDate").is(LocalDate.of(2019, 12, 28))) //
 		);
 
 		// mapped field name and converted parameter
-		String expected = "{\n" +
-				"  \"bool\" : {\n" +
-				"    \"should\" : [\n" +
-				"      {\n" +
-				"        \"bool\" : {\n" +
-				"          \"must\" : [\n" +
-				"            {\n" +
-				"              \"range\" : {\n" +
-				"                \"birth-date\" : {\n" +
-				"                  \"from\" : \"09.11.1989\",\n" +
-				"                  \"to\" : \"09.11.1990\",\n" +
-				"                  \"include_lower\" : true,\n" +
-				"                  \"include_upper\" : true,\n" +
-				"                  \"boost\" : 1.0\n" +
-				"                }\n" +
-				"              }\n" +
-				"            }\n" +
-				"          ],\n" +
-				"          \"adjust_pure_negative\" : true,\n" +
-				"          \"boost\" : 1.0\n" +
-				"        }\n" +
-				"      },\n" +
-				"      {\n" +
-				"        \"bool\" : {\n" +
-				"          \"must\" : [\n" +
-				"            {\n" +
-				"              \"query_string\" : {\n" +
-				"                \"query\" : \"28.12.2019\",\n" +
-				"                \"fields\" : [\n" +
-				"                  \"birth-date^1.0\"\n" +
-				"                ],\n" +
-				"                \"type\" : \"best_fields\",\n" +
-				"                \"default_operator\" : \"and\",\n" +
-				"                \"max_determinized_states\" : 10000,\n" +
-				"                \"enable_position_increments\" : true,\n" +
-				"                \"fuzziness\" : \"AUTO\",\n" +
-				"                \"fuzzy_prefix_length\" : 0,\n" +
-				"                \"fuzzy_max_expansions\" : 50,\n" +
-				"                \"phrase_slop\" : 0,\n" +
-				"                \"escape\" : false,\n" +
-				"                \"auto_generate_synonyms_phrase_query\" : true,\n" +
-				"                \"fuzzy_transpositions\" : true,\n" +
-				"                \"boost\" : 1.0\n" +
-				"              }\n" +
-				"            }\n" +
-				"          ],\n" +
-				"          \"adjust_pure_negative\" : true,\n" +
-				"          \"boost\" : 1.0\n" +
-				"        }\n" +
-				"      }\n" +
-				"    ],\n" +
-				"    \"adjust_pure_negative\" : true,\n" +
-				"    \"boost\" : 1.0\n" +
-				"  }\n" +
+		String expected = "{\n" + //
+				"  \"bool\" : {\n" + //
+				"    \"should\" : [\n" + //
+				"      {\n" + //
+				"        \"bool\" : {\n" + //
+				"          \"must\" : [\n" + //
+				"            {\n" + //
+				"              \"range\" : {\n" + //
+				"                \"birth-date\" : {\n" + //
+				"                  \"from\" : \"09.11.1989\",\n" + //
+				"                  \"to\" : \"09.11.1990\",\n" + //
+				"                  \"include_lower\" : true,\n" + //
+				"                  \"include_upper\" : true,\n" + //
+				"                  \"boost\" : 1.0\n" + //
+				"                }\n" + //
+				"              }\n" + //
+				"            }\n" + //
+				"          ],\n" + //
+				"          \"adjust_pure_negative\" : true,\n" + //
+				"          \"boost\" : 1.0\n" + //
+				"        }\n" + //
+				"      },\n" + //
+				"      {\n" + //
+				"        \"bool\" : {\n" + //
+				"          \"must\" : [\n" + //
+				"            {\n" + //
+				"              \"query_string\" : {\n" + //
+				"                \"query\" : \"28.12.2019\",\n" + //
+				"                \"fields\" : [\n" + //
+				"                  \"birth-date^1.0\"\n" + //
+				"                ],\n" + //
+				"                \"type\" : \"best_fields\",\n" + //
+				"                \"default_operator\" : \"and\",\n" + //
+				"                \"max_determinized_states\" : 10000,\n" + //
+				"                \"enable_position_increments\" : true,\n" + //
+				"                \"fuzziness\" : \"AUTO\",\n" + //
+				"                \"fuzzy_prefix_length\" : 0,\n" + //
+				"                \"fuzzy_max_expansions\" : 50,\n" + //
+				"                \"phrase_slop\" : 0,\n" + //
+				"                \"escape\" : false,\n" + //
+				"                \"auto_generate_synonyms_phrase_query\" : true,\n" + //
+				"                \"fuzzy_transpositions\" : true,\n" + //
+				"                \"boost\" : 1.0\n" + //
+				"              }\n" + //
+				"            }\n" + //
+				"          ],\n" + //
+				"          \"adjust_pure_negative\" : true,\n" + //
+				"          \"boost\" : 1.0\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    ],\n" + //
+				"    \"adjust_pure_negative\" : true,\n" + //
+				"    \"boost\" : 1.0\n" + //
+				"  }\n" + //
 				"}"; //
 
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, Person.class);
@@ -187,67 +189,66 @@ public class CriteriaQueryMappingUnitTests {
 	void shouldMapNamesAndConvertValuesInCriteriaQueryForSubCriteriaWithDate() throws JSONException {
 		// use POJO properties and types in the query building
 		CriteriaQuery criteriaQuery = new CriteriaQuery( //
-				Criteria.or()
-						.subCriteria( Criteria.where("birthDate") //
-								.between(LocalDate.of(1989, 11, 9), LocalDate.of(1990, 11, 9)) ) //
-						.subCriteria( Criteria.where( "createdDate").is(383745721653L) ) //
+				Criteria.or().subCriteria(Criteria.where("birthDate") //
+						.between(LocalDate.of(1989, 11, 9), LocalDate.of(1990, 11, 9))) //
+						.subCriteria(Criteria.where("createdDate").is(383745721653L)) //
 		);
 
 		// mapped field name and converted parameter
-		String expected = "{\n" +
-				"  \"bool\" : {\n" +
-				"    \"should\" : [\n" +
-				"      {\n" +
-				"        \"bool\" : {\n" +
-				"          \"must\" : [\n" +
-				"            {\n" +
-				"              \"range\" : {\n" +
-				"                \"birth-date\" : {\n" +
-				"                  \"from\" : \"09.11.1989\",\n" +
-				"                  \"to\" : \"09.11.1990\",\n" +
-				"                  \"include_lower\" : true,\n" +
-				"                  \"include_upper\" : true,\n" +
-				"                  \"boost\" : 1.0\n" +
-				"                }\n" +
-				"              }\n" +
-				"            }\n" +
-				"          ],\n" +
-				"          \"adjust_pure_negative\" : true,\n" +
-				"          \"boost\" : 1.0\n" +
-				"        }\n" +
-				"      },\n" +
-				"      {\n" +
-				"        \"bool\" : {\n" +
-				"          \"must\" : [\n" +
-				"            {\n" +
-				"              \"query_string\" : {\n" +
-				"                \"query\" : \"383745721653\",\n" +
-				"                \"fields\" : [\n" +
-				"                  \"created-date^1.0\"\n" +
-				"                ],\n" +
-				"                \"type\" : \"best_fields\",\n" +
-				"                \"default_operator\" : \"and\",\n" +
-				"                \"max_determinized_states\" : 10000,\n" +
-				"                \"enable_position_increments\" : true,\n" +
-				"                \"fuzziness\" : \"AUTO\",\n" +
-				"                \"fuzzy_prefix_length\" : 0,\n" +
-				"                \"fuzzy_max_expansions\" : 50,\n" +
-				"                \"phrase_slop\" : 0,\n" +
-				"                \"escape\" : false,\n" +
-				"                \"auto_generate_synonyms_phrase_query\" : true,\n" +
-				"                \"fuzzy_transpositions\" : true,\n" +
-				"                \"boost\" : 1.0\n" +
-				"              }\n" +
-				"            }\n" +
-				"          ],\n" +
-				"          \"adjust_pure_negative\" : true,\n" +
-				"          \"boost\" : 1.0\n" +
-				"        }\n" +
-				"      }\n" +
-				"    ],\n" +
-				"    \"adjust_pure_negative\" : true,\n" +
-				"    \"boost\" : 1.0\n" +
-				"  }\n" +
+		String expected = "{\n" + //
+				"  \"bool\" : {\n" + //
+				"    \"should\" : [\n" + //
+				"      {\n" + //
+				"        \"bool\" : {\n" + //
+				"          \"must\" : [\n" + //
+				"            {\n" + //
+				"              \"range\" : {\n" + //
+				"                \"birth-date\" : {\n" + //
+				"                  \"from\" : \"09.11.1989\",\n" + //
+				"                  \"to\" : \"09.11.1990\",\n" + //
+				"                  \"include_lower\" : true,\n" + //
+				"                  \"include_upper\" : true,\n" + //
+				"                  \"boost\" : 1.0\n" + //
+				"                }\n" + //
+				"              }\n" + //
+				"            }\n" + //
+				"          ],\n" + //
+				"          \"adjust_pure_negative\" : true,\n" + //
+				"          \"boost\" : 1.0\n" + //
+				"        }\n" + //
+				"      },\n" + //
+				"      {\n" + //
+				"        \"bool\" : {\n" + //
+				"          \"must\" : [\n" + //
+				"            {\n" + //
+				"              \"query_string\" : {\n" + //
+				"                \"query\" : \"383745721653\",\n" + //
+				"                \"fields\" : [\n" + //
+				"                  \"created-date^1.0\"\n" + //
+				"                ],\n" + //
+				"                \"type\" : \"best_fields\",\n" + //
+				"                \"default_operator\" : \"and\",\n" + //
+				"                \"max_determinized_states\" : 10000,\n" + //
+				"                \"enable_position_increments\" : true,\n" + //
+				"                \"fuzziness\" : \"AUTO\",\n" + //
+				"                \"fuzzy_prefix_length\" : 0,\n" + //
+				"                \"fuzzy_max_expansions\" : 50,\n" + //
+				"                \"phrase_slop\" : 0,\n" + //
+				"                \"escape\" : false,\n" + //
+				"                \"auto_generate_synonyms_phrase_query\" : true,\n" + //
+				"                \"fuzzy_transpositions\" : true,\n" + //
+				"                \"boost\" : 1.0\n" + //
+				"              }\n" + //
+				"            }\n" + //
+				"          ],\n" + //
+				"          \"adjust_pure_negative\" : true,\n" + //
+				"          \"boost\" : 1.0\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    ],\n" + //
+				"    \"adjust_pure_negative\" : true,\n" + //
+				"    \"boost\" : 1.0\n" + //
+				"  }\n" + //
 				"}"; //
 
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, Person.class);

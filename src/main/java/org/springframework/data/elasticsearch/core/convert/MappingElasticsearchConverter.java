@@ -187,7 +187,7 @@ public class MappingElasticsearchConverter
 
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(targetEntity);
 
-		@SuppressWarnings({"unchecked", "ConstantConditions"})
+		@SuppressWarnings({ "unchecked", "ConstantConditions" })
 		R instance = (R) instantiator.createInstance(targetEntity,
 				new PersistentEntityParameterValueProvider<>(targetEntity, propertyValueProvider, null));
 
@@ -800,6 +800,7 @@ public class MappingElasticsearchConverter
 	// region queries
 	@Override
 	public void updateCriteriaQuery(CriteriaQuery criteriaQuery, Class<?> domainClass) {
+
 		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(domainClass);
 
 		if (persistentEntity != null) {
@@ -828,7 +829,8 @@ public class MappingElasticsearchConverter
 			field.setName(property.getFieldName());
 
 			if (property.hasPropertyConverter()) {
-				ElasticsearchPersistentPropertyConverter propertyConverter = Objects.requireNonNull(property.getPropertyConverter());
+				ElasticsearchPersistentPropertyConverter propertyConverter = Objects
+						.requireNonNull(property.getPropertyConverter());
 				criteria.getQueryCriteriaEntries().forEach(criteriaEntry -> {
 					Object value = criteriaEntry.getValue();
 					if (value.getClass().isArray()) {
