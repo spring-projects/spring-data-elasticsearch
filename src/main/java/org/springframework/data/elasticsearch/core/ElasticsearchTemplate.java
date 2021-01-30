@@ -168,7 +168,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		}
 		String documentId = response.getId();
 
-		// We should call this because we are not going through a mapper.
 		Object queryObject = query.getObject();
 		if (queryObject != null) {
 			updateIndexedObject(queryObject, IndexedObjectInformation.of(documentId, response.getSeqNo(),

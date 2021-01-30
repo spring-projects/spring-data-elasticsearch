@@ -148,7 +148,6 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		IndexRequest request = prepareWriteRequest(requestFactory.indexRequest(query, index));
 		IndexResponse indexResponse = execute(client -> client.index(request, RequestOptions.DEFAULT));
 
-		// We should call this because we are not going through a mapper.
 		Object queryObject = query.getObject();
 		if (queryObject != null) {
 			updateIndexedObject(queryObject, IndexedObjectInformation.of(indexResponse.getId(), indexResponse.getSeqNo(),
