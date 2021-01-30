@@ -161,16 +161,12 @@ public class DocumentAdapters {
 		Map<String, SearchHits> sourceInnerHits = source.getInnerHits();
 
 		if (sourceInnerHits != null) {
-			sourceInnerHits.forEach((name, searchHits) -> {
-				innerHits.put(name, SearchDocumentResponse.from(searchHits, null, null));
-			});
+			sourceInnerHits
+					.forEach((name, searchHits) -> innerHits.put(name, SearchDocumentResponse.from(searchHits, null, null)));
 		}
 
-		NestedMetaData nestedMetaData = null;
-
-		if (source.getNestedIdentity() != null) {
-			 nestedMetaData = from(source.getNestedIdentity());
-		}
+		NestedMetaData nestedMetaData = from(source.getNestedIdentity());
+		Explanation explanation = from(source.getExplanation());
 
 		BytesReference sourceRef = source.getSourceRef();
 
@@ -178,7 +174,7 @@ public class DocumentAdapters {
 			return new SearchDocumentAdapter(
 					source.getScore(), source.getSortValues(), source.getFields(), highlightFields, fromDocumentFields(source,
 							source.getIndex(), source.getId(), source.getVersion(), source.getSeqNo(), source.getPrimaryTerm()),
-					innerHits, nestedMetaData);
+					innerHits, nestedMetaData, explanation);
 		}
 
 		Document document = Document.from(source.getSourceAsMap());
@@ -192,17 +188,32 @@ public class DocumentAdapters {
 		document.setPrimaryTerm(source.getPrimaryTerm());
 
 		return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(), highlightFields,
-				document, innerHits, nestedMetaData);
+				document, innerHits, nestedMetaData, explanation);
 	}
 
-	private static NestedMetaData from(SearchHit.NestedIdentity nestedIdentity) {
+	@Nullable
+	private static Explanation from(@Nullable org.apache.lucene.search.Explanation explanation) {
 
-		NestedMetaData child = null;
-
-		if (nestedIdentity.getChild() != null) {
-			child = from(nestedIdentity.getChild());
+		if (explanation == null) {
+			return null;
 		}
 
+		List<Explanation> details = new ArrayList<>();
+		for (org.apache.lucene.search.Explanation detail : explanation.getDetails()) {
+			details.add(from(detail));
+		}
+
+		return new Explanation(explanation.isMatch(), explanation.getValue().doubleValue(), explanation.getDescription(),
+				details);
+	}
+
+	@Nullable
+	private static NestedMetaData from(@Nullable SearchHit.NestedIdentity nestedIdentity) {
+
+		if (nestedIdentity == null) {
+			return null;
+		}
+		NestedMetaData child = from(nestedIdentity.getChild());
 		return NestedMetaData.of(nestedIdentity.getField().string(), nestedIdentity.getOffset(), child);
 	}
 
@@ -210,7 +221,7 @@ public class DocumentAdapters {
 	 * Create an unmodifiable {@link Document} from {@link Iterable} of {@link DocumentField}s.
 	 *
 	 * @param documentFields the {@link DocumentField}s backing the {@link Document}.
-	 * @param index
+	 * @param index the index where the Document was found
 	 * @return the adapted {@link Document}.
 	 */
 	public static Document fromDocumentFields(Iterable<DocumentField> documentFields, String index, String id,
@@ -458,10 +469,11 @@ public class DocumentAdapters {
 		private final Map<String, List<String>> highlightFields = new HashMap<>();
 		private final Map<String, SearchDocumentResponse> innerHits = new HashMap<>();
 		@Nullable private final NestedMetaData nestedMetaData;
+		@Nullable private final Explanation explanation;
 
 		SearchDocumentAdapter(float score, Object[] sortValues, Map<String, DocumentField> fields,
 				Map<String, List<String>> highlightFields, Document delegate, Map<String, SearchDocumentResponse> innerHits,
-				@Nullable NestedMetaData nestedMetaData) {
+				@Nullable NestedMetaData nestedMetaData, @Nullable Explanation explanation) {
 
 			this.score = score;
 			this.sortValues = sortValues;
@@ -470,6 +482,7 @@ public class DocumentAdapters {
 			this.highlightFields.putAll(highlightFields);
 			this.innerHits.putAll(innerHits);
 			this.nestedMetaData = nestedMetaData;
+			this.explanation = explanation;
 		}
 
 		@Override
@@ -644,6 +657,12 @@ public class DocumentAdapters {
 		@Override
 		public Set<Entry<String, Object>> entrySet() {
 			return delegate.entrySet();
+		}
+
+		@Override
+		@Nullable
+		public Explanation getExplanation() {
+			return explanation;
 		}
 
 		@Override

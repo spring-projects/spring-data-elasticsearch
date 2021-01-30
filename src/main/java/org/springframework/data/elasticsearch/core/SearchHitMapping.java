@@ -113,6 +113,7 @@ class SearchHitMapping<T> {
 				getHighlightsAndRemapFieldNames(searchDocument), //
 				mapInnerHits(searchDocument), //
 				searchDocument.getNestedMetaData(), //
+				searchDocument.getExplanation(), //
 				content); //
 	}
 
@@ -196,6 +197,7 @@ class SearchHitMapping<T> {
 							searchDocument.getHighlightFields(), //
 							searchHit.getInnerHits(), //
 							persistentEntityWithNestedMetaData.nestedMetaData, //
+							searchHit.getExplanation(), //
 							targetObject));
 				});
 

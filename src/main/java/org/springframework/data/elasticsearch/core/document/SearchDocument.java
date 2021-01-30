@@ -21,7 +21,7 @@ import java.util.Map;
 import org.springframework.lang.Nullable;
 
 /**
- * Extension to {@link Document} exposing a search response related data.
+ * Extension to {@link Document} exposing search response related data.
  *
  * @author Mark Paluch
  * @author Peter-Josef Meisch
@@ -98,4 +98,11 @@ public interface SearchDocument extends Document {
 	default String getRouting() {
 		return getFieldValue("_routing");
 	}
+
+	/**
+	 * @return the explanation for the SearchHit.
+	 * @since 4.2
+	 */
+	@Nullable
+	Explanation getExplanation();
 }

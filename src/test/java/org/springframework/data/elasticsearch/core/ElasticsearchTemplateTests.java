@@ -33,7 +33,16 @@ import java.lang.Double;
 import java.lang.Integer;
 import java.lang.Long;
 import java.lang.Object;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -74,6 +83,7 @@ import org.springframework.data.elasticsearch.annotations.JoinTypeRelation;
 import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
@@ -123,7 +133,6 @@ public abstract class ElasticsearchTemplateTests {
 	protected final IndexCoordinates index = IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY);
 	@Autowired protected ElasticsearchOperations operations;
 	protected IndexOperations indexOperations;
-
 
 	@BeforeEach
 	public void before() {
@@ -1546,10 +1555,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		final UpdateQuery updateQuery = UpdateQuery.builder(query)
 				.withScriptType(org.springframework.data.elasticsearch.core.ScriptType.INLINE)
-				.withScript("ctx._source['message'] = params['newMessage']")
-				.withLang("painless")
-				.withParams(Collections.singletonMap("newMessage", messageAfterUpdate))
-				.withAbortOnVersionConflict(true)
+				.withScript("ctx._source['message'] = params['newMessage']").withLang("painless")
+				.withParams(Collections.singletonMap("newMessage", messageAfterUpdate)).withAbortOnVersionConflict(true)
 				.build();
 
 		// when
@@ -3619,7 +3626,7 @@ public abstract class ElasticsearchTemplateTests {
 		softly.assertAll();
 	}
 
-	@Test
+	@Test // DATAES-907
 	@DisplayName("should track total hits is off")
 	void shouldTrackTotalHitsIsOff() {
 
@@ -3640,6 +3647,39 @@ public abstract class ElasticsearchTemplateTests {
 		softly.assertThat(searchHits.getTotalHits()).isEqualTo(10_000L);
 		softly.assertThat(searchHits.getTotalHitsRelation()).isEqualTo(TotalHitsRelation.OFF);
 		softly.assertAll();
+	}
+
+	@Test // #725
+	@DisplayName("should not return explanation when not requested")
+	void shouldNotReturnExplanationWhenNotRequested() {
+
+		SampleEntity entity = SampleEntity.builder().id("42").message("a message with text").build();
+		operations.save(entity);
+		Criteria criteria = new Criteria("message").contains("with");
+		CriteriaQuery query = new CriteriaQuery(criteria);
+
+		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1L);
+		Explanation explanation = searchHits.getSearchHit(0).getExplanation();
+		assertThat(explanation).isNull();
+	}
+
+	@Test // #725
+	@DisplayName("should return explanation when requested")
+	void shouldReturnExplanationWhenRequested() {
+
+		SampleEntity entity = SampleEntity.builder().id("42").message("a message with text").build();
+		operations.save(entity);
+		Criteria criteria = new Criteria("message").contains("with");
+		CriteriaQuery query = new CriteriaQuery(criteria);
+		query.setExplain(true);
+
+		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1L);
+		Explanation explanation = searchHits.getSearchHit(0).getExplanation();
+		assertThat(explanation).isNotNull();
 	}
 
 	@Data
@@ -3836,5 +3876,4 @@ public abstract class ElasticsearchTemplateTests {
 				@JoinTypeRelation(parent = "question", children = { "answer" }) }) private JoinField<String> myJoinField;
 		@Field(type = Text) private String text;
 	}
-
 }

@@ -25,6 +25,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.data.elasticsearch.core.document.Explanation;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -1057,6 +1058,45 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.as(StepVerifier::create) //
 				.expectNext(true) //
 				.verifyComplete(); //
+	}
+
+	@Test // #725
+	@DisplayName("should not return explanation when not requested")
+	void shouldNotReturnExplanationWhenNotRequested() {
+
+		ElasticsearchTemplateTests.SampleEntity entity = ElasticsearchTemplateTests.SampleEntity.builder().id("42").message("a message with text").build();
+		template.save(entity).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+
+		Criteria criteria = new Criteria("message").contains("with");
+		CriteriaQuery query = new CriteriaQuery(criteria);
+
+		template.search(query, ElasticsearchTemplateTests.SampleEntity.class)
+				.as(StepVerifier::create)
+				.consumeNextWith(searchHit -> {
+					Explanation explanation = searchHit.getExplanation();
+					assertThat(explanation).isNull();
+				})
+				.verifyComplete();
+	}
+
+	@Test // #725
+	@DisplayName("should return explanation when requested")
+	void shouldReturnExplanationWhenRequested() {
+
+		ElasticsearchTemplateTests.SampleEntity entity = ElasticsearchTemplateTests.SampleEntity.builder().id("42").message("a message with text").build();
+		template.save(entity).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+
+		Criteria criteria = new Criteria("message").contains("with");
+		CriteriaQuery query = new CriteriaQuery(criteria);
+		query.setExplain(true);
+
+		template.search(query, ElasticsearchTemplateTests.SampleEntity.class)
+				.as(StepVerifier::create)
+				.consumeNextWith(searchHit -> {
+					Explanation explanation = searchHit.getExplanation();
+					assertThat(explanation).isNotNull();
+				})
+				.verifyComplete();
 	}
 	// endregion
 
