@@ -1144,6 +1144,8 @@ class RequestFactory {
 			sourceBuilder.timeout(timeout);
 		}
 
+		sourceBuilder.explain(query.getExplain());
+
 		request.source(sourceBuilder);
 		return request;
 	}
@@ -1223,6 +1225,8 @@ class RequestFactory {
 		if (timeout != null) {
 			searchRequestBuilder.setTimeout(timeout);
 		}
+
+		searchRequestBuilder.setExplain(query.getExplain());
 
 		return searchRequestBuilder;
 	}

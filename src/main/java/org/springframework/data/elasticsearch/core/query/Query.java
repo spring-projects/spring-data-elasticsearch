@@ -285,4 +285,12 @@ public interface Query {
 	 */
 	@Nullable
 	TimeValue getTimeout();
+
+	/**
+	 * @return {@literal true} when the query has the eplain parameter set, defaults to {@literal false}
+	 * @since 4.2
+	 */
+	default boolean getExplain() {
+		return false;
+	}
 }

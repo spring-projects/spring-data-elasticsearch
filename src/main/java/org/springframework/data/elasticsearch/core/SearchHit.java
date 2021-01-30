@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.document.NestedMetaData;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -44,16 +45,18 @@ public class SearchHit<T> {
 	private final Map<String, List<String>> highlightFields = new LinkedHashMap<>();
 	private final Map<String, SearchHits<?>> innerHits = new LinkedHashMap<>();
 	@Nullable private final NestedMetaData nestedMetaData;
-	@Nullable private String routing;
+	@Nullable private final String routing;
+	@Nullable private final Explanation explanation;
 
 	public SearchHit(@Nullable String index, @Nullable String id, @Nullable String routing, float score,
 			@Nullable Object[] sortValues, @Nullable Map<String, List<String>> highlightFields, T content) {
-		this(index, id, routing, score, sortValues, highlightFields, null, null, content);
+		this(index, id, routing, score, sortValues, highlightFields, null, null, null, content);
 	}
 
 	public SearchHit(@Nullable String index, @Nullable String id, @Nullable String routing, float score,
 			@Nullable Object[] sortValues, @Nullable Map<String, List<String>> highlightFields,
-			@Nullable Map<String, SearchHits<?>> innerHits, @Nullable NestedMetaData nestedMetaData, T content) {
+			@Nullable Map<String, SearchHits<?>> innerHits, @Nullable NestedMetaData nestedMetaData,
+			@Nullable Explanation explanation, T content) {
 		this.index = index;
 		this.id = id;
 		this.routing = routing;
@@ -69,7 +72,7 @@ public class SearchHit<T> {
 		}
 
 		this.nestedMetaData = nestedMetaData;
-
+		this.explanation = explanation;
 		this.content = content;
 	}
 
@@ -175,5 +178,14 @@ public class SearchHit<T> {
 	@Nullable
 	public String getRouting() {
 		return routing;
+	}
+
+	/**
+	 * @return the explanation for this SearchHit.
+	 * @since 4.2
+	 */
+	@Nullable
+	public Explanation getExplanation() {
+		return explanation;
 	}
 }

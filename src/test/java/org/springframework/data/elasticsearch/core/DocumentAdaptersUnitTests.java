@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.elasticsearch.action.get.GetResponse;
@@ -31,9 +32,11 @@ import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.shard.ShardId;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchShardTarget;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
+import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 
 /**
@@ -235,5 +238,28 @@ public class DocumentAdaptersUnitTests {
 		assertThat(document.getSeqNo()).isEqualTo(1);
 		assertThat(document.hasPrimaryTerm()).isTrue();
 		assertThat(document.getPrimaryTerm()).isEqualTo(2);
+	}
+
+	@Test // #725
+	@DisplayName("should adapt returned explanations")
+	void shouldAdaptReturnedExplanations() {
+
+		SearchHit searchHit = new SearchHit(42);
+		searchHit.explanation(org.apache.lucene.search.Explanation.match( //
+				3.14, //
+				"explanation 3.14", //
+				Collections.singletonList(org.apache.lucene.search.Explanation.noMatch( //
+						"explanation noMatch", //
+						Collections.emptyList()))));
+
+		SearchDocument searchDocument = DocumentAdapters.from(searchHit);
+
+		Explanation explanation = searchDocument.getExplanation();
+		assertThat(explanation).isNotNull();
+		assertThat(explanation.isMatch()).isTrue();
+		assertThat(explanation.getValue()).isEqualTo(3.14);
+		assertThat(explanation.getDescription()).isEqualTo("explanation 3.14");
+		List<Explanation> details = explanation.getDetails();
+		assertThat(details).containsExactly(new Explanation(false, 0.0, "explanation noMatch", Collections.emptyList()));
 	}
 }

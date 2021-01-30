@@ -61,6 +61,7 @@ abstract class AbstractQuery implements Query {
 	@Nullable private Integer trackTotalHitsUpTo;
 	@Nullable private Duration scrollTime;
 	@Nullable private TimeValue timeout;
+	private boolean explain = false;
 
 	@Override
 	@Nullable
@@ -269,5 +270,17 @@ abstract class AbstractQuery implements Query {
 	 */
 	public void setTimeout(@Nullable TimeValue timeout) {
 		this.timeout = timeout;
+	}
+
+	@Override
+	public boolean getExplain() {
+		return explain;
+	}
+
+	/**
+	 * @param explain the explain flag on the query.
+	 */
+	public void setExplain(boolean explain) {
+		this.explain = explain;
 	}
 }
