@@ -18,9 +18,11 @@ package org.springframework.data.elasticsearch.repository.query;
 import static org.springframework.data.repository.util.ClassUtils.*;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.util.List;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
@@ -59,7 +61,6 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 		if (hasParameterOfType(method, Pageable.class)) {
 
 			TypeInformation<?> returnType = ClassTypeInformation.fromReturnTypeOf(method);
-
 			boolean multiWrapper = ReactiveWrappers.isMultiValueType(returnType.getType());
 			boolean singleWrapperWithWrappedPageableResult = ReactiveWrappers.isSingleValueType(returnType.getType())
 					&& (PAGE_TYPE.isAssignableFrom(returnType.getRequiredComponentType())
@@ -85,6 +86,20 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 
 		this.isCollectionQuery = Lazy.of(() -> (!(isPageQuery() || isSliceQuery())
 				&& ReactiveWrappers.isMultiValueType(metadata.getReturnType(method).getType()) || super.isCollectionQuery()));
+	}
+
+	@Override
+	protected void verifyCountQueryTypes() {
+		if (hasCountQueryAnnotation()) {
+			TypeInformation<?> returnType = ClassTypeInformation.fromReturnTypeOf(method);
+			List<TypeInformation<?>> typeArguments = returnType.getTypeArguments();
+
+			if (!Mono.class.isAssignableFrom(returnType.getType()) || typeArguments.size() != 1
+					|| (typeArguments.get(0).getType() != long.class
+							&& !Long.class.isAssignableFrom(typeArguments.get(0).getType()))) {
+				throw new InvalidDataAccessApiUsageException("count query methods must return a Mono<Long>");
+			}
+		}
 	}
 
 	@Override

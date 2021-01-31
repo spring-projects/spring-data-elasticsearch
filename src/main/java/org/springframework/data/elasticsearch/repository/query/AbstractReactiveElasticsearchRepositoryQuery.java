@@ -43,7 +43,7 @@ import org.springframework.data.repository.query.ResultProcessor;
  */
 abstract class AbstractReactiveElasticsearchRepositoryQuery implements RepositoryQuery {
 
-	private final ReactiveElasticsearchQueryMethod queryMethod;
+	protected final ReactiveElasticsearchQueryMethod queryMethod;
 	private final ReactiveElasticsearchOperations elasticsearchOperations;
 
 	AbstractReactiveElasticsearchRepositoryQuery(ReactiveElasticsearchQueryMethod queryMethod,

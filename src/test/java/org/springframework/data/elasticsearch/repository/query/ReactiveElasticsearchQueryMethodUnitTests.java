@@ -32,12 +32,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.elasticsearch.annotations.CountQuery;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -52,7 +54,6 @@ import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
- * @currentRead Fool's Fate - Robin Hobb
  */
 public class ReactiveElasticsearchQueryMethodUnitTests {
 
@@ -115,6 +116,20 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 		assertThat(method.getEntityInformation().getJavaType()).isAssignableFrom(Person.class);
 	}
 
+	@Test // #1156
+	@DisplayName("should reject count query method not returning a Mono of Long")
+	void shouldRejectCountQueryMethodNotReturningAMonoOfLong() {
+
+		assertThatThrownBy(() -> queryMethod(PersonRepository.class, "invalidCountQueryResult", String.class))
+				.isInstanceOf(InvalidDataAccessApiUsageException.class);
+	}
+
+	@Test // #1156
+	@DisplayName("should accept count query method returning a Mono of Long")
+	void shouldAcceptCountQueryMethodReturningAMonoOfLong() throws Exception {
+		queryMethod(PersonRepository.class, "validCountQueryResult", String.class);
+	}
+
 	private ReactiveElasticsearchQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters)
 			throws Exception {
 
@@ -137,6 +152,12 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 		Flux<Person> findByName(String name, Pageable pageRequest);
 
 		void deleteByName(String name);
+
+		@CountQuery("{}")
+		Flux<Person> invalidCountQueryResult(String name); // invalid return type here
+
+		@CountQuery("{}")
+		Mono<Long> validCountQueryResult(String name);
 	}
 
 	interface NonReactiveRepository extends Repository<Person, Long> {
@@ -156,6 +177,7 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 		@Nullable @Id private String id;
 
 		@Nullable private String name;
+		@Nullable private String firstName;
 
 		@Nullable @Field(type = FieldType.Nested) private List<Car> car;
 

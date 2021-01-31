@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repository.support.simple;
+package org.springframework.data.elasticsearch.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -77,7 +77,7 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 	@Configuration
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
 	@EnableElasticsearchRepositories(
-			basePackages = { "org.springframework.data.elasticsearch.repository.support.simple" },
+			basePackages = { "org.springframework.data.elasticsearch.repository.support" },
 			considerNestedRepositories = true)
 	static class Config {}
 

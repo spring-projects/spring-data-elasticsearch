@@ -35,6 +35,7 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -44,6 +45,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.elasticsearch.annotations.CountQuery;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Highlight;
@@ -911,6 +913,31 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat(count).isEqualTo(1L);
 	}
 
+	@Test // #1156
+	@DisplayName("should count with query by type")
+	void shouldCountWithQueryByType() {
+
+		String documentId = nextIdAsString();
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setType("test");
+		sampleEntity.setMessage("some message");
+
+		repository.save(sampleEntity);
+
+		documentId = nextIdAsString();
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setId(documentId);
+		sampleEntity2.setType("test2");
+		sampleEntity2.setMessage("some message");
+
+		repository.save(sampleEntity2);
+
+		long count = repository.countWithQueryByType("test");
+
+		assertThat(count).isEqualTo(1L);
+	}
+
 	@Test // DATAES-106
 	public void shouldCountCustomMethodForNot() {
 
@@ -1746,6 +1773,9 @@ public abstract class CustomMethodRepositoryBaseTests {
 		SearchHits<SampleEntity> searchBy(Sort sort);
 
 		SearchPage<SampleEntity> searchByMessage(String message, Pageable pageable);
+
+		@CountQuery("{\"bool\" : {\"must\" : {\"term\" : {\"type\" : \"?0\"}}}}")
+		long countWithQueryByType(String type);
 	}
 
 	/**
