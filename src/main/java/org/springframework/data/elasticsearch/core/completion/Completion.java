@@ -20,11 +20,11 @@ public class Completion {
 	@Nullable private Map<String, List<String>> contexts;
 	@Nullable private Integer weight;
 
+	@PersistenceConstructor
 	public Completion(String[] input) {
 		this.input = input;
 	}
 
-	@PersistenceConstructor
 	public Completion(List<String> input) {
 		this.input = input.toArray(new String[0]);
 	}
