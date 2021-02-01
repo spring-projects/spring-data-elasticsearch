@@ -26,6 +26,8 @@ import org.springframework.data.convert.TypeInformationMapper;
 import org.springframework.data.mapping.Alias;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
 /**
@@ -37,6 +39,9 @@ import org.springframework.lang.Nullable;
  */
 public class DefaultElasticsearchTypeMapper extends DefaultTypeMapper<Map<String, Object>>
 		implements ElasticsearchTypeMapper {
+
+	@SuppressWarnings("rawtypes") //
+	private static final TypeInformation<Map> MAP_TYPE_INFO = ClassTypeInformation.from(Map.class);
 
 	private final @Nullable String typeKey;
 
@@ -62,9 +67,21 @@ public class DefaultElasticsearchTypeMapper extends DefaultTypeMapper<Map<String
 		this.typeKey = typeKey;
 	}
 
-	@Override
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.MongoTypeMapper#isTypeKey(java.lang.String)
+	 */
 	public boolean isTypeKey(String key) {
 		return typeKey != null && typeKey.equals(key);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.convert.DefaultTypeMapper#getFallbackTypeFor(java.lang.Object)
+	 */
+	@Override
+	protected TypeInformation<?> getFallbackTypeFor(Map<String, Object> source) {
+		return MAP_TYPE_INFO;
 	}
 
 	/**
