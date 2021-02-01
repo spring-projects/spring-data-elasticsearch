@@ -211,6 +211,7 @@ public class MappingElasticsearchConverterUnitTests {
 		shotGunAsMap.put("_class", ShotGun.class.getName());
 
 		notificationAsMap = Document.create();
+		notificationAsMap.put("_class", Notification.class.getName());
 		notificationAsMap.put("id", 1L);
 		notificationAsMap.put("fromEmail", "from@email.com");
 		notificationAsMap.put("toEmail", "to@email.com");
