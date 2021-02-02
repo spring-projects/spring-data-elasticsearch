@@ -107,6 +107,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -1730,12 +1731,18 @@ class RequestFactory {
 	@Nullable
 	private String getPersistentEntityId(Object entity) {
 
-		Object identifier = elasticsearchConverter.getMappingContext() //
-				.getRequiredPersistentEntity(entity.getClass()) //
-				.getIdentifierAccessor(entity).getIdentifier();
+		MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext = elasticsearchConverter
+				.getMappingContext();
 
-		if (identifier != null) {
-			return identifier.toString();
+		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entity.getClass());
+
+		if (persistentEntity != null) {
+			Object identifier = persistentEntity //
+					.getIdentifierAccessor(entity).getIdentifier();
+
+			if (identifier != null) {
+				return identifier.toString();
+			}
 		}
 
 		return null;
@@ -1743,8 +1750,16 @@ class RequestFactory {
 
 	private VersionType retrieveVersionTypeFromPersistentEntity(Class<?> clazz) {
 
-		VersionType versionType = elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(clazz)
-				.getVersionType();
+		MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext = elasticsearchConverter
+				.getMappingContext();
+
+		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(clazz);
+
+		VersionType versionType = null;
+
+		if (persistentEntity != null) {
+			versionType = persistentEntity.getVersionType();
+		}
 
 		return versionType != null ? versionType : VersionType.EXTERNAL;
 	}

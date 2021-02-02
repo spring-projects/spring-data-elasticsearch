@@ -277,26 +277,24 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				routingResolver);
 		adaptibleEntity.populateIdIfNecessary(indexedObjectInformation.getId());
 
-		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entity.getClass());
-		PersistentPropertyAccessor<Object> propertyAccessor = persistentEntity.getPropertyAccessor(entity);
+		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntityFor(entity.getClass());
+		if (persistentEntity != null) {
+			PersistentPropertyAccessor<Object> propertyAccessor = persistentEntity.getPropertyAccessor(entity);
 
-		if (indexedObjectInformation.getSeqNo() != null && indexedObjectInformation.getPrimaryTerm() != null
-				&& persistentEntity.hasSeqNoPrimaryTermProperty()) {
-			ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
-			propertyAccessor.setProperty(seqNoPrimaryTermProperty,
-					new SeqNoPrimaryTerm(indexedObjectInformation.getSeqNo(), indexedObjectInformation.getPrimaryTerm()));
-		}
+			if (indexedObjectInformation.getSeqNo() != null && indexedObjectInformation.getPrimaryTerm() != null
+					&& persistentEntity.hasSeqNoPrimaryTermProperty()) {
+				ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
+				propertyAccessor.setProperty(seqNoPrimaryTermProperty,
+						new SeqNoPrimaryTerm(indexedObjectInformation.getSeqNo(), indexedObjectInformation.getPrimaryTerm()));
+			}
 
-		if (indexedObjectInformation.getVersion() != null && persistentEntity.hasVersionProperty()) {
-			ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
-			propertyAccessor.setProperty(versionProperty, indexedObjectInformation.getVersion());
+			if (indexedObjectInformation.getVersion() != null && persistentEntity.hasVersionProperty()) {
+				ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
+				propertyAccessor.setProperty(versionProperty, indexedObjectInformation.getVersion());
+			}
 		}
 
 		return entity;
-	}
-
-	private ElasticsearchPersistentEntity<?> getRequiredPersistentEntity(Class<?> clazz) {
-		return converter.getMappingContext().getRequiredPersistentEntity(clazz);
 	}
 
 	@Override

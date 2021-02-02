@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -40,6 +41,8 @@ public class ElasticsearchSimpleTypes {
 
 		Set<Class<?>> simpleTypes = new HashSet<>();
 		simpleTypes.add(Document.class);
+		simpleTypes.add(Map.class);
+
 		ELASTICSEARCH_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);
 	}
 
