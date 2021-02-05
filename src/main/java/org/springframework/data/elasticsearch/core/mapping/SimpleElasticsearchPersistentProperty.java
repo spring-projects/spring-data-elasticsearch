@@ -22,9 +22,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
-import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
@@ -83,16 +81,8 @@ public class SimpleElasticsearchPersistentProperty extends
 		this.annotatedFieldName = getAnnotatedFieldName();
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
 				: fieldNamingStrategy;
-		this.isId = super.isIdProperty() || SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName());
-
-		// deprecated since 4.1
-		@Deprecated
-		boolean isIdWithoutAnnotation = isId && !isAnnotationPresent(Id.class);
-		if (isIdWithoutAnnotation && owner.isAnnotationPresent(Document.class)) {
-			LOGGER.warn("Using the property name of '{}' to identify the id property is deprecated."
-					+ " Please annotate the id property with '@Id'", owner.getName() + "." + getName());
-		}
-
+		this.isId = super.isIdProperty()
+				|| (SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName()) && !hasExplicitFieldName());
 		this.isParent = isAnnotationPresent(Parent.class);
 		this.isSeqNoPrimaryTerm = SeqNoPrimaryTerm.class.isAssignableFrom(getRawType());
 
@@ -139,6 +129,10 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Override
 	public boolean storeNullValue() {
 		return storeNullValue;
+	}
+
+	protected boolean hasExplicitFieldName() {
+		return StringUtils.hasText(getAnnotatedFieldName());
 	}
 
 	/**

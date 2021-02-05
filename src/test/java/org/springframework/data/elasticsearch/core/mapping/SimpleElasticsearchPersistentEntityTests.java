@@ -17,10 +17,14 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.Property;
@@ -38,7 +42,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
  */
-public class SimpleElasticsearchPersistentEntityTests {
+public class SimpleElasticsearchPersistentEntityTests extends MappingContextBaseTests {
 
 	@Test
 	public void shouldThrowExceptionGivenVersionPropertyIsNotLong() {
@@ -135,6 +139,12 @@ public class SimpleElasticsearchPersistentEntityTests {
 				.isInstanceOf(MappingException.class);
 	}
 
+	@Test // #1680
+	@DisplayName("should allow fields with id property names")
+	void shouldAllowFieldsWithIdPropertyNames() {
+		elasticsearchConverter.get().getMappingContext().getRequiredPersistentEntity(EntityWithIdNameFields.class);
+	}
+
 	private static SimpleElasticsearchPersistentProperty createProperty(SimpleElasticsearchPersistentEntity<?> entity,
 			String field) {
 
@@ -192,5 +202,12 @@ public class SimpleElasticsearchPersistentEntityTests {
 	private static class EntityWithSeqNoPrimaryTerm {
 		private SeqNoPrimaryTerm seqNoPrimaryTerm;
 		private SeqNoPrimaryTerm seqNoPrimaryTerm2;
+	}
+
+	@Document(indexName = "fieldnames")
+	private static class EntityWithIdNameFields {
+		@Id private String theRealId;
+		@Field(type = FieldType.Text, name = "document") private String document;
+		@Field(name = "id") private String renamedId;
 	}
 }

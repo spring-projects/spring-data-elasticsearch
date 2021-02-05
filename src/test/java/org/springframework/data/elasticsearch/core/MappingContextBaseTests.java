@@ -13,18 +13,19 @@
  * limitations under the License.
  */
 
-package org.springframework.data.elasticsearch.core.index;
+package org.springframework.data.elasticsearch.core;
 
 import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.util.Lazy;
 
 /**
  * @author Peter-Josef Meisch
  */
-abstract class MappingContextBaseTests {
+public abstract class MappingContextBaseTests {
 
 	protected final Lazy<ElasticsearchConverter> elasticsearchConverter = Lazy.of(this::setupElasticsearchConverter);
 
@@ -41,7 +42,7 @@ abstract class MappingContextBaseTests {
 		return mappingContext;
 	}
 
-	final MappingBuilder getMappingBuilder() {
+	final protected MappingBuilder getMappingBuilder() {
 		return new MappingBuilder(elasticsearchConverter.get());
 	}
 }
