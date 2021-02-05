@@ -20,9 +20,7 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import lombok.Data;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
@@ -30,6 +28,7 @@ import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
 
 /**
  * @author Jakub Vavrik
@@ -41,8 +40,7 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 
 	private static final String EXPECTED_MAPPING = "{\"properties\":{\"message\":{\"store\":true,"
 			+ "\"type\":\"text\",\"index\":false,\"analyzer\":\"standard\"},\"customFormatDate\":{\"type\":\"date\",\"format\":\"dd.MM.uuuu hh:mm\"},"
-			+ "\"basicFormatDate\":{\""
-			+ "type\":\"date\",\"format\":\"basic_date\"}}}";
+			+ "\"basicFormatDate\":{\"" + "type\":\"date\",\"format\":\"basic_date\"}}}";
 
 	@Test // DATAES-568, DATAES-828
 	public void testCorrectDateMappings() {
@@ -56,8 +54,7 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 	 * @author Jakub Vavrik
 	 */
 	@Data
-	@Document(indexName = "test-index-date-mapping-core", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-date-mapping-core", replicas = 0, refreshInterval = "-1")
 	static class SampleDateMappingEntity {
 
 		@Id private String id;
