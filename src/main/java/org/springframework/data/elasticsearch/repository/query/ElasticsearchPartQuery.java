@@ -60,6 +60,11 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 	}
 
 	@Override
+	public boolean isCountQuery() {
+		return tree.isCountProjection();
+	}
+
+	@Override
 	public Object execute(Object[] parameters) {
 		Class<?> clazz = queryMethod.getResultProcessor().getReturnedType().getDomainType();
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);

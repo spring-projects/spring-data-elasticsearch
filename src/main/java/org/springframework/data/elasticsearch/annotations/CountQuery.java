@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,39 +15,25 @@
  */
 package org.springframework.data.elasticsearch.annotations;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import org.springframework.core.annotation.AliasFor;
 
 /**
- * Query
+ * Alias for a @Query annotation with the count parameter set to true.
  *
- * @author Rizwan Idrees
- * @author Mohsin Husen
  * @author Peter-Josef Meisch
  */
-
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+@Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
-public @interface Query {
+@Query(count = true)
+public @interface CountQuery {
 
-	/**
-	 * @return Elasticsearch query to be used when executing query. May contain placeholders eg. ?0
-	 */
+	@AliasFor(annotation = Query.class)
 	String value() default "";
-
-	/**
-	 * Named Query Named looked up by repository.
-	 *
-	 * @deprecated since 4.2, not implemented and used anywhere
-	 */
-	String name() default "";
-
-	/**
-	 * Returns whether the query defined should be executed as count projection.
-	 *
-	 * @return {@literal false} by default.
-	 * @since 4.2
-	 */
-	boolean count() default false;
 }
-

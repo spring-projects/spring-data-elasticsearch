@@ -24,6 +24,7 @@ import org.springframework.data.repository.query.RepositoryQuery;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Peter-Josef Meisch
  */
 
 public abstract class AbstractElasticsearchRepositoryQuery implements RepositoryQuery {
@@ -42,4 +43,10 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 	public QueryMethod getQueryMethod() {
 		return queryMethod;
 	}
+
+	/**
+	 * @return {@literal true} if this is a count query
+	 * @since 4.2
+	 */
+	public abstract boolean isCountQuery();
 }

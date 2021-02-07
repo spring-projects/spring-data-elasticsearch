@@ -20,7 +20,8 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
 import java.util.stream.Stream;
 
-import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -34,7 +35,9 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.Lazy;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -53,9 +56,9 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	private @Nullable ElasticsearchEntityMetadata<?> metadata;
-	private final Method method; // private in base class, but needed here as well
-	private final Query queryAnnotation;
-	private final Highlight highlightAnnotation;
+	protected final Method method; // private in base class, but needed here and in derived classes as well
+	@Nullable private final Query queryAnnotation;
+	@Nullable private final Highlight highlightAnnotation;
 	private final Lazy<HighlightQuery> highlightQueryLazy = Lazy.of(this::createAnnotatedHighlightQuery);
 
 	public ElasticsearchQueryMethod(Method method, RepositoryMetadata repositoryMetadata, ProjectionFactory factory,
@@ -67,16 +70,32 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 
 		this.method = method;
 		this.mappingContext = mappingContext;
-		this.queryAnnotation = method.getAnnotation(Query.class);
-		this.highlightAnnotation = method.getAnnotation(Highlight.class);
+		this.queryAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, Query.class);
+		this.highlightAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, Highlight.class);
+
+		verifyCountQueryTypes();
+	}
+
+	protected void verifyCountQueryTypes() {
+
+		if (hasCountQueryAnnotation()) {
+			TypeInformation<?> returnType = ClassTypeInformation.fromReturnTypeOf(method);
+
+			if (returnType.getType() != long.class && !Long.class.isAssignableFrom(returnType.getType())) {
+				throw new InvalidDataAccessApiUsageException("count query methods must return a Long");
+			}
+		}
 	}
 
 	public boolean hasAnnotatedQuery() {
 		return this.queryAnnotation != null;
 	}
 
+	/**
+	 * @return the query String. Must not be {@literal null} when {@link #hasAnnotatedQuery()} returns true
+	 */
 	public String getAnnotatedQuery() {
-		return (String) AnnotationUtils.getValue(queryAnnotation, "value");
+		return queryAnnotation.value();
 	}
 
 	/**
@@ -217,4 +236,14 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	public boolean isNotSearchPageMethod() {
 		return !isSearchPageMethod();
 	}
+
+	/**
+	 * @return {@literal true} if the method is annotated with
+	 *         {@link org.springframework.data.elasticsearch.annotations.CountQuery} or with {@link Query}(count =true)
+	 * @since 4.2
+	 */
+	public boolean hasCountQueryAnnotation() {
+		return queryAnnotation != null && queryAnnotation.count();
+	}
+
 }

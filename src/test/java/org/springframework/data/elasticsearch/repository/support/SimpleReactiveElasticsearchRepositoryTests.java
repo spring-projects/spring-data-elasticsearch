@@ -37,6 +37,7 @@ import java.util.stream.IntStream;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.elasticsearch.annotations.CountQuery;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Highlight;
@@ -316,10 +318,23 @@ class SimpleReactiveElasticsearchRepositoryTests {
 
 		bulkIndex(SampleEntity.builder().id("id-one").message("message").build(), //
 				SampleEntity.builder().id("id-two").message("test message").build(), //
-				SampleEntity.builder().id("id-three").message("test test").build()) //
-						.block();
+				SampleEntity.builder().id("id-three").message("test test").build()).block();
 
 		repository.countAllByMessage("test") //
+				.as(StepVerifier::create) //
+				.expectNext(2L) //
+				.verifyComplete();
+	}
+
+	@Test // #1156
+	@DisplayName("should count with string query")
+	void shouldCountWithStringQuery() {
+
+		bulkIndex(SampleEntity.builder().id("id-one").message("message").build(), //
+				SampleEntity.builder().id("id-two").message("test message").build(), //
+				SampleEntity.builder().id("id-three").message("test test").build()).block();
+
+		repository.retrieveCountByText("test") //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
 				.verifyComplete();
@@ -593,6 +608,9 @@ class SimpleReactiveElasticsearchRepositoryTests {
 		Mono<Boolean> existsAllByMessage(String message);
 
 		Mono<Long> deleteAllByMessage(String message);
+
+		@CountQuery(value = "{\"bool\": {\"must\": [{\"term\": {\"message\": \"?0\"}}]}}")
+		Mono<Long> retrieveCountByText(String message);
 	}
 
 	/**

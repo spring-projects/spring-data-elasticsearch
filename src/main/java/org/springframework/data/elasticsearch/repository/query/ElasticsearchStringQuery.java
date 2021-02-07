@@ -70,7 +70,13 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	}
 
 	@Override
+	public boolean isCountQuery() {
+		return queryMethod.hasCountQueryAnnotation();
+	}
+
+	@Override
 	public Object execute(Object[] parameters) {
+
 		Class<?> clazz = queryMethod.getResultProcessor().getReturnedType().getDomainType();
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
 
@@ -86,7 +92,9 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 
 		Object result = null;
 
-		if (queryMethod.isPageQuery()) {
+		if (isCountQuery()) {
+			result = elasticsearchOperations.count(stringQuery, clazz, index);
+		} else if (queryMethod.isPageQuery()) {
 			stringQuery.setPageable(accessor.getPageable());
 			SearchHits<?> searchHits = elasticsearchOperations.search(stringQuery, clazz, index);
 			result = SearchHitSupport.searchPageFor(searchHits, stringQuery.getPageable());

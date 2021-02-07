@@ -75,7 +75,7 @@ public class ReactiveElasticsearchStringQuery extends AbstractReactiveElasticsea
 
 	@Override
 	boolean isCountQuery() {
-		return false;
+		return queryMethod.hasCountQueryAnnotation();
 	}
 
 	@Override
