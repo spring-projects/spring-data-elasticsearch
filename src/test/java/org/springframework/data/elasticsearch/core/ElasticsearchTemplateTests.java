@@ -53,12 +53,19 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
+import org.elasticsearch.common.lucene.search.function.CombineFunction;
+import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
 import org.elasticsearch.index.VersionType;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
+import org.elasticsearch.index.query.functionscore.GaussDecayFunctionBuilder;
 import org.elasticsearch.join.query.ParentIdQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.rescore.QueryRescoreMode;
+import org.elasticsearch.search.rescore.QueryRescorerBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -121,6 +128,7 @@ import org.springframework.lang.Nullable;
  * @author Roman Puchkovskiy
  * @author Subhobrata Dey
  * @author Farid Faoudi
+ * @author Peer Mueller
  */
 @SpringIntegrationTest
 public abstract class ElasticsearchTemplateTests {
@@ -3108,7 +3116,63 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(highlightField.get(1)).contains("<em>message</em>");
 	}
 
-	@Test // DATAES-738
+	@Test
+	void shouldRunRescoreQueryInSearchQuery() {
+		IndexCoordinates index = IndexCoordinates.of("test-index-rescore-entity-template");
+
+		// matches main query better
+		SampleEntity entity = SampleEntity.builder() //
+				.id("1") //
+				.message("some message") //
+				.rate(java.lang.Integer.MAX_VALUE)
+				.version(System.currentTimeMillis()) //
+				.build();
+
+		// high score from rescore query
+		SampleEntity entity2 = SampleEntity.builder() //
+				.id("2") //
+				.message("nothing") //
+				.rate(1)
+				.version(System.currentTimeMillis()) //
+				.build();
+
+		List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(entity, entity2));
+
+		operations.bulkIndex(indexQueries, index);
+		indexOperations.refresh();
+
+		NativeSearchQuery query = new NativeSearchQueryBuilder() //
+				.withQuery(
+						boolQuery().filter(existsQuery("rate")).should(termQuery("message", "message"))) //
+				.withRescorerQuery(new QueryRescorerBuilder(
+						new FunctionScoreQueryBuilder(
+								new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
+										new FilterFunctionBuilder(
+												new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5)
+														.setWeight(1f)),
+										new FilterFunctionBuilder(
+												new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5)
+														.setWeight(100f))})
+								.scoreMode(FunctionScoreQuery.ScoreMode.SUM)
+								.maxBoost(80f)
+								.boostMode(CombineFunction.REPLACE))
+						.setScoreMode(QueryRescoreMode.Max)
+						.windowSize(100))
+				.build();
+
+		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class, index);
+
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.getSearchHits()).hasSize(2);
+
+		SearchHit<SampleEntity> searchHit = searchHits.getSearchHit(0);
+		assertThat(searchHit.getContent().getMessage()).isEqualTo("nothing");
+		//score capped to 80
+		assertThat(searchHit.getScore()).isEqualTo(80f);
+	}
+
+	@Test
+		// DATAES-738
 	void shouldSaveEntityWithIndexCoordinates() {
 		String id = "42";
 		SampleEntity entity = new SampleEntity();

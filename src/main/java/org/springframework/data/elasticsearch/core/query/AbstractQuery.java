@@ -41,27 +41,41 @@ import org.springframework.util.Assert;
  * @author Sascha Woo
  * @author Farid Azaza
  * @author Peter-Josef Meisch
+ * @author Peer Mueller
  */
 abstract class AbstractQuery implements Query {
 
 	protected Pageable pageable = DEFAULT_PAGE;
-	@Nullable protected Sort sort;
+	@Nullable
+	protected Sort sort;
 	protected List<String> fields = new ArrayList<>();
-	@Nullable protected SourceFilter sourceFilter;
+	@Nullable
+	protected SourceFilter sourceFilter;
 	protected float minScore;
-	@Nullable protected Collection<String> ids;
-	@Nullable protected String route;
+	@Nullable
+	protected Collection<String> ids;
+	@Nullable
+	protected String route;
 	protected SearchType searchType = SearchType.DFS_QUERY_THEN_FETCH;
-	@Nullable protected IndicesOptions indicesOptions;
+	@Nullable
+	protected IndicesOptions indicesOptions;
 	protected boolean trackScores;
-	@Nullable protected String preference;
-	@Nullable protected Integer maxResults;
-	@Nullable protected HighlightQuery highlightQuery;
-	@Nullable private Boolean trackTotalHits;
-	@Nullable private Integer trackTotalHitsUpTo;
-	@Nullable private Duration scrollTime;
-	@Nullable private TimeValue timeout;
+	@Nullable
+	protected String preference;
+	@Nullable
+	protected Integer maxResults;
+	@Nullable
+	protected HighlightQuery highlightQuery;
+	@Nullable
+	private Boolean trackTotalHits;
+	@Nullable
+	private Integer trackTotalHitsUpTo;
+	@Nullable
+	private Duration scrollTime;
+	@Nullable
+	private TimeValue timeout;
 	private boolean explain = false;
+	protected List<RescorerQuery> rescorerQueries = new ArrayList<>();
 
 	@Override
 	@Nullable
@@ -282,5 +296,21 @@ abstract class AbstractQuery implements Query {
 	 */
 	public void setExplain(boolean explain) {
 		this.explain = explain;
+	}
+
+	@Override
+	public void addRescorerQuery(RescorerQuery rescorerQuery) {
+		this.rescorerQueries.add(rescorerQuery);
+	}
+
+	@Override
+	public void setRescorerQueries(List<RescorerQuery> rescorerQueryList) {
+		this.rescorerQueries.clear();
+		this.rescorerQueries.addAll(rescorerQueryList);
+	}
+
+	@Override
+	public List<RescorerQuery> getRescorerQueries() {
+		return rescorerQueries;
 	}
 }
