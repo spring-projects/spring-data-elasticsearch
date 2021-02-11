@@ -173,10 +173,12 @@ Returned by the low level scroll API functions in `ElasticsearchRestTemplate`, i
 .SearchHitsIterator<T>
 An Iterator returned by the streaming functions of the `SearchOperations` interface.
 
+[[elasticsearch.operations.queries]]
 == Queries
 
 Almost all of the methods defined in the `SearchOperations` and `ReactiveSearchOperations` interface take a `Query` parameter that defines the query to execute for searching. `Query` is an interface and Spring Data Elasticsearch provides three implementations: `CriteriaQuery`, `StringQuery` and `NativeSearchQuery`.
 
+[[elasticsearch.operations.criteriaquery]]
 === CriteriaQuery
 
 `CriteriaQuery` based queries allow the creation of queries to search for data without knowing the syntax or basics of Elasticsearch queries. They allow the user to build queries by simply chaining and combining `Criteria` objects that specifiy the criteria the searched documents must fulfill.
@@ -241,6 +243,7 @@ Query query = new CriteriaQuery(criteria);
 
 Please refer to the API documentation of the `Criteria` class for a complete overview of the different available operations.
 
+[[elasticsearch.operations.stringquery]]
 === StringQuery
 
 This class takes an Elasticsearch query as JSON String.
@@ -258,6 +261,7 @@ SearchHits<Person> searchHits = operations.search(query, Person.class);
 
 Using `StringQuery` may be appropriate if you already have an Elasticsearch query to use.
 
+[[elasticsearch.operations.nativesearchquery]]
 === NativeSearchQuery
 
 `NativeSearchQuery` is the class to use when you have a complex query, or a query that cannot be expressed by using the `Criteria` API, for example when building queries and using aggregates.
