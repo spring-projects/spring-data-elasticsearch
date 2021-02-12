@@ -62,6 +62,7 @@ abstract class AbstractQuery implements Query {
 	@Nullable private Duration scrollTime;
 	@Nullable private TimeValue timeout;
 	private boolean explain = false;
+	@Nullable private List<Object> searchAfter;
 
 	@Override
 	@Nullable
@@ -282,5 +283,16 @@ abstract class AbstractQuery implements Query {
 	 */
 	public void setExplain(boolean explain) {
 		this.explain = explain;
+	}
+
+	@Override
+	public void setSearchAfter(@Nullable List<Object> searchAfter) {
+		this.searchAfter = searchAfter;
+	}
+
+	@Nullable
+	@Override
+	public List<Object> getSearchAfter() {
+		return searchAfter;
 	}
 }

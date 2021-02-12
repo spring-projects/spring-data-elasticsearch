@@ -27,6 +27,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.lang.Nullable;
 
 /**
@@ -287,10 +288,26 @@ public interface Query {
 	TimeValue getTimeout();
 
 	/**
-	 * @return {@literal true} when the query has the eplain parameter set, defaults to {@literal false}
+	 * @return {@literal true} when the query has the explain parameter set, defaults to {@literal false}
 	 * @since 4.2
 	 */
 	default boolean getExplain() {
 		return false;
 	}
+
+	/**
+	 * Sets the setSearchAfter objects for this query.
+	 * 
+	 * @param searchAfter the setSearchAfter objects. These are obtained with {@link SearchHit#getSortValues()} from a
+	 *          search result.
+	 * @since 4.2
+	 */
+	void setSearchAfter(@Nullable List<Object> searchAfter);
+
+	/**
+	 * @return the search_after objects.
+	 * @since 4.2
+	 */
+	@Nullable
+	List<Object> getSearchAfter();
 }

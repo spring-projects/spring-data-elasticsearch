@@ -1127,7 +1127,6 @@ class RequestFactory {
 
 		if (query instanceof NativeSearchQuery) {
 			prepareNativeSearch((NativeSearchQuery) query, sourceBuilder);
-
 		}
 
 		if (query.getTrackTotalHits() != null) {
@@ -1146,6 +1145,10 @@ class RequestFactory {
 		}
 
 		sourceBuilder.explain(query.getExplain());
+
+		if (query.getSearchAfter() != null) {
+			sourceBuilder.searchAfter(query.getSearchAfter().toArray());
+		}
 
 		request.source(sourceBuilder);
 		return request;
@@ -1228,6 +1231,10 @@ class RequestFactory {
 		}
 
 		searchRequestBuilder.setExplain(query.getExplain());
+
+		if (query.getSearchAfter() != null) {
+			searchRequestBuilder.searchAfter(query.getSearchAfter().toArray());
+		}
 
 		return searchRequestBuilder;
 	}
