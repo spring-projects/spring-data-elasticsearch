@@ -630,7 +630,9 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		template.delete(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.expectNext(0L) //
+				.consumeNextWith(byQueryResponse -> {
+					assertThat(byQueryResponse.getDeleted()).isEqualTo(0L);
+				})
 				.verifyComplete();
 	}
 
@@ -654,6 +656,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.build();
 
 		template.delete(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
+				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
 				.verifyComplete();
@@ -681,6 +684,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.build();
 
 		template.delete(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
+				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
 				.verifyComplete();
@@ -696,6 +700,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
 
 		template.delete(query, SampleEntity.class) //
+				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
 				.verifyComplete();
@@ -709,6 +714,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("luke"));
 
 		template.delete(query, SampleEntity.class) //
+				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
 				.verifyComplete();

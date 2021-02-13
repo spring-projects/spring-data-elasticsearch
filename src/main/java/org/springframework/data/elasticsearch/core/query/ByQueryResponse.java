@@ -29,7 +29,7 @@ import org.springframework.lang.Nullable;
  * @author Farid Faoudi
  * @since 4.2
  */
-public class UpdateByQueryResponse {
+public class ByQueryResponse {
 
 	private final long took;
 	private final boolean timedOut;
@@ -44,7 +44,7 @@ public class UpdateByQueryResponse {
 	@Nullable private final String reasonCancelled;
 	private final List<Failure> failures;
 
-	private UpdateByQueryResponse(long took, boolean timedOut, long total, long updated, long deleted, int batches,
+	private ByQueryResponse(long took, boolean timedOut, long total, long updated, long deleted, int batches,
 			long versionConflicts, long noops, long bulkRetries, long searchRetries, @Nullable String reasonCancelled,
 			List<Failure> failures) {
 		this.took = took;
@@ -149,21 +149,21 @@ public class UpdateByQueryResponse {
 	}
 
 	/**
-	 * Create a new {@link UpdateByQueryResponseBuilder} to build {@link UpdateByQueryResponse}
+	 * Create a new {@link ByQueryResponseBuilder} to build {@link ByQueryResponse}
 	 *
-	 * @return a new {@link UpdateByQueryResponseBuilder} to build {@link UpdateByQueryResponse}
+	 * @return a new {@link ByQueryResponseBuilder} to build {@link ByQueryResponse}
 	 */
-	public static UpdateByQueryResponseBuilder builder() {
-		return new UpdateByQueryResponseBuilder();
+	public static ByQueryResponseBuilder builder() {
+		return new ByQueryResponseBuilder();
 	}
 
-	public static UpdateByQueryResponse of(BulkByScrollResponse bulkByScrollResponse) {
+	public static ByQueryResponse of(BulkByScrollResponse bulkByScrollResponse) {
 		final List<Failure> failures = bulkByScrollResponse.getBulkFailures() //
 				.stream() //
 				.map(Failure::of) //
 				.collect(Collectors.toList()); //
 
-		return UpdateByQueryResponse.builder() //
+		return ByQueryResponse.builder() //
 				.withTook(bulkByScrollResponse.getTook().getMillis()) //
 				.withTimedOut(bulkByScrollResponse.isTimedOut()) //
 				.withTotal(bulkByScrollResponse.getTotal()) //
@@ -331,7 +331,7 @@ public class UpdateByQueryResponse {
 		}
 	}
 
-	public static final class UpdateByQueryResponseBuilder {
+	public static final class ByQueryResponseBuilder {
 		private long took;
 		private boolean timedOut;
 		private long total;
@@ -345,71 +345,71 @@ public class UpdateByQueryResponse {
 		@Nullable private String reasonCancelled;
 		private List<Failure> failures = Collections.emptyList();
 
-		private UpdateByQueryResponseBuilder() {}
+		private ByQueryResponseBuilder() {}
 
-		public UpdateByQueryResponseBuilder withTook(long took) {
+		public ByQueryResponseBuilder withTook(long took) {
 			this.took = took;
 			return this;
 		}
 
-		public UpdateByQueryResponseBuilder withTimedOut(boolean timedOut) {
+		public ByQueryResponseBuilder withTimedOut(boolean timedOut) {
 			this.timedOut = timedOut;
 			return this;
 		}
 
-		public UpdateByQueryResponseBuilder withTotal(long total) {
+		public ByQueryResponseBuilder withTotal(long total) {
 			this.total = total;
 			return this;
 		}
 
-		public UpdateByQueryResponseBuilder withUpdated(long updated) {
+		public ByQueryResponseBuilder withUpdated(long updated) {
 			this.updated = updated;
 			return this;
 		}
 
-		public UpdateByQueryResponseBuilder withDeleted(long deleted) {
+		public ByQueryResponseBuilder withDeleted(long deleted) {
 			this.deleted = deleted;
 			return this;
 		}
 
-		public UpdateByQueryResponseBuilder withBatches(int batches) {
+		public ByQueryResponseBuilder withBatches(int batches) {
 			this.batches = batches;
 			return this;
 		}
 
-		public UpdateByQueryResponseBuilder withVersionConflicts(long versionConflicts) {
+		public ByQueryResponseBuilder withVersionConflicts(long versionConflicts) {
 			this.versionConflicts = versionConflicts;
 			return this;
 		}
 
-		public UpdateByQueryResponseBuilder withNoops(long noops) {
+		public ByQueryResponseBuilder withNoops(long noops) {
 			this.noops = noops;
 			return this;
 		}
 
-		public UpdateByQueryResponseBuilder withBulkRetries(long bulkRetries) {
+		public ByQueryResponseBuilder withBulkRetries(long bulkRetries) {
 			this.bulkRetries = bulkRetries;
 			return this;
 		}
 
-		public UpdateByQueryResponseBuilder withSearchRetries(long searchRetries) {
+		public ByQueryResponseBuilder withSearchRetries(long searchRetries) {
 			this.searchRetries = searchRetries;
 			return this;
 		}
 
-		public UpdateByQueryResponseBuilder withReasonCancelled(String reasonCancelled) {
+		public ByQueryResponseBuilder withReasonCancelled(String reasonCancelled) {
 			this.reasonCancelled = reasonCancelled;
 			return this;
 		}
 
-		public UpdateByQueryResponseBuilder withFailures(List<Failure> failures) {
+		public ByQueryResponseBuilder withFailures(List<Failure> failures) {
 			this.failures = failures;
 			return this;
 		}
 
-		public UpdateByQueryResponse build() {
-			return new UpdateByQueryResponse(took, timedOut, total, updated, deleted, batches, versionConflicts, noops,
-					bulkRetries, searchRetries, reasonCancelled, failures);
+		public ByQueryResponse build() {
+			return new ByQueryResponse(took, timedOut, total, updated, deleted, batches, versionConflicts, noops, bulkRetries,
+					searchRetries, reasonCancelled, failures);
 		}
 	}
 }

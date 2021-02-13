@@ -66,7 +66,7 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.suggest.Suggest;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
+import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -606,7 +606,7 @@ public interface ReactiveElasticsearchClient {
 	 *      * Query API on elastic.co</a>
 	 * @return a {@link Mono} emitting operation response.
 	 */
-	default Mono<UpdateByQueryResponse> updateBy(Consumer<UpdateByQueryRequest> consumer) {
+	default Mono<ByQueryResponse> updateBy(Consumer<UpdateByQueryRequest> consumer) {
 
 		final UpdateByQueryRequest request = new UpdateByQueryRequest();
 		consumer.accept(request);
@@ -621,7 +621,7 @@ public interface ReactiveElasticsearchClient {
 	 *      * Query API on elastic.co</a>
 	 * @return a {@link Mono} emitting operation response.
 	 */
-	default Mono<UpdateByQueryResponse> updateBy(UpdateByQueryRequest updateRequest) {
+	default Mono<ByQueryResponse> updateBy(UpdateByQueryRequest updateRequest) {
 		return updateBy(HttpHeaders.EMPTY, updateRequest);
 	}
 
@@ -634,7 +634,7 @@ public interface ReactiveElasticsearchClient {
 	 *      * Query API on elastic.co</a>
 	 * @return a {@link Mono} emitting operation response.
 	 */
-	Mono<UpdateByQueryResponse> updateBy(HttpHeaders headers, UpdateByQueryRequest updateRequest);
+	Mono<ByQueryResponse> updateBy(HttpHeaders headers, UpdateByQueryRequest updateRequest);
 
 	/**
 	 * Execute a {@link BulkRequest} against the {@literal bulk} API.

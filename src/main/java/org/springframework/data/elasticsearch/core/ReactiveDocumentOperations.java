@@ -24,8 +24,8 @@ import java.util.List;
 
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
+import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.util.Assert;
@@ -264,7 +264,7 @@ public interface ReactiveDocumentOperations {
 	 * @param entityType must not be {@literal null}.
 	 * @return a {@link Mono} emitting the number of the removed documents.
 	 */
-	Mono<Long> delete(Query query, Class<?> entityType);
+	Mono<ByQueryResponse> delete(Query query, Class<?> entityType);
 
 	/**
 	 * Delete the documents matching the given {@link Query} extracting index from entity metadata.
@@ -274,7 +274,7 @@ public interface ReactiveDocumentOperations {
 	 * @param index the target index, must not be {@literal null}
 	 * @return a {@link Mono} emitting the number of the removed documents.
 	 */
-	Mono<Long> delete(Query query, Class<?> entityType, IndexCoordinates index);
+	Mono<ByQueryResponse> delete(Query query, Class<?> entityType, IndexCoordinates index);
 
 	/**
 	 * Partial update of the document.
@@ -294,5 +294,5 @@ public interface ReactiveDocumentOperations {
 	 * @return a {@link Mono} emitting the update response
 	 * @since 4.2
 	 */
-	Mono<UpdateByQueryResponse> updateByQuery(UpdateQuery updateQuery, IndexCoordinates index);
+	Mono<ByQueryResponse> updateByQuery(UpdateQuery updateQuery, IndexCoordinates index);
 }

@@ -47,9 +47,9 @@ import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
+import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.support.SearchHitsUtil;
@@ -232,8 +232,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
-		requestFactory.deleteByQueryRequestBuilder(client, query, clazz, index).get();
+	public ByQueryResponse delete(Query query, Class<?> clazz, IndexCoordinates index) {
+		return ByQueryResponse.of(requestFactory.deleteByQueryRequestBuilder(client, query, clazz, index).get());
 	}
 
 	@Override
@@ -260,7 +260,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public UpdateByQueryResponse updateByQuery(UpdateQuery query, IndexCoordinates index) {
+	public ByQueryResponse updateByQuery(UpdateQuery query, IndexCoordinates index) {
 
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
@@ -275,7 +275,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		// UpdateByQueryRequestBuilder has not parameters to set a routing value
 
 		final BulkByScrollResponse bulkByScrollResponse = updateByQueryRequestBuilder.execute().actionGet();
-		return UpdateByQueryResponse.of(bulkByScrollResponse);
+		return ByQueryResponse.of(bulkByScrollResponse);
 	}
 
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,

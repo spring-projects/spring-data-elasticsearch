@@ -47,3 +47,9 @@ If a refresh policy is set, then it will be used by the repositories as well.
 
 When configuring Spring Data Elasticsearch like described in <<elasticsearch.clients>> by using `ElasticsearchConfigurationSupport`, `AbstractElasticsearchConfiguration` or `AbstractReactiveElasticsearchConfiguration` the refresh policy will be initialized to `null`.
 Previously the reactive code initialized this to `IMMEDIATE`, now reactive and non-reactive code show the same behaviour.
+
+=== Method return types
+
+==== delete methods that take a Query
+
+The reactive methods previously returned a `Mono<Long>` with the number of deleted documents, the non reactive versions were void. They now return a `Mono<ByQueryResponse>` which contains much more detailed information about the deleted documents and errors that might have occurred.

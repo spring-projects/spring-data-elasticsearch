@@ -67,7 +67,7 @@ import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperatio
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
+import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.http.HttpHeaders;
@@ -478,7 +478,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.setScript(new Script(ScriptType.INLINE, "painless", script, params)); //
 
 		client.updateBy(request) //
-				.map(UpdateByQueryResponse::getUpdated) //
+				.map(ByQueryResponse::getUpdated) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
 				.verifyComplete(); //
@@ -510,7 +510,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.setScript(new Script(ScriptType.INLINE, "painless", script, params)); //
 
 		client.updateBy(request) //
-				.map(UpdateByQueryResponse::getUpdated) //
+				.map(ByQueryResponse::getUpdated) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
 				.verifyComplete(); //

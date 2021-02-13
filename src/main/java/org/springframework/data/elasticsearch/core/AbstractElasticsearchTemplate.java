@@ -53,6 +53,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
+import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
@@ -275,8 +276,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public void delete(Query query, Class<?> clazz) {
-		delete(query, clazz, getIndexCoordinatesFor(clazz));
+	public ByQueryResponse delete(Query query, Class<?> clazz) {
+		return delete(query, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override

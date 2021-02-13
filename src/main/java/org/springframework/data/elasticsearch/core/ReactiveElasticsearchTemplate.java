@@ -74,7 +74,7 @@ import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
+import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.routing.DefaultRoutingResolver;
@@ -526,11 +526,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(Query, Class, IndexCoordinates)
 	 */
 	@Override
-	public Mono<Long> delete(Query query, Class<?> entityType, IndexCoordinates index) {
+	public Mono<ByQueryResponse> delete(Query query, Class<?> entityType, IndexCoordinates index) {
 
 		Assert.notNull(query, "Query must not be null!");
 
-		return doDeleteBy(query, entityType, index).map(BulkByScrollResponse::getDeleted).next();
+		return doDeleteBy(query, entityType, index).map(ByQueryResponse::of);
 	}
 
 	@Override
@@ -556,7 +556,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public Mono<UpdateByQueryResponse> updateByQuery(UpdateQuery updateQuery, IndexCoordinates index) {
+	public Mono<ByQueryResponse> updateByQuery(UpdateQuery updateQuery, IndexCoordinates index) {
 
 		Assert.notNull(updateQuery, "updateQuery must not be null");
 		Assert.notNull(index, "Index must not be null");
@@ -578,13 +578,13 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public Mono<Long> delete(Query query, Class<?> entityType) {
+	public Mono<ByQueryResponse> delete(Query query, Class<?> entityType) {
 		return delete(query, entityType, getIndexCoordinatesFor(entityType));
 	}
 
-	private Flux<BulkByScrollResponse> doDeleteBy(Query query, Class<?> entityType, IndexCoordinates index) {
+	private Mono<BulkByScrollResponse> doDeleteBy(Query query, Class<?> entityType, IndexCoordinates index) {
 
-		return Flux.defer(() -> {
+		return Mono.defer(() -> {
 			DeleteByQueryRequest request = requestFactory.deleteByQueryRequest(query, entityType, index);
 			return doDeleteBy(prepareDeleteByRequest(request));
 		});
