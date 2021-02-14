@@ -32,6 +32,7 @@ import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.client.indices.GetMappingsRequest;
@@ -51,6 +52,7 @@ import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -60,6 +62,7 @@ import org.springframework.util.Assert;
  * 
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author George Popides
  * @since 4.0
  */
 class DefaultIndexOperations extends AbstractDefaultIndexOperations implements IndexOperations {
@@ -254,6 +257,17 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 				.deleteIndexTemplateRequest(deleteTemplateRequest);
 		return restTemplate.execute(
 				client -> client.indices().deleteTemplate(deleteIndexTemplateRequest, RequestOptions.DEFAULT).isAcknowledged());
+	}
+
+	@Override
+	public List<IndexInformation> getInformation() {
+		GetIndexRequest request = requestFactory.getIndexRequest(getIndexCoordinates());
+
+		return restTemplate.execute(
+				client -> {
+					GetIndexResponse getIndexResponse = client.indices().get(request, RequestOptions.DEFAULT);
+					return IndexInformation.createList(getIndexResponse);
+				});
 	}
 
 	// endregion

@@ -25,7 +25,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
+import org.elasticsearch.common.settings.Settings;
 import org.springframework.data.elasticsearch.core.document.Explanation;
+import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -86,6 +89,7 @@ import org.springframework.util.StringUtils;
  * @author Aleksei Arsenev
  * @author Russell Parry
  * @author Roman Puchkovskiy
+ * @author George Popides
  */
 @SpringIntegrationTest
 public class ReactiveElasticsearchTemplateIntegrationTests {
@@ -1098,6 +1102,24 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				})
 				.verifyComplete();
 	}
+
+
+	@Test // #1646
+	@DisplayName("should return info of all indices")
+	void shouldReturnInformationListOfAllIndices() {
+		template.indexOps(IndexCoordinates.of("*"))
+				.getInformation().as(StepVerifier::create)
+				.consumeNextWith(indexInformationList -> {
+					for (IndexInformation indexInformation : indexInformationList) {
+						assertThat(indexInformation.getName()).isInstanceOf(String.class);
+						assertThat(indexInformation.getMappings()).isInstanceOf(MappingMetadata.class);
+						assertThat(indexInformation.getSettings()).isInstanceOf(Settings.class);
+						assertThat(indexInformation.getAliases()).isInstanceOf(List.class);
+					}
+				})
+				.verifyComplete();
+	}
+
 	// endregion
 
 	// region Helper functions

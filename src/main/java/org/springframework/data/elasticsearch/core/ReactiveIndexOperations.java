@@ -15,8 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -284,5 +286,6 @@ public interface ReactiveIndexOperations {
 	 */
 	IndexCoordinates getIndexCoordinates();
 
+	Mono<List<IndexInformation>> getInformation();
 	// endregion
 }

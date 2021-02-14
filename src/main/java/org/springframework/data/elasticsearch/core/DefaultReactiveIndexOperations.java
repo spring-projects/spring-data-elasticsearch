@@ -18,8 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static org.elasticsearch.client.Requests.*;
 import static org.springframework.util.StringUtils.*;
 
-import reactor.core.publisher.Mono;
-
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,7 +37,6 @@ import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
@@ -55,11 +53,16 @@ import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
+import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import reactor.core.publisher.Mono;
+
 /**
  * @author Peter-Josef Meisch
+ * @author George Popides
  * @since 4.1
  */
 class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
@@ -302,6 +305,14 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public IndexCoordinates getIndexCoordinates() {
 		return (boundClass != null) ? getIndexCoordinatesFor(boundClass) : boundIndex;
+	}
+
+	@Override
+	public Mono<List<IndexInformation>> getInformation() {
+		org.elasticsearch.client.indices.GetIndexRequest getIndexRequest = requestFactory.getIndexRequest(getIndexCoordinates());
+
+		return Mono.from(operations.executeWithIndicesClient(client -> client.getIndex(HttpHeaders.EMPTY, getIndexRequest)
+				.map(IndexInformation::createList)));
 	}
 
 	private IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {
