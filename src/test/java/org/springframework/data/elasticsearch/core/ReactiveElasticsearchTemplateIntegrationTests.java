@@ -20,18 +20,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.elasticsearch.cluster.metadata.MappingMetadata;
-import org.elasticsearch.common.settings.Settings;
-import org.springframework.data.elasticsearch.core.document.Explanation;
-import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
-
 import java.lang.Boolean;
 import java.lang.Long;
 import java.lang.Object;
@@ -44,6 +32,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -72,11 +61,20 @@ import org.springframework.data.elasticsearch.UncategorizedElasticsearchExceptio
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.util.StringUtils;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 /**
  * Integration tests for {@link ReactiveElasticsearchTemplate}.
@@ -1107,15 +1105,21 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Test // #1646
 	@DisplayName("should return info of all indices")
 	void shouldReturnInformationListOfAllIndices() {
-		template.indexOps(IndexCoordinates.of("*"))
-				.getInformation().as(StepVerifier::create)
-				.consumeNextWith(indexInformationList -> {
-					for (IndexInformation indexInformation : indexInformationList) {
+		String indexName = "index-for-reactive-test";
+		IndexCoordinates index = IndexCoordinates.of(indexName);
+
+		// create the index
+		template.indexOps(index).create().block();
+
+		template.indexOps(index)
+				.getInformation()
+				.as(StepVerifier::create)
+				.consumeNextWith(indexInformation -> {
+						assertThat(indexInformation.getName()).isNotNull();
 						assertThat(indexInformation.getName()).isInstanceOf(String.class);
-						assertThat(indexInformation.getMappings()).isInstanceOf(MappingMetadata.class);
-						assertThat(indexInformation.getSettings()).isInstanceOf(Settings.class);
-						assertThat(indexInformation.getAliases()).isInstanceOf(List.class);
-					}
+						assertThat(indexInformation.getMappings()).isInstanceOf(org.springframework.data.elasticsearch.core.document.Document.class);
+						assertThat(indexInformation.getSettings()).isInstanceOf(org.springframework.data.elasticsearch.core.document.Document.class);
+						assertThat(indexInformation.getAliases()).isInstanceOf(Set.class);
 				})
 				.verifyComplete();
 	}

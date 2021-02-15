@@ -51,16 +51,9 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
-import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
-import org.elasticsearch.client.indices.GetMappingsRequest;
-import org.elasticsearch.client.indices.IndexTemplateMetadata;
-import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
-import org.elasticsearch.client.indices.PutIndexTemplateRequest;
-import org.elasticsearch.client.indices.PutMappingRequest;
+import org.elasticsearch.client.indices.*;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.geo.GeoDistance;
@@ -1840,6 +1833,79 @@ class RequestFactory {
 
 		return settings;
 	}
+
+	/**
+	 * extract the index settings information from a given index
+	 * @param getIndexResponse the elastic GetIndexResponse
+	 * @param indexName the index name
+	 * @return a document that represents {@link Settings}
+	 */
+	public Document settingsFromGetIndexResponse(GetIndexResponse getIndexResponse, String indexName) {
+		Document document = Document.create();
+
+		Settings indexSettings = getIndexResponse.getSettings().get(indexName);
+
+		if (!indexSettings.isEmpty()) {
+			for (String key : indexSettings.keySet()) {
+				document.put(key, indexSettings.get(key));
+			}
+		}
+
+		return document;
+	}
+
+	/**
+	 * extract the mappings information from a given index
+	 * @param getIndexResponse the elastic GetIndexResponse
+	 * @param indexName the index name
+	 * @return a document that represents {@link MappingMetadata}
+	 */
+	public Document mappingsFromGetIndexResponse(GetIndexResponse getIndexResponse, String indexName) {
+		Document document = Document.create();
+
+
+		if (getIndexResponse.getMappings().containsKey(indexName)) {
+			MappingMetadata mappings = getIndexResponse.getMappings().get(indexName);
+			Map<String, Object> mappingsAsMap = mappings.getSourceAsMap();
+
+			for (String key : mappingsAsMap.keySet()) {
+				document.put(key, mappingsAsMap);
+			}
+		}
+
+		return document;
+	}
+
+	public Document settingsFromGetIndexResponse(org.elasticsearch.action.admin.indices.get.GetIndexResponse getIndexResponse, String indexName) {
+		Document document = Document.create();
+
+		Settings indexSettings = getIndexResponse.getSettings().get(indexName);
+
+		if (!indexSettings.isEmpty()) {
+			for (String key : indexSettings.keySet()) {
+				document.put(key, indexSettings.get(key));
+			}
+		}
+
+		return document;
+	}
+
+	public Document mappingsFromGetIndexResponse(org.elasticsearch.action.admin.indices.get.GetIndexResponse getIndexResponse, String indexName) {
+		Document document = Document.create();
+
+
+		if (getIndexResponse.getMappings().containsKey(indexName)) {
+			MappingMetadata mappings = getIndexResponse.getMappings().get(indexName).get(indexName);
+			Map<String, Object> mappingsAsMap = mappings.getSourceAsMap();
+
+			for (String key : mappingsAsMap.keySet()) {
+				document.put(key, mappingsAsMap);
+			}
+		}
+
+		return document;
+	}
+
 
 	// endregion
 }

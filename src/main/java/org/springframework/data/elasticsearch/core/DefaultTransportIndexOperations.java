@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -308,8 +309,19 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 		getIndexRequest.indices(index.getIndexNames());
 
-		GetIndexResponse response = client.admin().indices().getIndex(getIndexRequest).actionGet();
+	 	Map<String, Set<AliasData>>	aliases = getAliases(index.getIndexNames());
 
-		return IndexInformation.createList(response);
+		GetIndexResponse getIndexResponse = client.admin().indices().getIndex(getIndexRequest).actionGet();
+		List<IndexInformation> indexInformationList = new ArrayList<>();
+
+		for (String indexName : getIndexResponse.getIndices()) {
+			Document settings = requestFactory.settingsFromGetIndexResponse(getIndexResponse, indexName);
+			Document mappings = requestFactory.mappingsFromGetIndexResponse(getIndexResponse, indexName);
+			Set<AliasData> indexAliases = aliases.get(indexName);
+
+			indexInformationList.add(IndexInformation.create(indexName, settings, mappings, indexAliases));
+		}
+
+		return indexInformationList;
 	}
 }

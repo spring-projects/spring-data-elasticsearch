@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static org.elasticsearch.client.Requests.*;
 import static org.springframework.util.StringUtils.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,6 +59,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -308,11 +310,24 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	}
 
 	@Override
-	public Mono<List<IndexInformation>> getInformation() {
+	public Flux<IndexInformation> getInformation() {
 		org.elasticsearch.client.indices.GetIndexRequest getIndexRequest = requestFactory.getIndexRequest(getIndexCoordinates());
 
 		return Mono.from(operations.executeWithIndicesClient(client -> client.getIndex(HttpHeaders.EMPTY, getIndexRequest)
-				.map(IndexInformation::createList)));
+				.flatMap(getIndexResponse -> getAliasesForIndex(getIndexCoordinates().getIndexNames()).map(aliases -> {
+					List<IndexInformation> indexInformationList = new ArrayList<>();
+
+					for (String indexName : getIndexResponse.getIndices()) {
+						Document settings = requestFactory.settingsFromGetIndexResponse(getIndexResponse, indexName);
+						Document mappings = requestFactory.mappingsFromGetIndexResponse(getIndexResponse, indexName);
+						Set<AliasData> indexAliases = aliases.get(indexName);
+
+						indexInformationList.add(IndexInformation.create(indexName, settings, mappings, indexAliases));
+					}
+					return indexInformationList;
+				})
+				))
+		).flatMapMany(Flux::fromIterable);
 	}
 
 	private IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {

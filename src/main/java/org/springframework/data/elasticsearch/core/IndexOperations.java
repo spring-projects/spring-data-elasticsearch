@@ -42,6 +42,7 @@ import org.springframework.lang.Nullable;
  * 
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author George Popides
  * @since 4.0
  */
 public interface IndexOperations {
@@ -318,6 +319,12 @@ public interface IndexOperations {
 	 */
 	IndexCoordinates getIndexCoordinates();
 
+
+	/**
+	 *
+	 * @return a list of {@link IndexInformation}
+	 * @since 4.2
+	 */
 	List<IndexInformation> getInformation();
 
 	// endregion

@@ -261,12 +261,25 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 
 	@Override
 	public List<IndexInformation> getInformation() {
-		GetIndexRequest request = requestFactory.getIndexRequest(getIndexCoordinates());
+		IndexCoordinates indexCoordinates = getIndexCoordinates();
+		GetIndexRequest request = requestFactory.getIndexRequest(indexCoordinates);
+
+		Map<String, Set<AliasData>> aliases = getAliasesForIndex(indexCoordinates.getIndexNames());
 
 		return restTemplate.execute(
 				client -> {
 					GetIndexResponse getIndexResponse = client.indices().get(request, RequestOptions.DEFAULT);
-					return IndexInformation.createList(getIndexResponse);
+					List<IndexInformation> indexInformationList = new ArrayList<>();
+
+					for (String indexName : getIndexResponse.getIndices()) {
+						Document settings = requestFactory.settingsFromGetIndexResponse(getIndexResponse, indexName);
+						Document mappings = requestFactory.mappingsFromGetIndexResponse(getIndexResponse, indexName);
+						Set<AliasData> indexAliases = aliases.get(indexName);
+
+						indexInformationList.add(IndexInformation.create(indexName, settings, mappings, indexAliases));
+					}
+
+					return indexInformationList;
 				});
 	}
 

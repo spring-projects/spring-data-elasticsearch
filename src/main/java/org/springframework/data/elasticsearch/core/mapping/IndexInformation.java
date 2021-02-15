@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,11 @@
 
 package org.springframework.data.elasticsearch.core.mapping;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.Set;
 
-import org.elasticsearch.client.indices.GetIndexResponse;
-import org.elasticsearch.cluster.metadata.AliasMetadata;
-import org.elasticsearch.cluster.metadata.MappingMetadata;
-import org.elasticsearch.common.settings.Settings;
+import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.lang.Nullable;
 
 /**
  * Immutable object that holds information(name, settings, mappings, aliases) about an Index
@@ -33,88 +30,49 @@ import org.elasticsearch.common.settings.Settings;
  */
 public class IndexInformation {
 	private final String name;
-	private final Settings settings;
-	private final MappingMetadata mappings;
-	private final List<AliasMetadata> aliases;
+	@Nullable
+	private final Document settings;
+	@Nullable
+	private final Document mappings;
+	@Nullable
+	private final Set<AliasData> aliases;
 
 
-	public static List<IndexInformation> createList(GetIndexResponse getIndexResponse) {
-		return buildIndexInformationList(getIndexResponse);
+	public static IndexInformation create(
+			String indexName,
+			@Nullable Document settings,
+			@Nullable Document mappings,
+			@Nullable Set<AliasData> aliases
+	) {
+		return new IndexInformation(indexName, settings, mappings, aliases);
 	}
 
-	public static List<IndexInformation> createList(org.elasticsearch.action.admin.indices.get.GetIndexResponse getIndexResponse) {
-		return buildIndexInformationList(getIndexResponse);
+	private IndexInformation(
+			String indexName,
+			@Nullable Document settings,
+			@Nullable Document mappings,
+			@Nullable Set<AliasData> aliases
+	) {
+		this.name = indexName;
+		this.settings = settings;
+		this.mappings = mappings;
+		this.aliases = aliases;
 	}
 
-	private static List<IndexInformation> buildIndexInformationList(GetIndexResponse response) {
-		List<IndexInformation> indexInformationList = new ArrayList<>();
-		for (String indexName : response.getIndices()) {
-			indexInformationList.add(IndexInformation.of(indexName, response));
-		}
-		return indexInformationList;
-	}
-
-	private static List<IndexInformation> buildIndexInformationList(org.elasticsearch.action.admin.indices.get.GetIndexResponse response) {
-		List<IndexInformation> indexInformationList = new ArrayList<>();
-		for (String indexName : response.getIndices()) {
-			indexInformationList.add(IndexInformation.of(indexName, response));
-		}
-		return indexInformationList;
-	}
-
-	private static IndexInformation of(String indexName, org.elasticsearch.action.admin.indices.get.GetIndexResponse getIndexResponse) {
-		Settings settings = getIndexResponse.getSettings().get(indexName);
-		MappingMetadata mappingMetadata = getIndexResponse.getMappings().get(indexName).get("indexName");
-		List<AliasMetadata> aliases = getIndexResponse.getAliases().get(indexName);
-
-		return new IndexInformation(indexName, settings, mappingMetadata, aliases);
-	}
-
-	private static IndexInformation of(String indexName, GetIndexResponse getIndexResponse) {
-		Settings settings = getIndexResponse.getSettings().get(indexName);
-		MappingMetadata mappingMetadata = getIndexResponse.getMappings().get(indexName);
-		List<AliasMetadata> aliases = getIndexResponse.getAliases().get(indexName);
-
-		return new IndexInformation(indexName, settings, mappingMetadata, aliases);
+	public Document getMappings() {
+		return mappings;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public Settings getSettings() {
+	public Document getSettings() {
 		return settings;
 	}
 
-	public List<AliasMetadata> getAliases() {
+	public Set<AliasData> getAliases() {
 		return aliases;
 	}
 
-	public MappingMetadata getMappings() {
-		return mappings;
-	}
-
-	private IndexInformation(String name, Settings settings, MappingMetadata mappingMetadata, List<AliasMetadata> aliases) {
-		this.name = name;
-		this.settings = settings;
-		this.mappings = mappingMetadata;
-		this.aliases = aliases;
-	}
-
-	@Override
-	public String toString() {
-		return "IndexInformation{" + "indexName=" + name + "}";
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		} else if (o != null && this.getClass() == o.getClass()) {
-			IndexInformation that = (IndexInformation)o;
-			return Objects.equals(this.name, that.name);
-		} else {
-			return false;
-		}
-	}
 }
