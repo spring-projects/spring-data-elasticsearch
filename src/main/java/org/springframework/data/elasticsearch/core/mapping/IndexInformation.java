@@ -16,10 +16,10 @@
 
 package org.springframework.data.elasticsearch.core.mapping;
 
-import java.util.Set;
+import java.util.List;
 
+import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.lang.Nullable;
 
 /**
@@ -35,14 +35,14 @@ public class IndexInformation {
 	@Nullable
 	private final Document mappings;
 	@Nullable
-	private final Set<AliasData> aliases;
+	private final List<AliasMetadata> aliases;
 
 
 	public static IndexInformation create(
 			String indexName,
 			@Nullable Document settings,
 			@Nullable Document mappings,
-			@Nullable Set<AliasData> aliases
+			@Nullable List<AliasMetadata> aliases
 	) {
 		return new IndexInformation(indexName, settings, mappings, aliases);
 	}
@@ -51,7 +51,7 @@ public class IndexInformation {
 			String indexName,
 			@Nullable Document settings,
 			@Nullable Document mappings,
-			@Nullable Set<AliasData> aliases
+			@Nullable List<AliasMetadata> aliases
 	) {
 		this.name = indexName;
 		this.settings = settings;
@@ -71,7 +71,7 @@ public class IndexInformation {
 		return settings;
 	}
 
-	public Set<AliasData> getAliases() {
+	public List<AliasMetadata> getAliases() {
 		return aliases;
 	}
 

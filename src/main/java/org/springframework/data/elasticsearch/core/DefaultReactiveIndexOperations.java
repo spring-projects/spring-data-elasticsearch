@@ -18,8 +18,6 @@ package org.springframework.data.elasticsearch.core;
 import static org.elasticsearch.client.Requests.*;
 import static org.springframework.util.StringUtils.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -76,6 +74,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	private final RequestFactory requestFactory;
 	private final ReactiveElasticsearchOperations operations;
 	private final ElasticsearchConverter converter;
+	private final ResponseConverter responseConverter;
 
 	public DefaultReactiveIndexOperations(ReactiveElasticsearchOperations operations, IndexCoordinates index) {
 
@@ -85,6 +84,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.operations = operations;
 		this.converter = operations.getElasticsearchConverter();
 		this.requestFactory = new RequestFactory(operations.getElasticsearchConverter());
+		this.responseConverter = new ResponseConverter(requestFactory);
 		this.boundClass = null;
 		this.boundIndex = index;
 	}
@@ -97,6 +97,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.operations = operations;
 		this.converter = operations.getElasticsearchConverter();
 		this.requestFactory = new RequestFactory(operations.getElasticsearchConverter());
+		this.responseConverter = new ResponseConverter(requestFactory);
 		this.boundClass = clazz;
 		this.boundIndex = getIndexCoordinatesFor(clazz);
 	}
@@ -164,11 +165,11 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Document> createMapping(Class<?> clazz) {
 
-        Mapping mappingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Mapping.class);
+		Mapping mappingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Mapping.class);
 
-        if (mappingAnnotation != null) {
-            return loadDocument(mappingAnnotation.mappingPath(), "@Mapping");
-        }
+		if (mappingAnnotation != null) {
+			return loadDocument(mappingAnnotation.mappingPath(), "@Mapping");
+		}
 
 		String mapping = new MappingBuilder(converter).buildPropertyMapping(clazz);
 		return Mono.just(Document.parse(mapping));
@@ -206,11 +207,11 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Document> createSettings(Class<?> clazz) {
 
-        Setting setting = AnnotatedElementUtils.findMergedAnnotation(clazz, Setting.class);
+		Setting setting = AnnotatedElementUtils.findMergedAnnotation(clazz, Setting.class);
 
-        if (setting != null) {
-            return loadDocument(setting.settingPath(), "@Setting");
-        }
+		if (setting != null) {
+			return loadDocument(setting.settingPath(), "@Setting");
+		}
 
 		return Mono.just(getRequiredPersistentEntity(clazz).getDefaultSettings());
 	}
@@ -313,21 +314,9 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	public Flux<IndexInformation> getInformation() {
 		org.elasticsearch.client.indices.GetIndexRequest getIndexRequest = requestFactory.getIndexRequest(getIndexCoordinates());
 
-		return Mono.from(operations.executeWithIndicesClient(client -> client.getIndex(HttpHeaders.EMPTY, getIndexRequest)
-				.flatMap(getIndexResponse -> getAliasesForIndex(getIndexCoordinates().getIndexNames()).map(aliases -> {
-					List<IndexInformation> indexInformationList = new ArrayList<>();
-
-					for (String indexName : getIndexResponse.getIndices()) {
-						Document settings = requestFactory.settingsFromGetIndexResponse(getIndexResponse, indexName);
-						Document mappings = requestFactory.mappingsFromGetIndexResponse(getIndexResponse, indexName);
-						Set<AliasData> indexAliases = aliases.get(indexName);
-
-						indexInformationList.add(IndexInformation.create(indexName, settings, mappings, indexAliases));
-					}
-					return indexInformationList;
-				})
-				))
-		).flatMapMany(Flux::fromIterable);
+		 return Mono.from(operations.executeWithIndicesClient(client ->
+				 client.getIndex(HttpHeaders.EMPTY, getIndexRequest).map(responseConverter::indexInformationCollection)))
+				 .flatMapMany(Flux::fromIterable);
 	}
 
 	private IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {

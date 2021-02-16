@@ -70,15 +70,18 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultIndexOperations.class);
 
 	private final ElasticsearchRestTemplate restTemplate;
+	private final ResponseConverter responseConverter;
 
 	public DefaultIndexOperations(ElasticsearchRestTemplate restTemplate, Class<?> boundClass) {
 		super(restTemplate.getElasticsearchConverter(), boundClass);
 		this.restTemplate = restTemplate;
+		this.responseConverter = initResponseConverter(restTemplate);
 	}
 
 	public DefaultIndexOperations(ElasticsearchRestTemplate restTemplate, IndexCoordinates boundIndex) {
 		super(restTemplate.getElasticsearchConverter(), boundIndex);
 		this.restTemplate = restTemplate;
+		this.responseConverter = initResponseConverter(restTemplate);
 	}
 
 	@Override
@@ -264,24 +267,17 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
 		GetIndexRequest request = requestFactory.getIndexRequest(indexCoordinates);
 
-		Map<String, Set<AliasData>> aliases = getAliasesForIndex(indexCoordinates.getIndexNames());
-
 		return restTemplate.execute(
 				client -> {
 					GetIndexResponse getIndexResponse = client.indices().get(request, RequestOptions.DEFAULT);
-					List<IndexInformation> indexInformationList = new ArrayList<>();
-
-					for (String indexName : getIndexResponse.getIndices()) {
-						Document settings = requestFactory.settingsFromGetIndexResponse(getIndexResponse, indexName);
-						Document mappings = requestFactory.mappingsFromGetIndexResponse(getIndexResponse, indexName);
-						Set<AliasData> indexAliases = aliases.get(indexName);
-
-						indexInformationList.add(IndexInformation.create(indexName, settings, mappings, indexAliases));
-					}
-
-					return indexInformationList;
+					return responseConverter.indexInformationCollection(getIndexResponse);
 				});
 	}
 
 	// endregion
+
+	private ResponseConverter initResponseConverter(ElasticsearchRestTemplate restTemplate) {
+		return new ResponseConverter(new RequestFactory(restTemplate.getElasticsearchConverter()));
+	}
+
 }

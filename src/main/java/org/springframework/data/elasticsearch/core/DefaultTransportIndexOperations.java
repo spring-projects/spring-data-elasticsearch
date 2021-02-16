@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -77,18 +76,22 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTransportIndexOperations.class);
 
+	private final ResponseConverter responseConverter;
+
 	private final Client client;
 
 	public DefaultTransportIndexOperations(Client client, ElasticsearchConverter elasticsearchConverter,
 			Class<?> boundClass) {
 		super(elasticsearchConverter, boundClass);
 		this.client = client;
+		this.responseConverter = initResponseConverter(elasticsearchConverter);
 	}
 
 	public DefaultTransportIndexOperations(Client client, ElasticsearchConverter elasticsearchConverter,
 			IndexCoordinates boundIndex) {
 		super(elasticsearchConverter, boundIndex);
 		this.client = client;
+		this.responseConverter = initResponseConverter(elasticsearchConverter);
 	}
 
 	@Override
@@ -309,19 +312,12 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 		getIndexRequest.indices(index.getIndexNames());
 
-	 	Map<String, Set<AliasData>>	aliases = getAliases(index.getIndexNames());
-
 		GetIndexResponse getIndexResponse = client.admin().indices().getIndex(getIndexRequest).actionGet();
-		List<IndexInformation> indexInformationList = new ArrayList<>();
 
-		for (String indexName : getIndexResponse.getIndices()) {
-			Document settings = requestFactory.settingsFromGetIndexResponse(getIndexResponse, indexName);
-			Document mappings = requestFactory.mappingsFromGetIndexResponse(getIndexResponse, indexName);
-			Set<AliasData> indexAliases = aliases.get(indexName);
+		return responseConverter.indexInformationCollection(getIndexResponse);
+	}
 
-			indexInformationList.add(IndexInformation.create(indexName, settings, mappings, indexAliases));
-		}
-
-		return indexInformationList;
+	private ResponseConverter initResponseConverter(ElasticsearchConverter elasticsearchConverter) {
+		return new ResponseConverter(new RequestFactory(elasticsearchConverter));
 	}
 }

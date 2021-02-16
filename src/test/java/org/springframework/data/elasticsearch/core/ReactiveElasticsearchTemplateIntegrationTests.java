@@ -32,7 +32,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -60,6 +59,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -1103,23 +1104,28 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 
 	@Test // #1646
-	@DisplayName("should return info of all indices")
+	@DisplayName("should return info of all indices using reactive template")
 	void shouldReturnInformationListOfAllIndices() {
-		String indexName = "index-for-reactive-test";
-		IndexCoordinates index = IndexCoordinates.of(indexName);
+		String indexName = "test-index-reactive-information-list";
+		ReactiveIndexOperations indexOps = template.indexOps(EntityWithSettingsAndMappingsReactive.class);
 
-		// create the index
-		template.indexOps(index).create().block();
+		indexOps.create().block();
+		indexOps.putMapping().block();
 
-		template.indexOps(index)
+		indexOps
 				.getInformation()
 				.as(StepVerifier::create)
 				.consumeNextWith(indexInformation -> {
-						assertThat(indexInformation.getName()).isNotNull();
-						assertThat(indexInformation.getName()).isInstanceOf(String.class);
-						assertThat(indexInformation.getMappings()).isInstanceOf(org.springframework.data.elasticsearch.core.document.Document.class);
-						assertThat(indexInformation.getSettings()).isInstanceOf(org.springframework.data.elasticsearch.core.document.Document.class);
-						assertThat(indexInformation.getAliases()).isInstanceOf(Set.class);
+					assertThat(indexInformation.getSettings().get("index.number_of_shards")).isEqualTo("1");
+					assertThat(indexInformation.getSettings().get("index.number_of_replicas")).isEqualTo("0");
+					assertThat(indexInformation.getSettings().get("index.analysis.analyzer.emailAnalyzer.type")).isEqualTo("custom");
+
+					assertThat(indexInformation.getMappings()).containsKey("properties");
+
+					assertThat(indexInformation.getName()).isEqualTo(indexName);
+					assertThat(indexInformation.getMappings()).isInstanceOf(org.springframework.data.elasticsearch.core.document.Document.class);
+					assertThat(indexInformation.getSettings()).isInstanceOf(org.springframework.data.elasticsearch.core.document.Document.class);
+					assertThat(indexInformation.getAliases()).isInstanceOf(List.class);
 				})
 				.verifyComplete();
 	}
@@ -1155,6 +1161,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 			template.saveAll(Mono.just(Arrays.asList(entities)), indexCoordinates).then(indexOperations.refresh()).block();
 		}
 	}
+
 	// endregion
 
 	// region Entities
@@ -1219,6 +1226,15 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	static class VersionedEntity {
 		@Id private String id;
 		@Version private Long version;
+	}
+
+	@Data
+	@Document(indexName = "test-index-reactive-information-list", createIndex = false)
+	@Setting(settingPath = "settings/test-settings.json")
+	@Mapping(mappingPath = "mappings/test-mappings.json")
+	private static class EntityWithSettingsAndMappingsReactive {
+		@Id
+		String id;
 	}
 
 	// endregion

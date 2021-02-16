@@ -1863,14 +1863,9 @@ class RequestFactory {
 	public Document mappingsFromGetIndexResponse(GetIndexResponse getIndexResponse, String indexName) {
 		Document document = Document.create();
 
-
 		if (getIndexResponse.getMappings().containsKey(indexName)) {
 			MappingMetadata mappings = getIndexResponse.getMappings().get(indexName);
-			Map<String, Object> mappingsAsMap = mappings.getSourceAsMap();
-
-			for (String key : mappingsAsMap.keySet()) {
-				document.put(key, mappingsAsMap);
-			}
+			document = Document.from(mappings.getSourceAsMap());
 		}
 
 		return document;
@@ -1879,9 +1874,9 @@ class RequestFactory {
 	public Document settingsFromGetIndexResponse(org.elasticsearch.action.admin.indices.get.GetIndexResponse getIndexResponse, String indexName) {
 		Document document = Document.create();
 
-		Settings indexSettings = getIndexResponse.getSettings().get(indexName);
+		if (getIndexResponse.getSettings().containsKey(indexName)) {
+			Settings indexSettings = getIndexResponse.getSettings().get(indexName);
 
-		if (!indexSettings.isEmpty()) {
 			for (String key : indexSettings.keySet()) {
 				document.put(key, indexSettings.get(key));
 			}
@@ -1893,9 +1888,8 @@ class RequestFactory {
 	public Document mappingsFromGetIndexResponse(org.elasticsearch.action.admin.indices.get.GetIndexResponse getIndexResponse, String indexName) {
 		Document document = Document.create();
 
-
 		if (getIndexResponse.getMappings().containsKey(indexName)) {
-			MappingMetadata mappings = getIndexResponse.getMappings().get(indexName).get(indexName);
+			MappingMetadata mappings = getIndexResponse.getMappings().get(indexName).get("_doc");
 			Map<String, Object> mappingsAsMap = mappings.getSourceAsMap();
 
 			for (String key : mappingsAsMap.keySet()) {
