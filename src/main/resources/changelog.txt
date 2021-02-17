@@ -1,6 +1,12 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 3.2.13.RELEASE (2021-02-17)
+----------------------------------------------
+* #1694 - Upgrade to Elasticsearch 6.8.14.
+* #1662 - Documentation fix.
+
+
 Changes in version 4.2.0-M2 (2021-01-13)
 ----------------------------------------
 * DATAES-1003 - add timeout to search query.
@@ -1407,6 +1413,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
