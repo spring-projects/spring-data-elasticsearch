@@ -1,6 +1,15 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.7.RELEASE (2021-02-17)
+---------------------------------------------
+* DATAES-996 - Update CI jobs with Docker Login.
+* #1667 - Couldn't find PersistentEntity for type class com.example.demo.dto.Address.
+* #1665 - ReactiveElasticsearchOperations indexName twice endcoding.
+* #1662 - Documentation fix.
+* #1659 - Fix source filter setup in multiget requests.
+
+
 Changes in version 3.2.13.RELEASE (2021-02-17)
 ----------------------------------------------
 * #1694 - Upgrade to Elasticsearch 6.8.14.
@@ -1413,6 +1422,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
