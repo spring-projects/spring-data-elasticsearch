@@ -84,7 +84,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.operations = operations;
 		this.converter = operations.getElasticsearchConverter();
 		this.requestFactory = new RequestFactory(operations.getElasticsearchConverter());
-		this.responseConverter = new ResponseConverter(requestFactory);
+		this.responseConverter = new ResponseConverter();
 		this.boundClass = null;
 		this.boundIndex = index;
 	}
@@ -97,7 +97,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.operations = operations;
 		this.converter = operations.getElasticsearchConverter();
 		this.requestFactory = new RequestFactory(operations.getElasticsearchConverter());
-		this.responseConverter = new ResponseConverter(requestFactory);
+		this.responseConverter = new ResponseConverter();
 		this.boundClass = clazz;
 		this.boundIndex = getIndexCoordinatesFor(clazz);
 	}

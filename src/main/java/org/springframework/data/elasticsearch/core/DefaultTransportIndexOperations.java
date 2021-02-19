@@ -76,22 +76,18 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTransportIndexOperations.class);
 
-	private final ResponseConverter responseConverter;
-
 	private final Client client;
 
 	public DefaultTransportIndexOperations(Client client, ElasticsearchConverter elasticsearchConverter,
 			Class<?> boundClass) {
 		super(elasticsearchConverter, boundClass);
 		this.client = client;
-		this.responseConverter = initResponseConverter(elasticsearchConverter);
 	}
 
 	public DefaultTransportIndexOperations(Client client, ElasticsearchConverter elasticsearchConverter,
 			IndexCoordinates boundIndex) {
 		super(elasticsearchConverter, boundIndex);
 		this.client = client;
-		this.responseConverter = initResponseConverter(elasticsearchConverter);
 	}
 
 	@Override
@@ -315,9 +311,5 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 		GetIndexResponse getIndexResponse = client.admin().indices().getIndex(getIndexRequest).actionGet();
 
 		return responseConverter.indexInformationCollection(getIndexResponse);
-	}
-
-	private ResponseConverter initResponseConverter(ElasticsearchConverter elasticsearchConverter) {
-		return new ResponseConverter(new RequestFactory(elasticsearchConverter));
 	}
 }

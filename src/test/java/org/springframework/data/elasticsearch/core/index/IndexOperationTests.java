@@ -19,8 +19,11 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
+import org.json.JSONException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -44,41 +47,42 @@ public class IndexOperationTests {
 	@Autowired
 	protected ElasticsearchOperations operations;
 
+	@BeforeEach
+	void setUp() {
+		operations.indexOps(EntityWithSettingsAndMappings.class).delete();
+	}
 
 	@Test // #1646
-	@DisplayName("should return info of all indices using rest template")
-	void shouldReturnInformationList() {
-		IndexOperations indexOps = operations.indexOps(EntityWithSettingsAndMappingsRest.class);
+	@DisplayName("should return info of all indices using REST template without aliases")
+	void shouldReturnInformationListOfAllIndicesNoAliases() throws JSONException {
+		IndexOperations indexOps = operations.indexOps(EntityWithSettingsAndMappings.class);
 
 		indexOps.create();
 		indexOps.putMapping();
-
-		indexOps.alias(new AliasActions(
-				new AliasAction.Add(AliasActionParameters.builder().withIndices("test-index-rest-information-list").withAliases("alias").build()))
-		);
 
 		List<IndexInformation> indexInformationList = indexOps.getInformation();
 
 		IndexInformation indexInformation = indexInformationList.get(0);
 
 		assertThat(indexInformationList.size()).isEqualTo(1);
+
+		assertThat(indexInformation.getName()).isEqualTo("test-index-information-list");
+
 		assertThat(indexInformation.getSettings().get("index.number_of_shards")).isEqualTo("1");
 		assertThat(indexInformation.getSettings().get("index.number_of_replicas")).isEqualTo("0");
 		assertThat(indexInformation.getSettings().get("index.analysis.analyzer.emailAnalyzer.type")).isEqualTo("custom");
+		assertThat(indexInformation.getAliases()).isEmpty();
 
-		assertThat(indexInformation.getMappings()).containsKey("properties");
+		String expectedMappings = "{\"properties\":{\"email\":{\"type\":\"text\",\"analyzer\":\"emailAnalyzer\"}}}";
 
-		assertThat(indexInformation.getName()).isEqualTo("test-index-rest-information-list");
-		assertThat(indexInformation.getMappings()).isInstanceOf(org.springframework.data.elasticsearch.core.document.Document.class);
-		assertThat(indexInformation.getSettings()).isInstanceOf(org.springframework.data.elasticsearch.core.document.Document.class);
-		assertThat(indexInformation.getAliases()).isInstanceOf(List.class);
+		JSONAssert.assertEquals(expectedMappings, indexInformation.getMappings().toJson(), false);
 	}
 
 	@Data
-	@Document(indexName = "test-index-rest-information-list", createIndex = false)
+	@Document(indexName = "test-index-information-list")
 	@Setting(settingPath = "settings/test-settings.json")
 	@Mapping(mappingPath = "mappings/test-mappings.json")
-	private static class EntityWithSettingsAndMappingsRest {
+	protected static class EntityWithSettingsAndMappings {
 		@Id
 		String id;
 	}

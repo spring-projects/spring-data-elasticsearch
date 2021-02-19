@@ -54,9 +54,11 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 	protected final ElasticsearchConverter elasticsearchConverter;
 	protected final RequestFactory requestFactory;
+	protected final ResponseConverter responseConverter;
 
 	@Nullable protected final Class<?> boundClass;
 	@Nullable private final IndexCoordinates boundIndex;
+
 
 	public AbstractDefaultIndexOperations(ElasticsearchConverter elasticsearchConverter, Class<?> boundClass) {
 
@@ -66,6 +68,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 		requestFactory = new RequestFactory(elasticsearchConverter);
 		this.boundClass = boundClass;
 		this.boundIndex = null;
+		this.responseConverter = new ResponseConverter();
 	}
 
 	public AbstractDefaultIndexOperations(ElasticsearchConverter elasticsearchConverter, IndexCoordinates boundIndex) {
@@ -76,6 +79,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 		requestFactory = new RequestFactory(elasticsearchConverter);
 		this.boundClass = null;
 		this.boundIndex = boundIndex;
+		this.responseConverter = new ResponseConverter();
 	}
 
 	protected Class<?> checkForBoundClass() {

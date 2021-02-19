@@ -17,10 +17,14 @@
 package org.springframework.data.elasticsearch.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
+import org.elasticsearch.common.settings.Settings;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
 
@@ -30,20 +34,21 @@ import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
  * @since 4.2
  */
 public class ResponseConverter {
-	private final RequestFactory requestFactory;
-
-	public ResponseConverter(RequestFactory requestFactory) {
-		this.requestFactory = requestFactory;
+	public ResponseConverter() {
 	}
+
+	// region alias
 
 	public List<IndexInformation> indexInformationCollection(GetIndexResponse getIndexResponse) {
 		List<IndexInformation> indexInformationList = new ArrayList<>();
 
 
 		for (String indexName : getIndexResponse.getIndices()) {
-			Document settings = requestFactory.settingsFromGetIndexResponse(getIndexResponse, indexName);
-			Document mappings = requestFactory.mappingsFromGetIndexResponse(getIndexResponse, indexName);
-			List<AliasMetadata> aliases = getIndexResponse.getAliases().get(indexName);
+			Document settings = settingsFromGetIndexResponse(getIndexResponse, indexName);
+			Document mappings = mappingsFromGetIndexResponse(getIndexResponse, indexName);
+			List<AliasMetadata> aliases = getIndexResponse.getAliases().get(indexName) != null
+					? getIndexResponse.getAliases().get(indexName)
+					: Collections.emptyList();
 			indexInformationList.add(IndexInformation.create(indexName, settings, mappings, aliases));
 		}
 
@@ -54,13 +59,82 @@ public class ResponseConverter {
 		List<IndexInformation> indexInformationList = new ArrayList<>();
 
 		for (String indexName : getIndexResponse.getIndices()) {
-			Document settings = requestFactory.settingsFromGetIndexResponse(getIndexResponse, indexName);
-			Document mappings = requestFactory.mappingsFromGetIndexResponse(getIndexResponse, indexName);
-			List<AliasMetadata> aliases = getIndexResponse.getAliases().get(indexName);
+			Document settings = settingsFromGetIndexResponse(getIndexResponse, indexName);
+			Document mappings = mappingsFromGetIndexResponse(getIndexResponse, indexName);
+			List<AliasMetadata> aliases = getIndexResponse.getAliases().get(indexName) != null
+					? getIndexResponse.getAliases().get(indexName)
+					: Collections.emptyList();
 			indexInformationList.add(IndexInformation.create(indexName, settings, mappings, aliases));
 		}
 
 		return indexInformationList;
 	}
 
+	// end region
+
+
+	/**
+	 * extract the index settings information from a given index
+	 * @param getIndexResponse the elastic GetIndexResponse
+	 * @param indexName the index name
+	 * @return a document that represents {@link Settings}
+	 */
+	private Document settingsFromGetIndexResponse(GetIndexResponse getIndexResponse, String indexName) {
+		Document document = Document.create();
+
+		Settings indexSettings = getIndexResponse.getSettings().get(indexName);
+
+		if (!indexSettings.isEmpty()) {
+			for (String key : indexSettings.keySet()) {
+				document.put(key, indexSettings.get(key));
+			}
+		}
+
+		return document;
+	}
+
+	/**
+	 * extract the mappings information from a given index
+	 * @param getIndexResponse the elastic GetIndexResponse
+	 * @param indexName the index name
+	 * @return a document that represents {@link MappingMetadata}
+	 */
+	private Document mappingsFromGetIndexResponse(GetIndexResponse getIndexResponse, String indexName) {
+		Document document = Document.create();
+
+		if (getIndexResponse.getMappings().containsKey(indexName)) {
+			MappingMetadata mappings = getIndexResponse.getMappings().get(indexName);
+			document = Document.from(mappings.getSourceAsMap());
+		}
+
+		return document;
+	}
+
+	private Document settingsFromGetIndexResponse(org.elasticsearch.action.admin.indices.get.GetIndexResponse getIndexResponse, String indexName) {
+		Document document = Document.create();
+
+		if (getIndexResponse.getSettings().containsKey(indexName)) {
+			Settings indexSettings = getIndexResponse.getSettings().get(indexName);
+
+			for (String key : indexSettings.keySet()) {
+				document.put(key, indexSettings.get(key));
+			}
+		}
+
+		return document;
+	}
+
+	private Document mappingsFromGetIndexResponse(org.elasticsearch.action.admin.indices.get.GetIndexResponse getIndexResponse, String indexName) {
+		Document document = Document.create();
+
+		boolean responseHasMappings = getIndexResponse.getMappings().containsKey(indexName) &&
+				(getIndexResponse.getMappings().get(indexName).get("_doc") != null);
+
+		if (responseHasMappings) {
+			MappingMetadata mappings = getIndexResponse.getMappings().get(indexName).get("_doc");
+			document = Document.from(mappings.getSourceAsMap());
+		}
+
+		return document;
+	}
 }

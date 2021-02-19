@@ -70,18 +70,15 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultIndexOperations.class);
 
 	private final ElasticsearchRestTemplate restTemplate;
-	private final ResponseConverter responseConverter;
 
 	public DefaultIndexOperations(ElasticsearchRestTemplate restTemplate, Class<?> boundClass) {
 		super(restTemplate.getElasticsearchConverter(), boundClass);
 		this.restTemplate = restTemplate;
-		this.responseConverter = initResponseConverter(restTemplate);
 	}
 
 	public DefaultIndexOperations(ElasticsearchRestTemplate restTemplate, IndexCoordinates boundIndex) {
 		super(restTemplate.getElasticsearchConverter(), boundIndex);
 		this.restTemplate = restTemplate;
-		this.responseConverter = initResponseConverter(restTemplate);
 	}
 
 	@Override
@@ -275,9 +272,5 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	// endregion
-
-	private ResponseConverter initResponseConverter(ElasticsearchRestTemplate restTemplate) {
-		return new ResponseConverter(new RequestFactory(restTemplate.getElasticsearchConverter()));
-	}
 
 }
