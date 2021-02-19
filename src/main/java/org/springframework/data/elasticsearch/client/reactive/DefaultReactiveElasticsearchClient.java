@@ -22,6 +22,7 @@ import io.netty.handler.ssl.IdentityCipherSuiteFilter;
 import io.netty.handler.ssl.JdkSslContext;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.elasticsearch.action.get.MultiGetItemResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
@@ -330,18 +331,12 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.next();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#multiGet(org.springframework.http.HttpHeaders, org.elasticsearch.action.get.MultiGetRequest)
-	 */
 	@Override
-	public Flux<GetResult> multiGet(HttpHeaders headers, MultiGetRequest multiGetRequest) {
+	public Flux<MultiGetItemResponse> multiGet(HttpHeaders headers, MultiGetRequest multiGetRequest) {
 
 		return sendRequest(multiGetRequest, requestCreator.multiGet(), MultiGetResponse.class, headers)
 				.map(MultiGetResponse::getResponses) //
-				.flatMap(Flux::fromArray) //
-				.filter(it -> !it.isFailed() && it.getResponse().isExists()) //
-				.map(it -> DefaultReactiveElasticsearchClient.getResponseToGetResult(it.getResponse()));
+				.flatMap(Flux::fromArray); //
 	}
 
 	/*

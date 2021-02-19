@@ -27,6 +27,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.client.indices.IndexTemplateMetadata;
@@ -213,67 +215,77 @@ public class ResponseConverter {
 
 	// endregion
 
-    //region templates
-    @Nullable
-    public static TemplateData getTemplateData(GetIndexTemplatesResponse getIndexTemplatesResponse, String templateName) {
-        for (IndexTemplateMetadata indexTemplateMetadata : getIndexTemplatesResponse.getIndexTemplates()) {
+	// region templates
+	@Nullable
+	public static TemplateData getTemplateData(GetIndexTemplatesResponse getIndexTemplatesResponse, String templateName) {
+		for (IndexTemplateMetadata indexTemplateMetadata : getIndexTemplatesResponse.getIndexTemplates()) {
 
-            if (indexTemplateMetadata.name().equals(templateName)) {
+			if (indexTemplateMetadata.name().equals(templateName)) {
 
-                Document settings = Document.create();
-                Settings templateSettings = indexTemplateMetadata.settings();
-                templateSettings.keySet().forEach(key -> settings.put(key, templateSettings.get(key)));
+				Document settings = Document.create();
+				Settings templateSettings = indexTemplateMetadata.settings();
+				templateSettings.keySet().forEach(key -> settings.put(key, templateSettings.get(key)));
 
-                Map<String, AliasData> aliases = new LinkedHashMap<>();
+				Map<String, AliasData> aliases = new LinkedHashMap<>();
 
-                ImmutableOpenMap<String, AliasMetadata> aliasesResponse = indexTemplateMetadata.aliases();
-                Iterator<String> keysIt = aliasesResponse.keysIt();
-                while (keysIt.hasNext()) {
-                    String key = keysIt.next();
-                    aliases.put(key, ResponseConverter.toAliasData(aliasesResponse.get(key)));
-                }
+				ImmutableOpenMap<String, AliasMetadata> aliasesResponse = indexTemplateMetadata.aliases();
+				Iterator<String> keysIt = aliasesResponse.keysIt();
+				while (keysIt.hasNext()) {
+					String key = keysIt.next();
+					aliases.put(key, ResponseConverter.toAliasData(aliasesResponse.get(key)));
+				}
 
-                return TemplateData.builder()
-                    .withIndexPatterns(indexTemplateMetadata.patterns().toArray(new String[0])) //
-                    .withSettings(settings) //
-                    .withMapping(Document.from(indexTemplateMetadata.mappings().getSourceAsMap())) //
-                    .withAliases(aliases) //
-                    .withOrder(indexTemplateMetadata.order()) //
-                    .withVersion(indexTemplateMetadata.version()).build();
-            }
-        }
-        return null;
-    }
-    //endregion
+				return TemplateData.builder().withIndexPatterns(indexTemplateMetadata.patterns().toArray(new String[0])) //
+						.withSettings(settings) //
+						.withMapping(Document.from(indexTemplateMetadata.mappings().getSourceAsMap())) //
+						.withAliases(aliases) //
+						.withOrder(indexTemplateMetadata.order()) //
+						.withVersion(indexTemplateMetadata.version()).build();
+			}
+		}
+		return null;
+	}
+	// endregion
 
-    //region settings
-    /**
-     * extract the index settings information for a given index
-     *
-     * @param response the Elasticsearch response
-     * @param indexName the index name
-     * @return settings as {@link Document}
-     */
-    public static Document fromSettingsResponse(GetSettingsResponse response, String indexName) {
+	// region settings
+	/**
+	 * extract the index settings information for a given index
+	 *
+	 * @param response the Elasticsearch response
+	 * @param indexName the index name
+	 * @return settings as {@link Document}
+	 */
+	public static Document fromSettingsResponse(GetSettingsResponse response, String indexName) {
 
-        Document settings = Document.create();
+		Document settings = Document.create();
 
-        if (!response.getIndexToDefaultSettings().isEmpty()) {
-            Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);
-            for (String key : defaultSettings.keySet()) {
-                settings.put(key, defaultSettings.get(key));
-            }
-        }
+		if (!response.getIndexToDefaultSettings().isEmpty()) {
+			Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);
+			for (String key : defaultSettings.keySet()) {
+				settings.put(key, defaultSettings.get(key));
+			}
+		}
 
-        if (!response.getIndexToSettings().isEmpty()) {
-            Settings customSettings = response.getIndexToSettings().get(indexName);
-            for (String key : customSettings.keySet()) {
-                settings.put(key, customSettings.get(key));
-            }
-        }
+		if (!response.getIndexToSettings().isEmpty()) {
+			Settings customSettings = response.getIndexToSettings().get(indexName);
+			for (String key : customSettings.keySet()) {
+				settings.put(key, customSettings.get(key));
+			}
+		}
 
-        return settings;
-    }
-    //endregion
+		return settings;
+	}
+	// endregion
+
+	// region multiget
+
+	@Nullable
+	public static MultiGetItem.Failure getFailure(MultiGetItemResponse itemResponse) {
+
+		MultiGetResponse.Failure responseFailure = itemResponse.getFailure();
+		return responseFailure != null ? MultiGetItem.Failure.of(responseFailure.getIndex(), responseFailure.getType(),
+				responseFailure.getId(), responseFailure.getFailure()) : null;
+	}
+	// endregion
 
 }

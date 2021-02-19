@@ -53,3 +53,10 @@ Previously the reactive code initialized this to `IMMEDIATE`, now reactive and n
 ==== delete methods that take a Query
 
 The reactive methods previously returned a `Mono<Long>` with the number of deleted documents, the non reactive versions were void. They now return a `Mono<ByQueryResponse>` which contains much more detailed information about the deleted documents and errors that might have occurred.
+
+==== multiget methods
+
+The implementations of _multiget_ previousl only returned the found entities in a `List<T>` for non-reactive implementations and in a `Flux<T>` for reactive implementations. If the request contained ids that were not found, the information that these are missing was not available. The user needed to compare the returned ids to the requested ones to find
+which ones were missing.
+
+Now the `multiget` methods return a `MultiGetItem` for every requested id. This contains information about failures (like non existing indices) and the information if the item existed (then it is contained in the `MultiGetItem) or not.

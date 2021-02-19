@@ -242,30 +242,30 @@ public class ReactiveElasticsearchClientUnitTests {
 		assertThat(uri.getRawPath()).isEqualTo("/_mget");
 	}
 
-	@Test // DATAES-488
+	@Test // DATAES-488, #1678
 	public void multiGetShouldReturnExistingDocuments() {
 
 		hostProvider.when(HOST) //
 				.receiveJsonFromFile("multi-get-ok-2-hits");
 
-		client.multiGet(new MultiGetRequest().add("twitter", "_doc", "1").add("twitter", "_doc", "2")) //
+		client.multiGet(new MultiGetRequest().add("twitter", "1").add("twitter", "2")) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(result -> {
 
-					assertThat(result.isExists()).isTrue();
+					assertThat(result.isFailed()).isFalse();
 					assertThat(result.getIndex()).isEqualTo("twitter");
 					assertThat(result.getId()).isEqualTo("1");
-					assertThat(result.getSource()) //
+					assertThat(result.getResponse().getSource()) //
 							.containsEntry("user", "kimchy") //
 							.containsEntry("message", "Trying out Elasticsearch, so far so good?") //
 							.containsKey("post_date");
 				}) //
 				.consumeNextWith(result -> {
 
-					assertThat(result.isExists()).isTrue();
+					assertThat(result.isFailed()).isFalse();
 					assertThat(result.getIndex()).isEqualTo("twitter");
 					assertThat(result.getId()).isEqualTo("2");
-					assertThat(result.getSource()) //
+					assertThat(result.getResponse().getSource()) //
 							.containsEntry("user", "kimchy") //
 							.containsEntry("message", "Another tweet, will it be indexed?") //
 							.containsKey("post_date");
@@ -273,33 +273,44 @@ public class ReactiveElasticsearchClientUnitTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-488
+	@Test // DATAES-488, #1678
 	public void multiGetShouldWorkForNonExistingDocuments() {
 
 		hostProvider.when(HOST) //
 				.receiveJsonFromFile("multi-get-ok-2-hits-1-unavailable");
 
-		client.multiGet(new MultiGetRequest().add("twitter", "_doc", "1").add("twitter", "_doc", "2")) //
+		client.multiGet(new MultiGetRequest() //
+				.add("twitter", "1") //
+				.add("twitter", "2") //
+				.add("twitter", "3") //
+		) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(result -> {
 
-					assertThat(result.isExists()).isTrue();
+					assertThat(result.isFailed()).isFalse();
 					assertThat(result.getIndex()).isEqualTo("twitter");
 					assertThat(result.getId()).isEqualTo("1");
-					assertThat(result.getSource()) //
+					assertThat(result.getResponse().isExists()).isTrue();
+					assertThat(result.getResponse().getSource()) //
 							.containsEntry("user", "kimchy") //
 							.containsEntry("message", "Trying out Elasticsearch, so far so good?") //
 							.containsKey("post_date");
 				}) //
 				.consumeNextWith(result -> {
 
-					assertThat(result.isExists()).isTrue();
-					assertThat(result.getIndex()).isEqualTo("twitter");
-					assertThat(result.getId()).isEqualTo("3");
-					assertThat(result.getSource()) //
-							.containsEntry("user", "elastic") //
-							.containsEntry("message", "Building the site, should be kewl") //
-							.containsKey("post_date");
+					assertThat(result.isFailed()).isFalse();
+					assertThat(result.getResponse().isExists()).isFalse();
+				}) //
+				.consumeNextWith(result -> {
+
+					assertThat(result.isFailed()).isFalse();
+					 assertThat(result.getIndex()).isEqualTo("twitter");
+					 assertThat(result.getId()).isEqualTo("3");
+					assertThat(result.getResponse().isExists()).isTrue();
+					 assertThat(result.getResponse().getSource()) //
+					 .containsEntry("user", "elastic") //
+					 .containsEntry("message", "Building the site, should be kewl") //
+					 .containsKey("post_date");
 				}) //
 				.verifyComplete();
 	}

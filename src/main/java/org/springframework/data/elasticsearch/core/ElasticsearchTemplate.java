@@ -42,7 +42,6 @@ import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -190,7 +189,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> List<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
+	public <T> List<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
 
 		Assert.notNull(index, "index must not be null");
 		Assert.notEmpty(query.getIds(), "No Ids defined for Query");
@@ -198,8 +197,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		MultiGetRequestBuilder builder = requestFactory.multiGetRequestBuilder(client, query, clazz, index);
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
-		List<Document> documents = DocumentAdapters.from(builder.execute().actionGet());
-		return documents.stream().map(callback::doWith).collect(Collectors.toList());
+
+		return DocumentAdapters.from(builder.execute().actionGet()).stream() //
+				.map(multiGetItem -> MultiGetItem.of(multiGetItem.isFailed() ? null : callback.doWith(multiGetItem.getItem()),
+						multiGetItem.getFailure()))
+				.collect(Collectors.toList());
 	}
 
 	@Override
