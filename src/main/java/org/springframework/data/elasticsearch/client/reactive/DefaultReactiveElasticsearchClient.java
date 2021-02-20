@@ -15,18 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
-import io.netty.channel.ChannelOption;
-import io.netty.handler.ssl.ApplicationProtocolConfig;
-import io.netty.handler.ssl.ClientAuth;
-import io.netty.handler.ssl.IdentityCipherSuiteFilter;
-import io.netty.handler.ssl.JdkSslContext;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.transport.ProxyProvider;
-
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
@@ -86,6 +74,7 @@ import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.indices.GetFieldMappingsRequest;
 import org.elasticsearch.client.indices.GetFieldMappingsResponse;
+import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
@@ -131,6 +120,18 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
 
+import io.netty.channel.ChannelOption;
+import io.netty.handler.ssl.ApplicationProtocolConfig;
+import io.netty.handler.ssl.ClientAuth;
+import io.netty.handler.ssl.IdentityCipherSuiteFilter;
+import io.netty.handler.ssl.JdkSslContext;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.transport.ProxyProvider;
+
 /**
  * A {@link WebClient} based {@link ReactiveElasticsearchClient} that connects to an Elasticsearch cluster using HTTP.
  *
@@ -144,6 +145,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  * @author Thomas Geese
  * @author Brian Clozel
  * @author Farid Faoudi
+ * @author George Popides
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
@@ -755,6 +757,12 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	public Mono<Boolean> deleteTemplate(HttpHeaders headers, DeleteIndexTemplateRequest deleteIndexTemplateRequest) {
 		return sendRequest(deleteIndexTemplateRequest, requestCreator.deleteTemplate(), AcknowledgedResponse.class, headers)
 				.map(AcknowledgedResponse::isAcknowledged).next();
+	}
+
+	@Override
+	public Mono<GetIndexResponse> getIndex(HttpHeaders headers, org.elasticsearch.client.indices.GetIndexRequest getIndexRequest) {
+		return sendRequest(getIndexRequest, requestCreator.getIndex(), GetIndexResponse.class, headers)
+				.next();
 	}
 
 	// endregion

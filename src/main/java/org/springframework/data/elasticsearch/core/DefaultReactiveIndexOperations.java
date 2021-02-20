@@ -18,8 +18,6 @@ package org.springframework.data.elasticsearch.core;
 import static org.elasticsearch.client.Requests.*;
 import static org.springframework.util.StringUtils.*;
 
-import reactor.core.publisher.Mono;
-
 import java.util.Map;
 import java.util.Set;
 
@@ -38,7 +36,6 @@ import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
@@ -55,11 +52,17 @@ import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
+import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 /**
  * @author Peter-Josef Meisch
+ * @author George Popides
  * @since 4.1
  */
 class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
@@ -71,6 +74,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	private final RequestFactory requestFactory;
 	private final ReactiveElasticsearchOperations operations;
 	private final ElasticsearchConverter converter;
+	private final ResponseConverter responseConverter;
 
 	public DefaultReactiveIndexOperations(ReactiveElasticsearchOperations operations, IndexCoordinates index) {
 
@@ -80,6 +84,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.operations = operations;
 		this.converter = operations.getElasticsearchConverter();
 		this.requestFactory = new RequestFactory(operations.getElasticsearchConverter());
+		this.responseConverter = new ResponseConverter();
 		this.boundClass = null;
 		this.boundIndex = index;
 	}
@@ -92,6 +97,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.operations = operations;
 		this.converter = operations.getElasticsearchConverter();
 		this.requestFactory = new RequestFactory(operations.getElasticsearchConverter());
+		this.responseConverter = new ResponseConverter();
 		this.boundClass = clazz;
 		this.boundIndex = getIndexCoordinatesFor(clazz);
 	}
@@ -159,11 +165,11 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Document> createMapping(Class<?> clazz) {
 
-        Mapping mappingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Mapping.class);
+		Mapping mappingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Mapping.class);
 
-        if (mappingAnnotation != null) {
-            return loadDocument(mappingAnnotation.mappingPath(), "@Mapping");
-        }
+		if (mappingAnnotation != null) {
+			return loadDocument(mappingAnnotation.mappingPath(), "@Mapping");
+		}
 
 		String mapping = new MappingBuilder(converter).buildPropertyMapping(clazz);
 		return Mono.just(Document.parse(mapping));
@@ -201,11 +207,11 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Document> createSettings(Class<?> clazz) {
 
-        Setting setting = AnnotatedElementUtils.findMergedAnnotation(clazz, Setting.class);
+		Setting setting = AnnotatedElementUtils.findMergedAnnotation(clazz, Setting.class);
 
-        if (setting != null) {
-            return loadDocument(setting.settingPath(), "@Setting");
-        }
+		if (setting != null) {
+			return loadDocument(setting.settingPath(), "@Setting");
+		}
 
 		return Mono.just(getRequiredPersistentEntity(clazz).getDefaultSettings());
 	}
@@ -244,7 +250,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(aliasNames, indexNames);
 		return Mono.from(operations.executeWithIndicesClient(client -> client.getAliases(getAliasesRequest)))
-				.map(GetAliasesResponse::getAliases).map(requestFactory::convertAliasesResponse);
+				.map(GetAliasesResponse::getAliases).map(responseConverter::convertAliasesResponse);
 	}
 	// endregion
 
@@ -302,6 +308,15 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public IndexCoordinates getIndexCoordinates() {
 		return (boundClass != null) ? getIndexCoordinatesFor(boundClass) : boundIndex;
+	}
+
+	@Override
+	public Flux<IndexInformation> getInformation() {
+		org.elasticsearch.client.indices.GetIndexRequest getIndexRequest = requestFactory.getIndexRequest(getIndexCoordinates());
+
+		 return Mono.from(operations.executeWithIndicesClient(client ->
+				 client.getIndex(HttpHeaders.EMPTY, getIndexRequest).map(responseConverter::indexInformationCollection)))
+				 .flatMapMany(Flux::fromIterable);
 	}
 
 	private IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {

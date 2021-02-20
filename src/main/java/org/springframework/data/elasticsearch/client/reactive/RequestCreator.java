@@ -40,6 +40,7 @@ import org.springframework.data.elasticsearch.client.util.RequestConverters;
 /**
  * @author Roman Puchkovskiy
  * @author Farid Faoudi
+ * @author George Popides
  * @since 4.0
  */
 public interface RequestCreator {
@@ -149,6 +150,7 @@ public interface RequestCreator {
 		return RequestConverters::count;
 	}
 
+	default Function<org.elasticsearch.client.indices.GetIndexRequest, Request> getIndex() { return RequestConverters::getIndex; }
 	/**
 	 * @since 4.1
 	 */

@@ -692,6 +692,22 @@ public class RequestConverters {
 		return request;
 	}
 
+	public static Request getIndex(org.elasticsearch.client.indices.GetIndexRequest getIndexRequest) {
+		String[] indices = getIndexRequest.indices() == null ? Strings.EMPTY_ARRAY : getIndexRequest.indices();
+
+		String endpoint = endpoint(indices);
+		Request request = new Request(HttpMethod.GET.name(), endpoint);
+
+		Params params = new Params(request);
+		params.withIndicesOptions(getIndexRequest.indicesOptions());
+		params.withLocal(getIndexRequest.local());
+		params.withIncludeDefaults(getIndexRequest.includeDefaults());
+		params.withHuman(getIndexRequest.humanReadable());
+		params.withMasterTimeout(getIndexRequest.masterNodeTimeout());
+
+		return request;
+	}
+
 	public static Request indexDelete(DeleteIndexRequest deleteIndexRequest) {
 		String endpoint = RequestConverters.endpoint(deleteIndexRequest.indices());
 		Request request = new Request(HttpMethod.DELETE.name(), endpoint);

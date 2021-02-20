@@ -29,6 +29,8 @@ import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
@@ -57,6 +59,7 @@ import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -66,6 +69,7 @@ import org.springframework.util.Assert;
  *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author George Popides
  * @since 4.0
  */
 class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations implements IndexOperations {
@@ -177,7 +181,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 		Map<String, Set<AliasMetadata>> aliasesResponse = new LinkedHashMap<>();
 		aliases.keysIt().forEachRemaining(index -> aliasesResponse.put(index, new HashSet<>(aliases.get(index))));
-		return requestFactory.convertAliasesResponse(aliasesResponse);
+		return responseConverter.convertAliasesResponse(aliasesResponse);
 	}
 
 	@Override
@@ -243,7 +247,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 				Iterator<String> keysItAliases = aliasesResponse.keysIt();
 				while (keysItAliases.hasNext()) {
 					String key = keysItAliases.next();
-					aliases.put(key, requestFactory.convertAliasMetadata(aliasesResponse.get(key)));
+					aliases.put(key, responseConverter.convertAliasMetadata(aliasesResponse.get(key)));
 				}
 
 				Map<String, String> mappingsDoc = new LinkedHashMap<>();
@@ -295,5 +299,17 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 		DeleteIndexTemplateRequest deleteIndexTemplateRequest = requestFactory.deleteIndexTemplateRequest(client,
 				deleteTemplateRequest);
 		return client.admin().indices().deleteTemplate(deleteIndexTemplateRequest).actionGet().isAcknowledged();
+	}
+
+	@Override
+	public List<IndexInformation> getInformation() {
+		GetIndexRequest getIndexRequest = new GetIndexRequest();
+		IndexCoordinates index = getIndexCoordinates();
+
+		getIndexRequest.indices(index.getIndexNames());
+
+		GetIndexResponse getIndexResponse = client.admin().indices().getIndex(getIndexRequest).actionGet();
+
+		return responseConverter.indexInformationCollection(getIndexResponse);
 	}
 }

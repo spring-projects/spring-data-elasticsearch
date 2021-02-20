@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import org.elasticsearch.client.indices.GetIndexResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -1456,5 +1457,7 @@ public interface ReactiveElasticsearchClient {
 		 * @since 4.1
 		 */
 		Mono<Boolean> deleteTemplate(HttpHeaders headers, DeleteIndexTemplateRequest deleteIndexTemplateRequest);
+
+		Mono<GetIndexResponse> getIndex(HttpHeaders headers, org.elasticsearch.client.indices.GetIndexRequest getIndexRequest);
 	}
 }

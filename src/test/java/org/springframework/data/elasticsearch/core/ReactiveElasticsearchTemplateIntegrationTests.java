@@ -20,15 +20,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.springframework.data.elasticsearch.core.document.Explanation;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
-
 import java.lang.Boolean;
 import java.lang.Long;
 import java.lang.Object;
@@ -51,10 +42,12 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
+import org.json.JSONException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -68,12 +61,27 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.core.document.Explanation;
+import org.springframework.data.elasticsearch.core.index.AliasAction;
+import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
+import org.springframework.data.elasticsearch.core.index.AliasActions;
+import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.util.StringUtils;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 /**
  * Integration tests for {@link ReactiveElasticsearchTemplate}.
@@ -86,6 +94,7 @@ import org.springframework.util.StringUtils;
  * @author Aleksei Arsenev
  * @author Russell Parry
  * @author Roman Puchkovskiy
+ * @author George Popides
  */
 @SpringIntegrationTest
 public class ReactiveElasticsearchTemplateIntegrationTests {
@@ -1104,6 +1113,56 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				})
 				.verifyComplete();
 	}
+
+
+	@Test // #1646
+	@DisplayName("should return a list of info for specific index using reactive template")
+	void shouldReturnInformationListOfAllIndices() {
+		String indexName = "test-index-reactive-information-list";
+		String aliasName = "testindexinformationindex";
+		ReactiveIndexOperations indexOps = template.indexOps(EntityWithSettingsAndMappingsReactive.class);
+
+		indexOps.create().block();
+		indexOps.putMapping().block();
+
+		AliasActionParameters parameters = AliasActionParameters.builder()
+				.withAliases(aliasName)
+				.withIndices(indexName)
+				.withIsHidden(false)
+				.withIsWriteIndex(false)
+				.withRouting("indexrouting")
+				.withSearchRouting("searchrouting")
+				.build();
+		indexOps.alias(new AliasActions(new AliasAction.Add(parameters))).block();
+
+		indexOps
+				.getInformation()
+				.as(StepVerifier::create)
+				.consumeNextWith(indexInformation -> {
+					assertThat(indexInformation.getName()).isEqualTo(indexName);
+					assertThat(indexInformation.getSettings().get("index.number_of_shards")).isEqualTo("1");
+					assertThat(indexInformation.getSettings().get("index.number_of_replicas")).isEqualTo("0");
+					assertThat(indexInformation.getSettings().get("index.analysis.analyzer.emailAnalyzer.type")).isEqualTo("custom");
+					assertThat(indexInformation.getAliases()).hasSize(1);
+
+					AliasData aliasData = indexInformation.getAliases().get(0);
+
+					assertThat(aliasData.getAlias()).isEqualTo(aliasName);
+					assertThat(aliasData.isHidden()).isEqualTo(false);
+					assertThat(aliasData.isWriteIndex()).isEqualTo(false);
+					assertThat(aliasData.getIndexRouting()).isEqualTo("indexrouting");
+					assertThat(aliasData.getSearchRouting()).isEqualTo("searchrouting");
+
+					String expectedMappings = "{\"properties\":{\"email\":{\"type\":\"text\",\"analyzer\":\"emailAnalyzer\"}}}";
+					try {
+						JSONAssert.assertEquals(expectedMappings, indexInformation.getMappings().toJson(), false);
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				})
+				.verifyComplete();
+	}
+
 	// endregion
 
 	// region Helper functions
@@ -1135,6 +1194,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 			template.saveAll(Mono.just(Arrays.asList(entities)), indexCoordinates).then(indexOperations.refresh()).block();
 		}
 	}
+
 	// endregion
 
 	// region Entities
@@ -1199,6 +1259,15 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	static class VersionedEntity {
 		@Id private String id;
 		@Version private Long version;
+	}
+
+	@Data
+	@Document(indexName = "test-index-reactive-information-list", createIndex = false)
+	@Setting(settingPath = "settings/test-settings.json")
+	@Mapping(mappingPath = "mappings/test-mappings.json")
+	private static class EntityWithSettingsAndMappingsReactive {
+		@Id
+		String id;
 	}
 
 	// endregion
