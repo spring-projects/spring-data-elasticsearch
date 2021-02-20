@@ -178,7 +178,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 
 		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(aliasNames, indexNames);
 
-		return restTemplate.execute(client -> requestFactory
+		return restTemplate.execute(client -> responseConverter
 				.convertAliasesResponse(client.indices().getAlias(getAliasesRequest, RequestOptions.DEFAULT).getAliases()));
 	}
 

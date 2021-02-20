@@ -181,7 +181,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 		Map<String, Set<AliasMetadata>> aliasesResponse = new LinkedHashMap<>();
 		aliases.keysIt().forEachRemaining(index -> aliasesResponse.put(index, new HashSet<>(aliases.get(index))));
-		return requestFactory.convertAliasesResponse(aliasesResponse);
+		return responseConverter.convertAliasesResponse(aliasesResponse);
 	}
 
 	@Override
@@ -247,7 +247,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 				Iterator<String> keysItAliases = aliasesResponse.keysIt();
 				while (keysItAliases.hasNext()) {
 					String key = keysItAliases.next();
-					aliases.put(key, requestFactory.convertAliasMetadata(aliasesResponse.get(key)));
+					aliases.put(key, responseConverter.convertAliasMetadata(aliasesResponse.get(key)));
 				}
 
 				Map<String, String> mappingsDoc = new LinkedHashMap<>();

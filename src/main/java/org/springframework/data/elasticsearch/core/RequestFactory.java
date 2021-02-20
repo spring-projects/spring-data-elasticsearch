@@ -18,7 +18,15 @@ package org.springframework.data.elasticsearch.core;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.util.CollectionUtils.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.alias.Alias;
@@ -51,11 +59,17 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
-import org.elasticsearch.client.indices.*;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
+import org.elasticsearch.client.indices.GetMappingsRequest;
+import org.elasticsearch.client.indices.IndexTemplateMetadata;
+import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
+import org.elasticsearch.client.indices.PutIndexTemplateRequest;
+import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
-import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
-import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.DistanceUnit;
@@ -485,26 +499,6 @@ class RequestFactory {
 		return new org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest().indices(indexNames);
 	}
 
-	public Map<String, Set<AliasData>> convertAliasesResponse(Map<String, Set<AliasMetadata>> aliasesResponse) {
-		Map<String, Set<AliasData>> converted = new LinkedHashMap<>();
-		aliasesResponse.forEach((index, aliasMetaDataSet) -> {
-			Set<AliasData> aliasDataSet = new LinkedHashSet<>();
-			aliasMetaDataSet.forEach(aliasMetaData -> aliasDataSet.add(convertAliasMetadata(aliasMetaData)));
-			converted.put(index, aliasDataSet);
-		});
-		return converted;
-	}
-
-	public AliasData convertAliasMetadata(AliasMetadata aliasMetaData) {
-		Document filter = null;
-		CompressedXContent aliasMetaDataFilter = aliasMetaData.getFilter();
-		if (aliasMetaDataFilter != null) {
-			filter = Document.parse(aliasMetaDataFilter.string());
-		}
-		AliasData aliasData = AliasData.of(aliasMetaData.alias(), filter, aliasMetaData.indexRouting(),
-				aliasMetaData.getSearchRouting(), aliasMetaData.writeIndex(), aliasMetaData.isHidden());
-		return aliasData;
-	}
 
 	public PutIndexTemplateRequest putIndexTemplateRequest(PutTemplateRequest putTemplateRequest) {
 
@@ -665,7 +659,7 @@ class RequestFactory {
 				Iterator<String> keysIt = aliasesResponse.keysIt();
 				while (keysIt.hasNext()) {
 					String key = keysIt.next();
-					aliases.put(key, convertAliasMetadata(aliasesResponse.get(key)));
+					aliases.put(key, ResponseConverter.convertAliasMetadata(aliasesResponse.get(key)));
 				}
 				TemplateData templateData = TemplateData.builder()
 						.withIndexPatterns(indexTemplateMetadata.patterns().toArray(new String[0])) //

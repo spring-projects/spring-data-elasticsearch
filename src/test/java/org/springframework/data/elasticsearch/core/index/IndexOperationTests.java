@@ -53,28 +53,46 @@ public class IndexOperationTests {
 	}
 
 	@Test // #1646
-	@DisplayName("should return info of all indices using REST template without aliases")
-	void shouldReturnInformationListOfAllIndicesNoAliases() throws JSONException {
+	@DisplayName("should return a list of info for specific index")
+	void shouldReturnInformationList() throws JSONException {
 		IndexOperations indexOps = operations.indexOps(EntityWithSettingsAndMappings.class);
+
+		String aliasName = "testindexinformationindex";
+		String indexName = "test-index-information-list";
 
 		indexOps.create();
 		indexOps.putMapping();
+
+		AliasActionParameters parameters = AliasActionParameters.builder()
+				.withAliases(aliasName)
+				.withIndices(indexName)
+				.withIsHidden(false)
+				.withIsWriteIndex(false)
+				.withRouting("indexrouting")
+				.withSearchRouting("searchrouting")
+				.build();
+		indexOps.alias(new AliasActions(new AliasAction.Add(parameters)));
 
 		List<IndexInformation> indexInformationList = indexOps.getInformation();
 
 		IndexInformation indexInformation = indexInformationList.get(0);
 
 		assertThat(indexInformationList.size()).isEqualTo(1);
-
-		assertThat(indexInformation.getName()).isEqualTo("test-index-information-list");
-
+		assertThat(indexInformation.getName()).isEqualTo(indexName);
 		assertThat(indexInformation.getSettings().get("index.number_of_shards")).isEqualTo("1");
 		assertThat(indexInformation.getSettings().get("index.number_of_replicas")).isEqualTo("0");
 		assertThat(indexInformation.getSettings().get("index.analysis.analyzer.emailAnalyzer.type")).isEqualTo("custom");
-		assertThat(indexInformation.getAliases()).isEmpty();
+		assertThat(indexInformation.getAliases()).hasSize(1);
+
+		AliasData aliasData = indexInformation.getAliases().get(0);
+
+		assertThat(aliasData.getAlias()).isEqualTo(aliasName);
+		assertThat(aliasData.isHidden()).isEqualTo(false);
+		assertThat(aliasData.isWriteIndex()).isEqualTo(false);
+		assertThat(aliasData.getIndexRouting()).isEqualTo("indexrouting");
+		assertThat(aliasData.getSearchRouting()).isEqualTo("searchrouting");
 
 		String expectedMappings = "{\"properties\":{\"email\":{\"type\":\"text\",\"analyzer\":\"emailAnalyzer\"}}}";
-
 		JSONAssert.assertEquals(expectedMappings, indexInformation.getMappings().toJson(), false);
 	}
 

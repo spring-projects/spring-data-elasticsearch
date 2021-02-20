@@ -250,7 +250,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(aliasNames, indexNames);
 		return Mono.from(operations.executeWithIndicesClient(client -> client.getAliases(getAliasesRequest)))
-				.map(GetAliasesResponse::getAliases).map(requestFactory::convertAliasesResponse);
+				.map(GetAliasesResponse::getAliases).map(responseConverter::convertAliasesResponse);
 	}
 	// endregion
 

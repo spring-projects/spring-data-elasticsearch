@@ -18,8 +18,8 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import java.util.List;
 
-import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.lang.Nullable;
 
 /**
@@ -35,14 +35,14 @@ public class IndexInformation {
 	@Nullable
 	private final Document mappings;
 	@Nullable
-	private final List<AliasMetadata> aliases;
+	private final List<AliasData> aliases;
 
 
 	public static IndexInformation create(
 			String indexName,
 			@Nullable Document settings,
 			@Nullable Document mappings,
-			@Nullable List<AliasMetadata> aliases
+			@Nullable List<AliasData> aliases
 	) {
 		return new IndexInformation(indexName, settings, mappings, aliases);
 	}
@@ -51,7 +51,7 @@ public class IndexInformation {
 			String indexName,
 			@Nullable Document settings,
 			@Nullable Document mappings,
-			@Nullable List<AliasMetadata> aliases
+			@Nullable List<AliasData> aliases
 	) {
 		this.name = indexName;
 		this.settings = settings;
@@ -71,7 +71,7 @@ public class IndexInformation {
 		return settings;
 	}
 
-	public List<AliasMetadata> getAliases() {
+	public List<AliasData> getAliases() {
 		return aliases;
 	}
 

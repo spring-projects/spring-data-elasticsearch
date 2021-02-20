@@ -18,14 +18,20 @@ package org.springframework.data.elasticsearch.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
+import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.settings.Settings;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
 
 /**
@@ -39,16 +45,26 @@ public class ResponseConverter {
 
 	// region alias
 
+	public static AliasData convertAliasMetadata(AliasMetadata aliasMetaData) {
+		Document filter = null;
+		CompressedXContent aliasMetaDataFilter = aliasMetaData.getFilter();
+		if (aliasMetaDataFilter != null) {
+			filter = Document.parse(aliasMetaDataFilter.string());
+		}
+		AliasData aliasData = AliasData.of(aliasMetaData.alias(), filter, aliasMetaData.indexRouting(),
+				aliasMetaData.getSearchRouting(), aliasMetaData.writeIndex(), aliasMetaData.isHidden());
+		return aliasData;
+	}
+
 	public List<IndexInformation> indexInformationCollection(GetIndexResponse getIndexResponse) {
 		List<IndexInformation> indexInformationList = new ArrayList<>();
-
 
 		for (String indexName : getIndexResponse.getIndices()) {
 			Document settings = settingsFromGetIndexResponse(getIndexResponse, indexName);
 			Document mappings = mappingsFromGetIndexResponse(getIndexResponse, indexName);
-			List<AliasMetadata> aliases = getIndexResponse.getAliases().get(indexName) != null
-					? getIndexResponse.getAliases().get(indexName)
-					: Collections.emptyList();
+			List<AliasData> aliases = mappingsFromIndexResponse(getIndexResponse, indexName);
+
+
 			indexInformationList.add(IndexInformation.create(indexName, settings, mappings, aliases));
 		}
 
@@ -61,14 +77,24 @@ public class ResponseConverter {
 		for (String indexName : getIndexResponse.getIndices()) {
 			Document settings = settingsFromGetIndexResponse(getIndexResponse, indexName);
 			Document mappings = mappingsFromGetIndexResponse(getIndexResponse, indexName);
-			List<AliasMetadata> aliases = getIndexResponse.getAliases().get(indexName) != null
-					? getIndexResponse.getAliases().get(indexName)
-					: Collections.emptyList();
+			List<AliasData> aliases = mappingsFromIndexResponse(getIndexResponse, indexName);
+
 			indexInformationList.add(IndexInformation.create(indexName, settings, mappings, aliases));
 		}
 
 		return indexInformationList;
 	}
+
+	public Map<String, Set<AliasData>> convertAliasesResponse(Map<String, Set<AliasMetadata>> aliasesResponse) {
+		Map<String, Set<AliasData>> converted = new LinkedHashMap<>();
+		aliasesResponse.forEach((index, aliasMetaDataSet) -> {
+			Set<AliasData> aliasDataSet = new LinkedHashSet<>();
+			aliasMetaDataSet.forEach(aliasMetaData -> aliasDataSet.add(convertAliasMetadata(aliasMetaData)));
+			converted.put(index, aliasDataSet);
+		});
+		return converted;
+	}
+
 
 	// end region
 
@@ -137,4 +163,33 @@ public class ResponseConverter {
 
 		return document;
 	}
+
+	private List<AliasData> mappingsFromIndexResponse(GetIndexResponse getIndexResponse, String indexName) {
+		List<AliasData> aliases = Collections.emptyList();
+
+		if (getIndexResponse.getAliases().get(indexName) != null) {
+			aliases = getIndexResponse
+					.getAliases()
+					.get(indexName)
+					.stream()
+					.map(ResponseConverter::convertAliasMetadata)
+					.collect(Collectors.toList());
+		}
+		return aliases;
+	}
+
+	private List<AliasData> mappingsFromIndexResponse(org.elasticsearch.action.admin.indices.get.GetIndexResponse getIndexResponse, String indexName) {
+		List<AliasData> aliases = Collections.emptyList();
+
+		if (getIndexResponse.getAliases().get(indexName) != null) {
+			aliases = getIndexResponse
+					.getAliases()
+					.get(indexName)
+					.stream()
+					.map(ResponseConverter::convertAliasMetadata)
+					.collect(Collectors.toList());
+		}
+		return aliases;
+	}
+
 }
