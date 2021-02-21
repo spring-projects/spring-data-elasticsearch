@@ -48,14 +48,9 @@ import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushResponse;
-import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
@@ -84,13 +79,18 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.Request;
+import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetFieldMappingsRequest;
 import org.elasticsearch.client.indices.GetFieldMappingsResponse;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
+import org.elasticsearch.client.indices.GetMappingsRequest;
+import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
+import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
@@ -646,9 +646,18 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	// region indices operations
 	@Override
-	public Mono<Boolean> createIndex(HttpHeaders headers, CreateIndexRequest createIndexRequest) {
+	public Mono<Boolean> createIndex(HttpHeaders headers,
+                                     org.elasticsearch.action.admin.indices.create.CreateIndexRequest createIndexRequest) {
 
 		return sendRequest(createIndexRequest, requestCreator.indexCreate(), AcknowledgedResponse.class, headers) //
+				.map(AcknowledgedResponse::isAcknowledged) //
+				.next();
+	}
+
+	@Override
+	public Mono<Boolean> createIndex(HttpHeaders headers, CreateIndexRequest createIndexRequest) {
+
+		return sendRequest(createIndexRequest, requestCreator.createIndexRequest(), AcknowledgedResponse.class, headers) //
 				.map(AcknowledgedResponse::isAcknowledged) //
 				.next();
 	}
@@ -661,14 +670,21 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	}
 
 	@Override
-	public Mono<Boolean> existsIndex(HttpHeaders headers, GetIndexRequest request) {
+	public Mono<Boolean> existsIndex(HttpHeaders headers, org.elasticsearch.action.admin.indices.get.GetIndexRequest request) {
 
 		return sendRequest(request, requestCreator.indexExists(), RawActionResponse.class, headers) //
 				.flatMap(response -> response.releaseBody().thenReturn(response.statusCode().is2xxSuccessful())) //
 				.next();
 	}
 
-	@Override
+    @Override
+    public Mono<Boolean> existsIndex(HttpHeaders headers, GetIndexRequest request) {
+        return sendRequest(request, requestCreator.indexExistsRequest(), RawActionResponse.class, headers) //
+                .flatMap(response -> response.releaseBody().thenReturn(response.statusCode().is2xxSuccessful())) //
+                .next();
+    }
+
+    @Override
 	public Mono<Boolean> deleteIndex(HttpHeaders headers, DeleteIndexRequest request) {
 
 		return sendRequest(request, requestCreator.indexDelete(), AcknowledgedResponse.class, headers) //
@@ -684,8 +700,16 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	}
 
 	@Override
+	public Mono<org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse> getMapping(HttpHeaders headers,
+            org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest getMappingsRequest) {
+		return sendRequest(getMappingsRequest, requestCreator.getMapping(),
+                org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse.class, headers).next();
+	}
+
+	@Override
 	public Mono<GetMappingsResponse> getMapping(HttpHeaders headers, GetMappingsRequest getMappingsRequest) {
-		return sendRequest(getMappingsRequest, requestCreator.getMapping(), GetMappingsResponse.class, headers).next();
+		return sendRequest(getMappingsRequest, requestCreator.getMappingRequest(), GetMappingsResponse.class, headers) //
+                .next();
 	}
 
 	@Override
@@ -701,11 +725,19 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	}
 
 	@Override
-	public Mono<Boolean> putMapping(HttpHeaders headers, PutMappingRequest putMappingRequest) {
+	public Mono<Boolean> putMapping(HttpHeaders headers,
+                                    org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest putMappingRequest) {
 
 		return sendRequest(putMappingRequest, requestCreator.putMapping(), AcknowledgedResponse.class, headers) //
 				.map(AcknowledgedResponse::isAcknowledged) //
 				.next();
+	}
+
+	@Override
+	public Mono<Boolean> putMapping(HttpHeaders headers, PutMappingRequest putMappingRequest) {
+        return sendRequest(putMappingRequest, requestCreator.putMappingRequest(), AcknowledgedResponse.class, headers) //
+                .map(AcknowledgedResponse::isAcknowledged) //
+                .next();
 	}
 
 	@Override
@@ -760,8 +792,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	}
 
 	@Override
-	public Mono<GetIndexResponse> getIndex(HttpHeaders headers,
-			org.elasticsearch.client.indices.GetIndexRequest getIndexRequest) {
+	public Mono<GetIndexResponse> getIndex(HttpHeaders headers, GetIndexRequest getIndexRequest) {
 		return sendRequest(getIndexRequest, requestCreator.getIndex(), GetIndexResponse.class, headers).next();
 	}
 
