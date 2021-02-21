@@ -150,7 +150,6 @@ public interface RequestCreator {
 		return RequestConverters::count;
 	}
 
-	default Function<org.elasticsearch.client.indices.GetIndexRequest, Request> getIndex() { return RequestConverters::getIndex; }
 	/**
 	 * @since 4.1
 	 */
@@ -212,5 +211,12 @@ public interface RequestCreator {
 	 */
 	default Function<GetFieldMappingsRequest, Request> getFieldMapping() {
 		return RequestConverters::getFieldMapping;
+	}
+
+	/**
+	 * @since 4.2
+	 */
+	default Function<org.elasticsearch.client.indices.GetIndexRequest, Request> getIndex() {
+		return RequestConverters::getIndex;
 	}
 }

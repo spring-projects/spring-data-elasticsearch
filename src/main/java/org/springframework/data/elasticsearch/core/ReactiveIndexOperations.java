@@ -15,6 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -27,10 +30,6 @@ import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 /**
  * Interface defining operations on indexes for the reactive stack.
@@ -69,14 +68,14 @@ public interface ReactiveIndexOperations {
 
 	/**
 	 * checks if an index exists
-	 * 
+	 *
 	 * @return a {@link Mono} with the result of exist check
 	 */
 	Mono<Boolean> exists();
 
 	/**
 	 * Refresh the index(es) this IndexOperations is bound to
-	 * 
+	 *
 	 * @return a {@link Mono} signalling operation completion.
 	 */
 	Mono<Void> refresh();
@@ -100,7 +99,7 @@ public interface ReactiveIndexOperations {
 
 	/**
 	 * Writes the mapping to the index for the class this IndexOperations is bound to.
-	 * 
+	 *
 	 * @return {@literal true} if the mapping could be stored
 	 */
 	default Mono<Boolean> putMapping() {
@@ -117,7 +116,7 @@ public interface ReactiveIndexOperations {
 
 	/**
 	 * Creates the index mapping for the given class and writes it to the index.
-	 * 
+	 *
 	 * @param clazz the clazz to create a mapping for
 	 * @return {@literal true} if the mapping could be stored
 	 */
@@ -153,7 +152,7 @@ public interface ReactiveIndexOperations {
 
 	/**
 	 * get the settings for the index
-	 * 
+	 *
 	 * @return a {@link Mono} with a {@link Document} containing the index settings
 	 */
 	default Mono<Document> getSettings() {
@@ -181,7 +180,7 @@ public interface ReactiveIndexOperations {
 
 	/**
 	 * gets information about aliases
-	 * 
+	 *
 	 * @param aliasNames alias names, must not be {@literal null}
 	 * @return a {@link Mono} of {@link Map} from index names to {@link AliasData} for that index
 	 * @since 4.1
@@ -190,7 +189,7 @@ public interface ReactiveIndexOperations {
 
 	/**
 	 * gets information about aliases
-	 * 
+	 *
 	 * @param indexNames alias names, must not be {@literal null}
 	 * @return a {@link Mono} of {@link Map} from index names to {@link AliasData} for that index
 	 * @since 4.1
@@ -277,6 +276,27 @@ public interface ReactiveIndexOperations {
 
 	// endregion
 
+	// region index information
+	/**
+	 * Gets the {@link IndexInformation} for the indices defined by {@link #getIndexCoordinates()}.
+	 *
+	 * @return a flux of {@link IndexInformation}
+	 * @since 4.2
+	 */
+	default Flux<IndexInformation> getInformation() {
+		return getInformation(getIndexCoordinates());
+	}
+
+	/**
+	 * Gets the {@link IndexInformation} for the indices defined by {@link #getIndexCoordinates()}.
+	 *
+	 * @return a flux of {@link IndexInformation}
+	 * @since 4.2
+	 */
+	Flux<IndexInformation> getInformation(IndexCoordinates index);
+
+	// endregion
+
 	// region helper functions
 	/**
 	 * get the current {@link IndexCoordinates}. These may change over time when the entity class has a SpEL constructed
@@ -287,11 +307,5 @@ public interface ReactiveIndexOperations {
 	 */
 	IndexCoordinates getIndexCoordinates();
 
-	/**
-	 *
-	 * @return a flux of {@link IndexInformation}
-	 * @since 4.2
-	 */
-	Flux<IndexInformation> getInformation();
 	// endregion
 }

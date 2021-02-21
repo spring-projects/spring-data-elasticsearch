@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,14 +60,10 @@ import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
-import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.client.indices.GetMappingsRequest;
-import org.elasticsearch.client.indices.IndexTemplateMetadata;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
-import org.elasticsearch.cluster.metadata.AliasMetadata;
-import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.DistanceUnit;
@@ -104,12 +98,10 @@ import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
-import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -499,7 +491,6 @@ class RequestFactory {
 		return new org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest().indices(indexNames);
 	}
 
-
 	public PutIndexTemplateRequest putIndexTemplateRequest(PutTemplateRequest putTemplateRequest) {
 
 		PutIndexTemplateRequest request = new PutIndexTemplateRequest(putTemplateRequest.getName())
@@ -641,38 +632,6 @@ class RequestFactory {
 
 	public GetIndexTemplatesRequest getIndexTemplatesRequest(GetTemplateRequest getTemplateRequest) {
 		return new GetIndexTemplatesRequest(getTemplateRequest.getTemplateName());
-	}
-
-	@Nullable
-	public TemplateData getTemplateData(GetIndexTemplatesResponse getIndexTemplatesResponse, String templateName) {
-		for (IndexTemplateMetadata indexTemplateMetadata : getIndexTemplatesResponse.getIndexTemplates()) {
-
-			if (indexTemplateMetadata.name().equals(templateName)) {
-
-				Document settings = Document.create();
-				Settings templateSettings = indexTemplateMetadata.settings();
-				templateSettings.keySet().forEach(key -> settings.put(key, templateSettings.get(key)));
-
-				Map<String, AliasData> aliases = new LinkedHashMap<>();
-
-				ImmutableOpenMap<String, AliasMetadata> aliasesResponse = indexTemplateMetadata.aliases();
-				Iterator<String> keysIt = aliasesResponse.keysIt();
-				while (keysIt.hasNext()) {
-					String key = keysIt.next();
-					aliases.put(key, ResponseConverter.convertAliasMetadata(aliasesResponse.get(key)));
-				}
-				TemplateData templateData = TemplateData.builder()
-						.withIndexPatterns(indexTemplateMetadata.patterns().toArray(new String[0])) //
-						.withSettings(settings) //
-						.withMapping(Document.from(indexTemplateMetadata.mappings().getSourceAsMap())) //
-						.withAliases(aliases) //
-						.withOrder(indexTemplateMetadata.order()) //
-						.withVersion(indexTemplateMetadata.version()).build();
-
-				return templateData;
-			}
-		}
-		return null;
 	}
 
 	public org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesRequest getIndexTemplatesRequest(
@@ -1802,40 +1761,6 @@ class RequestFactory {
 
 		return null;
 	}
-
-	// endregion
-
-	// region response stuff
-
-	/**
-	 * extract the index settings information for a given index
-	 *
-	 * @param response the Elasticsearch response
-	 * @param indexName the index name
-	 * @return settings as {@link Document}
-	 */
-	public Document fromSettingsResponse(GetSettingsResponse response, String indexName) {
-
-		Document settings = Document.create();
-
-		if (!response.getIndexToDefaultSettings().isEmpty()) {
-			Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);
-			for (String key : defaultSettings.keySet()) {
-				settings.put(key, defaultSettings.get(key));
-			}
-		}
-
-		if (!response.getIndexToSettings().isEmpty()) {
-			Settings customSettings = response.getIndexToSettings().get(indexName);
-			for (String key : customSettings.keySet()) {
-				settings.put(key, customSettings.get(key));
-			}
-		}
-
-		return settings;
-	}
-
-
 
 	// endregion
 }

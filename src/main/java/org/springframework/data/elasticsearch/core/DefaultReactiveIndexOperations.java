@@ -18,6 +18,9 @@ package org.springframework.data.elasticsearch.core;
 import static org.elasticsearch.client.Requests.*;
 import static org.springframework.util.StringUtils.*;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -52,13 +55,8 @@ import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
-import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 /**
  * @author Peter-Josef Meisch
@@ -74,7 +72,6 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	private final RequestFactory requestFactory;
 	private final ReactiveElasticsearchOperations operations;
 	private final ElasticsearchConverter converter;
-	private final ResponseConverter responseConverter;
 
 	public DefaultReactiveIndexOperations(ReactiveElasticsearchOperations operations, IndexCoordinates index) {
 
@@ -84,7 +81,6 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.operations = operations;
 		this.converter = operations.getElasticsearchConverter();
 		this.requestFactory = new RequestFactory(operations.getElasticsearchConverter());
-		this.responseConverter = new ResponseConverter();
 		this.boundClass = null;
 		this.boundIndex = index;
 	}
@@ -97,7 +93,6 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.operations = operations;
 		this.converter = operations.getElasticsearchConverter();
 		this.requestFactory = new RequestFactory(operations.getElasticsearchConverter());
-		this.responseConverter = new ResponseConverter();
 		this.boundClass = clazz;
 		this.boundIndex = getIndexCoordinatesFor(clazz);
 	}
@@ -223,7 +218,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		GetSettingsRequest request = requestFactory.getSettingsRequest(indexName, includeDefaults);
 
 		return Mono.from(operations.executeWithIndicesClient(client -> client.getSettings(request)))
-				.map(getSettingsResponse -> requestFactory.fromSettingsResponse(getSettingsResponse, indexName));
+				.map(getSettingsResponse -> ResponseConverter.fromSettingsResponse(getSettingsResponse, indexName));
 	}
 
 	// endregion
@@ -250,7 +245,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(aliasNames, indexNames);
 		return Mono.from(operations.executeWithIndicesClient(client -> client.getAliases(getAliasesRequest)))
-				.map(GetAliasesResponse::getAliases).map(responseConverter::convertAliasesResponse);
+				.map(GetAliasesResponse::getAliases).map(ResponseConverter::aliasDatas);
 	}
 	// endregion
 
@@ -273,7 +268,8 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		return Mono.from(operations.executeWithIndicesClient(client -> client.getTemplate(getIndexTemplatesRequest)))
 				.flatMap(response -> {
 					if (response != null) {
-						TemplateData templateData = requestFactory.getTemplateData(response, getTemplateRequest.getTemplateName());
+						TemplateData templateData = ResponseConverter.getTemplateData(response,
+								getTemplateRequest.getTemplateName());
 						if (templateData != null) {
 							return Mono.just(templateData);
 						}
@@ -311,12 +307,15 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	}
 
 	@Override
-	public Flux<IndexInformation> getInformation() {
-		org.elasticsearch.client.indices.GetIndexRequest getIndexRequest = requestFactory.getIndexRequest(getIndexCoordinates());
+	public Flux<IndexInformation> getInformation(IndexCoordinates index) {
 
-		 return Mono.from(operations.executeWithIndicesClient(client ->
-				 client.getIndex(HttpHeaders.EMPTY, getIndexRequest).map(responseConverter::indexInformationCollection)))
-				 .flatMapMany(Flux::fromIterable);
+        Assert.notNull(index, "index must not be null");
+
+	    org.elasticsearch.client.indices.GetIndexRequest getIndexRequest = requestFactory.getIndexRequest(index);
+		return Mono
+				.from(operations.executeWithIndicesClient(
+						client -> client.getIndex(getIndexRequest).map(ResponseConverter::getIndexInformations)))
+				.flatMapMany(Flux::fromIterable);
 	}
 
 	private IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {

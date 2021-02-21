@@ -52,14 +52,13 @@ import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
  * {@link IndexOperations} implementation using the RestClient.
- * 
+ *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
  * @author George Popides
@@ -178,8 +177,8 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 
 		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(aliasNames, indexNames);
 
-		return restTemplate.execute(client -> responseConverter
-				.convertAliasesResponse(client.indices().getAlias(getAliasesRequest, RequestOptions.DEFAULT).getAliases()));
+		return restTemplate.execute(client -> ResponseConverter
+				.aliasDatas(client.indices().getAlias(getAliasesRequest, RequestOptions.DEFAULT).getAliases()));
 	}
 
 	@Override
@@ -199,7 +198,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 		GetSettingsResponse response = restTemplate.execute(client -> client.indices() //
 				.getSettings(getSettingsRequest, RequestOptions.DEFAULT));
 
-		return requestFactory.fromSettingsResponse(response, getSettingsRequest.indices()[0]);
+		return ResponseConverter.fromSettingsResponse(response, getSettingsRequest.indices()[0]);
 	}
 
 	@Override
@@ -234,7 +233,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 		GetIndexTemplatesRequest getIndexTemplatesRequest = requestFactory.getIndexTemplatesRequest(getTemplateRequest);
 		GetIndexTemplatesResponse getIndexTemplatesResponse = restTemplate
 				.execute(client -> client.indices().getIndexTemplate(getIndexTemplatesRequest, RequestOptions.DEFAULT));
-		return requestFactory.getTemplateData(getIndexTemplatesResponse, getTemplateRequest.getTemplateName());
+		return ResponseConverter.getTemplateData(getIndexTemplatesResponse, getTemplateRequest.getTemplateName());
 	}
 
 	@Override
@@ -260,17 +259,15 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	public List<IndexInformation> getInformation() {
-		IndexCoordinates indexCoordinates = getIndexCoordinates();
-		GetIndexRequest request = requestFactory.getIndexRequest(indexCoordinates);
+	public List<IndexInformation> getInformation(IndexCoordinates index) {
 
-		return restTemplate.execute(
-				client -> {
-					GetIndexResponse getIndexResponse = client.indices().get(request, RequestOptions.DEFAULT);
-					return responseConverter.indexInformationCollection(getIndexResponse);
-				});
+		Assert.notNull(index, "index must not be null");
+
+		GetIndexRequest request = requestFactory.getIndexRequest(index);
+		return restTemplate.execute(client -> {
+			GetIndexResponse getIndexResponse = client.indices().get(request, RequestOptions.DEFAULT);
+			return ResponseConverter.getIndexInformations(getIndexResponse);
+		});
 	}
-
 	// endregion
-
 }

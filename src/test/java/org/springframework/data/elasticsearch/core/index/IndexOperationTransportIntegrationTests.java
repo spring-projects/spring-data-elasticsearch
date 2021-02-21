@@ -6,7 +6,5 @@ import org.springframework.test.context.ContextConfiguration;
 /**
  * @author George Popides
  */
-
 @ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
-public class IndexOperationTransportTests extends IndexOperationTests {
-}
+public class IndexOperationTransportIntegrationTests extends IndexOperationIntegrationTests {}

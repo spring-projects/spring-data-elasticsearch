@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
-import org.elasticsearch.client.indices.GetIndexResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -54,6 +53,7 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.indices.GetFieldMappingsRequest;
 import org.elasticsearch.client.indices.GetFieldMappingsResponse;
+import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
@@ -1458,6 +1458,39 @@ public interface ReactiveElasticsearchClient {
 		 */
 		Mono<Boolean> deleteTemplate(HttpHeaders headers, DeleteIndexTemplateRequest deleteIndexTemplateRequest);
 
-		Mono<GetIndexResponse> getIndex(HttpHeaders headers, org.elasticsearch.client.indices.GetIndexRequest getIndexRequest);
+		/**
+		 * Execute the given {@link GetIndexRequest} against the {@literal indices} API.
+		 *
+		 * @param consumer never {@literal null}.
+		 * @return the {@link Mono} emitting the response
+		 * @since 4.2
+		 */
+		default Mono<GetIndexResponse> getIndex(Consumer<org.elasticsearch.client.indices.GetIndexRequest> consumer) {
+			org.elasticsearch.client.indices.GetIndexRequest getIndexRequest = new org.elasticsearch.client.indices.GetIndexRequest();
+			consumer.accept(getIndexRequest);
+			return getIndex(getIndexRequest);
+		}
+
+		/**
+		 * Execute the given {@link GetIndexRequest} against the {@literal indices} API.
+		 *
+		 * @param getIndexRequest must not be {@literal null}
+		 * @return the {@link Mono} emitting the response
+		 * @since 4.2
+		 */
+		default Mono<GetIndexResponse> getIndex(org.elasticsearch.client.indices.GetIndexRequest getIndexRequest) {
+			return getIndex(HttpHeaders.EMPTY, getIndexRequest);
+		}
+
+		/**
+		 * Execute the given {@link GetIndexRequest} against the {@literal indices} API.
+		 *
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param getIndexRequest must not be {@literal null}
+		 * @return the {@link Mono} emitting the response
+		 * @since 4.2
+		 */
+		Mono<GetIndexResponse> getIndex(HttpHeaders headers,
+				org.elasticsearch.client.indices.GetIndexRequest getIndexRequest);
 	}
 }

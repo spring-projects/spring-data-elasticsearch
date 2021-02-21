@@ -20,6 +20,14 @@ import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
 import java.lang.Boolean;
 import java.lang.Long;
 import java.lang.Object;
@@ -74,14 +82,6 @@ import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.util.StringUtils;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
 /**
  * Integration tests for {@link ReactiveElasticsearchTemplate}.
@@ -641,8 +641,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.as(StepVerifier::create) //
 				.consumeNextWith(byQueryResponse -> {
 					assertThat(byQueryResponse.getDeleted()).isEqualTo(0L);
-				})
-				.verifyComplete();
+				}).verifyComplete();
 	}
 
 	@Test // DATAES-547
@@ -1079,44 +1078,41 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@DisplayName("should not return explanation when not requested")
 	void shouldNotReturnExplanationWhenNotRequested() {
 
-		ElasticsearchTemplateTests.SampleEntity entity = ElasticsearchTemplateTests.SampleEntity.builder().id("42").message("a message with text").build();
+		ElasticsearchTemplateTests.SampleEntity entity = ElasticsearchTemplateTests.SampleEntity.builder().id("42")
+				.message("a message with text").build();
 		template.save(entity).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		Criteria criteria = new Criteria("message").contains("with");
 		CriteriaQuery query = new CriteriaQuery(criteria);
 
-		template.search(query, ElasticsearchTemplateTests.SampleEntity.class)
-				.as(StepVerifier::create)
+		template.search(query, ElasticsearchTemplateTests.SampleEntity.class).as(StepVerifier::create)
 				.consumeNextWith(searchHit -> {
 					Explanation explanation = searchHit.getExplanation();
 					assertThat(explanation).isNull();
-				})
-				.verifyComplete();
+				}).verifyComplete();
 	}
 
 	@Test // #725
 	@DisplayName("should return explanation when requested")
 	void shouldReturnExplanationWhenRequested() {
 
-		ElasticsearchTemplateTests.SampleEntity entity = ElasticsearchTemplateTests.SampleEntity.builder().id("42").message("a message with text").build();
+		ElasticsearchTemplateTests.SampleEntity entity = ElasticsearchTemplateTests.SampleEntity.builder().id("42")
+				.message("a message with text").build();
 		template.save(entity).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		Criteria criteria = new Criteria("message").contains("with");
 		CriteriaQuery query = new CriteriaQuery(criteria);
 		query.setExplain(true);
 
-		template.search(query, ElasticsearchTemplateTests.SampleEntity.class)
-				.as(StepVerifier::create)
+		template.search(query, ElasticsearchTemplateTests.SampleEntity.class).as(StepVerifier::create)
 				.consumeNextWith(searchHit -> {
 					Explanation explanation = searchHit.getExplanation();
 					assertThat(explanation).isNotNull();
-				})
-				.verifyComplete();
+				}).verifyComplete();
 	}
 
-
 	@Test // #1646
-	@DisplayName("should return a list of info for specific index using reactive template")
+	@DisplayName("should return a list of info for specific index")
 	void shouldReturnInformationListOfAllIndices() {
 		String indexName = "test-index-reactive-information-list";
 		String aliasName = "testindexinformationindex";
@@ -1125,42 +1121,33 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		indexOps.create().block();
 		indexOps.putMapping().block();
 
-		AliasActionParameters parameters = AliasActionParameters.builder()
-				.withAliases(aliasName)
-				.withIndices(indexName)
-				.withIsHidden(false)
-				.withIsWriteIndex(false)
-				.withRouting("indexrouting")
-				.withSearchRouting("searchrouting")
+		AliasActionParameters parameters = AliasActionParameters.builder().withAliases(aliasName).withIndices(indexName)
+				.withIsHidden(false).withIsWriteIndex(false).withRouting("indexrouting").withSearchRouting("searchrouting")
 				.build();
 		indexOps.alias(new AliasActions(new AliasAction.Add(parameters))).block();
 
-		indexOps
-				.getInformation()
-				.as(StepVerifier::create)
-				.consumeNextWith(indexInformation -> {
-					assertThat(indexInformation.getName()).isEqualTo(indexName);
-					assertThat(indexInformation.getSettings().get("index.number_of_shards")).isEqualTo("1");
-					assertThat(indexInformation.getSettings().get("index.number_of_replicas")).isEqualTo("0");
-					assertThat(indexInformation.getSettings().get("index.analysis.analyzer.emailAnalyzer.type")).isEqualTo("custom");
-					assertThat(indexInformation.getAliases()).hasSize(1);
+		indexOps.getInformation().as(StepVerifier::create).consumeNextWith(indexInformation -> {
+			assertThat(indexInformation.getName()).isEqualTo(indexName);
+			assertThat(indexInformation.getSettings().get("index.number_of_shards")).isEqualTo("1");
+			assertThat(indexInformation.getSettings().get("index.number_of_replicas")).isEqualTo("0");
+			assertThat(indexInformation.getSettings().get("index.analysis.analyzer.emailAnalyzer.type")).isEqualTo("custom");
+			assertThat(indexInformation.getAliases()).hasSize(1);
 
-					AliasData aliasData = indexInformation.getAliases().get(0);
+			AliasData aliasData = indexInformation.getAliases().get(0);
 
-					assertThat(aliasData.getAlias()).isEqualTo(aliasName);
-					assertThat(aliasData.isHidden()).isEqualTo(false);
-					assertThat(aliasData.isWriteIndex()).isEqualTo(false);
-					assertThat(aliasData.getIndexRouting()).isEqualTo("indexrouting");
-					assertThat(aliasData.getSearchRouting()).isEqualTo("searchrouting");
+			assertThat(aliasData.getAlias()).isEqualTo(aliasName);
+			assertThat(aliasData.isHidden()).isEqualTo(false);
+			assertThat(aliasData.isWriteIndex()).isEqualTo(false);
+			assertThat(aliasData.getIndexRouting()).isEqualTo("indexrouting");
+			assertThat(aliasData.getSearchRouting()).isEqualTo("searchrouting");
 
-					String expectedMappings = "{\"properties\":{\"email\":{\"type\":\"text\",\"analyzer\":\"emailAnalyzer\"}}}";
-					try {
-						JSONAssert.assertEquals(expectedMappings, indexInformation.getMappings().toJson(), false);
-					} catch (JSONException e) {
-						e.printStackTrace();
-					}
-				})
-				.verifyComplete();
+			String expectedMappings = "{\"properties\":{\"email\":{\"type\":\"text\",\"analyzer\":\"emailAnalyzer\"}}}";
+			try {
+				JSONAssert.assertEquals(expectedMappings, indexInformation.getMapping().toJson(), false);
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}).verifyComplete();
 	}
 
 	// endregion
@@ -1266,8 +1253,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Setting(settingPath = "settings/test-settings.json")
 	@Mapping(mappingPath = "mappings/test-mappings.json")
 	private static class EntityWithSettingsAndMappingsReactive {
-		@Id
-		String id;
+		@Id String id;
 	}
 
 	// endregion

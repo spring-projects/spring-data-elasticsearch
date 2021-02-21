@@ -59,7 +59,6 @@ import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -181,7 +180,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 		Map<String, Set<AliasMetadata>> aliasesResponse = new LinkedHashMap<>();
 		aliases.keysIt().forEachRemaining(index -> aliasesResponse.put(index, new HashSet<>(aliases.get(index))));
-		return responseConverter.convertAliasesResponse(aliasesResponse);
+		return ResponseConverter.aliasDatas(aliasesResponse);
 	}
 
 	@Override
@@ -203,7 +202,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 				.getSettings(getSettingsRequest) //
 				.actionGet();
 
-		return requestFactory.fromSettingsResponse(response, index.getIndexName());
+		return ResponseConverter.fromSettingsResponse(response, index.getIndexName());
 	}
 
 	@Override
@@ -247,7 +246,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 				Iterator<String> keysItAliases = aliasesResponse.keysIt();
 				while (keysItAliases.hasNext()) {
 					String key = keysItAliases.next();
-					aliases.put(key, responseConverter.convertAliasMetadata(aliasesResponse.get(key)));
+					aliases.put(key, ResponseConverter.toAliasData(aliasesResponse.get(key)));
 				}
 
 				Map<String, String> mappingsDoc = new LinkedHashMap<>();
@@ -302,14 +301,13 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	public List<IndexInformation> getInformation() {
+	public List<IndexInformation> getInformation(IndexCoordinates index) {
+
+		Assert.notNull(index, "index must not be null");
+
 		GetIndexRequest getIndexRequest = new GetIndexRequest();
-		IndexCoordinates index = getIndexCoordinates();
-
 		getIndexRequest.indices(index.getIndexNames());
-
 		GetIndexResponse getIndexResponse = client.admin().indices().getIndex(getIndexRequest).actionGet();
-
-		return responseConverter.indexInformationCollection(getIndexResponse);
+		return ResponseConverter.getIndexInformations(getIndexResponse);
 	}
 }

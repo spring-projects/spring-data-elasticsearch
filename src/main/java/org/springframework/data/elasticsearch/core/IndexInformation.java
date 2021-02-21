@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.elasticsearch.core.mapping;
+package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
 
@@ -26,53 +26,44 @@ import org.springframework.lang.Nullable;
  * Immutable object that holds information(name, settings, mappings, aliases) about an Index
  *
  * @author George Popides
+ * @author Peter-Josef Meisch
  * @since 4.2
  */
 public class IndexInformation {
 	private final String name;
-	@Nullable
-	private final Document settings;
-	@Nullable
-	private final Document mappings;
-	@Nullable
-	private final List<AliasData> aliases;
+	@Nullable private final Document settings;
+	@Nullable private final Document mapping;
+	@Nullable private final List<AliasData> aliases;
 
-
-	public static IndexInformation create(
-			String indexName,
-			@Nullable Document settings,
-			@Nullable Document mappings,
-			@Nullable List<AliasData> aliases
-	) {
-		return new IndexInformation(indexName, settings, mappings, aliases);
+	public static IndexInformation of(String name, @Nullable Document settings, @Nullable Document mapping,
+			@Nullable List<AliasData> aliases) {
+		return new IndexInformation(name, settings, mapping, aliases);
 	}
 
-	private IndexInformation(
-			String indexName,
-			@Nullable Document settings,
-			@Nullable Document mappings,
-			@Nullable List<AliasData> aliases
-	) {
-		this.name = indexName;
+	private IndexInformation(String name, @Nullable Document settings, @Nullable Document mapping,
+			@Nullable List<AliasData> aliases) {
+		this.name = name;
 		this.settings = settings;
-		this.mappings = mappings;
+		this.mapping = mapping;
 		this.aliases = aliases;
-	}
-
-	public Document getMappings() {
-		return mappings;
 	}
 
 	public String getName() {
 		return name;
 	}
 
+	@Nullable
+	public Document getMapping() {
+		return mapping;
+	}
+
+	@Nullable
 	public Document getSettings() {
 		return settings;
 	}
 
+	@Nullable
 	public List<AliasData> getAliases() {
 		return aliases;
 	}
-
 }

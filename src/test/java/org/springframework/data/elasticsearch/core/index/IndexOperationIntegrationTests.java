@@ -17,6 +17,8 @@ package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
 
+import lombok.Data;
+
 import java.util.List;
 
 import org.json.JSONException;
@@ -30,22 +32,22 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.IndexOperations;
-import org.springframework.data.elasticsearch.core.mapping.IndexInformation;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.test.context.ContextConfiguration;
-
-import lombok.Data;
 
 /**
  * @author George Popides
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
-public class IndexOperationTests {
-	@Autowired
-	protected ElasticsearchOperations operations;
+public class IndexOperationIntegrationTests {
+
+	public static final String INDEX_NAME = "test-index-information-list";
+
+	@Autowired protected ElasticsearchOperations operations;
 
 	@BeforeEach
 	void setUp() {
@@ -58,18 +60,12 @@ public class IndexOperationTests {
 		IndexOperations indexOps = operations.indexOps(EntityWithSettingsAndMappings.class);
 
 		String aliasName = "testindexinformationindex";
-		String indexName = "test-index-information-list";
 
 		indexOps.create();
 		indexOps.putMapping();
 
-		AliasActionParameters parameters = AliasActionParameters.builder()
-				.withAliases(aliasName)
-				.withIndices(indexName)
-				.withIsHidden(false)
-				.withIsWriteIndex(false)
-				.withRouting("indexrouting")
-				.withSearchRouting("searchrouting")
+		AliasActionParameters parameters = AliasActionParameters.builder().withAliases(aliasName).withIndices(INDEX_NAME)
+				.withIsHidden(false).withIsWriteIndex(false).withRouting("indexrouting").withSearchRouting("searchrouting")
 				.build();
 		indexOps.alias(new AliasActions(new AliasAction.Add(parameters)));
 
@@ -78,7 +74,7 @@ public class IndexOperationTests {
 		IndexInformation indexInformation = indexInformationList.get(0);
 
 		assertThat(indexInformationList.size()).isEqualTo(1);
-		assertThat(indexInformation.getName()).isEqualTo(indexName);
+		assertThat(indexInformation.getName()).isEqualTo(INDEX_NAME);
 		assertThat(indexInformation.getSettings().get("index.number_of_shards")).isEqualTo("1");
 		assertThat(indexInformation.getSettings().get("index.number_of_replicas")).isEqualTo("0");
 		assertThat(indexInformation.getSettings().get("index.analysis.analyzer.emailAnalyzer.type")).isEqualTo("custom");
@@ -93,15 +89,14 @@ public class IndexOperationTests {
 		assertThat(aliasData.getSearchRouting()).isEqualTo("searchrouting");
 
 		String expectedMappings = "{\"properties\":{\"email\":{\"type\":\"text\",\"analyzer\":\"emailAnalyzer\"}}}";
-		JSONAssert.assertEquals(expectedMappings, indexInformation.getMappings().toJson(), false);
+		JSONAssert.assertEquals(expectedMappings, indexInformation.getMapping().toJson(), false);
 	}
 
 	@Data
-	@Document(indexName = "test-index-information-list")
+	@Document(indexName = INDEX_NAME)
 	@Setting(settingPath = "settings/test-settings.json")
 	@Mapping(mappingPath = "mappings/test-mappings.json")
 	protected static class EntityWithSettingsAndMappings {
-		@Id
-		String id;
+		@Id String id;
 	}
 }

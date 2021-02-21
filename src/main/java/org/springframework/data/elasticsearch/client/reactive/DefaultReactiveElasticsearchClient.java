@@ -15,6 +15,18 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import io.netty.channel.ChannelOption;
+import io.netty.handler.ssl.ApplicationProtocolConfig;
+import io.netty.handler.ssl.ClientAuth;
+import io.netty.handler.ssl.IdentityCipherSuiteFilter;
+import io.netty.handler.ssl.JdkSslContext;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.transport.ProxyProvider;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
@@ -119,18 +131,6 @@ import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
-
-import io.netty.channel.ChannelOption;
-import io.netty.handler.ssl.ApplicationProtocolConfig;
-import io.netty.handler.ssl.ClientAuth;
-import io.netty.handler.ssl.IdentityCipherSuiteFilter;
-import io.netty.handler.ssl.JdkSslContext;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.transport.ProxyProvider;
 
 /**
  * A {@link WebClient} based {@link ReactiveElasticsearchClient} that connects to an Elasticsearch cluster using HTTP.
@@ -760,9 +760,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	}
 
 	@Override
-	public Mono<GetIndexResponse> getIndex(HttpHeaders headers, org.elasticsearch.client.indices.GetIndexRequest getIndexRequest) {
-		return sendRequest(getIndexRequest, requestCreator.getIndex(), GetIndexResponse.class, headers)
-				.next();
+	public Mono<GetIndexResponse> getIndex(HttpHeaders headers,
+			org.elasticsearch.client.indices.GetIndexRequest getIndexRequest) {
+		return sendRequest(getIndexRequest, requestCreator.getIndex(), GetIndexResponse.class, headers).next();
 	}
 
 	// endregion
