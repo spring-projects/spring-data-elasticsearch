@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.ScrollableHitSource;
 import org.springframework.lang.Nullable;
 
 /**
@@ -43,10 +44,11 @@ public class ByQueryResponse {
 	private final long searchRetries;
 	@Nullable private final String reasonCancelled;
 	private final List<Failure> failures;
+	private final List<SearchFailure> searchFailures;
 
 	private ByQueryResponse(long took, boolean timedOut, long total, long updated, long deleted, int batches,
-			long versionConflicts, long noops, long bulkRetries, long searchRetries, @Nullable String reasonCancelled,
-			List<Failure> failures) {
+                            long versionConflicts, long noops, long bulkRetries, long searchRetries,
+                            @Nullable String reasonCancelled, List<Failure> failures, List<SearchFailure> searchFailures) {
 		this.took = took;
 		this.timedOut = timedOut;
 		this.total = total;
@@ -59,7 +61,8 @@ public class ByQueryResponse {
 		this.searchRetries = searchRetries;
 		this.reasonCancelled = reasonCancelled;
 		this.failures = failures;
-	}
+        this.searchFailures = searchFailures;
+    }
 
 	/**
 	 * The number of milliseconds from start to end of the whole operation.
@@ -148,7 +151,14 @@ public class ByQueryResponse {
 		return failures;
 	}
 
-	/**
+    /**
+     * Failures during search phase
+     */
+    public List<SearchFailure> getSearchFailures() {
+        return searchFailures;
+    }
+
+    /**
 	 * Create a new {@link ByQueryResponseBuilder} to build {@link ByQueryResponse}
 	 *
 	 * @return a new {@link ByQueryResponseBuilder} to build {@link ByQueryResponse}
@@ -163,7 +173,12 @@ public class ByQueryResponse {
 				.map(Failure::of) //
 				.collect(Collectors.toList()); //
 
-		return ByQueryResponse.builder() //
+        final List<SearchFailure> searchFailures = bulkByScrollResponse.getSearchFailures() //
+                .stream() //
+                .map(SearchFailure::of) //
+                .collect(Collectors.toList());//
+
+        return ByQueryResponse.builder() //
 				.withTook(bulkByScrollResponse.getTook().getMillis()) //
 				.withTimedOut(bulkByScrollResponse.isTimedOut()) //
 				.withTotal(bulkByScrollResponse.getTotal()) //
@@ -176,6 +191,7 @@ public class ByQueryResponse {
 				.withSearchRetries(bulkByScrollResponse.getSearchRetries()) //
 				.withReasonCancelled(bulkByScrollResponse.getReasonCancelled()) //
 				.withFailures(failures) //
+                .withSearchFailure(searchFailures) //
 				.build(); //
 	}
 
@@ -331,6 +347,115 @@ public class ByQueryResponse {
 		}
 	}
 
+	public static class SearchFailure {
+        private final Throwable reason;
+        @Nullable private final Integer status;
+        @Nullable private final String index;
+        @Nullable private final Integer shardId;
+        @Nullable private final String nodeId;
+
+        private SearchFailure(Throwable reason, @Nullable Integer status, @Nullable String index,
+                             @Nullable Integer shardId, @Nullable String nodeId) {
+            this.reason = reason;
+            this.status = status;
+            this.index = index;
+            this.shardId = shardId;
+            this.nodeId = nodeId;
+        }
+
+        public Throwable getReason() {
+            return reason;
+        }
+
+        @Nullable
+        public Integer getStatus() {
+            return status;
+        }
+
+        @Nullable
+        public String getIndex() {
+            return index;
+        }
+
+        @Nullable
+        public Integer getShardId() {
+            return shardId;
+        }
+
+        @Nullable
+        public String getNodeId() {
+            return nodeId;
+        }
+
+        /**
+         * Create a new {@link SearchFailureBuilder} to build {@link SearchFailure}
+         *
+         * @return a new {@link SearchFailureBuilder} to build {@link SearchFailure}
+         */
+        public static SearchFailureBuilder builder() {
+            return new SearchFailureBuilder();
+        }
+
+        /**
+         * Create a new {@link SearchFailure} from {@link ScrollableHitSource.SearchFailure}
+         *
+         * @param searchFailure {@link ScrollableHitSource.SearchFailure} to translate
+         * @return a new {@link SearchFailure}
+         */
+        public static SearchFailure of(ScrollableHitSource.SearchFailure searchFailure) {
+            return builder() //
+                    .withReason(searchFailure.getReason()) //
+                    .withIndex(searchFailure.getIndex()) //
+                    .withNodeId(searchFailure.getNodeId()) //
+                    .withShardId(searchFailure.getShardId()) //
+                    .withStatus(searchFailure.getStatus().getStatus()) //
+                    .build(); //
+        }
+
+        /**
+         * Builder for {@link SearchFailure}
+         */
+        public static final class SearchFailureBuilder {
+            private Throwable reason;
+            @Nullable private Integer status;
+            @Nullable private String index;
+            @Nullable private Integer shardId;
+            @Nullable private String nodeId;
+
+            private SearchFailureBuilder() {}
+
+            public SearchFailureBuilder withReason(Throwable reason) {
+                this.reason = reason;
+                return this;
+            }
+
+            public SearchFailureBuilder withStatus(Integer status) {
+                this.status = status;
+                return this;
+            }
+
+            public SearchFailureBuilder withIndex(String index) {
+                this.index = index;
+                return this;
+            }
+
+            public SearchFailureBuilder withShardId(Integer shardId) {
+                this.shardId = shardId;
+                return this;
+            }
+
+            public SearchFailureBuilder withNodeId(String nodeId) {
+                this.nodeId = nodeId;
+                return this;
+            }
+
+            public SearchFailure build() {
+                return new SearchFailure(reason, status, index, shardId, nodeId);
+            }
+        }
+
+    }
+
 	public static final class ByQueryResponseBuilder {
 		private long took;
 		private boolean timedOut;
@@ -344,6 +469,7 @@ public class ByQueryResponse {
 		private long searchRetries;
 		@Nullable private String reasonCancelled;
 		private List<Failure> failures = Collections.emptyList();
+		private List<SearchFailure> searchFailures = Collections.emptyList();
 
 		private ByQueryResponseBuilder() {}
 
@@ -407,9 +533,14 @@ public class ByQueryResponse {
 			return this;
 		}
 
+		public ByQueryResponseBuilder withSearchFailure(List<SearchFailure> searchFailures) {
+		    this.searchFailures = searchFailures;
+		    return this;
+        }
+
 		public ByQueryResponse build() {
 			return new ByQueryResponse(took, timedOut, total, updated, deleted, batches, versionConflicts, noops, bulkRetries,
-					searchRetries, reasonCancelled, failures);
+					searchRetries, reasonCancelled, failures, searchFailures);
 		}
 	}
 }
