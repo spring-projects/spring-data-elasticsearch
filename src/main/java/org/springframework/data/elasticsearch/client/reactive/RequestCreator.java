@@ -6,12 +6,8 @@ import java.util.function.Function;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushRequest;
-import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
@@ -28,10 +24,14 @@ import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetFieldMappingsRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
+import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
@@ -114,15 +114,37 @@ public interface RequestCreator {
 
 	// --> INDICES
 
-	default Function<GetIndexRequest, Request> indexExists() {
+    /**
+     * @deprecated since 4.2
+     */
+    @Deprecated
+	default Function<org.elasticsearch.action.admin.indices.get.GetIndexRequest, Request> indexExists() {
 		return RequestConverters::indexExists;
 	}
+
+    /**
+     * @since 4.2
+     */
+    default Function<GetIndexRequest, Request> indexExistsRequest() {
+        return RequestConverters::indexExists;
+    }
 
 	default Function<DeleteIndexRequest, Request> indexDelete() {
 		return RequestConverters::indexDelete;
 	}
 
-	default Function<CreateIndexRequest, Request> indexCreate() {
+    /**
+     * @deprecated since 4.2
+     */
+    @Deprecated
+	default Function<org.elasticsearch.action.admin.indices.create.CreateIndexRequest, Request> indexCreate() {
+		return RequestConverters::indexCreate;
+	}
+
+    /**
+     * @since 4.2
+     */
+	default Function<CreateIndexRequest, Request> createIndexRequest() {
 		return RequestConverters::indexCreate;
 	}
 
@@ -138,9 +160,20 @@ public interface RequestCreator {
 		return RequestConverters::indexRefresh;
 	}
 
-	default Function<PutMappingRequest, Request> putMapping() {
+    /**
+     * @deprecated since 4.2
+     */
+    @Deprecated
+	default Function<org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest, Request> putMapping() {
 		return RequestConverters::putMapping;
 	}
+
+    /**
+     * @since 4.2
+     */
+    default Function<PutMappingRequest, Request> putMappingRequest() {
+        return RequestConverters::putMapping;
+    }
 
 	default Function<FlushRequest, Request> flushIndex() {
 		return RequestConverters::flushIndex;
@@ -159,10 +192,19 @@ public interface RequestCreator {
 
 	/**
 	 * @since 4.1
+     * @deprecated since 4.2
 	 */
-	default Function<GetMappingsRequest, Request> getMapping() {
+	@Deprecated
+	default Function<org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest, Request> getMapping() {
 		return RequestConverters::getMapping;
 	}
+
+    /**
+     * @since 4.2
+     */
+    default Function<GetMappingsRequest, Request> getMappingRequest() {
+        return RequestConverters::getMapping;
+    }
 
 	/**
 	 * @since 4.1
@@ -216,7 +258,7 @@ public interface RequestCreator {
 	/**
 	 * @since 4.2
 	 */
-	default Function<org.elasticsearch.client.indices.GetIndexRequest, Request> getIndex() {
+	default Function<GetIndexRequest, Request> getIndex() {
 		return RequestConverters::getIndex;
 	}
 }

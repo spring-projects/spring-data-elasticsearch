@@ -18,6 +18,10 @@ package org.springframework.data.elasticsearch.client.reactive;
 import static org.assertj.core.api.Assertions.*;
 
 import lombok.SneakyThrows;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.GetMappingsRequest;
+import org.elasticsearch.common.xcontent.XContentType;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -583,6 +587,28 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.verifyComplete();
 	}
 
+    @Test // #1658
+    public void indexExistsShouldReturnTrueIfExists() {
+
+        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+
+        client.indices().existsIndex(new GetIndexRequest(INDEX_I)) //
+                .as(StepVerifier::create) //
+                .expectNext(true) //
+                .verifyComplete();
+    }
+
+    @Test // #1658
+    public void indexExistsShouldReturnFalseIfNotExists() {
+
+        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+
+        client.indices().existsIndex(new GetIndexRequest(INDEX_II)) //
+                .as(StepVerifier::create) //
+                .expectNext(false) //
+                .verifyComplete();
+    }
+
 	@Test // DATAES-569, DATAES-678
 	public void createIndex() {
 
@@ -606,6 +632,55 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.as(StepVerifier::create) //
 				.verifyError(ElasticsearchStatusException.class);
 	}
+
+    @Test // #1658
+    public void createIndex_() {
+
+        client.indices().createIndex(new CreateIndexRequest(INDEX_I))
+                .as(StepVerifier::create)
+                .expectNext(true)
+                .verifyComplete();
+
+        operations.indexOps(IndexCoordinates.of(INDEX_I)).exists() //
+                .as(StepVerifier::create) //
+                .expectNext(true) //
+                .verifyComplete();
+    }
+
+    @Test // #1658
+    public void createExistingIndexErrors_() {
+
+        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+
+        client.indices().createIndex(new CreateIndexRequest(INDEX_I)) //
+                .as(StepVerifier::create) //
+                .verifyError(ElasticsearchStatusException.class);
+    }
+
+    @Test // #1658
+    public void getIndex() {
+
+        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+
+        client.indices().getIndex(new GetIndexRequest(INDEX_I))
+                .as(StepVerifier::create)
+                .consumeNextWith(it -> {
+                    assertThat(it.getIndices().length).isOne();
+                    assertThat(it.getIndices()[0]).isEqualTo(INDEX_I);
+                })
+                .verifyComplete();
+    }
+
+    @Test // #1658
+    public void getIndexError() {
+
+        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+
+        client.indices().getIndex(new GetIndexRequest(INDEX_II))
+                .as(StepVerifier::create)
+                .verifyError(ElasticsearchStatusException.class);
+    }
+
 
 	@Test // DATAES-569, DATAES-678
 	public void deleteExistingIndex() {
@@ -685,6 +760,82 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.as(StepVerifier::create) //
 				.verifyError(ElasticsearchStatusException.class);
 	}
+
+    @Test // #1640
+    void putMapping() {
+
+        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+
+        Map<String, Object> jsonMap = Collections.singletonMap("properties",
+                Collections.singletonMap("message", Collections.singletonMap("type", "text")));
+
+        org.elasticsearch.client.indices.PutMappingRequest putMappingRequest =
+                new org.elasticsearch.client.indices.PutMappingRequest(INDEX_I).source(jsonMap);
+
+        client.indices().putMapping(putMappingRequest) //
+                .as(StepVerifier::create) //
+                .expectNext(true) //
+                .verifyComplete();
+    }
+
+    @Test // #1640
+    void putMappingError() {
+
+        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+
+        Map<String, Object> jsonMap = Collections.singletonMap("properties",
+                Collections.singletonMap("message", Collections.singletonMap("type", "text")));
+
+        org.elasticsearch.client.indices.PutMappingRequest putMappingRequest =
+                new org.elasticsearch.client.indices.PutMappingRequest(INDEX_II).source(jsonMap);
+
+        client.indices().putMapping(putMappingRequest) //
+                .as(StepVerifier::create) //
+                .verifyError(ElasticsearchStatusException.class);
+    }
+
+    @Test // #1640
+    void getMapping() {
+
+        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+
+        Map<String, Object> jsonMap = Collections.singletonMap("properties",
+                Collections.singletonMap("message", Collections.singletonMap("type", "text")));
+
+        org.elasticsearch.client.indices.PutMappingRequest putMappingRequest =
+                new org.elasticsearch.client.indices.PutMappingRequest(INDEX_I).source(jsonMap);
+
+        client.indices().putMapping(putMappingRequest).block();
+
+        final GetMappingsRequest getMappingsRequest = new GetMappingsRequest().indices(INDEX_I);
+
+        client.indices().getMapping(getMappingsRequest) //
+                .as(StepVerifier::create) //
+                .consumeNextWith(it -> {
+                    assertThat(it.mappings().get(INDEX_I).getSourceAsMap()).isEqualTo(jsonMap);
+                })
+                .verifyComplete();
+    }
+
+    @Test // #1640
+    void getMappingError() {
+
+        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+
+        Map<String, Object> jsonMap = Collections.singletonMap("properties",
+                Collections.singletonMap("message", Collections.singletonMap("type", "text")));
+
+        org.elasticsearch.client.indices.PutMappingRequest putMappingRequest =
+                new org.elasticsearch.client.indices.PutMappingRequest(INDEX_I).source(jsonMap);
+
+        client.indices().putMapping(putMappingRequest).block();
+
+        final GetMappingsRequest getMappingsRequest = new GetMappingsRequest().indices(INDEX_II);
+
+        client.indices().getMapping(getMappingsRequest) //
+                .as(StepVerifier::create) //
+                .verifyError(ElasticsearchStatusException.class);
+    }
 
 	@Test // DATAES-569
 	public void updateMapping() {
