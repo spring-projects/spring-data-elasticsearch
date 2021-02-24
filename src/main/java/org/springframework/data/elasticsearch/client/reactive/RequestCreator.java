@@ -114,36 +114,36 @@ public interface RequestCreator {
 
 	// --> INDICES
 
-    /**
-     * @deprecated since 4.2
-     */
-    @Deprecated
+	/**
+	 * @deprecated since 4.2
+	 */
+	@Deprecated
 	default Function<org.elasticsearch.action.admin.indices.get.GetIndexRequest, Request> indexExists() {
 		return RequestConverters::indexExists;
 	}
 
-    /**
-     * @since 4.2
-     */
-    default Function<GetIndexRequest, Request> indexExistsRequest() {
-        return RequestConverters::indexExists;
-    }
+	/**
+	 * @since 4.2
+	 */
+	default Function<GetIndexRequest, Request> indexExistsRequest() {
+		return RequestConverters::indexExists;
+	}
 
 	default Function<DeleteIndexRequest, Request> indexDelete() {
 		return RequestConverters::indexDelete;
 	}
 
-    /**
-     * @deprecated since 4.2
-     */
-    @Deprecated
+	/**
+	 * @deprecated since 4.2
+	 */
+	@Deprecated
 	default Function<org.elasticsearch.action.admin.indices.create.CreateIndexRequest, Request> indexCreate() {
 		return RequestConverters::indexCreate;
 	}
 
-    /**
-     * @since 4.2
-     */
+	/**
+	 * @since 4.2
+	 */
 	default Function<CreateIndexRequest, Request> createIndexRequest() {
 		return RequestConverters::indexCreate;
 	}
@@ -160,20 +160,20 @@ public interface RequestCreator {
 		return RequestConverters::indexRefresh;
 	}
 
-    /**
-     * @deprecated since 4.2
-     */
-    @Deprecated
+	/**
+	 * @deprecated since 4.2
+	 */
+	@Deprecated
 	default Function<org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest, Request> putMapping() {
 		return RequestConverters::putMapping;
 	}
 
-    /**
-     * @since 4.2
-     */
-    default Function<PutMappingRequest, Request> putMappingRequest() {
-        return RequestConverters::putMapping;
-    }
+	/**
+	 * @since 4.2
+	 */
+	default Function<PutMappingRequest, Request> putMappingRequest() {
+		return RequestConverters::putMapping;
+	}
 
 	default Function<FlushRequest, Request> flushIndex() {
 		return RequestConverters::flushIndex;
@@ -192,19 +192,19 @@ public interface RequestCreator {
 
 	/**
 	 * @since 4.1
-     * @deprecated since 4.2
+	 * @deprecated since 4.2
 	 */
 	@Deprecated
 	default Function<org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest, Request> getMapping() {
 		return RequestConverters::getMapping;
 	}
 
-    /**
-     * @since 4.2
-     */
-    default Function<GetMappingsRequest, Request> getMappingRequest() {
-        return RequestConverters::getMapping;
-    }
+	/**
+	 * @since 4.2
+	 */
+	default Function<GetMappingsRequest, Request> getMappingRequest() {
+		return RequestConverters::getMapping;
+	}
 
 	/**
 	 * @since 4.1
