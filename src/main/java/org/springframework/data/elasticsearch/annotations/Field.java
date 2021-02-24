@@ -34,6 +34,8 @@ import org.springframework.core.annotation.AliasFor;
  * @author Peter-Josef Meisch
  * @author Xiao Yu
  * @author Aleksei Arsenev
+ * @author Brian Kimmig
+ * @author Morgan Lutz
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
@@ -185,4 +187,11 @@ public @interface Field {
 	 * @since 4.1
 	 */
 	NullValueType nullValueType() default NullValueType.String;
+
+	/**
+   	 * to be used in combination with {@link FieldType#Dense_Vector}
+	 *
+	 * @since 4.2
+	 */
+	int dims() default -1;
 }

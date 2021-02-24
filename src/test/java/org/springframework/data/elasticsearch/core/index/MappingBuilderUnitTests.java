@@ -69,6 +69,8 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @author Xiao Yu
  * @author Roman Puchkovskiy
+ * @author Brian Kimmig
+ * @author Morgan Lutz
  */
 public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
@@ -502,6 +504,23 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				"}\n"; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(RankFeatureEntity.class);
+
+		assertEquals(expected, mapping, false);
+	}
+
+  	@Test // #1700
+	@DisplayName("should write dense_vector properties")
+	void shouldWriteDenseVectorProperties() throws JSONException {
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"my_vector\": {\n" + //
+				"      \"type\": \"dense_vector\",\n" + //
+				"      \"dims\": 16\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(DenseVectorEntity.class);
 
 		assertEquals(expected, mapping, false);
 	}
@@ -961,6 +980,13 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Rank_Feature) private Integer pageRank;
 		@Field(type = FieldType.Rank_Feature, positiveScoreImpact = false) private Integer urlLength;
 		@Field(type = FieldType.Rank_Features) private Map<String, Integer> topics;
+	}
+
+  	@Data
+	static class DenseVectorEntity {
+
+		@Id private String id;
+		@Field(type = FieldType.Dense_Vector, dims = 16) private float[] my_vector;
 	}
 
 	@Data
