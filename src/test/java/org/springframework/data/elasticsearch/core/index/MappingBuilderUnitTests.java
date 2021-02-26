@@ -31,6 +31,7 @@ import lombok.Setter;
 import java.lang.Boolean;
 import java.lang.Double;
 import java.lang.Integer;
+import java.lang.Object;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -508,7 +509,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
-  	@Test // #1700
+	@Test // #1700
 	@DisplayName("should write dense_vector properties")
 	void shouldWriteDenseVectorProperties() throws JSONException {
 		String expected = "{\n" + //
@@ -563,9 +564,8 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should only allow disabled properties on type object")
 	void shouldOnlyAllowDisabledPropertiesOnTypeObject() {
 
-		assertThatThrownBy(() ->
-				getMappingBuilder().buildPropertyMapping(InvalidDisabledMappingProperty.class)
-		).isInstanceOf(MappingException.class);
+		assertThatThrownBy(() -> getMappingBuilder().buildPropertyMapping(InvalidDisabledMappingProperty.class))
+				.isInstanceOf(MappingException.class);
 	}
 
 	@Setter
@@ -982,7 +982,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Rank_Features) private Map<String, Integer> topics;
 	}
 
-  	@Data
+	@Data
 	static class DenseVectorEntity {
 
 		@Id private String id;
@@ -999,15 +999,13 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@Data
 	static class InvalidDisabledMappingProperty {
 		@Id private String id;
-		@Mapping(enabled = false)
-		@Field(type = Text) private String text;
+		@Mapping(enabled = false) @Field(type = Text) private String text;
 	}
 
 	@Data
 	static class DisabledMappingProperty {
 		@Id private String id;
 		@Field(type = Text) private String text;
-		@Mapping(enabled = false)
-		@Field(type = Object) private Object object;
+		@Mapping(enabled = false) @Field(type = Object) private Object object;
 	}
 }

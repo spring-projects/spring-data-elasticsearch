@@ -1,7 +1,7 @@
 package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.Dense_Vector;
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Object;
 
 import java.lang.annotation.Annotation;

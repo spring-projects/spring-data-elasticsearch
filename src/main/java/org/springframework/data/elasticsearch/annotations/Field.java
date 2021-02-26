@@ -159,14 +159,14 @@ public @interface Field {
 
 	/**
 	 * if true, the field will be stored in Elasticsearch even if it has a null value
-	 * 
+	 *
 	 * @since 4.1
 	 */
 	boolean storeNullValue() default false;
 
 	/**
 	 * to be used in combination with {@link FieldType#Rank_Feature}
-	 * 
+	 *
 	 * @since 4.1
 	 */
 	boolean positiveScoreImpact() default true;
@@ -189,7 +189,7 @@ public @interface Field {
 	NullValueType nullValueType() default NullValueType.String;
 
 	/**
-   	 * to be used in combination with {@link FieldType#Dense_Vector}
+	 * to be used in combination with {@link FieldType#Dense_Vector}
 	 *
 	 * @since 4.2
 	 */
