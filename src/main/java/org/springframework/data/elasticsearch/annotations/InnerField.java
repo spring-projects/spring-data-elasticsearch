@@ -27,6 +27,8 @@ import java.lang.annotation.Target;
  * @author Xiao Yu
  * @author Peter-Josef Meisch
  * @author Aleksei Arsenev
+ * @author Brian Kimmig
+ * @author Morgan Lutz
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)
@@ -140,4 +142,11 @@ public @interface InnerField {
 	 * @since 4.1
 	 */
 	NullValueType nullValueType() default NullValueType.String;
+
+	/**
+	 * to be used in combination with {@link FieldType#Dense_Vector}
+	 *
+	 * @since 4.2
+	 */
+	int dims() default -1;
 }
