@@ -250,7 +250,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	public <T> List<T> multiGet(Query query, Class<T> clazz) {
+	public <T> List<MultiGetItem<T>> multiGet(Query query, Class<T> clazz) {
 		return multiGet(query, clazz, getIndexCoordinatesFor(clazz));
 	}
 

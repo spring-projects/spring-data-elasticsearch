@@ -147,10 +147,10 @@ public interface ReactiveDocumentOperations {
 	 *
 	 * @param query the query defining the ids of the objects to get
 	 * @param clazz the type of the object to be returned, used to determine the index
-	 * @return flux with list of nullable objects
+	 * @return flux with list of {@link MultiGetItem}s that contain the entities
 	 * @since 4.1
 	 */
-	<T> Flux<T> multiGet(Query query, Class<T> clazz);
+	<T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz);
 
 	/**
 	 * Execute a multiGet against elasticsearch for the given ids.
@@ -158,10 +158,10 @@ public interface ReactiveDocumentOperations {
 	 * @param query the query defining the ids of the objects to get
 	 * @param clazz the type of the object to be returned
 	 * @param index the index(es) from which the objects are read.
-	 * @return flux with list of nullable objects
+	 * @return flux with list of {@link MultiGetItem}s that contain the entities
 	 * @since 4.0
 	 */
-	<T> Flux<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
+	<T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Bulk update all objects. Will do update.

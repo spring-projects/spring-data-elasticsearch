@@ -237,7 +237,7 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(sampleEntity1).isEqualTo(sampleEntity);
 	}
 
-	@Test // DATAES-52
+	@Test // DATAES-52, #1678
 	public void shouldReturnObjectsForGivenIdsUsingMultiGet() {
 
 		// given
@@ -258,15 +258,15 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(Arrays.asList(documentId, documentId2)).build();
-		List<SampleEntity> sampleEntities = operations.multiGet(query, SampleEntity.class, index);
+		List<MultiGetItem<SampleEntity>> sampleEntities = operations.multiGet(query, SampleEntity.class, index);
 
 		// then
 		assertThat(sampleEntities).hasSize(2);
-		assertThat(sampleEntities.get(0)).isEqualTo(sampleEntity1);
-		assertThat(sampleEntities.get(1)).isEqualTo(sampleEntity2);
+		assertThat(sampleEntities.get(0).getItem()).isEqualTo(sampleEntity1);
+		assertThat(sampleEntities.get(1).getItem()).isEqualTo(sampleEntity2);
 	}
 
-	@Test // DATAES-791
+	@Test // DATAES-791, #1678
 	public void shouldReturnNullObjectForNotExistingIdUsingMultiGet() {
 
 		// given
@@ -290,16 +290,30 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(idsToSearch).hasSize(3);
 
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(idsToSearch).build();
-		List<SampleEntity> sampleEntities = operations.multiGet(query, SampleEntity.class, index);
+		List<MultiGetItem<SampleEntity>> sampleEntities = operations.multiGet(query, SampleEntity.class, index);
 
 		// then
 		assertThat(sampleEntities).hasSize(3);
-		assertThat(sampleEntities.get(0)).isEqualTo(sampleEntity1);
-		assertThat(sampleEntities.get(1)).isNull();
-		assertThat(sampleEntities.get(2)).isEqualTo(sampleEntity2);
+		assertThat(sampleEntities.get(0).getItem()).isEqualTo(sampleEntity1);
+		assertThat(sampleEntities.get(1).getItem()).isNull();
+		assertThat(sampleEntities.get(2).getItem()).isEqualTo(sampleEntity2);
 	}
 
-	@Test // DATAES-52
+	@Test // #1678
+	@DisplayName("should return failure in multiget result")
+	void shouldReturnFailureInMultigetResult() {
+
+		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(Arrays.asList("42")).build();
+		List<MultiGetItem<SampleEntity>> sampleEntities = operations.multiGet(query, SampleEntity.class,
+				IndexCoordinates.of("not-existing-index"));
+
+		// then
+		assertThat(sampleEntities).hasSize(1);
+		assertThat(sampleEntities.get(0).isFailed()).isTrue();
+		assertThat(sampleEntities.get(0).getFailure()).isNotNull();
+	}
+
+	@Test // DATAES-52, #1678
 	public void shouldReturnObjectsForGivenIdsUsingMultiGetWithFields() {
 
 		// given
@@ -321,7 +335,7 @@ public abstract class ElasticsearchTemplateTests {
 		// when
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withIds(Arrays.asList(documentId, documentId2))
 				.withFields("message", "type").build();
-		List<SampleEntity> sampleEntities = operations.multiGet(query, SampleEntity.class, index);
+		List<MultiGetItem<SampleEntity>> sampleEntities = operations.multiGet(query, SampleEntity.class, index);
 
 		// then
 		assertThat(sampleEntities).hasSize(2);
@@ -3263,9 +3277,9 @@ public abstract class ElasticsearchTemplateTests {
 		OptimisticEntity saved = operations.save(original);
 		operations.indexOps(OptimisticEntity.class).refresh();
 
-		List<OptimisticEntity> retrievedList = operations.multiGet(queryForOne(saved.getId()), OptimisticEntity.class,
-				operations.getIndexCoordinatesFor(OptimisticEntity.class));
-		OptimisticEntity retrieved = retrievedList.get(0);
+		List<MultiGetItem<OptimisticEntity>> retrievedList = operations.multiGet(queryForOne(saved.getId()),
+				OptimisticEntity.class, operations.getIndexCoordinatesFor(OptimisticEntity.class));
+		OptimisticEntity retrieved = retrievedList.get(0).getItem();
 
 		assertThatSeqNoPrimaryTermIsFilled(retrieved);
 	}

@@ -168,7 +168,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> List<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
+	public <T> List<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
 
 		Assert.notNull(index, "index must not be null");
 		Assert.notEmpty(query.getIds(), "No Id defined for Query");
@@ -177,7 +177,10 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		MultiGetResponse result = execute(client -> client.mget(request, RequestOptions.DEFAULT));
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
-		return DocumentAdapters.from(result).stream().map(callback::doWith).collect(Collectors.toList());
+		return DocumentAdapters.from(result).stream() //
+				.map(multiGetItem -> MultiGetItem.of( //
+						multiGetItem.isFailed() ? null : callback.doWith(multiGetItem.getItem()), multiGetItem.getFailure())) //
+				.collect(Collectors.toList());
 	}
 
 	@Override

@@ -772,7 +772,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-623
+	@Test // DATAES-623, #1678
 	public void shouldReturnObjectsForGivenIdsUsingMultiGet() {
 		SampleEntity entity1 = randomEntity("test message 1");
 		entity1.rate = 1;
@@ -786,7 +786,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.build();
 
 		template.multiGet(query, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
-				.as(StepVerifier::create) //
+				.map(MultiGetItem::getItem).as(StepVerifier::create) //
 				.expectNext(entity1, entity2) //
 				.verifyComplete();
 	}
@@ -811,7 +811,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-623
+	@Test // DATAES-623. #1678
 	public void shouldDoBulkUpdate() {
 		SampleEntity entity1 = randomEntity("test message 1");
 		entity1.rate = 1;
@@ -841,6 +841,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.withIds(Arrays.asList(entity1.getId(), entity2.getId())) //
 				.build();
 		template.multiGet(getQuery, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+				.map(MultiGetItem::getItem) //
 				.as(StepVerifier::create) //
 				.expectNextMatches(entity -> entity.getMessage().equals("updated 1")) //
 				.expectNextMatches(entity -> entity.getMessage().equals("updated 2")) //
@@ -891,7 +892,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isPositive();
 	}
 
-	@Test // DATAES-799
+	@Test // DATAES-799, #1678
 	void multiGetShouldReturnSeqNoPrimaryTerm() {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
@@ -899,8 +900,10 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		template
 				.multiGet(multiGetQueryForOne(saved.getId()), OptimisticEntity.class,
-						template.getIndexCoordinatesFor(OptimisticEntity.class))
-				.as(StepVerifier::create).assertNext(this::assertThatSeqNoPrimaryTermIsFilled).verifyComplete();
+						template.getIndexCoordinatesFor(OptimisticEntity.class)) //
+				.map(MultiGetItem::getItem) //
+				.as(StepVerifier::create) //
+				.assertNext(this::assertThatSeqNoPrimaryTermIsFilled).verifyComplete();
 	}
 
 	private Query multiGetQueryForOne(String id) {

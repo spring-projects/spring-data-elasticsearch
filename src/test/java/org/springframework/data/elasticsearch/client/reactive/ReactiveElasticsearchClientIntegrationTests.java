@@ -18,10 +18,6 @@ package org.springframework.data.elasticsearch.client.reactive;
 import static org.assertj.core.api.Assertions.*;
 
 import lombok.SneakyThrows;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.client.indices.GetMappingsRequest;
-import org.elasticsearch.common.xcontent.XContentType;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -45,8 +41,10 @@ import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
@@ -197,7 +195,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-488
+	@Test // DATAES-488, #1678
 	public void multiGetShouldReturnAllDocumentsFromSameCollection() {
 
 		String id1 = addSourceDocument().to(INDEX_I);
@@ -209,12 +207,18 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.multiGet(request) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(it -> assertThat(it.getId()).isEqualTo(id1)) //
-				.consumeNextWith(it -> assertThat(it.getId()).isEqualTo(id2)) //
+				.consumeNextWith(it -> {
+					assertThat(it.getResponse().isExists()).isTrue(); //
+					assertThat(it.getId()).isEqualTo(id1); //
+				}) //
+				.consumeNextWith(it -> {
+					assertThat(it.getResponse().isExists()).isTrue(); //
+					assertThat(it.getId()).isEqualTo(id2); //
+				}) //
 				.verifyComplete();
 	}
 
-	@Test // DATAES-488
+	@Test // DATAES-488, #1678
 	public void multiGetShouldReturnAllExistingDocumentsFromSameCollection() {
 
 		String id1 = addSourceDocument().to(INDEX_I);
@@ -226,12 +230,20 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.multiGet(request) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(it -> assertThat(it.getId()).isEqualTo(id1)) //
+				.consumeNextWith(it -> {
+					assertThat(it.isFailed()).isFalse(); //
+					assertThat(it.getResponse().isExists()).isTrue(); //
+					assertThat(it.getId()).isEqualTo(id1); //
+				}) //
+				.consumeNextWith(it -> {
+					assertThat(it.isFailed()).isFalse(); //
+					assertThat(it.getResponse().isExists()).isFalse(); //
+				}) //
 				.verifyComplete();
 	}
 
-	@Test // DATAES-488
-	public void multiGetShouldSkipNonExistingDocuments() {
+	@Test // DATAES-488, #1678
+	public void multiGetShouldNotSkipNonExistingDocuments() {
 
 		String id1 = addSourceDocument().to(INDEX_I);
 		String id2 = addSourceDocument().to(INDEX_I);
@@ -242,9 +254,21 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.add(INDEX_I, id2); //
 
 		client.multiGet(request) //
-				.map(GetResult::getId) //
 				.as(StepVerifier::create) //
-				.expectNext(id1, id2) //
+				.consumeNextWith(it -> {
+					assertThat(it.isFailed()).isFalse(); //
+					assertThat(it.getResponse().isExists()).isTrue(); //
+					assertThat(it.getId()).isEqualTo(id1); //
+				}) //
+				.consumeNextWith(it -> {
+					assertThat(it.isFailed()).isFalse(); //
+					assertThat(it.getResponse().isExists()).isFalse();
+				}) //
+				.consumeNextWith(it -> {
+					assertThat(it.isFailed()).isFalse(); //
+					assertThat(it.getResponse().isExists()).isTrue(); //
+					assertThat(it.getId()).isEqualTo(id2); //
+				}) //
 				.verifyComplete();
 	}
 
@@ -257,10 +281,12 @@ public class ReactiveElasticsearchClientIntegrationTests {
 		client.multiGet(new MultiGetRequest() //
 				.add(INDEX_II, id1).add(INDEX_II, id2)) //
 				.as(StepVerifier::create) //
+				.consumeNextWith(it -> assertThat(it.isFailed()).isTrue()) //
+				.consumeNextWith(it -> assertThat(it.isFailed()).isTrue()) //
 				.verifyComplete();
 	}
 
-	@Test // DATAES-488
+	@Test // DATAES-488, #1678
 	public void multiGetShouldReturnAllExistingDocumentsFromDifferentCollection() {
 
 		String id1 = addSourceDocument().to(INDEX_I);
@@ -271,10 +297,16 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.add(INDEX_II, id2);
 
 		client.multiGet(request) //
-				.map(GetResult::getId) //
 				.as(StepVerifier::create) //
-				.expectNext(id1, id2) //
-				.verifyComplete();
+				.consumeNextWith(it -> { //
+					assertThat(it.isFailed()).isFalse(); //
+					assertThat(it.getId()).isEqualTo(id1); //
+				}) //
+				.consumeNextWith(it -> { //
+					assertThat(it.isFailed()).isFalse(); //
+					assertThat(it.getId()).isEqualTo(id2); //
+				}) //
+				.verifyComplete(); //
 	}
 
 	@Test // DATAES-488
@@ -587,27 +619,27 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.verifyComplete();
 	}
 
-    @Test // #1658
-    public void indexExistsShouldReturnTrueIfExists() {
+	@Test // #1658
+	public void indexExistsShouldReturnTrueIfExists() {
 
-        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
-        client.indices().existsIndex(new GetIndexRequest(INDEX_I)) //
-                .as(StepVerifier::create) //
-                .expectNext(true) //
-                .verifyComplete();
-    }
+		client.indices().existsIndex(new GetIndexRequest(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.expectNext(true) //
+				.verifyComplete();
+	}
 
-    @Test // #1658
-    public void indexExistsShouldReturnFalseIfNotExists() {
+	@Test // #1658
+	public void indexExistsShouldReturnFalseIfNotExists() {
 
-        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
-        client.indices().existsIndex(new GetIndexRequest(INDEX_II)) //
-                .as(StepVerifier::create) //
-                .expectNext(false) //
-                .verifyComplete();
-    }
+		client.indices().existsIndex(new GetIndexRequest(INDEX_II)) //
+				.as(StepVerifier::create) //
+				.expectNext(false) //
+				.verifyComplete();
+	}
 
 	@Test // DATAES-569, DATAES-678
 	public void createIndex() {
@@ -633,54 +665,47 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.verifyError(ElasticsearchStatusException.class);
 	}
 
-    @Test // #1658
-    public void createIndex_() {
+	@Test // #1658
+	public void createIndex_() {
 
-        client.indices().createIndex(new CreateIndexRequest(INDEX_I))
-                .as(StepVerifier::create)
-                .expectNext(true)
-                .verifyComplete();
+		client.indices().createIndex(new CreateIndexRequest(INDEX_I)).as(StepVerifier::create).expectNext(true)
+				.verifyComplete();
 
-        operations.indexOps(IndexCoordinates.of(INDEX_I)).exists() //
-                .as(StepVerifier::create) //
-                .expectNext(true) //
-                .verifyComplete();
-    }
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).exists() //
+				.as(StepVerifier::create) //
+				.expectNext(true) //
+				.verifyComplete();
+	}
 
-    @Test // #1658
-    public void createExistingIndexErrors_() {
+	@Test // #1658
+	public void createExistingIndexErrors_() {
 
-        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
-        client.indices().createIndex(new CreateIndexRequest(INDEX_I)) //
-                .as(StepVerifier::create) //
-                .verifyError(ElasticsearchStatusException.class);
-    }
+		client.indices().createIndex(new CreateIndexRequest(INDEX_I)) //
+				.as(StepVerifier::create) //
+				.verifyError(ElasticsearchStatusException.class);
+	}
 
-    @Test // #1658
-    public void getIndex() {
+	@Test // #1658
+	public void getIndex() {
 
-        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
-        client.indices().getIndex(new GetIndexRequest(INDEX_I))
-                .as(StepVerifier::create)
-                .consumeNextWith(it -> {
-                    assertThat(it.getIndices().length).isOne();
-                    assertThat(it.getIndices()[0]).isEqualTo(INDEX_I);
-                })
-                .verifyComplete();
-    }
+		client.indices().getIndex(new GetIndexRequest(INDEX_I)).as(StepVerifier::create).consumeNextWith(it -> {
+			assertThat(it.getIndices().length).isOne();
+			assertThat(it.getIndices()[0]).isEqualTo(INDEX_I);
+		}).verifyComplete();
+	}
 
-    @Test // #1658
-    public void getIndexError() {
+	@Test // #1658
+	public void getIndexError() {
 
-        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
-        client.indices().getIndex(new GetIndexRequest(INDEX_II))
-                .as(StepVerifier::create)
-                .verifyError(ElasticsearchStatusException.class);
-    }
-
+		client.indices().getIndex(new GetIndexRequest(INDEX_II)).as(StepVerifier::create)
+				.verifyError(ElasticsearchStatusException.class);
+	}
 
 	@Test // DATAES-569, DATAES-678
 	public void deleteExistingIndex() {
@@ -761,81 +786,80 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.verifyError(ElasticsearchStatusException.class);
 	}
 
-    @Test // #1640
-    void putMapping() {
+	@Test // #1640
+	void putMapping() {
 
-        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
-        Map<String, Object> jsonMap = Collections.singletonMap("properties",
-                Collections.singletonMap("message", Collections.singletonMap("type", "text")));
+		Map<String, Object> jsonMap = Collections.singletonMap("properties",
+				Collections.singletonMap("message", Collections.singletonMap("type", "text")));
 
-        org.elasticsearch.client.indices.PutMappingRequest putMappingRequest =
-                new org.elasticsearch.client.indices.PutMappingRequest(INDEX_I).source(jsonMap);
+		org.elasticsearch.client.indices.PutMappingRequest putMappingRequest = new org.elasticsearch.client.indices.PutMappingRequest(
+				INDEX_I).source(jsonMap);
 
-        client.indices().putMapping(putMappingRequest) //
-                .as(StepVerifier::create) //
-                .expectNext(true) //
-                .verifyComplete();
-    }
+		client.indices().putMapping(putMappingRequest) //
+				.as(StepVerifier::create) //
+				.expectNext(true) //
+				.verifyComplete();
+	}
 
-    @Test // #1640
-    void putMappingError() {
+	@Test // #1640
+	void putMappingError() {
 
-        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
-        Map<String, Object> jsonMap = Collections.singletonMap("properties",
-                Collections.singletonMap("message", Collections.singletonMap("type", "text")));
+		Map<String, Object> jsonMap = Collections.singletonMap("properties",
+				Collections.singletonMap("message", Collections.singletonMap("type", "text")));
 
-        org.elasticsearch.client.indices.PutMappingRequest putMappingRequest =
-                new org.elasticsearch.client.indices.PutMappingRequest(INDEX_II).source(jsonMap);
+		org.elasticsearch.client.indices.PutMappingRequest putMappingRequest = new org.elasticsearch.client.indices.PutMappingRequest(
+				INDEX_II).source(jsonMap);
 
-        client.indices().putMapping(putMappingRequest) //
-                .as(StepVerifier::create) //
-                .verifyError(ElasticsearchStatusException.class);
-    }
+		client.indices().putMapping(putMappingRequest) //
+				.as(StepVerifier::create) //
+				.verifyError(ElasticsearchStatusException.class);
+	}
 
-    @Test // #1640
-    void getMapping() {
+	@Test // #1640
+	void getMapping() {
 
-        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
-        Map<String, Object> jsonMap = Collections.singletonMap("properties",
-                Collections.singletonMap("message", Collections.singletonMap("type", "text")));
+		Map<String, Object> jsonMap = Collections.singletonMap("properties",
+				Collections.singletonMap("message", Collections.singletonMap("type", "text")));
 
-        org.elasticsearch.client.indices.PutMappingRequest putMappingRequest =
-                new org.elasticsearch.client.indices.PutMappingRequest(INDEX_I).source(jsonMap);
+		org.elasticsearch.client.indices.PutMappingRequest putMappingRequest = new org.elasticsearch.client.indices.PutMappingRequest(
+				INDEX_I).source(jsonMap);
 
-        client.indices().putMapping(putMappingRequest).block();
+		client.indices().putMapping(putMappingRequest).block();
 
-        final GetMappingsRequest getMappingsRequest = new GetMappingsRequest().indices(INDEX_I);
+		final GetMappingsRequest getMappingsRequest = new GetMappingsRequest().indices(INDEX_I);
 
-        client.indices().getMapping(getMappingsRequest) //
-                .as(StepVerifier::create) //
-                .consumeNextWith(it -> {
-                    assertThat(it.mappings().get(INDEX_I).getSourceAsMap()).isEqualTo(jsonMap);
-                })
-                .verifyComplete();
-    }
+		client.indices().getMapping(getMappingsRequest) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+					assertThat(it.mappings().get(INDEX_I).getSourceAsMap()).isEqualTo(jsonMap);
+				}).verifyComplete();
+	}
 
-    @Test // #1640
-    void getMappingError() {
+	@Test // #1640
+	void getMappingError() {
 
-        operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
+		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
-        Map<String, Object> jsonMap = Collections.singletonMap("properties",
-                Collections.singletonMap("message", Collections.singletonMap("type", "text")));
+		Map<String, Object> jsonMap = Collections.singletonMap("properties",
+				Collections.singletonMap("message", Collections.singletonMap("type", "text")));
 
-        org.elasticsearch.client.indices.PutMappingRequest putMappingRequest =
-                new org.elasticsearch.client.indices.PutMappingRequest(INDEX_I).source(jsonMap);
+		org.elasticsearch.client.indices.PutMappingRequest putMappingRequest = new org.elasticsearch.client.indices.PutMappingRequest(
+				INDEX_I).source(jsonMap);
 
-        client.indices().putMapping(putMappingRequest).block();
+		client.indices().putMapping(putMappingRequest).block();
 
-        final GetMappingsRequest getMappingsRequest = new GetMappingsRequest().indices(INDEX_II);
+		final GetMappingsRequest getMappingsRequest = new GetMappingsRequest().indices(INDEX_II);
 
-        client.indices().getMapping(getMappingsRequest) //
-                .as(StepVerifier::create) //
-                .verifyError(ElasticsearchStatusException.class);
-    }
+		client.indices().getMapping(getMappingsRequest) //
+				.as(StepVerifier::create) //
+				.verifyError(ElasticsearchStatusException.class);
+	}
 
 	@Test // DATAES-569
 	public void updateMapping() {

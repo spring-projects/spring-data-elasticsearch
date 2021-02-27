@@ -22,6 +22,7 @@ import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.MultiGetItem;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
@@ -161,9 +162,10 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 				.collectList() //
 				.map(ids -> new NativeSearchQueryBuilder().withIds(ids).build()) //
 				.flatMapMany(query -> {
-
 					IndexCoordinates index = entityInformation.getIndexCoordinates();
-					return operations.multiGet(query, entityInformation.getJavaType(), index);
+					return operations.multiGet(query, entityInformation.getJavaType(), index) //
+							.filter(MultiGetItem::hasItem) //
+							.map(MultiGetItem::getItem);
 				});
 	}
 

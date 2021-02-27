@@ -120,10 +120,10 @@ public interface DocumentOperations {
 	 *
 	 * @param query the query defining the ids of the objects to get
 	 * @param clazz the type of the object to be returned
-	 * @return list of objects, contains null values for ids that are not found
+	 * @return list of {@link MultiGetItem}s
 	 * @since 4.1
 	 */
-	<T> List<T> multiGet(Query query, Class<T> clazz);
+	<T> List<MultiGetItem<T>> multiGet(Query query, Class<T> clazz);
 
 	/**
 	 * Execute a multiGet against elasticsearch for the given ids.
@@ -131,9 +131,9 @@ public interface DocumentOperations {
 	 * @param query the query defining the ids of the objects to get
 	 * @param clazz the type of the object to be returned
 	 * @param index the index(es) from which the objects are read.
-	 * @return list of objects, contains null values for ids that are not found
+	 * @return list of {@link MultiGetItem}s
 	 */
-	<T> List<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
+	<T> List<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Check if an entity with given {@literal id} exists.

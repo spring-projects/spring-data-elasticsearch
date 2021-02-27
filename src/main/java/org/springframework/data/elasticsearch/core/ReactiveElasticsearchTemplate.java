@@ -71,10 +71,10 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
+import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
-import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.routing.DefaultRoutingResolver;
@@ -298,12 +298,12 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public <T> Flux<T> multiGet(Query query, Class<T> clazz) {
+	public <T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz) {
 		return multiGet(query, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
-	public <T> Flux<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
+	public <T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
 
 		Assert.notNull(index, "Index must not be null");
 		Assert.notNull(clazz, "Class must not be null");
@@ -314,7 +314,12 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		MultiGetRequest request = requestFactory.multiGetRequest(query, clazz, index);
 		return Flux.from(execute(client -> client.multiGet(request))) //
-				.concatMap(result -> callback.toEntity(DocumentAdapters.from(result)));
+				.map(DocumentAdapters::from) //
+				.flatMap(multiGetItem -> multiGetItem.isFailed() //
+						? Mono.just(MultiGetItem.of(null, multiGetItem.getFailure())) //
+						: callback.toEntity(multiGetItem.getItem())
+								.map((T item) -> MultiGetItem.of(item, multiGetItem.getFailure())) //
+				);
 	}
 
 	@Override
