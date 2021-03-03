@@ -809,6 +809,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		String mediaType = response.headers().contentType().map(MediaType::toString).orElse(XContentType.JSON.mediaType());
 
 		return response.body(BodyExtractors.toMono(byte[].class)) //
+				.switchIfEmpty(Mono.error(
+						new ElasticsearchStatusException(String.format("%s request to %s returned error code %s and no body.",
+								request.getMethod(), request.getEndpoint(), statusCode), status)))
 				.map(bytes -> new String(bytes, StandardCharsets.UTF_8)) //
 				.flatMap(content -> contentOrError(content, mediaType, status))
 				.flatMap(unused -> Mono
@@ -834,7 +837,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	/**
 	 * checks if the given content body contains an {@link ElasticsearchException}, if yes it is returned in a Mono.error.
 	 * Otherwise the content is returned in the Mono
-	 * 
+	 *
 	 * @param content the content to analyze
 	 * @param mediaType the returned media type
 	 * @param status the response status
@@ -855,7 +858,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	/**
 	 * tries to parse an {@link ElasticsearchException} from the given body content
-	 * 
+	 *
 	 * @param content the content to analyse
 	 * @param mediaType the type of the body content
 	 * @return an {@link ElasticsearchException} or {@literal null}.
