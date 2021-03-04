@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -550,13 +549,13 @@ public class MappingElasticsearchConverter
 		}
 
 		Class<?> entityType = ClassUtils.getUserClass(source.getClass());
-		TypeInformation<? extends Object> type = ClassTypeInformation.from(entityType);
+		TypeInformation<? extends Object> typeInformation = ClassTypeInformation.from(entityType);
 
 		if (requiresTypeHint(entityType)) {
-			typeMapper.writeType(type, sink);
+			typeMapper.writeType(typeInformation, sink);
 		}
 
-		writeInternal(source, sink, type);
+		writeInternal(source, sink, typeInformation);
 	}
 
 	/**
@@ -564,11 +563,11 @@ public class MappingElasticsearchConverter
 	 *
 	 * @param source
 	 * @param sink
-	 * @param typeHint
+	 * @param typeInformation
 	 */
 	@SuppressWarnings("unchecked")
 	protected void writeInternal(@Nullable Object source, Map<String, Object> sink,
-			@Nullable TypeInformation<?> typeHint) {
+			@Nullable TypeInformation<?> typeInformation) {
 
 		if (null == source) {
 			return;
@@ -594,7 +593,7 @@ public class MappingElasticsearchConverter
 		}
 
 		ElasticsearchPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(entityType);
-		addCustomTypeKeyIfNecessary(typeHint, source, sink);
+		addCustomTypeKeyIfNecessary(source, sink, typeInformation);
 		writeInternal(source, sink, entity);
 	}
 
@@ -603,7 +602,7 @@ public class MappingElasticsearchConverter
 	 *
 	 * @param source
 	 * @param sink
-	 * @param typeHint
+	 * @param entity
 	 */
 	protected void writeInternal(@Nullable Object source, Map<String, Object> sink,
 			@Nullable ElasticsearchPersistentEntity<?> entity) {
@@ -725,7 +724,7 @@ public class MappingElasticsearchConverter
 		Map<String, Object> document = existingValue instanceof Map ? (Map<String, Object>) existingValue
 				: Document.create();
 
-		addCustomTypeKeyIfNecessary(ClassTypeInformation.from(property.getRawType()), value, document);
+		addCustomTypeKeyIfNecessary(value, document, ClassTypeInformation.from(property.getRawType()));
 		writeInternal(value, document, entity);
 		sink.set(property, document);
 	}
@@ -923,18 +922,18 @@ public class MappingElasticsearchConverter
 	// region helper methods
 
 	/**
-	 * Adds custom type information to the given {@link Map} if necessary. That is if the value is not the same as the one
-	 * given. This is usually the case if you store a subtype of the actual declared type of the property.
+	 * Adds custom typeInformation information to the given {@link Map} if necessary. That is if the value is not the same
+	 * as the one given. This is usually the case if you store a subtype of the actual declared typeInformation of the
+	 * property.
 	 *
-	 * @param type
-	 * @param value must not be {@literal null}.
+	 * @param source must not be {@literal null}.
 	 * @param sink must not be {@literal null}.
+	 * @param type
 	 */
-	protected void addCustomTypeKeyIfNecessary(@Nullable TypeInformation<?> type, Object value,
-			Map<String, Object> sink) {
+	protected void addCustomTypeKeyIfNecessary(Object source, Map<String, Object> sink, @Nullable TypeInformation<?> type) {
 
 		Class<?> reference = type != null ? type.getActualType().getType() : Object.class;
-		Class<?> valueType = ClassUtils.getUserClass(value.getClass());
+		Class<?> valueType = ClassUtils.getUserClass(source.getClass());
 
 		boolean notTheSameClass = !valueType.equals(reference);
 		if (notTheSameClass) {
@@ -948,7 +947,7 @@ public class MappingElasticsearchConverter
 	 * @param type must not be {@literal null}.
 	 * @return {@literal true} if not a simple type, {@link Collection} or type with custom write target.
 	 */
-	private boolean requiresTypeHint(Class<?> type) {
+	public boolean requiresTypeHint(Class<?> type) {
 
 		return !isSimpleType(type) && !ClassUtils.isAssignable(Collection.class, type)
 				&& !conversions.hasCustomWriteTarget(type, Document.class);

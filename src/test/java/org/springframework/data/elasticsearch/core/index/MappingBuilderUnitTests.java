@@ -37,9 +37,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.elasticsearch.search.suggest.completion.context.ContextMapping;
 import org.json.JSONException;
@@ -420,7 +418,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldMappingParameters.class);
 
 		// then
-		assertEquals(expected, mapping, true);
+		assertEquals(expected, mapping, false);
 	}
 
 	@Test
@@ -439,7 +437,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 		String mapping = getMappingBuilder().buildPropertyMapping(ConfigureDynamicMappingEntity.class);
 
-		assertEquals(expected, mapping, true);
+		assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-784
@@ -454,7 +452,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 		String mapping = getMappingBuilder().buildPropertyMapping(ValueDoc.class);
 
-		assertEquals(expected, mapping, true);
+		assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-788
@@ -566,6 +564,54 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 		assertThatThrownBy(() -> getMappingBuilder().buildPropertyMapping(InvalidDisabledMappingProperty.class))
 				.isInstanceOf(MappingException.class);
+	}
+
+	@Test // #1711
+	@DisplayName("should write typeHint entries")
+	void shouldWriteTypeHintEntries() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    },\n" + //
+				"    \"id\": {\n" + //
+				"      \"type\": \"keyword\"\n" + //
+				"    },\n" + //
+				"    \"nestedEntity\": {\n" + //
+				"      \"type\": \"nested\",\n" + //
+				"      \"properties\": {\n" + //
+				"        \"_class\": {\n" + //
+				"          \"type\": \"keyword\",\n" + //
+				"          \"index\": false,\n" + //
+				"          \"doc_values\": false\n" + //
+				"        },\n" + //
+				"        \"nestedField\": {\n" + //
+				"          \"type\": \"text\"\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    },\n" + //
+				"    \"objectEntity\": {\n" + //
+				"      \"type\": \"object\",\n" + //
+				"      \"properties\": {\n" + //
+				"        \"_class\": {\n" + //
+				"          \"type\": \"keyword\",\n" + //
+				"          \"index\": false,\n" + //
+				"          \"doc_values\": false\n" + //
+				"        },\n" + //
+				"        \"objectField\": {\n" + //
+				"          \"type\": \"text\"\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(TypeHintEntity.class);
+
+		assertEquals(expected, mapping, false);
 	}
 
 	@Setter
@@ -862,21 +908,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				orientation = GeoShapeField.Orientation.clockwise) private String shape2;
 	}
 
-	@Document(indexName = "test-index-user-mapping-builder")
-	static class User {
-		@Nullable @Id private String id;
-
-		@Field(type = FieldType.Nested, ignoreFields = { "users" }) private Set<Group> groups = new HashSet<>();
-	}
-
-	@Document(indexName = "test-index-group-mapping-builder")
-	static class Group {
-
-		@Nullable @Id String id;
-
-		@Field(type = FieldType.Nested, ignoreFields = { "groups" }) private Set<User> users = new HashSet<>();
-	}
-
 	@Document(indexName = "test-index-field-mapping-parameters")
 	static class FieldMappingParameters {
 		@Nullable @Field private String indexTrue;
@@ -1007,5 +1038,26 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Id private String id;
 		@Field(type = Text) private String text;
 		@Mapping(enabled = false) @Field(type = Object) private Object object;
+	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	static class TypeHintEntity {
+		@Id @Field(type = Keyword) private String id;
+
+		@Field(type = Nested) private NestedEntity nestedEntity;
+
+		@Field(type = Object) private ObjectEntity objectEntity;
+
+		@Data
+		static class NestedEntity {
+			@Field(type = Text) private String nestedField;
+		}
+
+		@Data
+		static class ObjectEntity {
+			@Field(type = Text) private String objectField;
+		}
 	}
 }

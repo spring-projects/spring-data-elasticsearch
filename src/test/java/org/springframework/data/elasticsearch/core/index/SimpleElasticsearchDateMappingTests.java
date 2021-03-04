@@ -15,13 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
+import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
@@ -43,11 +44,11 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 			+ "\"basicFormatDate\":{\"" + "type\":\"date\",\"format\":\"basic_date\"}}}";
 
 	@Test // DATAES-568, DATAES-828
-	public void testCorrectDateMappings() {
+	public void testCorrectDateMappings() throws JSONException {
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleDateMappingEntity.class);
 
-		assertThat(mapping).isEqualTo(EXPECTED_MAPPING);
+		assertEquals(EXPECTED_MAPPING, mapping, false);
 	}
 
 	/**
