@@ -91,8 +91,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		this.indexOperations = operations.indexOps(this.entityClass);
 
 		if (shouldCreateIndexAndMapping() && !indexOperations.exists()) {
-			indexOperations.create();
-			indexOperations.putMapping(entityClass);
+			indexOperations.createWithMapping();
 		}
 	}
 

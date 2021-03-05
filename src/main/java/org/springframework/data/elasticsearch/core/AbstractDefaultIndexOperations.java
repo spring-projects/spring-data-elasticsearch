@@ -96,7 +96,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 			settings = createSettings(boundClass);
 		}
 
-		return doCreate(getIndexCoordinates(), settings);
+		return doCreate(getIndexCoordinates(), settings, null);
 	}
 
 	@Override
@@ -120,11 +120,21 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
-	public boolean create(Document settings) {
-		return doCreate(getIndexCoordinates(), settings);
+	public boolean createWithMapping() {
+		return doCreate(getIndexCoordinates(), createSettings(), createMapping());
 	}
 
-	protected abstract boolean doCreate(IndexCoordinates index, @Nullable Document settings);
+	@Override
+	public boolean create(Document settings) {
+		return doCreate(getIndexCoordinates(), settings, null);
+	}
+
+	@Override
+	public boolean create(Document settings, Document mapping) {
+		return doCreate(getIndexCoordinates(), settings, mapping);
+	}
+
+	protected abstract boolean doCreate(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping);
 
 	@Override
 	public boolean delete() {
@@ -242,9 +252,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 		}
 
 		// build mapping from field annotations
-		try
-
-		{
+		try {
 			String mapping = new MappingBuilder(elasticsearchConverter).buildPropertyMapping(clazz);
 			return Document.parse(mapping);
 		} catch (Exception e) {

@@ -26,13 +26,13 @@ import java.util.Set;
 
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.client.GetAliasesResponse;
+import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
@@ -101,23 +101,36 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Boolean> create() {
 
-		String indexName = getIndexCoordinates().getIndexName();
+		IndexCoordinates index = getIndexCoordinates();
 
 		if (boundClass != null) {
-			return createSettings(boundClass).flatMap(settings -> doCreate(indexName, settings));
+			return createSettings(boundClass).flatMap(settings -> doCreate(index, settings, null));
 		} else {
-			return doCreate(indexName, null);
+			return doCreate(index, null, null);
 		}
 	}
 
 	@Override
-	public Mono<Boolean> create(Document settings) {
-		return doCreate(getIndexCoordinates().getIndexName(), settings);
+	public Mono<Boolean> createWithMapping() {
+		return createSettings() //
+				.flatMap(settings -> //
+				createMapping().flatMap(mapping -> //
+				doCreate(getIndexCoordinates(), settings, mapping))); //
 	}
 
-	private Mono<Boolean> doCreate(String indexName, @Nullable Document settings) {
+	@Override
+	public Mono<Boolean> create(Document settings) {
+		return doCreate(getIndexCoordinates(), settings, null);
+	}
 
-		CreateIndexRequest request = requestFactory.createIndexRequestReactive(indexName, settings);
+	@Override
+	public Mono<Boolean> create(Document settings, Document mapping) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	private Mono<Boolean> doCreate(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping) {
+
+		CreateIndexRequest request = requestFactory.createIndexRequest(index, settings, mapping);
 		return Mono.from(operations.executeWithIndicesClient(client -> client.createIndex(request)));
 	}
 
@@ -309,9 +322,9 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Flux<IndexInformation> getInformation(IndexCoordinates index) {
 
-        Assert.notNull(index, "index must not be null");
+		Assert.notNull(index, "index must not be null");
 
-	    org.elasticsearch.client.indices.GetIndexRequest getIndexRequest = requestFactory.getIndexRequest(index);
+		org.elasticsearch.client.indices.GetIndexRequest getIndexRequest = requestFactory.getIndexRequest(index);
 		return Mono
 				.from(operations.executeWithIndicesClient(
 						client -> client.getIndex(getIndexRequest).map(ResponseConverter::getIndexInformations)))

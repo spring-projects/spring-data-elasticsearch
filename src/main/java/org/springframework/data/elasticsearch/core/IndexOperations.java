@@ -55,12 +55,30 @@ public interface IndexOperations {
 	boolean create();
 
 	/**
-	 * Create an index for given Settings.
+	 * Create an index for given settings.
 	 *
 	 * @param settings the index settings
 	 * @return {@literal true} if the index was created
 	 */
 	boolean create(Document settings);
+
+	/**
+	 * Create an index for given settings and mapping.
+	 *
+	 * @param settings the index settings
+	 * @param mapping the index mapping
+	 * @return {@literal true} if the index was created
+	 * @since 4.2
+	 */
+	boolean create(Document settings, Document mapping);
+
+	/**
+	 * Create an index with the settings and mapping defined for the entity this IndexOperations is bound to.
+	 *
+	 * @return {@literal true} if the index was created
+	 * @since 4.2
+	 */
+	boolean createWithMapping();
 
 	/**
 	 * Deletes the index this {@link IndexOperations} is bound to
@@ -82,7 +100,7 @@ public interface IndexOperations {
 	void refresh();
 	// endregion
 
-	// region mappings
+	// region mapping
 	/**
 	 * Creates the index mapping for the entity this IndexOperations is bound to.
 	 *
@@ -309,16 +327,16 @@ public interface IndexOperations {
 
 	// endregion
 
-    //region index information
-    /**
-     * Gets the {@link IndexInformation} for the indices defined by {@link #getIndexCoordinates()}.
-     *
-     * @return a list of {@link IndexInformation}
-     * @since 4.2
-     */
-    default List<IndexInformation> getInformation() {
-        return getInformation(getIndexCoordinates());
-    }
+	// region index information
+	/**
+	 * Gets the {@link IndexInformation} for the indices defined by {@link #getIndexCoordinates()}.
+	 *
+	 * @return a list of {@link IndexInformation}
+	 * @since 4.2
+	 */
+	default List<IndexInformation> getInformation() {
+		return getInformation(getIndexCoordinates());
+	}
 
 	/**
 	 * Gets the {@link IndexInformation} for the indices defined by #index.
@@ -328,7 +346,7 @@ public interface IndexOperations {
 	 * @since 4.2
 	 */
 	List<IndexInformation> getInformation(IndexCoordinates index);
-    //endregion
+	// endregion
 
 	// region helper functions
 	/**

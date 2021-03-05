@@ -81,8 +81,8 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	protected boolean doCreate(IndexCoordinates index, @Nullable Document settings) {
-		CreateIndexRequest request = requestFactory.createIndexRequest(index, settings);
+	protected boolean doCreate(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping) {
+		CreateIndexRequest request = requestFactory.createIndexRequest(index, settings, mapping);
 		return restTemplate.execute(client -> client.indices().create(request, RequestOptions.DEFAULT).isAcknowledged());
 	}
 

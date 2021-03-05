@@ -59,6 +59,26 @@ public interface ReactiveIndexOperations {
 	Mono<Boolean> create(Document settings);
 
 	/**
+	 * Create an index for given settings and mapping.
+	 *
+	 * @param settings the index settings
+	 * @param mapping the index mapping
+	 * @return a {@link Mono} signalling successful operation completion or an {@link Mono#error(Throwable) error} if eg.
+	 *         the index already exist.
+	 * @since 4.2
+	 */
+	Mono<Boolean> create(Document settings, Document mapping);
+
+	/**
+	 * Create an index with the settings and mapping defined for the entity this IndexOperations is bound to.
+	 *
+	 * @return a {@link Mono} signalling successful operation completion or an {@link Mono#error(Throwable) error} if eg.
+	 *         the index already exist.
+	 * @since 4.2
+	 */
+	Mono<Boolean> createWithMapping();
+
+	/**
 	 * Delete an index.
 	 *
 	 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error}. If the index does

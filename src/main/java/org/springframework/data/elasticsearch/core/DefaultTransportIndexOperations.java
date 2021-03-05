@@ -90,9 +90,9 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	protected boolean doCreate(IndexCoordinates index, @Nullable Document settings) {
+	protected boolean doCreate(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping) {
 		CreateIndexRequestBuilder createIndexRequestBuilder = requestFactory.createIndexRequestBuilder(client, index,
-				settings);
+				settings, mapping);
 		return createIndexRequestBuilder.execute().actionGet().isAcknowledged();
 	}
 
