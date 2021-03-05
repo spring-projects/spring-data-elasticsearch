@@ -31,6 +31,10 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
@@ -47,10 +51,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-
 /**
  * Utility class to adapt {@link org.elasticsearch.action.get.GetResponse},
  * {@link org.elasticsearch.index.get.GetResult}, {@link org.elasticsearch.action.get.MultiGetResponse}
@@ -60,6 +60,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * @author Mark Paluch
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
+ * @author Matt Gilene
  * @since 4.0
  */
 public class DocumentAdapters {
@@ -181,6 +182,7 @@ public class DocumentAdapters {
 
 		NestedMetaData nestedMetaData = from(source.getNestedIdentity());
 		Explanation explanation = from(source.getExplanation());
+		List<String> matchedQueries = from(source.getMatchedQueries());
 
 		BytesReference sourceRef = source.getSourceRef();
 
@@ -188,7 +190,7 @@ public class DocumentAdapters {
 			return new SearchDocumentAdapter(
 					source.getScore(), source.getSortValues(), source.getFields(), highlightFields, fromDocumentFields(source,
 							source.getIndex(), source.getId(), source.getVersion(), source.getSeqNo(), source.getPrimaryTerm()),
-					innerHits, nestedMetaData, explanation);
+					innerHits, nestedMetaData, explanation, matchedQueries);
 		}
 
 		Document document = Document.from(source.getSourceAsMap());
@@ -202,7 +204,7 @@ public class DocumentAdapters {
 		document.setPrimaryTerm(source.getPrimaryTerm());
 
 		return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(), highlightFields,
-				document, innerHits, nestedMetaData, explanation);
+				document, innerHits, nestedMetaData, explanation, matchedQueries);
 	}
 
 	@Nullable
@@ -229,6 +231,15 @@ public class DocumentAdapters {
 		}
 		NestedMetaData child = from(nestedIdentity.getChild());
 		return NestedMetaData.of(nestedIdentity.getField().string(), nestedIdentity.getOffset(), child);
+	}
+
+	@Nullable
+	private static List<String> from(@Nullable String[] matchedQueries) {
+		if (matchedQueries == null) {
+			return null;
+		}
+
+		return List.of(matchedQueries);
 	}
 
 	/**
@@ -484,10 +495,11 @@ public class DocumentAdapters {
 		private final Map<String, SearchDocumentResponse> innerHits = new HashMap<>();
 		@Nullable private final NestedMetaData nestedMetaData;
 		@Nullable private final Explanation explanation;
+		@Nullable private final List<String> matchedQueries;
 
 		SearchDocumentAdapter(float score, Object[] sortValues, Map<String, DocumentField> fields,
 				Map<String, List<String>> highlightFields, Document delegate, Map<String, SearchDocumentResponse> innerHits,
-				@Nullable NestedMetaData nestedMetaData, @Nullable Explanation explanation) {
+				@Nullable NestedMetaData nestedMetaData, @Nullable Explanation explanation, @Nullable List<String> matchedQueries) {
 
 			this.score = score;
 			this.sortValues = sortValues;
@@ -497,6 +509,7 @@ public class DocumentAdapters {
 			this.innerHits.putAll(innerHits);
 			this.nestedMetaData = nestedMetaData;
 			this.explanation = explanation;
+			this.matchedQueries = matchedQueries;
 		}
 
 		@Override
@@ -677,6 +690,12 @@ public class DocumentAdapters {
 		@Nullable
 		public Explanation getExplanation() {
 			return explanation;
+		}
+
+		@Override
+		@Nullable
+		public List<String> getMatchedQueries() {
+			return matchedQueries;
 		}
 
 		@Override

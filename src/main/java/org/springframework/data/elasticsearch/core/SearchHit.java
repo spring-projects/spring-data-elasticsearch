@@ -33,6 +33,7 @@ import org.springframework.util.Assert;
  * 
  * @param <T> the result data class.
  * @author Peter-Josef Meisch
+ * @author Matt Gilene
  * @since 4.0
  */
 public class SearchHit<T> {
@@ -47,16 +48,18 @@ public class SearchHit<T> {
 	@Nullable private final NestedMetaData nestedMetaData;
 	@Nullable private final String routing;
 	@Nullable private final Explanation explanation;
+	@Nullable private final List<String> matchedQueries;
 
 	public SearchHit(@Nullable String index, @Nullable String id, @Nullable String routing, float score,
 			@Nullable Object[] sortValues, @Nullable Map<String, List<String>> highlightFields, T content) {
-		this(index, id, routing, score, sortValues, highlightFields, null, null, null, content);
+		this(index, id, routing, score, sortValues, highlightFields, null, null, null, null, content);
 	}
 
 	public SearchHit(@Nullable String index, @Nullable String id, @Nullable String routing, float score,
 			@Nullable Object[] sortValues, @Nullable Map<String, List<String>> highlightFields,
 			@Nullable Map<String, SearchHits<?>> innerHits, @Nullable NestedMetaData nestedMetaData,
-			@Nullable Explanation explanation, T content) {
+			@Nullable Explanation explanation,
+			@Nullable List<String> matchedQueries, T content) {
 		this.index = index;
 		this.id = id;
 		this.routing = routing;
@@ -74,6 +77,7 @@ public class SearchHit<T> {
 		this.nestedMetaData = nestedMetaData;
 		this.explanation = explanation;
 		this.content = content;
+		this.matchedQueries = matchedQueries;
 	}
 
 	/**
@@ -187,5 +191,13 @@ public class SearchHit<T> {
 	@Nullable
 	public Explanation getExplanation() {
 		return explanation;
+	}
+
+	/**
+	 * @return the matched queries for this SearchHit.
+	 */
+	@Nullable
+	public List<String> getMatchedQueries() {
+		return matchedQueries;
 	}
 }

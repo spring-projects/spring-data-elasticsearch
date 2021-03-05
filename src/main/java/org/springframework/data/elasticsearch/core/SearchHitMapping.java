@@ -43,6 +43,7 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @author Mark Paluch
  * @author Roman Puchkovskiy
+ * @author Matt Gilene
  * @since 4.0
  */
 class SearchHitMapping<T> {
@@ -114,6 +115,7 @@ class SearchHitMapping<T> {
 				mapInnerHits(searchDocument), //
 				searchDocument.getNestedMetaData(), //
 				searchDocument.getExplanation(), //
+				searchDocument.getMatchedQueries(), //
 				content); //
 	}
 
@@ -198,6 +200,7 @@ class SearchHitMapping<T> {
 							searchHit.getInnerHits(), //
 							persistentEntityWithNestedMetaData.nestedMetaData, //
 							searchHit.getExplanation(), //
+							searchHit.getMatchedQueries(), //
 							targetObject));
 				});
 

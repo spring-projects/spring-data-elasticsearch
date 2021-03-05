@@ -15,7 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -45,6 +46,7 @@ import org.springframework.data.elasticsearch.core.document.SearchDocument;
  * @author Mark Paluch
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
+ * @author Matt Gilene
  */
 public class DocumentAdaptersUnitTests {
 
@@ -261,5 +263,19 @@ public class DocumentAdaptersUnitTests {
 		assertThat(explanation.getDescription()).isEqualTo("explanation 3.14");
 		List<Explanation> details = explanation.getDetails();
 		assertThat(details).containsExactly(new Explanation(false, 0.0, "explanation noMatch", Collections.emptyList()));
+	}
+
+	@Test // DATAES-979
+	@DisplayName("should adapt returned matched queries")
+	void shouldAdaptReturnedMatchedQueries() {
+		SearchHit searchHit = new SearchHit(42);
+		searchHit.matchedQueries(new String[] { "query1", "query2" });
+
+		SearchDocument searchDocument = DocumentAdapters.from(searchHit);
+
+		List<String> matchedQueries = searchDocument.getMatchedQueries();
+		assertThat(matchedQueries).isNotNull();
+		assertThat(matchedQueries).hasSize(2);
+		assertThat(matchedQueries).isEqualTo(List.of("query1", "query2"));
 	}
 }
