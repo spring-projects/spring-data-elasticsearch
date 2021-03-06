@@ -355,11 +355,29 @@ class RequestFactory {
 	 * @return request
 	 */
 	public CreateIndexRequest createIndexRequest(IndexCoordinates index, @Nullable Document settings) {
+		return createIndexRequest(index, settings, null);
+	}
+
+	/**
+	 * creates a CreateIndexRequest from the rest-high-level-client library.
+	 *
+	 * @param index name of the index
+	 * @param settings optional settings
+	 * @param mapping optional mapping
+	 * @return request
+	 * @since 4.2
+	 */
+	public CreateIndexRequest createIndexRequest(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping) {
 		CreateIndexRequest request = new CreateIndexRequest(index.getIndexName());
 
 		if (settings != null && !settings.isEmpty()) {
 			request.settings(settings);
 		}
+
+		if (mapping != null && !mapping.isEmpty()) {
+			request.mapping(mapping);
+		}
+
 		return request;
 	}
 
@@ -392,6 +410,24 @@ class RequestFactory {
 		if (settings != null) {
 			createIndexRequestBuilder.setSettings(settings);
 		}
+		return createIndexRequestBuilder;
+	}
+
+	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, IndexCoordinates index,
+			@Nullable Document settings, @Nullable Document mapping) {
+
+		String indexName = index.getIndexName();
+		CreateIndexRequestBuilder createIndexRequestBuilder = client.admin().indices().prepareCreate(indexName);
+
+		if (settings != null && !settings.isEmpty()) {
+
+			createIndexRequestBuilder.setSettings(settings);
+		}
+
+		if (mapping != null && !mapping.isEmpty()) {
+			createIndexRequestBuilder.addMapping(IndexCoordinates.TYPE, mapping);
+		}
+
 		return createIndexRequestBuilder;
 	}
 

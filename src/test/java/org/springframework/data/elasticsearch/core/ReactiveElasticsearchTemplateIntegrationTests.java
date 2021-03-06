@@ -1114,15 +1114,14 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				}).verifyComplete();
 	}
 
-	@Test // #1646
+	@Test // #1646, #1718
 	@DisplayName("should return a list of info for specific index")
 	void shouldReturnInformationListOfAllIndices() {
 		String indexName = "test-index-reactive-information-list";
 		String aliasName = "testindexinformationindex";
 		ReactiveIndexOperations indexOps = template.indexOps(EntityWithSettingsAndMappingsReactive.class);
 
-		indexOps.create().block();
-		indexOps.putMapping().block();
+		indexOps.createWithMapping().block();
 
 		AliasActionParameters parameters = AliasActionParameters.builder().withAliases(aliasName).withIndices(indexName)
 				.withIsHidden(false).withIsWriteIndex(false).withRouting("indexrouting").withSearchRouting("searchrouting")

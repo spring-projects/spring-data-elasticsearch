@@ -54,15 +54,14 @@ public class IndexOperationIntegrationTests {
 		operations.indexOps(EntityWithSettingsAndMappings.class).delete();
 	}
 
-	@Test // #1646
+	@Test // #1646, #1718
 	@DisplayName("should return a list of info for specific index")
 	void shouldReturnInformationList() throws JSONException {
 		IndexOperations indexOps = operations.indexOps(EntityWithSettingsAndMappings.class);
 
 		String aliasName = "testindexinformationindex";
 
-		indexOps.create();
-		indexOps.putMapping();
+		indexOps.createWithMapping();
 
 		AliasActionParameters parameters = AliasActionParameters.builder().withAliases(aliasName).withIndices(INDEX_NAME)
 				.withIsHidden(false).withIsWriteIndex(false).withRouting("indexrouting").withSearchRouting("searchrouting")
@@ -88,7 +87,14 @@ public class IndexOperationIntegrationTests {
 		assertThat(aliasData.getIndexRouting()).isEqualTo("indexrouting");
 		assertThat(aliasData.getSearchRouting()).isEqualTo("searchrouting");
 
-		String expectedMappings = "{\"properties\":{\"email\":{\"type\":\"text\",\"analyzer\":\"emailAnalyzer\"}}}";
+		String expectedMappings = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"email\": {\n" + //
+				"      \"type\": \"text\",\n" + //
+				"      \"analyzer\": \"emailAnalyzer\"\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}"; //
 		JSONAssert.assertEquals(expectedMappings, indexInformation.getMapping().toJson(), false);
 	}
 

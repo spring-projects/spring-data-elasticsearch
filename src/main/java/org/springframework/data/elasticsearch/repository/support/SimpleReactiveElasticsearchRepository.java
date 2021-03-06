@@ -65,8 +65,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		if (shouldCreateIndexAndMapping()) {
 			indexOperations.exists() //
-					.flatMap(exists -> exists ? Mono.empty() : indexOperations.create()) //
-					.flatMap(success -> success ? indexOperations.putMapping() : Mono.empty()) //
+					.flatMap(exists -> exists ? Mono.empty() : indexOperations.createWithMapping()) //
 					.block();
 		}
 	}
