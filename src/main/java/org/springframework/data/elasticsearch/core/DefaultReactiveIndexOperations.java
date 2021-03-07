@@ -27,13 +27,13 @@ import java.util.Set;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.slf4j.Logger;
@@ -153,7 +153,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Boolean> exists() {
 
-		GetIndexRequest request = requestFactory.getIndexRequestReactive(getIndexCoordinates().getIndexName());
+		GetIndexRequest request = requestFactory.getIndexRequest(getIndexCoordinates());
 		return Mono.from(operations.executeWithIndicesClient(client -> client.existsIndex(request)));
 	}
 
@@ -185,7 +185,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 	@Override
 	public Mono<Boolean> putMapping(Mono<Document> mapping) {
-		return mapping.map(document -> requestFactory.putMappingRequestReactive(getIndexCoordinates(), document)) //
+		return mapping.map(document -> requestFactory.putMappingRequest(getIndexCoordinates(), document)) //
 				.flatMap(request -> Mono.from(operations.executeWithIndicesClient(client -> client.putMapping(request))));
 	}
 
@@ -193,13 +193,13 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	public Mono<Document> getMapping() {
 
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
-		GetMappingsRequest request = requestFactory.getMappingRequestReactive(indexCoordinates);
+		GetMappingsRequest request = requestFactory.getMappingsRequest(indexCoordinates);
 
 		return Mono.from(operations.executeWithIndicesClient(client -> client.getMapping(request)))
 				.flatMap(getMappingsResponse -> {
-					Document document = Document.create();
-					document.put("properties",
-							getMappingsResponse.mappings().get(indexCoordinates.getIndexName()).get("properties").getSourceAsMap());
+					Map<String, Object> source = getMappingsResponse.mappings().get(indexCoordinates.getIndexName())
+							.getSourceAsMap();
+					Document document = Document.from(source);
 					return Mono.just(document);
 				});
 	}

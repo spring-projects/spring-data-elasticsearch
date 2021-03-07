@@ -184,10 +184,12 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	protected abstract void doRefresh(IndexCoordinates indexCoordinates);
 
 	@Override
+	@Deprecated
 	public boolean addAlias(AliasQuery query) {
 		return doAddAlias(query, getIndexCoordinates());
 	}
 
+	@Deprecated
 	protected abstract boolean doAddAlias(AliasQuery query, IndexCoordinates index);
 
 	@Override
@@ -198,10 +200,12 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	protected abstract List<AliasMetadata> doQueryForAlias(IndexCoordinates index);
 
 	@Override
+	@Deprecated
 	public boolean removeAlias(AliasQuery query) {
 		return doRemoveAlias(query, getIndexCoordinates());
 	}
 
+	@Deprecated
 	protected abstract boolean doRemoveAlias(AliasQuery query, IndexCoordinates index);
 
 	@Override

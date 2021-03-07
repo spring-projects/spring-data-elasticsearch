@@ -141,6 +141,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
+	@Deprecated
 	protected boolean doAddAlias(AliasQuery query, IndexCoordinates index) {
 
 		IndicesAliasesRequest request = requestFactory.indicesAddAliasesRequest(query, index);
@@ -149,6 +150,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
+	@Deprecated
 	protected boolean doRemoveAlias(AliasQuery query, IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for Alias");

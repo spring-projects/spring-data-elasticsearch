@@ -685,6 +685,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	}
 
 	@Override
+	@Deprecated
 	public Mono<org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse> getMapping(HttpHeaders headers,
 			org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest getMappingsRequest) {
 		return sendRequest(getMappingsRequest, requestCreator.getMapping(),
