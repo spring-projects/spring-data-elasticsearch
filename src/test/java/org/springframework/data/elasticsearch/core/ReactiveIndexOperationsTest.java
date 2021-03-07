@@ -51,7 +51,6 @@ import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.lang.Nullable;
@@ -67,7 +66,7 @@ public class ReactiveIndexOperationsTest {
 	public static final String TESTINDEX = "reactive-index-operations-testindex";
 
 	@Configuration
-	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class, ElasticsearchRestTemplateConfiguration.class })
+	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class })
 	static class Config {}
 
 	@Autowired private ReactiveElasticsearchOperations operations;

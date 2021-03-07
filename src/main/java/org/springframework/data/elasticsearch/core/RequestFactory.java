@@ -133,6 +133,7 @@ class RequestFactory {
 	}
 
 	// region alias
+	@Deprecated
 	public IndicesAliasesRequest.AliasActions aliasAction(AliasQuery query, IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for Alias");
@@ -178,6 +179,7 @@ class RequestFactory {
 		return getAliasesRequest;
 	}
 
+	@Deprecated
 	public IndicesAliasesRequest indicesAddAliasesRequest(AliasQuery query, IndexCoordinates index) {
 		IndicesAliasesRequest.AliasActions aliasAction = aliasAction(query, index);
 		IndicesAliasesRequest request = new IndicesAliasesRequest();
@@ -253,6 +255,7 @@ class RequestFactory {
 		return requestBuilder;
 	}
 
+	@Deprecated
 	public IndicesAliasesRequest indicesRemoveAliasesRequest(AliasQuery query, IndexCoordinates index) {
 
 		String[] indexNames = index.getIndexNames();
@@ -264,6 +267,7 @@ class RequestFactory {
 				.addAliasAction(aliasAction);
 	}
 
+	@Deprecated
 	IndicesAliasesRequestBuilder indicesRemoveAliasesRequestBuilder(Client client, AliasQuery query,
 			IndexCoordinates index) {
 
@@ -347,26 +351,7 @@ class RequestFactory {
 	// endregion
 
 	// region index management
-	/**
-	 * creates a CreateIndexRequest from the rest-high-level-client library.
-	 *
-	 * @param index name of the index
-	 * @param settings optional settings
-	 * @return request
-	 */
-	public CreateIndexRequest createIndexRequest(IndexCoordinates index, @Nullable Document settings) {
-		return createIndexRequest(index, settings, null);
-	}
 
-	/**
-	 * creates a CreateIndexRequest from the rest-high-level-client library.
-	 *
-	 * @param index name of the index
-	 * @param settings optional settings
-	 * @param mapping optional mapping
-	 * @return request
-	 * @since 4.2
-	 */
 	public CreateIndexRequest createIndexRequest(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping) {
 		CreateIndexRequest request = new CreateIndexRequest(index.getIndexName());
 
@@ -379,38 +364,6 @@ class RequestFactory {
 		}
 
 		return request;
-	}
-
-	/**
-	 * creates a CreateIndexRequest from the elasticsearch library, used by the reactive methods.
-	 *
-	 * @param indexName name of the index
-	 * @param settings optional settings
-	 * @return request
-	 */
-	public org.elasticsearch.action.admin.indices.create.CreateIndexRequest createIndexRequestReactive(String indexName,
-			@Nullable Document settings) {
-
-		org.elasticsearch.action.admin.indices.create.CreateIndexRequest request = new org.elasticsearch.action.admin.indices.create.CreateIndexRequest(
-				indexName);
-		request.index(indexName);
-
-		if (settings != null && !settings.isEmpty()) {
-			request.settings(settings);
-		}
-		return request;
-	}
-
-	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, IndexCoordinates index,
-			@Nullable Document settings) {
-
-		String indexName = index.getIndexName();
-		CreateIndexRequestBuilder createIndexRequestBuilder = client.admin().indices().prepareCreate(indexName);
-
-		if (settings != null) {
-			createIndexRequestBuilder.setSettings(settings);
-		}
-		return createIndexRequestBuilder;
 	}
 
 	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, IndexCoordinates index,
@@ -431,27 +384,8 @@ class RequestFactory {
 		return createIndexRequestBuilder;
 	}
 
-	/**
-	 * creates a GetIndexRequest from the rest-high-level-client library.
-	 *
-	 * @param index name of the index
-	 * @return request
-	 */
 	public GetIndexRequest getIndexRequest(IndexCoordinates index) {
 		return new GetIndexRequest(index.getIndexNames());
-	}
-
-	/**
-	 * creates a CreateIndexRequest from the elasticsearch library, used by the reactive methods.
-	 *
-	 * @param indexName name of the index
-	 * @return request
-	 */
-	public org.elasticsearch.action.admin.indices.get.GetIndexRequest getIndexRequestReactive(String indexName) {
-
-		org.elasticsearch.action.admin.indices.get.GetIndexRequest request = new org.elasticsearch.action.admin.indices.get.GetIndexRequest();
-		request.indices(indexName);
-		return request;
 	}
 
 	public IndicesExistsRequest indicesExistsRequest(IndexCoordinates index) {
@@ -485,15 +419,6 @@ class RequestFactory {
 		return request;
 	}
 
-	public org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest putMappingRequestReactive(
-			IndexCoordinates index, Document mapping) {
-		org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest request = new org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest(
-				index.getIndexName());
-		request.type("not-used-but-must-be-there");
-		request.source(mapping);
-		return request;
-	}
-
 	public PutMappingRequestBuilder putMappingRequestBuilder(Client client, IndexCoordinates index, Document mapping) {
 
 		String[] indexNames = index.getIndexNames();
@@ -501,13 +426,6 @@ class RequestFactory {
 				.setType(IndexCoordinates.TYPE);
 		requestBuilder.setSource(mapping);
 		return requestBuilder;
-	}
-
-	public org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest getMappingRequestReactive(
-			IndexCoordinates index) {
-		org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest request = new org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest();
-		request.indices(index.getIndexName());
-		return request;
 	}
 
 	public GetSettingsRequest getSettingsRequest(String indexName, boolean includeDefaults) {

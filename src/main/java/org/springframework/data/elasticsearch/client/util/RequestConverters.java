@@ -812,6 +812,7 @@ public class RequestConverters {
 		return request;
 	}
 
+	@Deprecated
 	public static Request putMapping(PutMappingRequest putMappingRequest) {
 		// The concreteIndex is an internal concept, not applicable to requests made over the REST API.
 		if (putMappingRequest.getConcreteIndex() != null) {
