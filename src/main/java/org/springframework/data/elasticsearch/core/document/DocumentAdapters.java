@@ -235,11 +235,7 @@ public class DocumentAdapters {
 
 	@Nullable
 	private static List<String> from(@Nullable String[] matchedQueries) {
-		if (matchedQueries == null) {
-			return null;
-		}
-
-		return List.of(matchedQueries);
+		return matchedQueries == null ? null : Arrays.asList(matchedQueries);
 	}
 
 	/**

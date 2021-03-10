@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -276,6 +275,6 @@ public class DocumentAdaptersUnitTests {
 		List<String> matchedQueries = searchDocument.getMatchedQueries();
 		assertThat(matchedQueries).isNotNull();
 		assertThat(matchedQueries).hasSize(2);
-		assertThat(matchedQueries).isEqualTo(List.of("query1", "query2"));
+		assertThat(matchedQueries).isEqualTo(Arrays.asList("query1", "query2"));
 	}
 }
