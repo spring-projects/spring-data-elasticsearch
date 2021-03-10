@@ -25,7 +25,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.data.elasticsearch.core.document.Explanation;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -51,10 +50,12 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
+import org.json.JSONException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -68,7 +69,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.core.document.Explanation;
+import org.springframework.data.elasticsearch.core.index.AliasAction;
+import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
+import org.springframework.data.elasticsearch.core.index.AliasActions;
+import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
@@ -86,6 +94,7 @@ import org.springframework.util.StringUtils;
  * @author Aleksei Arsenev
  * @author Russell Parry
  * @author Roman Puchkovskiy
+ * @author George Popides
  */
 @SpringIntegrationTest
 public class ReactiveElasticsearchTemplateIntegrationTests {
@@ -630,8 +639,9 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		template.delete(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.expectNext(0L) //
-				.verifyComplete();
+				.consumeNextWith(byQueryResponse -> {
+					assertThat(byQueryResponse.getDeleted()).isEqualTo(0L);
+				}).verifyComplete();
 	}
 
 	@Test // DATAES-547
@@ -654,6 +664,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.build();
 
 		template.delete(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
+				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
 				.verifyComplete();
@@ -681,6 +692,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.build();
 
 		template.delete(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
+				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
 				.verifyComplete();
@@ -696,6 +708,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
 
 		template.delete(query, SampleEntity.class) //
+				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
 				.verifyComplete();
@@ -709,6 +722,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("luke"));
 
 		template.delete(query, SampleEntity.class) //
+				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
 				.verifyComplete();
@@ -758,7 +772,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-623
+	@Test // DATAES-623, #1678
 	public void shouldReturnObjectsForGivenIdsUsingMultiGet() {
 		SampleEntity entity1 = randomEntity("test message 1");
 		entity1.rate = 1;
@@ -772,7 +786,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.build();
 
 		template.multiGet(query, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
-				.as(StepVerifier::create) //
+				.map(MultiGetItem::getItem).as(StepVerifier::create) //
 				.expectNext(entity1, entity2) //
 				.verifyComplete();
 	}
@@ -797,7 +811,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAES-623
+	@Test // DATAES-623. #1678
 	public void shouldDoBulkUpdate() {
 		SampleEntity entity1 = randomEntity("test message 1");
 		entity1.rate = 1;
@@ -827,6 +841,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.withIds(Arrays.asList(entity1.getId(), entity2.getId())) //
 				.build();
 		template.multiGet(getQuery, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+				.map(MultiGetItem::getItem) //
 				.as(StepVerifier::create) //
 				.expectNextMatches(entity -> entity.getMessage().equals("updated 1")) //
 				.expectNextMatches(entity -> entity.getMessage().equals("updated 2")) //
@@ -877,7 +892,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isPositive();
 	}
 
-	@Test // DATAES-799
+	@Test // DATAES-799, #1678
 	void multiGetShouldReturnSeqNoPrimaryTerm() {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
@@ -885,8 +900,10 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		template
 				.multiGet(multiGetQueryForOne(saved.getId()), OptimisticEntity.class,
-						template.getIndexCoordinatesFor(OptimisticEntity.class))
-				.as(StepVerifier::create).assertNext(this::assertThatSeqNoPrimaryTermIsFilled).verifyComplete();
+						template.getIndexCoordinatesFor(OptimisticEntity.class)) //
+				.map(MultiGetItem::getItem) //
+				.as(StepVerifier::create) //
+				.assertNext(this::assertThatSeqNoPrimaryTermIsFilled).verifyComplete();
 	}
 
 	private Query multiGetQueryForOne(String id) {
@@ -1064,40 +1081,77 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@DisplayName("should not return explanation when not requested")
 	void shouldNotReturnExplanationWhenNotRequested() {
 
-		ElasticsearchTemplateTests.SampleEntity entity = ElasticsearchTemplateTests.SampleEntity.builder().id("42").message("a message with text").build();
+		ElasticsearchTemplateTests.SampleEntity entity = ElasticsearchTemplateTests.SampleEntity.builder().id("42")
+				.message("a message with text").build();
 		template.save(entity).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		Criteria criteria = new Criteria("message").contains("with");
 		CriteriaQuery query = new CriteriaQuery(criteria);
 
-		template.search(query, ElasticsearchTemplateTests.SampleEntity.class)
-				.as(StepVerifier::create)
+		template.search(query, ElasticsearchTemplateTests.SampleEntity.class).as(StepVerifier::create)
 				.consumeNextWith(searchHit -> {
 					Explanation explanation = searchHit.getExplanation();
 					assertThat(explanation).isNull();
-				})
-				.verifyComplete();
+				}).verifyComplete();
 	}
 
 	@Test // #725
 	@DisplayName("should return explanation when requested")
 	void shouldReturnExplanationWhenRequested() {
 
-		ElasticsearchTemplateTests.SampleEntity entity = ElasticsearchTemplateTests.SampleEntity.builder().id("42").message("a message with text").build();
+		ElasticsearchTemplateTests.SampleEntity entity = ElasticsearchTemplateTests.SampleEntity.builder().id("42")
+				.message("a message with text").build();
 		template.save(entity).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		Criteria criteria = new Criteria("message").contains("with");
 		CriteriaQuery query = new CriteriaQuery(criteria);
 		query.setExplain(true);
 
-		template.search(query, ElasticsearchTemplateTests.SampleEntity.class)
-				.as(StepVerifier::create)
+		template.search(query, ElasticsearchTemplateTests.SampleEntity.class).as(StepVerifier::create)
 				.consumeNextWith(searchHit -> {
 					Explanation explanation = searchHit.getExplanation();
 					assertThat(explanation).isNotNull();
-				})
-				.verifyComplete();
+				}).verifyComplete();
 	}
+
+	@Test // #1646, #1718
+	@DisplayName("should return a list of info for specific index")
+	void shouldReturnInformationListOfAllIndices() {
+		String indexName = "test-index-reactive-information-list";
+		String aliasName = "testindexinformationindex";
+		ReactiveIndexOperations indexOps = template.indexOps(EntityWithSettingsAndMappingsReactive.class);
+
+		indexOps.createWithMapping().block();
+
+		AliasActionParameters parameters = AliasActionParameters.builder().withAliases(aliasName).withIndices(indexName)
+				.withIsHidden(false).withIsWriteIndex(false).withRouting("indexrouting").withSearchRouting("searchrouting")
+				.build();
+		indexOps.alias(new AliasActions(new AliasAction.Add(parameters))).block();
+
+		indexOps.getInformation().as(StepVerifier::create).consumeNextWith(indexInformation -> {
+			assertThat(indexInformation.getName()).isEqualTo(indexName);
+			assertThat(indexInformation.getSettings().get("index.number_of_shards")).isEqualTo("1");
+			assertThat(indexInformation.getSettings().get("index.number_of_replicas")).isEqualTo("0");
+			assertThat(indexInformation.getSettings().get("index.analysis.analyzer.emailAnalyzer.type")).isEqualTo("custom");
+			assertThat(indexInformation.getAliases()).hasSize(1);
+
+			AliasData aliasData = indexInformation.getAliases().get(0);
+
+			assertThat(aliasData.getAlias()).isEqualTo(aliasName);
+			assertThat(aliasData.isHidden()).isEqualTo(false);
+			assertThat(aliasData.isWriteIndex()).isEqualTo(false);
+			assertThat(aliasData.getIndexRouting()).isEqualTo("indexrouting");
+			assertThat(aliasData.getSearchRouting()).isEqualTo("searchrouting");
+
+			String expectedMappings = "{\"properties\":{\"email\":{\"type\":\"text\",\"analyzer\":\"emailAnalyzer\"}}}";
+			try {
+				JSONAssert.assertEquals(expectedMappings, indexInformation.getMapping().toJson(), false);
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}).verifyComplete();
+	}
+
 	// endregion
 
 	// region Helper functions
@@ -1129,6 +1183,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 			template.saveAll(Mono.just(Arrays.asList(entities)), indexCoordinates).then(indexOperations.refresh()).block();
 		}
 	}
+
 	// endregion
 
 	// region Entities
@@ -1193,6 +1248,14 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	static class VersionedEntity {
 		@Id private String id;
 		@Version private Long version;
+	}
+
+	@Data
+	@Document(indexName = "test-index-reactive-information-list", createIndex = false)
+	@Setting(settingPath = "settings/test-settings.json")
+	@Mapping(mappingPath = "mappings/test-mappings.json")
+	private static class EntityWithSettingsAndMappingsReactive {
+		@Id String id;
 	}
 
 	// endregion

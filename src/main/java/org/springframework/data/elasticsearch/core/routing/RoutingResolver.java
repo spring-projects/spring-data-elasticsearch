@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the original author or authors.
+ * Copyright2020-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public interface RoutingResolver {
 
 	/**
 	 * Returns the routing for a bean.
-	 * 
+	 *
 	 * @param bean the bean to get the routing for
 	 * @return the routing value
 	 */
@@ -43,7 +43,7 @@ public interface RoutingResolver {
 
 	/**
 	 * Returns a {@link RoutingResolver that always retuns a fixed value}
-	 * 
+	 *
 	 * @param value the value to return
 	 * @return the fixed-value {@link RoutingResolver}
 	 */

@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static org.elasticsearch.client.Requests.*;
 import static org.springframework.util.StringUtils.*;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
@@ -25,20 +26,19 @@ import java.util.Set;
 
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.client.GetAliasesResponse;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
@@ -60,6 +60,7 @@ import org.springframework.util.Assert;
 
 /**
  * @author Peter-Josef Meisch
+ * @author George Popides
  * @since 4.1
  */
 class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
@@ -100,23 +101,36 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Boolean> create() {
 
-		String indexName = getIndexCoordinates().getIndexName();
+		IndexCoordinates index = getIndexCoordinates();
 
 		if (boundClass != null) {
-			return createSettings(boundClass).flatMap(settings -> doCreate(indexName, settings));
+			return createSettings(boundClass).flatMap(settings -> doCreate(index, settings, null));
 		} else {
-			return doCreate(indexName, null);
+			return doCreate(index, null, null);
 		}
 	}
 
 	@Override
-	public Mono<Boolean> create(Document settings) {
-		return doCreate(getIndexCoordinates().getIndexName(), settings);
+	public Mono<Boolean> createWithMapping() {
+		return createSettings() //
+				.flatMap(settings -> //
+				createMapping().flatMap(mapping -> //
+				doCreate(getIndexCoordinates(), settings, mapping))); //
 	}
 
-	private Mono<Boolean> doCreate(String indexName, @Nullable Document settings) {
+	@Override
+	public Mono<Boolean> create(Document settings) {
+		return doCreate(getIndexCoordinates(), settings, null);
+	}
 
-		CreateIndexRequest request = requestFactory.createIndexRequestReactive(indexName, settings);
+	@Override
+	public Mono<Boolean> create(Document settings, Document mapping) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	private Mono<Boolean> doCreate(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping) {
+
+		CreateIndexRequest request = requestFactory.createIndexRequest(index, settings, mapping);
 		return Mono.from(operations.executeWithIndicesClient(client -> client.createIndex(request)));
 	}
 
@@ -139,7 +153,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Boolean> exists() {
 
-		GetIndexRequest request = requestFactory.getIndexRequestReactive(getIndexCoordinates().getIndexName());
+		GetIndexRequest request = requestFactory.getIndexRequest(getIndexCoordinates());
 		return Mono.from(operations.executeWithIndicesClient(client -> client.existsIndex(request)));
 	}
 
@@ -159,11 +173,11 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Document> createMapping(Class<?> clazz) {
 
-        Mapping mappingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Mapping.class);
+		Mapping mappingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Mapping.class);
 
-        if (mappingAnnotation != null) {
-            return loadDocument(mappingAnnotation.mappingPath(), "@Mapping");
-        }
+		if (mappingAnnotation != null) {
+			return loadDocument(mappingAnnotation.mappingPath(), "@Mapping");
+		}
 
 		String mapping = new MappingBuilder(converter).buildPropertyMapping(clazz);
 		return Mono.just(Document.parse(mapping));
@@ -171,7 +185,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 	@Override
 	public Mono<Boolean> putMapping(Mono<Document> mapping) {
-		return mapping.map(document -> requestFactory.putMappingRequestReactive(getIndexCoordinates(), document)) //
+		return mapping.map(document -> requestFactory.putMappingRequest(getIndexCoordinates(), document)) //
 				.flatMap(request -> Mono.from(operations.executeWithIndicesClient(client -> client.putMapping(request))));
 	}
 
@@ -179,13 +193,13 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	public Mono<Document> getMapping() {
 
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
-		GetMappingsRequest request = requestFactory.getMappingRequestReactive(indexCoordinates);
+		GetMappingsRequest request = requestFactory.getMappingsRequest(indexCoordinates);
 
 		return Mono.from(operations.executeWithIndicesClient(client -> client.getMapping(request)))
 				.flatMap(getMappingsResponse -> {
-					Document document = Document.create();
-					document.put("properties",
-							getMappingsResponse.mappings().get(indexCoordinates.getIndexName()).get("properties").getSourceAsMap());
+					Map<String, Object> source = getMappingsResponse.mappings().get(indexCoordinates.getIndexName())
+							.getSourceAsMap();
+					Document document = Document.from(source);
 					return Mono.just(document);
 				});
 	}
@@ -201,11 +215,11 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public Mono<Document> createSettings(Class<?> clazz) {
 
-        Setting setting = AnnotatedElementUtils.findMergedAnnotation(clazz, Setting.class);
+		Setting setting = AnnotatedElementUtils.findMergedAnnotation(clazz, Setting.class);
 
-        if (setting != null) {
-            return loadDocument(setting.settingPath(), "@Setting");
-        }
+		if (setting != null) {
+			return loadDocument(setting.settingPath(), "@Setting");
+		}
 
 		return Mono.just(getRequiredPersistentEntity(clazz).getDefaultSettings());
 	}
@@ -217,7 +231,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		GetSettingsRequest request = requestFactory.getSettingsRequest(indexName, includeDefaults);
 
 		return Mono.from(operations.executeWithIndicesClient(client -> client.getSettings(request)))
-				.map(getSettingsResponse -> requestFactory.fromSettingsResponse(getSettingsResponse, indexName));
+				.map(getSettingsResponse -> ResponseConverter.fromSettingsResponse(getSettingsResponse, indexName));
 	}
 
 	// endregion
@@ -244,7 +258,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(aliasNames, indexNames);
 		return Mono.from(operations.executeWithIndicesClient(client -> client.getAliases(getAliasesRequest)))
-				.map(GetAliasesResponse::getAliases).map(requestFactory::convertAliasesResponse);
+				.map(GetAliasesResponse::getAliases).map(ResponseConverter::aliasDatas);
 	}
 	// endregion
 
@@ -267,7 +281,8 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		return Mono.from(operations.executeWithIndicesClient(client -> client.getTemplate(getIndexTemplatesRequest)))
 				.flatMap(response -> {
 					if (response != null) {
-						TemplateData templateData = requestFactory.getTemplateData(response, getTemplateRequest.getTemplateName());
+						TemplateData templateData = ResponseConverter.getTemplateData(response,
+								getTemplateRequest.getTemplateName());
 						if (templateData != null) {
 							return Mono.just(templateData);
 						}
@@ -302,6 +317,18 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	@Override
 	public IndexCoordinates getIndexCoordinates() {
 		return (boundClass != null) ? getIndexCoordinatesFor(boundClass) : boundIndex;
+	}
+
+	@Override
+	public Flux<IndexInformation> getInformation(IndexCoordinates index) {
+
+		Assert.notNull(index, "index must not be null");
+
+		org.elasticsearch.client.indices.GetIndexRequest getIndexRequest = requestFactory.getIndexRequest(index);
+		return Mono
+				.from(operations.executeWithIndicesClient(
+						client -> client.getIndex(getIndexRequest).map(ResponseConverter::getIndexInformations)))
+				.flatMapMany(Flux::fromIterable);
 	}
 
 	private IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {

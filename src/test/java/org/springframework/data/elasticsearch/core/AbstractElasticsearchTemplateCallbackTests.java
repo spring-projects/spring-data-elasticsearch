@@ -234,17 +234,17 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 		assertThat(result.firstname).isEqualTo("after-convert");
 	}
 
-	@Test // DATAES-772
+	@Test // DATAES-772, #1678
 	void multiGetShouldInvokeAfterConvertCallback() {
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
 
-		List<Person> results = template.multiGet(queryForTwo(), Person.class, index);
+		List<MultiGetItem<Person>> results = template.multiGet(queryForTwo(), Person.class, index);
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
 				eq(index));
-		assertThat(results.get(0).firstname).isEqualTo("after-convert");
-		assertThat(results.get(1).firstname).isEqualTo("after-convert");
+		assertThat(results.get(0).getItem().firstname).isEqualTo("after-convert");
+		assertThat(results.get(1).getItem().firstname).isEqualTo("after-convert");
 	}
 
 	private Query queryForTwo() {

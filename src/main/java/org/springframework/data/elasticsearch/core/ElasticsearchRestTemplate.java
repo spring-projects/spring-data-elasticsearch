@@ -49,9 +49,9 @@ import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
+import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.support.SearchHitsUtil;
@@ -168,7 +168,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public <T> List<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
+	public <T> List<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
 
 		Assert.notNull(index, "index must not be null");
 		Assert.notEmpty(query.getIds(), "No Id defined for Query");
@@ -177,7 +177,10 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		MultiGetResponse result = execute(client -> client.mget(request, RequestOptions.DEFAULT));
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
-		return DocumentAdapters.from(result).stream().map(callback::doWith).collect(Collectors.toList());
+		return DocumentAdapters.from(result).stream() //
+				.map(multiGetItem -> MultiGetItem.of( //
+						multiGetItem.isFailed() ? null : callback.doWith(multiGetItem.getItem()), multiGetItem.getFailure())) //
+				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -208,9 +211,9 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public void delete(Query query, Class<?> clazz, IndexCoordinates index) {
+	public ByQueryResponse delete(Query query, Class<?> clazz, IndexCoordinates index) {
 		DeleteByQueryRequest deleteByQueryRequest = requestFactory.deleteByQueryRequest(query, clazz, index);
-		execute(client -> client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT));
+		return ByQueryResponse.of(execute(client -> client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT)));
 	}
 
 	@Override
@@ -231,7 +234,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public UpdateByQueryResponse updateByQuery(UpdateQuery query, IndexCoordinates index) {
+	public ByQueryResponse updateByQuery(UpdateQuery query, IndexCoordinates index) {
 
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
@@ -248,7 +251,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		final BulkByScrollResponse bulkByScrollResponse = execute(
 				client -> client.updateByQuery(updateByQueryRequest, RequestOptions.DEFAULT));
-		return UpdateByQueryResponse.of(bulkByScrollResponse);
+		return ByQueryResponse.of(bulkByScrollResponse);
 	}
 
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,

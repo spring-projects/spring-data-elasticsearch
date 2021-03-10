@@ -32,6 +32,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.document.DocumentField;
@@ -39,6 +40,8 @@ import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.springframework.data.elasticsearch.core.MultiGetItem;
+import org.springframework.data.elasticsearch.core.ResponseConverter;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -126,19 +129,30 @@ public class DocumentAdapters {
 	}
 
 	/**
-	 * Creates a List of {@link Document}s from {@link MultiGetResponse}.
+	 * Creates a List of {@link MultiGetItem<Document>}s from {@link MultiGetResponse}.
 	 * 
 	 * @param source the source {@link MultiGetResponse}, not {@literal null}.
 	 * @return a list of Documents, contains null values for not found Documents.
 	 */
-	public static List<Document> from(MultiGetResponse source) {
+	public static List<MultiGetItem<Document>> from(MultiGetResponse source) {
 
 		Assert.notNull(source, "MultiGetResponse must not be null");
 
-		// noinspection ReturnOfNull
 		return Arrays.stream(source.getResponses()) //
-				.map(itemResponse -> itemResponse.isFailed() ? null : DocumentAdapters.from(itemResponse.getResponse())) //
+				.map(DocumentAdapters::from) //
 				.collect(Collectors.toList());
+	}
+
+	/**
+	 * Creates a {@link MultiGetItem<Document>} from a {@link MultiGetItemResponse}.
+	 * 
+	 * @param itemResponse the response, must not be {@literal null}
+	 * @return the MultiGetItem
+	 */
+	public static MultiGetItem<Document> from(MultiGetItemResponse itemResponse) {
+
+		MultiGetItem.Failure failure = ResponseConverter.getFailure(itemResponse);
+		return MultiGetItem.of(itemResponse.isFailed() ? null : DocumentAdapters.from(itemResponse.getResponse()), failure);
 	}
 
 	/**

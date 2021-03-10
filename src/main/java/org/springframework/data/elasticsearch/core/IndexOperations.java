@@ -38,9 +38,10 @@ import org.springframework.lang.Nullable;
  * <br/>
  * IndexOperations are bound to an entity class or an IndexCoordinate by
  * {@link ElasticsearchOperations#indexOps(IndexCoordinates)} or {@link ElasticsearchOperations#indexOps(Class)}
- * 
+ *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author George Popides
  * @since 4.0
  */
 public interface IndexOperations {
@@ -54,12 +55,30 @@ public interface IndexOperations {
 	boolean create();
 
 	/**
-	 * Create an index for given Settings.
+	 * Create an index for given settings.
 	 *
 	 * @param settings the index settings
 	 * @return {@literal true} if the index was created
 	 */
 	boolean create(Document settings);
+
+	/**
+	 * Create an index for given settings and mapping.
+	 *
+	 * @param settings the index settings
+	 * @param mapping the index mapping
+	 * @return {@literal true} if the index was created
+	 * @since 4.2
+	 */
+	boolean create(Document settings, Document mapping);
+
+	/**
+	 * Create an index with the settings and mapping defined for the entity this IndexOperations is bound to.
+	 *
+	 * @return {@literal true} if the index was created
+	 * @since 4.2
+	 */
+	boolean createWithMapping();
 
 	/**
 	 * Deletes the index this {@link IndexOperations} is bound to
@@ -81,7 +100,7 @@ public interface IndexOperations {
 	void refresh();
 	// endregion
 
-	// region mappings
+	// region mapping
 	/**
 	 * Creates the index mapping for the entity this IndexOperations is bound to.
 	 *
@@ -99,7 +118,7 @@ public interface IndexOperations {
 
 	/**
 	 * Writes the mapping to the index for the class this IndexOperations is bound to.
-	 * 
+	 *
 	 * @return {@literal true} if the mapping could be stored
 	 * @since 4.1
 	 */
@@ -109,7 +128,7 @@ public interface IndexOperations {
 
 	/**
 	 * writes a mapping to the index
-	 * 
+	 *
 	 * @param mapping the Document with the mapping definitions
 	 * @return {@literal true} if the mapping could be stored
 	 */
@@ -117,7 +136,7 @@ public interface IndexOperations {
 
 	/**
 	 * Creates the index mapping for the given class and writes it to the index.
-	 * 
+	 *
 	 * @param clazz the clazz to create a mapping for
 	 * @return {@literal true} if the mapping could be stored
 	 * @since 4.1
@@ -125,12 +144,20 @@ public interface IndexOperations {
 	default boolean putMapping(Class<?> clazz) {
 		return putMapping(createMapping(clazz));
 	}
+
+	/**
+	 * Get mapping for an index defined by a class.
+	 *
+	 * @return the mapping
+	 */
+	Map<String, Object> getMapping();
+
 	// endregion
 
 	// region settings
 	/**
 	 * Creates the index settings for the entity this IndexOperations is bound to.
-	 * 
+	 *
 	 * @return a settings document.
 	 * @since 4.1
 	 */
@@ -144,13 +171,6 @@ public interface IndexOperations {
 	 * @since 4.1
 	 */
 	Document createSettings(Class<?> clazz);
-
-	/**
-	 * Get mapping for an index defined by a class.
-	 *
-	 * @return the mapping
-	 */
-	Map<String, Object> getMapping();
 
 	/**
 	 * Get the index settings.
@@ -200,7 +220,7 @@ public interface IndexOperations {
 
 	/**
 	 * Executes the given {@link AliasActions}.
-	 * 
+	 *
 	 * @param aliasActions the actions to execute
 	 * @return if the operation is acknowledged by Elasticsearch
 	 * @since 4.1
@@ -209,7 +229,7 @@ public interface IndexOperations {
 
 	/**
 	 * gets information about aliases
-	 * 
+	 *
 	 * @param aliasNames alias names, must not be {@literal null}
 	 * @return a {@link Map} from index names to {@link AliasData} for that index
 	 * @since 4.1
@@ -218,7 +238,7 @@ public interface IndexOperations {
 
 	/**
 	 * gets information about aliases
-	 * 
+	 *
 	 * @param indexNames index names, must not be {@literal null}
 	 * @return a {@link Map} from index names to {@link AliasData} for that index
 	 * @since 4.1
@@ -230,7 +250,7 @@ public interface IndexOperations {
 	/**
 	 * Creates an index template using the legacy Elasticsearch interface (@see
 	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates-v1.html).
-	 * 
+	 *
 	 * @param putTemplateRequest template request parameters
 	 * @return true if successful
 	 * @since 4.1
@@ -305,6 +325,27 @@ public interface IndexOperations {
 	 */
 	boolean deleteTemplate(DeleteTemplateRequest deleteTemplateRequest);
 
+	// endregion
+
+	// region index information
+	/**
+	 * Gets the {@link IndexInformation} for the indices defined by {@link #getIndexCoordinates()}.
+	 *
+	 * @return a list of {@link IndexInformation}
+	 * @since 4.2
+	 */
+	default List<IndexInformation> getInformation() {
+		return getInformation(getIndexCoordinates());
+	}
+
+	/**
+	 * Gets the {@link IndexInformation} for the indices defined by #index.
+	 *
+	 * @param index defines the index names to get the information for
+	 * @return a list of {@link IndexInformation}
+	 * @since 4.2
+	 */
+	List<IndexInformation> getInformation(IndexCoordinates index);
 	// endregion
 
 	// region helper functions

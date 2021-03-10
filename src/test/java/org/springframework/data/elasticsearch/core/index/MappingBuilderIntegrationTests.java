@@ -82,6 +82,8 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  * @author Xiao Yu
  * @author Roman Puchkovskiy
+ * @author Brian Kimmig
+ * @author Morgan Lutz
  */
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
@@ -269,6 +271,16 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		IndexOperations indexOps = operations.indexOps(WildcardEntity.class);
 		indexOps.create();
 		indexOps.putMapping();
+	}
+
+	@Test // #1700
+	@DisplayName("should write dense_vector field mapping")
+	void shouldWriteDenseVectorFieldMapping() {
+
+		IndexOperations indexOps = operations.indexOps(DenseVectorEntity.class);
+		indexOps.create();
+		indexOps.putMapping();
+		indexOps.delete();
 	}
 
 	@Test // #1370
@@ -656,5 +668,12 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		@Id private String id;
 		@Field(type = Text) private String text;
 		@Mapping(enabled = false) @Field(type = Object) private Object object;
+	}
+
+	@Data
+	@Document(indexName = "densevector-test")
+	static class DenseVectorEntity {
+		@Id private String id;
+		@Field(type = Dense_Vector, dims = 3) private float[] dense_vector;
 	}
 }

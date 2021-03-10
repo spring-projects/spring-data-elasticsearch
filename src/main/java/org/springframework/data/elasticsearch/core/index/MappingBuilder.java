@@ -81,6 +81,8 @@ public class MappingBuilder {
 	private static final String COMPLETION_MAX_INPUT_LENGTH = "max_input_length";
 	private static final String COMPLETION_CONTEXTS = "contexts";
 
+	private static final String TYPEHINT_PROPERTY = "_class";
+
 	private static final String TYPE_DYNAMIC = "dynamic";
 	private static final String TYPE_VALUE_KEYWORD = "keyword";
 	private static final String TYPE_VALUE_GEO_POINT = "geo_point";
@@ -131,6 +133,14 @@ public class MappingBuilder {
 		}
 	}
 
+	private void writeTypeHintMapping(XContentBuilder builder) throws IOException {
+		builder.startObject(TYPEHINT_PROPERTY) //
+				.field(FIELD_PARAM_TYPE, TYPE_VALUE_KEYWORD) //
+				.field(FIELD_PARAM_INDEX, false) //
+				.field(FIELD_PARAM_DOC_VALUES, false) //
+				.endObject();
+	}
+
 	private void mapEntity(XContentBuilder builder, @Nullable ElasticsearchPersistentEntity<?> entity,
 			boolean isRootObject, String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType,
 			@Nullable Field parentFieldAnnotation, @Nullable DynamicMapping dynamicMapping) throws IOException {
@@ -161,6 +171,8 @@ public class MappingBuilder {
 		}
 
 		builder.startObject(FIELD_PROPERTIES);
+
+		writeTypeHintMapping(builder);
 
 		if (entity != null) {
 			entity.doWithProperties((PropertyHandler<ElasticsearchPersistentProperty>) property -> {

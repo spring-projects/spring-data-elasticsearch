@@ -31,14 +31,13 @@ import lombok.Setter;
 import java.lang.Boolean;
 import java.lang.Double;
 import java.lang.Integer;
+import java.lang.Object;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.elasticsearch.search.suggest.completion.context.ContextMapping;
 import org.json.JSONException;
@@ -69,6 +68,8 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @author Xiao Yu
  * @author Roman Puchkovskiy
+ * @author Brian Kimmig
+ * @author Morgan Lutz
  */
 public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
@@ -417,7 +418,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldMappingParameters.class);
 
 		// then
-		assertEquals(expected, mapping, true);
+		assertEquals(expected, mapping, false);
 	}
 
 	@Test
@@ -436,7 +437,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 		String mapping = getMappingBuilder().buildPropertyMapping(ConfigureDynamicMappingEntity.class);
 
-		assertEquals(expected, mapping, true);
+		assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-784
@@ -451,7 +452,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 		String mapping = getMappingBuilder().buildPropertyMapping(ValueDoc.class);
 
-		assertEquals(expected, mapping, true);
+		assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-788
@@ -506,6 +507,23 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
+	@Test // #1700
+	@DisplayName("should write dense_vector properties")
+	void shouldWriteDenseVectorProperties() throws JSONException {
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"my_vector\": {\n" + //
+				"      \"type\": \"dense_vector\",\n" + //
+				"      \"dims\": 16\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(DenseVectorEntity.class);
+
+		assertEquals(expected, mapping, false);
+	}
+
 	@Test // #1370
 	@DisplayName("should not write mapping when enabled is false on entity")
 	void shouldNotWriteMappingWhenEnabledIsFalseOnEntity() throws JSONException {
@@ -544,9 +562,56 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should only allow disabled properties on type object")
 	void shouldOnlyAllowDisabledPropertiesOnTypeObject() {
 
-		assertThatThrownBy(() ->
-				getMappingBuilder().buildPropertyMapping(InvalidDisabledMappingProperty.class)
-		).isInstanceOf(MappingException.class);
+		assertThatThrownBy(() -> getMappingBuilder().buildPropertyMapping(InvalidDisabledMappingProperty.class))
+				.isInstanceOf(MappingException.class);
+	}
+
+	@Test // #1711
+	@DisplayName("should write typeHint entries")
+	void shouldWriteTypeHintEntries() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    },\n" + //
+				"    \"id\": {\n" + //
+				"      \"type\": \"keyword\"\n" + //
+				"    },\n" + //
+				"    \"nestedEntity\": {\n" + //
+				"      \"type\": \"nested\",\n" + //
+				"      \"properties\": {\n" + //
+				"        \"_class\": {\n" + //
+				"          \"type\": \"keyword\",\n" + //
+				"          \"index\": false,\n" + //
+				"          \"doc_values\": false\n" + //
+				"        },\n" + //
+				"        \"nestedField\": {\n" + //
+				"          \"type\": \"text\"\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    },\n" + //
+				"    \"objectEntity\": {\n" + //
+				"      \"type\": \"object\",\n" + //
+				"      \"properties\": {\n" + //
+				"        \"_class\": {\n" + //
+				"          \"type\": \"keyword\",\n" + //
+				"          \"index\": false,\n" + //
+				"          \"doc_values\": false\n" + //
+				"        },\n" + //
+				"        \"objectField\": {\n" + //
+				"          \"type\": \"text\"\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(TypeHintEntity.class);
+
+		assertEquals(expected, mapping, false);
 	}
 
 	@Setter
@@ -843,21 +908,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				orientation = GeoShapeField.Orientation.clockwise) private String shape2;
 	}
 
-	@Document(indexName = "test-index-user-mapping-builder")
-	static class User {
-		@Nullable @Id private String id;
-
-		@Field(type = FieldType.Nested, ignoreFields = { "users" }) private Set<Group> groups = new HashSet<>();
-	}
-
-	@Document(indexName = "test-index-group-mapping-builder")
-	static class Group {
-
-		@Nullable @Id String id;
-
-		@Field(type = FieldType.Nested, ignoreFields = { "groups" }) private Set<User> users = new HashSet<>();
-	}
-
 	@Document(indexName = "test-index-field-mapping-parameters")
 	static class FieldMappingParameters {
 		@Nullable @Field private String indexTrue;
@@ -964,6 +1014,13 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	}
 
 	@Data
+	static class DenseVectorEntity {
+
+		@Id private String id;
+		@Field(type = FieldType.Dense_Vector, dims = 16) private float[] my_vector;
+	}
+
+	@Data
 	@Mapping(enabled = false)
 	static class DisabledMappingEntity {
 		@Id private String id;
@@ -973,15 +1030,34 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@Data
 	static class InvalidDisabledMappingProperty {
 		@Id private String id;
-		@Mapping(enabled = false)
-		@Field(type = Text) private String text;
+		@Mapping(enabled = false) @Field(type = Text) private String text;
 	}
 
 	@Data
 	static class DisabledMappingProperty {
 		@Id private String id;
 		@Field(type = Text) private String text;
-		@Mapping(enabled = false)
-		@Field(type = Object) private Object object;
+		@Mapping(enabled = false) @Field(type = Object) private Object object;
+	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	static class TypeHintEntity {
+		@Id @Field(type = Keyword) private String id;
+
+		@Field(type = Nested) private NestedEntity nestedEntity;
+
+		@Field(type = Object) private ObjectEntity objectEntity;
+
+		@Data
+		static class NestedEntity {
+			@Field(type = Text) private String nestedField;
+		}
+
+		@Data
+		static class ObjectEntity {
+			@Field(type = Text) private String objectField;
+		}
 	}
 }

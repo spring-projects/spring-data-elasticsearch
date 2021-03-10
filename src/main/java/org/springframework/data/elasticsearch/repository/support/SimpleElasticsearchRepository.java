@@ -34,6 +34,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.MultiGetItem;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
@@ -90,8 +91,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		this.indexOperations = operations.indexOps(this.entityClass);
 
 		if (shouldCreateIndexAndMapping() && !indexOperations.exists()) {
-			indexOperations.create();
-			indexOperations.putMapping(entityClass);
+			indexOperations.createWithMapping();
 		}
 	}
 
@@ -154,13 +154,14 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 			return result;
 		}
 
-		List<T> multiGetEntities = execute(operations -> operations.multiGet(idQuery, entityClass, getIndexCoordinates()));
+		List<MultiGetItem<T>> multiGetItems = execute(
+				operations -> operations.multiGet(idQuery, entityClass, getIndexCoordinates()));
 
-		if (multiGetEntities != null) {
-			multiGetEntities.forEach(entity -> {
+		if (multiGetItems != null) {
+			multiGetItems.forEach(multiGetItem -> {
 
-				if (entity != null) {
-					result.add(entity);
+				if (multiGetItem.hasItem()) {
+					result.add(multiGetItem.getItem());
 				}
 			});
 		}

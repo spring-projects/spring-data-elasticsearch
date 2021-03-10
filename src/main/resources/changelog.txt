@@ -1,6 +1,64 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.2.0-M4 (2021-02-18)
+----------------------------------------
+
+
+Changes in version 4.1.5 (2021-02-18)
+-------------------------------------
+
+
+Changes in version 4.2.0-M3 (2021-02-17)
+----------------------------------------
+* #1689 - Missing anchor links in documentation.
+* #1680 - After upgrade to 4.x can't read property id from _source named (different value from _id).
+* #1679 - Errors are silent in delete by query in ReactiveElasticsearchTemplate.
+* #1676 - Align MappingElasticsearchConverter with other Spring Data converters.
+* #1675 - Consider Document as simple type.
+* #1669 - Cleanup Deprecations from 4.0.
+* #1668 - Writing a more complex CriteriaQuery.
+* #1667 - Couldn't find PersistentEntity for type class com.example.demo.dto.Address.
+* #1665 - ReactiveElasticsearchOperations indexName twice endcoding.
+* #1662 - Documentation fix.
+* #1659 - Fix source filter setup in multiget requests.
+* #1655 - GeoJson types can be lowercase in Elasticsearch.
+* #1649 - Upgrade to Elasticsearch 7.10.2.
+* #1647 - Use own implementation of date formatters.
+* #1644 - Implement update by query.
+* #1565 - Allow using FieldNamingStrategy for property to fieldname matching [DATAES-993].
+* #1370 - Add enabled mapping parameter to FieldType configuration [DATAES-798].
+* #1218 - Add routing parameter to ElasticsearchOperations [DATAES-644].
+* #1156 - Add @CountQuery annotation [DATAES-584].
+* #1143 - Support for search_after [DATAES-571].
+* #803 - Don't update indexed object if it is no persistent entity [DATAES-229].
+* #725 - Add query Explain Support [DATAES-149].
+
+
+Changes in version 4.1.4 (2021-02-17)
+-------------------------------------
+* #1667 - Couldn't find PersistentEntity for type class com.example.demo.dto.Address.
+* #1665 - ReactiveElasticsearchOperations indexName twice endcoding.
+* #1662 - Documentation fix.
+* #1659 - Fix source filter setup in multiget requests.
+* #1655 - GeoJson types can be lowercase in Elasticsearch.
+
+
+Changes in version 4.0.7.RELEASE (2021-02-17)
+---------------------------------------------
+* DATAES-996 - Update CI jobs with Docker Login.
+* #1667 - Couldn't find PersistentEntity for type class com.example.demo.dto.Address.
+* #1665 - ReactiveElasticsearchOperations indexName twice endcoding.
+* #1662 - Documentation fix.
+* #1659 - Fix source filter setup in multiget requests.
+
+
+Changes in version 3.2.13.RELEASE (2021-02-17)
+----------------------------------------------
+* #1694 - Upgrade to Elasticsearch 6.8.14.
+* #1662 - Documentation fix.
+
+
 Changes in version 4.2.0-M2 (2021-01-13)
 ----------------------------------------
 * DATAES-1003 - add timeout to search query.
@@ -1426,6 +1484,12 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
+
+
+
+
+
 
 
 

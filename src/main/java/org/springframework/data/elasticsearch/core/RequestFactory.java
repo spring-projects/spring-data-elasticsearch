@@ -18,7 +18,13 @@ package org.springframework.data.elasticsearch.core;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.util.CollectionUtils.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.alias.Alias;
@@ -54,15 +60,10 @@ import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
-import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.client.indices.GetMappingsRequest;
-import org.elasticsearch.client.indices.IndexTemplateMetadata;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
-import org.elasticsearch.cluster.metadata.AliasMetadata;
-import org.elasticsearch.common.collect.ImmutableOpenMap;
-import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.DistanceUnit;
@@ -97,12 +98,10 @@ import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
-import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -135,6 +134,7 @@ class RequestFactory {
 	}
 
 	// region alias
+	@Deprecated
 	public IndicesAliasesRequest.AliasActions aliasAction(AliasQuery query, IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for Alias");
@@ -180,6 +180,7 @@ class RequestFactory {
 		return getAliasesRequest;
 	}
 
+	@Deprecated
 	public IndicesAliasesRequest indicesAddAliasesRequest(AliasQuery query, IndexCoordinates index) {
 		IndicesAliasesRequest.AliasActions aliasAction = aliasAction(query, index);
 		IndicesAliasesRequest request = new IndicesAliasesRequest();
@@ -255,6 +256,7 @@ class RequestFactory {
 		return requestBuilder;
 	}
 
+	@Deprecated
 	public IndicesAliasesRequest indicesRemoveAliasesRequest(AliasQuery query, IndexCoordinates index) {
 
 		String[] indexNames = index.getIndexNames();
@@ -266,6 +268,7 @@ class RequestFactory {
 				.addAliasAction(aliasAction);
 	}
 
+	@Deprecated
 	IndicesAliasesRequestBuilder indicesRemoveAliasesRequestBuilder(Client client, AliasQuery query,
 			IndexCoordinates index) {
 
@@ -349,75 +352,41 @@ class RequestFactory {
 	// endregion
 
 	// region index management
-	/**
-	 * creates a CreateIndexRequest from the rest-high-level-client library.
-	 *
-	 * @param index name of the index
-	 * @param settings optional settings
-	 * @return request
-	 */
-	public CreateIndexRequest createIndexRequest(IndexCoordinates index, @Nullable Document settings) {
+
+	public CreateIndexRequest createIndexRequest(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping) {
 		CreateIndexRequest request = new CreateIndexRequest(index.getIndexName());
 
 		if (settings != null && !settings.isEmpty()) {
 			request.settings(settings);
 		}
-		return request;
-	}
 
-	/**
-	 * creates a CreateIndexRequest from the elasticsearch library, used by the reactive methods.
-	 *
-	 * @param indexName name of the index
-	 * @param settings optional settings
-	 * @return request
-	 */
-	public org.elasticsearch.action.admin.indices.create.CreateIndexRequest createIndexRequestReactive(String indexName,
-			@Nullable Document settings) {
-
-		org.elasticsearch.action.admin.indices.create.CreateIndexRequest request = new org.elasticsearch.action.admin.indices.create.CreateIndexRequest(
-				indexName);
-		request.index(indexName);
-
-		if (settings != null && !settings.isEmpty()) {
-			request.settings(settings);
+		if (mapping != null && !mapping.isEmpty()) {
+			request.mapping(mapping);
 		}
+
 		return request;
 	}
 
 	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, IndexCoordinates index,
-			@Nullable Document settings) {
+			@Nullable Document settings, @Nullable Document mapping) {
 
 		String indexName = index.getIndexName();
 		CreateIndexRequestBuilder createIndexRequestBuilder = client.admin().indices().prepareCreate(indexName);
 
-		if (settings != null) {
+		if (settings != null && !settings.isEmpty()) {
+
 			createIndexRequestBuilder.setSettings(settings);
 		}
+
+		if (mapping != null && !mapping.isEmpty()) {
+			createIndexRequestBuilder.addMapping(IndexCoordinates.TYPE, mapping);
+		}
+
 		return createIndexRequestBuilder;
 	}
 
-	/**
-	 * creates a GetIndexRequest from the rest-high-level-client library.
-	 *
-	 * @param index name of the index
-	 * @return request
-	 */
 	public GetIndexRequest getIndexRequest(IndexCoordinates index) {
 		return new GetIndexRequest(index.getIndexNames());
-	}
-
-	/**
-	 * creates a CreateIndexRequest from the elasticsearch library, used by the reactive methods.
-	 *
-	 * @param indexName name of the index
-	 * @return request
-	 */
-	public org.elasticsearch.action.admin.indices.get.GetIndexRequest getIndexRequestReactive(String indexName) {
-
-		org.elasticsearch.action.admin.indices.get.GetIndexRequest request = new org.elasticsearch.action.admin.indices.get.GetIndexRequest();
-		request.indices(indexName);
-		return request;
 	}
 
 	public IndicesExistsRequest indicesExistsRequest(IndexCoordinates index) {
@@ -451,15 +420,6 @@ class RequestFactory {
 		return request;
 	}
 
-	public org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest putMappingRequestReactive(
-			IndexCoordinates index, Document mapping) {
-		org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest request = new org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest(
-				index.getIndexName());
-		request.type("not-used-but-must-be-there");
-		request.source(mapping);
-		return request;
-	}
-
 	public PutMappingRequestBuilder putMappingRequestBuilder(Client client, IndexCoordinates index, Document mapping) {
 
 		String[] indexNames = index.getIndexNames();
@@ -467,13 +427,6 @@ class RequestFactory {
 				.setType(IndexCoordinates.TYPE);
 		requestBuilder.setSource(mapping);
 		return requestBuilder;
-	}
-
-	public org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest getMappingRequestReactive(
-			IndexCoordinates index) {
-		org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest request = new org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest();
-		request.indices(index.getIndexName());
-		return request;
 	}
 
 	public GetSettingsRequest getSettingsRequest(String indexName, boolean includeDefaults) {
@@ -491,27 +444,6 @@ class RequestFactory {
 
 		String[] indexNames = index.getIndexNames();
 		return new org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest().indices(indexNames);
-	}
-
-	public Map<String, Set<AliasData>> convertAliasesResponse(Map<String, Set<AliasMetadata>> aliasesResponse) {
-		Map<String, Set<AliasData>> converted = new LinkedHashMap<>();
-		aliasesResponse.forEach((index, aliasMetaDataSet) -> {
-			Set<AliasData> aliasDataSet = new LinkedHashSet<>();
-			aliasMetaDataSet.forEach(aliasMetaData -> aliasDataSet.add(convertAliasMetadata(aliasMetaData)));
-			converted.put(index, aliasDataSet);
-		});
-		return converted;
-	}
-
-	public AliasData convertAliasMetadata(AliasMetadata aliasMetaData) {
-		Document filter = null;
-		CompressedXContent aliasMetaDataFilter = aliasMetaData.getFilter();
-		if (aliasMetaDataFilter != null) {
-			filter = Document.parse(aliasMetaDataFilter.string());
-		}
-		AliasData aliasData = AliasData.of(aliasMetaData.alias(), filter, aliasMetaData.indexRouting(),
-				aliasMetaData.getSearchRouting(), aliasMetaData.writeIndex(), aliasMetaData.isHidden());
-		return aliasData;
 	}
 
 	public PutIndexTemplateRequest putIndexTemplateRequest(PutTemplateRequest putTemplateRequest) {
@@ -655,38 +587,6 @@ class RequestFactory {
 
 	public GetIndexTemplatesRequest getIndexTemplatesRequest(GetTemplateRequest getTemplateRequest) {
 		return new GetIndexTemplatesRequest(getTemplateRequest.getTemplateName());
-	}
-
-	@Nullable
-	public TemplateData getTemplateData(GetIndexTemplatesResponse getIndexTemplatesResponse, String templateName) {
-		for (IndexTemplateMetadata indexTemplateMetadata : getIndexTemplatesResponse.getIndexTemplates()) {
-
-			if (indexTemplateMetadata.name().equals(templateName)) {
-
-				Document settings = Document.create();
-				Settings templateSettings = indexTemplateMetadata.settings();
-				templateSettings.keySet().forEach(key -> settings.put(key, templateSettings.get(key)));
-
-				Map<String, AliasData> aliases = new LinkedHashMap<>();
-
-				ImmutableOpenMap<String, AliasMetadata> aliasesResponse = indexTemplateMetadata.aliases();
-				Iterator<String> keysIt = aliasesResponse.keysIt();
-				while (keysIt.hasNext()) {
-					String key = keysIt.next();
-					aliases.put(key, convertAliasMetadata(aliasesResponse.get(key)));
-				}
-				TemplateData templateData = TemplateData.builder()
-						.withIndexPatterns(indexTemplateMetadata.patterns().toArray(new String[0])) //
-						.withSettings(settings) //
-						.withMapping(Document.from(indexTemplateMetadata.mappings().getSourceAsMap())) //
-						.withAliases(aliases) //
-						.withOrder(indexTemplateMetadata.order()) //
-						.withVersion(indexTemplateMetadata.version()).build();
-
-				return templateData;
-			}
-		}
-		return null;
 	}
 
 	public org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesRequest getIndexTemplatesRequest(
@@ -1128,7 +1028,6 @@ class RequestFactory {
 
 		if (query instanceof NativeSearchQuery) {
 			prepareNativeSearch((NativeSearchQuery) query, sourceBuilder);
-
 		}
 
 		if (query.getTrackTotalHits() != null) {
@@ -1147,6 +1046,10 @@ class RequestFactory {
 		}
 
 		sourceBuilder.explain(query.getExplain());
+
+		if (query.getSearchAfter() != null) {
+			sourceBuilder.searchAfter(query.getSearchAfter().toArray());
+		}
 
 		query.getRescorerQueries().stream().map(RescorerQuery::getRescorerBuilder)
 				.forEach(sourceBuilder::addRescorer);
@@ -1232,6 +1135,10 @@ class RequestFactory {
 		}
 
 		searchRequestBuilder.setExplain(query.getExplain());
+
+		if (query.getSearchAfter() != null) {
+			searchRequestBuilder.searchAfter(query.getSearchAfter().toArray());
+		}
 
 		query.getRescorerQueries().stream().map(RescorerQuery::getRescorerBuilder)
 				.forEach(searchRequestBuilder::addRescorer);
@@ -1814,38 +1721,6 @@ class RequestFactory {
 		}
 
 		return null;
-	}
-
-	// endregion
-
-	// region response stuff
-
-	/**
-	 * extract the index settings information for a given index
-	 *
-	 * @param response the Elasticsearch response
-	 * @param indexName the index name
-	 * @return settings as {@link Document}
-	 */
-	public Document fromSettingsResponse(GetSettingsResponse response, String indexName) {
-
-		Document settings = Document.create();
-
-		if (!response.getIndexToDefaultSettings().isEmpty()) {
-			Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);
-			for (String key : defaultSettings.keySet()) {
-				settings.put(key, defaultSettings.get(key));
-			}
-		}
-
-		if (!response.getIndexToSettings().isEmpty()) {
-			Settings customSettings = response.getIndexToSettings().get(indexName);
-			for (String key : customSettings.keySet()) {
-				settings.put(key, customSettings.get(key));
-			}
-		}
-
-		return settings;
 	}
 
 	// endregion

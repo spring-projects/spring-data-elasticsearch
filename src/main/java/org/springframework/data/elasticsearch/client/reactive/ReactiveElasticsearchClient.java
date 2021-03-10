@@ -25,13 +25,8 @@ import java.util.function.Consumer;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushRequest;
-import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
@@ -42,6 +37,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
@@ -51,12 +47,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.GetAliasesResponse;
-import org.elasticsearch.client.indices.GetFieldMappingsRequest;
-import org.elasticsearch.client.indices.GetFieldMappingsResponse;
-import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
-import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
-import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
-import org.elasticsearch.client.indices.PutIndexTemplateRequest;
+import org.elasticsearch.client.indices.*;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
@@ -66,7 +57,7 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.suggest.Suggest;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
+import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -166,9 +157,9 @@ public interface ReactiveElasticsearchClient {
 	 * @param consumer never {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html">Multi Get API on
 	 *      elastic.co</a>
-	 * @return the {@link Flux} emitting the {@link GetResult result}.
+	 * @return the {@link Flux} emitting the {@link MultiGetItemResponse result}.
 	 */
-	default Flux<GetResult> multiGet(Consumer<MultiGetRequest> consumer) {
+	default Flux<MultiGetItemResponse> multiGet(Consumer<MultiGetRequest> consumer) {
 
 		MultiGetRequest request = new MultiGetRequest();
 		consumer.accept(request);
@@ -182,9 +173,9 @@ public interface ReactiveElasticsearchClient {
 	 * @param multiGetRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html">Multi Get API on
 	 *      elastic.co</a>
-	 * @return the {@link Flux} emitting the {@link GetResult result}.
+	 * @return the {@link Flux} emitting the {@link MultiGetItemResponse result}.
 	 */
-	default Flux<GetResult> multiGet(MultiGetRequest multiGetRequest) {
+	default Flux<MultiGetItemResponse> multiGet(MultiGetRequest multiGetRequest) {
 		return multiGet(HttpHeaders.EMPTY, multiGetRequest);
 	}
 
@@ -196,9 +187,9 @@ public interface ReactiveElasticsearchClient {
 	 * @param multiGetRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html">Multi Get API on
 	 *      elastic.co</a>
-	 * @return the {@link Flux} emitting the {@link GetResult result}.
+	 * @return the {@link Flux} emitting the {@link MultiGetItemResponse result}.
 	 */
-	Flux<GetResult> multiGet(HttpHeaders headers, MultiGetRequest multiGetRequest);
+	Flux<MultiGetItemResponse> multiGet(HttpHeaders headers, MultiGetRequest multiGetRequest);
 
 	/**
 	 * Checks for the existence of a document. Emits {@literal true} if it exists, {@literal false} otherwise.
@@ -606,7 +597,7 @@ public interface ReactiveElasticsearchClient {
 	 *      * Query API on elastic.co</a>
 	 * @return a {@link Mono} emitting operation response.
 	 */
-	default Mono<UpdateByQueryResponse> updateBy(Consumer<UpdateByQueryRequest> consumer) {
+	default Mono<ByQueryResponse> updateBy(Consumer<UpdateByQueryRequest> consumer) {
 
 		final UpdateByQueryRequest request = new UpdateByQueryRequest();
 		consumer.accept(request);
@@ -621,7 +612,7 @@ public interface ReactiveElasticsearchClient {
 	 *      * Query API on elastic.co</a>
 	 * @return a {@link Mono} emitting operation response.
 	 */
-	default Mono<UpdateByQueryResponse> updateBy(UpdateByQueryRequest updateRequest) {
+	default Mono<ByQueryResponse> updateBy(UpdateByQueryRequest updateRequest) {
 		return updateBy(HttpHeaders.EMPTY, updateRequest);
 	}
 
@@ -634,7 +625,7 @@ public interface ReactiveElasticsearchClient {
 	 *      * Query API on elastic.co</a>
 	 * @return a {@link Mono} emitting operation response.
 	 */
-	Mono<UpdateByQueryResponse> updateBy(HttpHeaders headers, UpdateByQueryRequest updateRequest);
+	Mono<ByQueryResponse> updateBy(HttpHeaders headers, UpdateByQueryRequest updateRequest);
 
 	/**
 	 * Execute a {@link BulkRequest} against the {@literal bulk} API.
@@ -747,19 +738,52 @@ public interface ReactiveElasticsearchClient {
 	interface Indices {
 
 		/**
-		 * Execute the given {@link GetIndexRequest} against the {@literal indices} API.
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.get.GetIndexRequest} against the
+		 * {@literal indices} API.
 		 *
 		 * @param consumer never {@literal null}.
 		 * @return the {@link Mono} emitting {@literal true} if the index exists, {@literal false} otherwise.
 		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-exists.html"> Indices
 		 *      Exists API on elastic.co</a>
+		 * @deprecated since 4.2
 		 */
-		default Mono<Boolean> existsIndex(Consumer<GetIndexRequest> consumer) {
+		@Deprecated
+		default Mono<Boolean> existsIndex(Consumer<org.elasticsearch.action.admin.indices.get.GetIndexRequest> consumer) {
 
-			GetIndexRequest request = new GetIndexRequest();
+			org.elasticsearch.action.admin.indices.get.GetIndexRequest request = new org.elasticsearch.action.admin.indices.get.GetIndexRequest();
 			consumer.accept(request);
 			return existsIndex(request);
 		}
+
+		/**
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.get.GetIndexRequest} against the
+		 * {@literal indices} API.
+		 *
+		 * @param getIndexRequest must not be {@literal null}.
+		 * @return the {@link Mono} emitting {@literal true} if the index exists, {@literal false} otherwise.
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-exists.html"> Indices
+		 *      Exists API on elastic.co</a>
+		 * @deprecated since 4.2, use {@link #existsIndex(GetIndexRequest)}
+		 */
+		@Deprecated
+		default Mono<Boolean> existsIndex(org.elasticsearch.action.admin.indices.get.GetIndexRequest getIndexRequest) {
+			return existsIndex(HttpHeaders.EMPTY, getIndexRequest);
+		}
+
+		/**
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.get.GetIndexRequest} against the
+		 * {@literal indices} API.
+		 *
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param getIndexRequest must not be {@literal null}.
+		 * @return the {@link Mono} emitting {@literal true} if the index exists, {@literal false} otherwise.
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-exists.html"> Indices
+		 *      Exists API on elastic.co</a>
+		 * @deprecated since 4.2, use {@link #existsIndex(HttpHeaders, GetIndexRequest)}
+		 */
+		@Deprecated
+		Mono<Boolean> existsIndex(HttpHeaders headers,
+				org.elasticsearch.action.admin.indices.get.GetIndexRequest getIndexRequest);
 
 		/**
 		 * Execute the given {@link GetIndexRequest} against the {@literal indices} API.
@@ -768,6 +792,7 @@ public interface ReactiveElasticsearchClient {
 		 * @return the {@link Mono} emitting {@literal true} if the index exists, {@literal false} otherwise.
 		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-exists.html"> Indices
 		 *      Exists API on elastic.co</a>
+		 * @since 4.2
 		 */
 		default Mono<Boolean> existsIndex(GetIndexRequest getIndexRequest) {
 			return existsIndex(HttpHeaders.EMPTY, getIndexRequest);
@@ -781,6 +806,7 @@ public interface ReactiveElasticsearchClient {
 		 * @return the {@link Mono} emitting {@literal true} if the index exists, {@literal false} otherwise.
 		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-exists.html"> Indices
 		 *      Exists API on elastic.co</a>
+		 * @since 4.2
 		 */
 		Mono<Boolean> existsIndex(HttpHeaders headers, GetIndexRequest getIndexRequest);
 
@@ -826,20 +852,57 @@ public interface ReactiveElasticsearchClient {
 		Mono<Boolean> deleteIndex(HttpHeaders headers, DeleteIndexRequest deleteIndexRequest);
 
 		/**
-		 * Execute the given {@link CreateIndexRequest} against the {@literal indices} API.
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.create.CreateIndexRequest} against the
+		 * {@literal indices} API.
 		 *
 		 * @param consumer never {@literal null}.
 		 * @return a {@link Mono} signalling successful operation completion or an {@link Mono#error(Throwable) error} if
 		 *         eg. the index already exist.
 		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html"> Indices
 		 *      Create API on elastic.co</a>
+		 * @deprecated since 4.2
 		 */
-		default Mono<Boolean> createIndex(Consumer<CreateIndexRequest> consumer) {
+		@Deprecated
+		default Mono<Boolean> createIndex(
+				Consumer<org.elasticsearch.action.admin.indices.create.CreateIndexRequest> consumer) {
 
-			CreateIndexRequest request = new CreateIndexRequest();
+			org.elasticsearch.action.admin.indices.create.CreateIndexRequest request = new org.elasticsearch.action.admin.indices.create.CreateIndexRequest();
 			consumer.accept(request);
 			return createIndex(request);
 		}
+
+		/**
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.create.CreateIndexRequest} against the
+		 * {@literal indices} API.
+		 *
+		 * @param createIndexRequest must not be {@literal null}.
+		 * @return a {@link Mono} signalling successful operation completion or an {@link Mono#error(Throwable) error} if
+		 *         eg. the index already exist.
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html"> Indices
+		 *      Create API on elastic.co</a>
+		 * @deprecated since 4.2, use {@link #createIndex(CreateIndexRequest)}
+		 */
+		@Deprecated
+		default Mono<Boolean> createIndex(
+				org.elasticsearch.action.admin.indices.create.CreateIndexRequest createIndexRequest) {
+			return createIndex(HttpHeaders.EMPTY, createIndexRequest);
+		}
+
+		/**
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.create.CreateIndexRequest} against the
+		 * {@literal indices} API.
+		 *
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param createIndexRequest must not be {@literal null}.
+		 * @return a {@link Mono} signalling successful operation completion or an {@link Mono#error(Throwable) error} if
+		 *         eg. the index already exist.
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html"> Indices
+		 *      Create API on elastic.co</a>
+		 * @deprecated since 4.2, use {@link #createIndex(HttpHeaders, CreateIndexRequest)}
+		 */
+		@Deprecated
+		Mono<Boolean> createIndex(HttpHeaders headers,
+				org.elasticsearch.action.admin.indices.create.CreateIndexRequest createIndexRequest);
 
 		/**
 		 * Execute the given {@link CreateIndexRequest} against the {@literal indices} API.
@@ -849,6 +912,7 @@ public interface ReactiveElasticsearchClient {
 		 *         eg. the index already exist.
 		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html"> Indices
 		 *      Create API on elastic.co</a>
+		 * @since 4.2
 		 */
 		default Mono<Boolean> createIndex(CreateIndexRequest createIndexRequest) {
 			return createIndex(HttpHeaders.EMPTY, createIndexRequest);
@@ -863,6 +927,7 @@ public interface ReactiveElasticsearchClient {
 		 *         eg. the index already exist.
 		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html"> Indices
 		 *      Create API on elastic.co</a>
+		 * @since 4.2
 		 */
 		Mono<Boolean> createIndex(HttpHeaders headers, CreateIndexRequest createIndexRequest);
 
@@ -990,7 +1055,8 @@ public interface ReactiveElasticsearchClient {
 		Mono<Void> refreshIndex(HttpHeaders headers, RefreshRequest refreshRequest);
 
 		/**
-		 * Execute the given {@link PutMappingRequest} against the {@literal indices} API.
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest} against the
+		 * {@literal indices} API.
 		 *
 		 * @param consumer never {@literal null}.
 		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
@@ -1000,12 +1066,14 @@ public interface ReactiveElasticsearchClient {
 		 * @deprecated since 4.1, use {@link #putMapping(Consumer)}
 		 */
 		@Deprecated
-		default Mono<Boolean> updateMapping(Consumer<PutMappingRequest> consumer) {
+		default Mono<Boolean> updateMapping(
+				Consumer<org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest> consumer) {
 			return putMapping(consumer);
 		}
 
 		/**
-		 * Execute the given {@link PutMappingRequest} against the {@literal indices} API.
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest} against the
+		 * {@literal indices} API.
 		 *
 		 * @param putMappingRequest must not be {@literal null}.
 		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
@@ -1015,12 +1083,14 @@ public interface ReactiveElasticsearchClient {
 		 * @deprecated since 4.1, use {@link #putMapping(PutMappingRequest)}
 		 */
 		@Deprecated
-		default Mono<Boolean> updateMapping(PutMappingRequest putMappingRequest) {
+		default Mono<Boolean> updateMapping(
+				org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest putMappingRequest) {
 			return putMapping(putMappingRequest);
 		}
 
 		/**
-		 * Execute the given {@link PutMappingRequest} against the {@literal indices} API.
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest} against the
+		 * {@literal indices} API.
 		 *
 		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 		 * @param putMappingRequest must not be {@literal null}.
@@ -1031,25 +1101,63 @@ public interface ReactiveElasticsearchClient {
 		 * @deprecated since 4.1, use {@link #putMapping(HttpHeaders, PutMappingRequest)}
 		 */
 		@Deprecated
-		default Mono<Boolean> updateMapping(HttpHeaders headers, PutMappingRequest putMappingRequest) {
+		default Mono<Boolean> updateMapping(HttpHeaders headers,
+				org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest putMappingRequest) {
 			return putMapping(headers, putMappingRequest);
 		}
 
 		/**
-		 * Execute the given {@link PutMappingRequest} against the {@literal indices} API.
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest} against the
+		 * {@literal indices} API.
 		 *
 		 * @param consumer never {@literal null}.
 		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
 		 *         does not exist.
 		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-put-mapping.html"> Indices
 		 *      Put Mapping API on elastic.co</a>
+		 * @deprecated since 4.2
 		 */
-		default Mono<Boolean> putMapping(Consumer<PutMappingRequest> consumer) {
+		@Deprecated
+		default Mono<Boolean> putMapping(
+				Consumer<org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest> consumer) {
 
-			PutMappingRequest request = new PutMappingRequest();
+			org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest request = new org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest();
 			consumer.accept(request);
 			return putMapping(request);
 		}
+
+		/**
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest} against the
+		 * {@literal indices} API.
+		 *
+		 * @param putMappingRequest must not be {@literal null}.
+		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
+		 *         does not exist.
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-put-mapping.html"> Indices
+		 *      Put Mapping API on elastic.co</a>
+		 * @deprecated since 4.2, use {@link #putMapping(PutMappingRequest)}
+		 */
+		@Deprecated
+		default Mono<Boolean> putMapping(
+				org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest putMappingRequest) {
+			return putMapping(HttpHeaders.EMPTY, putMappingRequest);
+		}
+
+		/**
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest} against the
+		 * {@literal indices} API.
+		 *
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param putMappingRequest must not be {@literal null}.
+		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
+		 *         does not exist.
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-put-mapping.html"> Indices
+		 *      Put Mapping API on elastic.co</a>
+		 * @deprecated since 4.2, use {@link #putMapping(HttpHeaders, PutMappingRequest)}
+		 */
+		@Deprecated
+		Mono<Boolean> putMapping(HttpHeaders headers,
+				org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest putMappingRequest);
 
 		/**
 		 * Execute the given {@link PutMappingRequest} against the {@literal indices} API.
@@ -1059,6 +1167,7 @@ public interface ReactiveElasticsearchClient {
 		 *         does not exist.
 		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-put-mapping.html"> Indices
 		 *      Put Mapping API on elastic.co</a>
+		 * @since 4.2
 		 */
 		default Mono<Boolean> putMapping(PutMappingRequest putMappingRequest) {
 			return putMapping(HttpHeaders.EMPTY, putMappingRequest);
@@ -1073,6 +1182,7 @@ public interface ReactiveElasticsearchClient {
 		 *         does not exist.
 		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-put-mapping.html"> Indices
 		 *      Put Mapping API on elastic.co</a>
+		 * @since 4.2
 		 */
 		Mono<Boolean> putMapping(HttpHeaders headers, PutMappingRequest putMappingRequest);
 
@@ -1162,7 +1272,8 @@ public interface ReactiveElasticsearchClient {
 		Mono<GetSettingsResponse> getSettings(HttpHeaders headers, GetSettingsRequest getSettingsRequest);
 
 		/**
-		 * Execute the given {@link GetMappingsRequest} against the {@literal indices} API.
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest} against the
+		 * {@literal indices} API.
 		 *
 		 * @param consumer never {@literal null}.
 		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
@@ -1170,13 +1281,51 @@ public interface ReactiveElasticsearchClient {
 		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html"> Indices
 		 *      Flush API on elastic.co</a>
 		 * @since 4.1
+		 * @deprecated since 4.2
 		 */
-		default Mono<GetMappingsResponse> getMapping(Consumer<GetMappingsRequest> consumer) {
+		@Deprecated
+		default Mono<org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse> getMapping(
+				Consumer<org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest> consumer) {
 
-			GetMappingsRequest request = new GetMappingsRequest();
+			org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest request = new org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest();
 			consumer.accept(request);
 			return getMapping(request);
 		}
+
+		/**
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest} against the
+		 * {@literal indices} API.
+		 *
+		 * @param getMappingsRequest must not be {@literal null}.
+		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
+		 *         does not exist.
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html"> Indices
+		 *      Flush API on elastic.co</a>
+		 * @since 4.1
+		 * @deprecated since 4.2, use {@link #getMapping(GetMappingsRequest)}
+		 */
+		@Deprecated
+		default Mono<org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse> getMapping(
+				org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest getMappingsRequest) {
+			return getMapping(HttpHeaders.EMPTY, getMappingsRequest);
+		}
+
+		/**
+		 * Execute the given {@link org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest} against the
+		 * {@literal indices} API.
+		 *
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param getMappingsRequest must not be {@literal null}.
+		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
+		 *         does not exist.
+		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html"> Indices
+		 *      Flush API on elastic.co</a>
+		 * @since 4.1
+		 * @deprecated since 4.2, use {@link #getMapping(HttpHeaders, GetMappingsRequest)}
+		 */
+		@Deprecated
+		Mono<org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse> getMapping(HttpHeaders headers,
+				org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest getMappingsRequest);
 
 		/**
 		 * Execute the given {@link GetMappingsRequest} against the {@literal indices} API.
@@ -1185,8 +1334,8 @@ public interface ReactiveElasticsearchClient {
 		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
 		 *         does not exist.
 		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html"> Indices
-		 *      Flush API on elastic.co</a>
-		 * @since 4.1
+		 *      Get mapping API on elastic.co</a>
+		 * @since 4.2
 		 */
 		default Mono<GetMappingsResponse> getMapping(GetMappingsRequest getMappingsRequest) {
 			return getMapping(HttpHeaders.EMPTY, getMappingsRequest);
@@ -1200,8 +1349,8 @@ public interface ReactiveElasticsearchClient {
 		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
 		 *         does not exist.
 		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html"> Indices
-		 *      Flush API on elastic.co</a>
-		 * @since 4.1
+		 *      Get mapping API on elastic.co</a>
+		 * @since 4.2
 		 */
 		Mono<GetMappingsResponse> getMapping(HttpHeaders headers, GetMappingsRequest getMappingsRequest);
 
@@ -1456,5 +1605,39 @@ public interface ReactiveElasticsearchClient {
 		 * @since 4.1
 		 */
 		Mono<Boolean> deleteTemplate(HttpHeaders headers, DeleteIndexTemplateRequest deleteIndexTemplateRequest);
+
+		/**
+		 * Execute the given {@link GetIndexRequest} against the {@literal indices} API.
+		 *
+		 * @param consumer never {@literal null}.
+		 * @return the {@link Mono} emitting the response
+		 * @since 4.2
+		 */
+		default Mono<GetIndexResponse> getIndex(Consumer<GetIndexRequest> consumer) {
+			GetIndexRequest getIndexRequest = new GetIndexRequest();
+			consumer.accept(getIndexRequest);
+			return getIndex(getIndexRequest);
+		}
+
+		/**
+		 * Execute the given {@link GetIndexRequest} against the {@literal indices} API.
+		 *
+		 * @param getIndexRequest must not be {@literal null}
+		 * @return the {@link Mono} emitting the response
+		 * @since 4.2
+		 */
+		default Mono<GetIndexResponse> getIndex(GetIndexRequest getIndexRequest) {
+			return getIndex(HttpHeaders.EMPTY, getIndexRequest);
+		}
+
+		/**
+		 * Execute the given {@link GetIndexRequest} against the {@literal indices} API.
+		 *
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param getIndexRequest must not be {@literal null}
+		 * @return the {@link Mono} emitting the response
+		 * @since 4.2
+		 */
+		Mono<GetIndexResponse> getIndex(HttpHeaders headers, GetIndexRequest getIndexRequest);
 	}
 }

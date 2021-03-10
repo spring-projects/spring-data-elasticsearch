@@ -15,11 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -38,7 +39,7 @@ import org.springframework.lang.Nullable;
 public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests {
 
 	@Test // DATAES-568
-	public void testCorrectDynamicTemplatesMappings() {
+	public void testCorrectDynamicTemplatesMappings() throws JSONException {
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleDynamicTemplatesEntity.class);
 
@@ -46,11 +47,11 @@ public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests 
 				+ "\"mapping\":{\"type\":\"string\",\"analyzer\":\"standard_lowercase_asciifolding\"},"
 				+ "\"path_match\":\"names.*\"}}]," + "\"properties\":{\"names\":{\"type\":\"object\"}}}";
 
-		assertThat(mapping).isEqualTo(EXPECTED_MAPPING_ONE);
+		assertEquals(EXPECTED_MAPPING_ONE, mapping, false);
 	}
 
 	@Test // DATAES-568
-	public void testCorrectDynamicTemplatesMappingsTwo() {
+	public void testCorrectDynamicTemplatesMappingsTwo() throws JSONException {
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleDynamicTemplatesEntityTwo.class);
 		String EXPECTED_MAPPING_TWO = "{\"dynamic_templates\":" + "[{\"with_custom_analyzer\":{"
@@ -59,7 +60,7 @@ public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests 
 				+ "\"mapping\":{\"type\":\"string\",\"analyzer\":\"standard_lowercase_asciifolding\"},"
 				+ "\"path_match\":\"participantA1.*\"}}]," + "\"properties\":{\"names\":{\"type\":\"object\"}}}";
 
-		assertThat(mapping).isEqualTo(EXPECTED_MAPPING_TWO);
+		assertEquals(EXPECTED_MAPPING_TWO, mapping, false);
 	}
 
 	/**

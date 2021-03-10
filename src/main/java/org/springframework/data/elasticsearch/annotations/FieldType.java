@@ -22,6 +22,8 @@ package org.springframework.data.elasticsearch.annotations;
  * @author Zeng Zetang
  * @author Peter-Josef Meisch
  * @author Aleksei Arsenev
+ * @author Brian Kimmig
+ * @author Morgan Lutz
  */
 public enum FieldType {
 	Auto, //
@@ -57,5 +59,7 @@ public enum FieldType {
 	/** @since 4.1 */
 	Rank_Features, //
 	/** since 4.2 */
-	Wildcard //
+	Wildcard, //
+	/** @since 4.2 */
+	Dense_Vector //
 }

@@ -21,6 +21,8 @@ import static org.mockito.Mockito.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -85,6 +87,8 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 	@Mock private BulkItemResponse bulkItemResponse;
 	@Mock private DocWriteResponse docWriteResponse;
 	@Mock private GetResult getResult;
+	@Mock private GetResponse getResponse;
+	@Mock private MultiGetItemResponse multiGetItemResponse;
 	@Mock private org.elasticsearch.search.SearchHit searchHit;
 	@Mock private org.elasticsearch.action.search.SearchResponse searchResponse;
 
@@ -109,8 +113,6 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		doReturn(docWriteResponse).when(bulkItemResponse).getResponse();
 		doReturn("response-id").when(docWriteResponse).getId();
 
-		when(client.multiGet(any(MultiGetRequest.class))).thenReturn(Flux.just(getResult, getResult));
-
 		doReturn(true).when(getResult).isExists();
 		doReturn(false).when(getResult).isSourceEmpty();
 		doReturn(new HashMap<String, Object>() {
@@ -119,6 +121,16 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 				put("firstname", "luke");
 			}
 		}).when(getResult).getSource();
+
+		doReturn(true).when(getResponse).isExists();
+		doReturn(new HashMap<String, Object>() {
+			{
+				put("id", "init");
+				put("firstname", "luke");
+			}
+		}).when(getResponse).getSourceAsMap();
+		doReturn(getResponse).when(multiGetItemResponse).getResponse();
+		when(client.multiGet(any(MultiGetRequest.class))).thenReturn(Flux.just(multiGetItemResponse, multiGetItemResponse));
 
 		doReturn(Mono.just(getResult)).when(client).get(any(GetRequest.class));
 
@@ -224,18 +236,18 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		assertThat(saved.get(1).firstname).isEqualTo("after-save");
 	}
 
-	@Test // DATAES-772
+	@Test // DATAES-772, #1678
 	void multiGetShouldInvokeAfterConvertCallbacks() {
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
-		List<Person> results = template.multiGet(pagedQueryForTwo(), Person.class, index).timeout(Duration.ofSeconds(1))
+		List<MultiGetItem<Person>> results = template.multiGet(pagedQueryForTwo(), Person.class, index).timeout(Duration.ofSeconds(1))
 				.toStream().collect(Collectors.toList());
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
 				eq(index));
-		assertThat(results.get(0).firstname).isEqualTo("after-convert");
-		assertThat(results.get(1).firstname).isEqualTo("after-convert");
+		assertThat(results.get(0).getItem().firstname).isEqualTo("after-convert");
+		assertThat(results.get(1).getItem().firstname).isEqualTo("after-convert");
 	}
 
 	@Test // DATAES-772

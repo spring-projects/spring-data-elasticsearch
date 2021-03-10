@@ -19,9 +19,9 @@ import java.util.List;
 
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
+import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
@@ -120,10 +120,10 @@ public interface DocumentOperations {
 	 *
 	 * @param query the query defining the ids of the objects to get
 	 * @param clazz the type of the object to be returned
-	 * @return list of objects, contains null values for ids that are not found
+	 * @return list of {@link MultiGetItem}s
 	 * @since 4.1
 	 */
-	<T> List<T> multiGet(Query query, Class<T> clazz);
+	<T> List<MultiGetItem<T>> multiGet(Query query, Class<T> clazz);
 
 	/**
 	 * Execute a multiGet against elasticsearch for the given ids.
@@ -131,9 +131,9 @@ public interface DocumentOperations {
 	 * @param query the query defining the ids of the objects to get
 	 * @param clazz the type of the object to be returned
 	 * @param index the index(es) from which the objects are read.
-	 * @return list of objects, contains null values for ids that are not found
+	 * @return list of {@link MultiGetItem}s
 	 */
-	<T> List<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
+	<T> List<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Check if an entity with given {@literal id} exists.
@@ -276,19 +276,21 @@ public interface DocumentOperations {
 	 * @param query query defining the objects
 	 * @param clazz The entity class, must be annotated with
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @return response with detailed information
 	 * @since 4.1
 	 */
-	void delete(Query query, Class<?> clazz);
+	ByQueryResponse delete(Query query, Class<?> clazz);
 
 	/**
 	 * Delete all records matching the query.
-	 *
+	 * 
 	 * @param query query defining the objects
 	 * @param clazz The entity class, must be annotated with
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @param index the index from which to delete
+	 * @return response with detailed information
 	 */
-	void delete(Query query, Class<?> clazz, IndexCoordinates index);
+	ByQueryResponse delete(Query query, Class<?> clazz, IndexCoordinates index);
 
 	/**
 	 * Partial update of the document.
@@ -307,5 +309,5 @@ public interface DocumentOperations {
 	 * @return the update response
 	 * @since 4.2
 	 */
-	UpdateByQueryResponse updateByQuery(UpdateQuery updateQuery, IndexCoordinates index);
+	ByQueryResponse updateByQuery(UpdateQuery updateQuery, IndexCoordinates index);
 }

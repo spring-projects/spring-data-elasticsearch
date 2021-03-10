@@ -1,6 +1,7 @@
 package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Object;
 
 import java.lang.annotation.Annotation;
@@ -17,6 +18,8 @@ import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Brian Kimmig
+ * @author Morgan Lutz
  */
 public class MappingParametersTest extends MappingContextBaseTests {
 
@@ -66,6 +69,26 @@ public class MappingParametersTest extends MappingContextBaseTests {
 		assertThatThrownBy(() -> MappingParameters.from(annotation)).isInstanceOf(IllegalArgumentException.class);
 	}
 
+	@Test // #1700
+	@DisplayName("should not allow dims length greater than 2048 for dense_vector type")
+	void shouldNotAllowDimsLengthGreaterThan2048ForDenseVectorType() {
+		ElasticsearchPersistentEntity<?> failEntity = elasticsearchConverter.get().getMappingContext()
+				.getRequiredPersistentEntity(DenseVectorInvalidDimsClass.class);
+		Annotation annotation = failEntity.getRequiredPersistentProperty("dense_vector").findAnnotation(Field.class);
+
+		assertThatThrownBy(() -> MappingParameters.from(annotation)).isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test // #1700
+	@DisplayName("should require dims parameter for dense_vector type")
+	void shouldRequireDimsParameterForDenseVectorType() {
+		ElasticsearchPersistentEntity<?> failEntity = elasticsearchConverter.get().getMappingContext()
+				.getRequiredPersistentEntity(DenseVectorMissingDimsClass.class);
+		Annotation annotation = failEntity.getRequiredPersistentProperty("dense_vector").findAnnotation(Field.class);
+
+		assertThatThrownBy(() -> MappingParameters.from(annotation)).isInstanceOf(IllegalArgumentException.class);
+	}
+
 	static class AnnotatedClass {
 		@Nullable @Field private String field;
 		@Nullable @MultiField(mainField = @Field,
@@ -78,5 +101,13 @@ public class MappingParametersTest extends MappingContextBaseTests {
 
 	static class InvalidEnabledFieldClass {
 		@Nullable @Field(type = FieldType.Text, enabled = false) private String disabledObject;
+	}
+
+	static class DenseVectorInvalidDimsClass {
+		@Field(type = Dense_Vector, dims = 2049) private float[] dense_vector;
+	}
+
+	static class DenseVectorMissingDimsClass {
+		@Field(type = Dense_Vector) private float[] dense_vector;
 	}
 }

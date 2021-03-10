@@ -71,10 +71,10 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
+import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.routing.DefaultRoutingResolver;
@@ -298,12 +298,12 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public <T> Flux<T> multiGet(Query query, Class<T> clazz) {
+	public <T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz) {
 		return multiGet(query, clazz, getIndexCoordinatesFor(clazz));
 	}
 
 	@Override
-	public <T> Flux<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
+	public <T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
 
 		Assert.notNull(index, "Index must not be null");
 		Assert.notNull(clazz, "Class must not be null");
@@ -314,7 +314,12 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		MultiGetRequest request = requestFactory.multiGetRequest(query, clazz, index);
 		return Flux.from(execute(client -> client.multiGet(request))) //
-				.concatMap(result -> callback.toEntity(DocumentAdapters.from(result)));
+				.map(DocumentAdapters::from) //
+				.flatMap(multiGetItem -> multiGetItem.isFailed() //
+						? Mono.just(MultiGetItem.of(null, multiGetItem.getFailure())) //
+						: callback.toEntity(multiGetItem.getItem())
+								.map((T item) -> MultiGetItem.of(item, multiGetItem.getFailure())) //
+				);
 	}
 
 	@Override
@@ -526,11 +531,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @see org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations#delete(Query, Class, IndexCoordinates)
 	 */
 	@Override
-	public Mono<Long> delete(Query query, Class<?> entityType, IndexCoordinates index) {
+	public Mono<ByQueryResponse> delete(Query query, Class<?> entityType, IndexCoordinates index) {
 
 		Assert.notNull(query, "Query must not be null!");
 
-		return doDeleteBy(query, entityType, index).map(BulkByScrollResponse::getDeleted).next();
+		return doDeleteBy(query, entityType, index).map(ByQueryResponse::of);
 	}
 
 	@Override
@@ -556,7 +561,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public Mono<UpdateByQueryResponse> updateByQuery(UpdateQuery updateQuery, IndexCoordinates index) {
+	public Mono<ByQueryResponse> updateByQuery(UpdateQuery updateQuery, IndexCoordinates index) {
 
 		Assert.notNull(updateQuery, "updateQuery must not be null");
 		Assert.notNull(index, "Index must not be null");
@@ -578,13 +583,13 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public Mono<Long> delete(Query query, Class<?> entityType) {
+	public Mono<ByQueryResponse> delete(Query query, Class<?> entityType) {
 		return delete(query, entityType, getIndexCoordinatesFor(entityType));
 	}
 
-	private Flux<BulkByScrollResponse> doDeleteBy(Query query, Class<?> entityType, IndexCoordinates index) {
+	private Mono<BulkByScrollResponse> doDeleteBy(Query query, Class<?> entityType, IndexCoordinates index) {
 
-		return Flux.defer(() -> {
+		return Mono.defer(() -> {
 			DeleteByQueryRequest request = requestFactory.deleteByQueryRequest(query, entityType, index);
 			return doDeleteBy(prepareDeleteByRequest(request));
 		});

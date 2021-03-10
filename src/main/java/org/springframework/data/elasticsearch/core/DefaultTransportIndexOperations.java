@@ -29,6 +29,8 @@ import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
@@ -66,6 +68,7 @@ import org.springframework.util.Assert;
  *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author George Popides
  * @since 4.0
  */
 class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations implements IndexOperations {
@@ -87,9 +90,9 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	protected boolean doCreate(IndexCoordinates index, @Nullable Document settings) {
+	protected boolean doCreate(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping) {
 		CreateIndexRequestBuilder createIndexRequestBuilder = requestFactory.createIndexRequestBuilder(client, index,
-				settings);
+				settings, mapping);
 		return createIndexRequestBuilder.execute().actionGet().isAcknowledged();
 	}
 
@@ -150,6 +153,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
+	@Deprecated
 	protected boolean doRemoveAlias(AliasQuery query, IndexCoordinates index) {
 
 		Assert.notNull(index, "No index defined for Alias");
@@ -177,7 +181,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 		Map<String, Set<AliasMetadata>> aliasesResponse = new LinkedHashMap<>();
 		aliases.keysIt().forEachRemaining(index -> aliasesResponse.put(index, new HashSet<>(aliases.get(index))));
-		return requestFactory.convertAliasesResponse(aliasesResponse);
+		return ResponseConverter.aliasDatas(aliasesResponse);
 	}
 
 	@Override
@@ -199,7 +203,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 				.getSettings(getSettingsRequest) //
 				.actionGet();
 
-		return requestFactory.fromSettingsResponse(response, index.getIndexName());
+		return ResponseConverter.fromSettingsResponse(response, index.getIndexName());
 	}
 
 	@Override
@@ -243,7 +247,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 				Iterator<String> keysItAliases = aliasesResponse.keysIt();
 				while (keysItAliases.hasNext()) {
 					String key = keysItAliases.next();
-					aliases.put(key, requestFactory.convertAliasMetadata(aliasesResponse.get(key)));
+					aliases.put(key, ResponseConverter.toAliasData(aliasesResponse.get(key)));
 				}
 
 				Map<String, String> mappingsDoc = new LinkedHashMap<>();
@@ -295,5 +299,16 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 		DeleteIndexTemplateRequest deleteIndexTemplateRequest = requestFactory.deleteIndexTemplateRequest(client,
 				deleteTemplateRequest);
 		return client.admin().indices().deleteTemplate(deleteIndexTemplateRequest).actionGet().isAcknowledged();
+	}
+
+	@Override
+	public List<IndexInformation> getInformation(IndexCoordinates index) {
+
+		Assert.notNull(index, "index must not be null");
+
+		GetIndexRequest getIndexRequest = new GetIndexRequest();
+		getIndexRequest.indices(index.getIndexNames());
+		GetIndexResponse getIndexResponse = client.admin().indices().getIndex(getIndexRequest).actionGet();
+		return ResponseConverter.getIndexInformations(getIndexResponse);
 	}
 }

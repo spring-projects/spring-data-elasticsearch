@@ -24,8 +24,8 @@ import java.util.List;
 
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
+import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.UpdateByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.util.Assert;
@@ -147,10 +147,10 @@ public interface ReactiveDocumentOperations {
 	 *
 	 * @param query the query defining the ids of the objects to get
 	 * @param clazz the type of the object to be returned, used to determine the index
-	 * @return flux with list of nullable objects
+	 * @return flux with list of {@link MultiGetItem}s that contain the entities
 	 * @since 4.1
 	 */
-	<T> Flux<T> multiGet(Query query, Class<T> clazz);
+	<T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz);
 
 	/**
 	 * Execute a multiGet against elasticsearch for the given ids.
@@ -158,10 +158,10 @@ public interface ReactiveDocumentOperations {
 	 * @param query the query defining the ids of the objects to get
 	 * @param clazz the type of the object to be returned
 	 * @param index the index(es) from which the objects are read.
-	 * @return flux with list of nullable objects
+	 * @return flux with list of {@link MultiGetItem}s that contain the entities
 	 * @since 4.0
 	 */
-	<T> Flux<T> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
+	<T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
 
 	/**
 	 * Bulk update all objects. Will do update.
@@ -264,7 +264,7 @@ public interface ReactiveDocumentOperations {
 	 * @param entityType must not be {@literal null}.
 	 * @return a {@link Mono} emitting the number of the removed documents.
 	 */
-	Mono<Long> delete(Query query, Class<?> entityType);
+	Mono<ByQueryResponse> delete(Query query, Class<?> entityType);
 
 	/**
 	 * Delete the documents matching the given {@link Query} extracting index from entity metadata.
@@ -274,7 +274,7 @@ public interface ReactiveDocumentOperations {
 	 * @param index the target index, must not be {@literal null}
 	 * @return a {@link Mono} emitting the number of the removed documents.
 	 */
-	Mono<Long> delete(Query query, Class<?> entityType, IndexCoordinates index);
+	Mono<ByQueryResponse> delete(Query query, Class<?> entityType, IndexCoordinates index);
 
 	/**
 	 * Partial update of the document.
@@ -294,5 +294,5 @@ public interface ReactiveDocumentOperations {
 	 * @return a {@link Mono} emitting the update response
 	 * @since 4.2
 	 */
-	Mono<UpdateByQueryResponse> updateByQuery(UpdateQuery updateQuery, IndexCoordinates index);
+	Mono<ByQueryResponse> updateByQuery(UpdateQuery updateQuery, IndexCoordinates index);
 }

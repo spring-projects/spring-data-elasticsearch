@@ -81,17 +81,17 @@ public class SourceFilterIntegrationTests {
 		assertThat(entity.getField3()).isNull();
 	}
 
-	@Test // #1659
+	@Test // #1659, #1678
 	@DisplayName("should only return requested fields on multiget")
 	void shouldOnlyReturnRequestedFieldsOnGMultiGet() {
 
 		Query query = new NativeSearchQueryBuilder().withIds(Collections.singleton("42")).build();
 		query.addFields("field2");
 
-		List<Entity> entities = operations.multiGet(query, Entity.class);
+		List<MultiGetItem<Entity>> entities = operations.multiGet(query, Entity.class);
 
 		assertThat(entities).hasSize(1);
-		Entity entity = entities.get(0);
+		Entity entity = entities.get(0).getItem();
 		assertThat(entity.getField1()).isNull();
 		assertThat(entity.getField2()).isEqualTo("two");
 		assertThat(entity.getField3()).isNull();
@@ -123,7 +123,7 @@ public class SourceFilterIntegrationTests {
 		assertThat(entity.getField3()).isNotNull();
 	}
 
-	@Test // #1659
+	@Test // #1659, #1678
 	@DisplayName("should not return excluded fields from SourceFilter on multiget")
 	void shouldNotReturnExcludedFieldsFromSourceFilterOnMultiGet() {
 
@@ -140,10 +140,10 @@ public class SourceFilterIntegrationTests {
 			}
 		});
 
-		List<Entity> entities = operations.multiGet(query, Entity.class);
+		List<MultiGetItem<Entity>> entities = operations.multiGet(query, Entity.class);
 
 		assertThat(entities).hasSize(1);
-		Entity entity = entities.get(0);
+		Entity entity = entities.get(0).getItem();
 		assertThat(entity.getField1()).isNotNull();
 		assertThat(entity.getField2()).isNull();
 		assertThat(entity.getField3()).isNotNull();
@@ -175,7 +175,7 @@ public class SourceFilterIntegrationTests {
 		assertThat(entity.getField3()).isNull();
 	}
 
-	@Test // #1659
+	@Test // #1659, #1678
 	@DisplayName("should only return included fields from SourceFilter on multiget")
 	void shouldOnlyReturnIncludedFieldsFromSourceFilterOnMultiGet() {
 
@@ -192,10 +192,10 @@ public class SourceFilterIntegrationTests {
 			}
 		});
 
-		List<Entity> entities = operations.multiGet(query, Entity.class);
+		List<MultiGetItem<Entity>> entities = operations.multiGet(query, Entity.class);
 
 		assertThat(entities).hasSize(1);
-		Entity entity = entities.get(0);
+		Entity entity = entities.get(0).getItem();
 		assertThat(entity.getField1()).isNull();
 		assertThat(entity.getField2()).isNotNull();
 		assertThat(entity.getField3()).isNull();

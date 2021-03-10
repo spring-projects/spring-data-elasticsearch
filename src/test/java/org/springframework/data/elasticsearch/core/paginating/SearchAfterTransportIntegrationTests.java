@@ -1,5 +1,5 @@
 /*
- * Copyright2020-2021 the original author or authors.
+ * Copyright 2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core.routing;
+package org.springframework.data.elasticsearch.core.paginating;
 
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.test.context.ContextConfiguration;
@@ -22,4 +22,4 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  */
 @ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
-public class ElasticsearchOperationsRoutingTransportTests extends ElasticsearchOperationsRoutingTests {}
+public class SearchAfterTransportIntegrationTests extends SearchAfterIntegrationTests {}

@@ -31,7 +31,6 @@ import org.json.JSONException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -52,7 +51,6 @@ import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.lang.Nullable;
@@ -68,7 +66,7 @@ public class ReactiveIndexOperationsTest {
 	public static final String TESTINDEX = "reactive-index-operations-testindex";
 
 	@Configuration
-	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class, ElasticsearchRestTemplateConfiguration.class })
+	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class })
 	static class Config {}
 
 	@Autowired private ReactiveElasticsearchOperations operations;
@@ -257,7 +255,7 @@ public class ReactiveIndexOperationsTest {
 				.as(StepVerifier::create) //
 				.assertNext(document -> {
 					try {
-						assertEquals(expected, document.toJson(), JSONCompareMode.NON_EXTENSIBLE);
+						assertEquals(expected, document.toJson(), false);
 					} catch (JSONException e) {
 						fail("", e);
 					}
@@ -282,7 +280,7 @@ public class ReactiveIndexOperationsTest {
 				.as(StepVerifier::create) //
 				.assertNext(document -> {
 					try {
-						assertEquals(expected, document.toJson(), JSONCompareMode.NON_EXTENSIBLE);
+						assertEquals(expected, document.toJson(), false);
 					} catch (JSONException e) {
 						fail("", e);
 					}
@@ -310,7 +308,7 @@ public class ReactiveIndexOperationsTest {
 				.as(StepVerifier::create) //
 				.assertNext(document -> {
 					try {
-						assertEquals(expected, document.toJson(), JSONCompareMode.NON_EXTENSIBLE);
+						assertEquals(expected, document.toJson(), false);
 					} catch (JSONException e) {
 						fail("", e);
 					}
@@ -340,7 +338,7 @@ public class ReactiveIndexOperationsTest {
 				.as(StepVerifier::create) //
 				.assertNext(document -> {
 					try {
-						assertEquals(expected, document.toJson(), JSONCompareMode.NON_EXTENSIBLE);
+						assertEquals(expected, document.toJson(), false);
 					} catch (JSONException e) {
 						fail("", e);
 					}
