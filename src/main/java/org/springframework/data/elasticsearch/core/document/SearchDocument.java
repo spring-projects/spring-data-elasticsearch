@@ -25,6 +25,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Matt Gilene
  * @since 4.0
  * @see Document
  */
@@ -105,4 +106,10 @@ public interface SearchDocument extends Document {
 	 */
 	@Nullable
 	Explanation getExplanation();
+
+	/**
+	 * @return the matched queries for the SearchHit.
+	 */
+	@Nullable
+	List<String> getMatchedQueries();
 }
