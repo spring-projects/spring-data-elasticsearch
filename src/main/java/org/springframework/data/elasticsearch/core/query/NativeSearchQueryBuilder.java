@@ -73,7 +73,7 @@ public class NativeSearchQueryBuilder {
 	@Nullable private Integer maxResults;
 	@Nullable private Boolean trackTotalHits;
 	@Nullable private TimeValue timeout;
-	private final List<QueryRescorerBuilder> queryRescorerBuilders = new ArrayList<>();
+	private final List<RescorerQuery> rescorerQueries = new ArrayList<>();
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -193,8 +193,8 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withRescorerQuery(QueryRescorerBuilder queryRescorerBuilder) {
-		this.queryRescorerBuilders.add(queryRescorerBuilder);
+	public NativeSearchQueryBuilder withRescorerQuery(RescorerQuery rescorerQuery) {
+		this.rescorerQueries.add(rescorerQuery);
 		return this;
 	}
 
@@ -264,11 +264,9 @@ public class NativeSearchQueryBuilder {
 			nativeSearchQuery.setTimeout(timeout);
 		}
 
-		if (!isEmpty(queryRescorerBuilders)) {
+		if (!isEmpty(rescorerQueries)) {
 			nativeSearchQuery.setRescorerQueries(
-					queryRescorerBuilders.stream()
-							.map(RescorerQuery::new)
-							.collect(Collectors.toList()));
+					rescorerQueries);
 		}
 
 		return nativeSearchQuery;

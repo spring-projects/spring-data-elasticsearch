@@ -15,26 +15,80 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.rescore.QueryRescorerBuilder;
+import org.springframework.lang.Nullable;
 
 /**
- * Encapsulates an Elasticsearch {@link QueryRescorerBuilder} to prevent leaking of Elasticsearch
- * classes into the query API.
+ * Implementation of RescorerQuery to be used for rescoring filtered search results.
  *
  * @author Peer Mueller
  * @since 4.2
  */
 public class RescorerQuery {
 
-	private final QueryRescorerBuilder queryRescorerBuilder;
+	private final Query query;
+	private ScoreMode scoreMode = ScoreMode.Default;
+	@Nullable private Integer windowSize;
+	@Nullable private Float queryWeight;
+	@Nullable private Float rescoreQueryWeight;
 
-	public RescorerQuery(QueryRescorerBuilder queryRescorerBuilder) {
-		this.queryRescorerBuilder = queryRescorerBuilder;
+	public RescorerQuery(Query query) {
+		this.query = query;
 	}
 
-	public QueryRescorerBuilder getRescorerBuilder() {
-		return queryRescorerBuilder;
+	public Query getQuery() {
+		return query;
 	}
 
+	public ScoreMode getScoreMode() {
+		return scoreMode;
+	}
+
+	@Nullable
+	public Integer getWindowSize() {
+		return windowSize;
+	}
+
+	@Nullable
+	public Float getQueryWeight() {
+		return queryWeight;
+	}
+
+	@Nullable
+	public Float getRescoreQueryWeight() {
+		return rescoreQueryWeight;
+	}
+
+	public RescorerQuery withScoreMode(ScoreMode scoreMode) {
+		this.scoreMode = scoreMode;
+		return this;
+	}
+
+	public RescorerQuery withWindowSize(int windowSize) {
+		this.windowSize = windowSize;
+		return this;
+	}
+
+	public RescorerQuery withQueryWeight(float queryWeight) {
+		this.queryWeight = queryWeight;
+		return this;
+	}
+
+	public RescorerQuery withRescoreQueryWeight(float rescoreQueryWeight) {
+		this.rescoreQueryWeight = rescoreQueryWeight;
+		return this;
+	}
+
+
+
+	public enum ScoreMode {
+		Default,
+		Avg,
+		Max,
+		Min,
+		Total,
+		Multiply
+	}
 
 }

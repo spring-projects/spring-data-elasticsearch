@@ -56,6 +56,7 @@ import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
 import org.elasticsearch.index.VersionType;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
 import org.elasticsearch.index.query.functionscore.GaussDecayFunctionBuilder;
@@ -99,6 +100,7 @@ import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.RescorerQuery.ScoreMode;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.lang.Nullable;
@@ -3158,20 +3160,24 @@ public abstract class ElasticsearchTemplateTests {
 		NativeSearchQuery query = new NativeSearchQueryBuilder() //
 				.withQuery(
 						boolQuery().filter(existsQuery("rate")).should(termQuery("message", "message"))) //
-				.withRescorerQuery(new QueryRescorerBuilder(
-						new FunctionScoreQueryBuilder(
-								new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
-										new FilterFunctionBuilder(
-												new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5)
-														.setWeight(1f)),
-										new FilterFunctionBuilder(
-												new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5)
-														.setWeight(100f))})
-								.scoreMode(FunctionScoreQuery.ScoreMode.SUM)
-								.maxBoost(80f)
-								.boostMode(CombineFunction.REPLACE))
-						.setScoreMode(QueryRescoreMode.Max)
-						.windowSize(100))
+				.withRescorerQuery(new RescorerQuery(
+						new NativeSearchQueryBuilder().withQuery(
+								QueryBuilders.functionScoreQuery(
+										new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
+												new FilterFunctionBuilder(
+														new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5)
+																.setWeight(1f)),
+												new FilterFunctionBuilder(
+														new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5)
+																.setWeight(100f))}
+								)
+										.scoreMode(FunctionScoreQuery.ScoreMode.SUM)
+										.maxBoost(80f)
+										.boostMode(CombineFunction.REPLACE)
+						).build()
+				)
+						.withScoreMode(ScoreMode.Max)
+						.withWindowSize(100))
 				.build();
 
 		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class, index);

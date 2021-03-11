@@ -39,10 +39,18 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
+import org.elasticsearch.common.lucene.search.function.CombineFunction;
+import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
+import org.elasticsearch.index.query.functionscore.GaussDecayFunctionBuilder;
+import org.elasticsearch.index.query.functionscore.ScriptScoreQueryBuilder;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -70,12 +78,15 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.RescorerQuery;
+import org.springframework.data.elasticsearch.core.query.RescorerQuery.ScoreMode;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
+ * @author Peer Mueller
  */
 @ExtendWith(MockitoExtension.class)
 class RequestFactoryTests {
@@ -509,6 +520,139 @@ class RequestFactoryTests {
 
 	private String requestToString(ToXContent request) throws IOException {
 		return XContentHelper.toXContent(request, XContentType.JSON, true).utf8ToString();
+	}
+
+	@Test
+	void shouldBuildSearchWithRescorerQuery() throws JSONException {
+		CriteriaQuery query = new CriteriaQuery(new Criteria("lastName").is("Smith"));
+		RescorerQuery rescorerQuery = new RescorerQuery( new NativeSearchQueryBuilder() //
+				.withQuery(
+						QueryBuilders.functionScoreQuery(new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
+								new FilterFunctionBuilder(QueryBuilders.existsQuery("someField"),
+										new GaussDecayFunctionBuilder("someField", 0, 100000.0, null, 0.683)
+												.setWeight(5.022317f)),
+								new FilterFunctionBuilder(QueryBuilders.existsQuery("anotherField"),
+										new GaussDecayFunctionBuilder("anotherField", "202102", "31536000s", null, 0.683)
+												.setWeight(4.170836f))})
+								.scoreMode(FunctionScoreQuery.ScoreMode.SUM)
+								.maxBoost(50.0f)
+								.boostMode(CombineFunction.AVG)
+								.boost(1.5f))
+				.build()
+				)
+				.withWindowSize(50)
+				.withQueryWeight(2.0f)
+				.withRescoreQueryWeight(5.0f)
+				.withScoreMode(ScoreMode.Multiply);
+
+		RescorerQuery anotherRescorerQuery = new RescorerQuery(new NativeSearchQueryBuilder() //
+				.withQuery(
+						QueryBuilders.matchPhraseQuery("message", "the quick brown").slop(2))
+				.build()
+		)
+				.withWindowSize(100)
+				.withQueryWeight(0.7f)
+				.withRescoreQueryWeight(1.2f);
+
+		query.addRescorerQuery(rescorerQuery);
+		query.addRescorerQuery(anotherRescorerQuery);
+
+		converter.updateQuery(query, Person.class);
+
+		String expected = '{' + //
+				"  \"query\": {" + //
+				"    \"bool\": {" + //
+				"      \"must\": [" + //
+				"        {" + //
+				"          \"query_string\": {" + //
+				"            \"query\": \"Smith\"," + //
+				"            \"fields\": [" + //
+				"              \"last-name^1.0\"" + //
+				"            ]" + //
+				"          }" + //
+				"        }" + //
+				"      ]" + //
+				"    }" + //
+				"  }," + //
+				"  \"rescore\": [{\n"
+				+ "      \"window_size\" : 100,\n"
+				+ "      \"query\" : {\n"
+				+ "         \"rescore_query\" : {\n"
+				+ "            \"match_phrase\" : {\n"
+				+ "               \"message\" : {\n"
+				+ "                  \"query\" : \"the quick brown\",\n"
+				+ "                  \"slop\" : 2\n"
+				+ "               }\n"
+				+ "            }\n"
+				+ "         },\n"
+				+ "         \"query_weight\" : 0.7,\n"
+				+ "         \"rescore_query_weight\" : 1.2\n"
+				+ "      }\n"
+				+ "   },"
+				+ "  {\n"
+				+ "     \"window_size\": 50,\n"
+				+ "     \"query\": {\n"
+				+ "      				\"rescore_query\": {\n"
+				+ "      							\"function_score\": {\n"
+				+ "                        \"query\": {\n"
+				+ "                            \"match_all\": {\n"
+				+ "                                \"boost\": 1.0\n"
+				+ "                            }\n"
+				+ "                        },\n"
+				+ "                        \"functions\": [\n"
+				+ "                            {\n"
+				+ "                                \"filter\": {\n"
+				+ "                                    \"exists\": {\n"
+				+ "                                        \"field\": \"someField\",\n"
+				+ "                                        \"boost\": 1.0\n"
+				+ "                                    }\n"
+				+ "                                },\n"
+				+ "                                \"weight\": 5.022317,\n"
+				+ "                                \"gauss\": {\n"
+				+ "                                    \"someField\": {\n"
+				+ "                                        \"origin\": 0.0,\n"
+				+ "                                        \"scale\": 100000.0,\n"
+				+ "                                        \"decay\": 0.683\n"
+				+ "                                    },\n"
+				+ "                                    \"multi_value_mode\": \"MIN\"\n"
+				+ "                                }\n"
+				+ "                            },\n"
+				+ "                            {\n"
+				+ "                                \"filter\": {\n"
+				+ "                                    \"exists\": {\n"
+				+ "                                        \"field\": \"anotherField\",\n"
+				+ "                                        \"boost\": 1.0\n"
+				+ "                                    }\n"
+				+ "                                },\n"
+				+ "                                \"weight\": 4.170836,\n"
+				+ "                                \"gauss\": {\n"
+				+ "                                    \"anotherField\": {\n"
+				+ "                                        \"origin\": \"202102\",\n"
+				+ "                                        \"scale\": \"31536000s\",\n"
+				+ "                                        \"decay\": 0.683\n"
+				+ "                                    },\n"
+				+ "                                    \"multi_value_mode\": \"MIN\"\n"
+				+ "                                }\n"
+				+ "                            }\n"
+				+ "                        ],\n"
+				+ "                        \"score_mode\": \"sum\",\n"
+				+ "                        \"boost_mode\": \"avg\",\n"
+				+ "                        \"max_boost\": 50.0,\n"
+				+ "                        \"boost\": 1.5\n"
+				+ "                    }\n"
+				+ "             },\n"
+				+ "      \"query_weight\": 2.0,"
+				+ "      \"rescore_query_weight\": 5.0,"
+				+ "      \"score_mode\": \"multiply\""
+				+ "   }\n"
+				+ " }\n"
+				+ " ]\n"
+				+ '}';
+
+		String searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons")).source()
+				.toString();
+
+		assertEquals(expected, searchRequest, false);
 	}
 
 	@Data
