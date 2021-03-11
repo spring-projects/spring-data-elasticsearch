@@ -62,7 +62,7 @@ public class StreamQueriesTest {
 	}
 
 	private SearchHit<String> getOneSearchHit() {
-		return new SearchHit<String>(null, null, null, 0, null, null, "one");
+		return new SearchHit<String>(null, null, null, 0, null, null, null, null, null, null, "one");
 	}
 
 	@Test // DATAES-766

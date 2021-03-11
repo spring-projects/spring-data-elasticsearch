@@ -30,7 +30,7 @@ import org.springframework.util.Assert;
 
 /**
  * Encapsulates the found data with additional information from the search.
- * 
+ *
  * @param <T> the result data class.
  * @author Peter-Josef Meisch
  * @author Matt Gilene
@@ -48,8 +48,13 @@ public class SearchHit<T> {
 	@Nullable private final NestedMetaData nestedMetaData;
 	@Nullable private final String routing;
 	@Nullable private final Explanation explanation;
-	@Nullable private final List<String> matchedQueries;
+	private final List<String> matchedQueries = new ArrayList<>();
 
+	/**
+	 * @deprecated since 4.2 use
+	 *             {@link #SearchHit(String, String, String, float, Object[], Map, Map, NestedMetaData, Explanation, List, Object)}.
+	 */
+	@Deprecated
 	public SearchHit(@Nullable String index, @Nullable String id, @Nullable String routing, float score,
 			@Nullable Object[] sortValues, @Nullable Map<String, List<String>> highlightFields, T content) {
 		this(index, id, routing, score, sortValues, highlightFields, null, null, null, null, content);
@@ -58,8 +63,7 @@ public class SearchHit<T> {
 	public SearchHit(@Nullable String index, @Nullable String id, @Nullable String routing, float score,
 			@Nullable Object[] sortValues, @Nullable Map<String, List<String>> highlightFields,
 			@Nullable Map<String, SearchHits<?>> innerHits, @Nullable NestedMetaData nestedMetaData,
-			@Nullable Explanation explanation,
-			@Nullable List<String> matchedQueries, T content) {
+			@Nullable Explanation explanation, @Nullable List<String> matchedQueries, T content) {
 		this.index = index;
 		this.id = id;
 		this.routing = routing;
@@ -77,7 +81,10 @@ public class SearchHit<T> {
 		this.nestedMetaData = nestedMetaData;
 		this.explanation = explanation;
 		this.content = content;
-		this.matchedQueries = matchedQueries;
+
+		if (matchedQueries != null) {
+			this.matchedQueries.addAll(matchedQueries);
+		}
 	}
 
 	/**
@@ -125,7 +132,7 @@ public class SearchHit<T> {
 
 	/**
 	 * gets the highlight values for a field.
-	 * 
+	 *
 	 * @param field must not be {@literal null}
 	 * @return possibly empty List, never null
 	 */
@@ -141,7 +148,7 @@ public class SearchHit<T> {
 	 * nested entity class, the returned data will be of this type, otherwise
 	 * {{@link org.springframework.data.elasticsearch.core.document.SearchDocument}} instances are returned in this
 	 * {@link SearchHits} object.
-	 * 
+	 *
 	 * @param name the inner hits name
 	 * @return {@link SearchHits} if available, otherwise {@literal null}
 	 */
@@ -160,7 +167,7 @@ public class SearchHit<T> {
 
 	/**
 	 * If this is a nested inner hit, return the nested metadata information
-	 * 
+	 *
 	 * @return {{@link NestedMetaData}
 	 * @since 4.1
 	 */

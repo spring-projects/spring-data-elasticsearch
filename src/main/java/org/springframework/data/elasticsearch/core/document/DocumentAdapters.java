@@ -31,10 +31,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
@@ -50,6 +46,10 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
  * Utility class to adapt {@link org.elasticsearch.action.get.GetResponse},
@@ -131,7 +131,7 @@ public class DocumentAdapters {
 
 	/**
 	 * Creates a List of {@link MultiGetItem<Document>}s from {@link MultiGetResponse}.
-	 * 
+	 *
 	 * @param source the source {@link MultiGetResponse}, not {@literal null}.
 	 * @return a list of Documents, contains null values for not found Documents.
 	 */
@@ -146,7 +146,7 @@ public class DocumentAdapters {
 
 	/**
 	 * Creates a {@link MultiGetItem<Document>} from a {@link MultiGetItemResponse}.
-	 * 
+	 *
 	 * @param itemResponse the response, must not be {@literal null}
 	 * @return the MultiGetItem
 	 */
@@ -495,7 +495,8 @@ public class DocumentAdapters {
 
 		SearchDocumentAdapter(float score, Object[] sortValues, Map<String, DocumentField> fields,
 				Map<String, List<String>> highlightFields, Document delegate, Map<String, SearchDocumentResponse> innerHits,
-				@Nullable NestedMetaData nestedMetaData, @Nullable Explanation explanation, @Nullable List<String> matchedQueries) {
+				@Nullable NestedMetaData nestedMetaData, @Nullable Explanation explanation,
+				@Nullable List<String> matchedQueries) {
 
 			this.score = score;
 			this.sortValues = sortValues;

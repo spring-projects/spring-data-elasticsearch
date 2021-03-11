@@ -15,9 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -138,13 +137,13 @@ public class DocumentAdaptersUnitTests {
 	}
 
 	@Test // DATAES-628, DATAES-848
-	public void shouldAdaptSearchResponse() throws IOException {
+	public void shouldAdaptSearchResponse() {
 
 		Map<String, DocumentField> fields = Collections.singletonMap("field",
 				new DocumentField("field", Collections.singletonList("value")));
 
 		SearchShardTarget shard = new SearchShardTarget("node", new ShardId("index", "uuid", 42), null, null);
-		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), fields, null);
+		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), null, fields);
 		searchHit.shard(shard);
 		searchHit.setSeqNo(1);
 		searchHit.setPrimaryTerm(2);
@@ -219,7 +218,7 @@ public class DocumentAdaptersUnitTests {
 		BytesArray source = new BytesArray("{\"field\":\"value\"}");
 
 		SearchShardTarget shard = new SearchShardTarget("node", new ShardId("index", "uuid", 42), null, null);
-		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), Collections.emptyMap(), null);
+		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), null, null);
 		searchHit.shard(shard);
 		searchHit.sourceRef(source).score(42);
 		searchHit.version(22);

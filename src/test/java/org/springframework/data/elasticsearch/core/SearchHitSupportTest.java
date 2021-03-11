@@ -59,11 +59,11 @@ class SearchHitSupportTest {
 	void shouldReturnTheSameListInstanceInSearchHitsAndGetContent() {
 
 		List<SearchHit<String>> hits = new ArrayList<>();
-		hits.add(new SearchHit<>(null, null, null, 0, null, null, "one"));
-		hits.add(new SearchHit<>(null, null, null, 0, null, null, "two"));
-		hits.add(new SearchHit<>(null, null, null, 0, null, null, "three"));
-		hits.add(new SearchHit<>(null, null, null, 0, null, null, "four"));
-		hits.add(new SearchHit<>(null, null, null, 0, null, null, "five"));
+		hits.add(new SearchHit<>(null, null, null, 0, null, null, null, null, null, null, "one"));
+		hits.add(new SearchHit<>(null, null, null, 0, null, null, null, null, null, null, "two"));
+		hits.add(new SearchHit<>(null, null, null, 0, null, null, null, null, null, null, "three"));
+		hits.add(new SearchHit<>(null, null, null, 0, null, null, null, null, null, null, "four"));
+		hits.add(new SearchHit<>(null, null, null, 0, null, null, null, null, null, null, "five"));
 
 		SearchHits<String> originalSearchHits = new SearchHitsImpl<>(hits.size(), TotalHitsRelation.EQUAL_TO, 0, "scroll",
 				hits, null);
@@ -112,7 +112,7 @@ class SearchHitSupportTest {
 		@Override
 		public SearchHit<String> next() {
 			String nextString = iterator.next();
-			return new SearchHit<>("index", "id", null, 1.0f, new Object[0], emptyMap(), nextString);
+			return new SearchHit<>("index", "id", null, 1.0f, new Object[0], emptyMap(), null, null, null, null, nextString);
 		}
 	}
 
