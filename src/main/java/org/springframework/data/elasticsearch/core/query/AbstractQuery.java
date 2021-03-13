@@ -41,6 +41,7 @@ import org.springframework.util.Assert;
  * @author Sascha Woo
  * @author Farid Azaza
  * @author Peter-Josef Meisch
+ * @author Peer Mueller
  */
 abstract class AbstractQuery implements Query {
 
@@ -63,6 +64,7 @@ abstract class AbstractQuery implements Query {
 	@Nullable private TimeValue timeout;
 	private boolean explain = false;
 	@Nullable private List<Object> searchAfter;
+	protected List<RescorerQuery> rescorerQueries = new ArrayList<>();
 
 	@Override
 	@Nullable
@@ -294,5 +296,21 @@ abstract class AbstractQuery implements Query {
 	@Override
 	public List<Object> getSearchAfter() {
 		return searchAfter;
+	}
+
+	@Override
+	public void addRescorerQuery(RescorerQuery rescorerQuery) {
+		this.rescorerQueries.add(rescorerQuery);
+	}
+
+	@Override
+	public void setRescorerQueries(List<RescorerQuery> rescorerQueryList) {
+		this.rescorerQueries.clear();
+		this.rescorerQueries.addAll(rescorerQueryList);
+	}
+
+	@Override
+	public List<RescorerQuery> getRescorerQueries() {
+		return rescorerQueries;
 	}
 }

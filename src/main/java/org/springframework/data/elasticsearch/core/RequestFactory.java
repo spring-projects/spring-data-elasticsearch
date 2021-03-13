@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.elasticsearch.action.DocWriteRequest;
@@ -37,7 +38,6 @@ import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsReques
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
-import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -65,7 +65,6 @@ import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.geo.GeoDistance;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
@@ -83,6 +82,8 @@ import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.rescore.QueryRescoreMode;
+import org.elasticsearch.search.rescore.QueryRescorerBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
 import org.elasticsearch.search.sort.ScoreSortBuilder;
@@ -106,6 +107,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.RescorerQuery.ScoreMode;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -119,6 +121,7 @@ import org.springframework.util.StringUtils;
  * @author Roman Puchkovskiy
  * @author Subhobrata Dey
  * @author Farid Faoudi
+ * @author Peer Mueller
  * @since 4.0
  */
 class RequestFactory {
@@ -1050,6 +1053,9 @@ class RequestFactory {
 			sourceBuilder.searchAfter(query.getSearchAfter().toArray());
 		}
 
+		query.getRescorerQueries().forEach(rescorer -> sourceBuilder.addRescorer(
+				getQueryRescorerBuilder(rescorer)));
+
 		request.source(sourceBuilder);
 		return request;
 	}
@@ -1135,6 +1141,9 @@ class RequestFactory {
 		if (query.getSearchAfter() != null) {
 			searchRequestBuilder.searchAfter(query.getSearchAfter().toArray());
 		}
+
+		query.getRescorerQueries().forEach(rescorer -> searchRequestBuilder.addRescorer(
+				getQueryRescorerBuilder(rescorer)));
 
 		return searchRequestBuilder;
 	}
@@ -1259,6 +1268,30 @@ class RequestFactory {
 				return sort;
 			}
 		}
+	}
+
+	private QueryRescorerBuilder getQueryRescorerBuilder(RescorerQuery rescorerQuery) {
+
+		QueryRescorerBuilder builder = new QueryRescorerBuilder(Objects.requireNonNull(getQuery(rescorerQuery.getQuery())));
+
+		if (rescorerQuery.getScoreMode() != ScoreMode.Default) {
+			builder.setScoreMode(QueryRescoreMode.valueOf(rescorerQuery.getScoreMode().name()));
+		}
+
+		if (rescorerQuery.getQueryWeight() != null) {
+			builder.setQueryWeight(rescorerQuery.getQueryWeight());
+		}
+
+		if (rescorerQuery.getRescoreQueryWeight() != null) {
+			builder.setRescoreQueryWeight(rescorerQuery.getRescoreQueryWeight());
+		}
+
+		if (rescorerQuery.getWindowSize() != null) {
+			builder.windowSize(rescorerQuery.getWindowSize());
+		}
+
+		return builder;
+
 	}
 	// endregion
 

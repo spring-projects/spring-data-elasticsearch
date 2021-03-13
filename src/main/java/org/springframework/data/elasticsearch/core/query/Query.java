@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.query;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +42,7 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  * @author Farid Azaza
  * @author Peter-Josef Meisch
+ * @author Peer Mueller
  */
 public interface Query {
 
@@ -297,7 +299,7 @@ public interface Query {
 
 	/**
 	 * Sets the setSearchAfter objects for this query.
-	 * 
+	 *
 	 * @param searchAfter the setSearchAfter objects. These are obtained with {@link SearchHit#getSortValues()} from a
 	 *          search result.
 	 * @since 4.2
@@ -310,4 +312,24 @@ public interface Query {
 	 */
 	@Nullable
 	List<Object> getSearchAfter();
+
+	/**
+	 * Sets the {@link RescorerQuery}.
+	 *
+	 * @param rescorerQuery the query to add to the list of rescorer queries
+	 * @since 4.2
+	 */
+	void addRescorerQuery(RescorerQuery rescorerQuery);
+
+	/**
+	 * Sets the {@link RescorerQuery}.
+	 *
+	 * @param rescorerQueryList list of rescorer queries set
+	 * @since 4.2
+	 */
+	void setRescorerQueries(List<RescorerQuery> rescorerQueryList);
+
+	default List<RescorerQuery> getRescorerQueries() {
+		return Collections.emptyList();
+	}
 }
