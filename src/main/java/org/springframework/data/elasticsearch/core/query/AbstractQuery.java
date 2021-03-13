@@ -300,11 +300,17 @@ abstract class AbstractQuery implements Query {
 
 	@Override
 	public void addRescorerQuery(RescorerQuery rescorerQuery) {
+
+		Assert.notNull(rescorerQuery, "rescorerQuery must not be null");
+
 		this.rescorerQueries.add(rescorerQuery);
 	}
 
 	@Override
 	public void setRescorerQueries(List<RescorerQuery> rescorerQueryList) {
+
+		Assert.notNull(rescorerQueries, "rescorerQueries must not be null");
+
 		this.rescorerQueries.clear();
 		this.rescorerQueries.addAll(rescorerQueryList);
 	}

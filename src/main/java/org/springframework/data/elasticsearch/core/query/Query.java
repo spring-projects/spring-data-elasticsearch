@@ -314,9 +314,9 @@ public interface Query {
 	List<Object> getSearchAfter();
 
 	/**
-	 * Sets the {@link RescorerQuery}.
+	 * Adds a {@link RescorerQuery}.
 	 *
-	 * @param rescorerQuery the query to add to the list of rescorer queries
+	 * @param rescorerQuery the query to add to the list of rescorer queries, must not be {@literal null}
 	 * @since 4.2
 	 */
 	void addRescorerQuery(RescorerQuery rescorerQuery);
@@ -324,11 +324,16 @@ public interface Query {
 	/**
 	 * Sets the {@link RescorerQuery}.
 	 *
-	 * @param rescorerQueryList list of rescorer queries set
+	 * @param rescorerQueryList list of rescorer queries set, must not be {@literal null}.
 	 * @since 4.2
 	 */
 	void setRescorerQueries(List<RescorerQuery> rescorerQueryList);
 
+	/**
+	 * get the list of {@link RescorerQuery}s
+	 *
+	 * @since 4.2
+	 */
 	default List<RescorerQuery> getRescorerQueries() {
 		return Collections.emptyList();
 	}

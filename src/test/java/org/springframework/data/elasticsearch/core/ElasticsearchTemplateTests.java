@@ -3132,7 +3132,7 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(highlightField.get(1)).contains("<em>message</em>");
 	}
 
-	@Test
+	@Test // #1686
 	void shouldRunRescoreQueryInSearchQuery() {
 		IndexCoordinates index = IndexCoordinates.of("test-index-rescore-entity-template");
 

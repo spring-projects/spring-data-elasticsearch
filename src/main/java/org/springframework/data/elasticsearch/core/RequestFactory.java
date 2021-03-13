@@ -355,7 +355,8 @@ class RequestFactory {
 
 	// region index management
 
-	public CreateIndexRequest createIndexRequest(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping) {
+	public CreateIndexRequest createIndexRequest(IndexCoordinates index, @Nullable Document settings,
+			@Nullable Document mapping) {
 		CreateIndexRequest request = new CreateIndexRequest(index.getIndexName());
 
 		if (settings != null && !settings.isEmpty()) {
@@ -1053,8 +1054,7 @@ class RequestFactory {
 			sourceBuilder.searchAfter(query.getSearchAfter().toArray());
 		}
 
-		query.getRescorerQueries().forEach(rescorer -> sourceBuilder.addRescorer(
-				getQueryRescorerBuilder(rescorer)));
+		query.getRescorerQueries().forEach(rescorer -> sourceBuilder.addRescorer(getQueryRescorerBuilder(rescorer)));
 
 		request.source(sourceBuilder);
 		return request;
@@ -1142,8 +1142,7 @@ class RequestFactory {
 			searchRequestBuilder.searchAfter(query.getSearchAfter().toArray());
 		}
 
-		query.getRescorerQueries().forEach(rescorer -> searchRequestBuilder.addRescorer(
-				getQueryRescorerBuilder(rescorer)));
+		query.getRescorerQueries().forEach(rescorer -> searchRequestBuilder.addRescorer(getQueryRescorerBuilder(rescorer)));
 
 		return searchRequestBuilder;
 	}
@@ -1272,7 +1271,10 @@ class RequestFactory {
 
 	private QueryRescorerBuilder getQueryRescorerBuilder(RescorerQuery rescorerQuery) {
 
-		QueryRescorerBuilder builder = new QueryRescorerBuilder(Objects.requireNonNull(getQuery(rescorerQuery.getQuery())));
+        QueryBuilder queryBuilder = getQuery(rescorerQuery.getQuery());
+        Assert.notNull("queryBuilder", "Could not build query for rescorerQuery");
+
+        QueryRescorerBuilder builder = new QueryRescorerBuilder(queryBuilder);
 
 		if (rescorerQuery.getScoreMode() != ScoreMode.Default) {
 			builder.setScoreMode(QueryRescoreMode.valueOf(rescorerQuery.getScoreMode().name()));

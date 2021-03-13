@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the original author or authors.
+ * Copyright 2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.rescore.QueryRescorerBuilder;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * Implementation of RescorerQuery to be used for rescoring filtered search results.
@@ -34,6 +33,9 @@ public class RescorerQuery {
 	@Nullable private Float rescoreQueryWeight;
 
 	public RescorerQuery(Query query) {
+
+		Assert.notNull(query, "query must not be null");
+
 		this.query = query;
 	}
 
@@ -61,6 +63,9 @@ public class RescorerQuery {
 	}
 
 	public RescorerQuery withScoreMode(ScoreMode scoreMode) {
+
+		Assert.notNull(scoreMode, "scoreMode must not be null");
+
 		this.scoreMode = scoreMode;
 		return this;
 	}
@@ -80,15 +85,8 @@ public class RescorerQuery {
 		return this;
 	}
 
-
-
 	public enum ScoreMode {
-		Default,
-		Avg,
-		Max,
-		Min,
-		Total,
-		Multiply
+		Default, Avg, Max, Min, Total, Multiply
 	}
 
 }

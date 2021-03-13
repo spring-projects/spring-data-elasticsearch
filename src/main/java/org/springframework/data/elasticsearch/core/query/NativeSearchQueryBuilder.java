@@ -20,7 +20,6 @@ import static org.springframework.util.CollectionUtils.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.IndicesOptions;
@@ -29,7 +28,6 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.elasticsearch.search.rescore.QueryRescorerBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
@@ -265,8 +263,7 @@ public class NativeSearchQueryBuilder {
 		}
 
 		if (!isEmpty(rescorerQueries)) {
-			nativeSearchQuery.setRescorerQueries(
-					rescorerQueries);
+			nativeSearchQuery.setRescorerQueries(rescorerQueries);
 		}
 
 		return nativeSearchQuery;
