@@ -25,6 +25,7 @@ import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.script.mustache.SearchTemplateRequestBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -60,6 +61,7 @@ public class NativeSearchQueryBuilder {
 	@Nullable private SourceFilter sourceFilter;
 	@Nullable private CollapseBuilder collapseBuilder;
 	@Nullable private List<IndexBoost> indicesBoost;
+	@Nullable private SearchTemplateRequestBuilder searchTemplateBuilder;
 	private float minScore;
 	private boolean trackScores;
 	@Nullable private Collection<String> ids;
@@ -113,6 +115,11 @@ public class NativeSearchQueryBuilder {
 
 	public NativeSearchQueryBuilder withIndicesBoost(List<IndexBoost> indicesBoost) {
 		this.indicesBoost = indicesBoost;
+		return this;
+	}
+
+	public NativeSearchQueryBuilder withSearchTemplate(SearchTemplateRequestBuilder searchTemplateBuilder){
+		this.searchTemplateBuilder = searchTemplateBuilder;
 		return this;
 	}
 
@@ -207,6 +214,10 @@ public class NativeSearchQueryBuilder {
 
 		if (indicesBoost != null) {
 			nativeSearchQuery.setIndicesBoost(indicesBoost);
+		}
+
+		if (searchTemplateBuilder != null) {
+			nativeSearchQuery.setSearchTemplate(searchTemplateBuilder);
 		}
 
 		if (!isEmpty(scriptFields)) {

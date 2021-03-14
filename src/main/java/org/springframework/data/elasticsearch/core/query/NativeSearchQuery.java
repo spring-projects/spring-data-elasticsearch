@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.script.mustache.SearchTemplateRequestBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -50,6 +51,7 @@ public class NativeSearchQuery extends AbstractQuery {
 	@Nullable private HighlightBuilder highlightBuilder;
 	@Nullable private HighlightBuilder.Field[] highlightFields;
 	@Nullable private List<IndexBoost> indicesBoost;
+	@Nullable private SearchTemplateRequestBuilder searchTemplate;
 
 	public NativeSearchQuery(@Nullable QueryBuilder query) {
 
@@ -163,4 +165,12 @@ public class NativeSearchQuery extends AbstractQuery {
 		this.indicesBoost = indicesBoost;
 	}
 
+	@Nullable
+	public SearchTemplateRequestBuilder getSearchTemplate() {
+		return searchTemplate;
+	}
+
+	public void setSearchTemplate(@Nullable SearchTemplateRequestBuilder searchTemplate) {
+		this.searchTemplate = searchTemplate;
+	}
 }

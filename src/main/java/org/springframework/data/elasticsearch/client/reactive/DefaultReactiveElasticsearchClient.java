@@ -92,6 +92,8 @@ import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.script.mustache.SearchTemplateRequest;
+import org.elasticsearch.script.mustache.SearchTemplateResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -402,6 +404,13 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.map(SearchResponse::getHits) //
 				.map(searchHits -> searchHits.getTotalHits().value) //
 				.next();
+	}
+
+	@Override
+	public Flux<SearchHit> searchTemplate(HttpHeaders headers, SearchTemplateRequest searchTemplateRequest) {
+		return sendRequest(searchTemplateRequest, requestCreator.searchTemplate(), SearchTemplateResponse.class, headers)
+			.map(r ->  r.getResponse().getHits())
+			.flatMap(Flux::fromIterable);
 	}
 
 	/*

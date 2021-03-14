@@ -98,6 +98,7 @@ import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.ReindexRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.index.seqno.SequenceNumbers;
+import org.elasticsearch.script.mustache.SearchTemplateRequest;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.tasks.TaskId;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
@@ -408,6 +409,21 @@ public class RequestConverters {
 		if (searchRequest.source() != null) {
 			request.setEntity(createEntity(searchRequest.source(), REQUEST_BODY_CONTENT_TYPE));
 		}
+		return request;
+	}
+
+	public static Request searchTemplate(SearchTemplateRequest templateRequest) {
+		SearchRequest searchRequest = templateRequest.getRequest();
+
+		String endpoint = new EndpointBuilder().addCommaSeparatedPathParts(templateRequest.getRequest().indices())
+			.addPathPart("_search").addPathPart("template").build();
+
+		Request request = new Request(HttpMethod.GET.name(), endpoint);
+		Params params = new Params(request);
+		addSearchRequestParams(params, searchRequest);
+
+		request.setEntity(createEntity(templateRequest, REQUEST_BODY_CONTENT_TYPE));
+
 		return request;
 	}
 
